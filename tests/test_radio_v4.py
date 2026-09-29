@@ -589,6 +589,9 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         )
 
     def config_with(self, **overrides) -> Config:
+        # Extra announcement channels are opt-in per test, so the single-channel
+        # cases stay single-channel regardless of the shipped default.
+        overrides.setdefault("radio_extra_channel_ids", frozenset())
         return Config(
             token="test",
             guild_id=123,
@@ -600,6 +603,36 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
             radio_go_live_confirmations=2,
             **overrides,
         )
+
+    async def test_extra_channels_get_the_announcement_without_the_ping(self) -> None:
+        main = _FakeChannel()
+        extra = _FakeChannel()
+
+        class _TwoChannelBot:
+            def get_channel(self, channel_id):
+                return {1: main, 2: extra}.get(channel_id)
+
+            async def fetch_channel(self, channel_id):
+                return self.get_channel(channel_id)
+
+        config = self.config_with(radio_extra_channel_ids=frozenset({2}))
+        client = _SequenceRadioClient([
+            self.snapshot(self.start - timedelta(seconds=10), False),
+            self.snapshot(self.start, False),
+            self.snapshot(self.start + timedelta(seconds=10), False),
+        ])
+        monitor = RadioMonitor(_TwoChannelBot(), config, self.db, client)
+        self.assertEqual(monitor.announce_channel_ids, [1, 2])
+        for _ in range(3):
+            await monitor.check()
+
+        self.assertEqual(len(main.sent), 1)
+        self.assertEqual(len(extra.sent), 1)
+        self.assertIn("<@&1547108101747118100>", main.sent[0]["content"])
+        self.assertNotIn("<@&", extra.sent[0]["content"])
+        self.assertIn("DJ Whiski", extra.sent[0]["content"])
+        self.assertFalse(extra.sent[0]["allowed_mentions"].roles)
+        self.assertEqual(main.sent[0]["embed"].title, extra.sent[0]["embed"].title)
 
     async def test_scheduled_show_is_announced_at_start_once(self) -> None:
         # The DJ never connects: the ping still goes out at the scheduled start.

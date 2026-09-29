@@ -1,4 +1,4 @@
-# OctoBot v1.0.17
+# OctoBot v1.0.18
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -12,7 +12,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - Community `/report`, `/reports`, moderator report tools
 - Booty Bay Pirate Radio monitoring and `/radio`
 - `/nextshows` lists every upcoming scheduled show in the next `RADIO_SCHEDULE_DAYS` (default 14) with absolute (`<t:…:f>`) and relative (`<t:…:R>`) Discord timestamps plus the DJ's Twitch link; same access rule as `/radio`.
-  - Each scheduled show is pinged to `DISCORD_RADIO_PING_ROLE_ID` in `DISCORD_RADIO_CHANNEL_ID` at its scheduled start time, naming the DJ from the station schedule. One ping per show; a start missed while the bot was down is still announced if the show is under 10 minutes in.
+  - Each scheduled show is pinged to `DISCORD_RADIO_PING_ROLE_ID` in `DISCORD_RADIO_CHANNEL_ID` at its scheduled start time, naming the DJ from the station schedule. `DISCORD_RADIO_EXTRA_CHANNEL_IDS` receives the same announcement without the role ping. One ping per show; a start missed while the bot was down is still announced if the show is under 10 minutes in.
   - When an announced show's scheduled end passes, the `/nextshows` list is posted to the same channel automatically (no ping), once per show.
   - `RADIO_LIVE_ALERTS=true` additionally pings when a DJ goes live outside the schedule.
   - The ping lists three ways to listen: in-game radio, the radio website, and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind are built in; `RADIO_DJ_STREAMS` overrides the table).
@@ -59,7 +59,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - A message containing a banned word is deleted and the author is timed out for 30 seconds (no message-history cleanup). Recorded as a timeout case in `/check`, DMed if timeout DMs are on, and logged to the mod-log channel with the message text.
   - Matching is whole-word and case-insensitive; phrases are allowed and match with spaces, hyphens or no separator. `/word list` is alphabetical. The Arcane word list is seeded automatically the first time the filter starts with an empty list (`octocop/default_banned_words.py`). Server owner, administrators and anyone with a staff profile are exempt. Edited messages are re-checked.
   - The bot needs **Manage Messages** in filtered channels and **Moderate Members**.
-- Legacy-role cleanup: a member who gains role `1547371277474603028` automatically loses role `1547037223558451291`. Configurable via `ROLE_CLEANUP_*`; needs the **Server Members Intent** enabled in the Developer Portal.
+- Base-role cleanup: a member who gains role `1547371277474603028` automatically loses the base role `1547037223558451291`. `/rolefix` (settings permission) reconciles everyone in one pass — anyone holding a levelled role loses the base role, anyone holding none of them is given it. Configurable via `ROLE_CLEANUP_*`; needs the **Server Members Intent** enabled in the Developer Portal.
 - Helper default timeout limit: 1 hour
 - Moderator/Admin default timeout limit: Discord maximum (4 weeks)
 - Optional timeout message cleanup window
@@ -211,3 +211,7 @@ Message cleanup crashed on every timeout (`PartialMessage.delete()` does not tak
 ## v1.0.17 /clear
 
 `/clear 10` deletes the 10 most recent messages in the channel; `/clear 5m` deletes everything from the last 5 minutes. Counts are capped at 200, time at 1 hour and 500 messages.
+
+## v1.0.18 /rolefix and a second radio announcement channel
+
+`/rolefix` walks every member and reconciles the base role against the levelled roles in both directions: a levelled role means the base role is removed, no levelled role at all means it is granted. Radio announcements now also post to `DISCORD_RADIO_EXTRA_CHANNEL_IDS` (default `1554524069511168040`) without the role ping.

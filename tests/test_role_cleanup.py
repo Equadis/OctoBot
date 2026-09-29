@@ -8,7 +8,7 @@ from octotracker.config import Config
 
 LEGACY = 1547037223558451291
 AUTO = 1547371277474603028
-SWEEP_ONLY = 1547038342661804194  # a role that no longer triggers anything
+LEVEL_ONLY = 1547038342661804194  # a levelled role that /rolefix acts on
 UNRELATED = 999
 
 
@@ -58,7 +58,7 @@ def _config(**overrides) -> Config:
 
 class RoleCleanupTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.roles = {role_id: _Role(role_id) for role_id in (LEGACY, AUTO, SWEEP_ONLY, UNRELATED)}
+        self.roles = {role_id: _Role(role_id) for role_id in (LEGACY, AUTO, LEVEL_ONLY, UNRELATED)}
         self.guild = _Guild(123, self.roles)
         self.cog = RoleCleanupCog(SimpleNamespace(config=_config()))
 
@@ -86,9 +86,9 @@ class RoleCleanupTests(unittest.IsolatedAsyncioTestCase):
         await self.cog.on_member_update(before, after)
         self.assertEqual(after.removed, [])
 
-        # The sweep-only roles do not trigger the automatic path.
+        # A levelled role that is not the auto trigger does not fire the automatic path.
         before = _Member(self.guild, 2, [LEGACY])
-        after = _Member(self.guild, 2, [LEGACY, SWEEP_ONLY])
+        after = _Member(self.guild, 2, [LEGACY, LEVEL_ONLY])
         await self.cog.on_member_update(before, after)
         self.assertEqual(after.removed, [])
 
@@ -97,6 +97,20 @@ class RoleCleanupTests(unittest.IsolatedAsyncioTestCase):
         after = _Member(other, 3, [LEGACY, AUTO])
         await self.cog.on_member_update(before, after)
         self.assertEqual(after.removed, [])
+
+    def test_level_roles_cover_all_four(self) -> None:
+        config = _config()
+        self.assertEqual(
+            config.role_cleanup_level_role_ids,
+            frozenset({1547038342661804194, 1547038337297154078, 1547038296025333880, AUTO}),
+        )
+        # A levelled role that is not the auto trigger still counts for /rolefix.
+        self.assertTrue(
+            self.cog._has_any(_Member(self.guild, 1, [LEVEL_ONLY]), config.role_cleanup_level_role_ids)
+        )
+        self.assertFalse(
+            self.cog._has_any(_Member(self.guild, 1, [UNRELATED, LEGACY]), config.role_cleanup_level_role_ids)
+        )
 
     async def test_member_without_legacy_role_is_left_alone(self) -> None:
         before = _Member(self.guild, 1, [])

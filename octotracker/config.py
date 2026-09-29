@@ -108,6 +108,8 @@ class Config:
     radio_base_url: str = "https://radio.octowow.st"
     radio_station_shortcode: str = "booty_bay_pirate_radio"
     radio_channel_id: int | None = None
+    # Extra channels that also receive radio announcements, without the role ping.
+    radio_extra_channel_ids: frozenset[int] = frozenset({1554524069511168040})
     radio_ping_role_id: int | None = None
     radio_poll_seconds: int = 30
     radio_go_live_confirmations: int = 2
@@ -128,6 +130,14 @@ class Config:
     # Legacy-role cleanup: members holding a trigger role lose the legacy role.
     role_cleanup_remove_role_id: int | None = 1547037223558451291
     role_cleanup_auto_trigger_role_ids: frozenset[int] = frozenset({1547371277474603028})
+    # Every "levelled" role. A member holding any of these loses the base role;
+    # a member holding none of them is given it back. Used by /rolefix.
+    role_cleanup_level_role_ids: frozenset[int] = frozenset({
+        1547038342661804194,
+        1547038337297154078,
+        1547038296025333880,
+        1547371277474603028,
+    })
     report_active_minutes: int = 10
     report_degraded_threshold: int = 3
     database_path: Path = PROJECT_ROOT / "data" / "octobot.db"
@@ -189,6 +199,9 @@ class Config:
                 or "booty_bay_pirate_radio"
             ),
             radio_channel_id=_discord_id("DISCORD_RADIO_CHANNEL_ID"),
+            radio_extra_channel_ids=_discord_id_set(
+                "DISCORD_RADIO_EXTRA_CHANNEL_IDS", "1554524069511168040"
+            ),
             radio_ping_role_id=_discord_id("DISCORD_RADIO_PING_ROLE_ID"),
             radio_poll_seconds=_positive_int("RADIO_POLL_SECONDS", 30),
             radio_go_live_confirmations=_positive_int(
@@ -218,6 +231,10 @@ class Config:
             ),
             role_cleanup_auto_trigger_role_ids=_discord_id_set(
                 "ROLE_CLEANUP_AUTO_TRIGGER_ROLE_IDS", "1547371277474603028"
+            ),
+            role_cleanup_level_role_ids=_discord_id_set(
+                "ROLE_CLEANUP_LEVEL_ROLE_IDS",
+                "1547038342661804194,1547038337297154078,1547038296025333880,1547371277474603028",
             ),
             report_active_minutes=_positive_int("REPORT_ACTIVE_MINUTES", 10),
             report_degraded_threshold=_positive_int(

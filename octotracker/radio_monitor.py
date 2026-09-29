@@ -149,8 +149,7 @@ class RadioMonitor:
         return due
 
     async def _announce_scheduled_shows(self, snapshot: RadioSnapshot) -> None:
-        channel_id = self.config.radio_channel_id
-        if channel_id is None:
+        if not self.announce_channel_ids:
             return
         due = self._due_scheduled_shows(snapshot)
         if not due:
@@ -177,7 +176,7 @@ class RadioMonitor:
                 notification_sent=False,
                 notification_message_id=None,
             )
-            message_id = await self._send_occurrence(channel_id, occurrence)
+            message_id = await self._send_occurrence(occurrence)
             if message_id is None:
                 # Channel trouble: retry on the next poll while still inside the grace window.
                 break
@@ -192,24 +191,40 @@ class RadioMonitor:
         """Fetch display data without changing notification/deduplication state."""
         return await self.client.fetch()
 
+    @property
+    def announce_channel_ids(self) -> list[int]:
+        """The radio channel first, then any extra channels, without duplicates."""
+        ids: list[int] = []
+        if self.config.radio_channel_id is not None:
+            ids.append(self.config.radio_channel_id)
+        for channel_id in sorted(self.config.radio_extra_channel_ids):
+            if channel_id not in ids:
+                ids.append(channel_id)
+        return ids
+
     async def _post_next_shows_after_ended(self, snapshot: RadioSnapshot) -> None:
         """Post the /nextshows list once per announced show, when its slot ends."""
-        channel_id = self.config.radio_channel_id
-        if channel_id is None:
+        channel_ids = self.announce_channel_ids
+        if not channel_ids:
             return
         ended = await self.database.ended_shows_awaiting_followup(
             self.config.radio_station_shortcode, snapshot.checked_at, SHOW_ENDED_FOLLOWUP_GRACE
         )
         if not ended:
             return
-        channel = await self._resolve_channel(channel_id)
-        if channel is None:
-            return
-        try:
-            for embed in next_shows_embeds(snapshot, self.dj_streams):
-                await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-        except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not post the upcoming shows list to %s", channel_id)
+        embeds = next_shows_embeds(snapshot, self.dj_streams)
+        posted = False
+        for channel_id in channel_ids:
+            channel = await self._resolve_channel(channel_id)
+            if channel is None:
+                continue
+            try:
+                for embed in embeds:
+                    await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                posted = True
+            except (discord.Forbidden, discord.HTTPException):
+                LOGGER.exception("Could not post the upcoming shows list to %s", channel_id)
+        if not posted:
             return
         # Several slots ending together get one list, not one each.
         await self.database.mark_ended_followup_posted(ended, snapshot.checked_at)
@@ -229,8 +244,7 @@ class RadioMonitor:
         return channel
 
     async def _send_pending_notifications(self, occurrence_key: str) -> None:
-        channel_id = self.config.radio_channel_id
-        if channel_id is None:
+        if not self.announce_channel_ids:
             return
         station = self.config.radio_station_shortcode
         # A slot already announced from the schedule is never announced again here.
@@ -241,42 +255,54 @@ class RadioMonitor:
             if occurrence.occurrence_key in already:
                 await self.database.mark_radio_notification_sent(occurrence.occurrence_key, None)
                 continue
-            message_id = await self._send_occurrence(channel_id, occurrence)
+            message_id = await self._send_occurrence(occurrence)
             if message_id is None:
                 break
             await self.database.mark_radio_notification_sent(
                 occurrence.occurrence_key, message_id
             )
 
-    async def _send_occurrence(
-        self, channel_id: int, occurrence: RadioOccurrence
-    ) -> int | None:
-        channel = await self._resolve_channel(channel_id)
-        if channel is None:
-            return None
+    async def _send_occurrence(self, occurrence: RadioOccurrence) -> int | None:
+        """Announce the show in every configured channel.
 
-        role_id = self.config.radio_ping_role_id
-        allowed_mentions = (
-            discord.AllowedMentions(
-                everyone=False,
-                users=False,
-                roles=[discord.Object(id=role_id)],
-                replied_user=False,
-            )
-            if role_id is not None
-            else discord.AllowedMentions.none()
-        )
+        Only the main radio channel pings the listener role; the extra channels get
+        the same announcement without the mention, so nobody is pinged twice.
+        Returns the main channel's message id, or None when nothing could be sent.
+        """
         dj_name = occurrence.presenter or occurrence.title
         twitch_url = dj_stream_url(dj_name, self.dj_streams)
-        try:
-            message = await channel.send(
-                content=radio_notification_message(
-                    dj_name, role_id, self.client.public_url, twitch_url
-                ),
-                embed=radio_live_embed(occurrence, self.client.public_url, twitch_url),
-                allowed_mentions=allowed_mentions,
+        embed = radio_live_embed(occurrence, self.client.public_url, twitch_url)
+        role_id = self.config.radio_ping_role_id
+        first_message_id: int | None = None
+        sent_any = False
+
+        for index, channel_id in enumerate(self.announce_channel_ids):
+            channel = await self._resolve_channel(channel_id)
+            if channel is None:
+                continue
+            ping_here = index == 0 and role_id is not None
+            allowed_mentions = (
+                discord.AllowedMentions(
+                    everyone=False,
+                    users=False,
+                    roles=[discord.Object(id=role_id)],
+                    replied_user=False,
+                )
+                if ping_here
+                else discord.AllowedMentions.none()
             )
-            return message.id
-        except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not send radio notification to %s", channel_id)
-            return None
+            try:
+                message = await channel.send(
+                    content=radio_notification_message(
+                        dj_name, role_id if ping_here else None, self.client.public_url, twitch_url
+                    ),
+                    embed=embed,
+                    allowed_mentions=allowed_mentions,
+                )
+            except (discord.Forbidden, discord.HTTPException):
+                LOGGER.exception("Could not send radio notification to %s", channel_id)
+                continue
+            sent_any = True
+            if first_message_id is None:
+                first_message_id = message.id
+        return first_message_id if sent_any else None

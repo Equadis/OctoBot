@@ -113,6 +113,10 @@ When anyone's message contains a keyword, the bot replies to it with a fixed mes
 
 Whole-word and case-insensitive, phrases allowed. One reply per keyword per channel per cooldown so a busy conversation gets a single answer. Replies never ping anyone. Changes go to the mod log.
 
+### Roles
+
+**`/rolefix`** — walks every member and reconciles the base role against the levelled roles: anyone holding a levelled role loses the base role, anyone holding none of them is given it. Reports how many were checked, removed and granted. The removal half also happens automatically the moment a member gains a levelled role. **(private reply)**
+
 ### Raid protection (`/lockdown …`)
 
 Starting a lockdown bans everyone who joined in the **previous 10 minutes** (staff and bots excluded). While it is on, every new joiner is DMed "We are currently in Lockdown. Please try again soon" and banned for **7 days**. The bot unbans them automatically when the 7 days are up.
