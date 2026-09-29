@@ -1,4 +1,4 @@
-# OctoBot v1.0.18
+# OctoBot v1.0.19
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -59,7 +59,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - A message containing a banned word is deleted and the author is timed out for 30 seconds (no message-history cleanup). Recorded as a timeout case in `/check`, DMed if timeout DMs are on, and logged to the mod-log channel with the message text.
   - Matching is whole-word and case-insensitive; phrases are allowed and match with spaces, hyphens or no separator. `/word list` is alphabetical. The Arcane word list is seeded automatically the first time the filter starts with an empty list (`octocop/default_banned_words.py`). Server owner, administrators and anyone with a staff profile are exempt. Edited messages are re-checked.
   - The bot needs **Manage Messages** in filtered channels and **Moderate Members**.
-- Base-role cleanup: a member who gains role `1547371277474603028` automatically loses the base role `1547037223558451291`. `/rolefix` (settings permission) reconciles everyone in one pass — anyone holding a levelled role loses the base role, anyone holding none of them is given it. Configurable via `ROLE_CLEANUP_*`; needs the **Server Members Intent** enabled in the Developer Portal.
+- Base-role cleanup: the bot holds one rule — a member has the base role `1547037223558451291` exactly when they hold none of the levelled roles. It is applied automatically on every role change, in both directions, and `/rolefix` (settings permission) applies it to every member in one pass. Configurable via `ROLE_CLEANUP_*`; needs the **Server Members Intent** enabled in the Developer Portal.
 - Helper default timeout limit: 1 hour
 - Moderator/Admin default timeout limit: Discord maximum (4 weeks)
 - Optional timeout message cleanup window
@@ -215,3 +215,7 @@ Message cleanup crashed on every timeout (`PartialMessage.delete()` does not tak
 ## v1.0.18 /rolefix and a second radio announcement channel
 
 `/rolefix` walks every member and reconciles the base role against the levelled roles in both directions: a levelled role means the base role is removed, no levelled role at all means it is granted. Radio announcements now also post to `DISCORD_RADIO_EXTRA_CHANNEL_IDS` (default `1554524069511168040`) without the role ping.
+
+## v1.0.19 automatic base-role grant
+
+The base role is now kept in sync in both directions on every role change, not only removed: losing the last levelled role gives it back. `/rolefix` is the catch-up pass for members changed while the bot was offline.

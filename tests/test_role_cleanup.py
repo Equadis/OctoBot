@@ -34,15 +34,21 @@ class _Guild:
 
 
 class _Member:
-    def __init__(self, guild: _Guild, member_id: int, role_ids: list[int]):
+    def __init__(self, guild: _Guild, member_id: int, role_ids: list[int], *, bot: bool = False):
         self.guild = guild
         self.id = member_id
+        self.bot = bot
         self.roles = [guild.get_role(role_id) for role_id in role_ids]
         self.removed: list[tuple[_Role, str]] = []
+        self.added: list[tuple[_Role, str]] = []
 
     async def remove_roles(self, role, *, reason=None):
         self.removed.append((role, reason))
         self.roles = [existing for existing in self.roles if existing != role]
+
+    async def add_roles(self, role, *, reason=None):
+        self.added.append((role, reason))
+        self.roles = [*self.roles, role]
 
 
 def _config(**overrides) -> Config:
@@ -80,23 +86,65 @@ class RoleCleanupTests(unittest.IsolatedAsyncioTestCase):
         await self.cog.on_member_update(before, after)
         self.assertEqual([role.id for role, _ in after.removed], [LEGACY])
 
-    async def test_unrelated_updates_and_other_guilds_are_ignored(self) -> None:
-        before = _Member(self.guild, 1, [LEGACY, AUTO])
-        after = _Member(self.guild, 1, [LEGACY, AUTO, UNRELATED])
-        await self.cog.on_member_update(before, after)
-        self.assertEqual(after.removed, [])
-
-        # A levelled role that is not the auto trigger does not fire the automatic path.
+    async def test_any_levelled_role_removes_the_base_role(self) -> None:
+        # Not just the auto trigger: every levelled role means the base role goes.
         before = _Member(self.guild, 2, [LEGACY])
         after = _Member(self.guild, 2, [LEGACY, LEVEL_ONLY])
         await self.cog.on_member_update(before, after)
-        self.assertEqual(after.removed, [])
+        self.assertEqual([role.id for role, _ in after.removed], [LEGACY])
+
+        # A member already holding both is repaired on the next role change.
+        before = _Member(self.guild, 1, [LEGACY, AUTO])
+        after = _Member(self.guild, 1, [LEGACY, AUTO, UNRELATED])
+        await self.cog.on_member_update(before, after)
+        self.assertEqual([role.id for role, _ in after.removed], [LEGACY])
+
+    async def test_losing_the_last_levelled_role_grants_the_base_role(self) -> None:
+        before = _Member(self.guild, 1, [AUTO])
+        after = _Member(self.guild, 1, [])
+        await self.cog.on_member_update(before, after)
+        self.assertEqual([role.id for role, _ in after.added], [LEGACY])
+        self.assertIn(self.roles[LEGACY], after.roles)
+
+        # Still holding another levelled role: nothing is granted.
+        before = _Member(self.guild, 2, [AUTO, LEVEL_ONLY])
+        after = _Member(self.guild, 2, [LEVEL_ONLY])
+        await self.cog.on_member_update(before, after)
+        self.assertEqual(after.added, [])
+
+        # An unrelated role is not a levelled role, so the base role still applies.
+        before = _Member(self.guild, 3, [AUTO, UNRELATED])
+        after = _Member(self.guild, 3, [UNRELATED])
+        await self.cog.on_member_update(before, after)
+        self.assertEqual([role.id for role, _ in after.added], [LEGACY])
+
+    async def test_non_role_updates_bots_and_other_guilds_are_ignored(self) -> None:
+        # Same roles either side: a nickname or avatar change, nothing to do.
+        before = _Member(self.guild, 1, [UNRELATED])
+        after = _Member(self.guild, 1, [UNRELATED])
+        await self.cog.on_member_update(before, after)
+        self.assertEqual((after.removed, after.added), ([], []))
+
+        before = _Member(self.guild, 4, [AUTO], bot=True)
+        after = _Member(self.guild, 4, [], bot=True)
+        await self.cog.on_member_update(before, after)
+        self.assertEqual(after.added, [])
 
         other = _Guild(456, self.roles)
         before = _Member(other, 3, [LEGACY])
         after = _Member(other, 3, [LEGACY, AUTO])
         await self.cog.on_member_update(before, after)
         self.assertEqual(after.removed, [])
+
+    async def test_a_correct_member_is_never_touched_so_updates_cannot_loop(self) -> None:
+        # The bot's own change re-enters the listener; the second pass is a no-op.
+        before = _Member(self.guild, 1, [LEGACY])
+        after = _Member(self.guild, 1, [LEGACY, AUTO])
+        await self.cog.on_member_update(before, after)
+        settled_before = _Member(self.guild, 1, [LEGACY, AUTO])
+        settled_after = _Member(self.guild, 1, [AUTO])
+        await self.cog.on_member_update(settled_before, settled_after)
+        self.assertEqual((settled_after.removed, settled_after.added), ([], []))
 
     def test_level_roles_cover_all_four(self) -> None:
         config = _config()
@@ -112,11 +160,11 @@ class RoleCleanupTests(unittest.IsolatedAsyncioTestCase):
             self.cog._has_any(_Member(self.guild, 1, [UNRELATED, LEGACY]), config.role_cleanup_level_role_ids)
         )
 
-    async def test_member_without_legacy_role_is_left_alone(self) -> None:
+    async def test_gaining_a_levelled_role_without_the_base_role_changes_nothing(self) -> None:
         before = _Member(self.guild, 1, [])
         after = _Member(self.guild, 1, [AUTO])
         await self.cog.on_member_update(before, after)
-        self.assertEqual(after.removed, [])
+        self.assertEqual((after.removed, after.added), ([], []))
 
 
 if __name__ == "__main__":

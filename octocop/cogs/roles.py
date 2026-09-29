@@ -14,11 +14,10 @@ log = logging.getLogger(__name__)
 
 
 class RoleCleanupCog(commands.Cog):
-    """Keep the base role and the levelled roles mutually exclusive.
+    """Hold one invariant: a member has the base role exactly when they have no levelled role.
 
-    Automatic: gaining ``role_cleanup_auto_trigger_role_ids`` drops the base role.
-    ``/rolefix`` reconciles every member in one pass: anyone with a levelled role
-    loses the base role, and anyone with none of them is given it.
+    It is enforced automatically on every role change, and ``/rolefix`` applies the
+    same rule to every member in one pass for anyone the bot missed.
     """
 
     def __init__(self, bot: "OctoBot"):
@@ -28,54 +27,65 @@ class RoleCleanupCog(commands.Cog):
     def _remove_role_id(self) -> int | None:
         return self.bot.config.role_cleanup_remove_role_id
 
+    @property
+    def _level_role_ids(self) -> frozenset[int]:
+        """Every role that means "not a newcomer", so the base role does not apply."""
+        config = self.bot.config
+        return config.role_cleanup_level_role_ids | config.role_cleanup_auto_trigger_role_ids
+
     @staticmethod
     def _has_any(member: discord.Member, role_ids: frozenset[int]) -> bool:
         return any(role.id in role_ids for role in member.roles)
 
-    async def _remove_legacy_role(self, member: discord.Member, reason: str) -> bool:
-        """Remove the legacy role from ``member`` if present. True when removed."""
-        remove_id = self._remove_role_id
-        if remove_id is None:
-            return False
-        role = member.guild.get_role(remove_id)
-        if role is None or role not in member.roles:
-            return False
-        await member.remove_roles(role, reason=reason[:512])
-        return True
+    async def reconcile(self, member: discord.Member, reason: str) -> str | None:
+        """Add or remove the base role so the invariant holds.
+
+        Returns "removed", "granted", or None when the member is already correct.
+        """
+        base_id = self._remove_role_id
+        levels = self._level_role_ids
+        if base_id is None or not levels:
+            return None
+        base_role = member.guild.get_role(base_id)
+        if base_role is None:
+            return None
+        has_base = base_role in member.roles
+        has_level = self._has_any(member, levels)
+        if has_level and has_base:
+            await member.remove_roles(base_role, reason=reason[:512])
+            return "removed"
+        if not has_level and not has_base:
+            await member.add_roles(base_role, reason=reason[:512])
+            return "granted"
+        return None
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
-        if after.guild.id != self.bot.config.guild_id:
+        if after.guild.id != self.bot.config.guild_id or after.bot:
             return
-        triggers = self.bot.config.role_cleanup_auto_trigger_role_ids
-        if not triggers or self._remove_role_id is None:
-            return
-        if not self._has_any(after, triggers):
-            return
-        before_ids = {role.id for role in before.roles}
-        after_ids = {role.id for role in after.roles}
-        # Only act on the change that granted a trigger role (or re-added the legacy
-        # role while a trigger role is held). Unrelated updates are ignored.
-        gained_trigger = bool((after_ids - before_ids) & triggers)
-        regained_legacy = self._remove_role_id in after_ids - before_ids
-        if not (gained_trigger or regained_legacy):
+        # Nickname, avatar and timeout updates arrive here too; only role changes
+        # can break the invariant. The bot's own add/remove re-enters once and
+        # then finds nothing to do, so this cannot loop.
+        if {role.id for role in before.roles} == {role.id for role in after.roles}:
             return
         try:
-            removed = await self._remove_legacy_role(
-                after, "OctoBot role cleanup | superseded by a higher role"
+            action = await self.reconcile(
+                after, "OctoBot role cleanup | base role follows the levelled roles"
             )
         except discord.Forbidden:
             log.warning(
-                "Cannot remove role %s from %s: missing Manage Roles or role is above mine",
+                "Cannot change role %s on %s: missing Manage Roles or the role is above mine",
                 self._remove_role_id,
                 after.id,
             )
             return
         except discord.HTTPException:
-            log.exception("Failed to remove role %s from %s", self._remove_role_id, after.id)
+            log.exception("Failed to reconcile roles for %s", after.id)
             return
-        if removed:
-            log.info("Removed legacy role %s from %s", self._remove_role_id, after.id)
+        if action == "removed":
+            log.info("Removed base role %s from %s", self._remove_role_id, after.id)
+        elif action == "granted":
+            log.info("Granted base role %s to %s", self._remove_role_id, after.id)
 
     @app_commands.command(
         name="rolefix",
@@ -95,7 +105,7 @@ class RoleCleanupCog(commands.Cog):
 
         guild = interaction.guild
         base_id = self._remove_role_id
-        levels = self.bot.config.role_cleanup_level_role_ids
+        levels = self._level_role_ids
         if base_id is None or not levels:
             await interaction.response.send_message(
                 "Role cleanup is not configured (ROLE_CLEANUP_* in .env).", ephemeral=True
@@ -117,14 +127,11 @@ class RoleCleanupCog(commands.Cog):
                 if member.bot:
                     continue
                 checked += 1
-                has_base = base_role in member.roles
-                has_level = self._has_any(member, levels)
                 try:
-                    if has_level and has_base:
-                        await member.remove_roles(base_role, reason=reason)
+                    action = await self.reconcile(member, reason)
+                    if action == "removed":
                         removed += 1
-                    elif not has_level and not has_base:
-                        await member.add_roles(base_role, reason=reason)
+                    elif action == "granted":
                         granted += 1
                 except (discord.Forbidden, discord.HTTPException):
                     failed += 1

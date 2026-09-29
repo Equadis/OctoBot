@@ -115,7 +115,9 @@ Whole-word and case-insensitive, phrases allowed. One reply per keyword per chan
 
 ### Roles
 
-**`/rolefix`** — walks every member and reconciles the base role against the levelled roles: anyone holding a levelled role loses the base role, anyone holding none of them is given it. Reports how many were checked, removed and granted. The removal half also happens automatically the moment a member gains a levelled role. **(private reply)**
+The bot keeps one rule: a member has the base role exactly when they hold none of the levelled roles. Gaining a levelled role removes the base role, and losing the last one gives it back — both automatic, on every role change.
+
+**`/rolefix`** — applies the same rule to every member in one pass, for anyone changed while the bot was offline. Reports how many were checked, removed and granted. **(private reply)**
 
 ### Raid protection (`/lockdown …`)
 
