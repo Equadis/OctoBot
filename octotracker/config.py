@@ -9,6 +9,11 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Rank ladder, lowest rung first: Wanderer, Initiate, Recruit, Adventurer,
+# Veteran, Champion, Exalted. Fill this in (or set ROLE_LADDER_ROLE_IDS) to turn
+# the ladder on; while it is empty OctoBot does not touch anyone's rank roles.
+DEFAULT_ROLE_LADDER = ""
+
 
 def _discord_id(name: str, *, required: bool = False) -> int | None:
     value = os.getenv(name, "").strip()
@@ -43,6 +48,26 @@ def _discord_id_set(name: str, default: str) -> frozenset[int]:
             raise RuntimeError(f"{name} must contain positive Discord numeric IDs")
         ids.add(parsed)
     return frozenset(ids)
+
+
+def _discord_id_sequence(name: str, default: str) -> tuple[int, ...]:
+    """Comma-separated Discord IDs where the order matters, e.g. the rank ladder."""
+    value = os.getenv(name, default).strip()
+    ids: list[int] = []
+    for part in value.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            parsed = int(part)
+        except ValueError as exc:
+            raise RuntimeError(f"{name} must be comma-separated Discord numeric IDs") from exc
+        if parsed <= 0:
+            raise RuntimeError(f"{name} must contain positive Discord numeric IDs")
+        if parsed in ids:
+            raise RuntimeError(f"{name} lists the same role twice: {parsed}")
+        ids.append(parsed)
+    return tuple(ids)
 
 
 def _positive_int(name: str, default: int) -> int:
@@ -93,6 +118,8 @@ class Config:
     status_channel_id: int | None
     alert_channel_id: int | None
     announcement_channel_id: int | None
+    # Where new patch notes are posted. Defaults to the announcement channel.
+    patch_note_channel_id: int | None = None
     status_poll_seconds: int = 30
     announcement_poll_seconds: int = 90
     confirmation_checks: int = 3
@@ -127,6 +154,8 @@ class Config:
     helper_role_id: int | None = None
     moderator_role_id: int | None = None
     admin_role_id: int | None = None
+    # Rank ladder, lowest rung first (Wanderer … Exalted). A member holds only
+    # their highest rank; the lowest is granted on join. Empty disables it.
     # Legacy-role cleanup: members holding a trigger role lose the legacy role.
     role_cleanup_remove_role_id: int | None = 1547037223558451291
     role_cleanup_auto_trigger_role_ids: frozenset[int] = frozenset({1547371277474603028})
@@ -138,6 +167,9 @@ class Config:
         1547038296025333880,
         1547371277474603028,
     })
+    # Rank ladder, lowest rung first (Wanderer … Exalted). Empty until the rank
+    # role IDs are known; see DEFAULT_ROLE_LADDER.
+    role_ladder_ids: tuple[int, ...] = ()
     report_active_minutes: int = 10
     report_degraded_threshold: int = 3
     database_path: Path = PROJECT_ROOT / "data" / "octobot.db"
@@ -160,6 +192,10 @@ class Config:
             alert_channel_id=_discord_id("DISCORD_ALERT_CHANNEL_ID"),
             announcement_channel_id=_discord_id(
                 "DISCORD_ANNOUNCEMENT_CHANNEL_ID"
+            ),
+            patch_note_channel_id=(
+                _discord_id("DISCORD_PATCH_NOTE_CHANNEL_ID")
+                or _discord_id("DISCORD_ANNOUNCEMENT_CHANNEL_ID")
             ),
             status_poll_seconds=_positive_int("STATUS_POLL_SECONDS", 30),
             announcement_poll_seconds=_positive_int(
@@ -236,6 +272,7 @@ class Config:
                 "ROLE_CLEANUP_LEVEL_ROLE_IDS",
                 "1547038342661804194,1547038337297154078,1547038296025333880,1547371277474603028",
             ),
+            role_ladder_ids=_discord_id_sequence("ROLE_LADDER_ROLE_IDS", DEFAULT_ROLE_LADDER),
             report_active_minutes=_positive_int("REPORT_ACTIVE_MINUTES", 10),
             report_degraded_threshold=_positive_int(
                 "REPORT_DEGRADED_THRESHOLD", 3

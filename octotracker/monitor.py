@@ -48,6 +48,7 @@ class Monitor:
         status_client: StatusClient,
         auth_probe: AuthProbe,
         announcement_client: AnnouncementClient,
+        patch_note_client: AnnouncementClient | None = None,
     ):
         self.bot = bot
         self.config = config
@@ -55,9 +56,11 @@ class Monitor:
         self.status_client = status_client
         self.auth_probe = auth_probe
         self.announcement_client = announcement_client
+        self.patch_note_client = patch_note_client
         self._tasks: list[asyncio.Task[None]] = []
         self._status_lock = asyncio.Lock()
         self._announcement_lock = asyncio.Lock()
+        self._patch_note_lock = asyncio.Lock()
         self._last_health_signature = None
 
     def start(self) -> None:
@@ -69,6 +72,10 @@ class Monitor:
                 self._announcement_loop(), name="announcement-monitor"
             ),
         ]
+        if self.patch_note_client is not None:
+            self._tasks.append(
+                asyncio.create_task(self._patch_note_loop(), name="patch-note-monitor")
+            )
 
     async def stop(self) -> None:
         tasks, self._tasks = self._tasks, []
@@ -140,6 +147,17 @@ class Monitor:
                 raise
             except Exception:
                 LOGGER.exception("Unexpected error in announcement monitor")
+            await asyncio.sleep(self.config.announcement_poll_seconds)
+
+    async def _patch_note_loop(self) -> None:
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            try:
+                await self.check_patch_notes()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                LOGGER.exception("Unexpected error in patch note monitor")
             await asyncio.sleep(self.config.announcement_poll_seconds)
 
     async def check_status(self) -> CombinedStatusSnapshot:
@@ -232,40 +250,61 @@ class Monitor:
         )
 
     async def check_announcements(self) -> None:
-        async with self._announcement_lock:
-            topics = await self.announcement_client.fetch_topics()
+        await self._check_forum(
+            client=self.announcement_client,
+            kind="announcement",
+            channel_id=self.config.announcement_channel_id,
+            lock=self._announcement_lock,
+        )
+
+    async def check_patch_notes(self) -> None:
+        if self.patch_note_client is None:
+            return
+        await self._check_forum(
+            client=self.patch_note_client,
+            kind="patch_note",
+            channel_id=self.config.patch_note_channel_id,
+            lock=self._patch_note_lock,
+        )
+
+    async def _check_forum(
+        self,
+        *,
+        client: AnnouncementClient,
+        kind: str,
+        channel_id: int | None,
+        lock: asyncio.Lock,
+    ) -> None:
+        """Store new topics from one forum and post the ones not yet delivered."""
+        async with lock:
+            topics = await client.fetch_topics()
             if not topics:
                 return
 
-            if not await self.database.announcements_initialized():
-                await self.database.seed_announcements(topics)
-                LOGGER.info(
-                    "Initialized %s existing announcement topic(s) as seen",
-                    len(topics),
-                )
+            if not await self.database.announcements_initialized(kind):
+                # First run: treat everything already on the forum as seen, so the
+                # channel is not flooded with the whole back catalogue.
+                await self.database.seed_announcements(topics, kind)
+                LOGGER.info("Initialized %s existing %s topic(s) as seen", len(topics), kind)
                 return
 
-            known_ids = await self.database.known_topic_ids()
+            known_ids = await self.database.known_topic_ids(kind)
             new_topics = [topic for topic in topics if topic.topic_id not in known_ids]
             for topic in sorted(new_topics, key=lambda item: item.topic_id):
-                enriched = await self.announcement_client.enrich(topic)
-                await self.database.store_announcement(enriched)
+                enriched = await client.enrich(topic)
+                await self.database.store_announcement(enriched, kind=kind)
 
-            if self.config.announcement_channel_id is None:
+            if channel_id is None:
                 return
 
-            for announcement in await self.database.pending_announcements():
-                pages = announcement_embeds(announcement)
+            for announcement in await self.database.pending_announcements(kind):
+                pages = announcement_embeds(announcement, kind=kind)
                 progress = await self.database.announcement_delivery_progress(
                     announcement.topic_id
                 )
                 delivery_failed = False
-                for page_number, embed in enumerate(
-                    pages[progress:], start=progress + 1
-                ):
-                    if not await self._send_embed(
-                        self.config.announcement_channel_id, embed
-                    ):
+                for page_number, embed in enumerate(pages[progress:], start=progress + 1):
+                    if not await self._send_embed(channel_id, embed):
                         delivery_failed = True
                         break
                     await self.database.mark_announcement_page_sent(
@@ -277,11 +316,20 @@ class Monitor:
 
     async def latest_announcement(self):
         await self.check_announcements()
-        announcement = await self.database.latest_announcement()
+        return await self._latest(self.announcement_client, "announcement")
+
+    async def latest_patch_note(self):
+        if self.patch_note_client is None:
+            return None
+        await self.check_patch_notes()
+        return await self._latest(self.patch_note_client, "patch_note")
+
+    async def _latest(self, client: AnnouncementClient, kind: str):
+        announcement = await self.database.latest_announcement(kind)
         if announcement is None or announcement.body:
             return announcement
-        enriched = await self.announcement_client.enrich(announcement)
-        await self.database.store_announcement(enriched)
+        enriched = await client.enrich(announcement)
+        await self.database.store_announcement(enriched, kind=kind)
         return enriched
 
     async def _get_channel(self, channel_id: int) -> object | None:

@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from octotracker.announcements import AnnouncementClient
+from octotracker.announcements import PATCH_NOTES_URL, AnnouncementClient
 from octotracker.auth import AuthProbe
 from octotracker.config import Config
 from octotracker.database import Database as TrackerDatabase
@@ -44,6 +44,7 @@ CommandChoice = Literal[
     "uptime",
     "incidents",
     "announcement",
+    "patchnote",
     "report",
     "reports",
     "radio",
@@ -54,6 +55,7 @@ HELP_DESCRIPTIONS: dict[str, str] = {
     "uptime": "View OctoWoW uptime statistics.",
     "incidents": "View recent outages and degraded incidents.",
     "announcement": "Read the latest official OctoWoW announcement.",
+    "patchnote": "Read the latest official OctoWoW patch notes.",
     "report": "Report a current connection problem.",
     "reports": "View recent community connection reports.",
     "radio": "View Booty Bay Pirate Radio and upcoming shows.",
@@ -109,6 +111,7 @@ class OctoBot(commands.Bot):
             ("uptime", "Show official uptime and recent percentages.", self.uptime_command),
             ("incidents", "Show recent confirmed OctoWoW incidents.", self.incidents_command),
             ("announcement", "Show the latest official announcement.", self.announcement_command),
+            ("patchnote", "Show the latest official patch notes.", self.patchnote_command),
             ("report", "Report a current OctoWoW connection issue.", self.report_command),
             ("reports", "Show grouped current community reports.", self.reports_command),
             ("reports-details", "Show detailed current reports for moderators.", self.reports_details_command),
@@ -180,6 +183,10 @@ class OctoBot(commands.Bot):
                 self.config.auth_probe_timeout_seconds,
             ),
             announcement_client=AnnouncementClient(self.session),
+            # Patch notes live in their own forum and are not in the news feed.
+            patch_note_client=AnnouncementClient(
+                self.session, forum_url=PATCH_NOTES_URL, news_url=None
+            ),
         )
         self.radio_client = RadioClient(
             self.session,
@@ -354,6 +361,26 @@ class OctoBot(commands.Bot):
             LOGGER.exception("The /announcement command failed")
             await interaction.followup.send(
                 "OctoBot could not load the latest announcement right now.",
+                ephemeral=True,
+            )
+
+    async def patchnote_command(self, interaction: discord.Interaction) -> None:
+        if not await self._require_command_access(interaction, "patchnote"):
+            return
+        await interaction.response.defer(thinking=True)
+        try:
+            patch_note = await self._monitor().latest_patch_note()
+            if patch_note is None:
+                await interaction.followup.send(
+                    "No official patch notes are available yet.", ephemeral=True
+                )
+                return
+            for embed in announcement_embeds(patch_note, kind="patch_note"):
+                await interaction.followup.send(embed=embed)
+        except Exception:
+            LOGGER.exception("The /patchnote command failed")
+            await interaction.followup.send(
+                "OctoBot could not load the latest patch notes right now.",
                 ephemeral=True,
             )
 

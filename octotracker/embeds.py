@@ -784,7 +784,15 @@ def split_announcement_body(text: str, max_length: int = 3_500) -> list[str]:
     return chunks
 
 
-def announcement_embeds(announcement: Announcement) -> list[discord.Embed]:
+ANNOUNCEMENT_LABELS = {
+    "announcement": "Official OctoWoW announcement",
+    "patch_note": "Official OctoWoW patch notes",
+}
+
+
+def announcement_embeds(
+    announcement: Announcement, kind: str = "announcement"
+) -> list[discord.Embed]:
     body = (
         announcement.body
         or announcement.preview
@@ -797,7 +805,7 @@ def announcement_embeds(announcement: Announcement) -> list[discord.Embed]:
             title=announcement.title[:256],
             url=announcement.url,
             description=page,
-            color=discord.Color.blurple(),
+            color=discord.Color.green() if kind == "patch_note" else discord.Color.blurple(),
         )
         if announcement.author:
             embed.set_author(name=announcement.author[:256])
@@ -814,11 +822,9 @@ def announcement_embeds(announcement: Announcement) -> list[discord.Embed]:
                 value=f"[Open on the OctoWoW forum]({announcement.url})",
                 inline=False,
             )
+        label = ANNOUNCEMENT_LABELS.get(kind, ANNOUNCEMENT_LABELS["announcement"])
         embed.set_footer(
-            text=(
-                f"Official OctoWoW announcement · Topic {announcement.topic_id} · "
-                f"Page {index}/{len(pages)}"
-            )
+            text=f"{label} · Topic {announcement.topic_id} · Page {index}/{len(pages)}"
         )
         embeds.append(embed)
     return embeds

@@ -1,4 +1,4 @@
-# OctoBot v1.0.19
+# OctoBot v1.0.20
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -9,6 +9,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
 - Official announcement monitoring and `/announcement`
+- Patch note monitoring and `/patchnote` — reads the Patch Notes and Changelog forum and posts each new topic to `DISCORD_PATCH_NOTE_CHANNEL_ID` (defaults to the announcement channel)
 - Community `/report`, `/reports`, moderator report tools
 - Booty Bay Pirate Radio monitoring and `/radio`
 - `/nextshows` lists every upcoming scheduled show in the next `RADIO_SCHEDULE_DAYS` (default 14) with absolute (`<t:…:f>`) and relative (`<t:…:R>`) Discord timestamps plus the DJ's Twitch link; same access rule as `/radio`.
@@ -219,3 +220,7 @@ Message cleanup crashed on every timeout (`PartialMessage.delete()` does not tak
 ## v1.0.19 automatic base-role grant
 
 The base role is now kept in sync in both directions on every role change, not only removed: losing the last levelled role gives it back. `/rolefix` is the catch-up pass for members changed while the bot was offline.
+
+## v1.0.20 /patchnote
+
+`/patchnote` reads the Patch Notes and Changelog forum (`f=4`) the same way `/announcement` reads Announcements (`f=2`), and every new patch note is posted automatically to `DISCORD_PATCH_NOTE_CHANNEL_ID`, which defaults to the announcement channel. The two forums are tracked separately in the database, so neither shows up in the other's command or channel.

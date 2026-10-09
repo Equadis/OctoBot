@@ -24,6 +24,7 @@ Public tracker commands. Admins can restrict any of them to specific roles with 
 | `/uptime` | Official uptime statistics. |
 | `/incidents` | Recent outages and degraded incidents. |
 | `/announcement` | The latest official OctoWoW announcement. |
+| `/patchnote` | The latest official OctoWoW patch notes. New patch notes are also posted automatically. |
 | `/report realm issue [details]` | Report a connection problem right now. Groups with other reports; enough reports in 10 minutes flag the realm as degraded. |
 | `/reports` | Current community reports, grouped by realm and issue. |
 | `/radio` | Booty Bay Pirate Radio: live/AutoDJ state, listeners, now playing, next shows. |

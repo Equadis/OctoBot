@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 LOGGER = logging.getLogger(__name__)
 FORUM_URL = "https://octowow.st/forum/viewforum.php?f=2"
+PATCH_NOTES_URL = "https://octowow.st/forum/viewforum.php?f=4"
 NEWS_URL = "https://octowow.st/news.json"
 
 
@@ -149,7 +150,7 @@ def parse_first_post(html: str, announcement: Announcement) -> Announcement:
     )
 
 
-def parse_announcement_listing(html: str) -> list[Announcement]:
+def parse_announcement_listing(html: str, base_url: str = FORUM_URL) -> list[Announcement]:
     soup = BeautifulSoup(html, "html.parser")
     announcements: list[Announcement] = []
     seen: set[int] = set()
@@ -192,7 +193,7 @@ def parse_announcement_listing(html: str) -> list[Announcement]:
             Announcement(
                 topic_id=topic_id,
                 title=title,
-                url=urljoin(FORUM_URL, href),
+                url=urljoin(base_url, href),
                 author=author,
                 published_at=published_at,
             )
@@ -251,12 +252,26 @@ def parse_news_feed(payload: Any) -> list[Announcement]:
 
 
 class AnnouncementClient:
-    def __init__(self, session: aiohttp.ClientSession):
+    """Reads one forum's topic listing, newest first.
+
+    ``news_url`` is the official JSON feed, used only as a fallback when the HTML
+    listing is unreachable. It carries announcements alone, so the patch-notes
+    client is created without one.
+    """
+
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        forum_url: str = FORUM_URL,
+        news_url: str | None = NEWS_URL,
+    ):
         self.session = session
+        self.forum_url = forum_url
+        self.news_url = news_url
 
     async def fetch_topics(self) -> list[Announcement]:
         try:
-            async with self.session.get(FORUM_URL) as response:
+            async with self.session.get(self.forum_url) as response:
                 response.raise_for_status()
                 html = await response.text()
             if is_browser_verification(html):
@@ -266,7 +281,7 @@ class AnnouncementClient:
                 )
                 topics = []
             else:
-                topics = parse_announcement_listing(html)
+                topics = parse_announcement_listing(html, self.forum_url)
             if topics:
                 return topics
         except (aiohttp.ClientError, TimeoutError):
@@ -274,8 +289,12 @@ class AnnouncementClient:
         except Exception:
             LOGGER.warning("Could not parse the forum page; trying news feed")
 
+        if self.news_url is None:
+            LOGGER.warning("No topics could be parsed from %s", self.forum_url)
+            return []
+
         try:
-            async with self.session.get(NEWS_URL) as response:
+            async with self.session.get(self.news_url) as response:
                 response.raise_for_status()
                 topics = parse_news_feed(await response.json(content_type=None))
             if not topics:

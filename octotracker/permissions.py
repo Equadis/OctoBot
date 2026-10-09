@@ -6,6 +6,7 @@ MANAGED_COMMANDS = (
     "uptime",
     "incidents",
     "announcement",
+    "patchnote",
     "report",
     "reports",
     "radio",

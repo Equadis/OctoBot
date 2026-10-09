@@ -229,6 +229,7 @@ ON incidents(started_at DESC);
 
 CREATE TABLE IF NOT EXISTS announcements (
     topic_id INTEGER PRIMARY KEY,
+    kind TEXT NOT NULL DEFAULT 'announcement',
     title TEXT NOT NULL,
     author TEXT,
     published_at TEXT,
@@ -465,6 +466,11 @@ class Database:
             "announcements",
             "delivery_pages_sent",
             "INTEGER NOT NULL DEFAULT 0",
+        )
+        # Patch notes share this table; rows written before they existed are
+        # announcements, which is exactly what the default says.
+        await self._ensure_column(
+            "announcements", "kind", "TEXT NOT NULL DEFAULT 'announcement'"
         )
         await self._ensure_column(
             "radio_schedule_announcements", "ended_followup_at", "TEXT"
@@ -2142,10 +2148,21 @@ class Database:
             latency_ms=row["last_latency_ms"],
         )
 
-    async def announcements_initialized(self) -> bool:
-        return await self.get_metadata("announcements_initialized") == "1"
+    @staticmethod
+    def _initialized_key(kind: str) -> str:
+        # The original announcement key predates patch notes, so it keeps its name.
+        return (
+            "announcements_initialized"
+            if kind == "announcement"
+            else f"{kind}_initialized"
+        )
 
-    async def seed_announcements(self, announcements: list[Announcement]) -> None:
+    async def announcements_initialized(self, kind: str = "announcement") -> bool:
+        return await self.get_metadata(self._initialized_key(kind)) == "1"
+
+    async def seed_announcements(
+        self, announcements: list[Announcement], kind: str = "announcement"
+    ) -> None:
         async with self._lock:
             connection = self._connection()
             discovered_at = _iso(datetime.now(timezone.utc))
@@ -2153,13 +2170,14 @@ class Database:
                 await connection.execute(
                     """
                     INSERT OR IGNORE INTO announcements(
-                        topic_id, title, author, published_at, preview, body,
+                        topic_id, kind, title, author, published_at, preview, body,
                         content_source, url, discovered_at, announced,
                         delivery_pages_sent
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
                     """,
                     (
                         item.topic_id,
+                        kind,
                         item.title,
                         item.author,
                         item.published_at,
@@ -2172,23 +2190,25 @@ class Database:
                 )
             await connection.execute(
                 """
-                INSERT INTO metadata(key, value) VALUES ('announcements_initialized', '1')
+                INSERT INTO metadata(key, value) VALUES (?, '1')
                 ON CONFLICT(key) DO UPDATE SET value = '1'
-                """
+                """,
+                (self._initialized_key(kind),),
             )
             await connection.commit()
 
     async def store_announcement(
-        self, announcement: Announcement, *, announced: bool = False
+        self, announcement: Announcement, *, announced: bool = False,
+        kind: str = "announcement",
     ) -> None:
         async with self._lock:
             await self._connection().execute(
                 """
                 INSERT INTO announcements(
-                    topic_id, title, author, published_at, preview, body,
+                    topic_id, kind, title, author, published_at, preview, body,
                     content_source, url, discovered_at, announced,
                     delivery_pages_sent
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
                 ON CONFLICT(topic_id) DO UPDATE SET
                     title = excluded.title,
                     author = COALESCE(excluded.author, announcements.author),
@@ -2211,6 +2231,7 @@ class Database:
                 """,
                 (
                     announcement.topic_id,
+                    kind,
                     announcement.title,
                     announcement.author,
                     announcement.published_at,
@@ -2224,20 +2245,21 @@ class Database:
             )
             await self._connection().commit()
 
-    async def known_topic_ids(self) -> set[int]:
+    async def known_topic_ids(self, kind: str = "announcement") -> set[int]:
         async with self._lock:
             cursor = await self._connection().execute(
-                "SELECT topic_id FROM announcements"
+                "SELECT topic_id FROM announcements WHERE kind = ?", (kind,)
             )
             return {row["topic_id"] for row in await cursor.fetchall()}
 
-    async def pending_announcements(self) -> list[Announcement]:
+    async def pending_announcements(self, kind: str = "announcement") -> list[Announcement]:
         async with self._lock:
             cursor = await self._connection().execute(
                 """
-                SELECT * FROM announcements WHERE announced = 0
+                SELECT * FROM announcements WHERE announced = 0 AND kind = ?
                 ORDER BY topic_id ASC
-                """
+                """,
+                (kind,),
             )
             rows = await cursor.fetchall()
         return [self._announcement_from_row(row) for row in rows]
@@ -2273,10 +2295,11 @@ class Database:
             )
             await self._connection().commit()
 
-    async def latest_announcement(self) -> Announcement | None:
+    async def latest_announcement(self, kind: str = "announcement") -> Announcement | None:
         async with self._lock:
             cursor = await self._connection().execute(
-                "SELECT * FROM announcements ORDER BY topic_id DESC LIMIT 1"
+                "SELECT * FROM announcements WHERE kind = ? ORDER BY topic_id DESC LIMIT 1",
+                (kind,),
             )
             row = await cursor.fetchone()
         return self._announcement_from_row(row) if row else None
