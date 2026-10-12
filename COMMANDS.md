@@ -120,6 +120,12 @@ The bot keeps one rule: a member has the base role exactly when they hold none o
 
 **`/rolefix`** — applies the same rule to every member in one pass, for anyone changed while the bot was offline. Reports how many were checked, removed and granted. **(private reply)**
 
+### Invite filter
+
+A message linking to **another** Discord server is deleted and the author timed out for **1 hour**, recorded as a timeout case in `/check` and logged with the message text.
+
+Allowed through: invites to this server, and anything posted in the server-advertising forum (including every post inside it). Staff are exempt. Edited messages are re-checked. There is no command — it is configured in `.env` (`DISCORD_INVITE_ALLOWED_CHANNEL_IDS`, `INVITE_FILTER_TIMEOUT`).
+
 ### Raid protection (`/lockdown …`)
 
 Starting a lockdown bans everyone who joined in the **previous 10 minutes** (staff and bots excluded). While it is on, every new joiner is DMed "We are currently in Lockdown. Please try again soon" and banned for **7 days**. The bot unbans them automatically when the 7 days are up.

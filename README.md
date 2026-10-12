@@ -1,4 +1,4 @@
-# OctoBot v1.0.20
+# OctoBot v1.0.21
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -56,6 +56,9 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - Lockdown turns itself off after the timer (default 30 minutes; accepts `90s`, `2h`, `1d`, up to 7 days). `/lockdown cancel` stops it early. Timer and state persist across restarts.
 - Auto-replies: `/autoreply add keyword message`, `/autoreply edit keyword message`, `/autoreply remove keyword`, `/autoreply list`, `/autoreply cooldown duration` (settings permission).
   - When a message contains the keyword (whole-word, case-insensitive, phrases allowed) the bot replies to it with the fixed message. One reply per keyword per channel per cooldown (default 60s, `30s`–`60m`). Bots are ignored.
+- Invite filter: a message linking to another Discord server is deleted and the author timed out for `INVITE_FILTER_TIMEOUT` (default 1 hour), recorded as a timeout case and logged.
+  - Allowed: invites to this server (resolved through Discord, so vanity URLs work), and anything posted in `DISCORD_INVITE_ALLOWED_CHANNEL_IDS` (default the server-advertising forum `1547029978326245376`, including every post inside it). Staff are exempt and edited messages are re-checked.
+  - Catches `discord.gg`, `discord.com/invite`, `discordapp.com`, ptb/canary, `dsc.gg`, `discord.me`, plus spacing and zero-width tricks.
 - Banned-word filter (replaces the Arcane keyword filter): `/word list`, `/word add word`, `/word remove word` (settings permission; replies are visible only to you).
   - A message containing a banned word is deleted and the author is timed out for 30 seconds (no message-history cleanup). Recorded as a timeout case in `/check`, DMed if timeout DMs are on, and logged to the mod-log channel with the message text.
   - Matching is whole-word and case-insensitive; phrases are allowed and match with spaces, hyphens or no separator. `/word list` is alphabetical. The Arcane word list is seeded automatically the first time the filter starts with an empty list (`octocop/default_banned_words.py`). Server owner, administrators and anyone with a staff profile are exempt. Edited messages are re-checked.
@@ -224,3 +227,7 @@ The base role is now kept in sync in both directions on every role change, not o
 ## v1.0.20 /patchnote
 
 `/patchnote` reads the Patch Notes and Changelog forum (`f=4`) the same way `/announcement` reads Announcements (`f=2`), and every new patch note is posted automatically to `DISCORD_PATCH_NOTE_CHANNEL_ID`, which defaults to the announcement channel. The two forums are tracked separately in the database, so neither shows up in the other's command or channel.
+
+## v1.0.21 invite filter
+
+Invites to other Discord servers are deleted and the poster timed out for an hour. Invites to this server are resolved through Discord and allowed, as is anything posted in the server-advertising forum.

@@ -156,6 +156,7 @@ class OctoBot(commands.Bot):
 
         from octocop.cogs.moderation import ModerationCog
         from octocop.cogs.autoreply import AutoReplyCog
+        from octocop.cogs.invitefilter import InviteFilterCog
         from octocop.cogs.lockdown import LockdownCog
         from octocop.cogs.roles import RoleCleanupCog
         from octocop.cogs.settings import SettingsCog
@@ -168,6 +169,7 @@ class OctoBot(commands.Bot):
         await self.add_cog(WordFilterCog(self), guild=self.guild)
         await self.add_cog(LockdownCog(self), guild=self.guild)
         await self.add_cog(AutoReplyCog(self), guild=self.guild)
+        await self.add_cog(InviteFilterCog(self), guild=self.guild)
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=self.config.request_timeout_seconds),
             headers={"User-Agent": "OctoBot/1.0 (+OctoWoW Discord bot)"},

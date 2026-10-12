@@ -70,6 +70,19 @@ def _discord_id_sequence(name: str, default: str) -> tuple[int, ...]:
     return tuple(ids)
 
 
+def _duration_seconds(name: str, default: str, *, maximum: int | None = None) -> int:
+    """A duration such as 30s, 10m or 1h, as seconds. "0" disables the feature."""
+    from octocop.duration import DurationError, parse_duration
+
+    value = os.getenv(name, default).strip() or default
+    if value in {"0", "off", "none"}:
+        return 0
+    try:
+        return parse_duration(value, maximum=maximum)
+    except DurationError as exc:
+        raise RuntimeError(f"{name}: {exc}") from exc
+
+
 def _positive_int(name: str, default: int) -> int:
     value = os.getenv(name, str(default)).strip()
     try:
@@ -170,6 +183,11 @@ class Config:
     # Rank ladder, lowest rung first (Wanderer … Exalted). Empty until the rank
     # role IDs are known; see DEFAULT_ROLE_LADDER.
     role_ladder_ids: tuple[int, ...] = ()
+    # Invite filter: posting another server's invite is deleted and timed out,
+    # except in these channels (a forum covers its posts) or when the invite
+    # points back at this guild. Zero seconds deletes without timing out.
+    invite_allowed_channel_ids: frozenset[int] = frozenset({1547029978326245376})
+    invite_filter_timeout_seconds: int = 60 * 60
     report_active_minutes: int = 10
     report_degraded_threshold: int = 3
     database_path: Path = PROJECT_ROOT / "data" / "octobot.db"
@@ -273,6 +291,12 @@ class Config:
                 "1547038342661804194,1547038337297154078,1547038296025333880,1547371277474603028",
             ),
             role_ladder_ids=_discord_id_sequence("ROLE_LADDER_ROLE_IDS", DEFAULT_ROLE_LADDER),
+            invite_allowed_channel_ids=_discord_id_set(
+                "DISCORD_INVITE_ALLOWED_CHANNEL_IDS", "1547029978326245376"
+            ),
+            invite_filter_timeout_seconds=_duration_seconds(
+                "INVITE_FILTER_TIMEOUT", "1h"
+            ),
             report_active_minutes=_positive_int("REPORT_ACTIVE_MINUTES", 10),
             report_degraded_threshold=_positive_int(
                 "REPORT_DEGRADED_THRESHOLD", 3
