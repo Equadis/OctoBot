@@ -122,7 +122,7 @@ The bot keeps one rule: a member has the base role exactly when they hold none o
 
 ### Invite filter
 
-A message linking to **another** Discord server is deleted and the author timed out for **1 hour**, recorded as a timeout case in `/check` and logged with the message text.
+A message linking to **another** Discord server is deleted and the author timed out for **2 minutes**, recorded as a timeout case in `/check` and logged with the message text.
 
 Allowed through: invites to this server, and anything posted in the server-advertising forum (including every post inside it). Staff are exempt. Edited messages are re-checked. There is no command — it is configured in `.env` (`DISCORD_INVITE_ALLOWED_CHANNEL_IDS`, `INVITE_FILTER_TIMEOUT`).
 

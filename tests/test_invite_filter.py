@@ -136,13 +136,13 @@ class AllowedChannelTests(unittest.TestCase):
 
 
 class InviteConfigTests(unittest.TestCase):
-    def test_defaults_match_the_requested_forum_and_an_hour(self) -> None:
+    def test_defaults_match_the_requested_forum_and_two_minutes(self) -> None:
         config = Config(
             token="t", guild_id=GUILD, status_channel_id=None,
             alert_channel_id=None, announcement_channel_id=None,
         )
         self.assertEqual(config.invite_allowed_channel_ids, frozenset({FORUM}))
-        self.assertEqual(config.invite_filter_timeout_seconds, 3600)
+        self.assertEqual(config.invite_filter_timeout_seconds, 120)
 
     def test_the_timeout_is_configurable_and_can_be_disabled(self) -> None:
         base = {"DISCORD_TOKEN": "t", "DISCORD_GUILD_ID": str(GUILD)}

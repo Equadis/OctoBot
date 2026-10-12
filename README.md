@@ -1,4 +1,4 @@
-# OctoBot v1.0.21
+# OctoBot v1.0.22
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -56,7 +56,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - Lockdown turns itself off after the timer (default 30 minutes; accepts `90s`, `2h`, `1d`, up to 7 days). `/lockdown cancel` stops it early. Timer and state persist across restarts.
 - Auto-replies: `/autoreply add keyword message`, `/autoreply edit keyword message`, `/autoreply remove keyword`, `/autoreply list`, `/autoreply cooldown duration` (settings permission).
   - When a message contains the keyword (whole-word, case-insensitive, phrases allowed) the bot replies to it with the fixed message. One reply per keyword per channel per cooldown (default 60s, `30s`–`60m`). Bots are ignored.
-- Invite filter: a message linking to another Discord server is deleted and the author timed out for `INVITE_FILTER_TIMEOUT` (default 1 hour), recorded as a timeout case and logged.
+- Invite filter: a message linking to another Discord server is deleted and the author timed out for `INVITE_FILTER_TIMEOUT` (default 2 minutes), recorded as a timeout case and logged.
   - Allowed: invites to this server (resolved through Discord, so vanity URLs work), and anything posted in `DISCORD_INVITE_ALLOWED_CHANNEL_IDS` (default the server-advertising forum `1547029978326245376`, including every post inside it). Staff are exempt and edited messages are re-checked.
   - Catches `discord.gg`, `discord.com/invite`, `discordapp.com`, ptb/canary, `dsc.gg`, `discord.me`, plus spacing and zero-width tricks.
 - Banned-word filter (replaces the Arcane keyword filter): `/word list`, `/word add word`, `/word remove word` (settings permission; replies are visible only to you).
@@ -231,3 +231,7 @@ The base role is now kept in sync in both directions on every role change, not o
 ## v1.0.21 invite filter
 
 Invites to other Discord servers are deleted and the poster timed out for an hour. Invites to this server are resolved through Discord and allowed, as is anything posted in the server-advertising forum.
+
+## v1.0.22 invite filter timeout default
+
+The invite filter now times out for 2 minutes rather than an hour. `INVITE_FILTER_TIMEOUT` still overrides it.

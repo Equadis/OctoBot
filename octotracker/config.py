@@ -187,7 +187,7 @@ class Config:
     # except in these channels (a forum covers its posts) or when the invite
     # points back at this guild. Zero seconds deletes without timing out.
     invite_allowed_channel_ids: frozenset[int] = frozenset({1547029978326245376})
-    invite_filter_timeout_seconds: int = 60 * 60
+    invite_filter_timeout_seconds: int = 2 * 60
     report_active_minutes: int = 10
     report_degraded_threshold: int = 3
     database_path: Path = PROJECT_ROOT / "data" / "octobot.db"
@@ -295,7 +295,7 @@ class Config:
                 "DISCORD_INVITE_ALLOWED_CHANNEL_IDS", "1547029978326245376"
             ),
             invite_filter_timeout_seconds=_duration_seconds(
-                "INVITE_FILTER_TIMEOUT", "1h"
+                "INVITE_FILTER_TIMEOUT", "2m"
             ),
             report_active_minutes=_positive_int("REPORT_ACTIVE_MINUTES", 10),
             report_degraded_threshold=_positive_int(
