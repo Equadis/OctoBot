@@ -157,6 +157,29 @@ class RadioParserTests(unittest.TestCase):
         self.assertNotIn("tekeelatv", message)
         self.assertNotIn("sabellwind", message)
 
+    def test_show_names_from_the_live_schedule_resolve(self) -> None:
+        # The station reports the show name, not the DJ, so each key has to be a
+        # distinctive part of its show title.
+        expected = {
+            "Mossa’s Mayhem": "https://www.twitch.tv/dj_mossa",
+            "Mossa's Mayhem": "https://www.twitch.tv/dj_mossa",
+            "Tekeela N Trouble": "https://www.twitch.tv/tekeelatv",
+            "Sabellwind": "https://www.twitch.tv/sabellwind",
+            "The Whiski Lounge": "https://www.twitch.tv/djwhiski",
+            "The Hold with Judge Holdenn": "https://www.twitch.tv/woah_lp",
+        }
+        for show, url in expected.items():
+            self.assertEqual(dj_stream_url(show), url, show)
+        # A show with no configured stream gets no Twitch line rather than a wrong one.
+        self.assertIsNone(dj_stream_url("Davey Jones"))
+
+    def test_every_builtin_key_is_already_normalized(self) -> None:
+        # A key written with spaces would silently never match.
+        from octotracker.radio import DJ_TWITCH_STREAMS, _normalize
+
+        for key in DJ_TWITCH_STREAMS:
+            self.assertEqual(key, _normalize(key), key)
+
     def test_dj_stream_lookup_matches_schedule_names(self) -> None:
         self.assertEqual(dj_stream_url("Mossa"), "https://www.twitch.tv/dj_mossa")
         self.assertEqual(dj_stream_url("DJ Whiski"), "https://www.twitch.tv/djwhiski")

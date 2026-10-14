@@ -437,13 +437,18 @@ class RadioClient:
             )
 
 
-# Known DJs and where they stream. Matched against the presenter name reported by
-# the station schedule, so "DJ Whiski", "Whiski" and "whiski" all resolve.
+# Known DJs and where they stream. Matched against the presenter the station
+# schedule reports, which is the show name, so a key only has to be a distinctive
+# part of it: "whiski" resolves "The Whiski Lounge", "mossa" resolves
+# "Mossa’s Mayhem", and "judge-holdenn" resolves "The Hold with Judge Holdenn".
+# Keys must be written normalized: lower case, with every run of punctuation or
+# space as a single hyphen, because that is the form they are matched against.
 DJ_TWITCH_STREAMS: dict[str, str] = {
     "whiski": "https://www.twitch.tv/djwhiski",
     "mossa": "https://www.twitch.tv/dj_mossa",
     "tekeela": "https://www.twitch.tv/tekeelatv",
     "sabellwind": "https://www.twitch.tv/sabellwind",
+    "judge-holdenn": "https://www.twitch.tv/woah_lp",
 }
 
 

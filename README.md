@@ -1,4 +1,4 @@
-# OctoBot v1.0.24
+# OctoBot v1.0.25
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -18,7 +18,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - Each scheduled show is pinged to `DISCORD_RADIO_PING_ROLE_ID` in `DISCORD_RADIO_CHANNEL_ID` at its scheduled start time, naming the DJ from the station schedule. `DISCORD_RADIO_EXTRA_CHANNEL_IDS` receives the same announcement without the role ping. One ping per show; a start missed while the bot was down is still announced if the show is under 10 minutes in.
   - When an announced show's scheduled end passes, the `/nextshows` list is posted to the same channel automatically (no ping), once per show.
   - `RADIO_LIVE_ALERTS=true` additionally pings when a DJ goes live outside the schedule.
-  - The ping lists three ways to listen: in-game radio, the radio website, and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind are built in; `RADIO_DJ_STREAMS` overrides the table).
+  - The ping lists three ways to listen: in-game radio, the radio website, and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind and Judge Holdenn are built in, matched against the show name the station reports; `RADIO_DJ_STREAMS` overrides the table). A show with no configured stream simply omits the Twitch line.
 - Tracker command role configuration under `/config command-role`
 - `/authcheck` is open to everyone but only works in the channel set by `DISCORD_AUTHCHECK_CHANNEL_ID` (default `1547064843909988433`)
 
@@ -245,3 +245,7 @@ The status channel already kept one message and edited it, but a lost message id
 ## v1.0.24 one message per kind in the status channel
 
 Incident/report alerts and automatic authentication diagnostics were posted as new messages each time and piled up beside the status embed. All three now keep a single message that is edited in place, and the monitor adopts and de-duplicates whatever is already in the channel.
+
+## v1.0.25 Judge Holdenn's Twitch link
+
+"The Hold with Judge Holdenn" now links to twitch.tv/woah_lp in the radio announcement.
