@@ -84,6 +84,9 @@ class Monitor:
         self._announcement_lock = asyncio.Lock()
         self._patch_note_lock = asyncio.Lock()
         self._last_health_signature = None
+        # Channel ids already reported as missing, so a wrong id in .env is logged
+        # once rather than every poll.
+        self._unreachable_channels: set[int] = set()
 
     def start(self) -> None:
         if self._tasks:
@@ -360,17 +363,44 @@ class Monitor:
     async def _get_channel(self, channel_id: int) -> object | None:
         channel = self.bot.get_channel(channel_id)
         if channel is not None:
+            self._unreachable_channels.discard(channel_id)
             return channel
         try:
-            return await self.bot.fetch_channel(channel_id)
-        except (discord.Forbidden, discord.NotFound, discord.HTTPException):
-            LOGGER.exception("Could not access Discord channel %s", channel_id)
+            channel = await self.bot.fetch_channel(channel_id)
+        except discord.NotFound:
+            # A deleted channel or a wrong id in .env: it will not fix itself, and
+            # the status poll asks every few seconds, so say it once and stay quiet.
+            self._report_unreachable_channel(
+                channel_id,
+                "Channel %s does not exist. Check the channel ids in .env.",
+            )
             return None
+        except discord.Forbidden:
+            self._report_unreachable_channel(
+                channel_id,
+                "No access to channel %s. Check the bot's permissions there.",
+            )
+            return None
+        except discord.HTTPException:
+            LOGGER.warning("Could not reach Discord channel %s; will retry", channel_id)
+            return None
+        self._unreachable_channels.discard(channel_id)
+        return channel
+
+    def _report_unreachable_channel(self, channel_id: int, message: str) -> None:
+        """Log a misconfigured channel once, not on every poll."""
+        if channel_id in self._unreachable_channels:
+            LOGGER.debug(message, channel_id)
+            return
+        self._unreachable_channels.add(channel_id)
+        LOGGER.error(message, channel_id)
 
     async def _send_embed(self, channel_id: int, embed: discord.Embed) -> bool:
         channel = await self._get_channel(channel_id)
         if channel is None or not hasattr(channel, "send"):
-            LOGGER.error("Discord channel %s cannot receive messages", channel_id)
+            self._report_unreachable_channel(
+                channel_id, "Discord channel %s cannot receive messages"
+            )
             return False
         try:
             await channel.send(embed=embed)
@@ -410,7 +440,9 @@ class Monitor:
         """
         channel = await self._get_channel(channel_id)
         if channel is None or not hasattr(channel, "send"):
-            LOGGER.error("Channel %s cannot receive messages", channel_id)
+            self._report_unreachable_channel(
+                channel_id, "Channel %s cannot receive messages"
+            )
             return False
 
         message_id = await self.database.get_metadata(metadata_key)

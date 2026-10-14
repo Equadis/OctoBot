@@ -216,5 +216,68 @@ class StatusMessageTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self.db.get_metadata(self.key), "70")
 
 
+class MissingChannelTests(unittest.IsolatedAsyncioTestCase):
+    """A deleted channel or a wrong id in .env must not spam the log every poll."""
+
+    async def asyncSetUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.db = Database(Path(self.temp.name) / "octobot.db")
+        await self.db.connect()
+
+    async def asyncTearDown(self) -> None:
+        await self.db.close()
+        self.temp.cleanup()
+
+    def monitor(self, error: Exception) -> Monitor:
+        class _Bot:
+            user = SimpleNamespace(id=BOT_ID)
+
+            def get_channel(self, channel_id):
+                return None
+
+            async def fetch_channel(self, channel_id):
+                raise error
+
+        return Monitor(
+            bot=_Bot(),
+            config=Config(
+                token="t", guild_id=1, status_channel_id=CHANNEL,
+                alert_channel_id=None, announcement_channel_id=None,
+            ),
+            database=self.db, status_client=None, auth_probe=None,
+            announcement_client=None,
+        )
+
+    async def test_a_deleted_channel_is_reported_once(self) -> None:
+        gone = discord.NotFound(SimpleNamespace(status=404, reason="x"), "Unknown Channel")
+        monitor = self.monitor(gone)
+        with self.assertLogs("octotracker.monitor", level="ERROR") as captured:
+            self.assertIsNone(await monitor._get_channel(CHANNEL))
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn(".env", captured.records[0].getMessage())
+
+        # Every later poll stays quiet at ERROR level.
+        with self.assertLogs("octotracker.monitor", level="DEBUG") as captured:
+            for _ in range(5):
+                self.assertIsNone(await monitor._get_channel(CHANNEL))
+        self.assertEqual([r.levelname for r in captured.records], ["DEBUG"] * 5)
+
+    async def test_a_forbidden_channel_names_permissions(self) -> None:
+        denied = discord.Forbidden(SimpleNamespace(status=403, reason="x"), "nope")
+        monitor = self.monitor(denied)
+        with self.assertLogs("octotracker.monitor", level="ERROR") as captured:
+            self.assertIsNone(await monitor._get_channel(CHANNEL))
+        self.assertIn("permissions", captured.records[0].getMessage())
+
+    async def test_a_transient_failure_keeps_warning_and_can_recover(self) -> None:
+        flaky = discord.HTTPException(SimpleNamespace(status=500, reason="x"), "boom")
+        monitor = self.monitor(flaky)
+        with self.assertLogs("octotracker.monitor", level="WARNING") as captured:
+            for _ in range(3):
+                self.assertIsNone(await monitor._get_channel(CHANNEL))
+        # Not silenced: a transient fault may clear, unlike a wrong id.
+        self.assertEqual(len(captured.records), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

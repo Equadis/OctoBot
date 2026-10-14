@@ -1,4 +1,4 @@
-# OctoBot v1.0.26
+# OctoBot v1.0.27
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -253,3 +253,7 @@ Incident/report alerts and automatic authentication diagnostics were posted as n
 ## v1.0.26 complete sample environment
 
 `.env.example` now carries every setting the loader reads, so the only thing to fill in is `DISCORD_TOKEN`. `REQUEST_TIMEOUT_SECONDS` and `CONNECTIVITY_TIMEOUT_SECONDS` were the two that had never been documented.
+
+## v1.0.27 new status channel, quieter channel errors
+
+The sample environment points the status and alert channels at `1559989373921923173`. A deleted channel or a wrong id in `.env` is now reported once with a readable message instead of a traceback on every poll.
