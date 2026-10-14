@@ -1,4 +1,4 @@
-# OctoBot v1.0.23
+# OctoBot v1.0.24
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -8,7 +8,8 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
-- The status channel holds a single message that is edited in place on every poll. If its stored id is ever lost, the bot adopts the status message already in the channel and deletes any duplicates instead of posting another.
+- The status channel holds one message of each kind, edited in place rather than reposted: the server status embed, the latest incident/report alert, and the latest authentication diagnostic. If a stored message id is lost, the bot adopts its own earlier message of that kind and deletes any duplicates.
+- `STATUS_POLL_SECONDS` sets how often the status message is refreshed.
 - Official announcement monitoring and `/announcement`
 - Patch note monitoring and `/patchnote` — reads the Patch Notes and Changelog forum and posts each new topic to `DISCORD_PATCH_NOTE_CHANNEL_ID` (defaults to the announcement channel)
 - Community `/report`, `/reports`, moderator report tools
@@ -240,3 +241,7 @@ The invite filter now times out for 2 minutes rather than an hour. `INVITE_FILTE
 ## v1.0.23 one status message, always
 
 The status channel already kept one message and edited it, but a lost message id made it post a second and leave the first behind. It now finds its own earlier status message, reuses it and deletes any duplicates.
+
+## v1.0.24 one message per kind in the status channel
+
+Incident/report alerts and automatic authentication diagnostics were posted as new messages each time and piled up beside the status embed. All three now keep a single message that is edited in place, and the monitor adopts and de-duplicates whatever is already in the channel.

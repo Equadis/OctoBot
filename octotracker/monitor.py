@@ -38,9 +38,26 @@ from .status import (
 
 LOGGER = logging.getLogger(__name__)
 
-# The status channel holds exactly one bot message, edited in place. These let the
-# monitor recognise its own earlier message when the stored id has been lost.
+# Each of these is a single standing message, edited in place rather than reposted.
+# The title sets let the monitor recognise its own earlier message when the stored
+# id has been lost, so a channel converges on one message of each kind by itself.
 STATUS_EMBED_TITLE = "OctoBot — Server Status"
+STATUS_EMBED_TITLES = frozenset({
+    STATUS_EMBED_TITLE,
+    "OctoTracker — Server Status",  # pre-1.0.23 name, adopted and reused
+})
+AUTH_DIAGNOSTIC_TITLES = frozenset({"OctoWoW authentication diagnostic"})
+ALERT_EMBED_TITLES = frozenset({
+    "🟠 Community connection issues reported",
+    "🟢 Community reports cleared",
+    "🔴 OctoWoW authentication degraded",
+    "🟢 OctoWoW authentication recovered",
+    "🟢 OctoWoW service recovered",
+    "🔴 OctoWoW outage confirmed",
+    "🟠 OctoWoW outage confirmed",
+    "🟡 OctoWoW outage confirmed",
+    "⚪ OctoWoW outage confirmed",
+})
 STATUS_MESSAGE_SCAN_LIMIT = 50
 
 
@@ -109,9 +126,12 @@ class Monitor:
         if channel_id is None:
             return
 
-        await self._send_embed(
+        await self.upsert_standing_message(
             channel_id,
+            f"auth_diagnostic_message_id:{channel_id}",
             authcheck_embed(result),
+            AUTH_DIAGNOSTIC_TITLES,
+            label="authentication diagnostic",
         )
 
     @staticmethod
@@ -365,48 +385,69 @@ class Monitor:
         channel_id = self.config.status_channel_id
         if channel_id is None:
             return
+        await self.upsert_standing_message(
+            channel_id,
+            f"status_message_id:{channel_id}",
+            await self.make_status_embed(snapshot),
+            STATUS_EMBED_TITLES,
+            label="status",
+        )
+
+    async def upsert_standing_message(
+        self,
+        channel_id: int,
+        metadata_key: str,
+        embed: discord.Embed,
+        titles: frozenset[str],
+        *,
+        label: str,
+    ) -> bool:
+        """Keep exactly one message of this kind in the channel, edited in place.
+
+        The stored id is used first. When it is gone (new database, cleared
+        metadata, deleted message) the monitor adopts its own earlier message of
+        the same kind and deletes any duplicates, so the channel converges on one.
+        """
         channel = await self._get_channel(channel_id)
         if channel is None or not hasattr(channel, "send"):
-            LOGGER.error("Status channel %s cannot receive messages", channel_id)
-            return
+            LOGGER.error("Channel %s cannot receive messages", channel_id)
+            return False
 
-        embed = await self.make_status_embed(snapshot)
-        metadata_key = f"status_message_id:{channel_id}"
         message_id = await self.database.get_metadata(metadata_key)
-
         if message_id and hasattr(channel, "fetch_message"):
             try:
                 message = await channel.fetch_message(int(message_id))
                 await message.edit(embed=embed)
-                return
+                return True
             except discord.NotFound:
-                LOGGER.warning("Stored status message no longer exists; looking for another")
+                LOGGER.warning("The %s message is gone; looking for another", label)
             except (discord.Forbidden, discord.HTTPException, ValueError):
-                LOGGER.exception("Could not update the persistent status message")
-                return
+                LOGGER.exception("Could not update the %s message", label)
+                return False
 
-        # The id is gone (new database, cleared metadata, deleted message). Reuse the
-        # status message already in the channel rather than leaving the old one behind
-        # and adding a second, so the channel only ever holds one.
-        existing = await self._find_existing_status_message(channel)
+        existing = await self._find_standing_message(channel, titles, label)
         if existing is not None:
             try:
                 await existing.edit(embed=embed)
                 await self.database.set_metadata(metadata_key, str(existing.id))
-                LOGGER.info("Reused the existing status message %s", existing.id)
-                return
+                LOGGER.info("Reused the existing %s message %s", label, existing.id)
+                return True
             except (discord.Forbidden, discord.HTTPException):
-                LOGGER.exception("Could not reuse the existing status message")
-                return
+                LOGGER.exception("Could not reuse the existing %s message", label)
+                return False
 
         try:
             message = await channel.send(embed=embed)
             await self.database.set_metadata(metadata_key, str(message.id))
+            return True
         except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not create the persistent status message")
+            LOGGER.exception("Could not create the %s message", label)
+            return False
 
-    async def _find_existing_status_message(self, channel: object):
-        """The bot's own status message in this channel, with any duplicates removed.
+    async def _find_standing_message(
+        self, channel: object, titles: frozenset[str], label: str
+    ):
+        """The bot's own message of this kind, with any duplicates removed.
 
         Returns the newest one found, or None. Older copies are deleted, so a channel
         that already accumulated several is tidied up on the next poll.
@@ -419,10 +460,10 @@ class Monitor:
             async for message in channel.history(limit=STATUS_MESSAGE_SCAN_LIMIT):
                 if message.author.id != me.id or not message.embeds:
                     continue
-                if (message.embeds[0].title or "") == STATUS_EMBED_TITLE:
+                if (message.embeds[0].title or "") in titles:
                     found.append(message)
         except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not read channel %s while looking for the status message", channel)
+            LOGGER.exception("Could not read channel %s looking for the %s message", channel, label)
             return None
         if not found:
             return None
@@ -432,10 +473,17 @@ class Monitor:
             try:
                 await message.delete()
             except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-                LOGGER.warning("Could not remove the duplicate status message %s", message.id)
+                LOGGER.warning("Could not remove the duplicate %s message %s", label, message.id)
         if stale:
-            LOGGER.info("Removed %s duplicate status message(s)", len(stale))
+            LOGGER.info("Removed %s duplicate %s message(s)", len(stale), label)
         return newest
+
+    async def _upsert_alert(self, channel_id: int, embed: discord.Embed) -> bool:
+        """Show the newest incident alert in one standing message."""
+        return await self.upsert_standing_message(
+            channel_id, f"alert_message_id:{channel_id}", embed, ALERT_EMBED_TITLES,
+            label="alert",
+        )
 
     async def _send_pending_incident_alerts(
         self, snapshot: StatusSnapshot
@@ -446,7 +494,7 @@ class Monitor:
 
         for notification in await self.database.pending_incident_alerts():
             embed = self._incident_embed(snapshot, notification)
-            if not await self._send_embed(channel_id, embed):
+            if not await self._upsert_alert(channel_id, embed):
                 break
             await self.database.mark_incident_alert_sent(
                 notification.incident.incident_id, notification.kind
@@ -459,7 +507,7 @@ class Monitor:
 
         for notification in await self.database.pending_auth_incident_alerts():
             embed = self._auth_incident_embed(notification)
-            if not await self._send_embed(channel_id, embed):
+            if not await self._upsert_alert(channel_id, embed):
                 break
             await self.database.mark_auth_incident_alert_sent(
                 notification.incident.incident_id, notification.kind
@@ -476,7 +524,7 @@ class Monitor:
             self.config.guild_id
         ):
             embed = self._report_incident_embed(notification, snapshot)
-            if not await self._send_embed(channel_id, embed):
+            if not await self._upsert_alert(channel_id, embed):
                 break
             await self.database.mark_report_incident_alert_sent(
                 notification.incident.incident_id, notification.kind

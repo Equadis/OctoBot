@@ -9,7 +9,13 @@ import discord
 
 from octotracker.config import Config
 from octotracker.database import Database
-from octotracker.monitor import STATUS_EMBED_TITLE, Monitor
+from octotracker.monitor import (
+    ALERT_EMBED_TITLES,
+    AUTH_DIAGNOSTIC_TITLES,
+    STATUS_EMBED_TITLE,
+    STATUS_EMBED_TITLES,
+    Monitor,
+)
 
 CHANNEL = 555
 BOT_ID = 1
@@ -149,6 +155,55 @@ class StatusMessageTests(unittest.IsolatedAsyncioTestCase):
         for message in (someone_else, alert, plain):
             self.assertFalse(message.deleted, message.id)
             self.assertEqual(message.edits, [])
+
+    async def test_the_previous_octotracker_title_is_adopted(self) -> None:
+        # Installs upgrading from before the rename must reuse their old message.
+        old = _Message(80, title="OctoTracker — Server Status")
+        channel = _Channel([old])
+        monitor = self.monitor(channel)
+        await monitor._update_status_message(None)
+        self.assertEqual(channel.sent, [])
+        self.assertEqual(len(old.edits), 1)
+        self.assertEqual(await self.db.get_metadata(self.key), "80")
+
+    async def test_alerts_and_diagnostics_each_keep_one_message(self) -> None:
+        channel = _Channel()
+        monitor = self.monitor(channel)
+        alert = discord.Embed(title="🟠 Community connection issues reported")
+        cleared = discord.Embed(title="🟢 Community reports cleared")
+        diagnostic = discord.Embed(title="OctoWoW authentication diagnostic")
+
+        await monitor._upsert_alert(CHANNEL, alert)
+        await monitor._upsert_alert(CHANNEL, cleared)
+        await monitor.upsert_standing_message(
+            CHANNEL, f"auth_diagnostic_message_id:{CHANNEL}", diagnostic,
+            AUTH_DIAGNOSTIC_TITLES, label="authentication diagnostic",
+        )
+        await monitor.upsert_standing_message(
+            CHANNEL, f"auth_diagnostic_message_id:{CHANNEL}", diagnostic,
+            AUTH_DIAGNOSTIC_TITLES, label="authentication diagnostic",
+        )
+        # One alert message and one diagnostic message, each edited after creation.
+        self.assertEqual(len(channel.sent), 2)
+        self.assertEqual(len(channel.messages), 2)
+
+    async def test_every_alert_title_is_recognised_as_the_same_message(self) -> None:
+        for title in ALERT_EMBED_TITLES:
+            with self.subTest(title=title):
+                channel = _Channel([_Message(10, title=title)])
+                monitor = self.monitor(channel)
+                await monitor._upsert_alert(CHANNEL, discord.Embed(title=title))
+                self.assertEqual(channel.sent, [], title)
+
+    async def test_the_status_message_and_an_alert_do_not_adopt_each_other(self) -> None:
+        alert_message = _Message(10, title="🟢 Community reports cleared")
+        channel = _Channel([alert_message])
+        monitor = self.monitor(channel)
+        await monitor._update_status_message(None)
+        # The alert is not a status message, so a status message is created.
+        self.assertEqual(len(channel.sent), 1)
+        self.assertFalse(alert_message.deleted)
+        self.assertEqual(alert_message.edits, [])
 
     async def test_a_deleted_stored_message_is_replaced_not_duplicated(self) -> None:
         survivor = _Message(70)
