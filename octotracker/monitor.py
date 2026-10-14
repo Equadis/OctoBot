@@ -38,6 +38,11 @@ from .status import (
 
 LOGGER = logging.getLogger(__name__)
 
+# The status channel holds exactly one bot message, edited in place. These let the
+# monitor recognise its own earlier message when the stored id has been lost.
+STATUS_EMBED_TITLE = "OctoBot — Server Status"
+STATUS_MESSAGE_SCAN_LIMIT = 50
+
 
 class Monitor:
     def __init__(
@@ -375,9 +380,23 @@ class Monitor:
                 await message.edit(embed=embed)
                 return
             except discord.NotFound:
-                LOGGER.warning("Stored status message no longer exists; recreating it")
+                LOGGER.warning("Stored status message no longer exists; looking for another")
             except (discord.Forbidden, discord.HTTPException, ValueError):
                 LOGGER.exception("Could not update the persistent status message")
+                return
+
+        # The id is gone (new database, cleared metadata, deleted message). Reuse the
+        # status message already in the channel rather than leaving the old one behind
+        # and adding a second, so the channel only ever holds one.
+        existing = await self._find_existing_status_message(channel)
+        if existing is not None:
+            try:
+                await existing.edit(embed=embed)
+                await self.database.set_metadata(metadata_key, str(existing.id))
+                LOGGER.info("Reused the existing status message %s", existing.id)
+                return
+            except (discord.Forbidden, discord.HTTPException):
+                LOGGER.exception("Could not reuse the existing status message")
                 return
 
         try:
@@ -385,6 +404,38 @@ class Monitor:
             await self.database.set_metadata(metadata_key, str(message.id))
         except (discord.Forbidden, discord.HTTPException):
             LOGGER.exception("Could not create the persistent status message")
+
+    async def _find_existing_status_message(self, channel: object):
+        """The bot's own status message in this channel, with any duplicates removed.
+
+        Returns the newest one found, or None. Older copies are deleted, so a channel
+        that already accumulated several is tidied up on the next poll.
+        """
+        me = self.bot.user
+        if me is None or not hasattr(channel, "history"):
+            return None
+        found = []
+        try:
+            async for message in channel.history(limit=STATUS_MESSAGE_SCAN_LIMIT):
+                if message.author.id != me.id or not message.embeds:
+                    continue
+                if (message.embeds[0].title or "") == STATUS_EMBED_TITLE:
+                    found.append(message)
+        except (discord.Forbidden, discord.HTTPException):
+            LOGGER.exception("Could not read channel %s while looking for the status message", channel)
+            return None
+        if not found:
+            return None
+
+        newest, *stale = found  # history() yields newest first.
+        for message in stale:
+            try:
+                await message.delete()
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                LOGGER.warning("Could not remove the duplicate status message %s", message.id)
+        if stale:
+            LOGGER.info("Removed %s duplicate status message(s)", len(stale))
+        return newest
 
     async def _send_pending_incident_alerts(
         self, snapshot: StatusSnapshot

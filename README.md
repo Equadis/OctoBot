@@ -1,4 +1,4 @@
-# OctoBot v1.0.22
+# OctoBot v1.0.23
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -8,6 +8,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
+- The status channel holds a single message that is edited in place on every poll. If its stored id is ever lost, the bot adopts the status message already in the channel and deletes any duplicates instead of posting another.
 - Official announcement monitoring and `/announcement`
 - Patch note monitoring and `/patchnote` — reads the Patch Notes and Changelog forum and posts each new topic to `DISCORD_PATCH_NOTE_CHANNEL_ID` (defaults to the announcement channel)
 - Community `/report`, `/reports`, moderator report tools
@@ -235,3 +236,7 @@ Invites to other Discord servers are deleted and the poster timed out for an hou
 ## v1.0.22 invite filter timeout default
 
 The invite filter now times out for 2 minutes rather than an hour. `INVITE_FILTER_TIMEOUT` still overrides it.
+
+## v1.0.23 one status message, always
+
+The status channel already kept one message and edited it, but a lost message id made it post a second and leave the first behind. It now finds its own earlier status message, reuses it and deletes any duplicates.
