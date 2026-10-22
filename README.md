@@ -1,4 +1,4 @@
-# OctoBot v1.0.27
+# OctoBot v1.0.28
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -12,6 +12,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - `STATUS_POLL_SECONDS` sets how often the status message is refreshed.
 - Official announcement monitoring and `/announcement`
 - Patch note monitoring and `/patchnote` — reads the Patch Notes and Changelog forum and posts each new topic to `DISCORD_PATCH_NOTE_CHANNEL_ID` (defaults to the announcement channel)
+- Automatic forum posts ping a role: `DISCORD_ANNOUNCEMENT_PING_ROLE_ID` for announcements and `DISCORD_PATCH_NOTE_PING_ROLE_ID` for patch notes. A post split across several embeds pings only on its opening page, and the `/announcement` and `/patchnote` commands never ping.
 - Community `/report`, `/reports`, moderator report tools
 - Booty Bay Pirate Radio monitoring and `/radio`
 - `/nextshows` lists every upcoming scheduled show in the next `RADIO_SCHEDULE_DAYS` (default 14) with absolute (`<t:…:f>`) and relative (`<t:…:R>`) Discord timestamps plus the DJ's Twitch link; same access rule as `/radio`.
@@ -257,3 +258,7 @@ Incident/report alerts and automatic authentication diagnostics were posted as n
 ## v1.0.27 new status channel, quieter channel errors
 
 The sample environment points the status and alert channels at `1559989373921923173`. A deleted channel or a wrong id in `.env` is now reported once with a readable message instead of a traceback on every poll.
+
+## v1.0.28 role pings on automatic forum posts
+
+New announcements ping `1562868331885633579` and new patch notes ping `1562868317193248939`. Only the opening page of a multi-page post pings, and the commands stay silent.

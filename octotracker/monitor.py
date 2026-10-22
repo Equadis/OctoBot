@@ -283,6 +283,7 @@ class Monitor:
             kind="announcement",
             channel_id=self.config.announcement_channel_id,
             lock=self._announcement_lock,
+            ping_role_id=self.config.announcement_ping_role_id,
         )
 
     async def check_patch_notes(self) -> None:
@@ -293,6 +294,7 @@ class Monitor:
             kind="patch_note",
             channel_id=self.config.patch_note_channel_id,
             lock=self._patch_note_lock,
+            ping_role_id=self.config.patch_note_ping_role_id,
         )
 
     async def _check_forum(
@@ -302,6 +304,7 @@ class Monitor:
         kind: str,
         channel_id: int | None,
         lock: asyncio.Lock,
+        ping_role_id: int | None = None,
     ) -> None:
         """Store new topics from one forum and post the ones not yet delivered."""
         async with lock:
@@ -332,7 +335,9 @@ class Monitor:
                 )
                 delivery_failed = False
                 for page_number, embed in enumerate(pages[progress:], start=progress + 1):
-                    if not await self._send_embed(channel_id, embed):
+                    # Only the opening page pings, so a long post notifies once.
+                    ping = ping_role_id if page_number == 1 else None
+                    if not await self._send_embed(channel_id, embed, ping_role_id=ping):
                         delivery_failed = True
                         break
                     await self.database.mark_announcement_page_sent(
@@ -395,15 +400,26 @@ class Monitor:
         self._unreachable_channels.add(channel_id)
         LOGGER.error(message, channel_id)
 
-    async def _send_embed(self, channel_id: int, embed: discord.Embed) -> bool:
+    async def _send_embed(
+        self, channel_id: int, embed: discord.Embed, *, ping_role_id: int | None = None
+    ) -> bool:
         channel = await self._get_channel(channel_id)
         if channel is None or not hasattr(channel, "send"):
             self._report_unreachable_channel(
                 channel_id, "Discord channel %s cannot receive messages"
             )
             return False
+        content = f"<@&{ping_role_id}>" if ping_role_id is not None else None
+        allowed_mentions = (
+            discord.AllowedMentions(
+                everyone=False, users=False, replied_user=False,
+                roles=[discord.Object(id=ping_role_id)],
+            )
+            if ping_role_id is not None
+            else discord.AllowedMentions.none()
+        )
         try:
-            await channel.send(embed=embed)
+            await channel.send(content=content, embed=embed, allowed_mentions=allowed_mentions)
             return True
         except (discord.Forbidden, discord.HTTPException):
             LOGGER.exception("Could not send a message to channel %s", channel_id)

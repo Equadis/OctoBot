@@ -133,6 +133,10 @@ class Config:
     announcement_channel_id: int | None
     # Where new patch notes are posted. Defaults to the announcement channel.
     patch_note_channel_id: int | None = None
+    # Roles pinged by the automatic forum posts. Only the opening page pings, and
+    # the /announcement and /patchnote commands never do.
+    announcement_ping_role_id: int | None = 1562868331885633579
+    patch_note_ping_role_id: int | None = 1562868317193248939
     status_poll_seconds: int = 30
     announcement_poll_seconds: int = 90
     confirmation_checks: int = 3
@@ -214,6 +218,16 @@ class Config:
             patch_note_channel_id=(
                 _discord_id("DISCORD_PATCH_NOTE_CHANNEL_ID")
                 or _discord_id("DISCORD_ANNOUNCEMENT_CHANNEL_ID")
+            ),
+            announcement_ping_role_id=(
+                _discord_id("DISCORD_ANNOUNCEMENT_PING_ROLE_ID")
+                if os.getenv("DISCORD_ANNOUNCEMENT_PING_ROLE_ID") is not None
+                else 1562868331885633579
+            ),
+            patch_note_ping_role_id=(
+                _discord_id("DISCORD_PATCH_NOTE_PING_ROLE_ID")
+                if os.getenv("DISCORD_PATCH_NOTE_PING_ROLE_ID") is not None
+                else 1562868317193248939
             ),
             status_poll_seconds=_positive_int("STATUS_POLL_SECONDS", 30),
             announcement_poll_seconds=_positive_int(
