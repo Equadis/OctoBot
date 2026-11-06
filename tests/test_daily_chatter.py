@@ -123,6 +123,7 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         cog, _, _, _, _ = await self.make_cog()
         def msg(mid, **kwargs):
             base = dict(id=mid, guild=NS(id=123), author=NS(id=5, bot=False),
+                        channel=NS(id=789, parent_id=None),
                         webhook_id=None, created_at=END - timedelta(minutes=1), is_system=lambda: False)
             base.update(kwargs)
             return NS(**base)
@@ -132,5 +133,9 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         await cog.on_message(msg(103, author=NS(id=6, bot=True)))
         await cog.on_message(msg(104, webhook_id=123))
         await cog.on_message(msg(105, is_system=lambda: True))
-        self.assertEqual(dict(await self.store.counts(END))[5], 1)
+        for index, channel_id in enumerate((1547025818914525254, 1547064843909988433)):
+            await cog.on_message(msg(110 + index, channel=NS(id=channel_id, parent_id=None)))
+            await cog.on_message(msg(120 + index, channel=NS(id=999, parent_id=channel_id)))
+        await cog.on_message(msg(130, channel=NS(id=998, parent_id=789)))
+        self.assertEqual(dict(await self.store.counts(END))[5], 2)
         self.assertNotIn(6, dict(await self.store.counts(END)))

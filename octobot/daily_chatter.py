@@ -12,6 +12,7 @@ from discord.ext import commands, tasks
 
 log = logging.getLogger(__name__)
 UTC = timezone.utc
+EXCLUDED_CHANNEL_IDS = frozenset({1547025818914525254, 1547064843909988433})
 
 
 def latest_boundary(now: datetime) -> datetime:
@@ -146,6 +147,9 @@ class DailyChatterCog(commands.Cog):
                 or message.guild.id != self.bot.config.guild_id
                 or message.author.bot or message.webhook_id is not None
                 or message.is_system()):
+            return
+        if (message.channel.id in EXCLUDED_CHANNEL_IDS
+                or getattr(message.channel, "parent_id", None) in EXCLUDED_CHANNEL_IDS):
             return
         async with self.lock:
             await self.store.record(message)

@@ -1,4 +1,4 @@
-# OctoBot v1.0.30
+# OctoBot v1.0.31
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -303,3 +303,10 @@ use the show title in the pirate greeting and list Website · Twitch · Discord 
 in that order (Twitch is omitted when no stream is known). The live embed keeps the
 show details and ordered listen links but has no footer or bottom timestamp. Automatic
 post-show schedule messages are removed; `/nextshows` remains available on demand.
+
+### v1.0.31 daily chatter exclusions
+
+Messages in channels `1547025818914525254` and `1547064843909988433`, including
+their threads, no longer count towards Daily Top Chatter after updating and restarting.
+Previously recorded messages cannot be filtered retroactively because the earlier
+counter did not store channel IDs.
