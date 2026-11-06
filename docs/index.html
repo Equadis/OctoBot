@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="octobot-version" content="1.0.42">
+<meta name="octobot-version" content="1.0.43">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="OctoWoW population history from real observations, with source freshness and clearly labelled estimates.">
 <title>OctoBot · Server Info</title>
@@ -133,6 +133,17 @@ async function refreshLive(){
    }
   }
  }catch(e){console.warn('Live population feed temporarily unavailable',e);}
+ // Extend the active N'Zoth chart with each new real minute reading, without
+ // waiting for the slower archived-history refresh.
+ if(telemetryEndpoint&&realm==='nzoth'){
+  const latest=liveRow('nzoth');
+  if(latest&&(!rows.length||latest.t>rows[rows.length-1].t)){
+   rows.push(latest);
+   now=Date.now();
+   draw();
+   return;
+  }
+ }
  updateHeadline();
 }
 

@@ -41,7 +41,7 @@ const worker={
   ctx.waitUntil(collect(env).catch(e=>console.error('Population collection failed:',e)));
  },
  async fetch(request,env){
-  if(request.method==='OPTIONS')return json({},204);
+  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'GET, OPTIONS'}});
   if(request.method!=='GET')return json({error:'method_not_allowed'},405);
   const url=new URL(request.url);
   try{

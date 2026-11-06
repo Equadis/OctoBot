@@ -20,6 +20,8 @@ test('GET endpoints return typed response without invented data',async()=>{
  assert.equal(history.has_more,false);
  const invalid=await worker.fetch(new Request(base+'/api/history?realm=bogus'),env);
  assert.equal(invalid.status,400);
+ const preflight=await worker.fetch(new Request(base+'/api/latest',{method:'OPTIONS'}),env);
+ assert.equal(preflight.status,204);
  const health=await (await worker.fetch(new Request(base+'/api/health'),env)).json();
  assert.equal(health.status,'no_observations');
 });
