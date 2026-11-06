@@ -10,24 +10,24 @@ on:
       - 'octobot/population.py'
       - '.github/workflows/population.yml'
 permissions:
-  contents: write
-  pages: write
-  id-token: write
-concurrency:
-  group: population-pages
-  cancel-in-progress: false
+  contents: read
 jobs:
-  collect-and-publish:
+  collect:
+    name: Collect population
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: population-history-write
+      cancel-in-progress: false
     env:
       POPULATION_YSHAARJ_URL: ${{ vars.POPULATION_YSHAARJ_URL }}
       POPULATION_CTHUN_URL: ${{ vars.POPULATION_CTHUN_URL }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -43,6 +43,25 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+  publish:
+    name: Publish history
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: population-pages-deploy
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
