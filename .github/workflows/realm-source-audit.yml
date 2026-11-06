@@ -31,6 +31,15 @@ jobs:
               print('PAGE',base,'bytes',len(html))
               scripts=[urljoin(base,s) for s in re.findall(r'<script\b[^>]*\bsrc\s*=\s*["\']([^"\']+)',html,re.I)]
               print('SCRIPTS',scripts[:30])
+              if '/player-census' in base:
+                  from html import unescape
+                  decoded=unescape(html)
+                  for match in list(re.finditer(r'wire:(?:click|poll|model)[^>]{0,280}|<[^>]{0,350}(?:census-online|census-realm|census-tab)[^>]*>',decoded,re.I))[:80]:
+                      print('CENSUS_ELEMENT',re.sub(r'\s+',' ',match.group(0))[:350])
+                  for phrase in ['Y\'Shaarj','C\'Thun','N\'Zoth','onlineCount','online_count','realmId','realm_id','onlineTotal','online_now','wire:snapshot','wire:poll','livewire']:
+                      for m in list(re.finditer(re.escape(phrase),decoded,re.I))[:5]:
+                          print('CENSUS_MATCH',phrase,re.sub(r'\s+',' ',decoded[max(0,m.start()-100):m.end()+240])[:360])
+
               for phrase in ['Players online now','N\'Zoth','Y\'Shaarj','C\'Thun','/api/','realmPopulation','serverStatus','onlineCount','player-census']:
                   i=html.lower().find(phrase.lower())
                   if i>=0: print('HTML_MATCH',phrase,re.sub(r'\s+',' ',html[max(0,i-130):i+220])[:400])
