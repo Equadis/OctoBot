@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from PIL import Image
 from octobot.serverinfo import (RANGES, ServerInfoCog, ServerInfoView, demo_samples,
-                               range_start, render_chart, selectable_indices)
+                               range_start, render_chart, selectable_indices, interactive_url)
 
 END = datetime(2026, 11, 6, 11, 26, 26, tzinfo=timezone.utc)
 
@@ -79,7 +79,9 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
         event = interaction()
         await command.callback(cog, event)
         sent = event.followup.send.call_args.kwargs
-        self.assertTrue(sent['ephemeral'])
+        self.assertFalse(sent.get('ephemeral', False))
+        self.assertTrue(sent['view'].shared)
+        self.assertIn('#at=', sent['embed'].url)
         self.assertEqual(sent['view'].period, '1W')
         self.assertIn('Synthetic test data', sent['embed'].description)
         sent['view'].stop()
@@ -88,9 +90,9 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
     async def test_view_permissions_and_range_time_changes(self):
         view = ServerInfoView(1, END)
         self.assertEqual(view.period, '1W')
-        for event in (interaction(admin=False), interaction(user=2), interaction(guild=None)):
+        for event in (interaction(user=2), interaction(guild=None)):
             self.assertFalse(await view.interaction_check(event))
-        self.assertTrue(await view.interaction_check(interaction()))
+        self.assertTrue(await view.interaction_check(interaction(admin=False)))
         for period in RANGES:
             event = interaction()
             button = next(c for c in view.children if getattr(c, 'period', None) == period)
@@ -108,7 +110,11 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
         event.edit_original_response.call_args.kwargs['attachments'][0].close()
         view.message = NS(edit=AsyncMock())
         await view.on_timeout()
-        self.assertTrue(all(item.disabled for item in view.children))
+        for item in view.children:
+            if getattr(item, 'url', None):
+                self.assertFalse(item.disabled)
+            else:
+                self.assertTrue(item.disabled)
         view.message.edit.assert_awaited_once()
         view.stop()
 
@@ -121,3 +127,32 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
         event.followup.send.assert_awaited_once()
         event.edit_original_response.call_args.kwargs['attachments'][0].close()
         view.stop()
+
+    async def test_public_buttons_fork_private_views_without_editing_public(self):
+        view = ServerInfoView(1, END, shared=True)
+        for uid, period in [(2, '1H'), (3, 'YTD')]:
+            event = interaction(admin=False, user=uid)
+            self.assertTrue(await view.interaction_check(event))
+            await view.update_chart(event, period=period)
+            event.edit_original_response.assert_not_awaited()
+            sent = event.followup.send.call_args.kwargs
+            private = sent['view']
+            self.assertTrue(sent['ephemeral'])
+            self.assertFalse(private.shared)
+            self.assertEqual(private.owner_id, uid)
+            self.assertEqual(private.period, period)
+            self.assertEqual(private.end, view.end)
+            self.assertTrue(await private.interaction_check(interaction(admin=False, user=uid)))
+            self.assertFalse(await private.interaction_check(interaction(admin=False, user=uid+10)))
+            self.assertEqual(view.period, '1W')
+            link = next(c for c in private.children if getattr(c, 'url', None))
+            self.assertEqual(link.url, interactive_url(END))
+            sent['file'].close()
+            private.stop()
+        view.stop()
+
+    async def test_invalid_config_does_not_publish_unsafe_link(self):
+        with patch.dict('os.environ', {'SERVERINFO_GRAPH_URL': 'javascript:alert(1)'}):
+            self.assertTrue(interactive_url(END).startswith('https://'))
+        with patch.dict('os.environ', {'SERVERINFO_GRAPH_URL': 'https://example.com/chart#theme=dark'}):
+            self.assertIn('theme=dark&at=', interactive_url(END))

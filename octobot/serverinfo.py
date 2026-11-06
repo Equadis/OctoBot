@@ -5,9 +5,11 @@ import asyncio
 import io
 import logging
 import math
+import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import discord
 from discord import app_commands
@@ -18,6 +20,18 @@ UTC = timezone.utc
 RANGES = ("1H", "1D", "1W", "1M", "1Y", "YTD")
 _RENDER_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
+DEFAULT_GRAPH_URL = "https://octobot-serverinfo.plainshortbread2.chatgpt.site/"
+
+
+def interactive_url(end: datetime) -> str:
+    base = os.getenv("SERVERINFO_GRAPH_URL", DEFAULT_GRAPH_URL).strip()
+    parts = urlsplit(base)
+    if parts.scheme not in ("https", "http") or not parts.netloc or parts.username or parts.password:
+        log.warning("Invalid SERVERINFO_GRAPH_URL; using the hosted demo")
+        parts = urlsplit(DEFAULT_GRAPH_URL)
+    fragment = dict(parse_qsl(parts.fragment))
+    fragment["at"] = str(int(end.timestamp()))
+    return urlunsplit(parts._replace(fragment=urlencode(fragment)))
 
 
 @dataclass(frozen=True)
@@ -168,9 +182,10 @@ class TimeSelect(discord.ui.Select):
 
 
 class ServerInfoView(discord.ui.View):
-    def __init__(self, owner_id: int, end: datetime | None = None):
+    def __init__(self, owner_id: int, end: datetime | None = None, *, shared: bool = False):
         super().__init__(timeout=600)
         self.owner_id = owner_id
+        self.shared = shared
         self.end = (end or datetime.now(UTC)).replace(microsecond=0)
         self.period = "1W"
         self.samples = demo_samples(self.end, self.period)
@@ -184,26 +199,27 @@ class ServerInfoView(discord.ui.View):
         for i, period in enumerate(RANGES):
             self.add_item(RangeButton(period, self.period, row=i // 3))
         self.add_item(TimeSelect(self.samples, self.selected))
+        self.add_item(discord.ui.Button(label="Open interactive graph ↗", style=discord.ButtonStyle.link,
+                                        url=interactive_url(self.end), row=3))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if (interaction.guild_id is not None and interaction.user.id == self.owner_id
-                and interaction.permissions.administrator):
+        if interaction.guild_id is not None and (self.shared or interaction.user.id == self.owner_id):
             return True
-        await interaction.response.send_message("This test panel is restricted to the administrator who opened it.",
+        await interaction.response.send_message("This private chart belongs to the person who opened it.",
                                                 ephemeral=True)
         return False
 
     def embed(self) -> discord.Embed:
         point = self.samples[self.selected]
         value = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
-        embed = discord.Embed(title="Server Info: Test Preview", colour=0x46DF88,
+        embed = discord.Embed(title="Server Info: Test Preview ↗", url=interactive_url(self.end), colour=0x46DF88,
                               description="**Synthetic test data: these are not live server statistics.**\n\n"
                               "Players online: **1019**. Max online: **2476**.\n"
                               "Server uptime: **2 Days 2 Hours 54 Minutes 59 Seconds**\n"
                               f"Server Time: **{self.end:%a, %d.%m.%Y %H:%M:%S} UTC**")
         embed.add_field(name=f"Selected time · {self.period}", value=f"{point.time:%d %b %Y %H:%M:%S} UTC: **{value}**", inline=False)
         embed.set_image(url="attachment://serverinfo.png")
-        embed.set_footer(text="Select a range or sampled time below. Image graphs cannot respond to hover. Controls expire after 10 minutes; run /serverinfo again.")
+        embed.set_footer(text="Open the interactive graph for hover details. Range buttons open your own private chart. Discord controls expire after 10 minutes; the web link stays available.")
         return embed
 
     async def attachment(self) -> discord.File:
@@ -212,6 +228,27 @@ class ServerInfoView(discord.ui.View):
 
     async def update_chart(self, interaction: discord.Interaction, *, period: str | None = None,
                            selected: int | None = None) -> None:
+        if self.shared:
+            # A shared Discord message cannot display a different attachment for each viewer.
+            # Fork a private view rather than editing the public panel or another user's chart.
+            await interaction.response.defer(thinking=True, ephemeral=True)
+            private = ServerInfoView(interaction.user.id, self.end)
+            if period is not None:
+                private.period = period
+                private.samples = demo_samples(self.end, period)
+                private.selected = len(private.samples) - 1
+            elif selected is not None:
+                private.selected = max(0, min(selected, len(private.samples) - 1))
+            private.rebuild_controls()
+            try:
+                attachment = await private.attachment()
+                private.message = await interaction.followup.send(embed=private.embed(), file=attachment,
+                                                                 view=private, ephemeral=True, wait=True)
+            except Exception:
+                private.stop()
+                log.exception("Could not open private server-info chart")
+                await interaction.followup.send("Could not generate your chart. Try again.", ephemeral=True)
+            return
         await interaction.response.defer()
         async with self.lock:
             old = self.period, self.samples, self.selected
@@ -234,7 +271,8 @@ class ServerInfoView(discord.ui.View):
     async def on_timeout(self) -> None:
         async with self.lock:
             for item in self.children:
-                item.disabled = True
+                if not isinstance(item, discord.ui.Button) or item.url is None:
+                    item.disabled = True
             if self.message is not None:
                 try:
                     await self.message.edit(view=self)
@@ -251,12 +289,12 @@ class ServerInfoCog(commands.Cog):
         if interaction.guild_id is None or not interaction.permissions.administrator:
             await interaction.response.send_message("This test command requires Discord Administrator permission.", ephemeral=True)
             return
-        await interaction.response.defer(thinking=True, ephemeral=True)
-        view = ServerInfoView(interaction.user.id)
+        await interaction.response.defer(thinking=True)
+        view = ServerInfoView(interaction.user.id, shared=True)
         try:
             attachment = await view.attachment()
             view.message = await interaction.followup.send(embed=view.embed(), file=attachment,
-                                                          view=view, ephemeral=True, wait=True)
+                                                          view=view, wait=True)
         except Exception:
             view.stop()
             log.exception("Could not open server-info preview")

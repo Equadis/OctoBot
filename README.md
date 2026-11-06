@@ -1,14 +1,14 @@
-# OctoBot v1.0.33
+# OctoBot v1.0.34
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
 ## Included systems
 
 ### OctoTracker
-- `/serverinfo`: admin-only, private test panel with **synthetic data only**. Opens on **1W**; **1H / 1D / 1W / 1M / 1Y / YTD** buttons redraw a green population chart in the same message. A sampled-time dropdown moves the dot and displays the exact value; simulated outages use a dashed red line and **SERVER DOWN**. Controls expire after 10 minutes. Install the updated requirements and restart the bot to sync the command.
-  - Restricted by both Discord default command permissions and runtime Administrator checks, including every chart interaction. Only the admin who opens the private panel can operate it.
+- `/serverinfo`: admin-only command posting a public test panel with **synthetic data only**. Opens on **1W**; **1H / 1D / 1W / 1M / 1Y / YTD** buttons open a private green population chart for the person clicking, then redraw that private chart in place. A sampled-time dropdown moves the dot and displays the exact value; simulated outages use a dashed red line and **SERVER DOWN**. Controls expire after 10 minutes. Install the updated requirements and restart the bot to sync the command.
+  - Posting remains restricted by both Discord default command permissions and runtime Administrator checks. Everyone can use the public panel controls: a range or sampled-time click opens a private chart owned by that person, leaving the public 1W image unchanged.
   - This prototype does not scrape live data, persist history, or claim historical/YTD coverage. All headline stats and chart points are synthetic, including the current timestamp used as the demo server clock. 1M is a rolling 30 days, 1Y a rolling 365 days, YTD starts on 1 January UTC. Each panel freezes its snapshot so range changes remain consistent.
-  - Discord message images do not support hover tooltips. A hosted web chart or Discord Activity is a separate future step; no external chart link is advertised by this test.
+  - The **Open interactive graph ↗** button and linked embed title open the hosted web chart, with hover/tap details, a moving dot, all six ranges and SERVER DOWN tooltips. Each visitor has independent local state. The web page is public and uses synthetic data only; no Discord login or bot token is needed.
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
@@ -308,7 +308,7 @@ in that order (Twitch is omitted when no stream is known). The live embed keeps 
 show details and ordered listen links but has no footer or bottom timestamp. Automatic
 post-show schedule messages are removed; `/nextshows` remains available on demand.
 
-### v1.0.33 daily chatter exclusions
+### v1.0.31 daily chatter exclusions
 
 Messages in channels `1547025818914525254` and `1547064843909988433`, including
 their threads, no longer count towards Daily Top Chatter after updating and restarting.
@@ -323,3 +323,17 @@ installation and rendering overhead on small bot hosts. On hosts that automatica
 install requirements at startup, let that install finish; do not start a second manual
 pip install concurrently. Exit 137 indicates the process was killed (often by the host's
 memory limit); this change reduces demand but does not guarantee a particular RAM limit.
+
+### v1.0.34 interactive graph
+
+The public graph is hosted at https://octobot-serverinfo.plainshortbread2.chatgpt.site/.
+Its small HTML/CSS/JavaScript/SVG source is in `web/serverinfo.html`, with no chart
+framework, CDN, web server on the bot host or extra Python dependency. The button
+passes only the demo snapshot timestamp in a URL fragment so it matches the message.
+The default view is 1W; each visitor changes only their own view. The arrow opens a
+browser page, not an embedded Discord Activity or native hoverable message image.
+`SERVERINFO_GRAPH_URL` optionally overrides the hosted page for self-hosting; deploy
+`web/serverinfo.html` as a static index page. No configuration is required for the
+included hosted test page. Discord controls expire after 10 minutes; the external
+link stays usable. The command is still admin-only to post, while anyone can click
+its public controls to receive their own private chart.
