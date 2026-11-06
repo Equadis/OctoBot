@@ -159,6 +159,7 @@ class OctoBot(commands.Bot):
         from octocop.cogs.invitefilter import InviteFilterCog
         from octocop.cogs.lockdown import LockdownCog
         from octocop.cogs.roles import RoleCleanupCog
+        from octobot.daily_chatter import DailyChatterCog
         from octocop.cogs.settings import SettingsCog
         from octocop.cogs.words import WordFilterCog
 
@@ -166,6 +167,7 @@ class OctoBot(commands.Bot):
         await self.add_cog(ModerationCog(self), guild=self.guild)
         await self.add_cog(SettingsCog(self), guild=self.guild)
         await self.add_cog(RoleCleanupCog(self), guild=self.guild)
+        await self.add_cog(DailyChatterCog(self), guild=self.guild)
         await self.add_cog(WordFilterCog(self), guild=self.guild)
         await self.add_cog(LockdownCog(self), guild=self.guild)
         await self.add_cog(AutoReplyCog(self), guild=self.guild)
@@ -282,6 +284,8 @@ class OctoBot(commands.Bot):
         )
 
     async def close(self) -> None:
+        if self.get_cog("DailyChatterCog") is not None:
+            await self.remove_cog("DailyChatterCog")
         if self.radio_monitor is not None:
             await self.radio_monitor.stop()
         if self.monitor is not None:

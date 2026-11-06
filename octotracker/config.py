@@ -187,6 +187,8 @@ class Config:
     # Rank ladder, lowest rung first (Wanderer … Exalted). Empty until the rank
     # role IDs are known; see DEFAULT_ROLE_LADDER.
     role_ladder_ids: tuple[int, ...] = ()
+    daily_chatter_role_id: int | None = 1566128971916120275
+    daily_chatter_channel_id: int | None = 1547025378479181895
     # Invite filter: posting another server's invite is deleted and timed out,
     # except in these channels (a forum covers its posts) or when the invite
     # points back at this guild. Zero seconds deletes without timing out.
@@ -305,6 +307,14 @@ class Config:
                 "1547038342661804194,1547038337297154078,1547038296025333880,1547371277474603028",
             ),
             role_ladder_ids=_discord_id_sequence("ROLE_LADDER_ROLE_IDS", DEFAULT_ROLE_LADDER),
+            daily_chatter_role_id=(
+                _discord_id("DAILY_CHATTER_ROLE_ID")
+                if "DAILY_CHATTER_ROLE_ID" in os.environ else 1566128971916120275
+            ),
+            daily_chatter_channel_id=(
+                _discord_id("DAILY_CHATTER_CHANNEL_ID")
+                if "DAILY_CHATTER_CHANNEL_ID" in os.environ else 1547025378479181895
+            ),
             invite_allowed_channel_ids=_discord_id_set(
                 "DISCORD_INVITE_ALLOWED_CHANNEL_IDS", "1547029978326245376"
             ),

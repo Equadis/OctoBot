@@ -1,4 +1,4 @@
-# OctoBot v1.0.28
+# OctoBot v1.0.29
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -262,3 +262,33 @@ The sample environment points the status and alert channels at `1559989373921923
 ## v1.0.28 role pings on automatic forum posts
 
 New announcements ping `1562868331885633579` and new patch notes ping `1562868317193248939`. Only the opening page of a multi-page post pings, and the commands stay silent.
+
+### Daily Top Chatter (Exalted)
+
+Every day at **17:00 UTC**, OctoBot ranks human messages received across the configured
+server, including threads, in the preceding **17:00–17:00 UTC** period. Bot, webhook
+and system messages are excluded. This counts raw messages, independently of XP
+cooldowns or multipliers; edits do not add counts and deletions do not subtract them.
+Ties are resolved by the lowest Discord user ID. Only current human members qualify.
+
+The winner receives **Exalted** (`1566128971916120275`) until the next handover. All
+other holders lose the role **before** the winner receives it. If nobody posted,
+the previous award expires and no announcement is sent. The award role should be
+reserved for this feature and excluded from any automatic rank ladder.
+
+Results are posted to `1547025378479181895`, first with plain `@` placeholders,
+then edited to show the winner, runners-up and role mentions. Both requests disable
+all mention notifications. Only available places are shown if fewer than three qualify.
+The heading date is the UTC date on which the period ends (for example `24th Nov`).
+
+Counts and completed awards persist in the bot database. On first installation,
+tracking starts immediately and the first award occurs at the next 17:00 boundary
+(so that first period may be partial). Messages sent while the bot is offline are
+not backfilled. A restart catches up the latest completed period once, rather than
+posting a backlog of old awards. Failed role changes and announcement edits retry;
+a saved announcement is edited again rather than intentionally reposted.
+
+Override `DAILY_CHATTER_ROLE_ID` and `DAILY_CHATTER_CHANNEL_ID` in `.env`, or set either
+blank to disable the feature. The bot needs **Manage Roles**, its highest role above
+Exalted, **View Channel / Send Messages** in the announcement channel, and **Server
+Members Intent** enabled. Deploy the updated code and restart the bot to activate.
