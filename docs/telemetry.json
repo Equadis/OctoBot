@@ -1,4 +1,4 @@
 {
-  "endpoint": "",
-  "comment": "Set to the deployed Cloudflare Worker HTTPS origin to activate per-minute telemetry."
+  "endpoint": "https://octobot-population.eqvoice.workers.dev",
+  "comment": "Cloudflare Worker with one-minute census collection; fallback to GitHub archive if unavailable."
 }
