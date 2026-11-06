@@ -14,16 +14,18 @@ Anyone with Discord Administrator or the server owner always has every bot permi
 
 ---
 
-## Admin test: `/serverinfo`
+## Admin test: `/serverinfo [server]`
 
-Requires Discord **Administrator** to post. The reply is public and contains synthetic test data only.
+Requires Discord **Administrator** to post; the reply is public. Choose N’Zoth
+(default), Y’Shaarj or C’Thun. The panel contains real recorded observations.
 
-- Fixed **1D** population chart, with average, all-time peak and demo release markers.
-- Stats: **Online now**, **24h peak**, **All-time peak**, **Server uptime** (`dd:hh:mm:ss`).
-- Only one Discord button: **Open interactive graph ↗**. The embed title also links to it.
-- No Discord range buttons, date dropdowns, private chart messages or expiring controls.
-- The website defaults to **1D** and supports all six ranges, custom dates, hover details and compact P1/P2/P3 release flags with full-name tooltips. Selections remain local to each visitor.
-- Update and restart the bot, then run `/serverinfo` again. Existing messages retain their old controls.
+- Fixed **1D** image plus an **Open interactive graph ↗** link.
+- Stats: **Online now**, **24h peak**, **All-time recorded peak**, and uptime (`--:--:--:--` until a source supplies it).
+- Web dropdown selects a server independently for each visitor; current option is disabled.
+- Six web ranges, custom dates and hover details. **Yellow = NO DATA**, including dates before the import and collection gaps. Averages exclude missing time.
+- N’Zoth has imported history and a live counter. PvP/Hardcore remain NO DATA until their verified feeds are configured.
+- Launch is undated; P1/P2 show the supplied release dates and P3 Emerald Sanctum is scheduled for **28 January 2027 17:00 UTC**.
+- Restart after updating to start the bot’s minute-by-minute SQLite collector. The website has an independent GitHub Actions five-minute collector, subject to scheduler delays.
 
 ## Everyone
 

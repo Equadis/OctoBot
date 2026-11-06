@@ -1,15 +1,18 @@
-# OctoBot v1.0.38
+# OctoBot v1.0.39
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
 ## Included systems
 
 ### OctoTracker
-- `/serverinfo`: admin-only command posting a **public, fixed 1D chart** with synthetic test data. Discord shows **Online now, 24h peak, All-time peak, Server uptime** (`dd:hh:mm:ss`) and only **Open interactive graph ↗**. There are no range buttons, date selectors, selected-time readout or expiring interaction controls in Discord.
-  - The web page opens on **1D** and keeps **1H / 1D / 1W / 1M / 1Y / YTD**, custom dates, hover values with no slider. Each visitor changes only their own view.
-  - Charts include a time-weighted average for the selected window, a flat dashed all-time peak at 50% opacity, simulated outages and Phase 1/2/3 release markers. Demo release dates are explicitly synthetic; replace them with verified dates before going live.
-  - All headline statistics and chart history are still synthetic. The 24h peak always covers the last day, regardless of the website range. 1M is 30 days, 1Y is 365 days, YTD starts on 1 January UTC. Simulated downtime counts as zero in the window average.
-  - The default external graph is on GitHub Pages. Enable Pages from **main → /docs** in repository settings if not already active. No web server, new dependency or chart framework is needed on the bot host.
+- `/serverinfo [server]`: admin-only command posting a **public, fixed 1D chart** with recorded population. Discord shows **Online now, 24h peak, All-time peak, Server uptime** and one **Open interactive graph ↗** link. There are no Discord range/date controls.
+  - The website has a **Server** dropdown next to Players online: **N’Zoth (Normal), Y’Shaarj (PvP), C’Thun (Hardcore)**. The selected option is disabled in the dropdown. Each realm has independent history and browser-local range/date selection.
+  - N’Zoth imports the supplied 9,485 readings starting **30 October 2026 14:59:20.708 UTC** (realm confirmed by the owner). Its original maximum is **3,470**. New N’Zoth counts use the official census counter, whose N’Zoth scope was also explicitly confirmed by the owner.
+  - **Yellow = NO DATA**, including pre-history and collection gaps over 10 minutes. Failed fetches never become zero or a confirmed outage. Averages cover observed intervals only. Zero is a valid reading; it does not independently prove a server outage.
+  - All-time peak means **highest recorded observation**, with the recording start shown. Server uptime is `--:--:--:--` because the census/history does not provide it. Stale current counts become NO DATA after 10 minutes.
+  - Phase markers: Launch (Onyxia/MC, undated), P1 Zul’Gurub **1 Oct 2026 08:00 UTC**, P2 Blackwing Lair **1 Nov 2026 17:00 UTC**, P3 Emerald Sanctum **28 Jan 2027 17:00 UTC**, labelled **Scheduled** until release. Launch is shown as undated instead of inventing a timestamp.
+  - The bot collects every minute into persistent SQLite after restart. A GitHub Actions collector samples every five minutes and publishes the web history independently of the bot host; scheduled runs can be delayed. No new Python package is required.
+  - **Y’Shaarj and C’Thun currently have no verified population source.** Their UI and storage are ready, but they show NO DATA until feeds are configured. Never reuse N’Zoth counts for those realms.
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
@@ -393,3 +396,33 @@ is drawn at 2,476 on a 0–3,000 axis with an explicit value label and headroom 
 not at the plot ceiling. Python and web demo histories share these peak semantics.
 All dates and numbers remain synthetic; P2's name is a placeholder pending verified
 release metadata. Discord remains a fixed 1D preview with just the external link.
+
+### v1.0.39 real observations and three-realm support
+
+Install/update the repository files and restart the bot. History is seeded from
+`docs/online-history.json` for N’Zoth, and `docs/history/yshaarj.json` /
+`docs/history/cthun.json` for the other realms. The bot keeps data in the existing
+SQLite database (`population_readings_v2`, keyed by realm and timestamp), survives
+restarts, and refreshes its local history from the public site every 10 polls.
+
+The public site loads separate history files, refreshes once per minute, and never
+uploads visitor data. GitHub Actions (`.github/workflows/population.yml`) samples
+on a five-minute cron and publishes `docs/` through the official Pages artifact
+workflow. Its GITHUB_TOKEN has contents:write, pages:write and id-token:write;
+commits update observations only. Bot-host per-minute readings stay in its SQLite;
+the public site uses the independent scheduled readings, not a connection to the
+bot host. GitHub can delay schedules and disable them after extended repository
+inactivity. Missing collection periods remain yellow.
+
+To add verified public JSON feeds for PvP/Hardcore, configure
+`POPULATION_YSHAARJ_URL` / `POPULATION_CTHUN_URL` in the bot environment and the
+repository's **Actions variables** for the scheduled collector. Expected response:
+`{"online":123}`. A missing feed does not poll the census as a fallback and does not
+invent observations. Keep feed URLs public and credential-free. Import future
+histories using `load_history(path, realm)` and `PopulationStore.add` or replace the
+corresponding realm history file before restarting; file writes are deduplicated.
+
+The original uploaded snapshot is preserved as imported observations. New readings
+record the UTC retrieval time; the official page says its counter refreshes about
+every minute. There is no claim of population coverage before the first supplied
+reading or of authoritative uptime. Collection failures retain prior data intact.

@@ -1,256 +1,194 @@
-"""Admin-only server-info prototype. Every displayed value is synthetic."""
+"""Real population collection and an admin-posted public server information panel."""
 from __future__ import annotations
 
 import asyncio
 import io
+import json
 import logging
 import math
 import os
 import threading
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+import urllib.request
+from datetime import datetime, timedelta
+from typing import Literal
+from urllib.parse import urlsplit, urlunsplit
 
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 from PIL import Image, ImageDraw, ImageFont
 
-UTC = timezone.utc
-RANGES = ("1H", "1D", "1W", "1M", "1Y", "YTD")
+from .population import (UTC, HISTORY, RELEASES, GAP_SECONDS, PopulationStore, Reading,
+                         fetch_reading, load_history, missing_intervals, observed_average, parse_time, HISTORIES, REALMS)
+
+RANGES = ('1H', '1D', '1W', '1M', '1Y', 'YTD')
+DEFAULT_GRAPH_URL = 'https://equadis.github.io/OctoBot/'
 _RENDER_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
-DEFAULT_GRAPH_URL = "https://equadis.github.io/OctoBot/"
 
 
-def interactive_url(end: datetime) -> str:
-    base = os.getenv("SERVERINFO_GRAPH_URL", DEFAULT_GRAPH_URL).strip()
-    parts = urlsplit(base)
-    if parts.scheme not in ("https", "http") or not parts.netloc or parts.username or parts.password:
-        log.warning("Invalid SERVERINFO_GRAPH_URL; using the hosted demo")
+def interactive_url(end: datetime | None = None, realm: str = 'nzoth') -> str:
+    # Live history must not be frozen to a synthetic timestamp in old #at links.
+    base = os.getenv('SERVERINFO_GRAPH_URL', DEFAULT_GRAPH_URL).strip()
+    try:
+        parts = urlsplit(base)
+        if parts.scheme not in ('http', 'https') or not parts.netloc or parts.username or parts.password:
+            raise ValueError('Invalid graph URL')
+    except ValueError:
+        log.warning('Invalid SERVERINFO_GRAPH_URL; using GitHub Pages')
         parts = urlsplit(DEFAULT_GRAPH_URL)
-    fragment = dict(parse_qsl(parts.fragment))
-    fragment["at"] = str(int(end.timestamp()))
-    return urlunsplit(parts._replace(fragment=urlencode(fragment)))
-
-
-@dataclass(frozen=True)
-class Sample:
-    time: datetime
-    players: int | None  # None denotes a confirmed synthetic outage, not a scrape failure.
-
-
-def range_start(end: datetime, period: str) -> datetime:
-    if period == "YTD":
-        return end.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-    return end - timedelta(seconds={"1H": 3600, "1D": 86400, "1W": 604800,
-                                    "1M": 30 * 86400, "1Y": 365 * 86400}[period])
-
-
-def demo_outages(end: datetime) -> tuple[tuple[datetime, datetime], ...]:
-    return ((end - timedelta(minutes=25), end - timedelta(minutes=20)),
-            (end - timedelta(days=2, hours=2), end - timedelta(days=2)))
-
-
-def demo_samples(end: datetime, period: str) -> list[Sample]:
-    """Bounded preview data, anchored to one snapshot across every range."""
-    start = range_start(end, period)
-    times = {start + (end - start) * i / 144 for i in range(145)}
-    for a, b in demo_outages(end):
-        # Include outage boundaries/midpoints even when a long range downsamples them.
-        for t in (a - timedelta(seconds=1), a, a + (b - a) / 2,
-                  b - timedelta(seconds=1), b):
-            if start <= t <= end:
-                times.add(t)
-    peak_time = demo_peak_time(end)
-    for t in (peak_time - timedelta(hours=12), peak_time, peak_time + timedelta(hours=12),
-              *(time for _, time in demo_releases(end))):
-        if start <= t <= end:
-            times.add(t)
-    result = []
-    for t in sorted(times):
-        age = (end - t).total_seconds() / 86400
-        value = round(1019 + 480 * math.sin(age * math.tau)
-                      + 190 * math.sin(age * math.tau / 7)
-                      + 95 * math.sin(age * 41))
-        if t == peak_time:
-            value = DEMO_ALL_TIME_PEAK
-        down = any(a <= t < b for a, b in demo_outages(end))
-        result.append(Sample(t, None if down else max(100, value)))
-    return result
-
-
-DEMO_ALL_TIME_PEAK = 2476
-DEMO_UPTIME_SECONDS = 2 * 86400 + 2 * 3600 + 54 * 60 + 59
-
-
-def demo_peak_time(end: datetime) -> datetime:
-    year_start = end.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-    age = min(90 * 86400, max(.001, (end - year_start).total_seconds() * .6))
-    return end - timedelta(seconds=age)
-
-
-def format_uptime(seconds: int) -> str:
-    days, remaining = divmod(max(0, seconds), 86400)
-    hours, remaining = divmod(remaining, 3600)
-    minutes, seconds = divmod(remaining, 60)
-    return f"{days:02}:{hours:02}:{minutes:02}:{seconds:02}"
-
-
-def average_population(samples: list[Sample]) -> float:
-    """Time-weighted average of the selected window; simulated downtime counts as zero."""
-    if not samples:
-        return 0.0
-    span = (samples[-1].time - samples[0].time).total_seconds()
-    if span <= 0:
-        return float(samples[-1].players or 0)
-    area = sum((b.time - a.time).total_seconds() * ((a.players or 0) + (b.players or 0)) / 2
-               for a, b in zip(samples, samples[1:]))
-    return area / span
-
-
-def demo_releases(end: datetime) -> tuple[tuple[str, datetime], ...]:
-    # Preview dates only: these are deliberately not presented as real OctoWoW releases.
-    return (("Phase 1", end - timedelta(days=120)),
-            ("Phase 2", end - timedelta(days=45)),
-            ("Phase 3", end - timedelta(hours=6)))
+    return urlunsplit(parts._replace(fragment='server='+realm))
 
 
 def _font(size: int) -> ImageFont.ImageFont:
     try:
-        return ImageFont.truetype("DejaVuSans.ttf", size)
+        return ImageFont.truetype('DejaVuSans.ttf', size)
     except OSError:
-        # Pillow bundles a scalable default font, so minimal containers need no font packages.
         return ImageFont.load_default(size=size)
 
 
-def render_chart(end: datetime, period: str, samples: list[Sample], selected: int) -> bytes:
-    """Draw a bounded PNG without NumPy or Matplotlib; suitable for small bot hosts."""
+def render_chart(end: datetime, rows: list[Reading]) -> bytes:
+    start = end-timedelta(days=1)
     with _RENDER_LOCK:
-        image = Image.new("RGB", (1200, 660), "#202225")
+        image = Image.new('RGB', (1200, 660), '#202225')
         draw = ImageDraw.Draw(image)
-        title_font, label_font, small_font = _font(30), _font(22), _font(20)
-        green, red, muted = "#46df88", "#ef7777", "#b9bdc5"
+        title, font, small = _font(30), _font(22), _font(20)
         left, right, top, bottom = 85, 1160, 155, 550
-        start = samples[0].time
-        span = max((end - start).total_seconds(), 1)
-
-        def x(time: datetime) -> int:
-            return round(left + (time - start).total_seconds() / span * (right - left))
-
-        def y(value: int) -> int:
-            return round(bottom - value / 3000 * (bottom - top))
-
-        draw.text((left, 28), f"Population  /  {period}", font=title_font, fill="white")
-        draw.text((right, 34), "SYNTHETIC TEST DATA", font=small_font, fill="#f2c66d", anchor="ra")
-        point = samples[selected]
-        value = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
-        colour = green if point.players is not None else red
-        draw.text((left, 76), f"{point.time:%d %b %Y %H:%M:%S} UTC  ·  {value}", font=label_font, fill=colour)
-        for players in range(0, 3001, 500):
-            row = y(players)
-            draw.line((left, row, right, row), fill="#34373c")
-            draw.text((left - 12, row), f"{players:,}", font=small_font, fill=muted, anchor="rm")
-        draw.text((left, top - 27), "Players online", font=small_font, fill=muted)
+        peak = max((r.online for r in rows), default=0)
+        ceiling = max(500, math.ceil(peak*1.15/500)*500)
+        x = lambda t: round(left+(t-start).total_seconds()/86400*(right-left))
+        y = lambda n: round(bottom-n/ceiling*(bottom-top))
+        draw.text((left, 28), 'Population / 1D', font=title, fill='white')
+        latest = rows[-1] if rows else None
+        label = f'{latest.time:%d %b %Y %H:%M:%S} UTC · {latest.online:,} last observed' if latest else 'NO DATA'
+        draw.text((left, 76), label, font=font, fill='#79dfa7' if latest else '#e3bd57')
+        for a, b in missing_intervals(rows, start, end):
+            xa, xb = x(a), x(b)
+            draw.rectangle((xa, top, max(xa+1, xb), bottom), fill='#3d3523')
+            draw.line((xa, bottom, max(xa+1, xb), bottom), fill='#e3bd57', width=3)
+            if xb-xa > 100:
+                draw.text(((xa+xb)/2, top+25), 'NO DATA', anchor='mm', font=small, fill='#e3bd57')
+        step = max(100, math.ceil(ceiling/6/100)*100)
+        for n in range(0, ceiling+1, step):
+            draw.line((left,y(n),right,y(n)),fill='#34373c')
+            draw.text((left-12,y(n)),f'{n:,}',font=small,fill='#b9bdc5',anchor='rm')
         for i in range(6):
-            time = start + (end - start) * i / 5
-            column = x(time)
-            draw.line((column, top, column, bottom), fill="#34373c")
-            pattern = "%H:%M" if period in ("1H", "1D") else "%d %b"
-            if period in ("1Y", "YTD"):
-                pattern = "%d %b %Y"
-            draw.text((column, bottom + 17), time.strftime(pattern), font=small_font,
-                      fill=muted, anchor="ma")
-        for a, b in demo_outages(end):
-            a, b = max(a, start), min(b, end)
-            if a < b:
-                xa, xb = x(a), x(b)
-                draw.rectangle((xa, top, max(xa + 1, xb), bottom), fill="#3b292e")
-                for dash in range(xa, max(xa + 1, xb), 13):
-                    draw.line((dash, bottom, min(dash + 7, max(xa + 1, xb)), bottom), fill=red, width=3)
-        peak_y = y(DEMO_ALL_TIME_PEAK)
-        # Preblend white at exactly 50% opacity onto the opaque dark canvas.
-        peak_colour = tuple(round((component + 255) / 2) for component in (32, 34, 37))
-        for dash in range(left, right, 15):
-            draw.line((dash, peak_y, min(dash + 8, right), peak_y), fill=peak_colour, width=2)
-        mean = average_population(samples)
-        draw.line((left, y(round(mean)), right, y(round(mean))), fill="#6bafff", width=2)
-        draw.text((right, peak_y - 6), f"All-time peak  {DEMO_ALL_TIME_PEAK:,}", font=small_font,
-                  fill=peak_colour, anchor="rd")
-        for phase, time in demo_releases(end):
-            if start <= time <= end:
-                point = next(sample for sample in samples if sample.time == time)
-                column, row = x(time), y(point.players or 0)
-                fx, fy = min(right - 38, max(left, column - 19)), max(top + 5, row - 48)
-                draw.line((column, row, fx + 19, fy + 28), fill="#ba98e5", width=1)
-                draw.rounded_rectangle((fx, fy, fx + 38, fy + 28), radius=3,
-                                       fill="#34402e", outline="#8aa57b")
-                draw.text((fx + 19, fy + 14), "P" + phase.split()[-1], anchor="mm", font=small_font, fill="#e5f3dc")
-        segment: list[tuple[int, int]] = []
-        for sample in samples:
-            if sample.players is None:
-                if len(segment) > 1:
-                    draw.line(segment, fill=green, width=3)
-                segment = []
-            else:
-                segment.append((x(sample.time), y(sample.players)))
-        if len(segment) > 1:
-            draw.line(segment, fill=green, width=3)
-        px, py = x(point.time), y(point.players if point.players is not None else 0)
-        draw.line((px, top, px, bottom), fill="#56836c" if point.players is not None else "#995555")
-        draw.ellipse((px - 6, py - 6, px + 6, py + 6), fill=colour, outline="white", width=2)
-        draw.text((right, 618), f"Average {mean:,.0f}  ·  Dashed red: simulated outage  ·  All times UTC", font=small_font,
-                  fill=muted, anchor="ra")
-        output = io.BytesIO()
-        image.save(output, format="PNG")
-        image.close()
+            t=start+timedelta(seconds=86400*i/5)
+            draw.text((x(t),bottom+18),t.strftime('%H:%M'),font=small,fill='#b9bdc5',anchor='ma')
+        draw.text((left,top-27),'Players online',font=small,fill='#b9bdc5')
+        if rows:
+            for dash in range(left,right,15):
+                draw.line((dash,y(peak),min(dash+8,right),y(peak)),fill='#909193',width=2)
+            draw.text((right,y(peak)-7),f'All-time recorded peak {peak:,}',font=small,fill='#aab4c1',anchor='rd')
+        mean=observed_average(rows,start,end)
+        if mean is not None:
+            draw.line((left,y(mean),right,y(mean)),fill='#74b6ff',width=2)
+        segment=[]
+        previous=None
+        for row in rows:
+            if row.time<start or row.time>end:
+                if segment and len(segment)>1:draw.line(segment,fill='#63df9a',width=3)
+                segment=[];previous=None;continue
+            if previous and (row.time-previous.time).total_seconds()>GAP_SECONDS:
+                if len(segment)>1:draw.line(segment,fill='#63df9a',width=3)
+                segment=[]
+            segment.append((x(row.time),y(row.online)));previous=row
+        if len(segment)>1:draw.line(segment,fill='#63df9a',width=3)
+        if latest and start<=latest.time<=end:
+            px,py=x(latest.time),y(latest.online)
+            draw.ellipse((px-5,py-5,px+5,py+5),fill='#63df9a',outline='white',width=2)
+        avg=f'Average {mean:,.0f}' if mean is not None else 'Average unavailable'
+        draw.text((right,618),f'{avg} · Yellow: NO DATA · All times UTC',font=small,fill='#b9bdc5',anchor='ra')
+        output=io.BytesIO();image.save(output,format='PNG');image.close()
         return output.getvalue()
 
 
 class ServerInfoView(discord.ui.View):
-    """A permanent link only. All range/date interactions live on the website."""
-    def __init__(self, owner_id: int, end: datetime | None = None, *, shared: bool = True):
+    def __init__(self, rows: list[Reading], end: datetime | None = None, realm: str = 'nzoth'):
         super().__init__(timeout=None)
-        self.end = (end or datetime.now(UTC)).replace(microsecond=0)
-        self.period = "1D"
-        self.samples = demo_samples(self.end, self.period)
-        self.add_item(discord.ui.Button(label="Open interactive graph ↗", style=discord.ButtonStyle.link,
-                                        url=interactive_url(self.end)))
+        self.realm=realm
+        self.end=end or datetime.now(UTC)
+        self.rows=rows
+        self.add_item(discord.ui.Button(label='Open interactive graph ↗',style=discord.ButtonStyle.link,url=interactive_url(realm=realm)))
 
     def embed(self) -> discord.Embed:
-        peak = max(s.players or 0 for s in self.samples)
-        embed = discord.Embed(title="Server Info ↗", url=interactive_url(self.end), colour=0x46DF88,
-                              description="**Synthetic test data: not live server statistics.**")
-        for name, value in (("Online now", "1,019"), ("24h peak", f"{peak:,}"),
-                            ("All-time peak", f"{DEMO_ALL_TIME_PEAK:,}"),
-                            ("Server uptime", format_uptime(DEMO_UPTIME_SECONDS))):
-            embed.add_field(name=name, value=value, inline=True)
-        # Leave the image unreferenced so Discord displays the full attachment
-        # outside the narrower stats embed. Increasing PNG resolution alone cannot widen an embed.
-        embed.set_footer(text="Past 24 hours · Open the interactive graph for ranges, dates and hover details. All times UTC.")
+        latest=self.rows[-1] if self.rows else None
+        fresh=latest is not None and (self.end-latest.time).total_seconds()<=GAP_SECONDS
+        recent=[r.online for r in self.rows if self.end-timedelta(days=1)<=r.time<=self.end]
+        peak=max((r.online for r in self.rows),default=None)
+        embed=discord.Embed(title=REALMS[self.realm]+' ↗',url=interactive_url(realm=self.realm),colour=0x46DF88,
+                            description='Recorded population observations. Uptime is not supplied by the census source.')
+        for name,value in [('Online now',f'{latest.online:,}' if fresh else 'NO DATA'),
+                           ('24h peak',f'{max(recent):,}' if recent else 'NO DATA'),
+                           ('All-time peak',f'{peak:,}' if peak is not None else 'NO DATA'),
+                           ('Server uptime','--:--:--:--')]:
+            embed.add_field(name=name,value=value,inline=True)
+        since=self.rows[0].time.strftime('%d %b %Y %H:%M UTC') if self.rows else 'no history'
+        observed=latest.time.strftime('%d %b %Y %H:%M:%S UTC') if latest else 'never'
+        embed.set_footer(text=f'Last observed {observed} · Peak recorded since {since} · Yellow: NO DATA')
         return embed
 
     async def attachment(self) -> discord.File:
-        data = await asyncio.to_thread(render_chart, self.end, self.period, self.samples, len(self.samples) - 1)
-        return discord.File(io.BytesIO(data), filename="serverinfo.png")
+        data=await asyncio.to_thread(render_chart,self.end,self.rows)
+        return discord.File(io.BytesIO(data),filename='serverinfo.png')
 
 
 class ServerInfoCog(commands.Cog):
-    @app_commands.command(name="serverinfo", description="Preview server stats and population graphs (synthetic admin test).")
+    def __init__(self, bot):
+        self.bot=bot
+        self.store=PopulationStore(bot.config.database_path)
+        self.poll_count=0
+
+    async def cog_load(self) -> None:
+        for realm,path in HISTORIES.items():
+            await asyncio.to_thread(self.store.add,load_history(path,realm))
+        self.collect.start()
+
+    async def cog_unload(self) -> None:
+        self.collect.cancel()
+
+    @tasks.loop(seconds=60)
+    async def collect(self) -> None:
+        # Pull public observations too so gaps while this bot was stopped can be recovered.
+        for realm in REALMS:
+            if realm != 'nzoth' and not os.getenv('POPULATION_'+realm.upper()+'_URL','').strip():
+                continue
+            if self.poll_count%10==0:
+                try:
+                    remote=await asyncio.to_thread(self._public_history,realm)
+                    await asyncio.to_thread(self.store.add,remote)
+                except Exception:
+                    log.warning('Could not sync public history for %s; retaining local readings',realm)
+            try:
+                reading=await asyncio.to_thread(fetch_reading,realm)
+                await asyncio.to_thread(self.store.add,[reading])
+            except Exception as exc:
+                log.warning('Population poll for %s: %s; no reading invented',realm,exc)
+        self.poll_count+=1
+
+    @staticmethod
+    def _public_history(realm: str) -> list[Reading]:
+        relative=HISTORIES[realm].relative_to(HISTORY.parent).as_posix()
+        with urllib.request.urlopen(DEFAULT_GRAPH_URL+relative,timeout=20) as response:
+            data=response.read(20_000_001)
+        if len(data)>20_000_000:raise ValueError('History exceeds sync limit')
+        from .population import decode_history
+        return decode_history(json.loads(data),realm)
+
+    @app_commands.command(name='serverinfo',description='Show recorded server population and its interactive history.')
     @app_commands.guild_only()
     @app_commands.default_permissions(administrator=True)
-    async def serverinfo(self, interaction: discord.Interaction) -> None:
-        # Runtime enforcement remains necessary even if command permissions are overridden in Discord.
+    async def serverinfo(self,interaction:discord.Interaction, server: Literal["N'Zoth (Normal)", "Y'Shaarj (PvP)", "C'Thun (Hardcore)"] = "N'Zoth (Normal)")->None:
         if interaction.guild_id is None or not interaction.permissions.administrator:
-            await interaction.response.send_message("This test command requires Discord Administrator permission.", ephemeral=True)
+            await interaction.response.send_message('This test command requires Discord Administrator permission.',ephemeral=True)
             return
         await interaction.response.defer(thinking=True)
-        view = ServerInfoView(interaction.user.id, shared=True)
         try:
-            attachment = await view.attachment()
-            await interaction.followup.send(embed=view.embed(), file=attachment,
-                                                          view=view, wait=True)
+            realm=next(key for key,name in REALMS.items() if name==server)
+            rows=await asyncio.to_thread(self.store.all,realm)
+            view=ServerInfoView(rows,realm=realm)
+            attachment=await view.attachment()
+            await interaction.followup.send(embed=view.embed(),file=attachment,view=view,wait=True)
         except Exception:
-            view.stop()
-            log.exception("Could not open server-info preview")
-            await interaction.followup.send("Could not generate the server-info preview. Try again.", ephemeral=True)
+            log.exception('Could not load server information')
+            await interaction.followup.send('Could not load server information. Try again.',ephemeral=True)

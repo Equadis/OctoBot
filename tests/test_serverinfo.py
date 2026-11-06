@@ -1,139 +1,83 @@
 from __future__ import annotations
-
-import io
-import unittest
-from datetime import datetime, timedelta, timezone
+import io,json,tempfile,unittest
+from datetime import datetime,timedelta
+from pathlib import Path
 from types import SimpleNamespace as NS
-from unittest.mock import AsyncMock, patch
-
+from unittest.mock import AsyncMock,patch
 from PIL import Image
-from octobot.serverinfo import (RANGES, ServerInfoCog, ServerInfoView, demo_samples,
-                               range_start, render_chart, interactive_url, average_population, format_uptime, Sample, DEMO_ALL_TIME_PEAK, demo_peak_time)
+from octobot.population import (UTC,Reading,PopulationStore,load_history,decode_history,save_history,
+                               missing_intervals,observed_average,parse_online,fetch_reading,collect_file,HISTORY)
+from octobot.serverinfo import ServerInfoCog,ServerInfoView,interactive_url,render_chart
+END=datetime(2026,11,6,17,tzinfo=UTC)
 
-END = datetime(2026, 11, 6, 11, 26, 26, tzinfo=timezone.utc)
-
-
-def interaction(admin=True, user=1, guild=123):
-    return NS(guild_id=guild, user=NS(id=user), permissions=NS(administrator=admin),
-              response=NS(send_message=AsyncMock(), defer=AsyncMock()),
-              followup=NS(send=AsyncMock()), edit_original_response=AsyncMock())
-
-
-class ServerInfoDataTests(unittest.TestCase):
-    def test_github_pages_source_and_link(self):
-        from pathlib import Path
-        from urllib.parse import urlsplit
-        url = urlsplit(interactive_url(END))
-        self.assertEqual(url.netloc, 'equadis.github.io')
-        self.assertEqual(url.path, '/OctoBot/')
-        root = Path(__file__).resolve().parents[1]
-        self.assertTrue((root / 'docs' / '.nojekyll').is_file())
-        html = (root / 'docs' / 'index.html').read_text()
-        self.assertIn("const periods=['1H','1D','1W','1M','1Y','YTD']", html)
-        self.assertNotIn('chatgpt.site', html)
-
-    def test_ranges_and_consistency(self):
-        self.assertEqual(range_start(END, '1W'), END - timedelta(days=7))
-        self.assertEqual(range_start(END, 'YTD'), datetime(2026, 1, 1, tzinfo=timezone.utc))
-        for period in RANGES:
-            samples = demo_samples(END, period)
-            self.assertLess(len(samples), 170)
-            self.assertEqual(samples[0].time, range_start(END, period))
-            self.assertEqual(samples[-1].time, END)
-            self.assertEqual(samples[-1].players, 1019)
-            self.assertEqual(samples, sorted(samples, key=lambda s: s.time))
-            self.assertTrue(any(s.players is None for s in samples))
-        # January boundary must still produce valid choices and a nonempty range.
-        self.assertTrue(demo_samples(END.replace(month=1, day=1), 'YTD'))
-
-    def test_peak_is_a_real_retained_sample(self):
-        for period in ('YTD', '1Y'):
-            samples = demo_samples(END, period)
-            self.assertEqual(max(s.players or 0 for s in samples), DEMO_ALL_TIME_PEAK)
-            self.assertIn(Sample(demo_peak_time(END), DEMO_ALL_TIME_PEAK), samples)
-        from pathlib import Path
-        html = (Path(__file__).resolve().parents[1] / 'docs/index.html').read_text()
-        self.assertNotIn('time-picker', html)
-        self.assertNotIn('id="milestones"', html)
-        self.assertIn('Phase 3: Blackwing Lair Release', html)
-
-    def test_renderer_needs_no_plotting_stack(self):
-        import subprocess
-        import sys
-        result = subprocess.run([sys.executable, '-c',
-            "import sys; import octobot.serverinfo; "
-            "assert 'matplotlib' not in sys.modules; assert 'numpy' not in sys.modules"],
-            capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-
-    def test_minimal_host_font_fallback(self):
-        from octobot.serverinfo import _font
-        from PIL import ImageFont
-        original = ImageFont.truetype
-        def no_system_font(font, *args, **kwargs):
-            if isinstance(font, str):
-                raise OSError('no system font')
-            return original(font, *args, **kwargs)
-        with patch('octobot.serverinfo.ImageFont.truetype', side_effect=no_system_font):
-            self.assertIsNotNone(_font(18))
-
-    def test_every_range_renders_and_down_selection(self):
-        for period in RANGES:
-            samples = demo_samples(END, period)
-            selected = next(i for i, s in enumerate(samples) if s.players is None)
-            image = Image.open(io.BytesIO(render_chart(END, period, samples, selected)))
-            self.assertEqual(image.format, 'PNG')
-            self.assertEqual(image.size, (1200, 660))
-
+class PopulationTests(unittest.TestCase):
+ def test_import_real_history_and_peak(self):
+  rows=load_history(HISTORY)
+  self.assertGreaterEqual(len(rows),9485)
+  self.assertEqual(rows[0].time.isoformat(),'2026-10-30T14:59:20.708000+00:00')
+  self.assertEqual(max(r.online for r in rows),3470)
+  self.assertEqual({r.realm for r in rows},{'nzoth'})
+ def test_validation_sort_dedup_zero_and_realms(self):
+  data=[{'timestamp':'2026-11-06T01:00:00Z','online':0},{'timestamp':'2026-11-06T00:00:00Z','online':25}]
+  rows=decode_history(data+data,'cthun')
+  self.assertEqual([r.online for r in rows],[25,0]);self.assertEqual(rows[-1].realm,'cthun')
+  for count in [-1,True,1.5,'100']:
+   with self.assertRaises(ValueError):decode_history([{'timestamp':'2026-11-06T01:00:00Z','online':count}])
+  with self.assertRaises(ValueError):decode_history([{'timestamp':'2026-11-06T01:00:00','online':1}])
+ def test_missing_pre_history_and_collection_gap_not_zero(self):
+  rows=[Reading(END-timedelta(minutes=30),100),Reading(END-timedelta(minutes=29),200),Reading(END-timedelta(minutes=1),100)]
+  gaps=missing_intervals(rows,END-timedelta(hours=1),END)
+  self.assertEqual(gaps,[(END-timedelta(hours=1),rows[0].time),(rows[1].time,END)])
+  self.assertEqual(observed_average(rows,END-timedelta(hours=1),END),150)
+  self.assertIsNone(observed_average([],END-timedelta(days=1),END))
+ def test_window_boundary_average(self):
+  rows=[Reading(END-timedelta(minutes=2),0),Reading(END,200)]
+  self.assertEqual(observed_average(rows,END-timedelta(minutes=1),END),150)
+ def test_sqlite_realm_isolation_persistence_and_dedup(self):
+  with tempfile.TemporaryDirectory() as directory:
+   store=PopulationStore(Path(directory)/'bot.db')
+   store.add([Reading(END,100,'nzoth'),Reading(END,20,'cthun'),Reading(END,3,'yshaarj')])
+   store.add([Reading(END,100,'nzoth')])
+   self.assertEqual(store.all(),[Reading(END,100)])
+   self.assertEqual(PopulationStore(store.path).all('cthun'),[Reading(END,20,'cthun')])
+ def test_parser_failure_does_not_create_zero_and_atomic_export(self):
+  self.assertEqual(parse_online('Players online now: <b>1,234</b>'),1234)
+  with self.assertRaises(ValueError):parse_online('<html>temporarily unavailable</html>')
+  with tempfile.TemporaryDirectory() as directory:
+   path=Path(directory)/'history.json';save_history(path,[Reading(END,123)])
+   before=path.read_bytes()
+   with patch('octobot.population.fetch_reading',side_effect=OSError('network')):self.assertIsNone(collect_file(path))
+   self.assertEqual(path.read_bytes(),before)
+ def test_other_realms_never_fall_back_to_nzoth(self):
+  with patch.dict('os.environ',{'POPULATION_YSHAARJ_URL':'','POPULATION_CTHUN_URL':''}):
+   for realm in ['cthun','yshaarj']:
+    with self.assertRaisesRegex(ValueError,'No verified population feed'):fetch_reading(realm)
+ def test_real_renderer_has_no_fake_counts_and_handles_no_data(self):
+  rows=load_history(HISTORY)
+  for data in [rows,[]]:
+   image=Image.open(io.BytesIO(render_chart(END,data)));self.assertEqual(image.size,(1200,660))
+ def test_node_data_semantics(self):
+  import subprocess
+  code="""const assert=require('node:assert/strict');const D=require('./docs/chart-data.js');
+  const h=D.normalise([{timestamp:'2026-11-06T00:10:00Z',online:100},{timestamp:'2026-11-06T00:11:00Z',online:200},{timestamp:'2026-11-06T00:40:00Z',online:9}]);
+  const start=Date.parse('2026-11-06T00:00:00Z'),end=Date.parse('2026-11-06T01:00:00Z');const r=D.intervals(h,start,end);assert.equal(r.average,150);assert.equal(r.missing.length,2);assert.equal(D.at(h,start),null);assert.equal(D.at(h,Date.parse('2026-11-06T00:30:00Z')),null);
+  const p=Array.from({length:10000},(_,t)=>({t,value:t===4312?3470:10}));assert(D.downsample(p).some(r=>r.value===3470));
+  """
+  result=subprocess.run(['node','-e',code],capture_output=True,text=True)
+  self.assertEqual(result.returncode,0,result.stderr)
 
 class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
-    async def test_registration_and_runtime_permission(self):
-        command = ServerInfoCog.serverinfo
-        self.assertTrue(command.default_permissions.administrator)
-        cog = ServerInfoCog()
-        for event in (interaction(admin=False), interaction(guild=None)):
-            await command.callback(cog, event)
-            event.response.send_message.assert_awaited_once()
-            event.followup.send.assert_not_awaited()
-        event = interaction()
-        await command.callback(cog, event)
-        sent = event.followup.send.call_args.kwargs
-        self.assertFalse(sent.get('ephemeral', False))
-        self.assertIn('#at=', sent['embed'].url)
-        self.assertEqual(sent['view'].period, '1D')
-        self.assertIn('Synthetic test data', sent['embed'].description)
-        sent['view'].stop()
-        sent['file'].close()
-
-    async def test_link_only_public_panel(self):
-        view = ServerInfoView(1, END)
-        self.assertEqual(view.period, '1D')
-        self.assertIsNone(view.timeout)
-        self.assertEqual(len(view.children), 1)
-        button = view.children[0]
-        self.assertEqual(button.url, interactive_url(END))
-        self.assertEqual(button.label, 'Open interactive graph ↗')
-        embed = view.embed()
-        self.assertEqual([f.name for f in embed.fields],
-                         ['Online now', '24h peak', 'All-time peak', 'Server uptime'])
-        self.assertEqual(embed.fields[-1].value, '02:02:54:59')
-        self.assertIsNone(embed.image.url)
-        self.assertNotIn('Selected time', str(embed.to_dict()))
-        self.assertNotIn('Server Time', str(embed.to_dict()))
-        self.assertEqual(embed.fields[1].value, f"{max(s.players or 0 for s in view.samples):,}")
-        view.stop()
-
-    async def test_invalid_config_does_not_publish_unsafe_link(self):
-        with patch.dict('os.environ', {'SERVERINFO_GRAPH_URL': 'javascript:alert(1)'}):
-            self.assertTrue(interactive_url(END).startswith('https://'))
-        with patch.dict('os.environ', {'SERVERINFO_GRAPH_URL': 'https://example.com/chart#theme=dark'}):
-            self.assertIn('theme=dark&at=', interactive_url(END))
-
-    def test_average_is_time_weighted_and_downtime_zero(self):
-        samples = [Sample(END, 100), Sample(END+timedelta(seconds=1), 100),
-                   Sample(END+timedelta(seconds=10), None)]
-        self.assertEqual(average_population(samples), 55)
-        self.assertEqual(average_population([]), 0)
-        self.assertEqual(average_population([Sample(END, 1019)]), 1019)
-        self.assertEqual(format_uptime(0), '00:00:00:00')
-        self.assertEqual(format_uptime(100*86400+61), '100:00:01:01')
+ def event(self,admin=True):
+  return NS(guild_id=123,user=NS(id=1),permissions=NS(administrator=admin),response=NS(send_message=AsyncMock(),defer=AsyncMock()),followup=NS(send=AsyncMock()))
+ async def test_admin_command_only_and_public_link(self):
+  bot=NS(config=NS(database_path=Path('/tmp/unused-population-test.db')));cog=ServerInfoCog(bot);cog.store=NS(all=lambda realm:[])
+  command=ServerInfoCog.serverinfo;self.assertTrue(command.default_permissions.administrator)
+  event=self.event(False);await command.callback(cog,event);event.followup.send.assert_not_awaited()
+  event=self.event();await command.callback(cog,event,"C'Thun (Hardcore)")
+  sent=event.followup.send.call_args.kwargs;self.assertFalse(sent.get('ephemeral',False));self.assertIn('C\'Thun',sent['embed'].title)
+  self.assertEqual(len(sent['view'].children),1);self.assertIn('server=cthun',sent['view'].children[0].url);sent['file'].close();sent['view'].stop()
+ async def test_stats_use_real_peak_and_unknown_uptime(self):
+  rows=[Reading(END-timedelta(minutes=5),10),Reading(END-timedelta(days=2),3470),Reading(END-timedelta(minutes=1),15)]
+  rows.sort(key=lambda r:r.time);view=ServerInfoView(rows,END);embed=view.embed()
+  self.assertEqual([f.value for f in embed.fields],['15','15','3,470','--:--:--:--']);self.assertIsNone(embed.image.url);self.assertIsNone(view.timeout);view.stop()
+  self.assertNotIn('at=',interactive_url(END));self.assertIn('server=nzoth',interactive_url())

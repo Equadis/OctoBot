@@ -1,0 +1,6 @@
+[
+  {"short":"L","label":"Launch: Onyxia / Molten Core","timestamp":null,"date_note":"Available at launch; exact launch date unconfirmed","scheduled":false},
+  {"short":"P1","label":"Phase 1: Zul’Gurub Release","timestamp":"2026-10-01T08:00:00Z","scheduled":false},
+  {"short":"P2","label":"Phase 2: Blackwing Lair Release","timestamp":"2026-11-01T17:00:00Z","scheduled":false},
+  {"short":"P3","label":"Phase 3: Emerald Sanctum Release","timestamp":"2027-01-28T17:00:00Z","scheduled":true}
+]
