@@ -1,5 +1,25 @@
 [
- {"id":"nzoth","name":"N’Zoth (Normal)","history":"online-history.json","source_note":"Imported history and confirmed N’Zoth census counter"},
- {"id":"yshaarj","name":"Y’Shaarj (PvP)","history":"history/yshaarj.json","source_note":"Waiting for a verified realm population feed"},
- {"id":"cthun","name":"C’Thun (Hardcore)","history":"history/cthun.json","source_note":"Waiting for a verified realm population feed"}
+  {
+    "id": "all",
+    "name": "All Realms",
+    "source_note": "Combined total: only calculated when N’Zoth, Y’Shaarj and C’Thun have near-synchronous readings. An unavailable realm is never treated as zero."
+  },
+  {
+    "id": "nzoth",
+    "name": "N’Zoth (Normal)",
+    "history": "online-history.json",
+    "source_note": "Imported history and confirmed N’Zoth census counter"
+  },
+  {
+    "id": "yshaarj",
+    "name": "Y’Shaarj (PvP)",
+    "history": "history/yshaarj.json",
+    "source_note": "Waiting for a verified realm population feed"
+  },
+  {
+    "id": "cthun",
+    "name": "C’Thun (Hardcore)",
+    "history": "history/cthun.json",
+    "source_note": "Waiting for a verified realm population feed"
+  }
 ]
