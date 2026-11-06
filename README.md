@@ -1,10 +1,14 @@
-# OctoBot v1.0.31
+# OctoBot v1.0.32
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
 ## Included systems
 
 ### OctoTracker
+- `/serverinfo`: admin-only, private test panel with **synthetic data only**. Opens on **1W**; **1H / 1D / 1W / 1M / 1Y / YTD** buttons redraw a green population chart in the same message. A sampled-time dropdown moves the dot and displays the exact value; simulated outages use a dashed red line and **SERVER DOWN**. Controls expire after 10 minutes. Install the updated requirements and restart the bot to sync the command.
+  - Restricted by both Discord default command permissions and runtime Administrator checks, including every chart interaction. Only the admin who opens the private panel can operate it.
+  - This prototype does not scrape live data, persist history, or claim historical/YTD coverage. All headline stats and chart points are synthetic, including the current timestamp used as the demo server clock. 1M is a rolling 30 days, 1Y a rolling 365 days, YTD starts on 1 January UTC. Each panel freezes its snapshot so range changes remain consistent.
+  - Discord message images do not support hover tooltips. A hosted web chart or Discord Activity is a separate future step; no external chart link is advertised by this test.
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
@@ -304,7 +308,7 @@ in that order (Twitch is omitted when no stream is known). The live embed keeps 
 show details and ordered listen links but has no footer or bottom timestamp. Automatic
 post-show schedule messages are removed; `/nextshows` remains available on demand.
 
-### v1.0.31 daily chatter exclusions
+### v1.0.32 daily chatter exclusions
 
 Messages in channels `1547025818914525254` and `1547064843909988433`, including
 their threads, no longer count towards Daily Top Chatter after updating and restarting.

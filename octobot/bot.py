@@ -159,6 +159,7 @@ class OctoBot(commands.Bot):
         from octocop.cogs.invitefilter import InviteFilterCog
         from octocop.cogs.lockdown import LockdownCog
         from octocop.cogs.roles import RoleCleanupCog
+        from octobot.serverinfo import ServerInfoCog
         from octobot.daily_chatter import DailyChatterCog
         from octocop.cogs.settings import SettingsCog
         from octocop.cogs.words import WordFilterCog
@@ -168,6 +169,7 @@ class OctoBot(commands.Bot):
         await self.add_cog(SettingsCog(self), guild=self.guild)
         await self.add_cog(RoleCleanupCog(self), guild=self.guild)
         await self.add_cog(DailyChatterCog(self), guild=self.guild)
+        await self.add_cog(ServerInfoCog(), guild=self.guild)
         await self.add_cog(WordFilterCog(self), guild=self.guild)
         await self.add_cog(LockdownCog(self), guild=self.guild)
         await self.add_cog(AutoReplyCog(self), guild=self.guild)
@@ -552,6 +554,7 @@ class OctoBot(commands.Bot):
         if authcheck_channel is None or interaction.channel_id == authcheck_channel:
             visible.append(("authcheck", "Run a one-off authentication diagnostic."))
         if self._is_administrator(interaction):
+            visible.append(("serverinfo", "Preview synthetic server stats and population charts (admin test)."))
             visible.append(("config command-role", "Configure which roles can use tracker commands."))
 
         if isinstance(interaction.user, discord.Member):

@@ -14,6 +14,17 @@ Anyone with Discord Administrator or the server owner always has every bot permi
 
 ---
 
+## Admin test: `/serverinfo`
+
+Requires Discord **Administrator**, enforced at runtime for the command and its controls. The reply is private. All statistics are clearly labelled **synthetic test data**; no live population or historical feed is connected yet.
+
+- Opens the population chart on **1W**.
+- Buttons: **1H, 1D, 1W, 1M, 1Y, YTD**, arranged in two rows.
+- Select a sampled timestamp from the dropdown to move the dot and see its population or **SERVER DOWN**.
+- Simulated outages appear as dashed red sections. The headline stats stay at the demo snapshot when selecting historical points.
+- Image charts cannot show hover tooltips. Controls expire after 10 minutes; run the command again.
+- Restart the bot after installing the updated `requirements.txt` to sync the new guild command.
+
 ## Everyone
 
 Public tracker commands. Admins can restrict any of them to specific roles with `/config command-role`.
