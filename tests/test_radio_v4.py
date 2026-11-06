@@ -146,11 +146,13 @@ class RadioParserTests(unittest.TestCase):
         self.assertIn("DJ Whiski", message)
         self.assertIn("<@&1234>", message)
         self.assertIn("AHOY SCALLYWAGS!", message)
-        self.assertTrue(message.startswith("# <@&1234>\n\n# 📻Pirate Radio Announcement Service: DJ Whiski!"))
+        self.assertTrue(message.startswith("<@&1234>\n\n# 🏴‍☠️ Pirate Radio Announcement Service: DJ Whiski!"))
         self.assertIn("**LIVE**", message)
         self.assertIn(self.public_url, message)
         self.assertIn(f"[Website]({self.public_url})", message)
         self.assertNotIn("Twitch", message)
+        self.assertIn("YARRR! 💀 📻\n\n", message)
+        self.assertNotIn("\n- [Website]", message)
 
     def test_pirate_notification_lists_only_the_live_djs_twitch(self) -> None:
         message = radio_notification_message(
@@ -659,7 +661,9 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("<@&", extra.sent[0]["content"])
         self.assertIn("Pirate Hour", extra.sent[0]["content"])
         self.assertFalse(extra.sent[0]["allowed_mentions"].roles)
-        self.assertEqual(main.sent[0]["embed"].title, extra.sent[0]["embed"].title)
+        self.assertNotIn("embed", main.sent[0])
+        self.assertNotIn("embed", extra.sent[0])
+        self.assertEqual(main.sent[0]["allowed_mentions"].roles[0].id, 1547108101747118100)
 
     async def test_scheduled_show_is_announced_at_start_once(self) -> None:
         # The DJ never connects: the ping still goes out at the scheduled start.
@@ -686,11 +690,10 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(content.index("[Website]"), content.index("[Twitch]"))
         self.assertLess(content.index("[Twitch]"), content.index("[Discord]"))
         self.assertTrue(content.endswith(" · In-Game"))
-        embed = channel.sent[0]["embed"]
-        listen = next(field.value for field in embed.fields if field.name == "Listen")
-        self.assertEqual(listen, content.split("\n- ")[-1])
-        self.assertIsNone(embed.footer.text)
-        self.assertIsNone(embed.timestamp)
+        self.assertNotIn("embed", channel.sent[0])
+        self.assertIn("\n\n[Website](", content)
+        self.assertNotIn("\n- [Website]", content)
+        self.assertIn("YARRR! 💀 📻", content)
         self.assertEqual(channel.sent[0]["allowed_mentions"].roles[0].id, 1547108101747118100)
         for _ in range(3):
             await monitor.check()
@@ -859,9 +862,10 @@ class RadioAnnouncementConfigTests(unittest.TestCase):
 
     def test_new_defaults_and_legacy_settings_migrate(self):
         for config in (self.load(), self.load(DISCORD_RADIO_CHANNEL_ID="1547109894732120104",
-                                             DISCORD_RADIO_PING_ROLE_ID="1547108101747118100")):
+                                             DISCORD_RADIO_PING_ROLE_ID="1547108101747118100"),
+                       self.load(DISCORD_RADIO_PING_ROLE_ID="1567629523514818651")):
             self.assertEqual(config.radio_channel_id, 1547025378479181895)
-            self.assertEqual(config.radio_ping_role_id, 1567629523514818651)
+            self.assertEqual(config.radio_ping_role_id, 1547108101747118100)
             self.assertEqual(config.radio_discord_channel_id, 1568053765347741828)
 
     def test_custom_settings_are_preserved(self):
