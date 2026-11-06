@@ -114,11 +114,11 @@ def _font(size: int) -> ImageFont.ImageFont:
 def render_chart(end: datetime, period: str, samples: list[Sample], selected: int) -> bytes:
     """Draw a bounded PNG without NumPy or Matplotlib; suitable for small bot hosts."""
     with _RENDER_LOCK:
-        image = Image.new("RGB", (1300, 520), "#202225")
+        image = Image.new("RGB", (1200, 660), "#202225")
         draw = ImageDraw.Draw(image)
-        title_font, label_font, small_font = _font(25), _font(18), _font(15)
+        title_font, label_font, small_font = _font(30), _font(22), _font(20)
         green, red, muted = "#46df88", "#ef7777", "#b9bdc5"
-        left, right, top, bottom = 85, 1260, 125, 420
+        left, right, top, bottom = 85, 1160, 155, 550
         start = samples[0].time
         span = max((end - start).total_seconds(), 1)
 
@@ -169,7 +169,7 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
                 column = x(time)
                 for dash in range(top, bottom, 12):
                     draw.line((column, dash, column, min(dash + 5, bottom)), fill="#ba98e5")
-                draw.text((column + 5, top + 8), phase + " · demo", font=small_font, fill="#c5a7ed")
+                draw.text((column + 5, top + 30), phase + " · demo", font=small_font, fill="#c5a7ed")
         segment: list[tuple[int, int]] = []
         for sample in samples:
             if sample.players is None:
@@ -183,7 +183,7 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
         px, py = x(point.time), y(point.players if point.players is not None else 0)
         draw.line((px, top, px, bottom), fill="#56836c" if point.players is not None else "#995555")
         draw.ellipse((px - 6, py - 6, px + 6, py + 6), fill=colour, outline="white", width=2)
-        draw.text((right, 486), f"Average {mean:,.0f}  ·  Dashed red: simulated outage  ·  All times UTC", font=small_font,
+        draw.text((right, 618), f"Average {mean:,.0f}  ·  Dashed red: simulated outage  ·  All times UTC", font=small_font,
                   fill=muted, anchor="ra")
         output = io.BytesIO()
         image.save(output, format="PNG")
@@ -209,7 +209,8 @@ class ServerInfoView(discord.ui.View):
                             ("All-time peak", f"{DEMO_ALL_TIME_PEAK:,}"),
                             ("Server uptime", format_uptime(DEMO_UPTIME_SECONDS))):
             embed.add_field(name=name, value=value, inline=True)
-        embed.set_image(url="attachment://serverinfo.png")
+        # Leave the image unreferenced so Discord displays the full attachment
+        # outside the narrower stats embed. Increasing PNG resolution alone cannot widen an embed.
         embed.set_footer(text="Past 24 hours · Open the interactive graph for ranges, dates and hover details. All times UTC.")
         return embed
 

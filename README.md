@@ -1,4 +1,4 @@
-# OctoBot v1.0.36
+# OctoBot v1.0.37
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -365,3 +365,18 @@ and labelled synthetic Phase 1/2/3 milestones. Headline stats are Online now,
 24h peak, All-time peak and Server uptime in `dd:hh:mm:ss` format. The web chart is
 inspired by SteamDB's population-chart structure; it uses OctoBot's own synthetic
 history and has no dependency on SteamDB data, code or assets.
+
+### v1.0.37 larger Discord chart attachment
+
+The chart is now a standalone PNG attachment beside the stats embed, rather than
+an image embedded inside that narrow card. Its canvas is 1200×660 with larger text
+and a taller plot. Discord still controls its displayed size for each client; users
+can click the attachment to open the original image. The response still contains
+one public stats panel and one external graph link, without range/date controls.
+
+A GitHub Pages "There isn't a GitHub Pages site here" 404 means the site is not yet
+published; updating Python or the URL fragment cannot enable it. In the repository,
+open **Settings → Pages**, choose **Deploy from a branch**, choose **main** and
+**/docs**, and **Save**. Wait for the Pages deployment to finish before testing the
+link. The browser used during development was signed out, so initial activation
+could not be completed through the repository settings.

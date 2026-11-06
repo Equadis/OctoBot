@@ -72,7 +72,7 @@ class ServerInfoDataTests(unittest.TestCase):
             selected = next(i for i, s in enumerate(samples) if s.players is None)
             image = Image.open(io.BytesIO(render_chart(END, period, samples, selected)))
             self.assertEqual(image.format, 'PNG')
-            self.assertEqual(image.size, (1300, 520))
+            self.assertEqual(image.size, (1200, 660))
 
 
 class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
@@ -106,6 +106,7 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([f.name for f in embed.fields],
                          ['Online now', '24h peak', 'All-time peak', 'Server uptime'])
         self.assertEqual(embed.fields[-1].value, '02:02:54:59')
+        self.assertIsNone(embed.image.url)
         self.assertNotIn('Selected time', str(embed.to_dict()))
         self.assertNotIn('Server Time', str(embed.to_dict()))
         self.assertEqual(embed.fields[1].value, f"{max(s.players or 0 for s in view.samples):,}")
