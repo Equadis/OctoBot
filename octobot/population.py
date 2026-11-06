@@ -16,6 +16,7 @@ from pathlib import Path
 UTC = timezone.utc
 ROOT = Path(__file__).resolve().parents[1]
 HISTORY = ROOT / 'docs' / 'online-history.json'
+LIVE = ROOT / 'docs' / 'live.json'
 RELEASES = ROOT / 'docs' / 'releases.json'
 CENSUS_URL = 'https://octowow.st/player-census'
 GAP_SECONDS = 600
@@ -64,6 +65,34 @@ def save_history(path: Path, readings: list[Reading]) -> None:
     temporary = path.with_suffix('.tmp')
     temporary.write_text(json.dumps(data, separators=(',', ':')) + '\n')
     temporary.replace(path)
+
+
+def save_latest(reading: Reading, path: Path = LIVE) -> None:
+    """Publish a tiny per-realm reading snapshot for the dashboard.
+
+    This is an observation, not a guess: no expiry is hidden from the client.
+    """
+    try:
+        current = json.loads(path.read_text()) if path.exists() else {}
+    except (OSError, ValueError):
+        current = {}
+    if not isinstance(current, dict):
+        current = {}
+    existing = current.get(reading.realm)
+    if isinstance(existing, dict) and isinstance(existing.get('timestamp'), str):
+        try:
+            if parse_time(existing['timestamp']) > reading.time:
+                return
+        except ValueError:
+            pass
+    current[reading.realm] = {
+        'timestamp': reading.time.isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+        'online': reading.online, 'source': 'official census' if reading.realm == 'nzoth' else 'verified realm feed'
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix('.tmp')
+    temp.write_text(json.dumps(current, separators=(',', ':')) + '\n')
+    temp.replace(path)
 
 
 def parse_online(page: str) -> int:
@@ -170,4 +199,6 @@ if __name__ == '__main__':
     parser.add_argument('--all', action='store_true')
     args = parser.parse_args()
     for realm in (REALMS if args.all else [args.realm]):
-        collect_file(args.output or HISTORIES[realm],realm)
+        observation = collect_file(args.output or HISTORIES[realm], realm)
+        if observation is not None:
+            save_latest(observation)
