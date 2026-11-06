@@ -9,5 +9,5 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "octobot-population"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "43515153-c667-4599-8a73-24824fa5f399"
 migrations_dir = "migrations"
