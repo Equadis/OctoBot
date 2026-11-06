@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="octobot-version" content="1.0.43">
+<meta name="octobot-version" content="1.0.44">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="OctoWoW population history from real observations, with source freshness and clearly labelled estimates.">
 <title>OctoBot · Server Info</title>
 <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
 <style>
-:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#171a21;color:#e5e9ef}*{box-sizing:border-box}body{margin:0;padding:38px 24px}main{max-width:1180px;margin:auto}.brand{font-size:12px;font-weight:700;letter-spacing:.14em;color:#8b9aad}header{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #343c49;padding-bottom:24px}h1{font-size:28px;font-weight:500;margin:9px 0 0}.badge{font-size:11px;letter-spacing:.07em;color:#e8c67c;background:#362f21;padding:8px 11px;border-radius:4px}.intro,.muted{font-size:13px;color:#8f9cab;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #343c49;margin:25px 0 28px;background:#1e242e}.stat{padding:25px 22px;border-right:1px solid #343c49}.stat:last-child{border:0}.stat span{display:block;color:#9ba8b7;font-size:12px;margin-top:10px}.stat strong{display:block;font-size:32px;color:#74c6ef;font-weight:400;font-variant-numeric:tabular-nums}.stat:first-child strong{color:#6de394}.stat:last-child strong{font-size:27px}.stat small{display:block;color:#91a0b0;font-size:11px;line-height:1.5;margin-top:7px}.stat strong{white-space:nowrap}@media(max-width:450px){.stat:last-child strong{font-size:20px}}.chart-card{background:#1b2029;border:1px solid #343c49;padding:24px 20px 18px}.chart-title{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.server-label{font-size:14px;color:#aab8c8}select{background:#171c24;color:#e5e9ef;border:1px solid #68778c;border-radius:5px;padding:7px;font:inherit;max-width:230px}option:disabled{color:#6f7885}.chart-head{display:flex;justify-content:space-between;align-items:center;gap:15px}h2{font-size:18px;font-weight:500;margin:0}.range-label{color:#8f9cab;font-size:12px}.readout{height:22px;margin:19px 0 0;font-size:13px;color:#79dfa7;font-variant-numeric:tabular-nums}.graph{position:relative}svg{display:block;width:100%;height:auto;overflow:visible}svg text{fill:#8e9baa;font-size:11px;font-family:Arial,sans-serif}.controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding:15px 0;border-bottom:1px solid #343c49}.ranges{display:flex;align-items:center;gap:3px;flex-wrap:wrap}.ranges:before{content:'Zoom';font-size:12px;color:#8f9cab;margin-right:8px}button{font:inherit;font-size:12px;color:#aab8c8;cursor:pointer;border:1px solid #384658;background:#252e3b;padding:7px 13px;border-radius:3px}button[aria-pressed=true]{background:#376680;color:white;border-color:#5284a2}button:hover{color:white;border-color:#709ab5}button:focus-visible,input:focus-visible{outline:2px solid #74c6ef;outline-offset:3px}.dates{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:11px;color:#8f9cab}.dates input{font:inherit;background:#171c24;color:#bdc8d5;border:1px solid #384658;padding:6px;max-width:140px}.legend-row{display:flex;gap:20px;flex-wrap:wrap;padding:16px 0 4px;font-size:12px;color:#9ca9ba}.key{display:inline-block;width:23px;margin-right:6px;border-bottom:2px solid;vertical-align:middle}.release-flag{cursor:help}.release-flag:focus{outline:1px solid #c5a7ed}.tip{position:absolute;top:5px;left:0;background:#10151ceF;border:1px solid #50627a;padding:9px 12px;pointer-events:none;color:#edf2f7;font-size:12px;line-height:1.7;white-space:nowrap;box-shadow:0 3px 14px #0005}.tip[hidden]{display:none}#plot-hit{touch-action:pan-y;cursor:crosshair}.releases{margin-top:24px}.release-head{display:flex;justify-content:space-between;align-items:center;gap:15px}.release-head span{color:#8f9cab;font-size:12px}.milestones{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#343c49;border:1px solid #343c49;margin-top:14px}.milestone{padding:17px 20px;background:#1e242e;font-size:13px;line-height:1.7}.milestone strong{display:block;color:#c5a7ed;font-weight:500}.milestone span{color:#99a6b7;font-size:12px}#date-error{color:#ef9999;min-height:16px;font-size:12px;margin-top:8px}footer{margin-top:25px;display:flex;justify-content:space-between;gap:14px;color:#7e8b9c;font-size:11px;line-height:1.6}a{color:#a7b9cf}@media(max-width:720px){body{padding:22px 12px}.stats{grid-template-columns:repeat(2,1fr)}.stat{padding:18px 15px;border-bottom:1px solid #343c49}.stat:nth-child(2){border-right:0}.stat:nth-child(3){border-bottom:0}.stat strong{font-size:29px}.stat:last-child strong{font-size:24px}.chart-card{padding:18px 10px}.chart-head{align-items:flex-start;flex-direction:column;gap:7px}.readout{font-size:11px}.milestones{grid-template-columns:1fr}.release-head,header,footer{align-items:flex-start;flex-direction:column}.legend-row{gap:12px;font-size:11px}.dates{margin-top:5px}h1{font-size:25px}}
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#171a21;color:#e5e9ef}*{box-sizing:border-box}body{margin:0;padding:38px 24px}main{max-width:1180px;margin:auto}.brand{font-size:12px;font-weight:700;letter-spacing:.14em;color:#8b9aad}header{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #343c49;padding-bottom:24px}h1{font-size:28px;font-weight:500;margin:9px 0 0}.badge{font-size:11px;letter-spacing:.07em;color:#e8c67c;background:#362f21;padding:8px 11px;border-radius:4px}.intro,.muted{font-size:13px;color:#8f9cab;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #343c49;margin:25px 0 28px;background:#1e242e}.stat{padding:25px 22px;border-right:1px solid #343c49}.stat:last-child{border:0}.stat span{display:block;color:#9ba8b7;font-size:12px;margin-top:10px}.stat strong{display:block;font-size:32px;color:#74c6ef;font-weight:400;font-variant-numeric:tabular-nums}.stat:first-child strong{color:#6de394}.stat:last-child strong{font-size:27px}.stat small{display:block;color:#91a0b0;font-size:11px;line-height:1.5;margin-top:7px}.stat strong{white-space:nowrap}@media(max-width:450px){.stat:last-child strong{font-size:20px}}.chart-card{background:#1b2029;border:1px solid #343c49;padding:24px 20px 18px}.chart-title{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.server-label{font-size:14px;color:#aab8c8}select{background:#171c24;color:#e5e9ef;border:1px solid #68778c;border-radius:5px;padding:7px;font:inherit;max-width:230px}option:disabled{color:#6f7885}.chart-head{display:flex;justify-content:space-between;align-items:center;gap:15px}h2{font-size:18px;font-weight:500;margin:0}.range-label{color:#8f9cab;font-size:12px}.readout{height:22px;margin:19px 0 0;font-size:13px;color:#79dfa7;font-variant-numeric:tabular-nums}.graph{position:relative}svg{display:block;width:100%;height:auto;overflow:visible}svg text{fill:#8e9baa;font-size:11px;font-family:Arial,sans-serif}.controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding:15px 0;border-bottom:1px solid #343c49}.ranges{display:flex;align-items:center;gap:3px;flex-wrap:wrap}.ranges:before{content:'Zoom';font-size:12px;color:#8f9cab;margin-right:8px}button{font:inherit;font-size:12px;color:#aab8c8;cursor:pointer;border:1px solid #384658;background:#252e3b;padding:7px 13px;border-radius:3px}button[aria-pressed=true]{background:#376680;color:white;border-color:#5284a2}button:hover{color:white;border-color:#709ab5}button:focus-visible,input:focus-visible{outline:2px solid #74c6ef;outline-offset:3px}.dates{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:11px;color:#8f9cab}.dates input{font:inherit;background:#171c24;color:#bdc8d5;border:1px solid #384658;padding:6px;max-width:140px}.legend-row{display:flex;gap:20px;flex-wrap:wrap;padding:16px 0 4px;font-size:12px;color:#9ca9ba}.key{display:inline-block;width:23px;margin-right:6px;border-bottom:2px solid;vertical-align:middle}.release-flag{cursor:help}.release-flag:focus{outline:1px solid #c5a7ed}.tip{position:absolute;top:5px;left:0;background:#10151ceF;border:1px solid #50627a;padding:9px 12px;pointer-events:none;color:#edf2f7;font-size:12px;line-height:1.7;white-space:nowrap;box-shadow:0 3px 14px #0005}.tip[hidden]{display:none}#plot-hit{touch-action:pan-y;cursor:crosshair}.releases{margin-top:24px}.release-head{display:flex;justify-content:space-between;align-items:center;gap:15px}.release-head span{color:#8f9cab;font-size:12px}.milestones{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#343c49;border:1px solid #343c49;margin-top:14px}.milestone{padding:17px 20px;background:#1e242e;font-size:13px;line-height:1.7}.milestone strong{display:block;color:#c5a7ed;font-weight:500}.milestone span{color:#99a6b7;font-size:12px}#date-error{color:#ef9999;min-height:16px;font-size:12px;margin-top:8px}footer{margin-top:25px;display:flex;justify-content:space-between;gap:14px;color:#7e8b9c;font-size:11px;line-height:1.6}a{color:#a7b9cf}.header-status{display:flex;align-items:center;gap:13px;flex-wrap:wrap}.viewers{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;color:#dce5ef;font-variant-numeric:tabular-nums}.viewer-dot{width:7px;height:7px;flex:none;display:inline-block;border-radius:50%;background:#fc3039;box-shadow:0 0 5px #fa313888;animation:viewer-pulse 2.8s ease-in-out infinite}.viewers.is-offline .viewer-dot{animation:none;background:#748092;box-shadow:none}@keyframes viewer-pulse{0%,100%{opacity:1}50%{opacity:.24}}@media(prefers-reduced-motion:reduce){.viewer-dot{animation:none}}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:720px){body{padding:22px 12px}.stats{grid-template-columns:repeat(2,1fr)}.stat{padding:18px 15px;border-bottom:1px solid #343c49}.stat:nth-child(2){border-right:0}.stat:nth-child(3){border-bottom:0}.stat strong{font-size:29px}.stat:last-child strong{font-size:24px}.chart-card{padding:18px 10px}.chart-head{align-items:flex-start;flex-direction:column;gap:7px}.readout{font-size:11px}.milestones{grid-template-columns:1fr}.release-head,header,footer{align-items:flex-start;flex-direction:column}.legend-row{gap:12px;font-size:11px}.dates{margin-top:5px}h1{font-size:25px}}
 </style>
 </head>
 <body><main>
-<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><span class="badge">RECORDED OBSERVATIONS</span></header>
+<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="badge">RECORDED OBSERVATIONS</span><span class="viewers" id="viewer-status" role="status" title="Active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> people currently viewing this page</span></span></div></header>
 <p class="intro">Observed readings are preserved. The green curve is smoothed for readability; amber dashed sections are estimates between known readings, and NO DATA means genuinely unknown.</p>
 <section class="stats" aria-label="Recorded server statistics">
 <div class="stat"><strong id="online-now">NO DATA</strong><span id="online-label">Online now</span><small id="online-freshness">Waiting for a reading</small></div>
@@ -27,7 +27,7 @@
 <div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button id="apply-dates" type="button">Apply</button></div></div>
 <div id="date-error" role="status"></div>
 <div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Players online (smoothed)</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated between readings</span><span id="average-label"></span><span id="peak-legend">All-time recorded peak</span><span><i class="key" style="border-color:#c5a7ed;border-bottom-style:dashed"></i>Content release</span></div>
-<p class="muted">Hover to inspect the original, unsmoothed readings. Estimates are labelled and never counted as recorded peaks or observations.</p>
+<p class="muted">Hover to inspect original readings. Scroll up or down over the graph to change the visible time range around your cursor, from 10 minutes to the full history. Select a zoom preset to return to a fixed range. Estimates are labelled and never counted as recorded peaks.</p>
 <p class="muted">Amber dashed: estimated gaps up to 24 hours · Yellow NO DATA: missing or unbounded history · All times UTC</p>
 </section>
 
@@ -39,9 +39,17 @@
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='';
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',viewerSession=null;
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
+const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
+const timeSpanText=ms=>{
+ const minutes=Math.round(ms/60000),hours=ms/3600000,days=ms/day;
+ if(minutes<60)return minutes+'m';
+ if(hours<24)return (hours>=10?Math.round(hours):Math.round(hours*10)/10)+'h';
+ if(days<30)return (days>=10?Math.round(days):Math.round(days*10)/10)+'d';
+ return (days/30>=10?Math.round(days/30):Math.round(days/3)/10)+'mo';
+};
 const x=t=>56+(t-start)/Math.max(windowEnd-start,1)*908,y=v=>290-v/ceiling*262;
 const elapsedLabel=ms=>ms<60000?'under a minute ago':Math.round(ms/60000)+'m ago';
 function liveRow(id){
@@ -90,14 +98,14 @@ async function workerJson(path){
  return response.json();
 }
 async function liveWorkerHistory(realmId,existing){
- if(!telemetryEndpoint||realmId!=='nzoth')return existing;
+ if(!telemetryEndpoint||!['nzoth','yshaarj','cthun'].includes(realmId))return existing;
  try{
   let since=existing.length?existing[existing.length-1].t:0;
   const updated=[...existing];
   // Resume after the most recently stored Github reading. A Worker sample is
   // authoritative only for its own timestamp; never overwrite archived points.
   for(let page=0;page<60;page++){
-   const result=await workerJson('/api/history?realm=nzoth&since='+encodeURIComponent(since));
+   const result=await workerJson('/api/history?realm='+encodeURIComponent(realmId)+'&since='+encodeURIComponent(since));
    if(!Array.isArray(result.readings))throw Error('Invalid Worker history payload');
    const newRows=D.normalise(result.readings);
    updated.push(...newRows.filter(r=>r.t>since));
@@ -135,8 +143,8 @@ async function refreshLive(){
  }catch(e){console.warn('Live population feed temporarily unavailable',e);}
  // Extend the active N'Zoth chart with each new real minute reading, without
  // waiting for the slower archived-history refresh.
- if(telemetryEndpoint&&realm==='nzoth'){
-  const latest=liveRow('nzoth');
+ if(telemetryEndpoint){
+  const latest=realm==='all'?newestReading():liveRow(realm);
   if(latest&&(!rows.length||latest.t>rows[rows.length-1].t)){
    rows.push(latest);
    now=Date.now();
@@ -147,6 +155,36 @@ async function refreshLive(){
  updateHeadline();
 }
 
+function viewerId(){
+ if(viewerSession)return viewerSession;
+ try{
+  const previous=sessionStorage.getItem('octobot-active-viewer');
+  viewerSession=previous&&/^[0-9a-f-]{36}$/i.test(previous)?previous:crypto.randomUUID();
+  sessionStorage.setItem('octobot-active-viewer',viewerSession);
+ }catch(e){viewerSession=crypto.randomUUID();}
+ return viewerSession;
+}
+async function updateViewers(){
+ if(!telemetryEndpoint||document.visibilityState==='hidden')return;
+ try{
+  const response=await fetch(workerUrl('/api/presence/heartbeat'),{
+   method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({session_id:viewerId()})
+  });
+  if(!response.ok)throw Error('Viewer heartbeat '+response.status);
+  const result=await response.json();
+  if(!Number.isInteger(result.viewers)||result.viewers<0)throw Error('Invalid viewer count');
+  $('viewer-count').textContent=num(result.viewers);
+  $('viewer-status').classList.remove('is-offline');
+  $('viewer-status').title=result.viewers+' people active on the dashboard in the last 90 seconds';
+ }catch(e){
+  console.warn('Viewer count unavailable',e);
+  $('viewer-count').textContent='—';
+  $('viewer-status').classList.add('is-offline');
+  $('viewer-status').title='Viewer counter is temporarily unavailable';
+ }
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')updateViewers();});
 function svg(name,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function show(time,value,tooltip=false,custom=null,estimated=false){
  const label=custom|| (value===null?'NO DATA':(estimated?'ESTIMATED · ':'')+num(value)+' players'),colour=value===null||estimated?'#e3bd57':'#79dfa7';
@@ -155,7 +193,15 @@ function show(time,value,tooltip=false,custom=null,estimated=false){
  $('dot').setAttribute('cx',time===null?56:x(time));$('dot').setAttribute('cy',y(value??0));$('dot').setAttribute('fill',colour);
  $('crosshair').setAttribute('x1',time===null?56:x(time));$('crosshair').setAttribute('x2',time===null?56:x(time));
  const tip=$('tooltip');tip.hidden=!tooltip;
- if(tooltip){tip.replaceChildren(document.createTextNode(label),document.createElement('br'),document.createTextNode(time===null?'Exact date unconfirmed':fmt(time)+' UTC'));tip.style.color=colour;const width=tip.parentElement.clientWidth;tip.style.left=Math.max(0,Math.min(width-tip.offsetWidth,(time===null?56:x(time))/1000*width+12))+'px';}
+ if(tooltip){
+  const heading=document.createElement('div'),timestamp=document.createElement('div'),dayline=document.createElement('div');
+  heading.textContent=label;heading.style.color=colour;
+  timestamp.textContent=time===null?'Exact date unconfirmed':fmt(time)+' UTC';timestamp.style.color='#8ee5e5';
+  dayline.textContent=time===null?'':weekday(time);dayline.style.color='#e5e9ef';
+  tip.replaceChildren(heading,timestamp,dayline);
+  const width=tip.parentElement.clientWidth;
+  tip.style.left=Math.max(0,Math.min(width-tip.offsetWidth,(time===null?56:x(time))/1000*width+12))+'px';
+}
 }
 function marker(release,px,py,extra=''){
  const label=release.label+(extra?' · '+extra:'');
@@ -179,7 +225,12 @@ function draw(){
  $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();
  const step=Math.max(100,Math.ceil(ceiling/6/100)*100);
  for(let v=0;v<=ceiling;v+=step)$('axes').append(svg('line',{x1:56,x2:964,y1:y(v),y2:y(v),stroke:'#343a43'}),svg('text',{x:46,y:y(v)+4,'text-anchor':'end'},num(v)));
- for(let i=0;i<6;i++){const t=start+(windowEnd-start)*i/5;const label=new Intl.DateTimeFormat('en-GB',period==='1H'||period==='1D'?{timeZone:'UTC',hour:'2-digit',minute:'2-digit',hour12:false}:{timeZone:'UTC',day:'2-digit',month:'short'}).format(new Date(t));$('axes').append(svg('text',{x:x(t),y:318,'text-anchor':'middle'},label));}
+ for(let i=0;i<6;i++){
+  const t=start+(windowEnd-start)*i/5,span=windowEnd-start;
+  const options=span<=2*day?{timeZone:'UTC',hour:'2-digit',minute:'2-digit',hour12:false}:span<=5*day?{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}:{timeZone:'UTC',day:'2-digit',month:'short'};
+  const label=new Intl.DateTimeFormat('en-GB',options).format(new Date(t));
+  $('axes').append(svg('text',{x:x(t),y:318,'text-anchor':'middle'},label));
+}
  for(const [a,b]of missing){$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));if(x(b)-x(a)>75)$('outages').append(svg('text',{x:(x(a)+x(b))/2,y:150,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));}
  for(const [a,b]of info.estimated){$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));if(x(b)-x(a)>85)$('outages').append(svg('text',{x:(x(a)+x(b))/2,y:150,'text-anchor':'middle',style:'fill:#e3bd57'},'ESTIMATED'));}
  let estimatePath='';for(const [a,b]of info.estimated){const va=D.estimateAt(rows,a),vb=D.estimateAt(rows,b);if(va!==null&&vb!==null)estimatePath+='M'+x(a).toFixed(2)+','+y(va).toFixed(2)+' L'+x(b).toFixed(2)+','+y(vb).toFixed(2)+' ';}
@@ -208,7 +259,7 @@ function draw(){
  let undated=0,upcoming=0;
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
- $('range-label').textContent=period+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
+ $('range-label').textContent=(period==='CUSTOM'?timeSpanText(windowEnd-start):period)+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
  $('source-note').textContent=(realms.find(r=>r.id===realm)?.source_note||'')+(telemetryEndpoint?' · Minute-by-minute telemetry enabled':' · Real-time collector not connected; only archived readings available');
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
@@ -218,20 +269,36 @@ async function load(){const ticket=++loadNumber;try{
  const histories=await Promise.all(selected.map(async r=>D.normalise(await fetchLatestJson(r.history))));
  if(ticket!==loadNumber)return;
  if(telemetryEndpoint){
-  const nzothIndex=selected.findIndex(r=>r.id==='nzoth');
-  if(nzothIndex!==-1)histories[nzothIndex]=await liveWorkerHistory('nzoth',histories[nzothIndex]);
+  const current=await Promise.all(selected.map((r,i)=>liveWorkerHistory(r.id,histories[i])));
+  for(let i=0;i<current.length;i++)histories[i]=current[i];
  }
+ if(ticket!==loadNumber)return;
  rows=realm==='all'?D.combine(histories):histories[0];now=Date.now();draw();await refreshLive();
  }catch(e){if(ticket!==loadNumber)return;rows=[];draw();$('source-note').textContent='Could not load this server’s history. No readings have been invented.';}}
-function selectRealm(id){realm=id;for(const o of $('server-select').options)o.disabled=o.value===realm;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
+function selectRealm(id){realm=id;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
 for(const p of periods){const b=document.createElement('button');b.type='button';b.textContent=p;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{period=p;draw();});document.querySelector('.ranges').append(b);}
 $('plot-hit').addEventListener('pointermove',e=>{const rect=e.currentTarget.getBoundingClientRect();const time=start+(windowEnd-start)*Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));const value=D.at(rows,time);if(value===null){const estimate=D.estimateAt(rows,time);show(time,estimate,true,null,estimate!==null);}else {const point=D.nearest(rows,time);show(point.t,point.value,true);}});
 $('plot-hit').addEventListener('pointerleave',()=>{$('tooltip').hidden=true;});
+$('plot-hit').addEventListener('wheel',e=>{
+ const rect=e.currentTarget.getBoundingClientRect();
+ if(!rect.width)return;
+ e.preventDefault();
+ const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+ const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?800:1);
+ const view=D.zoomRange(start,windowEnd,ratio,delta,LAUNCH,Date.now());
+ if(Math.abs(view.start-start)<1&&Math.abs(view.end-windowEnd)<1)return;
+ period='CUSTOM';customStart=view.start;windowEnd=view.end;
+ $('date-from').value=new Date(view.start).toISOString().slice(0,10);
+ $('date-to').value=new Date(view.end).toISOString().slice(0,10);
+ $('date-error').textContent='';
+ $('tooltip').hidden=true;
+ draw();
+},{passive:false});
 $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from').value+'T00:00:00Z'),b=Math.min(now,Date.parse($('date-to').value+'T23:59:59Z'));if(!Number.isFinite(a)||!Number.isFinite(b)||a>=b||b<LAUNCH){$('date-error').textContent='Choose a valid start and end date before now.';return;}$('date-error').textContent='';customStart=a;windowEnd=b;period='CUSTOM';draw();});
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
 const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
-if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;for(const o of $('server-select').options)o.disabled=o.value===realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
+if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();updateViewers();setInterval(updateViewers,30000);setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
 
 </script>
 </body></html>

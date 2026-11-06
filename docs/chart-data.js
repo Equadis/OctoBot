@@ -97,5 +97,21 @@
   const estimatedDuration=estimated.reduce((n,[a,b])=>n+b-a,0);
   return {...observed,estimated,unknown,estimatedCoverage:end>start?estimatedDuration/(end-start):0};
  }
- const api={GAP,MAX_ESTIMATE_GAP,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
+ // Continuous mouse-wheel zoom centred on the hovered time, with hard timeline bounds.
+ // One common wheel tick (~100 px) changes the visible duration by about 30%.
+ const MIN_VIEW_MS=10*60*1000;
+ function zoomRange(start,end,anchorRatio,wheelDelta,minTime,maxTime){
+  if(![start,end,anchorRatio,wheelDelta,minTime,maxTime].every(Number.isFinite)||end<=start||maxTime<=minTime)throw Error('Invalid zoom range');
+  const bounds=maxTime-minTime,minSpan=Math.min(MIN_VIEW_MS,bounds);
+  const current=end-start;
+  const delta=Math.max(-250,Math.min(250,wheelDelta));
+  const span=Math.max(minSpan,Math.min(bounds,current*Math.exp(delta*0.0035)));
+  const ratio=Math.max(0,Math.min(1,anchorRatio));
+  const time=start+current*ratio;
+  let left=time-span*ratio,right=left+span;
+  if(left<minTime){left=minTime;right=left+span;}
+  if(right>maxTime){right=maxTime;left=right-span;}
+  return {start:left,end:right};
+ }
+ const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
