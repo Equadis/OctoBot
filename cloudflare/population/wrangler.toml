@@ -1,0 +1,13 @@
+name = "octobot-population"
+main = "src/index.js"
+compatibility_date = "2026-11-06"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "octobot-population"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"

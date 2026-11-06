@@ -1,0 +1,4 @@
+{
+  "endpoint": "",
+  "comment": "Set to the deployed Cloudflare Worker HTTPS origin to activate per-minute telemetry."
+}

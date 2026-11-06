@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="octobot-version" content="1.0.41">
+<meta name="octobot-version" content="1.0.42">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="OctoWoW population history from real observations, with source freshness and clearly labelled estimates.">
 <title>OctoBot · Server Info</title>
@@ -39,7 +39,7 @@
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={};
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='';
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const x=t=>56+(t-start)/Math.max(windowEnd-start,1)*908,y=v=>290-v/ceiling*262;
@@ -82,6 +82,34 @@ function updateUptime(){
  $('uptime').textContent=d+'D '+h+'H '+m+'M '+s+'S';
  $('uptime-freshness').textContent='Estimated from in-game screenshot; resets unverified';
 }
+function workerUrl(path){return telemetryEndpoint+path;}
+async function workerJson(path){
+ if(!telemetryEndpoint)throw Error('No minute-by-minute collector configured');
+ const response=await fetch(workerUrl(path),{cache:'no-store',headers:{'Accept':'application/json'}});
+ if(!response.ok)throw Error('Worker HTTP '+response.status);
+ return response.json();
+}
+async function liveWorkerHistory(realmId,existing){
+ if(!telemetryEndpoint||realmId!=='nzoth')return existing;
+ try{
+  let since=existing.length?existing[existing.length-1].t:0;
+  const updated=[...existing];
+  // Resume after the most recently stored Github reading. A Worker sample is
+  // authoritative only for its own timestamp; never overwrite archived points.
+  for(let page=0;page<60;page++){
+   const result=await workerJson('/api/history?realm=nzoth&since='+encodeURIComponent(since));
+   if(!Array.isArray(result.readings))throw Error('Invalid Worker history payload');
+   const newRows=D.normalise(result.readings);
+   updated.push(...newRows.filter(r=>r.t>since));
+   if(!result.has_more||!newRows.length)break;
+   since=newRows[newRows.length-1].t;
+  }
+  return D.normalise(updated.map(r=>({timestamp:new Date(r.t).toISOString(),online:r.value})));
+ }catch(e){
+  console.warn('Minute telemetry history unavailable; using archived readings',e);
+  return existing;
+ }
+}
 async function fetchLatestJson(path){
  try{
   const response=await fetch(RAW_ROOT+path+'?v='+Date.now(),{cache:'no-store'});
@@ -94,8 +122,17 @@ async function fetchLatestJson(path){
  }
 }
 async function refreshLive(){
- try{const data=await fetchLatestJson('live.json');if(data&&typeof data==='object'&&!Array.isArray(data))liveSnapshots=data;}
- catch(e){/* Do not erase known observations when live feed is temporarily unavailable. */}
+ try{
+  const data=telemetryEndpoint?await workerJson('/api/latest'):await fetchLatestJson('live.json');
+  if(data&&typeof data==='object'&&!Array.isArray(data)){
+   for(const [id,snapshot]of Object.entries(data)){
+    const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
+    if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev)){
+      liveSnapshots[id]=snapshot;
+    }
+   }
+  }
+ }catch(e){console.warn('Live population feed temporarily unavailable',e);}
  updateHeadline();
 }
 
@@ -161,7 +198,7 @@ function draw(){
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
  $('range-label').textContent=period+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
- $('source-note').textContent=realms.find(r=>r.id===realm)?.source_note||'';
+ $('source-note').textContent=(realms.find(r=>r.id===realm)?.source_note||'')+(telemetryEndpoint?' · Minute-by-minute telemetry enabled':' · Real-time collector not connected; only archived readings available');
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
@@ -169,6 +206,10 @@ async function load(){const ticket=++loadNumber;try{
  const selected=realm==='all'?realms.filter(r=>r.id!=='all'):[realms.find(r=>r.id===realm)];
  const histories=await Promise.all(selected.map(async r=>D.normalise(await fetchLatestJson(r.history))));
  if(ticket!==loadNumber)return;
+ if(telemetryEndpoint){
+  const nzothIndex=selected.findIndex(r=>r.id==='nzoth');
+  if(nzothIndex!==-1)histories[nzothIndex]=await liveWorkerHistory('nzoth',histories[nzothIndex]);
+ }
  rows=realm==='all'?D.combine(histories):histories[0];now=Date.now();draw();await refreshLive();
  }catch(e){if(ticket!==loadNumber)return;rows=[];draw();$('source-note').textContent='Could not load this server’s history. No readings have been invented.';}}
 function selectRealm(id){realm=id;for(const o of $('server-select').options)o.disabled=o.value===realm;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
@@ -177,7 +218,9 @@ $('plot-hit').addEventListener('pointermove',e=>{const rect=e.currentTarget.getB
 $('plot-hit').addEventListener('pointerleave',()=>{$('tooltip').hidden=true;});
 $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from').value+'T00:00:00Z'),b=Math.min(now,Date.parse($('date-to').value+'T23:59:59Z'));if(!Number.isFinite(a)||!Number.isFinite(b)||a>=b||b<LAUNCH){$('date-error').textContent='Choose a valid start and end date before now.';return;}$('date-error').textContent='';customStart=a;windowEnd=b;period='CUSTOM';draw();});
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
-(async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');[realms,releases,uptimeReference]=await Promise.all(responses.map(r=>r.json()));for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;for(const o of $('server-select').options)o.disabled=o.value===realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
+(async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
+const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
+if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;for(const o of $('server-select').options)o.disabled=o.value===realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
 
 </script>
 </body></html>
