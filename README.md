@@ -1,4 +1,4 @@
-# OctoBot v1.0.32
+# OctoBot v1.0.33
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -308,9 +308,18 @@ in that order (Twitch is omitted when no stream is known). The live embed keeps 
 show details and ordered listen links but has no footer or bottom timestamp. Automatic
 post-show schedule messages are removed; `/nextshows` remains available on demand.
 
-### v1.0.32 daily chatter exclusions
+### v1.0.33 daily chatter exclusions
 
 Messages in channels `1547025818914525254` and `1547064843909988433`, including
 their threads, no longer count towards Daily Top Chatter after updating and restarting.
 Previously recorded messages cannot be filtered retroactively because the earlier
 counter did not store channel IDs.
+
+### v1.0.33 lightweight server-info renderer
+
+The preview now draws PNGs with Pillow directly, removing Matplotlib and its NumPy,
+ContourPy, fontTools and other plotting dependencies from new installs. This reduces
+installation and rendering overhead on small bot hosts. On hosts that automatically
+install requirements at startup, let that install finish; do not start a second manual
+pip install concurrently. Exit 137 indicates the process was killed (often by the host's
+memory limit); this change reduces demand but does not guarantee a particular RAM limit.

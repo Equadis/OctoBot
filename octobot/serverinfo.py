@@ -12,9 +12,7 @@ from datetime import datetime, timedelta, timezone
 import discord
 from discord import app_commands
 from discord.ext import commands
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.figure import Figure
-import matplotlib.dates as mdates
+from PIL import Image, ImageDraw, ImageFont
 
 UTC = timezone.utc
 RANGES = ("1H", "1D", "1W", "1M", "1Y", "YTD")
@@ -72,45 +70,76 @@ def selectable_indices(samples: list[Sample], selected: int) -> list[int]:
     return sorted(indices)
 
 
+def _font(size: int) -> ImageFont.ImageFont:
+    try:
+        return ImageFont.truetype("DejaVuSans.ttf", size)
+    except OSError:
+        # Pillow bundles a scalable default font, so minimal containers need no font packages.
+        return ImageFont.load_default(size=size)
+
+
 def render_chart(end: datetime, period: str, samples: list[Sample], selected: int) -> bytes:
-    """Use an isolated Agg figure in a worker; serialise Matplotlib's shared state."""
+    """Draw a bounded PNG without NumPy or Matplotlib; suitable for small bot hosts."""
     with _RENDER_LOCK:
-        figure = Figure(figsize=(10, 4), dpi=130, facecolor="#202225")
-        FigureCanvasAgg(figure)
-        ax = figure.add_subplot(111, facecolor="#202225")
-        figure.subplots_adjust(left=.075, right=.975, bottom=.19, top=.82)
-        times = [s.time for s in samples]
-        ax.plot(times, [math.nan if s.players is None else s.players for s in samples],
-                color="#46df88", linewidth=1.8)
-        for a, b in demo_outages(end):
-            a, b = max(a, times[0]), min(b, end)
-            if a < b:
-                ax.axvspan(a, b, color="#ef7777", alpha=.13)
-                ax.plot([a, b], [0, 0], color="#ef7777", linestyle="--", linewidth=2)
+        image = Image.new("RGB", (1300, 520), "#202225")
+        draw = ImageDraw.Draw(image)
+        title_font, label_font, small_font = _font(25), _font(18), _font(15)
+        green, red, muted = "#46df88", "#ef7777", "#b9bdc5"
+        left, right, top, bottom = 85, 1260, 125, 420
+        start = samples[0].time
+        span = max((end - start).total_seconds(), 1)
+
+        def x(time: datetime) -> int:
+            return round(left + (time - start).total_seconds() / span * (right - left))
+
+        def y(value: int) -> int:
+            return round(bottom - value / 2600 * (bottom - top))
+
+        draw.text((left, 28), f"Population  /  {period}", font=title_font, fill="white")
+        draw.text((right, 34), "SYNTHETIC TEST DATA", font=small_font, fill="#f2c66d", anchor="ra")
         point = samples[selected]
-        y = point.players if point.players is not None else 0
-        colour = "#46df88" if point.players is not None else "#ef7777"
-        ax.axvline(point.time, color=colour, linewidth=.8, alpha=.6)
-        ax.scatter([point.time], [y], color=colour, edgecolor="#ffffff", s=45, zorder=5, clip_on=False)
-        label = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
-        figure.text(.075, .91, f"Population  /  {period}", color="white", fontsize=13, weight="bold")
-        figure.text(.075, .84, f"{point.time:%d %b %Y %H:%M} UTC  ·  {label}", color=colour, fontsize=10)
-        figure.text(.975, .92, "SYNTHETIC TEST DATA", ha="right", color="#f2c66d", fontsize=9)
-        figure.text(.975, .025, "Dashed red: simulated outage  ·  All times UTC", ha="right",
-                    color="#b9bdc5", fontsize=8)
-        ax.set_xlim(times[0], end)
-        ax.set_ylim(-80, 2600)
-        ax.set_ylabel("Players online", color="#b9bdc5")
-        locator = mdates.AutoDateLocator(minticks=3, maxticks=7, tz=UTC)
-        ax.xaxis.set_major_locator(locator)
-        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator, tz=UTC))
-        ax.tick_params(colors="#b9bdc5", labelsize=8)
-        ax.grid(color="#ffffff", alpha=.07)
-        for spine in ax.spines.values():
-            spine.set_visible(False)
+        value = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
+        colour = green if point.players is not None else red
+        draw.text((left, 76), f"{point.time:%d %b %Y %H:%M:%S} UTC  ·  {value}", font=label_font, fill=colour)
+        for players in range(0, 2501, 500):
+            row = y(players)
+            draw.line((left, row, right, row), fill="#34373c")
+            draw.text((left - 12, row), f"{players:,}", font=small_font, fill=muted, anchor="rm")
+        draw.text((left, top - 27), "Players online", font=small_font, fill=muted)
+        for i in range(6):
+            time = start + (end - start) * i / 5
+            column = x(time)
+            draw.line((column, top, column, bottom), fill="#34373c")
+            pattern = "%H:%M" if period in ("1H", "1D") else "%d %b"
+            if period in ("1Y", "YTD"):
+                pattern = "%d %b %Y"
+            draw.text((column, bottom + 17), time.strftime(pattern), font=small_font,
+                      fill=muted, anchor="ma")
+        for a, b in demo_outages(end):
+            a, b = max(a, start), min(b, end)
+            if a < b:
+                xa, xb = x(a), x(b)
+                draw.rectangle((xa, top, max(xa + 1, xb), bottom), fill="#3b292e")
+                for dash in range(xa, max(xa + 1, xb), 13):
+                    draw.line((dash, bottom, min(dash + 7, max(xa + 1, xb)), bottom), fill=red, width=3)
+        segment: list[tuple[int, int]] = []
+        for sample in samples:
+            if sample.players is None:
+                if len(segment) > 1:
+                    draw.line(segment, fill=green, width=3)
+                segment = []
+            else:
+                segment.append((x(sample.time), y(sample.players)))
+        if len(segment) > 1:
+            draw.line(segment, fill=green, width=3)
+        px, py = x(point.time), y(point.players if point.players is not None else 0)
+        draw.line((px, top, px, bottom), fill="#56836c" if point.players is not None else "#995555")
+        draw.ellipse((px - 6, py - 6, px + 6, py + 6), fill=colour, outline="white", width=2)
+        draw.text((right, 486), "Dashed red: simulated outage  ·  All times UTC", font=small_font,
+                  fill=muted, anchor="ra")
         output = io.BytesIO()
-        figure.savefig(output, format="png", facecolor=figure.get_facecolor())
-        figure.clear()
+        image.save(output, format="PNG")
+        image.close()
         return output.getvalue()
 
 

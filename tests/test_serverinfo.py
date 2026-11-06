@@ -4,7 +4,7 @@ import io
 import unittest
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace as NS
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from PIL import Image
 from octobot.serverinfo import (RANGES, ServerInfoCog, ServerInfoView, demo_samples,
@@ -37,6 +37,26 @@ class ServerInfoDataTests(unittest.TestCase):
             self.assertIn(len(samples) - 1, choices)
         # January boundary must still produce valid choices and a nonempty range.
         self.assertTrue(demo_samples(END.replace(month=1, day=1), 'YTD'))
+
+    def test_renderer_needs_no_plotting_stack(self):
+        import subprocess
+        import sys
+        result = subprocess.run([sys.executable, '-c',
+            "import sys; import octobot.serverinfo; "
+            "assert 'matplotlib' not in sys.modules; assert 'numpy' not in sys.modules"],
+            capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_minimal_host_font_fallback(self):
+        from octobot.serverinfo import _font
+        from PIL import ImageFont
+        original = ImageFont.truetype
+        def no_system_font(font, *args, **kwargs):
+            if isinstance(font, str):
+                raise OSError('no system font')
+            return original(font, *args, **kwargs)
+        with patch('octobot.serverinfo.ImageFont.truetype', side_effect=no_system_font):
+            self.assertIsNotNone(_font(18))
 
     def test_every_range_renders_and_down_selection(self):
         for period in RANGES:
