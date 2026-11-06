@@ -151,10 +151,11 @@ class Config:
     radio_enabled: bool = True
     radio_base_url: str = "https://radio.octowow.st"
     radio_station_shortcode: str = "booty_bay_pirate_radio"
-    radio_channel_id: int | None = None
+    radio_channel_id: int | None = 1547025378479181895
+    radio_discord_channel_id: int = 1568053765347741828
     # Extra channels that also receive radio announcements, without the role ping.
     radio_extra_channel_ids: frozenset[int] = frozenset({1554524069511168040})
-    radio_ping_role_id: int | None = None
+    radio_ping_role_id: int | None = 1567629523514818651
     radio_poll_seconds: int = 30
     radio_go_live_confirmations: int = 2
     # Scheduled shows are announced at their scheduled start. Live-detection alerts
@@ -268,11 +269,21 @@ class Config:
                 ).strip()
                 or "booty_bay_pirate_radio"
             ),
-            radio_channel_id=_discord_id("DISCORD_RADIO_CHANNEL_ID"),
+            # Migrate the former shipped channel/role IDs on existing installs.
+            radio_channel_id=(
+                1547025378479181895
+                if os.getenv("DISCORD_RADIO_CHANNEL_ID", "1547109894732120104").strip() == "1547109894732120104"
+                else _discord_id("DISCORD_RADIO_CHANNEL_ID")
+            ),
+            radio_discord_channel_id=_positive_int("DISCORD_RADIO_LISTEN_CHANNEL_ID", 1568053765347741828),
             radio_extra_channel_ids=_discord_id_set(
                 "DISCORD_RADIO_EXTRA_CHANNEL_IDS", "1554524069511168040"
             ),
-            radio_ping_role_id=_discord_id("DISCORD_RADIO_PING_ROLE_ID"),
+            radio_ping_role_id=(
+                1567629523514818651
+                if os.getenv("DISCORD_RADIO_PING_ROLE_ID", "1547108101747118100").strip() == "1547108101747118100"
+                else _discord_id("DISCORD_RADIO_PING_ROLE_ID")
+            ),
             radio_poll_seconds=_positive_int("RADIO_POLL_SECONDS", 30),
             radio_go_live_confirmations=_positive_int(
                 "RADIO_GO_LIVE_CONFIRMATIONS", 2

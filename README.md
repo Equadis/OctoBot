@@ -1,4 +1,4 @@
-# OctoBot v1.0.29
+# OctoBot v1.0.30
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -17,9 +17,9 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - Booty Bay Pirate Radio monitoring and `/radio`
 - `/nextshows` lists every upcoming scheduled show in the next `RADIO_SCHEDULE_DAYS` (default 14) with absolute (`<t:…:f>`) and relative (`<t:…:R>`) Discord timestamps plus the DJ's Twitch link; same access rule as `/radio`.
   - Each scheduled show is pinged to `DISCORD_RADIO_PING_ROLE_ID` in `DISCORD_RADIO_CHANNEL_ID` at its scheduled start time, naming the DJ from the station schedule. `DISCORD_RADIO_EXTRA_CHANNEL_IDS` receives the same announcement without the role ping. One ping per show; a start missed while the bot was down is still announced if the show is under 10 minutes in.
-  - When an announced show's scheduled end passes, the `/nextshows` list is posted to the same channel automatically (no ping), once per show.
+  - Ended shows do not post an automatic schedule. Use `/nextshows` to request it.
   - `RADIO_LIVE_ALERTS=true` additionally pings when a DJ goes live outside the schedule.
-  - The ping lists three ways to listen: in-game radio, the radio website, and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind and Judge Holdenn are built in, matched against the show name the station reports; `RADIO_DJ_STREAMS` overrides the table). A show with no configured stream simply omits the Twitch line.
+  - The ping lists Website · Twitch · Discord · In-Game, linking to the radio stage and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind and Judge Holdenn are built in, matched against the show name the station reports; `RADIO_DJ_STREAMS` overrides the table). A show with no configured stream simply omits the Twitch line.
 - Tracker command role configuration under `/config command-role`
 - `/authcheck` is open to everyone but only works in the channel set by `DISCORD_AUTHCHECK_CHANNEL_ID` (default `1547064843909988433`)
 
@@ -292,3 +292,14 @@ Override `DAILY_CHATTER_ROLE_ID` and `DAILY_CHATTER_CHANNEL_ID` in `.env`, or se
 blank to disable the feature. The bot needs **Manage Roles**, its highest role above
 Exalted, **View Channel / Send Messages** in the announcement channel, and **Server
 Members Intent** enabled. Deploy the updated code and restart the bot to activate.
+
+### v1.0.30 radio announcements
+
+Radio pings now go to `1547025378479181895`, mentioning role `1567629523514818651`.
+The previous shipped channel and ping-role IDs are migrated automatically; custom
+overrides and blank (disabled) values are preserved. The Discord listen link opens
+stage channel `1568053765347741828` (`DISCORD_RADIO_LISTEN_CHANNEL_ID`). Announcements
+use the show title in the pirate greeting and list Website · Twitch · Discord · In-Game
+in that order (Twitch is omitted when no stream is known). The live embed keeps the
+show details and ordered listen links but has no footer or bottom timestamp. Automatic
+post-show schedule messages are removed; `/nextshows` remains available on demand.

@@ -583,8 +583,17 @@ def report_recovery_embed(incident: ReportIncident) -> discord.Embed:
     return embed
 
 
+def radio_listen_links(public_url: str, twitch_url: str | None, discord_url: str) -> str:
+    links = [f"[Website]({public_url})"]
+    if twitch_url:
+        links.append(f"[Twitch]({twitch_url})")
+    links.extend([f"[Discord]({discord_url})", "In-Game"])
+    return " · ".join(links)
+
+
 def radio_live_embed(
-    occurrence: RadioOccurrence, public_url: str, twitch_url: str | None = None
+    occurrence: RadioOccurrence, public_url: str, twitch_url: str | None = None,
+    discord_url: str = "https://discord.com/channels/1547014756463026197/1568053765347741828",
 ) -> discord.Embed:
     presenter = occurrence.presenter or occurrence.title
     embed = discord.Embed(
@@ -592,7 +601,6 @@ def radio_live_embed(
         description=f"🔴 **LIVE NOW**\n**{occurrence.title}**\nwith **{presenter}**",
         url=public_url,
         color=discord.Color.red(),
-        timestamp=occurrence.detected_live_at,
     )
     embed.add_field(
         name="Started",
@@ -603,13 +611,10 @@ def radio_live_embed(
         embed.add_field(name="Scheduled end", value=discord_time(occurrence.scheduled_end, "t"), inline=True)
     if occurrence.description:
         embed.add_field(name="About this show", value=occurrence.description[:1024], inline=False)
-    listen = f"In-game radio • [Radio website]({public_url})"
-    if twitch_url:
-        listen += f" • [Twitch]({twitch_url})"
+    listen = radio_listen_links(public_url, twitch_url, discord_url)
     embed.add_field(name="Listen", value=listen, inline=False)
     if occurrence.artwork_url and occurrence.artwork_url.startswith(("http://", "https://")):
         embed.set_thumbnail(url=occurrence.artwork_url)
-    embed.set_footer(text="Tune in through the in-game radio or the web player")
     return embed
 
 

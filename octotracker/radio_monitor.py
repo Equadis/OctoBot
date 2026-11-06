@@ -9,7 +9,7 @@ import discord
 
 from .config import Config
 from .database import Database, RadioOccurrence
-from .embeds import next_shows_embeds, radio_live_embed
+from .embeds import radio_listen_links, radio_live_embed
 from .radio import (
     DJ_TWITCH_STREAMS,
     LIVE,
@@ -29,32 +29,25 @@ RADIO_LISTEN_URL = (
 # at that moment it still announces on the next poll, but not once the show is this
 # far in: a late ping is worse than none.
 SCHEDULE_ANNOUNCE_GRACE = timedelta(minutes=10)
-# After an announced show's scheduled end, the upcoming-shows list is posted to the
-# radio channel so listeners see what is next. Same lateness cut-off as above.
-SHOW_ENDED_FOLLOWUP_GRACE = timedelta(minutes=10)
 
 
 def radio_notification_message(
-    dj_name: str,
+    show_name: str,
     role_id: int | None,
     listen_url: str = RADIO_LISTEN_URL,
     twitch_url: str | None = None,
+    discord_url: str = "https://discord.com/channels/1547014756463026197/1568053765347741828",
 ) -> str:
-    audience = f"<@&{role_id}> " if role_id is not None else ""
-    website = f"[Radio Website]({listen_url})"
-    ways = (
-        f"Tune in through the in-game radio, the {website}, "
-        f"or directly on their [Twitch Stream]({twitch_url})!"
-        if twitch_url
-        else f"Tune in through the in-game radio or the {website}!"
-    )
+    audience = f"# <@&{role_id}>\n\n" if role_id is not None else ""
+    show_name = discord.utils.escape_markdown(discord.utils.escape_mentions(show_name))
     return (
-        f"GREETINGS, ALL YE {audience}LISTENERS!\n"
-        "YARRR! This be the Booty Bay Pirate Radio Announcement Service, "
-        f"lettin’ all ye landlubbers know that {dj_name} has just gone LIVE "
-        "on the airwaves!\n"
-        f"{ways}\n"
-        "Raise the sails, turn it up, and enjoy the show! ☠️📻"
+        audience
+        + f"# 📻Pirate Radio Announcement Service: {show_name}!\n\n"
+        "AHOY SCALLYWAGS! This be the Booty Bay Pirate Radio Announcement Service, "
+        f"lettin’ all ye landlubbers know that {show_name} has just gone **LIVE** "
+        "on the airwaves!\n\n"
+        "Raise the sails, turn it up, and enjoy the show! YARRR! ☠🏴‍☠️\n\n"
+        f"- {radio_listen_links(listen_url, twitch_url, discord_url)}"
     )
 
 
@@ -116,7 +109,6 @@ class RadioMonitor:
             )
             if snapshot.source_ok and snapshot.schedule_available:
                 await self._announce_scheduled_shows(snapshot)
-                await self._post_next_shows_after_ended(snapshot)
             # Never deliver a stale "now live" alert after the source has already
             # moved back to AutoDJ/offline. Only the currently confirmed live
             # occurrence is eligible for delivery.
@@ -202,34 +194,6 @@ class RadioMonitor:
                 ids.append(channel_id)
         return ids
 
-    async def _post_next_shows_after_ended(self, snapshot: RadioSnapshot) -> None:
-        """Post the /nextshows list once per announced show, when its slot ends."""
-        channel_ids = self.announce_channel_ids
-        if not channel_ids:
-            return
-        ended = await self.database.ended_shows_awaiting_followup(
-            self.config.radio_station_shortcode, snapshot.checked_at, SHOW_ENDED_FOLLOWUP_GRACE
-        )
-        if not ended:
-            return
-        embeds = next_shows_embeds(snapshot, self.dj_streams)
-        posted = False
-        for channel_id in channel_ids:
-            channel = await self._resolve_channel(channel_id)
-            if channel is None:
-                continue
-            try:
-                for embed in embeds:
-                    await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-                posted = True
-            except (discord.Forbidden, discord.HTTPException):
-                LOGGER.exception("Could not post the upcoming shows list to %s", channel_id)
-        if not posted:
-            return
-        # Several slots ending together get one list, not one each.
-        await self.database.mark_ended_followup_posted(ended, snapshot.checked_at)
-        LOGGER.info("Posted upcoming shows after %s show(s) ended", len(ended))
-
     async def _resolve_channel(self, channel_id: int):
         channel = self.bot.get_channel(channel_id)
         if channel is None:
@@ -271,7 +235,8 @@ class RadioMonitor:
         """
         dj_name = occurrence.presenter or occurrence.title
         twitch_url = dj_stream_url(dj_name, self.dj_streams)
-        embed = radio_live_embed(occurrence, self.client.public_url, twitch_url)
+        discord_url = f"https://discord.com/channels/{self.config.guild_id}/{self.config.radio_discord_channel_id}"
+        embed = radio_live_embed(occurrence, self.client.public_url, twitch_url, discord_url)
         role_id = self.config.radio_ping_role_id
         first_message_id: int | None = None
         sent_any = False
@@ -294,7 +259,7 @@ class RadioMonitor:
             try:
                 message = await channel.send(
                     content=radio_notification_message(
-                        dj_name, role_id if ping_here else None, self.client.public_url, twitch_url
+                        occurrence.title, role_id if ping_here else None, self.client.public_url, twitch_url, discord_url
                     ),
                     embed=embed,
                     allowed_mentions=allowed_mentions,

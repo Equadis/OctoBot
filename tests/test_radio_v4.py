@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import os
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -143,16 +145,18 @@ class RadioParserTests(unittest.TestCase):
         message = radio_notification_message("DJ Whiski", 1234, self.public_url)
         self.assertIn("DJ Whiski", message)
         self.assertIn("<@&1234>", message)
-        self.assertIn("GREETINGS, ALL YE", message)
+        self.assertIn("AHOY SCALLYWAGS!", message)
+        self.assertTrue(message.startswith("# <@&1234>\n\n# 📻Pirate Radio Announcement Service: DJ Whiski!"))
+        self.assertIn("**LIVE**", message)
         self.assertIn(self.public_url, message)
-        self.assertIn(f"[Radio Website]({self.public_url})", message)
+        self.assertIn(f"[Website]({self.public_url})", message)
         self.assertNotIn("Twitch", message)
 
     def test_pirate_notification_lists_only_the_live_djs_twitch(self) -> None:
         message = radio_notification_message(
             "Mossa", 1234, self.public_url, "https://www.twitch.tv/dj_mossa"
         )
-        self.assertIn("[Twitch Stream](https://www.twitch.tv/dj_mossa)!", message)
+        self.assertIn("[Twitch](https://www.twitch.tv/dj_mossa)", message)
         self.assertNotIn("djwhiski", message)
         self.assertNotIn("tekeelatv", message)
         self.assertNotIn("sabellwind", message)
@@ -653,7 +657,7 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(extra.sent), 1)
         self.assertIn("<@&1547108101747118100>", main.sent[0]["content"])
         self.assertNotIn("<@&", extra.sent[0]["content"])
-        self.assertIn("DJ Whiski", extra.sent[0]["content"])
+        self.assertIn("Pirate Hour", extra.sent[0]["content"])
         self.assertFalse(extra.sent[0]["allowed_mentions"].roles)
         self.assertEqual(main.sent[0]["embed"].title, extra.sent[0]["embed"].title)
 
@@ -673,15 +677,26 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         await monitor.check()
         self.assertEqual(len(channel.sent), 1)
         self.assertIn("<@&1547108101747118100>", channel.sent[0]["content"])
-        self.assertIn("DJ Whiski", channel.sent[0]["content"])
-        self.assertIn("[Twitch Stream](https://www.twitch.tv/djwhiski)", channel.sent[0]["content"])
+        self.assertIn("Pirate Hour", channel.sent[0]["content"])
+        self.assertIn("[Twitch](https://www.twitch.tv/djwhiski)", channel.sent[0]["content"])
         self.assertNotIn("dj_mossa", channel.sent[0]["content"])
+        content = channel.sent[0]["content"]
+        self.assertIn("Pirate Radio Announcement Service: Pirate Hour!", content)
+        self.assertIn("[Discord](https://discord.com/channels/123/1568053765347741828)", content)
+        self.assertLess(content.index("[Website]"), content.index("[Twitch]"))
+        self.assertLess(content.index("[Twitch]"), content.index("[Discord]"))
+        self.assertTrue(content.endswith(" · In-Game"))
+        embed = channel.sent[0]["embed"]
+        listen = next(field.value for field in embed.fields if field.name == "Listen")
+        self.assertEqual(listen, content.split("\n- ")[-1])
+        self.assertIsNone(embed.footer.text)
+        self.assertIsNone(embed.timestamp)
         self.assertEqual(channel.sent[0]["allowed_mentions"].roles[0].id, 1547108101747118100)
         for _ in range(3):
             await monitor.check()
         self.assertEqual(len(channel.sent), 1)
 
-    async def test_next_shows_posted_once_when_announced_show_ends(self) -> None:
+    async def test_no_schedule_post_when_announced_show_ends(self) -> None:
         channel = _FakeChannel()
         end = self.start + timedelta(hours=1)
         client = _SequenceRadioClient([
@@ -697,14 +712,10 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
             await monitor.check()
         self.assertEqual(len(channel.sent), 1)
         await monitor.check()
-        self.assertEqual(len(channel.sent), 2)
-        followup = channel.sent[1]
-        self.assertNotIn("content", followup)
-        self.assertEqual(followup["embed"].title, "📻 Upcoming Booty Bay Pirate Radio shows")
-        self.assertFalse(followup["allowed_mentions"].roles)
+        self.assertEqual(len(channel.sent), 1)
         for _ in range(2):
             await monitor.check()
-        self.assertEqual(len(channel.sent), 2)
+        self.assertEqual(len(channel.sent), 1)
 
     async def test_ended_followup_skipped_when_end_missed_by_too_long(self) -> None:
         channel = _FakeChannel()
@@ -838,3 +849,29 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RadioAnnouncementConfigTests(unittest.TestCase):
+    def load(self, **settings):
+        with patch.dict(os.environ, {"DISCORD_TOKEN": "test", "DISCORD_GUILD_ID": "123", **settings}, clear=True):
+            with patch("octotracker.config.load_dotenv"):
+                return Config.from_env()
+
+    def test_new_defaults_and_legacy_settings_migrate(self):
+        for config in (self.load(), self.load(DISCORD_RADIO_CHANNEL_ID="1547109894732120104",
+                                             DISCORD_RADIO_PING_ROLE_ID="1547108101747118100")):
+            self.assertEqual(config.radio_channel_id, 1547025378479181895)
+            self.assertEqual(config.radio_ping_role_id, 1567629523514818651)
+            self.assertEqual(config.radio_discord_channel_id, 1568053765347741828)
+
+    def test_custom_settings_are_preserved(self):
+        config = self.load(DISCORD_RADIO_CHANNEL_ID="111", DISCORD_RADIO_PING_ROLE_ID="222",
+                           DISCORD_RADIO_LISTEN_CHANNEL_ID="333")
+        self.assertEqual(config.radio_channel_id, 111)
+        self.assertEqual(config.radio_ping_role_id, 222)
+        self.assertEqual(config.radio_discord_channel_id, 333)
+
+    def test_blank_settings_stay_disabled(self):
+        config = self.load(DISCORD_RADIO_CHANNEL_ID="", DISCORD_RADIO_PING_ROLE_ID="")
+        self.assertIsNone(config.radio_channel_id)
+        self.assertIsNone(config.radio_ping_role_id)
