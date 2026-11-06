@@ -1,4 +1,4 @@
-# OctoBot v1.0.34
+# OctoBot v1.0.35
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -326,14 +326,31 @@ memory limit); this change reduces demand but does not guarantee a particular RA
 
 ### v1.0.34 interactive graph
 
-The public graph is hosted at https://octobot-serverinfo.plainshortbread2.chatgpt.site/.
-Its small HTML/CSS/JavaScript/SVG source is in `web/serverinfo.html`, with no chart
+The public graph is hosted at https://equadis.github.io/OctoBot/.
+Its small HTML/CSS/JavaScript/SVG source is in `docs/index.html`, with no chart
 framework, CDN, web server on the bot host or extra Python dependency. The button
 passes only the demo snapshot timestamp in a URL fragment so it matches the message.
 The default view is 1W; each visitor changes only their own view. The arrow opens a
 browser page, not an embedded Discord Activity or native hoverable message image.
 `SERVERINFO_GRAPH_URL` optionally overrides the hosted page for self-hosting; deploy
-`web/serverinfo.html` as a static index page. No configuration is required for the
+`docs/index.html` as a static index page. No configuration is required for the
 included hosted test page. Discord controls expire after 10 minutes; the external
 link stays usable. The command is still admin-only to post, while anyone can click
 its public controls to receive their own private chart.
+
+### v1.0.35 GitHub Pages hosting
+
+The default graph URL is `https://equadis.github.io/OctoBot/`. The static page is
+`docs/index.html`; GitHub Pages publishes it from **main → /docs**. There is no
+build step, server or new dependency. If Pages has not been enabled yet, a repository
+administrator must enable **Settings → Pages → Deploy from a branch → main → /docs**.
+Future changes to the page publish automatically when pushed to main.
+
+The bot passes only a demo snapshot timestamp in `#at=...`. Page range changes are
+local to that browser tab. Discord range controls open a private chart for the
+person clicking; subsequent clicks edit that private chart. The public 1W panel
+stays unchanged. 1H/1D/1W cover the previous hour/day/week; 1M and 1Y mean rolling
+30 and 365 days; YTD starts at 00:00 UTC on 1 January of the snapshot year.
+
+If `SERVERINFO_GRAPH_URL` was explicitly set to the old host, remove that override
+or change it to the GitHub Pages URL, then restart OctoBot and run `/serverinfo` again.

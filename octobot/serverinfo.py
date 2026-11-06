@@ -20,7 +20,7 @@ UTC = timezone.utc
 RANGES = ("1H", "1D", "1W", "1M", "1Y", "YTD")
 _RENDER_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
-DEFAULT_GRAPH_URL = "https://octobot-serverinfo.plainshortbread2.chatgpt.site/"
+DEFAULT_GRAPH_URL = "https://equadis.github.io/OctoBot/"
 
 
 def interactive_url(end: datetime) -> str:

@@ -20,6 +20,18 @@ def interaction(admin=True, user=1, guild=123):
 
 
 class ServerInfoDataTests(unittest.TestCase):
+    def test_github_pages_source_and_link(self):
+        from pathlib import Path
+        from urllib.parse import urlsplit
+        url = urlsplit(interactive_url(END))
+        self.assertEqual(url.netloc, 'equadis.github.io')
+        self.assertEqual(url.path, '/OctoBot/')
+        root = Path(__file__).resolve().parents[1]
+        self.assertTrue((root / 'docs' / '.nojekyll').is_file())
+        html = (root / 'docs' / 'index.html').read_text()
+        self.assertIn("const periods=['1H','1D','1W','1M','1Y','YTD']", html)
+        self.assertNotIn('chatgpt.site', html)
+
     def test_ranges_and_consistency(self):
         self.assertEqual(range_start(END, '1W'), END - timedelta(days=7))
         self.assertEqual(range_start(END, 'YTD'), datetime(2026, 1, 1, tzinfo=timezone.utc))
