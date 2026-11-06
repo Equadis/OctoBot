@@ -82,3 +82,26 @@ Each HTTPS URL must return JSON `{"online":123}` for **that realm only**.
 Never copy the N'Zoth census count as a substitute. The site already lists
 all three realms and All Realms; those entries will show NO DATA until
 their real feeds exist. All Realms sums three near-synchronous observations.
+
+## Public feed audit (6 November 2026)
+
+An inspection of the official `/player-census` HTML and its public JavaScript found
+**one** Livewire `onlineNow` value, displayed as `OctoWoW Players online now`.
+The three realm tabs use a separately generated character census (`combos` and
+historic character totals), not independently exposed current online numbers.
+The public homepage lists realm **online/offline status**, not online population.
+No verified, realm-specific once-per-minute PvP or Hardcore feed was identified.
+
+**Important limitation:** The website does not explicitly label its `onlineNow`
+count as N'Zoth-only; OctoBot currently stores this reading under `nzoth` due
+to the earlier assumption. Its realm attribution needs verification against
+an in-game N'Zoth `.s info` reading taken at the same time, or direct confirmation
+from OctoWoW developers. Do not report this time series as fully verified
+realm-specific population until the attribution is established. If the official
+counter represents the combined population, move the series to an appropriately
+named aggregate instead of adding it to individual realm figures.
+
+The most reliable solution is for OctoWoW developers to publish or confirm
+read-only JSON endpoints with timestamped per-realm online counts (ideally all
+three in one response). The existing Worker supports separately configured
+verified per-realm JSON feeds but cannot invent missing sources.
