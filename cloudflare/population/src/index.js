@@ -54,6 +54,12 @@ async function collect(env){
 const worker={
  async scheduled(controller,env,ctx){
   ctx.waitUntil(collect(env).catch(e=>console.error('Population collection failed:',e)));
+  // Expired anonymous viewer sessions need not accumulate indefinitely in D1.
+  ctx.waitUntil(
+   env.DB.prepare('DELETE FROM viewer_presence WHERE last_seen_ms<?')
+    .bind(Date.now()-3600000).run()
+    .catch(e=>console.error('Viewer session cleanup failed:',e))
+  );
  },
  async fetch(request,env){
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type'}});
