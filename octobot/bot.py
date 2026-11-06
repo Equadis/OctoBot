@@ -118,6 +118,7 @@ class OctoBot(commands.Bot):
             ("reports-clear", "Clear current community reports.", self.reports_clear_command),
             ("radio", "Show Booty Bay Pirate Radio status and upcoming shows.", self.radio_command),
             ("nextshows", "List all upcoming Booty Bay Pirate Radio shows.", self.nextshows_command),
+            ("testalert", "Send a Pirate Radio ping test (admin only).", self.testalert_command),
             ("help", "Explain the OctoBot commands you can use.", self.help_slash_command),
             (
                 "authcheck",
@@ -514,6 +515,33 @@ class OctoBot(commands.Bot):
                 ephemeral=True,
             )
 
+    async def testalert_command(
+        self,
+        interaction: discord.Interaction,
+        show_name: app_commands.Range[str, 1, 100] = "Tekeela N Trouble",
+    ) -> None:
+        if not await self._require_administrator(interaction):
+            return
+        if not self.config.radio_enabled:
+            await interaction.response.send_message(
+                "Pirate Radio monitoring is disabled.", ephemeral=True
+            )
+            return
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        try:
+            message = await self._radio_monitor().send_test_notification(show_name)
+        except (RuntimeError, discord.Forbidden, discord.HTTPException) as exc:
+            LOGGER.warning("Could not send Pirate Radio test alert: %s", exc)
+            await interaction.followup.send(
+                f"Could not send the radio test alert: {exc}", ephemeral=True
+            )
+            return
+        await interaction.followup.send(
+            f"Sent a labelled Pirate Radio test to <#{self.config.radio_channel_id}> "
+            f"with the configured listener role mention: {message.jump_url}",
+            ephemeral=True,
+        )
+
     async def nextshows_command(self, interaction: discord.Interaction) -> None:
         # Same access rule as /radio: one "radio" entry in /config command-role covers both.
         if not await self._require_command_access(interaction, "radio"):
@@ -555,6 +583,7 @@ class OctoBot(commands.Bot):
             visible.append(("authcheck", "Run a one-off authentication diagnostic."))
         if self._is_administrator(interaction):
             visible.append(("serverinfo", "View recorded population and its history (admin test)."))
+            visible.append(("testalert", "Post a Pirate Radio test with a role ping to the radio channel."))
             visible.append(("config command-role", "Configure which roles can use tracker commands."))
 
         if isinstance(interaction.user, discord.Member):
