@@ -9,7 +9,7 @@ import discord
 
 from .config import Config
 from .database import Database, RadioOccurrence
-from .embeds import radio_listen_links, radio_live_embed
+from .embeds import radio_listen_links
 from .radio import (
     DJ_TWITCH_STREAMS,
     LIVE,
@@ -38,16 +38,16 @@ def radio_notification_message(
     twitch_url: str | None = None,
     discord_url: str = "https://discord.com/channels/1547014756463026197/1568053765347741828",
 ) -> str:
-    audience = f"# <@&{role_id}>\n\n" if role_id is not None else ""
+    audience = f"<@&{role_id}>\n\n" if role_id is not None else ""
     show_name = discord.utils.escape_markdown(discord.utils.escape_mentions(show_name))
     return (
         audience
-        + f"# 📻Pirate Radio Announcement Service: {show_name}!\n\n"
+        + f"# 🏴‍☠️ Pirate Radio Announcement Service: {show_name}!\n\n"
         "AHOY SCALLYWAGS! This be the Booty Bay Pirate Radio Announcement Service, "
         f"lettin’ all ye landlubbers know that {show_name} has just gone **LIVE** "
         "on the airwaves!\n\n"
-        "Raise the sails, turn it up, and enjoy the show! YARRR! ☠🏴‍☠️\n\n"
-        f"- {radio_listen_links(listen_url, twitch_url, discord_url)}"
+        "Raise the sails, turn it up, and enjoy the show! YARRR! 💀 📻\n\n"
+        f"{radio_listen_links(listen_url, twitch_url, discord_url)}"
     )
 
 
@@ -236,7 +236,6 @@ class RadioMonitor:
         dj_name = occurrence.presenter or occurrence.title
         twitch_url = dj_stream_url(dj_name, self.dj_streams)
         discord_url = f"https://discord.com/channels/{self.config.guild_id}/{self.config.radio_discord_channel_id}"
-        embed = radio_live_embed(occurrence, self.client.public_url, twitch_url, discord_url)
         role_id = self.config.radio_ping_role_id
         first_message_id: int | None = None
         sent_any = False
@@ -261,7 +260,6 @@ class RadioMonitor:
                     content=radio_notification_message(
                         occurrence.title, role_id if ping_here else None, self.client.public_url, twitch_url, discord_url
                     ),
-                    embed=embed,
                     allowed_mentions=allowed_mentions,
                 )
             except (discord.Forbidden, discord.HTTPException):
