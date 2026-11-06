@@ -2,13 +2,13 @@
   {
     "id": "all",
     "name": "All Realms",
-    "source_note": "Combined total: only calculated when N’Zoth, Y’Shaarj and C’Thun have near-synchronous readings. An unavailable realm is never treated as zero."
+    "source_note": "Only combined from independently verified, near-synchronous counts for all three realms. The single website headline is not used as an additional realm."
   },
   {
     "id": "nzoth",
     "name": "N’Zoth (Normal)",
     "history": "online-history.json",
-    "source_note": "Imported history and confirmed N’Zoth census counter"
+    "source_note": "Official website headline 'Players online now' count: assumed N’Zoth historically, but the site does not label the count by realm. Attribution requires verification."
   },
   {
     "id": "yshaarj",
