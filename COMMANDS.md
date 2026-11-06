@@ -16,15 +16,14 @@ Anyone with Discord Administrator or the server owner always has every bot permi
 
 ## Admin test: `/serverinfo`
 
-Requires Discord **Administrator** to post, enforced at runtime. The reply is public; anyone can click a range or sampled time to get their own private chart without changing the public panel. All statistics are clearly labelled **synthetic test data**; no live population or historical feed is connected yet.
+Requires Discord **Administrator** to post. The reply is public and contains synthetic test data only.
 
-- Opens the population chart on **1W**.
-- Buttons: **1H, 1D, 1W, 1M, 1Y, YTD**, arranged in two rows.
-- Select a sampled timestamp from the dropdown to move the dot and see its population or **SERVER DOWN**.
-- Simulated outages appear as dashed red sections. The headline stats stay at the demo snapshot when selecting historical points.
-- **Open interactive graph ↗** opens the public hosted chart with hover/tap values, a moving dot and SERVER DOWN tooltips. Each visitor changes only their own range. The same link is on the embed title.
-- Discord image charts cannot show hover tooltips. Discord controls expire after 10 minutes; the web link remains usable.
-- Restart the bot after installing the updated `requirements.txt` to sync the new guild command.
+- Fixed **1D** population chart, with average, all-time peak and demo release markers.
+- Stats: **Online now**, **24h peak**, **All-time peak**, **Server uptime** (`dd:hh:mm:ss`).
+- Only one Discord button: **Open interactive graph ↗**. The embed title also links to it.
+- No Discord range buttons, date dropdowns, private chart messages or expiring controls.
+- The website defaults to **1D** and supports all six ranges, custom dates, hover/tap details, a time slider and Phase 1/2/3 demo markers. Selections remain local to each visitor.
+- Update and restart the bot, then run `/serverinfo` again. Existing messages retain their old controls.
 
 ## Everyone
 

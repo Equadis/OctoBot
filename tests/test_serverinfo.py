@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from PIL import Image
 from octobot.serverinfo import (RANGES, ServerInfoCog, ServerInfoView, demo_samples,
-                               range_start, render_chart, selectable_indices, interactive_url)
+                               range_start, render_chart, interactive_url, average_population, format_uptime, Sample)
 
 END = datetime(2026, 11, 6, 11, 26, 26, tzinfo=timezone.utc)
 
@@ -43,10 +43,6 @@ class ServerInfoDataTests(unittest.TestCase):
             self.assertEqual(samples[-1].players, 1019)
             self.assertEqual(samples, sorted(samples, key=lambda s: s.time))
             self.assertTrue(any(s.players is None for s in samples))
-            choices = selectable_indices(samples, len(samples) - 1)
-            self.assertLessEqual(len(choices), 25)
-            self.assertTrue(any(samples[i].players is None for i in choices))
-            self.assertIn(len(samples) - 1, choices)
         # January boundary must still produce valid choices and a nonempty range.
         self.assertTrue(demo_samples(END.replace(month=1, day=1), 'YTD'))
 
@@ -92,75 +88,27 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
         await command.callback(cog, event)
         sent = event.followup.send.call_args.kwargs
         self.assertFalse(sent.get('ephemeral', False))
-        self.assertTrue(sent['view'].shared)
         self.assertIn('#at=', sent['embed'].url)
-        self.assertEqual(sent['view'].period, '1W')
+        self.assertEqual(sent['view'].period, '1D')
         self.assertIn('Synthetic test data', sent['embed'].description)
         sent['view'].stop()
         sent['file'].close()
 
-    async def test_view_permissions_and_range_time_changes(self):
+    async def test_link_only_public_panel(self):
         view = ServerInfoView(1, END)
-        self.assertEqual(view.period, '1W')
-        for event in (interaction(user=2), interaction(guild=None)):
-            self.assertFalse(await view.interaction_check(event))
-        self.assertTrue(await view.interaction_check(interaction(admin=False)))
-        for period in RANGES:
-            event = interaction()
-            button = next(c for c in view.children if getattr(c, 'period', None) == period)
-            await button.callback(event)
-            self.assertEqual(view.period, period)
-            edit = event.edit_original_response.call_args.kwargs
-            self.assertEqual(len(edit['attachments']), 1)
-            edit['attachments'][0].close()
-            self.assertEqual(len([c for c in view.children if hasattr(c, 'period')]), 6)
-        down = next(i for i, sample in enumerate(view.samples) if sample.players is None)
-        event = interaction()
-        await view.update_chart(event, selected=down)
-        self.assertIn('SERVER DOWN', view.embed().fields[0].value)
-        self.assertIn('Players online: **1019**', view.embed().description)
-        event.edit_original_response.call_args.kwargs['attachments'][0].close()
-        view.message = NS(edit=AsyncMock())
-        await view.on_timeout()
-        for item in view.children:
-            if getattr(item, 'url', None):
-                self.assertFalse(item.disabled)
-            else:
-                self.assertTrue(item.disabled)
-        view.message.edit.assert_awaited_once()
-        view.stop()
-
-    async def test_failed_edit_restores_state(self):
-        view = ServerInfoView(1, END)
-        event = interaction()
-        event.edit_original_response.side_effect = RuntimeError('test edit failure')
-        await view.update_chart(event, period='1H')
-        self.assertEqual(view.period, '1W')
-        event.followup.send.assert_awaited_once()
-        event.edit_original_response.call_args.kwargs['attachments'][0].close()
-        view.stop()
-
-    async def test_public_buttons_fork_private_views_without_editing_public(self):
-        view = ServerInfoView(1, END, shared=True)
-        for uid, period in [(2, '1H'), (3, 'YTD')]:
-            event = interaction(admin=False, user=uid)
-            self.assertTrue(await view.interaction_check(event))
-            await view.update_chart(event, period=period)
-            event.edit_original_response.assert_not_awaited()
-            sent = event.followup.send.call_args.kwargs
-            private = sent['view']
-            self.assertTrue(sent['ephemeral'])
-            self.assertFalse(private.shared)
-            self.assertEqual(private.owner_id, uid)
-            self.assertEqual(private.period, period)
-            self.assertEqual(private.end, view.end)
-            self.assertTrue(await private.interaction_check(interaction(admin=False, user=uid)))
-            self.assertFalse(await private.interaction_check(interaction(admin=False, user=uid+10)))
-            self.assertEqual(view.period, '1W')
-            link = next(c for c in private.children if getattr(c, 'url', None))
-            self.assertEqual(link.url, interactive_url(END))
-            sent['file'].close()
-            private.stop()
+        self.assertEqual(view.period, '1D')
+        self.assertIsNone(view.timeout)
+        self.assertEqual(len(view.children), 1)
+        button = view.children[0]
+        self.assertEqual(button.url, interactive_url(END))
+        self.assertEqual(button.label, 'Open interactive graph ↗')
+        embed = view.embed()
+        self.assertEqual([f.name for f in embed.fields],
+                         ['Online now', '24h peak', 'All-time peak', 'Server uptime'])
+        self.assertEqual(embed.fields[-1].value, '02:02:54:59')
+        self.assertNotIn('Selected time', str(embed.to_dict()))
+        self.assertNotIn('Server Time', str(embed.to_dict()))
+        self.assertEqual(embed.fields[1].value, f"{max(s.players or 0 for s in view.samples):,}")
         view.stop()
 
     async def test_invalid_config_does_not_publish_unsafe_link(self):
@@ -168,3 +116,12 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(interactive_url(END).startswith('https://'))
         with patch.dict('os.environ', {'SERVERINFO_GRAPH_URL': 'https://example.com/chart#theme=dark'}):
             self.assertIn('theme=dark&at=', interactive_url(END))
+
+    def test_average_is_time_weighted_and_downtime_zero(self):
+        samples = [Sample(END, 100), Sample(END+timedelta(seconds=1), 100),
+                   Sample(END+timedelta(seconds=10), None)]
+        self.assertEqual(average_population(samples), 55)
+        self.assertEqual(average_population([]), 0)
+        self.assertEqual(average_population([Sample(END, 1019)]), 1019)
+        self.assertEqual(format_uptime(0), '00:00:00:00')
+        self.assertEqual(format_uptime(100*86400+61), '100:00:01:01')

@@ -1,14 +1,15 @@
-# OctoBot v1.0.35
+# OctoBot v1.0.36
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
 ## Included systems
 
 ### OctoTracker
-- `/serverinfo`: admin-only command posting a public test panel with **synthetic data only**. Opens on **1W**; **1H / 1D / 1W / 1M / 1Y / YTD** buttons open a private green population chart for the person clicking, then redraw that private chart in place. A sampled-time dropdown moves the dot and displays the exact value; simulated outages use a dashed red line and **SERVER DOWN**. Controls expire after 10 minutes. Install the updated requirements and restart the bot to sync the command.
-  - Posting remains restricted by both Discord default command permissions and runtime Administrator checks. Everyone can use the public panel controls: a range or sampled-time click opens a private chart owned by that person, leaving the public 1W image unchanged.
-  - This prototype does not scrape live data, persist history, or claim historical/YTD coverage. All headline stats and chart points are synthetic, including the current timestamp used as the demo server clock. 1M is a rolling 30 days, 1Y a rolling 365 days, YTD starts on 1 January UTC. Each panel freezes its snapshot so range changes remain consistent.
-  - The **Open interactive graph ↗** button and linked embed title open the hosted web chart, with hover/tap details, a moving dot, all six ranges and SERVER DOWN tooltips. Each visitor has independent local state. The web page is public and uses synthetic data only; no Discord login or bot token is needed.
+- `/serverinfo`: admin-only command posting a **public, fixed 1D chart** with synthetic test data. Discord shows **Online now, 24h peak, All-time peak, Server uptime** (`dd:hh:mm:ss`) and only **Open interactive graph ↗**. There are no range buttons, date selectors, selected-time readout or expiring interaction controls in Discord.
+  - The web page opens on **1D** and keeps **1H / 1D / 1W / 1M / 1Y / YTD**, custom dates, hover/tap values and an accessible time slider. Each visitor changes only their own view.
+  - Charts include a time-weighted average for the selected window, a flat dashed all-time peak at 50% opacity, simulated outages and Phase 1/2/3 release markers. Demo release dates are explicitly synthetic; replace them with verified dates before going live.
+  - All headline statistics and chart history are still synthetic. The 24h peak always covers the last day, regardless of the website range. 1M is 30 days, 1Y is 365 days, YTD starts on 1 January UTC. Simulated downtime counts as zero in the window average.
+  - The default external graph is on GitHub Pages. Enable Pages from **main → /docs** in repository settings if not already active. No web server, new dependency or chart framework is needed on the bot host.
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
@@ -354,3 +355,13 @@ stays unchanged. 1H/1D/1W cover the previous hour/day/week; 1M and 1Y mean rolli
 
 If `SERVERINFO_GRAPH_URL` was explicitly set to the old host, remove that override
 or change it to the GitHub Pages URL, then restart OctoBot and run `/serverinfo` again.
+
+### v1.0.36 fixed Discord chart and expanded web charts
+
+Discord now has a fixed 24-hour image and one external link; range/date selection
+and private per-user chart messages have been removed. The website defaults to 1D,
+adds UTC date filtering, an average reference, a 50%-opacity dashed all-time peak,
+and labelled synthetic Phase 1/2/3 milestones. Headline stats are Online now,
+24h peak, All-time peak and Server uptime in `dd:hh:mm:ss` format. The web chart is
+inspired by SteamDB's population-chart structure; it uses OctoBot's own synthetic
+history and has no dependency on SteamDB data, code or assets.

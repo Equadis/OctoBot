@@ -73,15 +73,34 @@ def demo_samples(end: datetime, period: str) -> list[Sample]:
     return result
 
 
-def selectable_indices(samples: list[Sample], selected: int) -> list[int]:
-    # Leave space for outage points and the current selection; Discord allows 25 options.
-    indices = {round(i * (len(samples) - 1) / 20) for i in range(21)}
-    down = [i for i, sample in enumerate(samples) if sample.players is None]
-    if down:
-        indices.add(down[len(down) // 2])
-        indices.add(down[0])
-    indices.add(selected)
-    return sorted(indices)
+DEMO_ALL_TIME_PEAK = 2476
+DEMO_UPTIME_SECONDS = 2 * 86400 + 2 * 3600 + 54 * 60 + 59
+
+
+def format_uptime(seconds: int) -> str:
+    days, remaining = divmod(max(0, seconds), 86400)
+    hours, remaining = divmod(remaining, 3600)
+    minutes, seconds = divmod(remaining, 60)
+    return f"{days:02}:{hours:02}:{minutes:02}:{seconds:02}"
+
+
+def average_population(samples: list[Sample]) -> float:
+    """Time-weighted average of the selected window; simulated downtime counts as zero."""
+    if not samples:
+        return 0.0
+    span = (samples[-1].time - samples[0].time).total_seconds()
+    if span <= 0:
+        return float(samples[-1].players or 0)
+    area = sum((b.time - a.time).total_seconds() * ((a.players or 0) + (b.players or 0)) / 2
+               for a, b in zip(samples, samples[1:]))
+    return area / span
+
+
+def demo_releases(end: datetime) -> tuple[tuple[str, datetime], ...]:
+    # Preview dates only: these are deliberately not presented as real OctoWoW releases.
+    return (("Phase 1", end - timedelta(days=120)),
+            ("Phase 2", end - timedelta(days=45)),
+            ("Phase 3", end - timedelta(hours=6)))
 
 
 def _font(size: int) -> ImageFont.ImageFont:
@@ -136,6 +155,21 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
                 draw.rectangle((xa, top, max(xa + 1, xb), bottom), fill="#3b292e")
                 for dash in range(xa, max(xa + 1, xb), 13):
                     draw.line((dash, bottom, min(dash + 7, max(xa + 1, xb)), bottom), fill=red, width=3)
+        peak_y = y(DEMO_ALL_TIME_PEAK)
+        # Preblend white at exactly 50% opacity onto the opaque dark canvas.
+        peak_colour = tuple(round((component + 255) / 2) for component in (32, 34, 37))
+        for dash in range(left, right, 15):
+            draw.line((dash, peak_y, min(dash + 8, right), peak_y), fill=peak_colour, width=2)
+        mean = average_population(samples)
+        draw.line((left, y(round(mean)), right, y(round(mean))), fill="#6bafff", width=2)
+        draw.text((right, peak_y - 6), f"All-time peak  {DEMO_ALL_TIME_PEAK:,}", font=small_font,
+                  fill=peak_colour, anchor="rd")
+        for phase, time in demo_releases(end):
+            if start <= time <= end:
+                column = x(time)
+                for dash in range(top, bottom, 12):
+                    draw.line((column, dash, column, min(dash + 5, bottom)), fill="#ba98e5")
+                draw.text((column + 5, top + 8), phase + " · demo", font=small_font, fill="#c5a7ed")
         segment: list[tuple[int, int]] = []
         for sample in samples:
             if sample.players is None:
@@ -149,7 +183,7 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
         px, py = x(point.time), y(point.players if point.players is not None else 0)
         draw.line((px, top, px, bottom), fill="#56836c" if point.players is not None else "#995555")
         draw.ellipse((px - 6, py - 6, px + 6, py + 6), fill=colour, outline="white", width=2)
-        draw.text((right, 486), "Dashed red: simulated outage  ·  All times UTC", font=small_font,
+        draw.text((right, 486), f"Average {mean:,.0f}  ·  Dashed red: simulated outage  ·  All times UTC", font=small_font,
                   fill=muted, anchor="ra")
         output = io.BytesIO()
         image.save(output, format="PNG")
@@ -157,127 +191,31 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
         return output.getvalue()
 
 
-class RangeButton(discord.ui.Button):
-    def __init__(self, period: str, active: str, row: int):
-        super().__init__(label=period, row=row,
-                         style=discord.ButtonStyle.success if period == active else discord.ButtonStyle.secondary)
-        self.period = period
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        await self.view.update_chart(interaction, period=self.period)
-
-
-class TimeSelect(discord.ui.Select):
-    def __init__(self, samples: list[Sample], selected: int):
-        options = []
-        for index in selectable_indices(samples, selected):
-            sample = samples[index]
-            value = f"{sample.players:,} players" if sample.players is not None else "SERVER DOWN"
-            options.append(discord.SelectOption(label=f"{sample.time:%d %b %Y %H:%M:%S} UTC",
-                                                description=value, value=str(index), default=index == selected))
-        super().__init__(placeholder="Select a sampled time to move the dot", options=options, row=2)
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        await self.view.update_chart(interaction, selected=int(self.values[0]))
-
-
 class ServerInfoView(discord.ui.View):
-    def __init__(self, owner_id: int, end: datetime | None = None, *, shared: bool = False):
-        super().__init__(timeout=600)
-        self.owner_id = owner_id
-        self.shared = shared
+    """A permanent link only. All range/date interactions live on the website."""
+    def __init__(self, owner_id: int, end: datetime | None = None, *, shared: bool = True):
+        super().__init__(timeout=None)
         self.end = (end or datetime.now(UTC)).replace(microsecond=0)
-        self.period = "1W"
+        self.period = "1D"
         self.samples = demo_samples(self.end, self.period)
-        self.selected = len(self.samples) - 1
-        self.message: discord.InteractionMessage | discord.WebhookMessage | None = None
-        self.lock = asyncio.Lock()
-        self.rebuild_controls()
-
-    def rebuild_controls(self) -> None:
-        self.clear_items()
-        for i, period in enumerate(RANGES):
-            self.add_item(RangeButton(period, self.period, row=i // 3))
-        self.add_item(TimeSelect(self.samples, self.selected))
         self.add_item(discord.ui.Button(label="Open interactive graph ↗", style=discord.ButtonStyle.link,
-                                        url=interactive_url(self.end), row=3))
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.guild_id is not None and (self.shared or interaction.user.id == self.owner_id):
-            return True
-        await interaction.response.send_message("This private chart belongs to the person who opened it.",
-                                                ephemeral=True)
-        return False
+                                        url=interactive_url(self.end)))
 
     def embed(self) -> discord.Embed:
-        point = self.samples[self.selected]
-        value = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
-        embed = discord.Embed(title="Server Info: Test Preview ↗", url=interactive_url(self.end), colour=0x46DF88,
-                              description="**Synthetic test data: these are not live server statistics.**\n\n"
-                              "Players online: **1019**. Max online: **2476**.\n"
-                              "Server uptime: **2 Days 2 Hours 54 Minutes 59 Seconds**\n"
-                              f"Server Time: **{self.end:%a, %d.%m.%Y %H:%M:%S} UTC**")
-        embed.add_field(name=f"Selected time · {self.period}", value=f"{point.time:%d %b %Y %H:%M:%S} UTC: **{value}**", inline=False)
+        peak = max(s.players or 0 for s in self.samples)
+        embed = discord.Embed(title="Server Info ↗", url=interactive_url(self.end), colour=0x46DF88,
+                              description="**Synthetic test data: not live server statistics.**")
+        for name, value in (("Online now", "1,019"), ("24h peak", f"{peak:,}"),
+                            ("All-time peak", f"{DEMO_ALL_TIME_PEAK:,}"),
+                            ("Server uptime", format_uptime(DEMO_UPTIME_SECONDS))):
+            embed.add_field(name=name, value=value, inline=True)
         embed.set_image(url="attachment://serverinfo.png")
-        embed.set_footer(text="Open the interactive graph for hover details. Range buttons open your own private chart. Discord controls expire after 10 minutes; the web link stays available.")
+        embed.set_footer(text="Past 24 hours · Open the interactive graph for ranges, dates and hover details. All times UTC.")
         return embed
 
     async def attachment(self) -> discord.File:
-        data = await asyncio.to_thread(render_chart, self.end, self.period, self.samples, self.selected)
+        data = await asyncio.to_thread(render_chart, self.end, self.period, self.samples, len(self.samples) - 1)
         return discord.File(io.BytesIO(data), filename="serverinfo.png")
-
-    async def update_chart(self, interaction: discord.Interaction, *, period: str | None = None,
-                           selected: int | None = None) -> None:
-        if self.shared:
-            # A shared Discord message cannot display a different attachment for each viewer.
-            # Fork a private view rather than editing the public panel or another user's chart.
-            await interaction.response.defer(thinking=True, ephemeral=True)
-            private = ServerInfoView(interaction.user.id, self.end)
-            if period is not None:
-                private.period = period
-                private.samples = demo_samples(self.end, period)
-                private.selected = len(private.samples) - 1
-            elif selected is not None:
-                private.selected = max(0, min(selected, len(private.samples) - 1))
-            private.rebuild_controls()
-            try:
-                attachment = await private.attachment()
-                private.message = await interaction.followup.send(embed=private.embed(), file=attachment,
-                                                                 view=private, ephemeral=True, wait=True)
-            except Exception:
-                private.stop()
-                log.exception("Could not open private server-info chart")
-                await interaction.followup.send("Could not generate your chart. Try again.", ephemeral=True)
-            return
-        await interaction.response.defer()
-        async with self.lock:
-            old = self.period, self.samples, self.selected
-            try:
-                if period is not None:
-                    self.period = period
-                    self.samples = demo_samples(self.end, period)
-                    self.selected = len(self.samples) - 1
-                elif selected is not None:
-                    self.selected = max(0, min(selected, len(self.samples) - 1))
-                attachment = await self.attachment()
-                self.rebuild_controls()
-                await interaction.edit_original_response(embed=self.embed(), attachments=[attachment], view=self)
-            except Exception:
-                self.period, self.samples, self.selected = old
-                self.rebuild_controls()
-                log.exception("Could not update server-info preview")
-                await interaction.followup.send("Could not redraw the preview. Try again.", ephemeral=True)
-
-    async def on_timeout(self) -> None:
-        async with self.lock:
-            for item in self.children:
-                if not isinstance(item, discord.ui.Button) or item.url is None:
-                    item.disabled = True
-            if self.message is not None:
-                try:
-                    await self.message.edit(view=self)
-                except discord.HTTPException:
-                    log.debug("Server-info preview expired or was deleted")
 
 
 class ServerInfoCog(commands.Cog):
@@ -293,7 +231,7 @@ class ServerInfoCog(commands.Cog):
         view = ServerInfoView(interaction.user.id, shared=True)
         try:
             attachment = await view.attachment()
-            view.message = await interaction.followup.send(embed=view.embed(), file=attachment,
+            await interaction.followup.send(embed=view.embed(), file=attachment,
                                                           view=view, wait=True)
         except Exception:
             view.stop()
