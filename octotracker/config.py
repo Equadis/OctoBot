@@ -155,7 +155,7 @@ class Config:
     radio_discord_channel_id: int = 1568053765347741828
     # Extra channels that also receive radio announcements, without the role ping.
     radio_extra_channel_ids: frozenset[int] = frozenset({1554524069511168040})
-    radio_ping_role_id: int | None = 1567629523514818651
+    radio_ping_role_id: int | None = 1547108101747118100
     radio_poll_seconds: int = 30
     radio_go_live_confirmations: int = 2
     # Scheduled shows are announced at their scheduled start. Live-detection alerts
@@ -280,8 +280,9 @@ class Config:
                 "DISCORD_RADIO_EXTRA_CHANNEL_IDS", "1554524069511168040"
             ),
             radio_ping_role_id=(
-                1567629523514818651
-                if os.getenv("DISCORD_RADIO_PING_ROLE_ID", "1547108101747118100").strip() == "1547108101747118100"
+                1547108101747118100
+                if os.getenv("DISCORD_RADIO_PING_ROLE_ID", "1547108101747118100").strip()
+                in {"1547108101747118100", "1567629523514818651"}
                 else _discord_id("DISCORD_RADIO_PING_ROLE_ID")
             ),
             radio_poll_seconds=_positive_int("RADIO_POLL_SECONDS", 30),
