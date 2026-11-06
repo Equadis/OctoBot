@@ -1,4 +1,4 @@
-# OctoBot v1.0.37
+# OctoBot v1.0.38
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -6,7 +6,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 
 ### OctoTracker
 - `/serverinfo`: admin-only command posting a **public, fixed 1D chart** with synthetic test data. Discord shows **Online now, 24h peak, All-time peak, Server uptime** (`dd:hh:mm:ss`) and only **Open interactive graph ↗**. There are no range buttons, date selectors, selected-time readout or expiring interaction controls in Discord.
-  - The web page opens on **1D** and keeps **1H / 1D / 1W / 1M / 1Y / YTD**, custom dates, hover/tap values and an accessible time slider. Each visitor changes only their own view.
+  - The web page opens on **1D** and keeps **1H / 1D / 1W / 1M / 1Y / YTD**, custom dates, hover values with no slider. Each visitor changes only their own view.
   - Charts include a time-weighted average for the selected window, a flat dashed all-time peak at 50% opacity, simulated outages and Phase 1/2/3 release markers. Demo release dates are explicitly synthetic; replace them with verified dates before going live.
   - All headline statistics and chart history are still synthetic. The 24h peak always covers the last day, regardless of the website range. 1M is 30 days, 1Y is 365 days, YTD starts on 1 January UTC. Simulated downtime counts as zero in the window average.
   - The default external graph is on GitHub Pages. Enable Pages from **main → /docs** in repository settings if not already active. No web server, new dependency or chart framework is needed on the bot host.
@@ -380,3 +380,16 @@ open **Settings → Pages**, choose **Deploy from a branch**, choose **main** an
 **/docs**, and **Save**. Wait for the Pages deployment to finish before testing the
 link. The browser used during development was signed out, so initial activation
 could not be completed through the repository settings.
+
+### v1.0.38 hover-only graph and curve-attached release flags
+
+The web slider and separate content-release cards are removed. Hover the curve for
+population/outage details or hover/focus P1/P2/P3 flags for full release names (P3:
+Phase 3: Blackwing Lair Release). The flags sit inside the graph, connected to the
+curve with short stems; release timestamps are retained during downsampling.
+The synthetic peak of 2,476 now exists as an actual timestamped sample, retained
+in YTD/1Y and any custom window containing it. The dashed 50%-opacity peak reference
+is drawn at 2,476 on a 0–3,000 axis with an explicit value label and headroom above,
+not at the plot ceiling. Python and web demo histories share these peak semantics.
+All dates and numbers remain synthetic; P2's name is a placeholder pending verified
+release metadata. Discord remains a fixed 1D preview with just the external link.

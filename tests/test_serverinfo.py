@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from PIL import Image
 from octobot.serverinfo import (RANGES, ServerInfoCog, ServerInfoView, demo_samples,
-                               range_start, render_chart, interactive_url, average_population, format_uptime, Sample)
+                               range_start, render_chart, interactive_url, average_population, format_uptime, Sample, DEMO_ALL_TIME_PEAK, demo_peak_time)
 
 END = datetime(2026, 11, 6, 11, 26, 26, tzinfo=timezone.utc)
 
@@ -45,6 +45,17 @@ class ServerInfoDataTests(unittest.TestCase):
             self.assertTrue(any(s.players is None for s in samples))
         # January boundary must still produce valid choices and a nonempty range.
         self.assertTrue(demo_samples(END.replace(month=1, day=1), 'YTD'))
+
+    def test_peak_is_a_real_retained_sample(self):
+        for period in ('YTD', '1Y'):
+            samples = demo_samples(END, period)
+            self.assertEqual(max(s.players or 0 for s in samples), DEMO_ALL_TIME_PEAK)
+            self.assertIn(Sample(demo_peak_time(END), DEMO_ALL_TIME_PEAK), samples)
+        from pathlib import Path
+        html = (Path(__file__).resolve().parents[1] / 'docs/index.html').read_text()
+        self.assertNotIn('time-picker', html)
+        self.assertNotIn('id="milestones"', html)
+        self.assertIn('Phase 3: Blackwing Lair Release', html)
 
     def test_renderer_needs_no_plotting_stack(self):
         import subprocess

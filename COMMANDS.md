@@ -22,7 +22,7 @@ Requires Discord **Administrator** to post. The reply is public and contains syn
 - Stats: **Online now**, **24h peak**, **All-time peak**, **Server uptime** (`dd:hh:mm:ss`).
 - Only one Discord button: **Open interactive graph ↗**. The embed title also links to it.
 - No Discord range buttons, date dropdowns, private chart messages or expiring controls.
-- The website defaults to **1D** and supports all six ranges, custom dates, hover/tap details, a time slider and Phase 1/2/3 demo markers. Selections remain local to each visitor.
+- The website defaults to **1D** and supports all six ranges, custom dates, hover details and compact P1/P2/P3 release flags with full-name tooltips. Selections remain local to each visitor.
 - Update and restart the bot, then run `/serverinfo` again. Existing messages retain their old controls.
 
 ## Everyone

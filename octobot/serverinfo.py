@@ -62,12 +62,19 @@ def demo_samples(end: datetime, period: str) -> list[Sample]:
                   b - timedelta(seconds=1), b):
             if start <= t <= end:
                 times.add(t)
+    peak_time = demo_peak_time(end)
+    for t in (peak_time - timedelta(hours=12), peak_time, peak_time + timedelta(hours=12),
+              *(time for _, time in demo_releases(end))):
+        if start <= t <= end:
+            times.add(t)
     result = []
     for t in sorted(times):
         age = (end - t).total_seconds() / 86400
         value = round(1019 + 480 * math.sin(age * math.tau)
                       + 190 * math.sin(age * math.tau / 7)
                       + 95 * math.sin(age * 41))
+        if t == peak_time:
+            value = DEMO_ALL_TIME_PEAK
         down = any(a <= t < b for a, b in demo_outages(end))
         result.append(Sample(t, None if down else max(100, value)))
     return result
@@ -75,6 +82,12 @@ def demo_samples(end: datetime, period: str) -> list[Sample]:
 
 DEMO_ALL_TIME_PEAK = 2476
 DEMO_UPTIME_SECONDS = 2 * 86400 + 2 * 3600 + 54 * 60 + 59
+
+
+def demo_peak_time(end: datetime) -> datetime:
+    year_start = end.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    age = min(90 * 86400, max(.001, (end - year_start).total_seconds() * .6))
+    return end - timedelta(seconds=age)
 
 
 def format_uptime(seconds: int) -> str:
@@ -126,7 +139,7 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
             return round(left + (time - start).total_seconds() / span * (right - left))
 
         def y(value: int) -> int:
-            return round(bottom - value / 2600 * (bottom - top))
+            return round(bottom - value / 3000 * (bottom - top))
 
         draw.text((left, 28), f"Population  /  {period}", font=title_font, fill="white")
         draw.text((right, 34), "SYNTHETIC TEST DATA", font=small_font, fill="#f2c66d", anchor="ra")
@@ -134,7 +147,7 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
         value = f"{point.players:,} players" if point.players is not None else "SERVER DOWN"
         colour = green if point.players is not None else red
         draw.text((left, 76), f"{point.time:%d %b %Y %H:%M:%S} UTC  ·  {value}", font=label_font, fill=colour)
-        for players in range(0, 2501, 500):
+        for players in range(0, 3001, 500):
             row = y(players)
             draw.line((left, row, right, row), fill="#34373c")
             draw.text((left - 12, row), f"{players:,}", font=small_font, fill=muted, anchor="rm")
@@ -166,10 +179,13 @@ def render_chart(end: datetime, period: str, samples: list[Sample], selected: in
                   fill=peak_colour, anchor="rd")
         for phase, time in demo_releases(end):
             if start <= time <= end:
-                column = x(time)
-                for dash in range(top, bottom, 12):
-                    draw.line((column, dash, column, min(dash + 5, bottom)), fill="#ba98e5")
-                draw.text((column + 5, top + 30), phase + " · demo", font=small_font, fill="#c5a7ed")
+                point = next(sample for sample in samples if sample.time == time)
+                column, row = x(time), y(point.players or 0)
+                fx, fy = min(right - 38, max(left, column - 19)), max(top + 5, row - 48)
+                draw.line((column, row, fx + 19, fy + 28), fill="#ba98e5", width=1)
+                draw.rounded_rectangle((fx, fy, fx + 38, fy + 28), radius=3,
+                                       fill="#34402e", outline="#8aa57b")
+                draw.text((fx + 19, fy + 14), "P" + phase.split()[-1], anchor="mm", font=small_font, fill="#e5f3dc")
         segment: list[tuple[int, int]] = []
         for sample in samples:
             if sample.players is None:
