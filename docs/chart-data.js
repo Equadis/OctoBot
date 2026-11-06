@@ -113,5 +113,12 @@
   if(right>maxTime){right=maxTime;left=right-span;}
   return {start:left,end:right};
  }
- const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
+ // Change date position, retaining the same visible range at both boundaries.
+ function panRange(start,end,offset,minTime,maxTime){
+  if(![start,end,offset,minTime,maxTime].every(Number.isFinite)||end<=start||maxTime<=minTime)throw Error('Invalid pan range');
+  const span=Math.min(end-start,maxTime-minTime);
+  const left=Math.max(minTime,Math.min(maxTime-span,start+offset));
+  return {start:left,end:left+span};
+ }
+ const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,panRange,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
