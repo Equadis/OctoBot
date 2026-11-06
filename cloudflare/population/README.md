@@ -50,3 +50,35 @@ into those realms or the All Realms total.
 **Important:** Merely committing this Worker code does not activate it.
 A real deployment to your Cloudflare account and the live endpoint setting
 are required for one-minute tracking. No secrets are committed.
+
+## Update: anonymous live viewers, cursor-anchored scroll and three-realm support
+
+The dashboard now has continuous mouse-wheel zoom (about 30% per typical notch)
+centred on the exact time under the pointer, with a ten-minute minimum.
+
+The active-viewer counter uses an anonymous session ID per browser tab and
+a 30-second heartbeat to Cloudflare D1. The counter includes sessions seen in
+the last 90 seconds; a red dot pulses slowly. No IP, name or Discord ID is
+saved. It requires a **one-time database migration and Worker redeployment**:
+
+```sh
+git pull origin main
+npx wrangler d1 migrations apply octobot-population --remote
+npx wrangler deploy
+```
+
+Run those from the Codespaces directory `cloudflare/population`.
+
+Two optional Worker environment variables allow separate PvP and Hardcore
+population feeds **when you have independently confirmed realm-specific URLs**:
+
+```toml
+[vars]
+POPULATION_YSHAARJ_URL = "https://REAL_VERIFIED_PVP_JSON_ENDPOINT"
+POPULATION_CTHUN_URL = "https://REAL_VERIFIED_HC_JSON_ENDPOINT"
+```
+
+Each HTTPS URL must return JSON `{"online":123}` for **that realm only**.
+Never copy the N'Zoth census count as a substitute. The site already lists
+all three realms and All Realms; those entries will show NO DATA until
+their real feeds exist. All Realms sums three near-synchronous observations.

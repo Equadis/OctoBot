@@ -16,35 +16,64 @@ export function parseOnline(page){
 function json(data,status=200){
  return new Response(JSON.stringify(data),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',
-   'access-control-allow-origin':'*','access-control-allow-methods':'GET, OPTIONS',
+   'access-control-allow-origin':'*','access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type',
    'x-content-type-options':'nosniff'}
  });
 }
+async function collectOne(env,realm,source,format){
+ const url=new URL(source);
+ if(url.protocol!=='https:')throw Error('Unsecured realm source: '+realm);
+ const response=await fetch(url.href,{headers:{'Accept':format==='html'?'text/html':'application/json','Cache-Control':'no-cache'},cf:{cacheTtl:0}});
+ if(!response.ok)throw Error('Population HTTP '+response.status+' for '+realm);
+ const body=await response.text();
+ if(body.length>2000000)throw Error('Unexpectedly large census response');
+ let online;
+ if(format==='html')online=parseOnline(body);
+ else {
+  online=JSON.parse(body)?.online;
+  if(!Number.isSafeInteger(online)||online<0)throw Error('Invalid verified feed: '+realm);
+ }
+ const timestamp=Date.now();
+ await env.DB.prepare('INSERT OR IGNORE INTO readings (realm,timestamp_ms,online,source) VALUES (?,?,?,?)')
+  .bind(realm,timestamp,online,format==='html'?'official census':'verified realm feed').run();
+ return {timestamp:new Date(timestamp).toISOString(),online,realm};
+}
 async function collect(env){
  if(!env.DB)throw Error('D1 binding missing');
- // The official counter is the source; never infer a count from a failed fetch.
- const response=await fetch(CENSUS_URL+'?t='+Date.now(),{
-  headers:{'Accept':'text/html','Cache-Control':'no-cache'},
-  cf:{cacheTtl:0}
- });
- if(!response.ok)throw Error('Official census HTTP '+response.status);
- const body=await response.text();
- if(body.length>2_000_000)throw Error('Unexpectedly large census page');
- const online=parseOnline(body),timestamp=Date.now();
- await env.DB.prepare(
-  'INSERT OR IGNORE INTO readings (realm,timestamp_ms,online,source) VALUES (?,?,?,?)'
- ).bind('nzoth',timestamp,online,'official census').run();
- return {timestamp:new Date(timestamp).toISOString(),online,realm:'nzoth'};
+ const feeds=[['nzoth',CENSUS_URL+'?t='+Date.now(),'html']];
+ for(const [realm,key] of [['yshaarj','POPULATION_YSHAARJ_URL'],['cthun','POPULATION_CTHUN_URL']]){
+  if(typeof env[key]==='string'&&env[key].trim())feeds.push([realm,env[key].trim(),'json']);
+ }
+ const settled=await Promise.allSettled(feeds.map(([id,url,format])=>collectOne(env,id,url,format)));
+ for(let i=0;i<settled.length;i++){
+  if(settled[i].status==='rejected')console.error('Population source failed: '+feeds[i][0],settled[i].reason);
+ }
+ if(settled.every(x=>x.status==='rejected'))throw Error('All realm sources failed');
+ return settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
 }
 const worker={
  async scheduled(controller,env,ctx){
   ctx.waitUntil(collect(env).catch(e=>console.error('Population collection failed:',e)));
  },
  async fetch(request,env){
-  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'GET, OPTIONS'}});
-  if(request.method!=='GET')return json({error:'method_not_allowed'},405);
+  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type'}});
   const url=new URL(request.url);
+  if(url.pathname==='/api/presence/heartbeat'&&request.method!=='POST')return json({error:'method_not_allowed'},405);
+  if(url.pathname!=='/api/presence/heartbeat'&&request.method!=='GET')return json({error:'method_not_allowed'},405);
   try{
+   if(url.pathname==='/api/presence/heartbeat'){
+    if(Number(request.headers.get('content-length')||0)>1024)return json({error:'request_too_large'},413);
+    const body=await request.json(),id=body?.session_id;
+    if(typeof id!=='string'||!(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))return json({error:'invalid_session'},400);
+    const time=Date.now();
+    await env.DB.prepare("INSERT INTO viewer_presence(session_id,page,last_seen_ms) VALUES (?, 'population', ?) ON CONFLICT(session_id,page) DO UPDATE SET last_seen_ms=excluded.last_seen_ms").bind(id,time).run();
+    const row=await env.DB.prepare("SELECT COUNT(*) AS viewers FROM viewer_presence WHERE page='population' AND last_seen_ms>=?").bind(time-90000).first();
+    return json({viewers:row?.viewers??0,window_seconds:90});
+   }
+   if(url.pathname==='/api/presence/count'){
+    const row=await env.DB.prepare("SELECT COUNT(*) AS viewers FROM viewer_presence WHERE page='population' AND last_seen_ms>=?").bind(Date.now()-90000).first();
+    return json({viewers:row?.viewers??0,window_seconds:90});
+   }
    if(url.pathname==='/api/latest'){
     const {results}=await env.DB.prepare(
      'SELECT r.realm,r.timestamp_ms,r.online,r.source FROM readings r INNER JOIN (SELECT realm,MAX(timestamp_ms) AS latest FROM readings GROUP BY realm) q ON r.realm=q.realm AND r.timestamp_ms=q.latest'
