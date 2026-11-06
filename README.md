@@ -409,7 +409,8 @@ The public site loads separate history files, refreshes once per minute, and nev
 uploads visitor data. GitHub Actions (`.github/workflows/population.yml`) samples
 on a five-minute cron and publishes `docs/` through the official Pages artifact
 workflow. Its GITHUB_TOKEN has contents:write, pages:write and id-token:write;
-commits update observations only. Bot-host per-minute readings stay in its SQLite;
+commits update observations only. Collection and deployment run in separate jobs,
+so a slow Pages deployment does not hold up subsequent observations. Bot-host per-minute readings stay in its SQLite;
 the public site uses the independent scheduled readings, not a connection to the
 bot host. GitHub can delay schedules and disable them after extended repository
 inactivity. Missing collection periods remain yellow.
