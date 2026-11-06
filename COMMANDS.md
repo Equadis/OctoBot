@@ -14,6 +14,19 @@ Anyone with Discord Administrator or the server owner always has every bot permi
 
 ---
 
+## Admin test: `/testalert [show_name]`
+
+Requires Discord **Administrator**. Posts a clearly labelled Pirate Radio
+test to the main radio announcement channel, including the real listener-role
+ping. It uses the same formatting and links as production announcements;
+`show_name` defaults to `Tekeela N Trouble` to verify its Twitch URL.
+
+Before sending, the bot verifies the role exists and can be mentioned in the
+channel. The command returns a private confirmation with a message link.
+
+The test does not send to extra announcement channels or change radio history.
+**It genuinely pings the role, so use sparingly.**
+
 ## Admin test: `/serverinfo [server]`
 
 Requires Discord **Administrator** to post; the reply is public. Choose N’Zoth
@@ -45,7 +58,7 @@ Public tracker commands. Admins can restrict any of them to specific roles with 
 | `/authcheck` | Immediate diagnostic of the OctoWoW authentication endpoint. Only works in the designated channel. |
 | `/help` | Lists only the commands you can use. |
 
-Automatic: the radio role is pinged at each scheduled show's start, the `/nextshows` list is posted when a show ends, and a member who gains the newer membership role loses the legacy one.
+Automatic: the radio role is pinged at each scheduled show's start, and a member who gains the newer membership role loses the legacy one. The `/nextshows` list is available on demand, not posted at show end.
 
 ---
 
