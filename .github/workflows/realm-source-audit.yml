@@ -29,6 +29,14 @@ jobs:
                   print('ERROR',base,type(e).__name__,str(e)[:120])
                   continue
               print('PAGE',base,'bytes',len(html))
+              if base=='https://octowow.st/':
+                  from html import unescape
+                  decoded=unescape(html)
+                  for phrase in ["C'Thun (Hardcore)","N'Zoth (Normal)","Y'Shaarj (PvP)","online_count","playersOnline","onlineNow","realmStatus","realm-status","player-count","players online"]:
+                      print('HOME_OCCURRENCES',phrase,decoded.lower().count(phrase.lower()))
+                      for m in list(re.finditer(re.escape(phrase),decoded,re.I))[-5:]:
+                          print('HOME_REALM_CONTEXT',phrase,re.sub(r'\s+',' ',decoded[max(0,m.start()-500):m.end()+500])[:1000])
+
               scripts=[urljoin(base,s) for s in re.findall(r'<script\b[^>]*\bsrc\s*=\s*["\']([^"\']+)',html,re.I)]
               print('SCRIPTS',scripts[:30])
               if '/player-census' in base:
