@@ -37,6 +37,21 @@ The Server Status page then automatically displays the imported uptime figures i
 
 **Important:** A historical confirmed-state interval is not proof of an uninterrupted stream of individual probes. The original bot's /uptime methodology counts time between confirmed transitions; the new website probes calculate availability only over independently observed intervals. These are shown separately. An export is a snapshot: if you want the old-bot history updated over time, repeat the export from the host and republish the JSON; it does not automatically upload your private DB or require a GitHub token on the bot host.
 
+## Dashboard chart design and navigation
+
+The [Population dashboard's **Players online** graph](https://equadis.github.io/OctoBot/#server=nzoth)
+is the canonical interaction and visual design for all OctoBot time-series charts.
+
+- Cursor-anchored mouse-wheel zoom with a ten-minute minimum and dataset-aware boundaries.
+- Click-and-drag panning; Shift + scroll moves horizontally without changing zoom (including browsers that remap the wheel to `deltaX`).
+- Hoverable, timestamped **recorded** readings and clear `NO DATA` regions rather than assumed uptime or fabricated latency.
+- Matching dark backgrounds, gridlines, time axes, legends, crosshairs, tooltips and active-range controls.
+- Time-range presets and UTC custom date selectors; the status and latency charts deliberately share one range and synchronise when either graph is moved.
+- The original Discord bot's confirmed-status archive remains a distinct source from the independent five-minute web probes; its timeline has its own presets, date selectors and direct zoom/pan.
+
+The common `docs/chart-interactions.js` module implements these interactions using the same
+`docs/chart-data.js` pan/zoom functions as the Population graph. **New graphs must reuse these conventions**, not introduce separate navigation behaviour. Calendar days retain their appropriate discrete date-selection interaction.
+
 ## Included systems
 
 ### OctoTracker
