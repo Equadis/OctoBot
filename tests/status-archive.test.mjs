@@ -77,7 +77,7 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   assert.equal(window.OctoBotHistoricCalendarActive,true);
   assert.equal(attached.length,1);
   assert.equal(attached[0].hit,$('archive-hit'));
-  assert.equal($('archive-ranges').children.length,5);
+  assert.equal($('archive-ranges').children.length,6);
   assert.ok($('archive-bars').children.length>0);
   assert.match($('archive-view-label').textContent,/1M/);
 
