@@ -33,7 +33,7 @@ git commit -m "Backfill archived OctoBot service status"
 git push origin main
 ```
 
-The Server Status page then automatically displays an **OctoBot historical monitoring** section with the previous confirmed-state uptime percentages, realm/TCP/authentication timelines and recorded incidents. Until that JSON is populated, the panel clearly says the archive hasn't been imported; the independent website checks continue collecting normally.
+The Server Status page then automatically displays the imported uptime figures in its **main overview**, and the **OctoBot historical monitoring** section with the previous confirmed-state uptime percentages, realm/TCP/authentication timelines, historical availability calendar and recorded incidents. Independent web-probe history remains a separately labelled section. Until that JSON is populated, the panel clearly says the archive hasn't been imported; the independent website checks continue collecting normally.
 
 **Important:** A historical confirmed-state interval is not proof of an uninterrupted stream of individual probes. The original bot's /uptime methodology counts time between confirmed transitions; the new website probes calculate availability only over independently observed intervals. These are shown separately. An export is a snapshot: if you want the old-bot history updated over time, repeat the export from the host and republish the JSON; it does not automatically upload your private DB or require a GitHub token on the bot host.
 
