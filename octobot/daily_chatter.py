@@ -154,6 +154,32 @@ class DailyChatterCog(commands.Cog):
         async with self.lock:
             await self.store.record(message)
 
+    async def test_preview(self, now: datetime | None = None) -> str:
+        """Render a read-only Exalted preview from observed messages, never award roles."""
+        if not self.enabled:
+            raise RuntimeError("Daily Exalted tracking is disabled.")
+        now = now or datetime.now(UTC)
+        guild = self.bot.get_guild(self.bot.config.guild_id)
+        if guild is None:
+            raise RuntimeError("Daily Exalted server is unavailable.")
+        async with self.lock:
+            counts = await self.store.counts(now)
+        # The actual handover also excludes users who have left and bot accounts.
+        members = {member.id: member async for member in guild.fetch_members(limit=None)}
+        ranking = [
+            (uid, count) for uid, count in counts
+            if uid in members and not members[uid].bot
+        ][:3]
+        label = "**🧪 TEST ALERT: Daily Exalted (no notifications or role changes).**"
+        if not ranking:
+            return label + "\n\nNo eligible chat messages recorded in the last 24 hours."
+        return (
+            label
+            + "\n\n**Preview only:** message counts over the preceding 24 hours as of "
+            + f"<t:{int(now.timestamp())}:f>. The actual 17:00 UTC result may differ.\n\n"
+            + announcement(ranking, now, self.bot.config.daily_chatter_role_id, mentions=True)
+        )
+
     @tasks.loop(seconds=30)
     async def refresh(self):
         try:
