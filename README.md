@@ -1,4 +1,4 @@
-# OctoBot v1.0.42
+# OctoBot v1.0.43
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -28,6 +28,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
   - Ended shows do not post an automatic schedule. Use `/nextshows` to request it.
   - Admin-only `/testalert [alert] [show_name]` sends no-ping previews of Pirate Radio (`radio`, the default) or Exalted (`exalted`) to the dedicated test channel `1547053624268689520`. Role/user mentions are shown but notifications are suppressed. Neither test changes real scheduling, award or alert state.
   - `RADIO_LIVE_ALERTS=true` additionally pings when a DJ goes live outside the schedule.
+  - Live radio notifications display the Pirate Radio role as a prominent heading directly above the show title (no blank line), and Discord link-preview embeds are suppressed on all live and test messages.
   - The ping lists Website · Twitch · Discord · In-Game, linking to the radio stage and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind and Judge Holdenn are built in, matched against the show name the station reports; `RADIO_DJ_STREAMS` overrides the table). A show with no configured stream simply omits the Twitch line.
 - Tracker command role configuration under `/config command-role`
 - `/authcheck` is open to everyone but only works in the channel set by `DISCORD_AUTHCHECK_CHANNEL_ID` (default `1547064843909988433`)
