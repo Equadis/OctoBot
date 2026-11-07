@@ -9,7 +9,7 @@
   ];
   const PERIODS = {'1H':3600000,'1D':DAY,'1W':7*DAY,'1M':30*DAY,'3M':90*DAY};
   let history = [], current = null, period = '1D', viewStart = Date.now()-DAY,
-      viewEnd = Date.now(), dragging = null, requestId = 0;
+      viewEnd = Date.now(), dragging = null, requestId = 0, archivedOfficial = null;
   const colour = {up:'#63df9a',down:'#ed777f',unknown:'#455363'};
   const fmt = t => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
   const short = ms => {
@@ -93,9 +93,16 @@
     $('overall-note').textContent=!current?'Waiting for first observation':!fresh?'Last probe is stale; status unknown':
       s==='up'?'Realms, TCP and authentication responding':s==='down'?'One or more checked services failed':'One or more signals unavailable';
     for(const [days,suffix] of [[1,'24'],[7,'7'],[30,'30']]){
-      const result=availability('overall',Date.now()-days*DAY,Date.now());
-      $('uptime-'+suffix).textContent=percentage(result);
-      $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% observed coverage · sampled';
+      const fromBot=archivedOfficial?.windows?.[days];
+      if(fromBot && Number.isFinite(fromBot.uptime) && Number.isFinite(fromBot.coverage)){
+        $('uptime-'+suffix).textContent=fromBot.uptime.toFixed(3)+'%';
+        const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(archivedOfficial.asOf);
+        $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% bot-confirmed coverage · as of '+stamp+' UTC';
+      }else{
+        const result=availability('overall',Date.now()-days*DAY,Date.now());
+        $('uptime-'+suffix).textContent=percentage(result);
+        $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% independent probe coverage';
+      }
     }
     $('freshness-badge').textContent=!current?'AWAITING TELEMETRY':!fresh?'CHECKS STALE':
       s==='up'?'MONITORING · ONLINE':s==='down'?'MONITORING · ISSUES':'MONITORING · INCOMPLETE';
@@ -125,7 +132,7 @@
     }
     $('streak').textContent=streak||'NO DATA';
     $('source-note').textContent='Source: official realm page + independent TCP / credential-free auth checks from GitHub Actions. '+
-      'Community reports and earlier Discord bot incident records are not available to this public monitor.'+
+      'Original bot incidents and uptime are displayed in the separate historical section when the archive is imported.'+
       (current?.source_error?' Latest website diagnostic: '+current.source_error:'');
     updateStability();
   }
@@ -311,6 +318,7 @@
     }
   }
   function calendar() {
+    if(window.OctoBotHistoricCalendarActive)return; // Original bot history owns the calendar once imported.
     const el=$('calendar');el.replaceChildren();const now=Date.now();
     const midnight=Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate());
     for(let index=89;index>=0;index--){
@@ -407,6 +415,12 @@
       if(!current){updateStats();draw();calendar();}
     }
   }
+  window.addEventListener('octobot:archive-ready',event=>{
+    const detail=event.detail;
+    if(!detail || !Number.isFinite(detail.asOf) || !detail.windows)return;
+    archivedOfficial=detail;
+    updateStats();
+  });
   setup();load();
   setInterval(load,300000);
   setInterval(updateStats,15000);
