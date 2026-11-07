@@ -9,6 +9,11 @@
     if(!D||!hit)throw Error('Chart interaction prerequisites missing');
     let dragging=null;
     const area=()=>hit.getBoundingClientRect();
+    const valid=()=> {
+      const v=range(),b=bounds();
+      return v&&b&&[v.start,v.end,b.floor,b.now].every(Number.isFinite)&&
+        v.end>v.start&&b.now>b.floor;
+    };
     const move=next=>navigate(next);
     hit.addEventListener('pointerdown',e=>{
       if(e.button!==0||dragging)return;
@@ -22,7 +27,7 @@
       if(dragging){
         if(e.pointerId!==dragging.id)return;
         const rect=area(),dx=e.clientX-dragging.x;dragging.x=e.clientX;
-        if(rect.width>0&&dx!==0){
+        if(rect.width>0&&dx!==0&&valid()){
           const view=range(),limits=bounds();
           move(D.panRange(view.start,view.end,-dx/rect.width*(view.end-view.start),limits.floor,limits.now));
         }
@@ -39,7 +44,7 @@
     hit.addEventListener('lostpointercapture',()=>{dragging=null;hit.classList.remove('is-panning');});
     hit.addEventListener('pointerleave',()=>{if(leave)leave();});
     hit.addEventListener('wheel',e=>{
-      const rect=area();if(!rect.width)return;
+      const rect=area();if(!rect.width||!valid())return;
       e.preventDefault();
       const view=range(),limits=bounds(),unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
       if(e.shiftKey){
