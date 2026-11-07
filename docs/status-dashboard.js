@@ -9,7 +9,8 @@
   ];
   const PERIODS = {'1H':3600000,'1D':DAY,'1W':7*DAY,'1M':30*DAY,'3M':90*DAY};
   let history = [], current = null, period = '1D', viewStart = Date.now()-DAY,
-      viewEnd = Date.now(), dragging = null, requestId = 0, archivedOfficial = null;
+      viewEnd = Date.now(), requestId = 0, archivedOfficial = null;
+  let latencySamples = [], latencyMax = 100;
   const colour = {up:'#63df9a',down:'#ed777f',unknown:'#455363'};
   const fmt = t => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
   const short = ms => {
@@ -172,8 +173,8 @@
   }
   const X=t=>128+(t-viewStart)/Math.max(viewEnd-viewStart,1)*882;
   function timeline() {
-    const axes=$('timeline-axis'),bands=$('timeline-bands');
-    axes.replaceChildren();bands.replaceChildren();
+    const axes=$('timeline-axis'),bands=$('timeline-bands'),gaps=$('timeline-gaps');
+    axes.replaceChildren();bands.replaceChildren();gaps.replaceChildren();
     const axisRows=[36,86,136,186,236],size=32;
     for(let i=0;i<LANE.length;i++){
       const y=axisRows[i];
@@ -183,9 +184,31 @@
     const span=viewEnd-viewStart;
     for(let i=0;i<=5;i++){
       const t=viewStart+span*i/5,x=X(t);
-      axes.append(node('line',{x1:x,x2:x,y1:25,y2:269,stroke:'#ffffff','stroke-opacity':'.07'}));
+      axes.append(node('line',{x1:x,x2:x,y1:25,y2:269,stroke:'#343a43'}));
       axes.append(node('text',{x,y:310,'text-anchor':i===0?'start':i===5?'end':'middle'},
         new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(t)));
+    }
+    // Highlight unobserved periods without assigning an invented state.
+    const monitored=[];
+    for(let i=1;i<history.length;i++){
+      const a=history[i-1],b=history[i];
+      if(b.t-a.t<=0||b.t-a.t>MAX_GAP)continue;
+      const start=Math.max(viewStart,a.t),end=Math.min(viewEnd,b.t);
+      if(end>start)monitored.push([start,end]);
+    }
+    let cursor=viewStart;
+    const missing=[];
+    for(const [a,b]of monitored){
+      if(a>cursor)missing.push([cursor,a]);
+      cursor=Math.max(cursor,b);
+    }
+    if(cursor<viewEnd)missing.push([cursor,viewEnd]);
+    for(const [a,b]of missing){
+      const left=X(a),width=X(b)-left;
+      if(width<=0)continue;
+      gaps.append(node('rect',{x:left,y:32,width,height:237,fill:'#e3bd57','fill-opacity':'.055'}));
+      gaps.append(node('line',{x1:left,x2:left+width,y1:269,y2:269,stroke:'#e3bd57','stroke-opacity':'.7','stroke-dasharray':'6 4'}));
+      if(width>140)gaps.append(node('text',{x:left+width/2,y:170,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));
     }
     const columns=441;
     // Rasterise evidence into fixed-width bins: chart remains fast at 90 days.
@@ -224,38 +247,96 @@
     updateButtons();
   }
   function latencyChart(samples) {
-    const axes=$('latency-axes'),points=$('latency-points'),path=$('latency-path');
-    axes.replaceChildren();points.replaceChildren();
-    const candidates=samples.filter(r=>r.auth==='responsive'&&Number.isFinite(r.latency_ms)&&r.latency_ms>=0);
-    const peak=Math.max(100,...candidates.map(r=>r.latency_ms)),max=Math.ceil(peak/50)*50;
-    for(let i=0;i<=3;i++){
-      const y=138-110*i/3;
-      axes.append(node('line',{x1:128,x2:1010,y1:y,y2:y,stroke:'#617085','stroke-opacity':'.25'}));
-      axes.append(node('text',{x:112,y:y+4,'text-anchor':'end'},Math.round(max*i/3)+' ms'));
+    const axes=$('latency-axes'),points=$('latency-points'),path=$('latency-path'),gaps=$('latency-gaps');
+    axes.replaceChildren();points.replaceChildren();gaps.replaceChildren();
+    latencySamples=samples.filter(r=>r.auth==='responsive'&&Number.isFinite(r.latency_ms)&&r.latency_ms>=0);
+    const peak=Math.max(100,...latencySamples.map(r=>r.latency_ms));
+    latencyMax=Math.ceil(peak/50)*50;
+    for(let i=0;i<=4;i++){
+      const y=138-110*i/4;
+      axes.append(node('line',{x1:128,x2:1010,y1:y,y2:y,stroke:'#343a43'}));
+      axes.append(node('text',{x:112,y:y+4,'text-anchor':'end'},Math.round(latencyMax*i/4)+' ms'));
     }
-    if(!candidates.length) {
+    const span=viewEnd-viewStart;
+    for(let i=0;i<=5;i++){
+      const t=viewStart+span*i/5,x=X(t);
+      axes.append(node('line',{x1:x,x2:x,y1:28,y2:138,stroke:'#343a43'}));
+      axes.append(node('text',{x,y:165,'text-anchor':i===0?'start':i===5?'end':'middle'},
+        new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(t)));
+    }
+    const connected=[];
+    for(let i=1;i<latencySamples.length;i++){
+      const a=latencySamples[i-1],b=latencySamples[i];
+      if(b.t-a.t>0&&b.t-a.t<=MAX_GAP)connected.push([a.t,b.t]);
+    }
+    let cursor=viewStart;
+    const missing=[];
+    for(const [a,b]of connected){
+      if(a>cursor)missing.push([cursor,a]);
+      cursor=Math.max(cursor,b);
+    }
+    if(cursor<viewEnd)missing.push([cursor,viewEnd]);
+    for(const [a,b]of missing){
+      const left=X(Math.max(a,viewStart)),right=X(Math.min(b,viewEnd));
+      if(right<=left)continue;
+      gaps.append(node('rect',{x:left,y:28,width:right-left,height:110,fill:'#e3bd57','fill-opacity':'.07'}));
+      if(right-left>145)gaps.append(node('text',{x:(left+right)/2,y:83,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));
+    }
+    if(!latencySamples.length){
       path.setAttribute('d','');
       axes.append(node('text',{x:566,y:82,'text-anchor':'middle',style:'fill:#e3bd57'},'NO LATENCY DATA'));
       return;
     }
-    // Retain one actual sample per horizontal pixel bin, without interpolating missing periods.
+    // Only actual responsive samples; no paths across unobserved intervals.
     const picked=new Map();
-    for(const r of candidates){
+    for(const r of latencySamples){
       const bin=Math.max(0,Math.min(881,Math.floor(X(r.t)-128)));
       const old=picked.get(bin);
       if(!old||r.latency_ms>old.latency_ms)picked.set(bin,r);
     }
     const values=[...picked.values()].sort((a,b)=>a.t-b.t);
     let d='',previous=null;
-    for(const r of values) {
-      const x=X(r.t),y=138-r.latency_ms/max*110;
+    for(const r of values){
+      const x=X(r.t),y=138-r.latency_ms/latencyMax*110;
       d+=(previous&&r.t-previous.t<=MAX_GAP?'L':'M')+x.toFixed(2)+','+y.toFixed(2)+' ';
       previous=r;
     }
     path.setAttribute('d',d);
-    for(const r of values.filter((_,i)=>i%Math.max(1,Math.floor(values.length/35))===0)){
-      points.append(node('circle',{cx:X(r.t),cy:138-r.latency_ms/max*110,r:1.9,fill:'#74c6ef'}));
+    for(const r of values.filter((_,i)=>i%Math.max(1,Math.floor(values.length/35))===0))
+      points.append(node('circle',{cx:X(r.t),cy:138-r.latency_ms/latencyMax*110,r:2.1,fill:'#74c6ef'}));
+  }
+  function latencyInspection(e){
+    const hit=$('latency-hit'),rect=hit.getBoundingClientRect();
+    if(!rect.width)return;
+    const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+    const t=viewStart+(viewEnd-viewStart)*ratio,x=X(t);
+    const crosshair=$('latency-crosshair'),dot=$('latency-hover-dot');
+    crosshair.setAttribute('x1',x);crosshair.setAttribute('x2',x);
+    crosshair.style.display='';
+    const point=D.nearest(latencySamples,t);
+    const closeEnough=point&&point.t>=viewStart&&point.t<=viewEnd&&
+      Math.abs(point.t-t)<=Math.max(MAX_GAP,(viewEnd-viewStart)/882*6);
+    if(!closeEnough){
+      $('latency-readout').textContent='NO DATA · '+fmt(t)+' UTC';
+      $('latency-tooltip').hidden=true;dot.style.display='none';return;
     }
+    const label=fmt(point.t)+' UTC · '+point.latency_ms+' ms (recorded)';
+    $('latency-readout').textContent=label;
+    dot.setAttribute('cx',X(point.t));
+    dot.setAttribute('cy',138-point.latency_ms/latencyMax*110);
+    dot.setAttribute('fill','#74c6ef');dot.style.display='';
+    const tooltip=$('latency-tooltip');
+    tooltip.replaceChildren();
+    const title=document.createElement('strong');title.textContent=point.latency_ms+' ms · authentication response';
+    const stamp=document.createElement('div');stamp.textContent=fmt(point.t)+' UTC';
+    tooltip.append(title,stamp);tooltip.hidden=false;
+    const outer=hit.closest('.graph').getBoundingClientRect();
+    tooltip.style.left=Math.max(0,Math.min(outer.width-220,e.clientX-outer.left+12))+'px';
+  }
+  function hideLatencyInspection(){
+    $('latency-crosshair').style.display='none';
+    $('latency-hover-dot').style.display='none';
+    $('latency-tooltip').hidden=true;
   }
   function nearest(t) {
     if(!history.length)return null;
@@ -347,46 +428,26 @@
     if(!next||Math.abs(viewStart-next.start)<1&&Math.abs(viewEnd-next.end)<1)return;
     viewStart=next.start;viewEnd=next.end;period='CUSTOM';draw();syncDates();
     $('tooltip').hidden=true;
+    $('timeline-crosshair').style.display='none';
+    hideLatencyInspection();
   }
   function setup() {
     for(const p of Object.keys(PERIODS)){
       const b=document.createElement('button');b.type='button';b.textContent=p;
       b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>preset(p));$('ranges').append(b);
     }
-    const hit=$('timeline-hit');
-    hit.addEventListener('pointerdown',e=>{
-      if(e.button!==0||dragging)return;
-      dragging={id:e.pointerId,x:e.clientX};
-      hit.setPointerCapture(e.pointerId);hit.classList.add('is-panning');
-      $('tooltip').hidden=true;e.preventDefault();
-    });
-    hit.addEventListener('pointermove',e=>{
-      if(dragging){
-        if(dragging.id!==e.pointerId)return;
-        const width=hit.getBoundingClientRect().width,dx=e.clientX-dragging.x;
-        dragging.x=e.clientX;
-        if(width)changeRange(D.panRange(viewStart,viewEnd,-dx/width*(viewEnd-viewStart),...Object.values(boundaries())));
-      }else inspection(e);
-    });
-    const finish=e=>{
-      if(!dragging||dragging.id!==e.pointerId)return;
-      dragging=null;hit.classList.remove('is-panning');
-      if(hit.hasPointerCapture(e.pointerId))hit.releasePointerCapture(e.pointerId);
+    const shared={
+      range:()=>({start:viewStart,end:viewEnd}),
+      bounds:boundaries,
+      navigate:changeRange
     };
-    hit.addEventListener('pointerup',finish);hit.addEventListener('pointercancel',finish);
-    hit.addEventListener('lostpointercapture',()=>{dragging=null;hit.classList.remove('is-panning')});
-    hit.addEventListener('pointerleave',()=>{$('tooltip').hidden=true;$('timeline-crosshair').style.display='none'});
-    hit.addEventListener('wheel',e=>{
-      const rect=hit.getBoundingClientRect();if(!rect.width)return;
-      e.preventDefault();
-      const delta=(Math.abs(e.deltaX)>0&&e.shiftKey?e.deltaX:e.deltaY)*(e.deltaMode===1?16:e.deltaMode===2?800:1);
-      const {floor,now}=boundaries();
-      if(e.shiftKey)changeRange(D.panRange(viewStart,viewEnd,delta/100*.12*(viewEnd-viewStart),floor,now));
-      else {
-        const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
-        changeRange(D.zoomRange(viewStart,viewEnd,ratio,delta,floor,now));
-      }
-    },{passive:false});
+    window.OctoChartInteractions.attach({...shared,hit:$('timeline-hit'),
+      hover:inspection,
+      leave:()=>{$('tooltip').hidden=true;$('timeline-crosshair').style.display='none'}
+    });
+    window.OctoChartInteractions.attach({...shared,hit:$('latency-hit'),
+      hover:latencyInspection,leave:hideLatencyInspection
+    });
     $('apply-dates').addEventListener('click',()=>{
       const a=Date.parse($('date-from').value+'T00:00:00Z');
       const b=Math.min(Date.now(),Date.parse($('date-to').value+'T23:59:59Z'));
