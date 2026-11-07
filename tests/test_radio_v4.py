@@ -146,7 +146,7 @@ class RadioParserTests(unittest.TestCase):
         self.assertIn("DJ Whiski", message)
         self.assertIn("<@&1234>", message)
         self.assertIn("AHOY SCALLYWAGS!", message)
-        self.assertTrue(message.startswith("<@&1234>\n\n# 🏴‍☠️ Pirate Radio Announcement Service: DJ Whiski!"))
+        self.assertTrue(message.startswith("# <@&1234>\n# 🏴‍☠️ Pirate Radio Announcement Service: DJ Whiski!"))
         self.assertIn("**LIVE**", message)
         self.assertIn(self.public_url, message)
         self.assertIn(f"[Website]({self.public_url})", message)
@@ -644,13 +644,13 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(channel.sent), 1)
         sent = channel.sent[0]
         self.assertTrue(sent["content"].startswith("**🧪 TEST ALERT: Pirate Radio (no notifications).**"))
-        self.assertIn("<@&1547108101747118100>", sent["content"])
-        self.assertIn("# 🏴‍☠️ Pirate Radio Announcement Service: Tekeela N Trouble!", sent["content"])
+        self.assertIn("# <@&1547108101747118100>\n# 🏴‍☠️ Pirate Radio Announcement Service: Tekeela N Trouble!", sent["content"])
         self.assertIn("[Twitch](https://www.twitch.tv/tekeelatv)", sent["content"])
         self.assertIn("YARRR! 💀 📻", sent["content"])
         self.assertNotIn("\n- [Website]", sent["content"])
         self.assertNotIn("embed", sent)
         self.assertEqual(sent["allowed_mentions"].to_dict(), {"parse": []})
+        self.assertTrue(sent["suppress_embeds"])
         self.assertEqual(monitor.config.test_alert_channel_id, 1547053624268689520)
         self.assertEqual(await self.db.pending_radio_notifications("booty_bay_pirate_radio"), [])
 
@@ -662,6 +662,7 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         monitor = RadioMonitor(_FakeBot(channel), self.config, self.db, _SequenceRadioClient([]))
         await monitor.send_test_message("<@123> <@&456> @everyone @here")
         self.assertEqual(channel.sent[0]["allowed_mentions"].to_dict(), {"parse": []})
+        self.assertTrue(channel.sent[0]["suppress_embeds"])
 
     async def test_radio_testalert_rejects_wrong_server_channel(self) -> None:
         from types import SimpleNamespace
@@ -703,6 +704,8 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(extra.sent[0]["allowed_mentions"].roles)
         self.assertNotIn("embed", main.sent[0])
         self.assertNotIn("embed", extra.sent[0])
+        self.assertTrue(main.sent[0]["suppress_embeds"])
+        self.assertTrue(extra.sent[0]["suppress_embeds"])
         self.assertEqual(main.sent[0]["allowed_mentions"].roles[0].id, 1547108101747118100)
 
     async def test_scheduled_show_is_announced_at_start_once(self) -> None:
@@ -720,7 +723,8 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(channel.sent), 0)
         await monitor.check()
         self.assertEqual(len(channel.sent), 1)
-        self.assertIn("<@&1547108101747118100>", channel.sent[0]["content"])
+        self.assertIn("# <@&1547108101747118100>\n# 🏴‍☠️ Pirate Radio Announcement Service: Pirate Hour!", channel.sent[0]["content"])
+        self.assertTrue(channel.sent[0]["suppress_embeds"])
         self.assertIn("Pirate Hour", channel.sent[0]["content"])
         self.assertIn("[Twitch](https://www.twitch.tv/djwhiski)", channel.sent[0]["content"])
         self.assertNotIn("dj_mossa", channel.sent[0]["content"])
