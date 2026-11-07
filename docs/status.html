@@ -93,12 +93,12 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <nav class="page-nav" aria-label="Dashboard pages">
 <a href="./#server=nzoth">Population</a><a href="status.html" aria-current="page">Server Status</a>
 </nav>
-<p class="intro">Official realm status, login connectivity and credential-free authentication checks are monitored independently. Historical availability is based only on recorded observations; missed checks are never treated as downtime or successful uptime.</p>
+<p class="intro">Live realm, login and authentication checks are monitored independently. The main uptime figures use the original OctoBot confirmed-state history when available, with its last observation time shown. The separate website probe chart records only what its own monitoring has observed.</p>
 <section class="stats" aria-label="Availability overview">
 <div class="stat"><strong class="is-unknown" id="overall">NO DATA</strong><span>Overall service</span><small id="overall-note">Awaiting a fresh observation</small></div>
-<div class="stat"><strong id="uptime-24">NO DATA</strong><span>24h availability</span><small id="coverage-24">No monitored coverage</small></div>
-<div class="stat"><strong id="uptime-7">NO DATA</strong><span>7d availability</span><small id="coverage-7">No monitored coverage</small></div>
-<div class="stat"><strong id="uptime-30">NO DATA</strong><span>30d availability</span><small id="coverage-30">No monitored coverage</small></div>
+<div class="stat"><strong id="uptime-24">NO DATA</strong><span>24h official uptime</span><small id="coverage-24">No monitored coverage</small></div>
+<div class="stat"><strong id="uptime-7">NO DATA</strong><span>7d official uptime</span><small id="coverage-7">No monitored coverage</small></div>
+<div class="stat"><strong id="uptime-30">NO DATA</strong><span>30d official uptime</span><small id="coverage-30">No monitored coverage</small></div>
 </section>
 <div class="split">
 <section class="panel" aria-label="Official realm status">
@@ -114,12 +114,33 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <div class="kv"><span class="name">Login endpoint (TCP)</span><span class="value" id="tcp-state">NO DATA</span></div>
 <div class="kv"><span class="name">Authentication challenge</span><span class="value" id="auth-state">NO DATA</span></div>
 <div class="kv"><span class="name">Response latency</span><span class="value" id="latency-now">NO DATA</span></div>
-<div class="kv"><span class="name">Current observed uptime streak</span><span class="value" id="streak">NO DATA</span></div>
+<div class="kv"><span class="name">Web probe uptime streak</span><span class="value" id="streak">NO DATA</span></div>
 <div class="details">A valid logon challenge response does not prove that a full account login succeeds. No credentials or login proof are sent.</div>
 </section>
 </div>
+<section class="panel" id="bot-archive" aria-label="Historical OctoBot monitoring archive">
+<div class="panel-head"><h2>OctoBot historical monitoring</h2><p>Original Discord bot database</p></div>
+<p class="muted" id="archive-note">Checking for archived status records…</p>
+<div id="archive-empty"><p class="muted">Previously recorded data will appear here when the bot database export is available. This is separate from the new five-minute website collector.</p></div>
+<div id="archive-content" hidden>
+<div class="archive-summary" aria-label="Original bot official uptime history">
+  <div class="archive-stat"><strong id="archive-24">NO DATA</strong><span>Official uptime · 24h</span><small id="archive-24-coverage">No history</small></div>
+  <div class="archive-stat"><strong id="archive-7">NO DATA</strong><span>Official uptime · 7d</span><small id="archive-7-coverage">No history</small></div>
+  <div class="archive-stat"><strong id="archive-30">NO DATA</strong><span>Official uptime · 30d</span><small id="archive-30-coverage">No history</small></div>
+</div>
+<p class="muted" id="archive-as-of"></p>
+<div class="archive-controls"><label class="server-label" for="archive-signal">History: <select id="archive-signal"></select></label><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div></div>
+<p class="muted" id="archive-view-label"></p>
+<p id="archive-readout" aria-live="polite"></p>
+<div class="archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-bars"></g><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg></div>
+<div class="legend"><span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed problem</span><span><i class="key missing"></i>No recorded state</span></div>
+<p class="muted">These are periods recorded by the original bot's confirmed-state monitor, not individual one-minute probes. A confirmed state may persist across missed checks. Partial outages count as downtime, matching OctoBot's /uptime command. All times UTC.</p>
+<div class="panel-head" style="margin-top:23px"><h3>Archived bot incidents</h3><p>Official, authentication and aggregated community reports</p></div>
+<div id="archive-incidents"></div>
+</div>
+</section>
 <section class="panel" aria-label="Interactive monitoring history">
-<div class="chart-head"><h2>Service history</h2><span class="muted" id="range-label">No history loaded</span></div>
+<div class="chart-head"><h2>Independent probe history</h2><span class="muted" id="range-label">No history loaded</span></div>
 <p class="readout" id="readout" aria-live="polite">Hover to inspect individual observations.</p>
 <div class="graph">
 <svg viewBox="0 0 1050 340" role="img" aria-label="Observed status history for three realms, TCP and authentication">
@@ -136,26 +157,6 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <p class="muted">Drag the status chart to pan. Scroll to zoom; hold Shift while scrolling to move across time. Missing data is not estimated. All times UTC. GitHub-hosted checks are scheduled approximately every five minutes and can be delayed.</p>
 <div class="stability" id="stability" aria-label="Recent stability"></div>
 </section>
-<section class="panel" id="bot-archive" aria-label="Historical OctoBot monitoring archive">
-<div class="panel-head"><h2>OctoBot historical monitoring</h2><p>Original Discord bot database</p></div>
-<p class="muted" id="archive-note">Checking for archived status records…</p>
-<div id="archive-empty"><p class="muted">Previously recorded data will appear here when the bot database export is available. This is separate from the new five-minute website collector.</p></div>
-<div id="archive-content" hidden>
-<div class="archive-summary" aria-label="Original bot official uptime history">
-  <div class="archive-stat"><strong id="archive-24">NO DATA</strong><span>Official uptime · 24h</span><small id="archive-24-coverage">No history</small></div>
-  <div class="archive-stat"><strong id="archive-7">NO DATA</strong><span>Official uptime · 7d</span><small id="archive-7-coverage">No history</small></div>
-  <div class="archive-stat"><strong id="archive-30">NO DATA</strong><span>Official uptime · 30d</span><small id="archive-30-coverage">No history</small></div>
-</div>
-<p class="muted" id="archive-as-of"></p>
-<div class="archive-controls"><label class="server-label" for="archive-signal">History: <select id="archive-signal"></select></label><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div></div>
-<p id="archive-readout" aria-live="polite"></p>
-<div class="archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-bars"></g><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg></div>
-<div class="legend"><span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed problem</span><span><i class="key missing"></i>No recorded state</span></div>
-<p class="muted">These are periods recorded by the original bot's confirmed-state monitor, not individual one-minute probes. A confirmed state may persist across missed checks. Partial outages count as downtime, matching OctoBot's /uptime command. All times UTC.</p>
-<div class="panel-head" style="margin-top:23px"><h3>Archived bot incidents</h3><p>Official, authentication and aggregated community reports</p></div>
-<div id="archive-incidents"></div>
-</div>
-</section>
 <section class="panel" aria-label="Availability calendar">
 <div class="panel-head"><h2>Availability calendar</h2><p>Last 90 tracked days</p></div>
 <div class="calendar" id="calendar"></div>
@@ -163,9 +164,9 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <p class="muted">Click a day to inspect its observations. Each cell reflects observed coverage and outages, not an assumption that unmonitored periods were healthy.</p>
 </section>
 <section class="panel" aria-label="Recent monitoring incidents">
-<div class="panel-head"><h2>Recent interruptions</h2><p>Detected by this monitor</p></div>
+<div class="panel-head"><h2>Independent probe interruptions</h2><p>Detected by this monitor</p></div>
 <div id="incidents"><p class="muted">No monitoring history yet.</p></div>
-<p class="muted">Incident times are first detection and first observed recovery, not necessarily the exact start and end. Short outages between scheduled probes may be missed. Historical incidents already stored in the Discord bot are not imported automatically.</p>
+<p class="muted">Incident times are first detection and first observed recovery, not necessarily the exact start and end. Short outages between scheduled probes may be missed. Older incidents imported from the Discord bot appear in the historical monitoring section above.</p>
 </section>
 <p class="muted" id="source-note" role="status"></p>
 <footer><span id="last-check">No observations recorded</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community-built status monitoring</span></footer>
