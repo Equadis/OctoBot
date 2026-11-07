@@ -13,7 +13,7 @@
 </style>
 </head>
 <body><main>
-<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="badge">RECORDED OBSERVATIONS</span><span class="viewers" id="viewer-status" role="status" title="Active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> people currently viewing this page</span></span></div></header>
+<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="badge">RECORDED OBSERVATIONS</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
 <nav class="page-nav" aria-label="Dashboard pages"><a href="./#server=nzoth" aria-current="page">Population</a><a href="status.html">Server Status</a></nav>
 <p class="intro">Observed readings are preserved. The green curve is smoothed for readability; amber dashed sections are estimates between known readings, and NO DATA means genuinely unknown.</p>
 <section class="stats" aria-label="Recorded server statistics">
@@ -36,12 +36,13 @@
 <p id="record-note" class="muted"></p><p id="source-note" class="muted" role="status"></p><footer><span id="snapshot"></span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community population tracker</span></footer>
 </main>
 <script src="chart-data.js"></script>
+<script src="viewer-presence.js"></script>
 <script>
 'use strict';
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',viewerSession=null;
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='';
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -157,36 +158,6 @@ async function refreshLive(){
  updateHeadline();
 }
 
-function viewerId(){
- if(viewerSession)return viewerSession;
- try{
-  const previous=sessionStorage.getItem('octobot-active-viewer');
-  viewerSession=previous&&/^[0-9a-f-]{36}$/i.test(previous)?previous:crypto.randomUUID();
-  sessionStorage.setItem('octobot-active-viewer',viewerSession);
- }catch(e){viewerSession=crypto.randomUUID();}
- return viewerSession;
-}
-async function updateViewers(){
- if(!telemetryEndpoint||document.visibilityState==='hidden')return;
- try{
-  const response=await fetch(workerUrl('/api/presence/heartbeat'),{
-   method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({session_id:viewerId()})
-  });
-  if(!response.ok)throw Error('Viewer heartbeat '+response.status);
-  const result=await response.json();
-  if(!Number.isInteger(result.viewers)||result.viewers<0)throw Error('Invalid viewer count');
-  $('viewer-count').textContent=num(result.viewers);
-  $('viewer-status').classList.remove('is-offline');
-  $('viewer-status').title=result.viewers+' people active on the dashboard in the last 90 seconds';
- }catch(e){
-  console.warn('Viewer count unavailable',e);
-  $('viewer-count').textContent='—';
-  $('viewer-status').classList.add('is-offline');
-  $('viewer-status').title='Viewer counter is temporarily unavailable';
- }
-}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')updateViewers();});
 function svg(name,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function show(time,value,tooltip=false,custom=null,estimated=false){
  const label=custom|| (value===null?'NO DATA':(estimated?'ESTIMATED · ':'')+num(value)+' players'),colour=value===null||estimated?'#e3bd57':'#79dfa7';
@@ -356,7 +327,7 @@ $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from')
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
 const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
-if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();updateViewers();setInterval(updateViewers,30000);setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
+if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
 
 </script>
 </body></html>
