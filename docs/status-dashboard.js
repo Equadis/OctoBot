@@ -37,10 +37,10 @@
     return 'unknown';
   };
   const overall = r => {
-    if (!r || r.website!=='available') return 'unknown';
+    if(!r)return 'unknown';
     const states=LANE.map(([k])=>status(r,k));
     if(states.includes('down'))return 'down';
-    if(states.includes('unknown'))return 'unknown';
+    if(r.website!=='available'||states.includes('unknown'))return 'unknown';
     return 'up';
   };
   const at = r => {
