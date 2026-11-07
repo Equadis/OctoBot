@@ -11,6 +11,7 @@
   let history = [], current = null, period = '1D', viewStart = Date.now()-DAY,
       viewEnd = Date.now(), requestId = 0, archivedOfficial = null;
   let latencySamples = [], latencyMax = 100;
+  let workerEndpoint=null,workerConfigured=false,workerHistory=[],workerCursor=0,workerActive=false;
   const colour = {up:'#63df9a',down:'#ed777f',unknown:'#455363'};
   const fmt = t => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
   const short = ms => {
@@ -136,7 +137,10 @@
       streak=first===current.t?'Observed now':short(current.t-first)+' (observed)';
     }
     $('streak').textContent=streak||'NO DATA';
-    $('source-note').textContent='Source: official realm page + independent TCP / credential-free auth checks from GitHub Actions. '+
+    $('source-note').textContent=(workerActive
+      ?'Sources: one-minute Cloudflare Worker with GitHub Actions fallback. '
+      :'Source: GitHub Actions checks (scheduled runs may be delayed). ')+
+      'Official realm page and independent, credential-free login checks. '+
       'Original bot incidents and uptime are displayed in the separate historical section when the archive is imported.'+
       (current?.source_error?' Latest website diagnostic: '+current.source_error:'');
     updateStability();
@@ -468,20 +472,69 @@
     });
     preset('1D');
   }
+  async function loadWorkerReadings(){
+    if(!workerConfigured){
+      workerConfigured=true;
+      try{
+        const response=await fetch('telemetry.json',{cache:'no-store'});
+        if(response.ok){
+          const configuration=await response.json();
+          const candidate=String(configuration?.endpoint||'').replace(new RegExp('/+$'),'');
+          if(new URL(candidate).protocol==='https:')workerEndpoint=candidate;
+        }
+      }catch{}
+    }
+    if(!workerEndpoint)return {rows:[],latest:null,connected:false};
+    try{
+      // D1 retains real minute-by-minute readings. Read each new page just once
+      // per open browser tab; missing minutes are never interpolated.
+      const recentFloor=Date.now()-90*DAY;
+      let since=Math.max(recentFloor,workerCursor||recentFloor);
+      const accumulated=[];
+      for(let page=0;page<18;page++){
+        const url=workerEndpoint+'/api/status/history?since='+Math.floor(since);
+        const response=await fetch(url,{cache:'no-store'});
+        if(!response.ok)throw Error('Worker status history HTTP '+response.status);
+        const payload=await response.json();
+        if(!Array.isArray(payload.samples))throw Error('Unrecognised Worker status history');
+        accumulated.push(...payload.samples);
+        if(!payload.has_more)break;
+        const next=Number(payload.next_since);
+        if(!Number.isFinite(next)||next<=since)throw Error('Status pagination stalled');
+        since=next;
+        if(page===17)throw Error('Status history exceeds paging limit');
+      }
+      const latestResponse=await fetch(workerEndpoint+'/api/status/latest',{cache:'no-store'});
+      if(!latestResponse.ok)throw Error('Worker latest status HTTP '+latestResponse.status);
+      const latest=await latestResponse.json();
+      workerHistory=sanitise([...workerHistory,...accumulated]);
+      if(latest?.sample)workerHistory=sanitise([...workerHistory,latest.sample]);
+      if(workerHistory.length)workerCursor=workerHistory.at(-1).t;
+      return {rows:workerHistory,latest:latest?.sample||null,connected:true};
+    }catch{
+      return {rows:workerHistory,latest:null,connected:false};
+    }
+  }
   async function load(){
     const request=++requestId;
     try{
-      const results=await Promise.all([
-        fetch('status/history.json',{cache:'no-store'}),
-        fetch('status/latest.json',{cache:'no-store'})
+      const [results,worker]=await Promise.all([
+        Promise.all([
+          fetch('status/history.json',{cache:'no-store'}),
+          fetch('status/latest.json',{cache:'no-store'})
+        ]),loadWorkerReadings()
       ]);
-      if(results.some(r=>!r.ok))throw Error('HTTP status feed unavailable');
-      const [all,latest]=await Promise.all(results.map(r=>r.json()));
+      let all=[],latest=null;
+      if(results.every(r=>r.ok)){
+        [all,latest]=await Promise.all(results.map(r=>r.json()));
+      }else if(!worker.rows.length)throw Error('No independent status feed available');
       if(request!==requestId)return;
-      history=sanitise(all);
-      const sample=latest?.sample;
-      const t=at(sample);
-      current=Number.isFinite(t)&&sample&&typeof sample.realms==='object'?{...sample,t}:history.at(-1)||null;
+      workerActive=worker.connected;
+      history=sanitise([...all,...worker.rows]);
+      const candidates=[latest?.sample,worker.latest,history.at(-1)]
+        .filter(v=>v&&Number.isFinite(at(v))&&typeof v.realms==='object');
+      const sample=candidates.sort((a,b)=>at(b)-at(a))[0];
+      current=sample?{...sample,t:at(sample)}:null;
       if(current&&!history.some(r=>r.t===current.t))history=sanitise([...history,current]);
       updateStats();draw();calendar();showIncidents();
     }catch(e){
@@ -496,6 +549,6 @@
     updateStats();
   });
   setup();load();
-  setInterval(load,300000);
+  setInterval(load,60000);
   setInterval(updateStats,15000);
 })();
