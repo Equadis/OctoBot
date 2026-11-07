@@ -14,18 +14,24 @@ Anyone with Discord Administrator or the server owner always has every bot permi
 
 ---
 
-## Admin test: `/testalert [show_name]`
+## Admin previews: `/testalert [alert] [show_name]`
 
-Requires Discord **Administrator**. Posts a clearly labelled Pirate Radio
-test to the main radio announcement channel, including the real listener-role
-ping. It uses the same formatting and links as production announcements;
-`show_name` defaults to `Tekeela N Trouble` to verify its Twitch URL.
+Requires Discord **Administrator**. All tests post exclusively to
+`1547053624268689520` (or `DISCORD_TEST_ALERT_CHANNEL_ID` if overridden),
+regardless of where the slash command is invoked. Every test is explicitly
+labelled and uses `discord.AllowedMentions.none()`: **no roles, users,
+@everyone or @here receive notifications**.
 
-Before sending, the bot verifies the role exists and can be mentioned in the
-channel. The command returns a private confirmation with a message link.
+- `/testalert` or `/testalert alert:radio`: Pirate Radio message with the
+  configured role mention rendered but not pinged. Optional `show_name` defaults
+  to `Tekeela N Trouble`, to check the DJ Twitch link.
+- `/testalert alert:exalted`: Top Daily Chatter/Exalted announcement using
+  messages recorded in the preceding 24 hours, as of the time of the test.
+  Displays the top three (when available) without granting or removing roles,
+  modifying the daily handover or changing its announcement.
 
-The test does not send to extra announcement channels or change radio history.
-**It genuinely pings the role, so use sparingly.**
+The test command replies privately with a link to its posted test message.
+Normal automatic alerts continue to use their existing channels and pings.
 
 ## Admin test: `/serverinfo [server]`
 
