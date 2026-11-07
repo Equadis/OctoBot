@@ -2,6 +2,17 @@
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
+## Public dashboards
+
+The [Population dashboard](https://equadis.github.io/OctoBot/#server=nzoth) and [Server Status dashboard](https://equadis.github.io/OctoBot/status.html) share the same dark visual style and top navigation.
+
+The status dashboard uses independent GitHub-hosted observations of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its status chart, latency chart, recent detected interruptions and last-90-day calendar are backed by `docs/status/history.json`, written approximately every five minutes by the existing population GitHub Actions workflow.
+
+- Unreadable pages, missed runs, stale probes and large monitoring gaps remain **NO DATA**. Never convert them to an outage or healthy uptime.
+- Availability percentages include **only observed intervals**; changes between observations remain unknown. Coverage is displayed next to every uptime percentage. Short outages between samples may not be seen.
+- The GitHub monitor starts with an **empty archive**. It cannot retroactively recover the bot's Discord incidents, current service uptime or community-reported issues from its private database. Those need a separate read-only telemetry export from the running bot.
+- This collector and the Discord bot use different monitoring locations/cadences; latency and observed incidents may differ. No credentials are sent.
+
 ## Included systems
 
 ### OctoTracker
