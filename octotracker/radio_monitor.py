@@ -38,7 +38,7 @@ def radio_notification_message(
     twitch_url: str | None = None,
     discord_url: str = "https://discord.com/channels/1547014756463026197/1568053765347741828",
 ) -> str:
-    audience = f"<@&{role_id}>\n\n" if role_id is not None else ""
+    audience = f"# <@&{role_id}>\n" if role_id is not None else ""
     show_name = discord.utils.escape_markdown(discord.utils.escape_mentions(show_name))
     return (
         audience
@@ -236,7 +236,9 @@ class RadioMonitor:
         if guild is None or guild.id != self.config.guild_id:
             raise RuntimeError("The configured test alert channel is not in this server.")
         return await channel.send(
-            content=content, allowed_mentions=discord.AllowedMentions.none(),
+            content=content,
+            allowed_mentions=discord.AllowedMentions.none(),
+            suppress_embeds=True,
         )
 
     async def send_test_notification(self, show_name: str = "Tekeela N Trouble") -> discord.Message:
@@ -292,6 +294,7 @@ class RadioMonitor:
                         occurrence.title, role_id if ping_here else None, self.client.public_url, twitch_url, discord_url
                     ),
                     allowed_mentions=allowed_mentions,
+                    suppress_embeds=True,
                 )
             except (discord.Forbidden, discord.HTTPException):
                 LOGGER.exception("Could not send radio notification to %s", channel_id)
