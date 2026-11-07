@@ -408,6 +408,6 @@
     }
   }
   setup();load();
-  setInterval(load,60000);
+  setInterval(load,300000);
   setInterval(updateStats,15000);
 })();
