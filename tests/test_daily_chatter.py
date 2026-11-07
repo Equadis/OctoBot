@@ -94,6 +94,30 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(channel.send.await_count, 1)
         self.assertEqual(message.edit.await_count, 1)
 
+    async def test_exalted_preview_is_read_only_and_renders_real_ranking(self):
+        cog, events, members, channel, message = await self.make_cog()
+        preview = await cog.test_preview(END - timedelta(minutes=1))
+        self.assertIn("TEST ALERT: Daily Exalted", preview)
+        self.assertIn("no notifications or role changes", preview)
+        self.assertIn("# Top Daily Chatter: <@1> - (24th Nov)", preview)
+        self.assertIn("<@&777>", preview)
+        self.assertIn("2nd place: <@2> - 1 messages", preview)
+        self.assertEqual(events, [])
+        channel.send.assert_not_awaited()
+        message.edit.assert_not_awaited()
+        for member in members:
+            member.add_roles.assert_not_awaited()
+            member.remove_roles.assert_not_awaited()
+        self.assertIsNone(await self.store.run(END))
+
+    async def test_exalted_preview_with_no_activity_does_not_invent_winner(self):
+        cog, events, _, channel, _ = await self.make_cog()
+        preview = await cog.test_preview(END + timedelta(days=3))
+        self.assertIn("No eligible chat messages", preview)
+        self.assertNotIn("has been awarded", preview)
+        self.assertEqual(events, [])
+        channel.send.assert_not_awaited()
+
     async def test_removal_failure_never_grants_second_holder(self):
         cog, _, members, channel, _ = await self.make_cog()
         members[1].remove_roles.side_effect = RuntimeError('role hierarchy')
