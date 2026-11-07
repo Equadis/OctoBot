@@ -30,6 +30,8 @@ labelled and uses `discord.AllowedMentions.none()`: **no roles, users,
   Displays the top three (when available) without granting or removing roles,
   modifying the daily handover or changing its announcement.
 
+All radio and test messages use Discord's embed-suppression flag, so Website/Twitch/Discord links remain clickable without generating rich preview cards. Live radio posts show the role mention as a heading immediately above the show heading, with no empty line between them.
+
 The test command replies privately with a link to its posted test message.
 Normal automatic alerts continue to use their existing channels and pings.
 
