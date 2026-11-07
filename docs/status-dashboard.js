@@ -85,6 +85,8 @@
     return {up,down,covered,coverage:length>0?covered/length:0,
       percent:covered?up/covered*100:null};
   }
+  const uptimeColour = value => !Number.isFinite(value) ? '' :
+    value >= 99.95 ? '#63df9a' : value >= 99.9 ? '#e3bd57' : value >= 99 ? '#f39a53' : '#ed777f';
   function percentage(v) {return v.percent===null?'NO DATA':v.percent.toFixed(3)+'%';}
   function updateStats() {
     const fresh=!!recent(), s=fresh?overall(current):'unknown';
@@ -96,11 +98,13 @@
       const fromBot=archivedOfficial?.windows?.[days];
       if(fromBot && Number.isFinite(fromBot.uptime) && Number.isFinite(fromBot.coverage)){
         $('uptime-'+suffix).textContent=fromBot.uptime.toFixed(3)+'%';
+        $('uptime-'+suffix).style.color=uptimeColour(fromBot.uptime);
         const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(archivedOfficial.asOf);
         $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% bot-confirmed coverage · as of '+stamp+' UTC';
       }else{
         const result=availability('overall',Date.now()-days*DAY,Date.now());
         $('uptime-'+suffix).textContent=percentage(result);
+        $('uptime-'+suffix).style.color=uptimeColour(result.percent);
         $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% independent probe coverage';
       }
     }
