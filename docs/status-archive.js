@@ -58,8 +58,6 @@
   }
   function setRange(name){
     range=name;
-    const all=Object.values(SIGNALS).flatMap(()=>[]); // no synthetic samples
-    void all;
     intervals=get(source).filter(r=>Number.isFinite(ms(r.start))&&Number.isFinite(ms(r.end))&&ms(r.end)>ms(r.start));
     upper=Math.max(0,...intervals.map(r=>ms(r.end)));
     const earliest=Math.min(...intervals.map(r=>ms(r.start)));
