@@ -156,6 +156,8 @@ class Config:
     # Extra channels that also receive radio announcements, without the role ping.
     radio_extra_channel_ids: frozenset[int] = frozenset({1554524069511168040})
     radio_ping_role_id: int | None = 1547108101747118100
+    # All manual /testalert previews go here; never send test role pings.
+    test_alert_channel_id: int = 1547053624268689520
     radio_poll_seconds: int = 30
     radio_go_live_confirmations: int = 2
     # Scheduled shows are announced at their scheduled start. Live-detection alerts
@@ -285,6 +287,7 @@ class Config:
                 in {"1547108101747118100", "1567629523514818651"}
                 else _discord_id("DISCORD_RADIO_PING_ROLE_ID")
             ),
+            test_alert_channel_id=_positive_int("DISCORD_TEST_ALERT_CHANNEL_ID", 1547053624268689520),
             radio_poll_seconds=_positive_int("RADIO_POLL_SECONDS", 30),
             radio_go_live_confirmations=_positive_int(
                 "RADIO_GO_LIVE_CONFIRMATIONS", 2
