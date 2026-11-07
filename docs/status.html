@@ -48,7 +48,7 @@ button:hover{color:#fff;border-color:#709ab5}button:focus-visible,a:focus-visibl
 .readout{color:#79dfa7;min-height:24px;font-size:12px;margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .graph{position:relative}svg{width:100%;height:auto;display:block}
 svg text{fill:#91a0b0;font-size:12px;font-family:Arial,Helvetica,sans-serif}
-#timeline-hit{touch-action:pan-y;cursor:grab}#timeline-hit.is-panning{cursor:grabbing}
+#timeline-hit,#latency-hit,#archive-hit{touch-action:pan-y;cursor:grab}#timeline-hit.is-panning,#latency-hit.is-panning,#archive-hit.is-panning{cursor:grabbing}
 .tip{position:absolute;top:22px;left:0;padding:9px 12px;background:#10151cef;border:1px solid #50627a;pointer-events:none;color:#f0f5fa;font-size:12px;line-height:1.7;box-shadow:0 3px 14px #0005;z-index:2;white-space:nowrap}
 .tip[hidden]{display:none}.legend{display:flex;gap:17px;flex-wrap:wrap;font-size:12px;color:#a6b1be;margin:14px 0 6px}
 .key{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:#63df9a}
@@ -84,8 +84,15 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 .archive-controls select{background:#171c24;color:#e5e9ef;border:1px solid #68778c;border-radius:5px;padding:7px}
 #archive-readout{color:#79dfa7;font-size:12px;font-variant-numeric:tabular-nums;min-height:20px;margin:17px 0 0}
 .archive-graph svg{width:100%;height:auto;display:block}
-#archive-hit{cursor:crosshair}
+#archive-hit{cursor:grab}
 @media(max-width:780px){.archive-stat{padding:15px 10px}.archive-stat strong{font-size:20px}}
+
+.chart-title{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.server-label{color:#9ba8b7;font-size:12px;display:inline-flex;align-items:center;gap:7px}
+.server-label select{font:inherit;font-size:12px;color:#dde7f1;background:#252e3b;border:1px solid #384658;padding:7px 9px;border-radius:3px}
+#archive-date-error{min-height:17px}
+#archive-view-label{font-size:12px}
+.archive-graph .tip,.latency-graph .tip{top:5px}
 </style>
 </head>
 <body><main>
@@ -129,10 +136,11 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
   <div class="archive-stat"><strong id="archive-30">NO DATA</strong><span>Official uptime · 30d</span><small id="archive-30-coverage">No history</small></div>
 </div>
 <p class="muted" id="archive-as-of"></p>
-<div class="archive-controls"><label class="server-label" for="archive-signal">History: <select id="archive-signal"></select></label><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div></div>
-<p class="muted" id="archive-view-label"></p>
-<p id="archive-readout" aria-live="polite"></p>
-<div class="archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-bars"></g><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg></div>
+<div class="chart-head"><div class="chart-title"><h3>Historical status</h3><label class="server-label" for="archive-signal">Metric: <select id="archive-signal"></select></label></div><span class="muted" id="archive-view-label"></span></div>
+<p class="readout" id="archive-readout" aria-live="polite"></p>
+<div class="graph archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-missing"></g><g id="archive-bars"></g><line id="archive-crosshair" y1="31" y2="84" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><circle id="archive-hover-dot" r="4" stroke="#f4fff8" stroke-width="1.5" style="display:none"></circle><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg><div class="tip" id="archive-tooltip" hidden></div></div>
+<div class="controls"><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div><div class="dates"><label for="archive-date-from">From</label><input type="date" id="archive-date-from"><label for="archive-date-to">To</label><input type="date" id="archive-date-to"><button type="button" id="archive-apply-dates">Apply</button></div></div>
+<p class="muted" id="archive-date-error" role="status"></p>
 <div class="legend"><span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed problem</span><span><i class="key missing"></i>No recorded state</span></div>
 <p class="muted">These are periods recorded by the original bot's confirmed-state monitor, not individual one-minute probes. A confirmed state may persist across missed checks. Partial outages count as downtime, matching OctoBot's /uptime command. All times UTC.</p>
 <div class="panel-head" style="margin-top:23px"><h3>Archived bot incidents</h3><p>Official, authentication and aggregated community reports</p></div>
@@ -144,17 +152,18 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <p class="readout" id="readout" aria-live="polite">Hover to inspect individual observations.</p>
 <div class="graph">
 <svg viewBox="0 0 1050 340" role="img" aria-label="Observed status history for three realms, TCP and authentication">
-<g id="timeline-axis"></g><g id="timeline-bands"></g>
-<line id="timeline-crosshair" y1="23" y2="295" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line>
+<g id="timeline-axis"></g><g id="timeline-gaps"></g><g id="timeline-bands"></g>
+<line id="timeline-crosshair" y1="23" y2="295" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><g id="timeline-hover-dots"></g>
 <rect id="timeline-hit" x="128" y="23" width="882" height="272" fill="transparent"></rect></svg>
 <div class="tip" id="tooltip" hidden></div>
 </div>
 <div class="legend"><span><i class="key"></i>Online / responsive</span><span><i class="key down"></i>Offline / failed</span><span><i class="key missing"></i>Unknown / unobserved</span></div>
 <div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button type="button" id="apply-dates">Apply</button></div></div>
 <p class="muted" id="date-error" role="status"></p>
-<div class="panel-head" style="margin-top:22px"><h3>Authentication response time</h3><p>Milliseconds · responsive probes only</p></div>
-<svg viewBox="0 0 1050 170" role="img" aria-label="Authentication latency observations"><g id="latency-axes"></g><path id="latency-path" fill="none" stroke="#74c6ef" stroke-width="2.5" stroke-linejoin="round"></path><g id="latency-points"></g></svg>
-<p class="muted">Drag the status chart to pan. Scroll to zoom; hold Shift while scrolling to move across time. Missing data is not estimated. All times UTC. GitHub-hosted checks are scheduled approximately every five minutes and can be delayed.</p>
+<div class="panel-head" style="margin-top:22px"><h3>Authentication response time</h3><p>Milliseconds · responsive probes only · shares time range with probe history</p></div>
+<p class="readout" id="latency-readout" aria-live="polite">Hover to inspect recorded response times.</p>
+<div class="graph latency-graph"><svg viewBox="0 0 1050 170" role="img" aria-label="Authentication latency observations"><g id="latency-gaps"></g><g id="latency-axes"></g><path id="latency-path" fill="none" stroke="#74c6ef" stroke-width="2.5" stroke-linejoin="round"></path><g id="latency-points"></g><line id="latency-crosshair" y1="28" y2="138" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><circle id="latency-hover-dot" r="4" stroke="#f4fff8" stroke-width="1.5" style="display:none"></circle><rect id="latency-hit" x="128" y="20" width="882" height="130" fill="transparent"></rect></svg><div class="tip" id="latency-tooltip" hidden></div></div>
+<p class="muted">Hover for exact recorded values. Drag either graph to pan, scroll to zoom at the pointer, or hold Shift while scrolling to move horizontally without zooming. Both graphs share the controls above. Missing data is not estimated. All times UTC. Checks are scheduled approximately every five minutes and can be delayed.</p>
 <div class="stability" id="stability" aria-label="Recent stability"></div>
 </section>
 <section class="panel" aria-label="Availability calendar">
@@ -172,6 +181,7 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <footer><span id="last-check">No observations recorded</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community-built status monitoring</span></footer>
 </main>
 <script src="chart-data.js"></script>
+<script src="chart-interactions.js"></script>
 <script src="viewer-presence.js"></script>
 <script src="status-dashboard.js"></script>
 <script src="status-archive.js"></script>
