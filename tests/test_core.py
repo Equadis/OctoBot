@@ -228,6 +228,7 @@ class CommandRegistrationTests(unittest.TestCase):
                 "reports-clear",
                 "reports-details",
                 "status",
+                "testalert",
                 "uptime",
             ],
         )
