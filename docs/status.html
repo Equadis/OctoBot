@@ -67,10 +67,17 @@ svg text{fill:#91a0b0;font-size:12px;font-family:Arial,Helvetica,sans-serif}
 footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#7e8b9c;font-size:11px;line-height:1.6}
 a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:780px){body{padding:22px 12px}h1{font-size:25px}header,footer{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:repeat(2,1fr)}.stat{padding:18px 15px;border-bottom:1px solid #343c49}.stat:nth-child(2){border-right:0}.stat:nth-child(3),.stat:nth-child(4){border-bottom:0}.stat strong,.stat:first-child strong{font-size:25px}.split{grid-template-columns:1fr;gap:14px}.panel{padding:17px 11px;margin-top:14px}.calendar{grid-template-columns:repeat(15,minmax(0,1fr))}.incident{grid-template-columns:1fr auto;gap:5px}.incident time{grid-column:1/-1}.dates input{max-width:128px}}
+
+.header-status{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.viewers{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;color:#dce5ef;font-variant-numeric:tabular-nums}
+.viewer-dot{width:7px;height:7px;flex:none;display:inline-block;border-radius:50%;background:#fc3039;box-shadow:0 0 5px #fa313888;animation:viewer-pulse 2.8s ease-in-out infinite}
+.viewers.is-offline .viewer-dot{animation:none;background:#748092;box-shadow:none}
+@keyframes viewer-pulse{0%,100%{opacity:1}50%{opacity:.24}}
+@media(prefers-reduced-motion:reduce){.viewer-dot{animation:none}}
 </style>
 </head>
 <body><main>
-<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW server status</h1></div><span class="badge" id="freshness-badge">AWAITING TELEMETRY</span></header>
+<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW server status</h1></div><div class="header-status"><span class="badge" id="freshness-badge">AWAITING TELEMETRY</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
 <nav class="page-nav" aria-label="Dashboard pages">
 <a href="./#server=nzoth">Population</a><a href="status.html" aria-current="page">Server Status</a>
 </nav>
@@ -132,5 +139,6 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <footer><span id="last-check">No observations recorded</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community-built status monitoring</span></footer>
 </main>
 <script src="chart-data.js"></script>
+<script src="viewer-presence.js"></script>
 <script src="status-dashboard.js"></script>
 </body></html>
