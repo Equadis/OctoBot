@@ -10,8 +10,32 @@ The status dashboard uses independent GitHub-hosted observations of the three of
 
 - Unreadable pages, missed runs, stale probes and large monitoring gaps remain **NO DATA**. Never convert them to an outage or healthy uptime.
 - Availability percentages include **only observed intervals**; changes between observations remain unknown. Coverage is displayed next to every uptime percentage. Short outages between samples may not be seen.
-- The GitHub monitor starts with an **empty archive**. It cannot retroactively recover the bot's Discord incidents, current service uptime or community-reported issues from its private database. Those need a separate read-only telemetry export from the running bot.
+- The GitHub monitor starts with an **empty archive**. It cannot retroactively recover the bot's Discord incidents, current service uptime or community-reported issues without an export from the original bot database. The optional historical archive below provides a privacy-safe import.
 - This collector and the Discord bot use different monitoring locations/cadences; latency and observed incidents may differ. No credentials are sent.
+
+### Import historical status records from the existing bot
+
+**The older data is not gone:** The running bot stores confirmed realm and service history, TCP state periods, authentication transitions and official/auth/community incidents in its private SQLite database (usually `data/octobot.db`). The public GitHub Pages repository does **not** contain that database.
+
+On the machine that actually hosts OctoBot, with an up-to-date copy of this repository and access to the **existing** database, run:
+
+```sh
+python -m tools.export_status_history --db data/octobot.db --out docs/status/bot-history.json
+```
+
+Or substitute the configured `DATABASE_PATH` for `data/octobot.db`. The exporter opens SQLite in **read-only mode**, cannot create or modify the bot database, and exports only public service periods, timestamps and aggregated incident counts. It omits Discord IDs, reports, messages, user details and tokens.
+
+Check the resulting `docs/status/bot-history.json` and publish **only that JSON**, not `data/octobot.db` or its `-wal`/`-shm` files:
+
+```sh
+git add docs/status/bot-history.json
+git commit -m "Backfill archived OctoBot service status"
+git push origin main
+```
+
+The Server Status page then automatically displays an **OctoBot historical monitoring** section with the previous confirmed-state uptime percentages, realm/TCP/authentication timelines and recorded incidents. Until that JSON is populated, the panel clearly says the archive hasn't been imported; the independent website checks continue collecting normally.
+
+**Important:** A historical confirmed-state interval is not proof of an uninterrupted stream of individual probes. The original bot's /uptime methodology counts time between confirmed transitions; the new website probes calculate availability only over independently observed intervals. These are shown separately. An export is a snapshot: if you want the old-bot history updated over time, repeat the export from the host and republish the JSON; it does not automatically upload your private DB or require a GitHub token on the bot host.
 
 ## Included systems
 

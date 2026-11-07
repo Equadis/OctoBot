@@ -74,6 +74,18 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 .viewers.is-offline .viewer-dot{animation:none;background:#748092;box-shadow:none}
 @keyframes viewer-pulse{0%,100%{opacity:1}50%{opacity:.24}}
 @media(prefers-reduced-motion:reduce){.viewer-dot{animation:none}}
+
+.archive-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#343c49;border:1px solid #343c49;margin:19px 0}
+.archive-stat{background:#1e242e;padding:17px 20px}
+.archive-stat strong{font-size:27px;font-weight:400;display:block;color:#74c6ef;font-variant-numeric:tabular-nums}
+.archive-stat span{font-size:12px;color:#a1adba;display:block;margin:8px 0}
+.archive-stat small{font-size:11px;color:#8f9cab}
+.archive-controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:18px}
+.archive-controls select{background:#171c24;color:#e5e9ef;border:1px solid #68778c;border-radius:5px;padding:7px}
+#archive-readout{color:#79dfa7;font-size:12px;font-variant-numeric:tabular-nums;min-height:20px;margin:17px 0 0}
+.archive-graph svg{width:100%;height:auto;display:block}
+#archive-hit{cursor:crosshair}
+@media(max-width:780px){.archive-stat{padding:15px 10px}.archive-stat strong{font-size:20px}}
 </style>
 </head>
 <body><main>
@@ -124,6 +136,26 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <p class="muted">Drag the status chart to pan. Scroll to zoom; hold Shift while scrolling to move across time. Missing data is not estimated. All times UTC. GitHub-hosted checks are scheduled approximately every five minutes and can be delayed.</p>
 <div class="stability" id="stability" aria-label="Recent stability"></div>
 </section>
+<section class="panel" id="bot-archive" aria-label="Historical OctoBot monitoring archive">
+<div class="panel-head"><h2>OctoBot historical monitoring</h2><p>Original Discord bot database</p></div>
+<p class="muted" id="archive-note">Checking for archived status records…</p>
+<div id="archive-empty"><p class="muted">Previously recorded data will appear here when the bot database export is available. This is separate from the new five-minute website collector.</p></div>
+<div id="archive-content" hidden>
+<div class="archive-summary" aria-label="Original bot official uptime history">
+  <div class="archive-stat"><strong id="archive-24">NO DATA</strong><span>Official uptime · 24h</span><small id="archive-24-coverage">No history</small></div>
+  <div class="archive-stat"><strong id="archive-7">NO DATA</strong><span>Official uptime · 7d</span><small id="archive-7-coverage">No history</small></div>
+  <div class="archive-stat"><strong id="archive-30">NO DATA</strong><span>Official uptime · 30d</span><small id="archive-30-coverage">No history</small></div>
+</div>
+<p class="muted" id="archive-as-of"></p>
+<div class="archive-controls"><label class="server-label" for="archive-signal">History: <select id="archive-signal"></select></label><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div></div>
+<p id="archive-readout" aria-live="polite"></p>
+<div class="archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-bars"></g><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg></div>
+<div class="legend"><span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed problem</span><span><i class="key missing"></i>No recorded state</span></div>
+<p class="muted">These are periods recorded by the original bot's confirmed-state monitor, not individual one-minute probes. A confirmed state may persist across missed checks. Partial outages count as downtime, matching OctoBot's /uptime command. All times UTC.</p>
+<div class="panel-head" style="margin-top:23px"><h3>Archived bot incidents</h3><p>Official, authentication and aggregated community reports</p></div>
+<div id="archive-incidents"></div>
+</div>
+</section>
 <section class="panel" aria-label="Availability calendar">
 <div class="panel-head"><h2>Availability calendar</h2><p>Last 90 tracked days</p></div>
 <div class="calendar" id="calendar"></div>
@@ -141,4 +173,5 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <script src="chart-data.js"></script>
 <script src="viewer-presence.js"></script>
 <script src="status-dashboard.js"></script>
+<script src="status-archive.js"></script>
 </body></html>
