@@ -13,7 +13,7 @@
     tcp: ['Login TCP', 'tcp'],
     auth: ['Authentication', 'auth']
   };
-  const DURATIONS = {'1D':DAY,'1W':7*DAY,'1M':30*DAY,'3M':90*DAY,'ALL':0};
+  const DURATIONS = {'1H':3600000,'1D':DAY,'1W':7*DAY,'1M':30*DAY,'3M':90*DAY,'ALL':0};
   const COLOUR={online:'#63df9a',reachable:'#63df9a',responsive:'#63df9a',
     partial:'#e3bd57',offline:'#ed777f',unreachable:'#ed777f',
     unresponsive:'#ed777f',malformed_response:'#ed777f',unknown:'#455363'};
