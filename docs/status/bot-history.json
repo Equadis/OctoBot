@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "source": "octobot_database",
+  "exported_at": null,
+  "service": [],
+  "realms": {
+    "nzoth": [],
+    "yshaarj": [],
+    "cthun": []
+  },
+  "tcp": [],
+  "auth": [],
+  "incidents": []
+}
