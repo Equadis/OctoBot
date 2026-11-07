@@ -54,7 +54,19 @@ async function officialStatus(){
     const realms=Object.fromEntries(Object.keys(EMPTY).map(k=>[k,confirmRealm(first[k],second[k])]));
     return {website:'available',realms,source_error:Object.values(realms).includes('unknown')?'Unconfirmed or unparseable official state':null};
   }catch(error){
-    return {website:'unavailable',realms:{...EMPTY},source_error:String(error?.message||'Official website unavailable').slice(0,180)};
+    // Retry a network/verification error as well as a suspicious realm label.
+    // A real healthy second response resolves a transient source outage.
+    await delay(2000);
+    try{
+      const recovered=await officialOnce();
+      const realms=Object.fromEntries(Object.keys(EMPTY).map(k=>
+        [k,confirmRealm('unknown',recovered[k])]));
+      return {website:'available',realms,source_error:
+        Object.values(realms).includes('unknown')?'Official realm state unconfirmed after source retry':null};
+    }catch(repeated){
+      return {website:'unavailable',realms:{...EMPTY},
+        source_error:String(repeated?.message||'Official website unavailable').slice(0,180)};
+    }
   }
 }
 function buildLogonChallenge(){
