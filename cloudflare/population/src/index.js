@@ -1,3 +1,4 @@
+import {collectStatus,statusLatest,statusHistory,cleanOldStatus} from './status.js';
 /**
  * OctoBot minute-by-minute population recorder.
  * Deployed to Cloudflare Workers with D1. No GitHub token required.
@@ -54,6 +55,11 @@ async function collect(env){
 const worker={
  async scheduled(controller,env,ctx){
   ctx.waitUntil(collect(env).catch(e=>console.error('Population collection failed:',e)));
+  ctx.waitUntil(collectStatus(env).catch(e=>console.error('Status collection failed:',e)));
+  // Retain 90 days of recorded checks without filling missing minutes.
+  const scheduledTime=Number(controller?.scheduledTime||Date.now());
+  if(new Date(scheduledTime).getUTCHours()===3&&new Date(scheduledTime).getUTCMinutes()===0)
+    ctx.waitUntil(cleanOldStatus(env).catch(e=>console.error('Status retention cleanup failed:',e)));
   // Expired anonymous viewer sessions need not accumulate indefinitely in D1.
   ctx.waitUntil(
    env.DB.prepare('DELETE FROM viewer_presence WHERE last_seen_ms<?')
@@ -79,6 +85,18 @@ const worker={
    if(url.pathname==='/api/presence/count'){
     const row=await env.DB.prepare("SELECT COUNT(*) AS viewers FROM viewer_presence WHERE page='population' AND last_seen_ms>=?").bind(Date.now()-90000).first();
     return json({viewers:row?.viewers??0,window_seconds:90});
+   }
+   if(url.pathname==='/api/status/latest')return json(await statusLatest(env));
+   if(url.pathname==='/api/status/history'){
+    const since=Number(url.searchParams.get('since')||Date.now()-90*86400000);
+    if(!Number.isSafeInteger(since)||since<0)return json({error:'invalid_since'},400);
+    return json(await statusHistory(env,since));
+   }
+   if(url.pathname==='/api/status/health'){
+    const data=await statusLatest(env);
+    const time=Date.parse(data.sample?.timestamp);
+    return json({status:Number.isFinite(time)&&Date.now()-time<180000?'ok':'stale',
+      last_observation:data.sample?.timestamp||null,collector:'cloudflare-cron-every-minute'});
    }
    if(url.pathname==='/api/latest'){
     const {results}=await env.DB.prepare(
