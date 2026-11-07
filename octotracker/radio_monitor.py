@@ -226,52 +226,36 @@ class RadioMonitor:
                 occurrence.occurrence_key, message_id
             )
 
-    async def send_test_notification(self, show_name: str = "Tekeela N Trouble") -> discord.Message:
-        """Send a clearly labelled radio test without changing radio deduplication state."""
-        channel_id = self.config.radio_channel_id
-        role_id = self.config.radio_ping_role_id
-        if channel_id is None:
-            raise RuntimeError("The main Pirate Radio announcement channel is not configured.")
-        if role_id is None:
-            raise RuntimeError("The Pirate Radio ping role is not configured.")
+    async def send_test_message(self, content: str) -> discord.Message:
+        """Post a no-mention test in the dedicated channel; do not mutate live state."""
+        channel_id = self.config.test_alert_channel_id
         channel = await self._resolve_channel(channel_id)
         if channel is None:
-            raise RuntimeError("The Pirate Radio announcement channel is inaccessible.")
-
+            raise RuntimeError(f"The test alert channel {channel_id} is inaccessible.")
         guild = getattr(channel, "guild", None)
         if guild is None or guild.id != self.config.guild_id:
-            raise RuntimeError("The configured radio channel is not in this server.")
-        role = guild.get_role(role_id)
-        if role is None:
-            raise RuntimeError(f"Pirate Radio role {role_id} was not found in this server.")
-        bot_member = guild.me
-        if bot_member is None:
-            raise RuntimeError("Could not check OctoBot channel permissions.")
-        permissions = channel.permissions_for(bot_member)
-        if not role.mentionable and not permissions.mention_everyone:
-            raise RuntimeError(
-                "The radio role is not mentionable and OctoBot lacks "
-                "the Mention @everyone, @here, and All Roles permission in the radio channel."
-            )
+            raise RuntimeError("The configured test alert channel is not in this server.")
+        return await channel.send(
+            content=content, allowed_mentions=discord.AllowedMentions.none(),
+        )
 
+    async def send_test_notification(self, show_name: str = "Tekeela N Trouble") -> discord.Message:
+        """Preview the real radio message in the test channel without notifying roles."""
+        role_id = self.config.radio_ping_role_id
+        if role_id is None:
+            raise RuntimeError("The Pirate Radio ping role is not configured.")
         twitch_url = dj_stream_url(show_name, self.dj_streams)
         discord_url = (
             f"https://discord.com/channels/{self.config.guild_id}/"
             f"{self.config.radio_discord_channel_id}"
         )
         content = (
-            "**🧪 TEST ALERT: This is not a live broadcast.**\n\n"
+            "**🧪 TEST ALERT: Pirate Radio (no notifications).**\n\n"
             + radio_notification_message(
                 show_name, role_id, self.client.public_url, twitch_url, discord_url
             )
         )
-        return await channel.send(
-            content=content,
-            allowed_mentions=discord.AllowedMentions(
-                everyone=False, users=False,
-                roles=[discord.Object(id=role_id)], replied_user=False,
-            ),
-        )
+        return await self.send_test_message(content)
 
     async def _send_occurrence(self, occurrence: RadioOccurrence) -> int | None:
         """Announce the show in every configured channel.
