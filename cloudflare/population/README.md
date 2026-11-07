@@ -1,5 +1,43 @@
 # OctoBot: one-minute population telemetry
 
+## One-minute Server Status monitoring
+
+The same existing Cloudflare Cron Worker now independently records the official
+realm labels, login TCP reachability and a credential-free WoW authentication
+challenge into `status_readings` in D1. It never uses real accounts, and
+a failed/blocked probe is **unknown**, not fabricated downtime. Consecutive
+explicit official offline readings are required before recording an offline
+realm; a transient unsuccessful website request cannot declare a realm down.
+
+**One-time update required** after pulling the repository:
+
+```sh
+cd cloudflare/population
+npx wrangler d1 migrations apply octobot-population --remote
+npx wrangler deploy
+```
+
+Then open these public read-only endpoints:
+
+- `https://octobot-population.eqvoice.workers.dev/api/status/health` — last
+  reading timestamp and freshness.
+- `https://octobot-population.eqvoice.workers.dev/api/status/latest` — most
+  recent recorded official and credential-free login checks.
+- `https://octobot-population.eqvoice.workers.dev/api/status/history?since=0` —
+  chronological readings with `has_more` and `next_since` pagination.
+
+The Server Status webpage fetches new results every minute, merges them with
+the independent GitHub JSON fallback, and retains the 90-day browsing window.
+The original imported Discord-bot history is unaffected.
+
+Cloudflare supports outgoing TCP sockets, but some destinations may reject
+Cloudflare connections. If the WoW login endpoint cannot be reached from the
+Worker, its authentication state remains `unknown`; the GitHub monitor
+remains a fallback. An explicitly confirmed outage is never hidden just
+to make uptime look perfect. No scheduled system can guarantee that
+every minute will contain a successful external observation.
+
+
 The GitHub-hosted site itself is static. Its existing GitHub Actions workflow cannot
 reliably collect a new observation once per minute (GitHub's minimum is five minutes
 and scheduled jobs may be delayed or skipped).
