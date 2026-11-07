@@ -633,51 +633,43 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
             **overrides,
         )
 
-    async def test_radio_testalert_sends_one_labelled_ping_without_embed(self) -> None:
+    async def test_radio_testalert_uses_staff_channel_without_pinging(self) -> None:
         from types import SimpleNamespace
 
         channel = _FakeChannel()
-        role = SimpleNamespace(id=1547108101747118100, mentionable=True)
-        channel.guild = SimpleNamespace(
-            id=123, me=object(),
-            get_role=lambda role_id: role if role_id == role.id else None,
-        )
-        channel.permissions_for = lambda member: SimpleNamespace(mention_everyone=False)
+        channel.guild = SimpleNamespace(id=123)
         monitor = RadioMonitor(_FakeBot(channel), self.config, self.db, _SequenceRadioClient([]))
         message = await monitor.send_test_notification("Tekeela N Trouble")
         self.assertEqual(message.id, 1)
         self.assertEqual(len(channel.sent), 1)
         sent = channel.sent[0]
-        self.assertTrue(sent["content"].startswith("**🧪 TEST ALERT: This is not a live broadcast.**"))
+        self.assertTrue(sent["content"].startswith("**🧪 TEST ALERT: Pirate Radio (no notifications).**"))
         self.assertIn("<@&1547108101747118100>", sent["content"])
         self.assertIn("# 🏴‍☠️ Pirate Radio Announcement Service: Tekeela N Trouble!", sent["content"])
         self.assertIn("[Twitch](https://www.twitch.tv/tekeelatv)", sent["content"])
         self.assertIn("YARRR! 💀 📻", sent["content"])
         self.assertNotIn("\n- [Website]", sent["content"])
         self.assertNotIn("embed", sent)
-        self.assertEqual(sent["allowed_mentions"].roles[0].id, role.id)
-        self.assertFalse(sent["allowed_mentions"].everyone)
+        self.assertEqual(sent["allowed_mentions"].to_dict(), {"parse": []})
+        self.assertEqual(monitor.config.test_alert_channel_id, 1547053624268689520)
+        self.assertEqual(await self.db.pending_radio_notifications("booty_bay_pirate_radio"), [])
 
-    async def test_radio_testalert_refuses_non_mentionable_role(self) -> None:
+    async def test_alert_preview_also_disables_user_and_everyone_mentions(self) -> None:
         from types import SimpleNamespace
 
         channel = _FakeChannel()
-        role = SimpleNamespace(id=1547108101747118100, mentionable=False)
-        channel.guild = SimpleNamespace(id=123, me=object(), get_role=lambda role_id: role)
-        channel.permissions_for = lambda member: SimpleNamespace(mention_everyone=False)
+        channel.guild = SimpleNamespace(id=123)
         monitor = RadioMonitor(_FakeBot(channel), self.config, self.db, _SequenceRadioClient([]))
-        with self.assertRaisesRegex(RuntimeError, "not mentionable"):
-            await monitor.send_test_notification()
-        self.assertFalse(channel.sent)
+        await monitor.send_test_message("<@123> <@&456> @everyone @here")
+        self.assertEqual(channel.sent[0]["allowed_mentions"].to_dict(), {"parse": []})
 
-    async def test_radio_testalert_refuses_unknown_role(self) -> None:
+    async def test_radio_testalert_rejects_wrong_server_channel(self) -> None:
         from types import SimpleNamespace
 
         channel = _FakeChannel()
-        channel.guild = SimpleNamespace(id=123, me=object(), get_role=lambda role_id: None)
-        channel.permissions_for = lambda member: SimpleNamespace(mention_everyone=True)
+        channel.guild = SimpleNamespace(id=777)
         monitor = RadioMonitor(_FakeBot(channel), self.config, self.db, _SequenceRadioClient([]))
-        with self.assertRaisesRegex(RuntimeError, "not found"):
+        with self.assertRaisesRegex(RuntimeError, "not in this server"):
             await monitor.send_test_notification()
         self.assertFalse(channel.sent)
 
