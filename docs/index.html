@@ -85,9 +85,11 @@ function updateUptime(){
  const valid=reference&&Number.isFinite(time)&&Number.isInteger(reference.elapsed_seconds)&&reference.elapsed_seconds>=0&&age>=0&&age<=12*3600000;
  if(!valid){
   $('uptime').textContent='NO DATA';
+  $('uptime').style.color='#e3bd57';
   $('uptime-freshness').textContent=reference?'Last screenshot too old to estimate reliably':'No verified uptime telemetry';
   return;
  }
+ $('uptime').style.color='';
  const seconds=reference.elapsed_seconds+Math.floor(age/1000);
  const d=Math.floor(seconds/86400),h=Math.floor(seconds%86400/3600),m=Math.floor(seconds%3600/60),s=seconds%60;
  $('uptime').textContent=d+'D '+h+'H '+m+'M '+s+'S';
