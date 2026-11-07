@@ -1,8 +1,9 @@
 """Regression tests for safe publication of independent status observations."""
 import unittest
+from types import SimpleNamespace
 from datetime import datetime, timedelta, timezone
 
-from tools.collect_status import merge_history
+from tools.collect_status import confirm_state, merge_history, needs_confirmation
 
 
 class StatusHistoryTests(unittest.TestCase):
@@ -35,6 +36,38 @@ class StatusHistoryTests(unittest.TestCase):
     def test_unknown_is_preserved_as_unknown(self):
         missing=self.row(self.now,"unknown")
         self.assertEqual(merge_history([],missing,self.now)[0]["realms"]["nzoth"],"unknown")
+
+
+
+
+class ConfirmationTests(unittest.TestCase):
+    def test_transient_offline_recovers_on_retry(self):
+        self.assertEqual(confirm_state("offline", "online", "online"), "online")
+
+    def test_repeated_offline_is_real_observed_failure(self):
+        self.assertEqual(confirm_state("offline", "offline", "online"), "offline")
+        self.assertEqual(
+            confirm_state("unresponsive", "unresponsive", "responsive"),
+            "unresponsive",
+        )
+
+    def test_conflicting_results_are_not_marked_down(self):
+        self.assertEqual(confirm_state("unknown", "offline", "online"), "unknown")
+        self.assertEqual(
+            confirm_state("unreachable", "unknown", "reachable"), "unknown"
+        )
+
+    def test_health_checks_are_not_retried_unnecessarily(self):
+        official = SimpleNamespace(
+            reachable=True, error=None, realms={"nzoth": "online"}
+        )
+        auth = SimpleNamespace(tcp_status="reachable", auth_status="responsive")
+        self.assertFalse(needs_confirmation(official, auth))
+        official.realms["nzoth"] = "offline"
+        self.assertTrue(needs_confirmation(official, auth))
+        official.realms["nzoth"] = "online"
+        auth.auth_status = "unresponsive"
+        self.assertTrue(needs_confirmation(official, auth))
 
 
 if __name__=="__main__":

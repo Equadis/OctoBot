@@ -58,34 +58,102 @@ def merge_history(existing: list[dict], sample: dict, now: datetime) -> list[dic
     return [valid[k] for k in sorted(valid)][-MAX_SAMPLES:]
 
 
+def needs_confirmation(official, auth) -> bool:
+    """A single bad poll may be a transient website, routing or TLS error."""
+    return (
+        not official.reachable
+        or bool(official.error)
+        or any(state != "online" for state in official.realms.values())
+        or auth.tcp_status != "reachable"
+        or auth.auth_status != "responsive"
+    )
+
+
+def confirm_state(initial: str, repeated: str, healthy: str) -> str:
+    """Never turn a single transient failure into a confirmed outage.
+
+    A fresh healthy retry is usable, while the same negative state twice is
+    confirmed. Disagreement or incomplete parsing remains unknown.
+    """
+    if repeated == healthy:
+        return healthy
+    if initial == repeated and repeated not in {"unknown", "unavailable"}:
+        return repeated
+    return "unknown"
+
+
 async def take_sample() -> dict:
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=12)) as session:
-        official, auth = await asyncio.gather(
-            StatusClient(session).fetch(),
-            AuthProbe(
-                os.getenv("OCTOWOW_AUTH_HOST", "play.octowow.st"),
-                int(os.getenv("OCTOWOW_AUTH_PORT", "3724")),
-                timeout_seconds=8,
-            ).probe(),
+        status_client = StatusClient(session)
+        auth_probe = AuthProbe(
+            os.getenv("OCTOWOW_AUTH_HOST", "play.octowow.st"),
+            int(os.getenv("OCTOWOW_AUTH_PORT", "3724")),
+            timeout_seconds=8,
         )
-    # Unknown is mandatory if the website was unreachable or parsing was incomplete.
-    realms = {
-        REALM_KEYS[name]: (
-            official.realms.get(name, "unknown") if official.reachable else "unknown"
-        )
-        for name in REALMS
-    }
-    return {
-        "timestamp": iso(datetime.now(timezone.utc)),
-        "website": "available" if official.reachable and not official.error else "unavailable",
-        "realms": realms,
-        "tcp": auth.tcp_status,
-        "auth": auth.auth_status,
-        "latency_ms": auth.latency_ms if auth.auth_status == "responsive" else None,
-        "auth_result_code": auth.result_code if auth.auth_status == "responsive" else None,
-        "source_error": official.error,
-        "auth_reason": auth.reason,
-    }
+
+        async def once():
+            return await asyncio.gather(status_client.fetch(), auth_probe.probe())
+
+        first_official, first_auth = await once()
+        official, auth = first_official, first_auth
+        realms = {
+            REALM_KEYS[name]: (
+                official.realms.get(name, "unknown") if official.reachable else "unknown"
+            )
+            for name in REALMS
+        }
+        tcp, authentication = auth.tcp_status, auth.auth_status
+        latency = auth.latency_ms
+        result_code = auth.result_code
+        auth_reason = auth.reason
+        source_error = official.error
+
+        if needs_confirmation(first_official, first_auth):
+            # A second real probe (not a fabricated status) filters short-lived
+            # network failures. Never mark an unconfirmed issue as downtime.
+            await asyncio.sleep(2)
+            official, auth = await once()
+            realms = {
+                REALM_KEYS[name]: confirm_state(
+                    first_official.realms.get(name, "unknown")
+                    if first_official.reachable else "unknown",
+                    official.realms.get(name, "unknown")
+                    if official.reachable else "unknown",
+                    "online",
+                )
+                for name in REALMS
+            }
+            tcp = confirm_state(first_auth.tcp_status, auth.tcp_status, "reachable")
+            authentication = confirm_state(
+                first_auth.auth_status, auth.auth_status, "responsive"
+            )
+            # Only a real responsive challenge produces usable latency data.
+            if authentication == "responsive":
+                observed = auth if auth.auth_status == "responsive" else first_auth
+                latency, result_code, auth_reason = (
+                    observed.latency_ms, observed.result_code, observed.reason
+                )
+            else:
+                latency, result_code = None, None
+                auth_reason = (
+                    auth.reason if first_auth.auth_status == auth.auth_status
+                    else "Conflicting authentication checks; not a confirmed outage"
+                )
+            source_error = official.error
+            if source_error and first_official.error != source_error:
+                source_error = "Website check inconclusive after retry: " + source_error
+
+        return {
+            "timestamp": iso(datetime.now(timezone.utc)),
+            "website": "available" if official.reachable and not official.error else "unavailable",
+            "realms": realms,
+            "tcp": tcp,
+            "auth": authentication,
+            "latency_ms": latency if authentication == "responsive" else None,
+            "auth_result_code": result_code if authentication == "responsive" else None,
+            "source_error": source_error,
+            "auth_reason": auth_reason,
+        }
 
 
 async def main() -> None:

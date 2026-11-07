@@ -6,12 +6,39 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 
 The [Population dashboard](https://equadis.github.io/OctoBot/#server=nzoth) and [Server Status dashboard](https://equadis.github.io/OctoBot/status.html) share the same dark visual style and top navigation.
 
-The status dashboard uses independent GitHub-hosted observations of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its status chart, latency chart, recent detected interruptions and last-90-day calendar are backed by `docs/status/history.json`, written approximately every five minutes by the existing population GitHub Actions workflow.
+The status dashboard uses independent checks of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its independent-probe chart, response-time graph and recent interruption history combine the one-minute Cloudflare Worker (after its D1 migration and redeployment) with GitHub-recorded observations from an independent status workflow (`.github/workflows/status.yml`). GitHub Actions is a fallback, not a guaranteed five-minute schedule.
 
+- One-minute Worker readings only start **after** running the migration and deploying the Worker; simply merging code does not activate them. The `/api/status/health` endpoint reports whether the latest D1 status observation is fresh.
+- Confirmed monitoring failures are retried; disagreement is unknown, not automatically downtime. The original Discord-bot confirmed incidents remain in the historical archive and are never deleted.
 - Unreadable pages, missed runs, stale probes and large monitoring gaps remain **NO DATA**. Never convert them to an outage or healthy uptime.
 - Availability percentages include **only observed intervals**; changes between observations remain unknown. Coverage is displayed next to every uptime percentage. Short outages between samples may not be seen.
 - The GitHub monitor starts with an **empty archive**. It cannot retroactively recover the bot's Discord incidents, current service uptime or community-reported issues without an export from the original bot database. The optional historical archive below provides a privacy-safe import.
 - This collector and the Discord bot use different monitoring locations/cadences; latency and observed incidents may differ. No credentials are sent.
+
+### More reliable one-minute status monitoring
+
+Use the already configured [Cloudflare Population Worker](cloudflare/population/README.md).
+From the `cloudflare/population` directory in Codespaces, after `git pull`, apply
+the **new** status-table migration and redeploy the existing Worker:
+
+```sh
+npx wrangler d1 migrations apply octobot-population --remote
+npx wrangler deploy
+```
+
+Check `https://octobot-population.eqvoice.workers.dev/api/status/health` and
+`/api/status/latest`. This is a separate one-minute collector for the same
+official realm and credential-free authentication checks. Its samples go to D1,
+and the dashboard polls it every minute; it falls back to the GitHub status JSON
+if D1 is not yet deployed or the Worker cannot respond. The Worker does not
+alter the separate population tracking.
+
+**Limitations:** No external scheduled monitor can promise zero missed readings
+or guarantee zero server downtime. Cloudflare's TCP egress may be unable to
+reach the game login endpoint; in that case its auth result is `unknown`, not
+a claimed outage. GitHub status checks remain as a distinct fallback. Old
+missed checks cannot be recreated; new genuine failures and unobserved
+periods must not be represented as healthy.
 
 ### Import historical status records from the existing bot
 
