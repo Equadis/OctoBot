@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OctoBot monitoring dashboard for official OctoWoW realm status, login health, latency and observed availability.">
+<title>OctoBot · Server Status</title>
+<link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#171a21;color:#e5e9ef}
+*{box-sizing:border-box}body{margin:0;padding:38px 24px}main{max-width:1180px;margin:auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #343c49;padding-bottom:24px}
+.brand{font-size:12px;font-weight:700;letter-spacing:.14em;color:#8b9aad}
+h1{font-size:28px;font-weight:500;margin:9px 0 0}h2{font-size:18px;font-weight:500;margin:0}
+h3{font-size:14px;font-weight:500;margin:0}.badge{font-size:11px;letter-spacing:.07em;color:#e8c67c;background:#362f21;padding:8px 11px;border-radius:4px}
+.muted,.intro{font-size:13px;color:#91a0b0;line-height:1.6}
+.page-nav{display:flex;gap:5px;margin:22px 0 20px;flex-wrap:wrap}
+.page-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:145px;padding:11px 18px;background:#202630;border:1px solid #384658;color:#aab8c8;text-decoration:none;font-size:13px;border-radius:4px}
+.page-nav a:hover,.page-nav a:focus-visible{border-color:#709ab5;color:#fff}
+.page-nav a[aria-current=page]{background:#34566d;color:#f0f7ff;border-color:#6585a0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #343c49;margin:24px 0 28px;background:#1e242e}
+.stat{padding:25px 21px;border-right:1px solid #343c49}.stat:last-child{border:0}
+.stat strong{display:block;font-size:31px;color:#74c6ef;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat:first-child strong{color:#78dfa6;font-size:29px}.stat span{display:block;color:#a1adba;font-size:12px;margin-top:11px}
+.stat small{display:block;color:#91a0b0;font-size:11px;line-height:1.5;margin-top:8px}
+.stat strong.is-down{color:#f08f8f}.stat strong.is-unknown{color:#e3bd57}
+.panel{background:#1b2029;border:1px solid #343c49;padding:23px 22px;margin-top:22px;min-width:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.panel-head p{margin:0;color:#8997a8;font-size:12px}.split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.split>.panel{margin-top:0}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid #333c49;font-size:13px}
+.kv:last-child{border:0}.kv .name{color:#bac6d3}.kv .value{font-variant-numeric:tabular-nums;text-align:right;font-size:12px}
+.pill{display:inline-flex;gap:7px;align-items:center;font-size:12px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#788597;flex:none}
+.dot.online,.dot.reachable,.dot.responsive{background:#63df9a;box-shadow:0 0 7px #63df9a44}
+.dot.offline,.dot.unreachable,.dot.unresponsive,.dot.malformed_response{background:#ee777f}
+.dot.unknown{background:#e3bd57}.ok{color:#78dfa6}.bad{color:#ef929b}.unknown-text{color:#e3bd57}
+.details{font-size:11px;line-height:1.65;color:#8f9cab;margin-top:12px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ranges{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.ranges:before{content:'Zoom';font-size:12px;color:#8f9cab;margin-right:7px}
+button{font:inherit;font-size:12px;color:#aab8c8;cursor:pointer;border:1px solid #384658;background:#252e3b;padding:7px 12px;border-radius:3px}
+button[aria-pressed=true]{background:#376680;color:white;border-color:#5284a2}
+button:hover{color:#fff;border-color:#709ab5}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #74c6ef;outline-offset:3px}
+.dates{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:11px;color:#8f9cab}
+.dates input{background:#171c24;color:#bdc8d5;border:1px solid #384658;padding:6px;font:inherit;max-width:140px}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:15px 0;border-bottom:1px solid #343c49}
+.readout{color:#79dfa7;min-height:24px;font-size:12px;margin:16px 0 4px;font-variant-numeric:tabular-nums}
+.graph{position:relative}svg{width:100%;height:auto;display:block}
+svg text{fill:#91a0b0;font-size:12px;font-family:Arial,Helvetica,sans-serif}
+#timeline-hit{touch-action:pan-y;cursor:grab}#timeline-hit.is-panning{cursor:grabbing}
+.tip{position:absolute;top:22px;left:0;padding:9px 12px;background:#10151cef;border:1px solid #50627a;pointer-events:none;color:#f0f5fa;font-size:12px;line-height:1.7;box-shadow:0 3px 14px #0005;z-index:2;white-space:nowrap}
+.tip[hidden]{display:none}.legend{display:flex;gap:17px;flex-wrap:wrap;font-size:12px;color:#a6b1be;margin:14px 0 6px}
+.key{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:#63df9a}
+.key.down{background:#ed777f}.key.missing{background:#455363}.key.latency{background:#74c6ef}
+.stability{display:flex;gap:13px;flex-wrap:wrap;margin-top:17px}
+.stability span{background:#202733;border:1px solid #394352;padding:9px 13px;font-size:12px;color:#aab7c7}
+.calendar{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:5px;margin:18px 0}
+.calendar button{padding:0;min-width:0;aspect-ratio:1;background:#394452;border:1px solid #485465;border-radius:2px}
+.calendar button.good{background:#387957;border-color:#49906a}
+.calendar button.partial{background:#947a36;border-color:#b39c52}
+.calendar button.bad{background:#98535b;border-color:#b26972}
+.calendar button:hover{outline:2px solid #fff;outline-offset:1px}
+.calendar button:focus-visible{outline:2px solid #74c6ef}
+.incident{display:grid;grid-template-columns:150px 1fr auto;gap:15px;align-items:center;padding:14px 0;border-bottom:1px solid #343c49;font-size:12px}
+.incident:last-child{border:0}.incident time{color:#9ba8b7}.incident strong{font-weight:500;color:#e4eaf0}.incident small{color:#9ba8b7;font-size:11px}
+footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#7e8b9c;font-size:11px;line-height:1.6}
+a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:780px){body{padding:22px 12px}h1{font-size:25px}header,footer{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:repeat(2,1fr)}.stat{padding:18px 15px;border-bottom:1px solid #343c49}.stat:nth-child(2){border-right:0}.stat:nth-child(3),.stat:nth-child(4){border-bottom:0}.stat strong,.stat:first-child strong{font-size:25px}.split{grid-template-columns:1fr;gap:14px}.panel{padding:17px 11px;margin-top:14px}.calendar{grid-template-columns:repeat(15,minmax(0,1fr))}.incident{grid-template-columns:1fr auto;gap:5px}.incident time{grid-column:1/-1}.dates input{max-width:128px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW server status</h1></div><span class="badge" id="freshness-badge">AWAITING TELEMETRY</span></header>
+<nav class="page-nav" aria-label="Dashboard pages">
+<a href="./#server=nzoth">Population</a><a href="status.html" aria-current="page">Server Status</a>
+</nav>
+<p class="intro">Official realm status, login connectivity and credential-free authentication checks are monitored independently. Historical availability is based only on recorded observations; missed checks are never treated as downtime or successful uptime.</p>
+<section class="stats" aria-label="Availability overview">
+<div class="stat"><strong class="is-unknown" id="overall">NO DATA</strong><span>Overall service</span><small id="overall-note">Awaiting a fresh observation</small></div>
+<div class="stat"><strong id="uptime-24">NO DATA</strong><span>24h availability</span><small id="coverage-24">No monitored coverage</small></div>
+<div class="stat"><strong id="uptime-7">NO DATA</strong><span>7d availability</span><small id="coverage-7">No monitored coverage</small></div>
+<div class="stat"><strong id="uptime-30">NO DATA</strong><span>30d availability</span><small id="coverage-30">No monitored coverage</small></div>
+</section>
+<div class="split">
+<section class="panel" aria-label="Official realm status">
+<div class="panel-head"><h2>Official realm status</h2><p><a href="https://octowow.st/" target="_blank" rel="noopener noreferrer">OctoWoW source ↗</a></p></div>
+<div class="kv"><span class="name">N'Zoth (Normal)</span><span class="value" id="realm-nzoth">NO DATA</span></div>
+<div class="kv"><span class="name">Y'Shaarj (PvP)</span><span class="value" id="realm-yshaarj">NO DATA</span></div>
+<div class="kv"><span class="name">C'Thun (Hardcore)</span><span class="value" id="realm-cthun">NO DATA</span></div>
+<div class="details" id="official-note">Waiting for official realm data.</div>
+</section>
+<section class="panel" aria-label="Login and authentication">
+<div class="panel-head"><h2>Login &amp; authentication</h2><p>play.octowow.st:3724</p></div>
+<div class="kv"><span class="name">Website source</span><span class="value" id="website-state">NO DATA</span></div>
+<div class="kv"><span class="name">Login endpoint (TCP)</span><span class="value" id="tcp-state">NO DATA</span></div>
+<div class="kv"><span class="name">Authentication challenge</span><span class="value" id="auth-state">NO DATA</span></div>
+<div class="kv"><span class="name">Response latency</span><span class="value" id="latency-now">NO DATA</span></div>
+<div class="kv"><span class="name">Current observed uptime streak</span><span class="value" id="streak">NO DATA</span></div>
+<div class="details">A valid logon challenge response does not prove that a full account login succeeds. No credentials or login proof are sent.</div>
+</section>
+</div>
+<section class="panel" aria-label="Interactive monitoring history">
+<div class="chart-head"><h2>Service history</h2><span class="muted" id="range-label">No history loaded</span></div>
+<p class="readout" id="readout" aria-live="polite">Hover to inspect individual observations.</p>
+<div class="graph">
+<svg viewBox="0 0 1050 340" role="img" aria-label="Observed status history for three realms, TCP and authentication">
+<g id="timeline-axis"></g><g id="timeline-bands"></g>
+<line id="timeline-crosshair" y1="23" y2="295" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line>
+<rect id="timeline-hit" x="128" y="23" width="882" height="272" fill="transparent"></rect></svg>
+<div class="tip" id="tooltip" hidden></div>
+</div>
+<div class="legend"><span><i class="key"></i>Online / responsive</span><span><i class="key down"></i>Offline / failed</span><span><i class="key missing"></i>Unknown / unobserved</span></div>
+<div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button type="button" id="apply-dates">Apply</button></div></div>
+<p class="muted" id="date-error" role="status"></p>
+<div class="panel-head" style="margin-top:22px"><h3>Authentication response time</h3><p>Milliseconds · responsive probes only</p></div>
+<svg viewBox="0 0 1050 170" role="img" aria-label="Authentication latency observations"><g id="latency-axes"></g><path id="latency-path" fill="none" stroke="#74c6ef" stroke-width="2.5" stroke-linejoin="round"></path><g id="latency-points"></g></svg>
+<p class="muted">Drag the status chart to pan. Scroll to zoom; hold Shift while scrolling to move across time. Missing data is not estimated. All times UTC. GitHub-hosted checks are scheduled approximately every five minutes and can be delayed.</p>
+<div class="stability" id="stability" aria-label="Recent stability"></div>
+</section>
+<section class="panel" aria-label="Availability calendar">
+<div class="panel-head"><h2>Availability calendar</h2><p>Last 90 tracked days</p></div>
+<div class="calendar" id="calendar"></div>
+<div class="legend"><span><i class="key"></i>Observed online</span><span><i class="key down"></i>Detected issues</span><span><i class="key missing"></i>Insufficient data</span></div>
+<p class="muted">Click a day to inspect its observations. Each cell reflects observed coverage and outages, not an assumption that unmonitored periods were healthy.</p>
+</section>
+<section class="panel" aria-label="Recent monitoring incidents">
+<div class="panel-head"><h2>Recent interruptions</h2><p>Detected by this monitor</p></div>
+<div id="incidents"><p class="muted">No monitoring history yet.</p></div>
+<p class="muted">Incident times are first detection and first observed recovery, not necessarily the exact start and end. Short outages between scheduled probes may be missed. Historical incidents already stored in the Discord bot are not imported automatically.</p>
+</section>
+<p class="muted" id="source-note" role="status"></p>
+<footer><span id="last-check">No observations recorded</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community-built status monitoring</span></footer>
+</main>
+<script src="chart-data.js"></script>
+<script src="status-dashboard.js"></script>
+</body></html>
