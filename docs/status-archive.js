@@ -45,6 +45,8 @@
     const length=Math.max(1,end-begin);
     return {uptime:known?online/known*100:null,coverage:Math.min(1,known/length)*100};
   }
+  const uptimeColour = value => !Number.isFinite(value) ? '' :
+    value >= 99.95 ? '#63df9a' : value >= 99.9 ? '#e3bd57' : value >= 99 ? '#f39a53' : '#ed777f';
   const pct = n => n==null?'NO DATA':n.toFixed(3)+'%';
   function currentRows(){return get(source).filter(r=>r&&ms(r.start)<upper&&ms(r.end)>lower);}
   function buildStats(){
@@ -52,6 +54,7 @@
     for(const [days,id] of [[1,'archive-24'],[7,'archive-7'],[30,'archive-30']]){
       const result=last?coverage(get('service'),last-days*DAY,last):{uptime:null,coverage:0};
       $(id).textContent=pct(result.uptime);
+      $(id).style.color=uptimeColour(result.uptime);
       $(id+'-coverage').textContent=Math.round(result.coverage)+'% recorded coverage';
     }
     $('archive-as-of').textContent=last?'Recorded through '+date(last)+' UTC':'NO DATA';
@@ -95,6 +98,7 @@
     }
     const c=coverage(currentRows(),lower,upper);
     $('archive-readout').textContent=pct(c.uptime)+' recorded uptime · '+Math.round(c.coverage)+'% covered · '+SIGNALS[source][0];
+    $('archive-readout').style.color=uptimeColour(c.uptime);
     $('archive-hit').onpointermove=ev=>{
       const rect=$('archive-hit').getBoundingClientRect();
       if(!rect.width)return;
@@ -105,6 +109,7 @@
     };
     $('archive-hit').onpointerleave=()=>{
       $('archive-readout').textContent=pct(c.uptime)+' recorded uptime · '+Math.round(c.coverage)+'% covered · '+SIGNALS[source][0];
+      $('archive-readout').style.color=uptimeColour(c.uptime);
     };
   }
   function showIncidents() {
