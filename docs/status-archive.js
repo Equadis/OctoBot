@@ -17,7 +17,7 @@
   const COLOUR={online:'#63df9a',reachable:'#63df9a',responsive:'#63df9a',
     partial:'#e3bd57',offline:'#ed777f',unreachable:'#ed777f',
     unresponsive:'#ed777f',malformed_response:'#ed777f',unknown:'#455363'};
-  let data=null, source='service', range='1M', lower=0, upper=0, intervals=[];
+  let data=null, source='service', range='1M', lower=0, upper=0, intervals=[], showAllIncidents=false;
   const date = t => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
   const svg = (tag,attrs={},label) => {
     const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
@@ -115,7 +115,7 @@
       const p=document.createElement('p');p.className='muted';
       p.textContent='No recorded incidents in the imported bot archive.';holder.append(p);return;
     }
-    for(const incident of list.slice(0,20)){
+    for(const incident of list.slice(0,showAllIncidents?list.length:12)){
       const wrapper=document.createElement('div');wrapper.className='incident';
       const time=document.createElement('time');time.textContent=date(ms(incident.start))+' UTC';
       const label=document.createElement('strong');
@@ -130,6 +130,45 @@
         small.textContent+=' · peak '+incident.peak_reporters+' reporters';
       wrapper.append(time,label,small);holder.append(wrapper);
     }
+    if(list.length>12){
+      const toggle=document.createElement('button');toggle.type='button';
+      toggle.textContent=showAllIncidents?'Show fewer incidents':'Show all '+list.length+' incidents';
+      toggle.addEventListener('click',()=>{showAllIncidents=!showAllIncidents;showIncidents();});
+      holder.append(toggle);
+    }
+  }
+  function calendarFromBot(){
+    const rows=get('service');
+    const latest=Math.max(0,...rows.map(r=>ms(r.end)).filter(Number.isFinite));
+    if(!latest)return;
+    const midnight=Date.UTC(new Date(latest).getUTCFullYear(),new Date(latest).getUTCMonth(),new Date(latest).getUTCDate());
+    const holder=$('calendar');
+    holder.replaceChildren();
+    const panel=holder.closest('.panel');
+    panel.querySelector('h2').textContent='Historical availability calendar';
+    panel.querySelector('.panel-head p').textContent='Last 90 days · bot-confirmed';
+    const note=holder.parentElement.querySelector('p.muted');
+    if(note)note.textContent='Calendar shows the original OctoBot confirmed-state history, ending at the last recorded bot check. Days before monitoring started remain NO DATA. Click a date to examine its archived status; all times UTC.';
+    const legend=holder.parentElement.querySelector('.legend');
+    if(legend)legend.innerHTML='<span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed interruption</span><span><i class="key missing"></i>No recorded state</span>';
+    for(let index=89;index>=0;index--){
+      const begin=midnight-index*DAY,end=Math.min(begin+DAY,latest);
+      const info=coverage(rows,begin,end);
+      const enough=info.coverage>=.5*100;
+      const day=new Date(begin).toISOString().slice(0,10);
+      const button=document.createElement('button');
+      button.type='button';
+      button.className=!enough?'':info.uptime<99.999?'bad':info.coverage>=85?'good':'partial';
+      button.title=day+' UTC · '+pct(info.uptime)+' official uptime · '+Math.round(info.coverage)+'% covered';
+      button.setAttribute('aria-label',button.title);
+      button.addEventListener('click',()=>{
+        source='service';$('archive-signal').value=source;range='CUSTOM';
+        lower=begin;upper=end;draw();
+        $('bot-archive').scrollIntoView({block:'center',behavior:'smooth'});
+      });
+      holder.append(button);
+    }
+    window.OctoBotHistoricCalendarActive=true;
   }
   function setup() {
     for(const [key,[name]] of Object.entries(SIGNALS)){
@@ -161,9 +200,20 @@
       $('archive-content').hidden=false;
       $('archive-note').textContent='Imported from the original bot database · exported '+date(ms(data.exported_at))+
         ' UTC. History represents confirmed states recorded by OctoBot; it is distinct from the independent web probes above.';
-      buildStats();setRange('1M');showIncidents();
+      buildStats();setRange('1M');showIncidents();calendarFromBot();
+      const service=get('service'),last=Math.max(0,...service.map(r=>ms(r.end)).filter(Number.isFinite));
+      if(last>0){
+        const windows={};
+        for(const days of [1,7,30])windows[days]=coverage(service,last-days*DAY,last);
+        window.dispatchEvent(new CustomEvent('octobot:archive-ready',{detail:{
+          asOf:last,windows
+        }}));
+      }
     }catch(e){
-      $('archive-note').textContent='Original OctoBot database history is not available on the public site. Independent web monitoring continues above.';
+      console.error('OctoBot historical archive failed to display',e);
+      $('archive-note').textContent=data
+        ?'Historical data loaded, but the archive display encountered an error. See browser console.'
+        :'Historical archive could not be fetched. Independent website monitoring continues.';
     }
   }
   initialise();
