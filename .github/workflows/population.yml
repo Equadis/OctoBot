@@ -38,7 +38,7 @@ jobs:
       - name: Test historical bot archive exporter
         run: python -m unittest discover -s tests -p 'test_export_status_history.py'
       - name: Test historical dashboard rendering
-        run: node --test tests/status-archive.test.mjs
+        run: node --test tests/status-archive.test.mjs tests/status-interactions.test.mjs
       - name: Record official realm and login health
         run: python -m tools.collect_status
       - name: Record the current population
