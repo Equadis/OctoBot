@@ -26,17 +26,17 @@ function setup(){
     hasPointerCapture(){return captured;},
     releasePointerCapture(){captured=false;}
   };
-  let view={start:20*3600000,end:44*3600000},hovered=0,left=0;
+  let view={start:20*3600000,end:44*3600000},limits={floor:0,now:100*3600000},hovered=0,left=0;
   const config={
     hit,
     range:()=>({...view}),
-    bounds:()=>({floor:0,now:100*3600000}),
+    bounds:()=>limits,
     navigate:next=>{view=next;},
     hover:()=>{hovered++;},
     leave:()=>{left++;}
   };
   window.OctoChartInteractions.attach(config);
-  return {handlers,hit,classes,get view(){return view;},set view(v){view=v;},
+  return {handlers,hit,classes,get view(){return view;},set view(v){view=v;},get bounds(){return limits;},set bounds(v){limits=v;},
     get hovered(){return hovered;},get left(){return left;},config};
 }
 function wheel(event,delta,opts={}){
@@ -82,7 +82,7 @@ test('pointer drag pans without changing zoom and hover resumes afterwards',()=>
 
 test('empty history is safe: no pan or zoom attempted',()=>{
   const s=setup();
-  s.config.bounds=()=>({floor:NaN,now:NaN});
+  s.bounds={floor:NaN,now:NaN};
   const a=s.view;
   s.handlers.get('wheel')({clientX:500,deltaY:100,deltaX:0,deltaMode:0,
     shiftKey:false,preventDefault(){throw Error('Must not prevent page scroll on empty chart')}});
