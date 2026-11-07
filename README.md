@@ -1,4 +1,4 @@
-# OctoBot v1.0.41
+# OctoBot v1.0.42
 
 OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one Discord bot process and one Discord application/token.
 
@@ -26,7 +26,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 - `/nextshows` lists every upcoming scheduled show in the next `RADIO_SCHEDULE_DAYS` (default 14) with absolute (`<t:…:f>`) and relative (`<t:…:R>`) Discord timestamps plus the DJ's Twitch link; same access rule as `/radio`.
   - Each scheduled show is pinged to `DISCORD_RADIO_PING_ROLE_ID` in `DISCORD_RADIO_CHANNEL_ID` at its scheduled start time, naming the DJ from the station schedule. `DISCORD_RADIO_EXTRA_CHANNEL_IDS` receives the same announcement without the role ping. One ping per show; a start missed while the bot was down is still announced if the show is under 10 minutes in.
   - Ended shows do not post an automatic schedule. Use `/nextshows` to request it.
-  - Admin-only `/testalert [show_name]` sends a clearly labelled sample to the main radio channel with the real role ping, checking role and mention permissions without changing radio notification state. Default sample: `Tekeela N Trouble`.
+  - Admin-only `/testalert [alert] [show_name]` sends no-ping previews of Pirate Radio (`radio`, the default) or Exalted (`exalted`) to the dedicated test channel `1547053624268689520`. Role/user mentions are shown but notifications are suppressed. Neither test changes real scheduling, award or alert state.
   - `RADIO_LIVE_ALERTS=true` additionally pings when a DJ goes live outside the schedule.
   - The ping lists Website · Twitch · Discord · In-Game, linking to the radio stage and the live DJ's own Twitch stream (Whiski, Mossa, Tekeela, Sabellwind and Judge Holdenn are built in, matched against the show name the station reports; `RADIO_DJ_STREAMS` overrides the table). A show with no configured stream simply omits the Twitch line.
 - Tracker command role configuration under `/config command-role`
