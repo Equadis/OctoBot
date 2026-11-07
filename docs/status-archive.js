@@ -216,7 +216,7 @@
     const holder=$('calendar');
     holder.replaceChildren();
     const panel=holder.closest('.panel');
-    panel.querySelector('h2').textContent='Historical availability calendar';
+    panel.querySelector('h2').textContent='Historical Availability Calendar';
     panel.querySelector('.panel-head p').textContent='Last 90 days · bot-confirmed';
     const note=holder.parentElement.querySelector('p.muted');
     if(note)note.textContent='Calendar shows the original OctoBot confirmed-state history, ending at the last recorded bot check. Days before monitoring started remain NO DATA. Click a date to examine its archived status; all times UTC.';
