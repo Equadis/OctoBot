@@ -59,58 +59,124 @@
     }
     $('archive-as-of').textContent=last?'Recorded through '+date(last)+' UTC':'NO DATA';
   }
+  function archiveBounds(){
+    const valid=get(source).filter(r=>Number.isFinite(ms(r.start))&&Number.isFinite(ms(r.end))&&ms(r.end)>ms(r.start));
+    return {
+      floor:valid.length?Math.min(...valid.map(r=>ms(r.start))):NaN,
+      now:valid.length?Math.max(...valid.map(r=>ms(r.end))):NaN
+    };
+  }
+  const x=t=>65+(t-lower)/Math.max(1,upper-lower)*920;
+  function syncDates(){
+    const limits=archiveBounds(),from=$('archive-date-from'),to=$('archive-date-to');
+    from.value=lower?new Date(lower).toISOString().slice(0,10):'';
+    to.value=upper?new Date(upper).toISOString().slice(0,10):'';
+    for(const el of [from,to]){
+      el.min=Number.isFinite(limits.floor)?new Date(limits.floor).toISOString().slice(0,10):'';
+      el.max=Number.isFinite(limits.now)?new Date(limits.now).toISOString().slice(0,10):'';
+    }
+  }
+  function hideInspection(){
+    $('archive-tooltip').hidden=true;
+    $('archive-crosshair').style.display='none';
+    $('archive-hover-dot').style.display='none';
+  }
   function setRange(name){
     range=name;
     intervals=get(source).filter(r=>Number.isFinite(ms(r.start))&&Number.isFinite(ms(r.end))&&ms(r.end)>ms(r.start));
-    upper=Math.max(0,...intervals.map(r=>ms(r.end)));
-    const earliest=Math.min(...intervals.map(r=>ms(r.start)));
-    if(!Number.isFinite(earliest)||upper===0) {
-      lower=0;
+    const {floor,now}=archiveBounds();
+    if(!Number.isFinite(floor)||!Number.isFinite(now)){
+      lower=0;upper=0;
+    }else if(name==='ALL'){
+      lower=floor;upper=now;
+    }else if(name==='CUSTOM'&&lower&&upper&&lower<upper){
+      const span=Math.min(upper-lower,now-floor);
+      lower=Math.max(floor,Math.min(lower,now-span));upper=lower+span;
     }else{
-      lower=name==='ALL'?earliest:Math.max(earliest,upper-DURATIONS[name]);
-      if(lower>=upper)lower=upper-60000;
+      upper=now;lower=Math.max(floor,now-(DURATIONS[name]||30*DAY));
     }
-    draw();
+    if(lower&&upper&&upper<=lower)lower=Math.max(floor,upper-60000);
+    hideInspection();draw();syncDates();
+  }
+  function navigateArchive(next){
+    if(!next||!Number.isFinite(next.start)||!Number.isFinite(next.end)||next.end<=next.start)return;
+    if(Math.abs(lower-next.start)<1&&Math.abs(upper-next.end)<1)return;
+    lower=next.start;upper=next.end;range='CUSTOM';
+    hideInspection();draw();syncDates();
+    $('archive-date-error').textContent='';
   }
   function draw(){
-    const axis=$('archive-axis'),bands=$('archive-bars');
-    axis.replaceChildren();bands.replaceChildren();
-    $('archive-view-label').textContent=SIGNALS[source][0]+' · '+range+' · bot-confirmed history';
+    const axis=$('archive-axis'),bands=$('archive-bars'),missing=$('archive-missing');
+    axis.replaceChildren();bands.replaceChildren();missing.replaceChildren();
     for(const b of $('archive-ranges').querySelectorAll('button'))
       b.setAttribute('aria-pressed',String(b.textContent===range));
+    $('archive-view-label').textContent=SIGNALS[source][0]+' · '+(range==='CUSTOM'?'Custom range':range)+' · bot-confirmed history';
     if(!lower||!upper||upper<=lower){
-      bands.append(svg('text',{x:520,y:98,'text-anchor':'middle',style:'fill:#e3bd57'},'NO HISTORICAL RECORDS'));
-      $('archive-readout').textContent='No archived history for this signal.';
-      return;
+      bands.append(svg('text',{x:520,y:82,'text-anchor':'middle',style:'fill:#e3bd57'},'NO HISTORICAL RECORDS'));
+      $('archive-readout').textContent='NO DATA · No archived history for this metric';
+      $('archive-readout').style.color='#e3bd57';hideInspection();return;
     }
-    const x=t=>65+(t-lower)/(upper-lower)*920;
+    const rows=currentRows().sort((a,b)=>ms(a.start)-ms(b.start));
     axis.append(svg('rect',{x:65,y:39,width:920,height:42,fill:'#28313e',stroke:'#405063'}));
     for(let i=0;i<=5;i++){
       const t=lower+(upper-lower)*i/5,p=x(t);
-      axis.append(svg('line',{x1:p,y1:29,x2:p,y2:86,stroke:'#fff','stroke-opacity':'.12'}));
-      axis.append(svg('text',{x:p,y:120,'text-anchor':i===0?'start':i===5?'end':'middle'},date(t)));
+      axis.append(svg('line',{x1:p,y1:29,x2:p,y2:86,stroke:'#343a43'}));
+      axis.append(svg('text',{x:p,y:120,'text-anchor':i===0?'start':i===5?'end':'middle'},
+        new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(t)));
     }
-    for(const row of currentRows()){
+    let cursor=lower;
+    for(const row of rows){
       const a=Math.max(ms(row.start),lower),b=Math.min(ms(row.end),upper);
       if(!(b>a))continue;
-      bands.append(svg('rect',{x:x(a),y:43,width:Math.max(.75,x(b)-x(a)),height:34,
-        fill:COLOUR[row.status]||COLOUR.unknown,opacity:'.88'}));
+      if(a>cursor){
+        const left=x(cursor),width=x(a)-left;
+        missing.append(svg('rect',{x:left,y:40,width,height:40,fill:'#e3bd57','fill-opacity':'.11'}));
+        missing.append(svg('line',{x1:left,x2:left+width,y1:80,y2:80,stroke:'#e3bd57','stroke-dasharray':'6 4'}));
+        if(width>80)missing.append(svg('text',{x:left+width/2,y:65,'text-anchor':'middle',style:'fill:#e3bd57;font-size:11px'},'NO DATA'));
+      }
+      bands.append(svg('rect',{x:x(a),y:43,width:Math.max(.8,x(b)-x(a)),height:34,
+        fill:COLOUR[row.status]||COLOUR.unknown,opacity:'.89'}));
+      cursor=Math.max(cursor,b);
     }
-    const c=coverage(currentRows(),lower,upper);
+    if(cursor<upper){
+      const left=x(cursor),width=x(upper)-left;
+      missing.append(svg('rect',{x:left,y:40,width,height:40,fill:'#e3bd57','fill-opacity':'.11'}));
+      missing.append(svg('line',{x1:left,x2:left+width,y1:80,y2:80,stroke:'#e3bd57','stroke-dasharray':'6 4'}));
+      if(width>80)missing.append(svg('text',{x:left+width/2,y:65,'text-anchor':'middle',style:'fill:#e3bd57;font-size:11px'},'NO DATA'));
+    }
+    const c=coverage(rows,lower,upper);
     $('archive-readout').textContent=pct(c.uptime)+' recorded uptime · '+Math.round(c.coverage)+'% covered · '+SIGNALS[source][0];
     $('archive-readout').style.color=uptimeColour(c.uptime);
-    $('archive-hit').onpointermove=ev=>{
-      const rect=$('archive-hit').getBoundingClientRect();
-      if(!rect.width)return;
-      const t=lower+Math.max(0,Math.min(1,(ev.clientX-rect.left)/rect.width))*(upper-lower);
-      const matched=currentRows().find(r=>ms(r.start)<=t&&t<=ms(r.end));
-      $('archive-readout').textContent=date(t)+' UTC · '+(matched?
-        'Bot-confirmed '+matched.status.toUpperCase():'NO DATA')+' · '+SIGNALS[source][0];
-    };
-    $('archive-hit').onpointerleave=()=>{
-      $('archive-readout').textContent=pct(c.uptime)+' recorded uptime · '+Math.round(c.coverage)+'% covered · '+SIGNALS[source][0];
-      $('archive-readout').style.color=uptimeColour(c.uptime);
-    };
+  }
+  function archiveInspection(e){
+    if(!lower||!upper||upper<=lower)return;
+    const hit=$('archive-hit'),rect=hit.getBoundingClientRect();
+    if(!rect.width)return;
+    const t=lower+(upper-lower)*Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+    const match=currentRows().find(row=>ms(row.start)<=t&&t<ms(row.end));
+    const timestamp=date(t)+' UTC',crosshair=$('archive-crosshair'),dot=$('archive-hover-dot');
+    crosshair.setAttribute('x1',x(t));crosshair.setAttribute('x2',x(t));
+    crosshair.style.display='';
+    dot.setAttribute('cx',x(t));dot.setAttribute('cy',60);
+    dot.setAttribute('fill',match?(COLOUR[match.status]||COLOUR.unknown):'#e3bd57');
+    dot.style.display='';
+    $('archive-readout').textContent=timestamp+' · '+(match?SIGNALS[source][0]+': '+match.status.toUpperCase()+' (recorded)':'NO DATA · '+SIGNALS[source][0]);
+    $('archive-readout').style.color=match?COLOUR[match.status]||COLOUR.unknown:'#e3bd57';
+    const tooltip=$('archive-tooltip');
+    tooltip.replaceChildren();
+    const heading=document.createElement('strong');heading.textContent=match?SIGNALS[source][0]+' · '+match.status.toUpperCase():'NO DATA';
+    const time=document.createElement('div');time.textContent=timestamp;
+    tooltip.append(heading,time);
+    if(match){
+      const interval=document.createElement('div');
+      interval.textContent='Confirmed from '+date(ms(match.start))+' to '+date(ms(match.end))+' UTC';
+      tooltip.append(interval);
+    }else{
+      const note=document.createElement('div');note.textContent='No confirmed status recorded';tooltip.append(note);
+    }
+    tooltip.hidden=false;
+    const outer=hit.closest('.graph').getBoundingClientRect();
+    tooltip.style.left=Math.max(0,Math.min(outer.width-240,e.clientX-outer.left+12))+'px';
   }
   function showIncidents() {
     const holder=$('archive-incidents');
@@ -168,24 +234,47 @@
       button.setAttribute('aria-label',button.title);
       button.addEventListener('click',()=>{
         source='service';$('archive-signal').value=source;range='CUSTOM';
-        lower=begin;upper=end;draw();
+        lower=begin;upper=end;hideInspection();draw();syncDates();
         $('bot-archive').scrollIntoView({block:'center',behavior:'smooth'});
       });
       holder.append(button);
     }
     window.OctoBotHistoricCalendarActive=true;
   }
-  function setup() {
+  function setup(){
+    const D=window.PopulationData;
     for(const [key,[name]] of Object.entries(SIGNALS)){
       const option=document.createElement('option');option.value=key;option.textContent=name;
       $('archive-signal').append(option);
     }
-    $('archive-signal').addEventListener('change',e=>{source=e.target.value;setRange(range)});
+    $('archive-signal').addEventListener('change',e=>{source=e.target.value;setRange(range==='CUSTOM'?'1M':range);});
     for(const name of Object.keys(DURATIONS)){
       const b=document.createElement('button');b.textContent=name;b.type='button';
+      b.setAttribute('aria-pressed','false');
       b.addEventListener('click',()=>setRange(name));
       $('archive-ranges').append(b);
     }
+    $('archive-apply-dates').addEventListener('click',()=>{
+      const start=Date.parse($('archive-date-from').value+'T00:00:00Z');
+      const end=Date.parse($('archive-date-to').value+'T23:59:59Z');
+      const {floor,now}=archiveBounds();
+      if(!Number.isFinite(start)||!Number.isFinite(end)||!Number.isFinite(floor)||
+         start>=end||end<floor||start>now){
+        $('archive-date-error').textContent='Choose valid dates within the recorded history.';return;
+      }
+      $('archive-date-error').textContent='';
+      const a=Math.max(start,floor),b=Math.min(end,now);
+      if(b>a)navigateArchive({start:a,end:b});
+    });
+    window.OctoChartInteractions.attach({
+      hit:$('archive-hit'),
+      range:()=>({start:lower,end:upper}),
+      bounds:archiveBounds,
+      navigate:navigateArchive,
+      hover:archiveInspection,
+      leave:hideInspection
+    });
+    void D;
   }
   async function initialise() {
     setup();
