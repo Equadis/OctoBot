@@ -150,8 +150,8 @@ the Worker:
 ```sh
 git pull origin main
 cd cloudflare/population
-npx wrangler d1 migrations apply octobot-population --remote
 npx wrangler deploy
+npx wrangler d1 migrations apply octobot-population --remote
 ```
 
 This copies the existing official-census N'Zoth readings to `all` with
