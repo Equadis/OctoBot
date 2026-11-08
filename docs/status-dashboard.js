@@ -94,20 +94,20 @@
     const fresh=!!recent(), s=fresh?overall(current):'unknown';
     const top=$('overall');top.textContent=s==='up'?'Online':s==='down'?'Issues detected':'NO DATA';
     top.className=s==='up'?'':s==='down'?'is-down':'is-unknown';
-    $('overall-note').textContent=!current?'Waiting for first observation':!fresh?'Last probe is stale; status unknown':
-      s==='up'?'Realms, TCP and authentication responding':s==='down'?'One or more checked services failed':'One or more signals unavailable';
+    $('overall-note').textContent=!current?'Awaiting observation':!fresh?'Stale':
+      s==='up'?'All checks passing':s==='down'?'Check failed':'Incomplete';
     for(const [days,suffix] of [[1,'24'],[7,'7'],[30,'30']]){
       const fromBot=archivedOfficial?.windows?.[days];
       if(fromBot && Number.isFinite(fromBot.uptime) && Number.isFinite(fromBot.coverage)){
         $('uptime-'+suffix).textContent=fromBot.uptime.toFixed(3)+'%';
         $('uptime-'+suffix).style.color=uptimeColour(fromBot.uptime);
         const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(archivedOfficial.asOf);
-        $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% bot-confirmed coverage · as of '+stamp+' UTC';
+        $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% covered · '+stamp+' UTC';
       }else{
         const result=availability('overall',Date.now()-days*DAY,Date.now());
         $('uptime-'+suffix).textContent=percentage(result);
         $('uptime-'+suffix).style.color=uptimeColour(result.percent);
-        $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% independent probe coverage';
+        $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% covered';
       }
     }
     $('freshness-badge').textContent=!current?'AWAITING TELEMETRY':!fresh?'CHECKS STALE':
@@ -120,7 +120,7 @@
     $('auth-state').innerHTML=pill(current?.auth,stale);
     $('latency-now').textContent=fresh&&current?.auth==='responsive'&&
       Number.isFinite(current.latency_ms)?current.latency_ms+' ms':'NO DATA';
-    $('last-check').textContent=current?'Last recorded check: '+fmt(current.t)+' UTC ('+short(Math.max(0,Date.now()-current.t))+' ago)':'No observations recorded';
+    $('last-check').textContent=current?fmt(current.t)+' UTC · '+short(Math.max(0,Date.now()-current.t))+' ago':'No observations recorded';
     let streak=null;
     if(fresh&&overall(current)==='up'){
       let first=current.t;
