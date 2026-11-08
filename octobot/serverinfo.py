@@ -177,7 +177,7 @@ class ServerInfoCog(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(server='Population to display (defaults to all realms)')
     @app_commands.choices(server=[
-        app_commands.Choice(name='all', value='all'),
+        app_commands.Choice(name='Total', value='all'),
         app_commands.Choice(name='nzoth', value='nzoth'),
         app_commands.Choice(name='cthun', value='cthun'),
         app_commands.Choice(name='yshaarj', value='yshaarj'),

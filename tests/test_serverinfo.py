@@ -88,6 +88,8 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
   self.assertEqual([choice.value for choice in command.get_parameter('server').choices],
                    ['all','nzoth','cthun','yshaarj'])
   self.assertEqual(command.get_parameter('server').default,'all')
+  self.assertEqual([choice.name for choice in command.get_parameter('server').choices],
+                   ['Total','nzoth','cthun','yshaarj'])
   event=self.event(False);await command.callback(cog,event);event.followup.send.assert_not_awaited()
   event=self.event();await command.callback(cog,event,'cthun')
   sent=event.followup.send.call_args.kwargs;self.assertFalse(sent.get('ephemeral',False));self.assertIn('C\'Thun',sent['embed'].title)
@@ -107,6 +109,7 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
    sent=event.followup.send.call_args.kwargs
    self.assertEqual(sent['view'].children[0].url,expected)
    self.assertEqual(sent['embed'].url,expected)
+   if selected=='all':self.assertIn('All Realms',sent['embed'].title)
    sent['file'].close();sent['view'].stop()
  def test_interactive_url_never_uses_legacy_host(self):
   import os
