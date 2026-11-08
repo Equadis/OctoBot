@@ -94,20 +94,20 @@
     const fresh=!!recent(), s=fresh?overall(current):'unknown';
     const top=$('overall');top.textContent=s==='up'?'Online':s==='down'?'Issues detected':'NO DATA';
     top.className=s==='up'?'':s==='down'?'is-down':'is-unknown';
-    $('overall-note').textContent=!current?'Waiting for first observation':!fresh?'Last probe is stale; status unknown':
-      s==='up'?'Realms, TCP and authentication responding':s==='down'?'One or more checked services failed':'One or more signals unavailable';
+    $('overall-note').textContent=!current?'Awaiting observation':!fresh?'Stale':
+      s==='up'?'All checks passing':s==='down'?'Check failed':'Incomplete';
     for(const [days,suffix] of [[1,'24'],[7,'7'],[30,'30']]){
       const fromBot=archivedOfficial?.windows?.[days];
       if(fromBot && Number.isFinite(fromBot.uptime) && Number.isFinite(fromBot.coverage)){
         $('uptime-'+suffix).textContent=fromBot.uptime.toFixed(3)+'%';
         $('uptime-'+suffix).style.color=uptimeColour(fromBot.uptime);
         const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(archivedOfficial.asOf);
-        $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% bot-confirmed coverage · as of '+stamp+' UTC';
+        $('coverage-'+suffix).textContent=Math.round(fromBot.coverage)+'% covered · '+stamp+' UTC';
       }else{
         const result=availability('overall',Date.now()-days*DAY,Date.now());
         $('uptime-'+suffix).textContent=percentage(result);
         $('uptime-'+suffix).style.color=uptimeColour(result.percent);
-        $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% independent probe coverage';
+        $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% covered';
       }
     }
     $('freshness-badge').textContent=!current?'AWAITING TELEMETRY':!fresh?'CHECKS STALE':
@@ -120,11 +120,7 @@
     $('auth-state').innerHTML=pill(current?.auth,stale);
     $('latency-now').textContent=fresh&&current?.auth==='responsive'&&
       Number.isFinite(current.latency_ms)?current.latency_ms+' ms':'NO DATA';
-    $('official-note').textContent=!current?'Waiting for the first scheduled check.':
-      !fresh?'Previous observation '+fmt(current.t)+' UTC; no current status can be confirmed.':
-      current.website==='available'?'Official status checked '+fmt(current.t)+' UTC.':
-      'Official site could not be read reliably; realm status may be unknown.';
-    $('last-check').textContent=current?'Last recorded check: '+fmt(current.t)+' UTC ('+short(Math.max(0,Date.now()-current.t))+' ago)':'No observations recorded';
+    $('last-check').textContent=current?fmt(current.t)+' UTC · '+short(Math.max(0,Date.now()-current.t))+' ago':'No observations recorded';
     let streak=null;
     if(fresh&&overall(current)==='up'){
       let first=current.t;
@@ -137,26 +133,6 @@
       streak=first===current.t?'Observed now':short(current.t-first)+' (observed)';
     }
     $('streak').textContent=streak||'NO DATA';
-    $('source-note').textContent=(workerActive
-      ?'Sources: one-minute Cloudflare Worker with GitHub Actions fallback. '
-      :'Source: GitHub Actions checks (scheduled runs may be delayed). ')+
-      'Official realm page and independent, credential-free login checks. '+
-      'Original bot incidents and uptime are displayed in the separate historical section when the archive is imported.'+
-      (current?.source_error?' Latest website diagnostic: '+current.source_error:'');
-    updateStability();
-  }
-  function updateStability() {
-    const el=$('stability');el.replaceChildren();
-    for(const minutes of [10,20,30]){
-      const a=availability('overall',Date.now()-minutes*60000,Date.now());
-      const known=a.coverage>=0.7;
-      const state=!known?'NO DATA':a.down>0?'ISSUES':'STABLE';
-      const span=document.createElement('span');
-      span.textContent=minutes+'m · '+state;
-      span.style.color=!known?'#e3bd57':a.down>0?'#ef929b':'#78dfa6';
-      span.title=Math.round(a.coverage*100)+'% observed coverage. Does not guarantee uninterrupted service between checks.';
-      el.append(span);
-    }
   }
   function boundaries() {
     const now=Date.now(),floor=now-90*DAY;
@@ -212,7 +188,7 @@
       if(width<=0)continue;
       gaps.append(node('rect',{x:left,y:32,width,height:237,fill:'#e3bd57','fill-opacity':'.055'}));
       gaps.append(node('line',{x1:left,x2:left+width,y1:269,y2:269,stroke:'#e3bd57','stroke-opacity':'.7','stroke-dasharray':'6 4'}));
-      if(width>140)gaps.append(node('text',{x:left+width/2,y:170,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));
+
     }
     const columns=441;
     // Rasterise evidence into fixed-width bins: chart remains fast at 90 days.
@@ -244,9 +220,7 @@
       }
     }
     const samples=history.filter(r=>r.t>=viewStart&&r.t<=viewEnd);
-    if(!samples.length)
-      bands.append(node('text',{x:565,y:170,'text-anchor':'middle','font-size':'19',style:'fill:#e3bd57'},'NO DATA'));
-    $('range-label').textContent=(period==='CUSTOM'?'Custom range':period)+' · '+samples.length.toLocaleString('en-GB')+' recorded observations';
+    $('range-label').textContent=period==='CUSTOM'?'Custom':period;
     latencyChart(samples);
     updateButtons();
   }
@@ -284,11 +258,11 @@
       const left=X(Math.max(a,viewStart)),right=X(Math.min(b,viewEnd));
       if(right<=left)continue;
       gaps.append(node('rect',{x:left,y:28,width:right-left,height:110,fill:'#e3bd57','fill-opacity':'.07'}));
-      if(right-left>145)gaps.append(node('text',{x:(left+right)/2,y:83,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));
+
     }
     if(!latencySamples.length){
       path.setAttribute('d','');
-      axes.append(node('text',{x:566,y:82,'text-anchor':'middle',style:'fill:#e3bd57'},'NO LATENCY DATA'));
+
       return;
     }
     // Only actual responsive samples; no paths across unobserved intervals.
@@ -538,7 +512,7 @@
       if(current&&!history.some(r=>r.t===current.t))history=sanitise([...history,current]);
       updateStats();draw();calendar();showIncidents();
     }catch(e){
-      $('source-note').textContent='Status feed currently unavailable; no realm or availability readings have been invented.';
+      console.warn('Status feed unavailable',e);
       if(!current){updateStats();draw();calendar();}
     }
   }

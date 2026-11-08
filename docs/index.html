@@ -13,9 +13,8 @@
 </style>
 </head>
 <body><main>
-<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="badge">RECORDED OBSERVATIONS</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
+<header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
 <nav class="page-nav" aria-label="Dashboard pages"><a href="./#server=all" aria-current="page">Population</a><a href="status.html">Server Status</a></nav>
-<p class="intro">Observed readings are preserved. The green curve is smoothed for readability; amber dashed sections are estimates between known readings, and NO DATA means genuinely unknown.</p>
 <section class="stats" aria-label="Recorded server statistics">
 <div class="stat"><strong id="online-now">NO DATA</strong><span id="online-label">Online now</span><small id="online-freshness">Waiting for a reading</small></div>
 <div class="stat"><strong id="peak24"></strong><span>24h peak</span></div>
@@ -28,12 +27,12 @@
 <div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><line id="average-line" x1="56" x2="964" stroke="#74b6ff" stroke-width="1.5"></line><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><div class="tip" id="tooltip" hidden></div></div>
 <div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button id="apply-dates" type="button">Apply</button></div></div>
 <div id="date-error" role="status"></div>
-<div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Players online (smoothed)</span><span><i class="key" style="border-color:#82efb3;border-bottom-style:dashed"></i>Players online (actual)</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Players online (estimated)</span></div>
-<p class="muted">Hover to inspect original readings. Scroll to zoom the date range around your cursor (10-minute minimum). Hold Shift and scroll down to move left (earlier), or up to move right (later), or click and drag the graph to pan without changing the visible range. Presets restore fixed ranges. Estimates are never counted as recorded observations.</p>
-<p class="muted">Amber dashed: estimated gaps up to 24 hours · Yellow NO DATA: missing or unbounded history · All times UTC</p>
+<div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Smoothed</span><span><i class="key" style="border-color:#82efb3;border-bottom-style:dashed"></i>Recorded</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated</span></div>
+
+
 </section>
 
-<p id="record-note" class="muted"></p><p id="source-note" class="muted" role="status"></p><footer><span id="snapshot"></span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community population tracker</span></footer>
+<footer><span>All times UTC</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community population tracker</span></footer>
 </main>
 <script src="chart-data.js"></script>
 <script src="population-history.js"></script>
@@ -66,27 +65,13 @@ function newestReading(){
  const a=rows.at(-1),b=liveRow(realm);
  return !a?b:(!b||a.t>=b.t?a:b);
 }
-function updateSourceNote(){
- const note=realms.find(r=>r.id===realm)?.source_note||'';
- if(!telemetryEndpoint){
-  $('source-note').textContent=note+' · Cloudflare collector not configured; showing recorded GitHub observations';
-  return;
- }
- const last=liveRow(realm),age=last?Date.now()-last.t:Infinity;
- const feed=liveFeedSource==='worker'?'Cloudflare':'GitHub fallback';
- const status=age<=3*60000
-  ?feed+': recent recorded reading at '+fmt(last.t)+' UTC'
-  :last?feed+': last recorded reading at '+fmt(last.t)+' UTC (stale)'
-  :'No verified live reading for this selection';
- $('source-note').textContent=note+' · '+status;
-}
 function updateHeadline(){
  const latest=newestReading(),current=Date.now();
  $('online-now').textContent=latest?num(latest.value):'NO DATA';
  const age=latest?Math.max(0,current-latest.t):Infinity;
  $('online-label').textContent=age<=2*60000?'Online now':'Latest recorded';
  $('online-freshness').textContent=latest?(age<=2*60000?'Updated '+elapsedLabel(age):'Last observation: '+fmt(latest.t)+' UTC'):'No verified population observation';
- $('snapshot').textContent=latest?'Last observed: '+fmt(latest.t)+' UTC':'NO DATA · Waiting for a verified population feed';
+
 }
 function updateUptime(){
  const reference=uptimeReference[realm],time=reference&&Date.parse(reference.observed_at),age=Date.now()-time;
@@ -94,14 +79,14 @@ function updateUptime(){
  if(!valid){
   $('uptime').textContent='NO DATA';
   $('uptime').style.color='#e3bd57';
-  $('uptime-freshness').textContent=reference?'Last screenshot too old to estimate reliably':'No verified uptime telemetry';
+  $('uptime-freshness').textContent=reference?'Stale':'Unverified';
   return;
  }
  $('uptime').style.color='';
  const seconds=reference.elapsed_seconds+Math.floor(age/1000);
  const d=Math.floor(seconds/86400),h=Math.floor(seconds%86400/3600),m=Math.floor(seconds%3600/60),s=seconds%60;
  $('uptime').textContent=d+'D '+h+'H '+m+'M '+s+'S';
- $('uptime-freshness').textContent='Estimated from in-game screenshot; resets unverified';
+ $('uptime-freshness').textContent='Estimated';
 }
 function workerUrl(path){return telemetryEndpoint+path;}
 async function workerJson(path){
@@ -241,7 +226,7 @@ function draw(){
  const latest=rows.at(-1),peak=rows.length?rows.reduce((a,b)=>a.value>=b.value?a:b):null;
  const recent=rows.filter(r=>now-day<=r.t&&r.t<=now),peak24=recent.length?Math.max(...recent.map(r=>r.value)):null;
  $('peak24').textContent=num(peak24);$('all-peak').textContent=num(peak?.value??null);updateHeadline();updateUptime();
- $('record-note').textContent=rows.length?'Recorded since '+fmt(rows[0].t)+' UTC':'No population history for this server';
+ $('all-peak').title=rows.length?'Recorded since '+fmt(rows[0].t)+' UTC':'No recorded observations';
  const info=D.intervals(rows,start,windowEnd);missing=info.unknown;ceiling=Math.max(500,Math.ceil((peak?.value||0)*1.15/500)*500);
  $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();
  const step=Math.max(100,Math.ceil(ceiling/6/100)*100);
@@ -252,8 +237,8 @@ function draw(){
   const label=new Intl.DateTimeFormat('en-GB',options).format(new Date(t));
   $('axes').append(svg('text',{x:x(t),y:318,'text-anchor':'middle'},label));
 }
- for(const [a,b]of missing){$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));if(x(b)-x(a)>75)$('outages').append(svg('text',{x:(x(a)+x(b))/2,y:150,'text-anchor':'middle',style:'fill:#e3bd57'},'NO DATA'));}
- for(const [a,b]of info.estimated){$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));if(x(b)-x(a)>85)$('outages').append(svg('text',{x:(x(a)+x(b))/2,y:150,'text-anchor':'middle',style:'fill:#e3bd57'},'ESTIMATED'));}
+ for(const [a,b]of missing)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
+ for(const [a,b]of info.estimated)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));
  let estimatePath='';for(const [a,b]of info.estimated){const va=D.estimateAt(rows,a),vb=D.estimateAt(rows,b);if(va!==null&&vb!==null)estimatePath+='M'+x(a).toFixed(2)+','+y(va).toFixed(2)+' L'+x(b).toFixed(2)+','+y(vb).toFixed(2)+' ';}
  $('estimate-path').setAttribute('d',estimatePath);
  function pathFor(points,curved=false){
@@ -276,12 +261,12 @@ function draw(){
  $('raw-population').setAttribute('d',rawPath);$('population').setAttribute('d',path);
  for(const [id,val]of [['average-line',info.average],['peak-line',peak?.value??null]]){const line=$(id);line.style.display=val===null?'none':'';line.setAttribute('y1',y(val??0));line.setAttribute('y2',y(val??0));}
  
- if(peak){$('release-markers').append(svg('text',{x:62,y:y(peak.value)+17,'text-anchor':'start'},'Recorded peak · '+num(peak.value)));if(start<=peak.t&&peak.t<=windowEnd)$('release-markers').append(svg('circle',{cx:x(peak.t),cy:y(peak.value),r:4,fill:'#63df9a',stroke:'#fff'}));}
+ if(peak&&start<=peak.t&&peak.t<=windowEnd)$('release-markers').append(svg('circle',{cx:x(peak.t),cy:y(peak.value),r:4,fill:'#63df9a',stroke:'#fff'}));
  let undated=0,upcoming=0;
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
- $('range-label').textContent=(period==='CUSTOM'?timeSpanText(windowEnd-start):period)+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
- updateSourceNote();
+ $('range-label').textContent=period==='CUSTOM'?timeSpanText(windowEnd-start):period;
+
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
@@ -302,7 +287,7 @@ async function load(){const ticket=++loadNumber;try{
  if(ticket!==loadNumber)return;
  for(let i=0;i<selected.length;i++)realmHistories.set(selected[i].id,histories[i]);
   rows=histories[0];now=Date.now();draw();await refreshLive();
- }catch(e){if(ticket!==loadNumber)return;rows=[];draw();$('source-note').textContent='Could not load this server’s history. No readings have been invented.';}}
+ }catch(e){if(ticket!==loadNumber)return;rows=[];draw();console.warn('Population history unavailable',e);}}
 function selectRealm(id){realm=id;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
 for(const p of periods){const b=document.createElement('button');b.type='button';b.textContent=p;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{period=p;draw();});document.querySelector('.ranges').append(b);}
 // Keep manual navigation independent of the preset time ranges.
@@ -382,7 +367,7 @@ $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from')
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
 const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
-if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,30000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
+ if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,30000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){console.error('Population configuration unavailable',e);}})();
 
 </script>
 </body></html>
