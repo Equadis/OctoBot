@@ -14,7 +14,7 @@
 </head>
 <body><main>
 <header><div><div class="brand">OCTOBOT / SERVER INFO</div><h1>OctoWoW population charts</h1></div><div class="header-status"><span class="badge">RECORDED OBSERVATIONS</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
-<nav class="page-nav" aria-label="Dashboard pages"><a href="./#server=nzoth" aria-current="page">Population</a><a href="status.html">Server Status</a></nav>
+<nav class="page-nav" aria-label="Dashboard pages"><a href="./#server=all" aria-current="page">Population</a><a href="status.html">Server Status</a></nav>
 <p class="intro">Observed readings are preserved. The green curve is smoothed for readability; amber dashed sections are estimates between known readings, and NO DATA means genuinely unknown.</p>
 <section class="stats" aria-label="Recorded server statistics">
 <div class="stat"><strong id="online-now">NO DATA</strong><span id="online-label">Online now</span><small id="online-freshness">Waiting for a reading</small></div>
@@ -43,7 +43,7 @@
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false;
+let period='1D',rows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false;
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -62,14 +62,7 @@ function liveRow(id){
  return Number.isFinite(t)&&Number.isInteger(snap.online)&&snap.online>=0&&t<=Date.now()+60000?{t,value:snap.online}:null;
 }
 function newestReading(){
- if(realm==='all'){
-  const parts=['nzoth','yshaarj','cthun'].map(liveRow);
-  if(parts.some(p=>!p)||parts.some(p=>Date.now()-p.t>10*60000))return rows.at(-1)||null;
-  const times=parts.map(p=>p.t);
-  if(Math.max(...times)-Math.min(...times)>3*60000)return rows.at(-1)||null;
-  const combined={t:Math.min(...times),value:parts.reduce((n,p)=>n+p.value,0)};
-  const history=rows.at(-1);return history&&history.t>combined.t?history:combined;
- }
+ // Official website headline is the All Realms series; never sum it again.
  const a=rows.at(-1),b=liveRow(realm);
  return !a?b:(!b||a.t>=b.t?a:b);
 }
@@ -79,19 +72,12 @@ function updateSourceNote(){
   $('source-note').textContent=note+' · Cloudflare collector not configured; showing recorded GitHub observations';
   return;
  }
- const allParts=realm==='all'?['nzoth','yshaarj','cthun'].map(liveRow):null;
- if(allParts&&allParts.some(v=>!v)){
-  $('source-note').textContent=note+' · All Realms requires three independently verified live feeds; one or more are unavailable';
-  return;
- }
- const last=allParts?allParts.sort((a,b)=>a.t-b.t)[0]:liveRow(realm);
- const age=last?Date.now()-last.t:Infinity;
+ const last=liveRow(realm),age=last?Date.now()-last.t:Infinity;
  const feed=liveFeedSource==='worker'?'Cloudflare':'GitHub fallback';
  const status=age<=3*60000
-  ?feed+': recent verified reading at '+fmt(last.t)+' UTC'
-  :last
-   ?feed+': last verified reading at '+fmt(last.t)+' UTC (stale)'
-   :'Cloudflare configured, but no verified live reading for this realm';
+  ?feed+': recent recorded reading at '+fmt(last.t)+' UTC'
+  :last?feed+': last recorded reading at '+fmt(last.t)+' UTC (stale)'
+  :'No verified live reading for this selection';
  $('source-note').textContent=note+' · '+status;
 }
 function updateHeadline(){
@@ -126,11 +112,20 @@ async function workerJson(path){
 }
 // Keep Cloudflare's cursor independent from sporadic GitHub snapshot timestamps.
 const readWorkerHistory=window.PopulationHistory.createHistoryReader({
- fetchPage:(id,since)=>workerJson('/api/history?realm='+encodeURIComponent(id)+'&since='+encodeURIComponent(since)),
+ fetchPage:async(id,since)=>{
+  const suffix='&since='+encodeURIComponent(since);
+  try{return await workerJson('/api/history?realm='+encodeURIComponent(id)+suffix);}
+  catch(error){
+   // Until the Worker is redeployed, the old API still calls the census 'nzoth'.
+   // Only All Realms may read that legacy census series.
+   if(id!=='all')throw error;
+   return workerJson('/api/history?realm=nzoth'+suffix);
+  }
+ },
  normalise:D.normalise
 });
 async function liveWorkerHistory(realmId,existing){
- if(!telemetryEndpoint||!['nzoth','yshaarj','cthun'].includes(realmId))return existing;
+ if(!telemetryEndpoint||!['all','yshaarj','cthun'].includes(realmId))return existing;
  return readWorkerHistory(realmId,existing);
 }
 async function fetchLatestJson(path){
@@ -171,6 +166,12 @@ async function refreshLive(){
    }
   }
   if(data&&typeof data==='object'&&!Array.isArray(data)){
+   // Compatibility until D1 census rows are migrated from nzoth to all.
+   if(data.nzoth?.source==='official census'){
+    if(!data.all||Date.parse(data.nzoth.timestamp)>Date.parse(data.all.timestamp))
+     data.all=data.nzoth;
+    delete data.nzoth;
+   }
    for(const [id,snapshot]of Object.entries(data)){
     const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
     if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&
@@ -180,7 +181,7 @@ async function refreshLive(){
   // A realm change can happen while fetches are in flight. Discard the old
   // graph's response instead of overwriting the newly selected chart.
   if(ticket!==loadNumber||selectedRealm!==realm)return;
-  const selectedIds=selectedRealm==='all'?['nzoth','yshaarj','cthun']:[selectedRealm];
+  const selectedIds=[selectedRealm];
   if(telemetryEndpoint){
    const updated=await Promise.all(selectedIds.map(async id=>
     [id,await liveWorkerHistory(id,realmHistories.get(id)||[])]));
@@ -196,9 +197,7 @@ async function refreshLive(){
    realmHistories.set(id,D.normalise([...existing,{t:observed.t,value:observed.value}]
     .map(p=>({timestamp:new Date(p.t).toISOString(),online:p.value}))));
   }
-  rows=selectedRealm==='all'
-   ?D.combine(selectedIds.map(id=>realmHistories.get(id)||[]))
-   :realmHistories.get(selectedRealm)||[];
+  rows=realmHistories.get(selectedRealm)||[];
   now=Date.now();
   // In fixed presets, follow real time; customised/panned ranges remain fixed.
   draw();
@@ -287,7 +286,7 @@ function draw(){
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
 async function load(){const ticket=++loadNumber;try{
- const selected=realm==='all'?realms.filter(r=>r.id!=='all'):[realms.find(r=>r.id===realm)];
+ const selected=[realms.find(r=>r.id===realm)];
  const histories=await Promise.all(selected.map(async r=>{
   try{return D.normalise(await fetchLatestJson(r.history));}
   catch(error){
@@ -302,7 +301,7 @@ async function load(){const ticket=++loadNumber;try{
  }
  if(ticket!==loadNumber)return;
  for(let i=0;i<selected.length;i++)realmHistories.set(selected[i].id,histories[i]);
-  rows=realm==='all'?D.combine(histories):histories[0];now=Date.now();draw();await refreshLive();
+  rows=histories[0];now=Date.now();draw();await refreshLive();
  }catch(e){if(ticket!==loadNumber)return;rows=[];draw();$('source-note').textContent='Could not load this server’s history. No readings have been invented.';}}
 function selectRealm(id){realm=id;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
 for(const p of periods){const b=document.createElement('button');b.type='button';b.textContent=p;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{period=p;draw();});document.querySelector('.ranges').append(b);}
