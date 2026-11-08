@@ -55,8 +55,8 @@ function fixture(){
     createElement:mockElement,createElementNS:(_ns,tag)=>mockElement(tag)
   };
   const realms=[
-    {id:'all',name:'All Realms'},
-    {id:'nzoth',name:"N'Zoth (Normal)",history:'online-history.json'}
+    {id:'all',name:'All Realms',history:'online-history.json'},
+    {id:'nzoth',name:"N'Zoth (Normal)",history:'history/nzoth.json'}
   ];
   const requests=[];
   const fetch=async path=>{
@@ -67,12 +67,15 @@ function fixture(){
     }
     if(url.includes('/api/history?')){
       if(failed)throw Error('Worker history temporarily unavailable');
-      const since=Number(new URL(url).searchParams.get('since'));
+      const params=new URL(url).searchParams;
+      if(params.get('realm')==='all')return {ok:false,status:400};
+      const since=Number(params.get('since'));
       return {ok:true,json:async()=>({
         readings:worker.filter(r=>Date.parse(r.timestamp)>since),has_more:false
       })};
     }
     if(url.includes('online-history.json'))return {ok:true,json:async()=>archival};
+    if(url.includes('history/nzoth.json'))return {ok:true,json:async()=>([])};
     if(url.includes('live.json'))return {ok:true,json:async()=>({
       nzoth:{...archival.at(-1),source:'official census'}
     })};
@@ -87,7 +90,7 @@ function fixture(){
   const window={};
   const context=vm.createContext({
     Date:FakeDate,URL,URLSearchParams,Intl,document,window,fetch,
-    location:{hash:'server=nzoth'},
+    location:{hash:'server=all'},
     console:{warn(){},error(...e){throw Error(e.join(' '))}},
     setInterval:(handler,ms)=>{
       if(!intervals.has(ms))intervals.set(ms,[]);
@@ -124,7 +127,7 @@ test('new readings refresh the chart and headline without page reload',async()=>
   assert.equal(env.get('online-now').textContent,'127');
   assert.equal(env.get('peak24').textContent,'127');
   assert.notEqual(env.get('raw-population').getAttribute('d'),initialPath);
-  assert.match(env.get('source-note').textContent,/Cloudflare: recent verified/);
+  assert.match(env.get('source-note').textContent,/Cloudflare: recent recorded/);
 });
 
 test('a temporary Worker outage leaves recorded history in place and reports stale data',async()=>{
@@ -160,4 +163,17 @@ test('custom time ranges are not reset as new observations arrive',async()=>{
   assert.ok(!env.get('range-label').textContent.startsWith('1H'),
     'Do not reset manual zoom on background refresh');
   assert.equal(env.get('date-to').value,initialEnd);
+});
+
+
+test('legacy website-wide census is never shown as N\'Zoth population',async()=>{
+  const env=fixture();await settle();
+  assert.equal(env.get('online-now').textContent,'101');
+  assert.ok(env.requests.some(url=>url.includes('/api/history?realm=nzoth')),
+    'All Realms is allowed to retrieve the old Worker census until redeploy');
+  env.get('server-select').fire('change',{target:{value:'nzoth'}});
+  await settle();
+  assert.equal(env.get('online-now').textContent,'NO DATA');
+  assert.ok(!env.requests.some(url=>url.includes('/api/history?realm=nzoth')&&url.includes('legacy-realms-only')),
+    'The legacy N\'Zoth census may not be used as a N\'Zoth feed');
 });
