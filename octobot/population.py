@@ -169,6 +169,21 @@ class PopulationStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(self.path, timeout=15)
         connection.execute('CREATE TABLE IF NOT EXISTS population_readings_v2 (realm TEXT NOT NULL, timestamp TEXT NOT NULL, online INTEGER NOT NULL CHECK(online >= 0), PRIMARY KEY (realm,timestamp))')
+        connection.execute('CREATE TABLE IF NOT EXISTS population_migrations (name TEXT PRIMARY KEY)')
+        # One-time migration of the formerly mislabelled website-wide census.
+        # Do not repeatedly migrate future genuine N'Zoth-specific observations.
+        marker = 'official_census_to_all_realms_20261108'
+        if not connection.execute(
+            'SELECT 1 FROM population_migrations WHERE name=?', (marker,)
+        ).fetchone():
+            connection.execute("""
+                INSERT OR IGNORE INTO population_readings_v2 (realm,timestamp,online)
+                SELECT 'all',timestamp,online
+                FROM population_readings_v2 WHERE realm='nzoth'
+            """)
+            connection.execute("DELETE FROM population_readings_v2 WHERE realm='nzoth'")
+            connection.execute('INSERT INTO population_migrations (name) VALUES (?)', (marker,))
+            connection.commit()
         return connection
 
     def add(self, rows: list[Reading]) -> None:
