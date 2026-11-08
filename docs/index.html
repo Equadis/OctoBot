@@ -29,7 +29,7 @@
 <div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button id="apply-dates" type="button">Apply</button></div></div>
 <div id="date-error" role="status"></div>
 <div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Players online (smoothed)</span><span><i class="key" style="border-color:#82efb3;border-bottom-style:dashed"></i>Players online (actual)</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Players online (estimated)</span></div>
-<p class="muted">Hover to inspect original readings. Scroll to zoom the date range around your cursor (10-minute minimum). Hold Shift while scrolling to move left or right in time, or click and drag the graph to pan without changing the visible range. Presets restore fixed ranges. Estimates are never counted as recorded observations.</p>
+<p class="muted">Hover to inspect original readings. Scroll to zoom the date range around your cursor (10-minute minimum). Hold Shift and scroll down to move left (earlier), or up to move right (later), or click and drag the graph to pan without changing the visible range. Presets restore fixed ranges. Estimates are never counted as recorded observations.</p>
 <p class="muted">Amber dashed: estimated gaps up to 24 hours · Yellow NO DATA: missing or unbounded history · All times UTC</p>
 </section>
 
@@ -317,9 +317,9 @@ plotHit.addEventListener('wheel',e=>{
  e.preventDefault();
  const unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
  if(e.shiftKey){
-  // Shift+wheel pans without zoom, including browsers that remap wheel to deltaX.
+  // Shift+scroll down pans left (earlier); up pans right (later), including deltaX remapping.
   const wheel=(Math.abs(e.deltaX)>0?e.deltaX:e.deltaY)*unit;
-  navigateTimeline(D.panRange(start,windowEnd,wheel/100*0.12*(windowEnd-start),LAUNCH,Date.now()));
+  navigateTimeline(D.panRange(start,windowEnd,-wheel/100*0.12*(windowEnd-start),LAUNCH,Date.now()));
  }else{
   const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
   navigateTimeline(D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now()));
