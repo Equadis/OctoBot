@@ -1,5 +1,5 @@
 from __future__ import annotations
-import io,json,tempfile,unittest
+import io,json,sqlite3,tempfile,unittest
 from datetime import datetime,timedelta
 from pathlib import Path
 from types import SimpleNamespace as NS
@@ -16,7 +16,7 @@ class PopulationTests(unittest.TestCase):
   self.assertGreaterEqual(len(rows),9485)
   self.assertEqual(rows[0].time.isoformat(),'2026-10-30T14:59:20.708000+00:00')
   self.assertEqual(max(r.online for r in rows),3470)
-  self.assertEqual({r.realm for r in rows},{'nzoth'})
+  self.assertEqual({r.realm for r in rows},{'all'})
  def test_validation_sort_dedup_zero_and_realms(self):
   data=[{'timestamp':'2026-11-06T01:00:00Z','online':0},{'timestamp':'2026-11-06T00:00:00Z','online':25}]
   rows=decode_history(data+data,'cthun')
@@ -36,10 +36,23 @@ class PopulationTests(unittest.TestCase):
  def test_sqlite_realm_isolation_persistence_and_dedup(self):
   with tempfile.TemporaryDirectory() as directory:
    store=PopulationStore(Path(directory)/'bot.db')
-   store.add([Reading(END,100,'nzoth'),Reading(END,20,'cthun'),Reading(END,3,'yshaarj')])
-   store.add([Reading(END,100,'nzoth')])
+   store.add([Reading(END,100,'all'),Reading(END,20,'cthun'),Reading(END,3,'yshaarj')])
+   store.add([Reading(END,100,'all')])
    self.assertEqual(store.all(),[Reading(END,100)])
    self.assertEqual(PopulationStore(store.path).all('cthun'),[Reading(END,20,'cthun')])
+ def test_migrate_existing_nzoth_census_into_all_exactly_once(self):
+  with tempfile.TemporaryDirectory() as directory:
+   path=Path(directory)/'bot.db'
+   with sqlite3.connect(path) as db:
+    db.execute('CREATE TABLE population_readings_v2 (realm TEXT NOT NULL, timestamp TEXT NOT NULL, online INTEGER NOT NULL, PRIMARY KEY (realm,timestamp))')
+    db.execute('INSERT INTO population_readings_v2 VALUES (?, ?, ?)',('nzoth',END.isoformat(),123))
+   store=PopulationStore(path)
+   self.assertEqual(store.all(),[Reading(END,123,'all')])
+   self.assertEqual(store.all('nzoth'),[])
+   # A future verified N'Zoth observation remains independent after the one-time migration.
+   store.add([Reading(END+timedelta(minutes=1),9,'nzoth')])
+   self.assertEqual(store.all('nzoth'),[Reading(END+timedelta(minutes=1),9,'nzoth')])
+   self.assertEqual(store.all(),[Reading(END,123,'all')])
  def test_parser_failure_does_not_create_zero_and_atomic_export(self):
   self.assertEqual(parse_online('Players online now: <b>1,234</b>'),1234)
   with self.assertRaises(ValueError):parse_online('<html>temporarily unavailable</html>')
@@ -49,8 +62,8 @@ class PopulationTests(unittest.TestCase):
    with patch('octobot.population.fetch_reading',side_effect=OSError('network')):self.assertIsNone(collect_file(path))
    self.assertEqual(path.read_bytes(),before)
  def test_other_realms_never_fall_back_to_nzoth(self):
-  with patch.dict('os.environ',{'POPULATION_YSHAARJ_URL':'','POPULATION_CTHUN_URL':''}):
-   for realm in ['cthun','yshaarj']:
+  with patch.dict('os.environ',{'POPULATION_NZOTH_URL':'','POPULATION_YSHAARJ_URL':'','POPULATION_CTHUN_URL':''}):
+   for realm in ['nzoth','cthun','yshaarj']:
     with self.assertRaisesRegex(ValueError,'No verified population feed'):fetch_reading(realm)
  def test_real_renderer_has_no_fake_counts_and_handles_no_data(self):
   rows=load_history(HISTORY)
@@ -80,4 +93,4 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
   rows=[Reading(END-timedelta(minutes=5),10),Reading(END-timedelta(days=2),3470),Reading(END-timedelta(minutes=1),15)]
   rows.sort(key=lambda r:r.time);view=ServerInfoView(rows,END);embed=view.embed()
   self.assertEqual([f.value for f in embed.fields],['15','15','3,470','--:--:--:--']);self.assertIsNone(embed.image.url);self.assertIsNone(view.timeout);view.stop()
-  self.assertNotIn('at=',interactive_url(END));self.assertIn('server=nzoth',interactive_url())
+  self.assertNotIn('at=',interactive_url(END));self.assertIn('server=all',interactive_url())
