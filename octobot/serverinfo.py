@@ -10,8 +10,6 @@ import os
 import threading
 import urllib.request
 from datetime import datetime, timedelta
-from typing import Literal
-from urllib.parse import urlsplit, urlunsplit
 
 import discord
 from discord import app_commands
@@ -28,16 +26,15 @@ log = logging.getLogger(__name__)
 
 
 def interactive_url(end: datetime | None = None, realm: str = 'all') -> str:
-    # Live history must not be frozen to a synthetic timestamp in old #at links.
-    base = os.getenv('SERVERINFO_GRAPH_URL', DEFAULT_GRAPH_URL).strip()
-    try:
-        parts = urlsplit(base)
-        if parts.scheme not in ('http', 'https') or not parts.netloc or parts.username or parts.password:
-            raise ValueError('Invalid graph URL')
-    except ValueError:
-        log.warning('Invalid SERVERINFO_GRAPH_URL; using GitHub Pages')
-        parts = urlsplit(DEFAULT_GRAPH_URL)
-    return urlunsplit(parts._replace(fragment='server='+realm))
+    """Open the canonical OctoBot dashboard at the correct realm.
+
+    All Realms is the default page. Other realms use stable hash selectors.
+    The legacy graph-host environment override is intentionally ignored so
+    Discord buttons cannot point to an outdated graph host.
+    """
+    if realm not in REALMS:
+        raise ValueError('Unknown population realm')
+    return DEFAULT_GRAPH_URL if realm == 'all' else DEFAULT_GRAPH_URL + '#server=' + realm
 
 
 def _font(size: int) -> ImageFont.ImageFont:
@@ -178,13 +175,23 @@ class ServerInfoCog(commands.Cog):
     @app_commands.command(name='serverinfo',description='Show recorded server population and its interactive history.')
     @app_commands.guild_only()
     @app_commands.default_permissions(administrator=True)
-    async def serverinfo(self,interaction:discord.Interaction, server: Literal["All Realms", "N'Zoth (Normal)", "Y'Shaarj (PvP)", "C'Thun (Hardcore)"] = "All Realms")->None:
+    @app_commands.describe(server='Population to display (defaults to all realms)')
+    @app_commands.choices(server=[
+        app_commands.Choice(name='all', value='all'),
+        app_commands.Choice(name='nzoth', value='nzoth'),
+        app_commands.Choice(name='cthun', value='cthun'),
+        app_commands.Choice(name='yshaarj', value='yshaarj'),
+    ])
+    async def serverinfo(self,interaction:discord.Interaction, server: str = 'all')->None:
         if interaction.guild_id is None or not interaction.permissions.administrator:
             await interaction.response.send_message('This test command requires Discord Administrator permission.',ephemeral=True)
             return
         await interaction.response.defer(thinking=True)
         try:
-            realm=next(key for key,name in REALMS.items() if name==server)
+            realm=server
+            if realm not in REALMS:
+                await interaction.followup.send('Unknown server. Please choose a listed realm.',ephemeral=True)
+                return
             rows=await asyncio.to_thread(self.store.all,realm)
             view=ServerInfoView(rows,realm=realm)
             attachment=await view.attachment()
