@@ -80,8 +80,8 @@ future Worker samples to `all`, deploy the new migration and Worker code:
 cd /workspaces/OctoBot
 git pull origin main
 cd cloudflare/population
-npx wrangler d1 migrations apply octobot-population --remote
 npx wrangler deploy
+npx wrangler d1 migrations apply octobot-population --remote
 ```
 
 Until that redeploy, the webpage reads legacy census records under **All Realms**
