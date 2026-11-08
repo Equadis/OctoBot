@@ -85,12 +85,37 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
  async def test_admin_command_only_and_public_link(self):
   bot=NS(config=NS(database_path=Path('/tmp/unused-population-test.db')));cog=ServerInfoCog(bot);cog.store=NS(all=lambda realm:[])
   command=ServerInfoCog.serverinfo;self.assertTrue(command.default_permissions.administrator)
+  self.assertEqual([choice.value for choice in command.get_parameter('server').choices],
+                   ['all','nzoth','cthun','yshaarj'])
+  self.assertEqual(command.get_parameter('server').default,'all')
   event=self.event(False);await command.callback(cog,event);event.followup.send.assert_not_awaited()
-  event=self.event();await command.callback(cog,event,"C'Thun (Hardcore)")
+  event=self.event();await command.callback(cog,event,'cthun')
   sent=event.followup.send.call_args.kwargs;self.assertFalse(sent.get('ephemeral',False));self.assertIn('C\'Thun',sent['embed'].title)
-  self.assertEqual(len(sent['view'].children),1);self.assertIn('server=cthun',sent['view'].children[0].url);sent['file'].close();sent['view'].stop()
+  self.assertEqual(len(sent['view'].children),1)
+  self.assertEqual(sent['view'].children[0].url,'https://equadis.github.io/OctoBot/#server=cthun')
+  self.assertEqual(sent['embed'].url,sent['view'].children[0].url)
+  sent['file'].close();sent['view'].stop()
+ async def test_default_and_other_realm_link_destinations(self):
+  bot=NS(config=NS(database_path=Path('/tmp/unused-population-test.db')));cog=ServerInfoCog(bot);cog.store=NS(all=lambda realm:[])
+  for selected,expected in [('all','https://equadis.github.io/OctoBot/'),
+                            ('nzoth','https://equadis.github.io/OctoBot/#server=nzoth'),
+                            ('cthun','https://equadis.github.io/OctoBot/#server=cthun'),
+                            ('yshaarj','https://equadis.github.io/OctoBot/#server=yshaarj')]:
+   event=self.event()
+   if selected=='all':await ServerInfoCog.serverinfo.callback(cog,event)
+   else:await ServerInfoCog.serverinfo.callback(cog,event,selected)
+   sent=event.followup.send.call_args.kwargs
+   self.assertEqual(sent['view'].children[0].url,expected)
+   self.assertEqual(sent['embed'].url,expected)
+   sent['file'].close();sent['view'].stop()
+ def test_interactive_url_never_uses_legacy_host(self):
+  import os
+  with patch.dict(os.environ,{'SERVERINFO_GRAPH_URL':'https://outdated.example.test/graph'}):
+   self.assertEqual(interactive_url(),'https://equadis.github.io/OctoBot/')
+   for slug in ('nzoth','cthun','yshaarj'):
+    self.assertEqual(interactive_url(realm=slug),'https://equadis.github.io/OctoBot/#server='+slug)
  async def test_stats_use_real_peak_and_unknown_uptime(self):
   rows=[Reading(END-timedelta(minutes=5),10),Reading(END-timedelta(days=2),3470),Reading(END-timedelta(minutes=1),15)]
   rows.sort(key=lambda r:r.time);view=ServerInfoView(rows,END);embed=view.embed()
   self.assertEqual([f.value for f in embed.fields],['15','15','3,470','--:--:--:--']);self.assertIsNone(embed.image.url);self.assertIsNone(view.timeout);view.stop()
-  self.assertNotIn('at=',interactive_url(END));self.assertIn('server=all',interactive_url())
+  self.assertNotIn('at=',interactive_url(END));self.assertEqual(interactive_url(),'https://equadis.github.io/OctoBot/')
