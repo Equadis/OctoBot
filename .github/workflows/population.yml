@@ -22,6 +22,7 @@ jobs:
       group: population-history-write
       cancel-in-progress: false
     env:
+      POPULATION_NZOTH_URL: ${{ vars.POPULATION_NZOTH_URL }}
       POPULATION_YSHAARJ_URL: ${{ vars.POPULATION_YSHAARJ_URL }}
       POPULATION_CTHUN_URL: ${{ vars.POPULATION_CTHUN_URL }}
     steps:
