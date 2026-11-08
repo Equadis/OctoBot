@@ -20,15 +20,15 @@ LIVE = ROOT / 'docs' / 'live.json'
 RELEASES = ROOT / 'docs' / 'releases.json'
 CENSUS_URL = 'https://octowow.st/player-census'
 GAP_SECONDS = 600
-REALMS = {'nzoth': "N'Zoth (Normal)", 'yshaarj': "Y'Shaarj (PvP)", 'cthun': "C'Thun (Hardcore)"}
-HISTORIES = {'nzoth': HISTORY, 'yshaarj': ROOT/'docs/history/yshaarj.json', 'cthun': ROOT/'docs/history/cthun.json'}
+REALMS = {'all': "All Realms", 'nzoth': "N'Zoth (Normal)", 'yshaarj': "Y'Shaarj (PvP)", 'cthun': "C'Thun (Hardcore)"}
+HISTORIES = {'all': HISTORY, 'nzoth': ROOT/'docs/history/nzoth.json', 'yshaarj': ROOT/'docs/history/yshaarj.json', 'cthun': ROOT/'docs/history/cthun.json'}
 
 
 @dataclass(frozen=True)
 class Reading:
     time: datetime
     online: int
-    realm: str = 'nzoth'
+    realm: str = 'all'
 
 
 def parse_time(value: str) -> datetime:
@@ -38,11 +38,11 @@ def parse_time(value: str) -> datetime:
     return result.astimezone(UTC)
 
 
-def load_history(path: Path, realm: str = 'nzoth') -> list[Reading]:
+def load_history(path: Path, realm: str = 'all') -> list[Reading]:
     return decode_history(json.loads(path.read_text()), realm)
 
 
-def decode_history(data, realm: str = 'nzoth') -> list[Reading]:
+def decode_history(data, realm: str = 'all') -> list[Reading]:
     if not isinstance(data, list):
         raise ValueError('History must be a list of timestamp/online observations')
     rows = {}
@@ -85,9 +85,13 @@ def save_latest(reading: Reading, path: Path = LIVE) -> None:
                 return
         except ValueError:
             pass
+    # Relabel the legacy website-wide census sample, but never erase a future
+    # separately verified N'Zoth reading.
+    if reading.realm == 'all' and current.get('nzoth', {}).get('source') == 'official census':
+        current.pop('nzoth', None)
     current[reading.realm] = {
         'timestamp': reading.time.isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
-        'online': reading.online, 'source': 'official census' if reading.realm == 'nzoth' else 'verified realm feed'
+        'online': reading.online, 'source': 'official census' if reading.realm == 'all' else 'verified realm feed'
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix('.tmp')
@@ -102,11 +106,11 @@ def parse_online(page: str) -> int:
     return int(re.sub(r'[,\s]', '', match[1]))
 
 
-def fetch_reading(realm: str = 'nzoth') -> Reading:
+def fetch_reading(realm: str = 'all') -> Reading:
     if realm not in REALMS:
         raise ValueError('Unknown realm')
-    # The owner confirmed the census counter belongs to N'Zoth. Never copy it to other realms.
-    url = CENSUS_URL if realm == 'nzoth' else os.getenv('POPULATION_'+realm.upper()+'_URL', '').strip()
+    # The official census is a site-wide headline, not a verified N'Zoth-only feed.
+    url = CENSUS_URL if realm == 'all' else os.getenv('POPULATION_'+realm.upper()+'_URL', '').strip()
     if not url:
         raise ValueError(f'No verified population feed configured for {REALMS[realm]}')
     request = urllib.request.Request(url, headers={'User-Agent': 'OctoBot-Population/1.0'})
@@ -114,7 +118,7 @@ def fetch_reading(realm: str = 'nzoth') -> Reading:
         page = response.read(2_000_001)
         if len(page) > 2_000_000:
             raise ValueError('Unexpectedly large population response')
-    if realm == 'nzoth':
+    if realm == 'all':
         count = parse_online(page.decode('utf-8'))
     else:
         payload = json.loads(page)
@@ -165,6 +169,21 @@ class PopulationStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(self.path, timeout=15)
         connection.execute('CREATE TABLE IF NOT EXISTS population_readings_v2 (realm TEXT NOT NULL, timestamp TEXT NOT NULL, online INTEGER NOT NULL CHECK(online >= 0), PRIMARY KEY (realm,timestamp))')
+        connection.execute('CREATE TABLE IF NOT EXISTS population_migrations (name TEXT PRIMARY KEY)')
+        # One-time migration of the formerly mislabelled website-wide census.
+        # Do not repeatedly migrate future genuine N'Zoth-specific observations.
+        marker = 'official_census_to_all_realms_20261108'
+        if not connection.execute(
+            'SELECT 1 FROM population_migrations WHERE name=?', (marker,)
+        ).fetchone():
+            connection.execute("""
+                INSERT OR IGNORE INTO population_readings_v2 (realm,timestamp,online)
+                SELECT 'all',timestamp,online
+                FROM population_readings_v2 WHERE realm='nzoth'
+            """)
+            connection.execute("DELETE FROM population_readings_v2 WHERE realm='nzoth'")
+            connection.execute('INSERT INTO population_migrations (name) VALUES (?)', (marker,))
+            connection.commit()
         return connection
 
     def add(self, rows: list[Reading]) -> None:
@@ -173,13 +192,13 @@ class PopulationStore:
                                    [(r.realm, r.time.isoformat(), r.online) for r in rows])
             connection.commit()
 
-    def all(self, realm: str = 'nzoth') -> list[Reading]:
+    def all(self, realm: str = 'all') -> list[Reading]:
         with closing(self.connect()) as connection:
             data = connection.execute('SELECT timestamp, online FROM population_readings_v2 WHERE realm=? ORDER BY timestamp', (realm,)).fetchall()
         return [Reading(parse_time(t), n, realm) for t, n in data]
 
 
-def collect_file(path: Path, realm: str = 'nzoth') -> Reading | None:
+def collect_file(path: Path, realm: str = 'all') -> Reading | None:
     rows = load_history(path,realm) if path.exists() else []
     # Failure leaves history unchanged; it is never converted to zero or SERVER DOWN.
     try:
@@ -195,7 +214,7 @@ def collect_file(path: Path, realm: str = 'nzoth') -> Reading | None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path)
-    parser.add_argument('--realm', choices=list(REALMS), default='nzoth')
+    parser.add_argument('--realm', choices=list(REALMS), default='all')
     parser.add_argument('--all', action='store_true')
     args = parser.parse_args()
     for realm in (REALMS if args.all else [args.realm]):

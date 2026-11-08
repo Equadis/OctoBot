@@ -43,6 +43,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_export_status_history.py'
       - name: Test dashboard rendering and interactions
         run: node --test tests/status-archive.test.mjs tests/status-interactions.test.mjs
+      - name: Test All Realms census reclassification
+        run: python -m unittest discover -s tests -p 'test_population_reclassification.py'
       - name: Test real Population history backfill
         run: node --test tests/population-history.test.mjs tests/population-live.test.mjs
       - name: Test Cloudflare Worker

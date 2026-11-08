@@ -27,7 +27,7 @@ _RENDER_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
 
 
-def interactive_url(end: datetime | None = None, realm: str = 'nzoth') -> str:
+def interactive_url(end: datetime | None = None, realm: str = 'all') -> str:
     # Live history must not be frozen to a synthetic timestamp in old #at links.
     base = os.getenv('SERVERINFO_GRAPH_URL', DEFAULT_GRAPH_URL).strip()
     try:
@@ -104,7 +104,7 @@ def render_chart(end: datetime, rows: list[Reading]) -> bytes:
 
 
 class ServerInfoView(discord.ui.View):
-    def __init__(self, rows: list[Reading], end: datetime | None = None, realm: str = 'nzoth'):
+    def __init__(self, rows: list[Reading], end: datetime | None = None, realm: str = 'all'):
         super().__init__(timeout=None)
         self.realm=realm
         self.end=end or datetime.now(UTC)
@@ -151,7 +151,7 @@ class ServerInfoCog(commands.Cog):
     async def collect(self) -> None:
         # Pull public observations too so gaps while this bot was stopped can be recovered.
         for realm in REALMS:
-            if realm != 'nzoth' and not os.getenv('POPULATION_'+realm.upper()+'_URL','').strip():
+            if realm != 'all' and not os.getenv('POPULATION_'+realm.upper()+'_URL','').strip():
                 continue
             if self.poll_count%10==0:
                 try:
@@ -178,7 +178,7 @@ class ServerInfoCog(commands.Cog):
     @app_commands.command(name='serverinfo',description='Show recorded server population and its interactive history.')
     @app_commands.guild_only()
     @app_commands.default_permissions(administrator=True)
-    async def serverinfo(self,interaction:discord.Interaction, server: Literal["N'Zoth (Normal)", "Y'Shaarj (PvP)", "C'Thun (Hardcore)"] = "N'Zoth (Normal)")->None:
+    async def serverinfo(self,interaction:discord.Interaction, server: Literal["All Realms", "N'Zoth (Normal)", "Y'Shaarj (PvP)", "C'Thun (Hardcore)"] = "All Realms")->None:
         if interaction.guild_id is None or not interaction.permissions.administrator:
             await interaction.response.send_message('This test command requires Discord Administrator permission.',ephemeral=True)
             return

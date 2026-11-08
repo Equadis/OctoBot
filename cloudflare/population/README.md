@@ -81,9 +81,9 @@ Cron deployment/propagation can take a few minutes. The dashboard polls
 `/api/latest` every 60 seconds and retrieves new `/api/history` observations
 every five minutes, merging them with your imported GitHub history.
 
-The census counter is attributed to N'Zoth as previously verified. The other
-realms still need their own confirmed sources. Do not copy the N'Zoth value
-into those realms or the All Realms total.
+The website-wide census counter is now recorded as **All Realms**. It is
+never treated as a N'Zoth reading and is never summed with individual realm
+counts. N'Zoth, Y'Shaarj and C'Thun require their own verified feeds.
 
 **Important:** Merely committing this Worker code does not activate it.
 A real deployment to your Cloudflare account and the live endpoint setting
@@ -107,19 +107,20 @@ npx wrangler deploy
 
 Run those from the Codespaces directory `cloudflare/population`.
 
-Two optional Worker environment variables allow separate PvP and Hardcore
+Three optional Worker environment variables allow separate Normal, PvP and Hardcore
 population feeds **when you have independently confirmed realm-specific URLs**:
 
 ```toml
 [vars]
+POPULATION_NZOTH_URL = "https://REAL_VERIFIED_NORMAL_JSON_ENDPOINT"
 POPULATION_YSHAARJ_URL = "https://REAL_VERIFIED_PVP_JSON_ENDPOINT"
 POPULATION_CTHUN_URL = "https://REAL_VERIFIED_HC_JSON_ENDPOINT"
 ```
 
 Each HTTPS URL must return JSON `{"online":123}` for **that realm only**.
-Never copy the N'Zoth census count as a substitute. The site already lists
-all three realms and All Realms; those entries will show NO DATA until
-their real feeds exist. All Realms sums three near-synchronous observations.
+The website-wide count is always stored under `all`; N'Zoth, Y'Shaarj
+and C'Thun show NO DATA until separately verified feeds exist. Never
+sum the website-wide count with individual realm values.
 
 ## Public feed audit (6 November 2026)
 
@@ -130,16 +131,31 @@ historic character totals), not independently exposed current online numbers.
 The public homepage lists realm **online/offline status**, not online population.
 No verified, realm-specific once-per-minute PvP or Hardcore feed was identified.
 
-**Important limitation:** The website does not explicitly label its `onlineNow`
-count as N'Zoth-only; OctoBot currently stores this reading under `nzoth` due
-to the earlier assumption. Its realm attribution needs verification against
-an in-game N'Zoth `.s info` reading taken at the same time, or direct confirmation
-from OctoWoW developers. Do not report this time series as fully verified
-realm-specific population until the attribution is established. If the official
-counter represents the combined population, move the series to an appropriately
-named aggregate instead of adding it to individual realm figures.
+**Population attribution:** The website does not explicitly break its
+`onlineNow` figure down by realm. In accordance with the requested change,
+OctoBot displays this website-wide headline as **All Realms** while leaving
+the three individual realms unpopulated. The headline's exact scope remains
+unverified without developer confirmation.
 
 The most reliable solution is for OctoWoW developers to publish or confirm
 read-only JSON endpoints with timestamped per-realm online counts (ideally all
 three in one response). The existing Worker supports separately configured
 verified per-realm JSON feeds but cannot invent missing sources.
+
+## Move legacy census history to All Realms
+
+Apply `0004_census_all_realms.sql` to the remote D1 database, then redeploy
+the Worker:
+
+```sh
+git pull origin main
+cd cloudflare/population
+npx wrangler deploy
+npx wrangler d1 migrations apply octobot-population --remote
+```
+
+This copies the existing official-census N'Zoth readings to `all` with
+their exact timestamps and player counts, then removes the wrongly labelled
+N'Zoth census rows. Separately verified N'Zoth data, if any, is preserved.
+The website works with the older Worker until this migration is deployed,
+but the Worker will keep writing its old classification until redeployment.

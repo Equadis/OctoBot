@@ -5,7 +5,7 @@ import {collectStatus,statusLatest,statusHistory,cleanOldStatus} from './status.
  * Public endpoints serve only population aggregates, never player identifiers.
  */
 const CENSUS_URL='https://octowow.st/player-census';
-const REALMS=['nzoth','yshaarj','cthun'];
+const REALMS=['all','nzoth','yshaarj','cthun'];
 const MAX_PAGE=10000;
 export function parseOnline(page){
  const match=page.match(/Players\s+online\s+now:\s*<b[^>]*>\s*([\d,\s]+)\s*<\/b>/i);
@@ -39,10 +39,10 @@ async function collectOne(env,realm,source,format){
   .bind(realm,timestamp,online,format==='html'?'official census':'verified realm feed').run();
  return {timestamp:new Date(timestamp).toISOString(),online,realm};
 }
-async function collect(env){
+export async function collect(env){
  if(!env.DB)throw Error('D1 binding missing');
- const feeds=[['nzoth',CENSUS_URL+'?t='+Date.now(),'html']];
- for(const [realm,key] of [['yshaarj','POPULATION_YSHAARJ_URL'],['cthun','POPULATION_CTHUN_URL']]){
+ const feeds=[['all',CENSUS_URL+'?t='+Date.now(),'html']];
+ for(const [realm,key] of [['nzoth','POPULATION_NZOTH_URL'],['yshaarj','POPULATION_YSHAARJ_URL'],['cthun','POPULATION_CTHUN_URL']]){
   if(typeof env[key]==='string'&&env[key].trim())feeds.push([realm,env[key].trim(),'json']);
  }
  const settled=await Promise.allSettled(feeds.map(([id,url,format])=>collectOne(env,id,url,format)));

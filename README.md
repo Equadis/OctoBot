@@ -4,7 +4,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 
 ## Public dashboards
 
-The [Population dashboard](https://equadis.github.io/OctoBot/#server=nzoth) and [Server Status dashboard](https://equadis.github.io/OctoBot/status.html) share the same dark visual style and top navigation.
+The [Population dashboard](https://equadis.github.io/OctoBot/#server=all) and [Server Status dashboard](https://equadis.github.io/OctoBot/status.html) share the same dark visual style and top navigation.
 
 The status dashboard uses independent checks of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its independent-probe chart, response-time graph and recent interruption history combine the one-minute Cloudflare Worker (after its D1 migration and redeployment) with GitHub-recorded observations from an independent status workflow (`.github/workflows/status.yml`). GitHub Actions is a fallback, not a guaranteed five-minute schedule.
 
@@ -64,9 +64,34 @@ The Server Status page then automatically displays the imported uptime figures i
 
 **Important:** A historical confirmed-state interval is not proof of an uninterrupted stream of individual probes. The original bot's /uptime methodology counts time between confirmed transitions; the new website probes calculate availability only over independently observed intervals. These are shown separately. An export is a snapshot: if you want the old-bot history updated over time, repeat the export from the host and republish the JSON; it does not automatically upload your private DB or require a GitHub token on the bot host.
 
+### All Realms population reclassification
+
+The official site-wide `Players online now` census is now displayed under
+**All Realms**, not N'Zoth. The original `docs/online-history.json` file is
+retained unchanged as the All Realms archive; fresh `docs/live.json` and
+GitHub collector samples are keyed as `all`. Individual realm populations
+require genuinely realm-specific feeds. This does not alter the separate
+official realm **online/offline status** monitoring.
+
+To reclassify the existing one-minute Cloudflare D1 census history and switch
+future Worker samples to `all`, deploy the new migration and Worker code:
+
+```sh
+cd /workspaces/OctoBot
+git pull origin main
+cd cloudflare/population
+npx wrangler deploy
+npx wrangler d1 migrations apply octobot-population --remote
+```
+
+Until that redeploy, the webpage reads legacy census records under **All Realms**
+only; N'Zoth remains NO DATA. Restarting the Discord bot runs a one-time
+migration of its local SQLite population records. All original readings and
+timestamps are preserved.
+
 ## Dashboard chart design and navigation
 
-The [Population dashboard's **Players online** graph](https://equadis.github.io/OctoBot/#server=nzoth)
+The [Population dashboard's **Players online** graph](https://equadis.github.io/OctoBot/#server=all)
 is the canonical interaction and visual design for all OctoBot time-series charts.
 
 - Cursor-anchored mouse-wheel zoom with a ten-minute minimum and dataset-aware boundaries.
@@ -83,14 +108,14 @@ The common `docs/chart-interactions.js` module implements these interactions usi
 
 ### OctoTracker
 - `/serverinfo [server]`: admin-only command posting a **public, fixed 1D chart** with recorded population. Discord shows **Online now, 24h peak, All-time peak, Server uptime** and one **Open interactive graph ↗** link. There are no Discord range/date controls.
-  - The website has a **Server** dropdown next to Players online: **N’Zoth (Normal), Y’Shaarj (PvP), C’Thun (Hardcore)**. The selected option is disabled in the dropdown. Each realm has independent history and browser-local range/date selection.
-  - N’Zoth imports the supplied 9,485 readings starting **30 October 2026 14:59:20.708 UTC** (realm confirmed by the owner). Its original maximum is **3,470**. New N’Zoth counts use the official census counter, whose N’Zoth scope was also explicitly confirmed by the owner.
+  - The website has a **Server** dropdown next to Players online: **All Realms, N’Zoth (Normal), Y’Shaarj (PvP), C’Thun (Hardcore)**. The selected option is disabled in the dropdown. Each realm has independent history and browser-local range/date selection.
+  - **All Realms** displays the preserved website-wide census readings originally imported on **30 October 2026 14:59:20.708 UTC** (historical peak **3,470**). The original data was formerly mislabelled N’Zoth; it is now assigned to All Realms without changing any timestamps or values. The website’s headline is not a verified N’Zoth-only count.
   - **Cloudflare D1 is the primary source of one-minute player-count readings.** The dashboard now fetches all retained actual Worker readings (90 days) using its own cursor, independently of the newest GitHub snapshot. This prevents recorded minute observations from being skipped and incorrectly shown as estimated gaps. Subsequent page loads request only newer Worker samples, and the UI shows whether its live source is fresh or stale.
   - **Yellow = NO DATA**, including pre-history and collection gaps over 10 minutes. Failed fetches never become zero or a confirmed outage. Averages cover observed intervals only. Zero is a valid reading; it does not independently prove a server outage.
   - All-time peak means **highest recorded observation**, with the recording start shown. Server uptime is `--:--:--:--` because the census/history does not provide it. Stale current counts become NO DATA after 10 minutes.
   - Phase markers: Launch (Onyxia/MC, undated), P1 Zul’Gurub **1 Oct 2026 08:00 UTC**, P2 Blackwing Lair **1 Nov 2026 17:00 UTC**, P3 Emerald Sanctum **28 Jan 2027 17:00 UTC**, labelled **Scheduled** until release. Launch is shown as undated instead of inventing a timestamp.
   - The bot collects every minute into persistent SQLite after restart. A GitHub Actions collector samples every five minutes and publishes the web history independently of the bot host; scheduled runs can be delayed. No new Python package is required.
-  - **Y’Shaarj and C’Thun currently have no verified population source.** Their UI and storage are ready, but they show NO DATA until feeds are configured. Never reuse N’Zoth counts for those realms.
+  - **N’Zoth, Y’Shaarj and C’Thun currently have no verified individual population source.** They show NO DATA until separate sources are configured. Never copy or add the All Realms headline to any individual realm.
 - Realm/authentication monitoring
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
@@ -480,7 +505,7 @@ release metadata. Discord remains a fixed 1D preview with just the external link
 ### v1.0.39 real observations and three-realm support
 
 Install/update the repository files and restart the bot. History is seeded from
-`docs/online-history.json` for N’Zoth, and `docs/history/yshaarj.json` /
+`docs/online-history.json` for All Realms, and `docs/history/nzoth.json`, `docs/history/yshaarj.json` /
 `docs/history/cthun.json` for the other realms. The bot keeps data in the existing
 SQLite database (`population_readings_v2`, keyed by realm and timestamp), survives
 restarts, and refreshes its local history from the public site every 10 polls.
