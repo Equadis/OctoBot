@@ -43,7 +43,7 @@
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none';
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false;
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -144,46 +144,67 @@ async function fetchLatestJson(path){
   return await response.json();
  }
 }
+// Refresh active charts with Cloudflare's real observations while the page stays open.
+// Source history and live snapshots are merged by timestamp, never interpolated.
 async function refreshLive(){
- let data=null;
- if(telemetryEndpoint){
-  try{
-   data=await workerJson('/api/latest');
-   if(data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length)
-    liveFeedSource='worker';
-   else data=null;
-  }catch(e){
-   console.warn('Cloudflare population latest unavailable; trying GitHub fallback',e);
+ if(livePollRunning)return;
+ livePollRunning=true;
+ const ticket=loadNumber,selectedRealm=realm;
+ try{
+  let data=null;
+  if(telemetryEndpoint){
+   try{
+    data=await workerJson('/api/latest');
+    if(data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length)
+     liveFeedSource='worker';
+    else data=null;
+   }catch(error){
+    console.warn('Cloudflare latest unavailable; using recorded GitHub fallback',error);
+   }
   }
- }
- if(!data){
-  try{
-   data=await fetchLatestJson('live.json');
-   liveFeedSource='github';
-  }catch(e){
-   console.warn('Neither Cloudflare nor GitHub live population readings are available',e);
+  if(!data){
+   try{
+    data=await fetchLatestJson('live.json');
+    liveFeedSource='github';
+   }catch(error){
+    console.warn('Live population feeds temporarily unavailable',error);
+   }
   }
- }
- if(data&&typeof data==='object'&&!Array.isArray(data)){
-  for(const [id,snapshot]of Object.entries(data)){
-   const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
-   if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev))
-    liveSnapshots[id]=snapshot;
+  if(data&&typeof data==='object'&&!Array.isArray(data)){
+   for(const [id,snapshot]of Object.entries(data)){
+    const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
+    if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&
+       (!Number.isFinite(prev)||t>=prev))liveSnapshots[id]=snapshot;
+   }
   }
- }
- updateSourceNote();
- // Extend the active N'Zoth chart with each new real minute reading, without
- // waiting for the slower archived-history refresh.
- if(telemetryEndpoint){
-  const latest=realm==='all'?newestReading():liveRow(realm);
-  if(latest&&(!rows.length||latest.t>rows[rows.length-1].t)){
-   rows.push(latest);
-   now=Date.now();
-   draw();
-   return;
+  // A realm change can happen while fetches are in flight. Discard the old
+  // graph's response instead of overwriting the newly selected chart.
+  if(ticket!==loadNumber||selectedRealm!==realm)return;
+  const selectedIds=selectedRealm==='all'?['nzoth','yshaarj','cthun']:[selectedRealm];
+  if(telemetryEndpoint){
+   const updated=await Promise.all(selectedIds.map(async id=>
+    [id,await liveWorkerHistory(id,realmHistories.get(id)||[])]));
+   if(ticket!==loadNumber||selectedRealm!==realm)return;
+   for(const [id,recorded]of updated)realmHistories.set(id,recorded);
   }
+  // Include the newest verified live samples even if a history request fails.
+  // Never insert synthetic or stale values, or mix snapshots between realms.
+  for(const id of selectedIds){
+   const observed=liveRow(id);
+   if(!observed)continue;
+   const existing=realmHistories.get(id)||[];
+   realmHistories.set(id,D.normalise([...existing,{t:observed.t,value:observed.value}]
+    .map(p=>({timestamp:new Date(p.t).toISOString(),online:p.value}))));
+  }
+  rows=selectedRealm==='all'
+   ?D.combine(selectedIds.map(id=>realmHistories.get(id)||[]))
+   :realmHistories.get(selectedRealm)||[];
+  now=Date.now();
+  // In fixed presets, follow real time; customised/panned ranges remain fixed.
+  draw();
+ }finally{
+  livePollRunning=false;
  }
- updateHeadline();
 }
 
 function svg(name,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
@@ -280,7 +301,8 @@ async function load(){const ticket=++loadNumber;try{
   for(let i=0;i<current.length;i++)histories[i]=current[i];
  }
  if(ticket!==loadNumber)return;
- rows=realm==='all'?D.combine(histories):histories[0];now=Date.now();draw();await refreshLive();
+ for(let i=0;i<selected.length;i++)realmHistories.set(selected[i].id,histories[i]);
+  rows=realm==='all'?D.combine(histories):histories[0];now=Date.now();draw();await refreshLive();
  }catch(e){if(ticket!==loadNumber)return;rows=[];draw();$('source-note').textContent='Could not load this server’s history. No readings have been invented.';}}
 function selectRealm(id){realm=id;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
 for(const p of periods){const b=document.createElement('button');b.type='button';b.textContent=p;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{period=p;draw();});document.querySelector('.ranges').append(b);}
@@ -361,7 +383,7 @@ $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from')
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
 const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
-if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,60000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
+if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,30000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){$('source-note').textContent='Could not load graph configuration. Please refresh.';}})();
 
 </script>
 </body></html>
