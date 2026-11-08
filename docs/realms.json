@@ -2,13 +2,14 @@
   {
     "id": "all",
     "name": "All Realms",
-    "source_note": "Only combined from independently verified, near-synchronous counts for all three realms. The single website headline is not used as an additional realm."
+    "source_note": "Official OctoWoW website-wide 'Players online now' count. Displayed as All Realms; individual realm breakdown not available.",
+    "history": "online-history.json"
   },
   {
     "id": "nzoth",
     "name": "N’Zoth (Normal)",
-    "history": "online-history.json",
-    "source_note": "Official website headline 'Players online now' count: assumed N’Zoth historically, but the site does not label the count by realm. Attribution requires verification."
+    "history": "history/nzoth.json",
+    "source_note": "NO DATA · No independently verified N'Zoth population feed."
   },
   {
     "id": "yshaarj",
