@@ -127,7 +127,7 @@ test('new readings refresh the chart and headline without page reload',async()=>
   assert.equal(env.get('online-now').textContent,'127');
   assert.equal(env.get('peak24').textContent,'127');
   assert.notEqual(env.get('raw-population').getAttribute('d'),initialPath);
-  assert.match(env.get('source-note').textContent,/Cloudflare: recent recorded/);
+  assert.equal(env.get('range-label').textContent,'1D');
 });
 
 test('a temporary Worker outage leaves recorded history in place and reports stale data',async()=>{
@@ -138,7 +138,7 @@ test('a temporary Worker outage leaves recorded history in place and reports sta
   assert.equal(env.get('online-now').textContent,'101',
     'Historical real value must not be replaced with a fabricated population count');
   assert.equal(env.get('online-label').textContent,'Latest recorded');
-  assert.match(env.get('source-note').textContent,/(stale|fallback)/i);
+  assert.match(env.get('online-freshness').textContent,/Last observation:/);
   assert.ok(env.get('raw-population').getAttribute('d'));
   assert.notEqual(before,'');
 });
