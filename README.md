@@ -107,7 +107,7 @@ The common `docs/chart-interactions.js` module implements these interactions usi
 ## Included systems
 
 ### OctoTracker
-- `/serverinfo [server]`: admin-only command posting a **public, fixed 1D chart** with recorded population. Discord shows **Online now, 24h peak, All-time peak, Server uptime** and one **Open interactive graph ↗** link. There are no Discord range/date controls.
+- `/serverinfo [server]`: admin-only command posting a **public, fixed 1D chart**. Its optional `server` choices are `all`, `nzoth`, `cthun` and `yshaarj`; if omitted, it defaults to `all`. Discord shows **Online now, 24h peak, All-time peak, Server uptime** and an **Open interactive graph ↗** link to `https://equadis.github.io/OctoBot/` for `all`, or the same page with `#server=nzoth`, `#server=cthun` or `#server=yshaarj` respectively. There are no Discord range/date controls.
   - The website has a **Server** dropdown next to Players online: **All Realms, N’Zoth (Normal), Y’Shaarj (PvP), C’Thun (Hardcore)**. The selected option is disabled in the dropdown. Each realm has independent history and browser-local range/date selection.
   - **All Realms** displays the preserved website-wide census readings originally imported on **30 October 2026 14:59:20.708 UTC** (historical peak **3,470**). The original data was formerly mislabelled N’Zoth; it is now assigned to All Realms without changing any timestamps or values. The website’s headline is not a verified N’Zoth-only count.
   - **Cloudflare D1 is the primary source of one-minute player-count readings.** The dashboard now fetches all retained actual Worker readings (90 days) using its own cursor, independently of the newest GitHub snapshot. This prevents recorded minute observations from being skipped and incorrectly shown as estimated gaps. Subsequent page loads request only newer Worker samples, and the UI shows whether its live source is fresh or stale.
@@ -441,11 +441,12 @@ framework, CDN, web server on the bot host or extra Python dependency. The butto
 passes only the demo snapshot timestamp in a URL fragment so it matches the message.
 The default view is 1W; each visitor changes only their own view. The arrow opens a
 browser page, not an embedded Discord Activity or native hoverable message image.
-`SERVERINFO_GRAPH_URL` optionally overrides the hosted page for self-hosting; deploy
-`docs/index.html` as a static index page. No configuration is required for the
-included hosted test page. Discord controls expire after 10 minutes; the external
-link stays usable. The command is still admin-only to post, while anyone can click
-its public controls to receive their own private chart.
+The Discord `Open interactive graph ↗` link always uses the canonical
+`https://equadis.github.io/OctoBot/` dashboard. The legacy
+`SERVERINFO_GRAPH_URL` override is no longer used by this command.
+Restart the hosted OctoBot process to reload its slash-command choices
+and allow its existing guild sync to register them. The command is still
+admin-only to post; its public graph link is accessible to everyone.
 
 ### v1.0.35 GitHub Pages hosting
 
@@ -461,8 +462,9 @@ person clicking; subsequent clicks edit that private chart. The public 1W panel
 stays unchanged. 1H/1D/1W cover the previous hour/day/week; 1M and 1Y mean rolling
 30 and 365 days; YTD starts at 00:00 UTC on 1 January of the snapshot year.
 
-If `SERVERINFO_GRAPH_URL` was explicitly set to the old host, remove that override
-or change it to the GitHub Pages URL, then restart OctoBot and run `/serverinfo` again.
+Historical note: `SERVERINFO_GRAPH_URL` was once supported, but
+`/serverinfo` now always links to the GitHub Pages population dashboard.
+Restart OctoBot after updating the source code to activate the new choices.
 
 ### v1.0.36 fixed Discord chart and expanded web charts
 
