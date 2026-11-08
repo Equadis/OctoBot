@@ -177,8 +177,7 @@ class ServerInfoCog(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(server='Population to display (defaults to all realms)')
     @app_commands.choices(server=[
-        app_commands.Choice(name='all', value='all'),
-        app_commands.Choice(name='Total', value='total'),
+        app_commands.Choice(name='Total', value='all'),
         app_commands.Choice(name='nzoth', value='nzoth'),
         app_commands.Choice(name='cthun', value='cthun'),
         app_commands.Choice(name='yshaarj', value='yshaarj'),
@@ -189,8 +188,7 @@ class ServerInfoCog(commands.Cog):
             return
         await interaction.response.defer(thinking=True)
         try:
-            # Total is a display alias for All Realms, not a second population feed.
-            realm='all' if server=='total' else server
+            realm=server
             if realm not in REALMS:
                 await interaction.followup.send('Unknown server. Please choose a listed realm.',ephemeral=True)
                 return
