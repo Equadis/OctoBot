@@ -110,10 +110,10 @@
     axis.replaceChildren();bands.replaceChildren();missing.replaceChildren();
     for(const b of $('archive-ranges').querySelectorAll('button'))
       b.setAttribute('aria-pressed',String(b.textContent===range));
-    $('archive-view-label').textContent=SIGNALS[source][0]+' · '+(range==='CUSTOM'?'Custom range':range)+' · bot-confirmed history';
+    $('archive-view-label').textContent=range==='CUSTOM'?'Custom':range;
     if(!lower||!upper||upper<=lower){
-      bands.append(svg('text',{x:520,y:82,'text-anchor':'middle',style:'fill:#e3bd57'},'NO HISTORICAL RECORDS'));
-      $('archive-readout').textContent='NO DATA · No archived history for this metric';
+
+      $('archive-readout').textContent='';
       $('archive-readout').style.color='#e3bd57';hideInspection();return;
     }
     const rows=currentRows().sort((a,b)=>ms(a.start)-ms(b.start));
@@ -132,7 +132,7 @@
         const left=x(cursor),width=x(a)-left;
         missing.append(svg('rect',{x:left,y:40,width,height:40,fill:'#e3bd57','fill-opacity':'.11'}));
         missing.append(svg('line',{x1:left,x2:left+width,y1:80,y2:80,stroke:'#e3bd57','stroke-dasharray':'6 4'}));
-        if(width>80)missing.append(svg('text',{x:left+width/2,y:65,'text-anchor':'middle',style:'fill:#e3bd57;font-size:11px'},'NO DATA'));
+
       }
       bands.append(svg('rect',{x:x(a),y:43,width:Math.max(.8,x(b)-x(a)),height:34,
         fill:COLOUR[row.status]||COLOUR.unknown,opacity:'.89'}));
@@ -142,10 +142,10 @@
       const left=x(cursor),width=x(upper)-left;
       missing.append(svg('rect',{x:left,y:40,width,height:40,fill:'#e3bd57','fill-opacity':'.11'}));
       missing.append(svg('line',{x1:left,x2:left+width,y1:80,y2:80,stroke:'#e3bd57','stroke-dasharray':'6 4'}));
-      if(width>80)missing.append(svg('text',{x:left+width/2,y:65,'text-anchor':'middle',style:'fill:#e3bd57;font-size:11px'},'NO DATA'));
+
     }
     const c=coverage(rows,lower,upper);
-    $('archive-readout').textContent=pct(c.uptime)+' recorded uptime · '+Math.round(c.coverage)+'% covered · '+SIGNALS[source][0];
+    $('archive-readout').textContent=pct(c.uptime)+' uptime · '+Math.round(c.coverage)+'% covered';
     $('archive-readout').style.color=uptimeColour(c.uptime);
   }
   function archiveInspection(e){
@@ -218,8 +218,8 @@
     const panel=holder.closest('.panel');
     panel.querySelector('h2').textContent='Historical Availability Calendar';
     panel.querySelector('.panel-head p').textContent='Last 90 days · bot-confirmed';
-    const note=holder.parentElement.querySelector('p.muted');
-    if(note)note.textContent='Calendar shows the original OctoBot confirmed-state history, ending at the last recorded bot check. Days before monitoring started remain NO DATA. Click a date to examine its archived status; all times UTC.';
+
+
     const legend=holder.parentElement.querySelector('.legend');
     if(legend)legend.innerHTML='<span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed interruption</span><span><i class="key missing"></i>No recorded state</span>';
     for(let index=89;index>=0;index--){
@@ -286,14 +286,13 @@
       const count=['service','tcp','auth'].reduce((n,key)=>n+(Array.isArray(archive[key])?archive[key].length:0),0);
       const realmCount=Object.values(archive.realms||{}).reduce((n,rows)=>n+(Array.isArray(rows)?rows.length:0),0);
       if(count+realmCount===0){
-        $('archive-note').textContent='Existing bot history has not yet been exported from data/octobot.db. The independent web monitoring above continues recording normally.';
+        $('archive-note').textContent='';
         return;
       }
       data=archive;
       $('archive-empty').hidden=true;
       $('archive-content').hidden=false;
-      $('archive-note').textContent='Imported from the original bot database · exported '+date(ms(data.exported_at))+
-        ' UTC. History represents confirmed states recorded by OctoBot; it is distinct from the independent web probes above.';
+      $('archive-note').textContent='Imported · '+date(ms(data.exported_at))+' UTC';
       buildStats();setRange('1M');showIncidents();calendarFromBot();
       const service=get('service'),last=Math.max(0,...service.map(r=>ms(r.end)).filter(Number.isFinite));
       if(last>0){
@@ -306,8 +305,8 @@
     }catch(e){
       console.error('OctoBot historical archive failed to display',e);
       $('archive-note').textContent=data
-        ?'Historical data loaded, but the archive display encountered an error. See browser console.'
-        :'Historical archive could not be fetched. Independent website monitoring continues.';
+        ?'Archive error.'
+        :'Archive unavailable.';
     }
   }
   initialise();
