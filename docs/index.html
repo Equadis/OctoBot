@@ -43,7 +43,7 @@
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='';
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none';
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -83,10 +83,11 @@ function updateSourceNote(){
   ? ['nzoth','yshaarj','cthun'].map(liveRow).filter(Boolean).sort((a,b)=>a.t-b.t)[0]
   :liveRow(realm);
  const age=last?Date.now()-last.t:Infinity;
+ const feed=liveFeedSource==='worker'?'Cloudflare':'GitHub fallback';
  const status=age<=3*60000
-  ?'Cloudflare: recent verified reading at '+fmt(last.t)+' UTC'
+  ?feed+': recent verified reading at '+fmt(last.t)+' UTC'
   :last
-   ?'Cloudflare: last verified reading at '+fmt(last.t)+' UTC (stale)'
+   ?feed+': last verified reading at '+fmt(last.t)+' UTC (stale)'
    :'Cloudflare configured, but no verified live reading for this realm';
  $('source-note').textContent=note+' · '+status;
 }
@@ -141,18 +142,33 @@ async function fetchLatestJson(path){
  }
 }
 async function refreshLive(){
- try{
-  const data=telemetryEndpoint?await workerJson('/api/latest'):await fetchLatestJson('live.json');
-  if(data&&typeof data==='object'&&!Array.isArray(data)){
-   for(const [id,snapshot]of Object.entries(data)){
-    const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
-    if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev)){
-      liveSnapshots[id]=snapshot;
-    }
-   }
+ let data=null;
+ if(telemetryEndpoint){
+  try{
+   data=await workerJson('/api/latest');
+   if(data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length)
+    liveFeedSource='worker';
+   else data=null;
+  }catch(e){
+   console.warn('Cloudflare population latest unavailable; trying GitHub fallback',e);
   }
- }catch(e){console.warn('Live population feed temporarily unavailable',e);}
-  updateSourceNote();
+ }
+ if(!data){
+  try{
+   data=await fetchLatestJson('live.json');
+   liveFeedSource='github';
+  }catch(e){
+   console.warn('Neither Cloudflare nor GitHub live population readings are available',e);
+  }
+ }
+ if(data&&typeof data==='object'&&!Array.isArray(data)){
+  for(const [id,snapshot]of Object.entries(data)){
+   const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
+   if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev))
+    liveSnapshots[id]=snapshot;
+  }
+ }
+ updateSourceNote();
  // Extend the active N'Zoth chart with each new real minute reading, without
  // waiting for the slower archived-history refresh.
  if(telemetryEndpoint){
