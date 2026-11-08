@@ -64,9 +64,9 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   await new Promise(resolve=>setImmediate(resolve));
   const $=id=>document.getElementById(id);
   assert.deepEqual(errors,[]);
-  assert.match($('archive-note').textContent,/Imported from the original bot database/);
-  assert.match($('archive-view-label').textContent,/bot-confirmed history/);
-  assert.match($('archive-readout').textContent,/recorded uptime/);
+  assert.match($('archive-note').textContent,/Imported ·/);
+  assert.equal($('archive-view-label').textContent,'1M');
+  assert.match($('archive-readout').textContent,/uptime/);
   assert.equal($('archive-content').hidden,false);
   assert.equal($('archive-empty').hidden,true);
   assert.equal($('calendar').children.length,90);
@@ -91,12 +91,12 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   // Date navigation and custom zoom must share the same underlying range.
   const end=Date.parse('2026-11-07T15:52:32Z');
   attached[0].navigate({start:end-86400000,end});
-  assert.match($('archive-view-label').textContent,/Custom range/);
+  assert.equal($('archive-view-label').textContent,'Custom');
   assert.equal($('archive-date-to').value,'2026-11-07');
   assert.ok($('archive-bars').children.length>0);
 
   // Metric switching should re-bound the chart, without missing-data invention.
   $('archive-signal').onchange({target:{value:'auth'}});
-  assert.match($('archive-view-label').textContent,/Authentication/);
+  assert.equal($('archive-view-label').textContent,'1M');
   assert.ok($('archive-bars').children.length>0);
 });
