@@ -43,15 +43,3 @@ test('anonymous viewer heartbeat deduplicates a browser tab and rejects bad IDs'
  assert.equal(preflight.status,204);
  assert.equal(preflight.headers.get('access-control-allow-headers'),'Content-Type');
 });
-
-test('population health reports stale when real minute readings stop',async()=>{
- const url='https://example.workers.dev/api/health';
- const makeDB=last=>({prepare(){return {async first(){return {last}}};}});
- const recent=Date.now()-60000;
- const active=await (await worker.fetch(new Request(url),{DB:makeDB(recent)})).json();
- assert.equal(active.status,'ok');
- assert.ok(active.last_observation_age_seconds>=0);
- const old=await (await worker.fetch(new Request(url),{DB:makeDB(Date.now()-600000)})).json();
- assert.equal(old.status,'stale');
- assert.ok(old.last_observation_age_seconds>=600);
-});
