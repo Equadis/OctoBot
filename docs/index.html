@@ -36,6 +36,7 @@
 <p id="record-note" class="muted"></p><p id="source-note" class="muted" role="status"></p><footer><span id="snapshot"></span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community population tracker</span></footer>
 </main>
 <script src="chart-data.js"></script>
+<script src="population-history.js"></script>
 <script src="viewer-presence.js"></script>
 <script>
 'use strict';
@@ -72,6 +73,23 @@ function newestReading(){
  const a=rows.at(-1),b=liveRow(realm);
  return !a?b:(!b||a.t>=b.t?a:b);
 }
+function updateSourceNote(){
+ const note=realms.find(r=>r.id===realm)?.source_note||'';
+ if(!telemetryEndpoint){
+  $('source-note').textContent=note+' · Cloudflare collector not configured; showing recorded GitHub observations';
+  return;
+ }
+ const last=realm==='all'
+  ? ['nzoth','yshaarj','cthun'].map(liveRow).filter(Boolean).sort((a,b)=>a.t-b.t)[0]
+  :liveRow(realm);
+ const age=last?Date.now()-last.t:Infinity;
+ const status=age<=3*60000
+  ?'Cloudflare: recent verified reading at '+fmt(last.t)+' UTC'
+  :last
+   ?'Cloudflare: last verified reading at '+fmt(last.t)+' UTC (stale)'
+   :'Cloudflare configured, but no verified live reading for this realm';
+ $('source-note').textContent=note+' · '+status;
+}
 function updateHeadline(){
  const latest=newestReading(),current=Date.now();
  $('online-now').textContent=latest?num(latest.value):'NO DATA';
@@ -102,26 +120,14 @@ async function workerJson(path){
  if(!response.ok)throw Error('Worker HTTP '+response.status);
  return response.json();
 }
+// Keep Cloudflare's cursor independent from sporadic GitHub snapshot timestamps.
+const readWorkerHistory=window.PopulationHistory.createHistoryReader({
+ fetchPage:(id,since)=>workerJson('/api/history?realm='+encodeURIComponent(id)+'&since='+encodeURIComponent(since)),
+ normalise:D.normalise
+});
 async function liveWorkerHistory(realmId,existing){
  if(!telemetryEndpoint||!['nzoth','yshaarj','cthun'].includes(realmId))return existing;
- try{
-  let since=existing.length?existing[existing.length-1].t:0;
-  const updated=[...existing];
-  // Resume after the most recently stored Github reading. A Worker sample is
-  // authoritative only for its own timestamp; never overwrite archived points.
-  for(let page=0;page<60;page++){
-   const result=await workerJson('/api/history?realm='+encodeURIComponent(realmId)+'&since='+encodeURIComponent(since));
-   if(!Array.isArray(result.readings))throw Error('Invalid Worker history payload');
-   const newRows=D.normalise(result.readings);
-   updated.push(...newRows.filter(r=>r.t>since));
-   if(!result.has_more||!newRows.length)break;
-   since=newRows[newRows.length-1].t;
-  }
-  return D.normalise(updated.map(r=>({timestamp:new Date(r.t).toISOString(),online:r.value})));
- }catch(e){
-  console.warn('Minute telemetry history unavailable; using archived readings',e);
-  return existing;
- }
+ return readWorkerHistory(realmId,existing);
 }
 async function fetchLatestJson(path){
  try{
@@ -146,6 +152,7 @@ async function refreshLive(){
    }
   }
  }catch(e){console.warn('Live population feed temporarily unavailable',e);}
+  updateSourceNote();
  // Extend the active N'Zoth chart with each new real minute reading, without
  // waiting for the slower archived-history refresh.
  if(telemetryEndpoint){
@@ -235,7 +242,7 @@ function draw(){
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
  $('range-label').textContent=(period==='CUSTOM'?timeSpanText(windowEnd-start):period)+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
- $('source-note').textContent=(realms.find(r=>r.id===realm)?.source_note||'')+(telemetryEndpoint?' · Minute-by-minute telemetry enabled':' · Real-time collector not connected; only archived readings available');
+ updateSourceNote();
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
