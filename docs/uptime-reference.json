@@ -1,8 +1,8 @@
 {
   "nzoth": {
-    "observed_at": "2026-11-06T19:07:30Z",
-    "elapsed_seconds": 210963,
+    "observed_at": "2026-11-08T16:38:48Z",
+    "elapsed_seconds": 374822,
     "source": "in-game screenshot",
-    "note": "An estimate from one verified point in time; cannot detect realm restarts."
+    "note": "4 days 8 hours 7 minutes 2 seconds in-game. Observation time inferred from screenshot filename (within roughly one minute); this is a N'Zoth-only reference, not verified combined-realm uptime. A realm restart cannot be detected from this screenshot."
   }
 }
