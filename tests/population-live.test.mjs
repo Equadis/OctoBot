@@ -10,6 +10,7 @@ const inline=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
 assert.ok(inline,'Population page must include its controller');
 const math=readFileSync(join(root,'chart-data.js'),'utf8');
 const history=readFileSync(join(root,'population-history.js'),'utf8');
+const uptime=readFileSync(join(root,'uptime-clock.js'),'utf8');
 
 function mockElement(tag='div'){
   const events=new Map(),attrs=new Map();
@@ -43,6 +44,7 @@ function fixture(){
   const worker=[
     {timestamp:new FakeDate(timestamp-60000).toISOString(),online:101}
   ];
+  const statusSamples=[];
   const elements=new Map(),intervals=new Map();
   const get=id=>{
     if(!elements.has(id))elements.set(id,mockElement());
@@ -61,6 +63,15 @@ function fixture(){
   const requests=[];
   const fetch=async path=>{
     const url=String(path);requests.push(url);
+    if(url.includes('/api/status/history?')){
+      if(failed)throw Error('Worker uptime monitoring temporarily unavailable');
+      const since=Number(new URL(url).searchParams.get('since'));
+      const rows=statusSamples.filter(r=>Date.parse(r.timestamp)>since);
+      return {ok:true,json:async()=>({
+        samples:rows,has_more:false,
+        next_since:rows.length?Date.parse(rows.at(-1).timestamp):since
+      })};
+    }
     if(url.includes('/api/latest')){
       if(failed)throw Error('Worker temporarily unavailable');
       return {ok:true,json:async()=>({nzoth:{...worker.at(-1),source:'official census'}})};
@@ -81,7 +92,11 @@ function fixture(){
     })};
     if(url==='realms.json')return {ok:true,json:async()=>realms};
     if(url==='releases.json')return {ok:true,json:async()=>([])};
-    if(url==='uptime-reference.json')return {ok:true,json:async()=>({})};
+    if(url==='uptime-reference.json')return {ok:true,json:async()=>({
+      nzoth:{observed_at:'2026-11-07T00:00:00Z',elapsed_seconds:7200}
+    })};
+    if(url==='status/history.json')return {ok:true,json:async()=>([])};
+    if(url==='status/latest.json')return {ok:true,json:async()=>({sample:null})};
     if(url==='telemetry.json')return {ok:true,json:async()=>({
       endpoint:'https://test.worker.dev'
     })};
@@ -100,9 +115,10 @@ function fixture(){
   });
   vm.runInContext(math,context);
   vm.runInContext(history,context);
+  vm.runInContext(uptime,context);
   vm.runInContext(inline,context);
   return {
-    get,requests,intervals,worker,
+    get,requests,intervals,worker,statusSamples,
     advance(ms){timestamp+=ms},
     setWorkerFailed(v){failed=v}
   };
@@ -177,4 +193,47 @@ test('legacy website-wide census is never shown as N\'Zoth population',async()=>
   assert.equal(env.get('online-now').textContent,'NO DATA');
   assert.equal(env.requests.filter(url=>url.includes('/api/history?realm=nzoth')).length,legacyCalls,
     'The legacy census must only be read by All Realms, not by N\'Zoth');
+});
+
+
+test('All Realms shows continuously advancing N\'Zoth uptime even after 12 hours',async()=>{
+ const env=fixture();await settle();
+ assert.equal(env.get('uptime-label').textContent,"N'Zoth uptime");
+ assert.equal(env.get('uptime-freshness').textContent,'Estimated');
+ const original=env.get('uptime').textContent;
+ assert.notEqual(original,'NO DATA');
+ env.advance(13*3600000);
+ const tick=env.intervals.get(1000)?.[0];
+ assert.equal(typeof tick,'function');
+ tick();
+ assert.notEqual(env.get('uptime').textContent,'NO DATA');
+ assert.notEqual(env.get('uptime').textContent,original);
+ assert.equal(env.get('uptime-freshness').textContent,'Estimated');
+});
+
+test('single offline probe, missing probes and Worker failure never stop the uptime clock',async()=>{
+ const env=fixture();await settle();
+ env.statusSamples.push({
+  timestamp:'2026-11-08T00:45:00Z',website:'available',
+  realms:{nzoth:'offline'}
+ });
+ await env.intervals.get(60000)?.[0]();await settle();
+ assert.notEqual(env.get('uptime').textContent,'NO DATA');
+ env.setWorkerFailed(true);
+ env.advance(600000);
+ await env.intervals.get(60000)?.[0]();await settle();
+ env.intervals.get(1000)?.[0]();
+ assert.notEqual(env.get('uptime').textContent,'NO DATA');
+ assert.equal(env.get('uptime-freshness').textContent,'Estimated');
+});
+
+test('two explicit N\'Zoth offline observations interrupt uptime until a fresh in-game reference',async()=>{
+ const env=fixture();await settle();
+ env.statusSamples.push(
+  {timestamp:'2026-11-08T00:45:00Z',website:'available',realms:{nzoth:'offline'}},
+  {timestamp:'2026-11-08T00:46:00Z',website:'available',realms:{nzoth:'offline'}}
+ );
+ await env.intervals.get(60000)?.[0]();await settle();
+ assert.equal(env.get('uptime').textContent,'NO DATA');
+ assert.equal(env.get('uptime-freshness').textContent,'Offline observed · new reading needed');
 });
