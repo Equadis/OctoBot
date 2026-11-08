@@ -119,13 +119,8 @@ const worker={
    }
    if(url.pathname==='/api/health'){
     const row=await env.DB.prepare('SELECT MAX(timestamp_ms) AS last FROM readings').first();
-    const last=Number(row?.last),age=Number.isFinite(last)&&last>0?Math.max(0,Date.now()-last):null;
-    return json({
-      status:age===null?'no_observations':age<=3*60000?'ok':'stale',
-      last_observation:age===null?null:new Date(last).toISOString(),
-      last_observation_age_seconds:age===null?null:Math.floor(age/1000),
-      collector:'cloudflare-cron-every-minute',source:'official census'
-    });
+    return json({status:row?.last?'ok':'no_observations',last_observation:row?.last?new Date(row.last).toISOString():null,
+      collector:'cloudflare-cron-every-minute',source:'official census'});
    }
    return json({error:'not_found'},404);
   }catch(e){console.error('Population request failed:',e);return json({error:'backend_unavailable'},503);}
