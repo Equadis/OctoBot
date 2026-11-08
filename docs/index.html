@@ -36,13 +36,14 @@
 <p id="record-note" class="muted"></p><p id="source-note" class="muted" role="status"></p><footer><span id="snapshot"></span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community population tracker</span></footer>
 </main>
 <script src="chart-data.js"></script>
+<script src="population-history.js"></script>
 <script src="viewer-presence.js"></script>
 <script>
 'use strict';
 const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='';
+let period='1D',rows=[],realms=[],releases=[],realm='nzoth',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none';
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -71,6 +72,27 @@ function newestReading(){
  }
  const a=rows.at(-1),b=liveRow(realm);
  return !a?b:(!b||a.t>=b.t?a:b);
+}
+function updateSourceNote(){
+ const note=realms.find(r=>r.id===realm)?.source_note||'';
+ if(!telemetryEndpoint){
+  $('source-note').textContent=note+' · Cloudflare collector not configured; showing recorded GitHub observations';
+  return;
+ }
+ const allParts=realm==='all'?['nzoth','yshaarj','cthun'].map(liveRow):null;
+ if(allParts&&allParts.some(v=>!v)){
+  $('source-note').textContent=note+' · All Realms requires three independently verified live feeds; one or more are unavailable';
+  return;
+ }
+ const last=allParts?allParts.sort((a,b)=>a.t-b.t)[0]:liveRow(realm);
+ const age=last?Date.now()-last.t:Infinity;
+ const feed=liveFeedSource==='worker'?'Cloudflare':'GitHub fallback';
+ const status=age<=3*60000
+  ?feed+': recent verified reading at '+fmt(last.t)+' UTC'
+  :last
+   ?feed+': last verified reading at '+fmt(last.t)+' UTC (stale)'
+   :'Cloudflare configured, but no verified live reading for this realm';
+ $('source-note').textContent=note+' · '+status;
 }
 function updateHeadline(){
  const latest=newestReading(),current=Date.now();
@@ -102,26 +124,14 @@ async function workerJson(path){
  if(!response.ok)throw Error('Worker HTTP '+response.status);
  return response.json();
 }
+// Keep Cloudflare's cursor independent from sporadic GitHub snapshot timestamps.
+const readWorkerHistory=window.PopulationHistory.createHistoryReader({
+ fetchPage:(id,since)=>workerJson('/api/history?realm='+encodeURIComponent(id)+'&since='+encodeURIComponent(since)),
+ normalise:D.normalise
+});
 async function liveWorkerHistory(realmId,existing){
  if(!telemetryEndpoint||!['nzoth','yshaarj','cthun'].includes(realmId))return existing;
- try{
-  let since=existing.length?existing[existing.length-1].t:0;
-  const updated=[...existing];
-  // Resume after the most recently stored Github reading. A Worker sample is
-  // authoritative only for its own timestamp; never overwrite archived points.
-  for(let page=0;page<60;page++){
-   const result=await workerJson('/api/history?realm='+encodeURIComponent(realmId)+'&since='+encodeURIComponent(since));
-   if(!Array.isArray(result.readings))throw Error('Invalid Worker history payload');
-   const newRows=D.normalise(result.readings);
-   updated.push(...newRows.filter(r=>r.t>since));
-   if(!result.has_more||!newRows.length)break;
-   since=newRows[newRows.length-1].t;
-  }
-  return D.normalise(updated.map(r=>({timestamp:new Date(r.t).toISOString(),online:r.value})));
- }catch(e){
-  console.warn('Minute telemetry history unavailable; using archived readings',e);
-  return existing;
- }
+ return readWorkerHistory(realmId,existing);
 }
 async function fetchLatestJson(path){
  try{
@@ -135,17 +145,33 @@ async function fetchLatestJson(path){
  }
 }
 async function refreshLive(){
- try{
-  const data=telemetryEndpoint?await workerJson('/api/latest'):await fetchLatestJson('live.json');
-  if(data&&typeof data==='object'&&!Array.isArray(data)){
-   for(const [id,snapshot]of Object.entries(data)){
-    const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
-    if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev)){
-      liveSnapshots[id]=snapshot;
-    }
-   }
+ let data=null;
+ if(telemetryEndpoint){
+  try{
+   data=await workerJson('/api/latest');
+   if(data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length)
+    liveFeedSource='worker';
+   else data=null;
+  }catch(e){
+   console.warn('Cloudflare population latest unavailable; trying GitHub fallback',e);
   }
- }catch(e){console.warn('Live population feed temporarily unavailable',e);}
+ }
+ if(!data){
+  try{
+   data=await fetchLatestJson('live.json');
+   liveFeedSource='github';
+  }catch(e){
+   console.warn('Neither Cloudflare nor GitHub live population readings are available',e);
+  }
+ }
+ if(data&&typeof data==='object'&&!Array.isArray(data)){
+  for(const [id,snapshot]of Object.entries(data)){
+   const previous=liveSnapshots[id],t=Date.parse(snapshot?.timestamp),prev=Date.parse(previous?.timestamp);
+   if(Number.isFinite(t)&&Number.isInteger(snapshot.online)&&snapshot.online>=0&&(!Number.isFinite(prev)||t>=prev))
+    liveSnapshots[id]=snapshot;
+  }
+ }
+ updateSourceNote();
  // Extend the active N'Zoth chart with each new real minute reading, without
  // waiting for the slower archived-history refresh.
  if(telemetryEndpoint){
@@ -235,13 +261,19 @@ function draw(){
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
  $('range-label').textContent=(period==='CUSTOM'?timeSpanText(windowEnd-start):period)+' · '+Math.round(info.coverage*100)+'% observed'+(info.estimatedCoverage?' · '+Math.round(info.estimatedCoverage*100)+'% estimated':'')+' coverage';
- $('source-note').textContent=(realms.find(r=>r.id===realm)?.source_note||'')+(telemetryEndpoint?' · Minute-by-minute telemetry enabled':' · Real-time collector not connected; only archived readings available');
+ updateSourceNote();
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
 async function load(){const ticket=++loadNumber;try{
  const selected=realm==='all'?realms.filter(r=>r.id!=='all'):[realms.find(r=>r.id===realm)];
- const histories=await Promise.all(selected.map(async r=>D.normalise(await fetchLatestJson(r.history))));
+ const histories=await Promise.all(selected.map(async r=>{
+  try{return D.normalise(await fetchLatestJson(r.history));}
+  catch(error){
+   console.warn('GitHub population archive unavailable; attempting Cloudflare history',r.id,error);
+   return [];
+  }
+ }));
  if(ticket!==loadNumber)return;
  if(telemetryEndpoint){
   const current=await Promise.all(selected.map((r,i)=>liveWorkerHistory(r.id,histories[i])));
