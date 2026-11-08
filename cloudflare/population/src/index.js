@@ -39,7 +39,7 @@ async function collectOne(env,realm,source,format){
   .bind(realm,timestamp,online,format==='html'?'official census':'verified realm feed').run();
  return {timestamp:new Date(timestamp).toISOString(),online,realm};
 }
-async function collect(env){
+export async function collect(env){
  if(!env.DB)throw Error('D1 binding missing');
  const feeds=[['all',CENSUS_URL+'?t='+Date.now(),'html']];
  for(const [realm,key] of [['nzoth','POPULATION_NZOTH_URL'],['yshaarj','POPULATION_YSHAARJ_URL'],['cthun','POPULATION_CTHUN_URL']]){
