@@ -12,12 +12,12 @@
   const sourceRealm=realm==='all'?'nzoth':realm;
   return {sourceRealm,reference:references[sourceRealm]||null};
  }
- function confirmedOffline(samples,realm,observedAt){
+ function confirmedOffline(samples,realm,observedAt,now=Date.now()){
   if(!Array.isArray(samples)||!Number.isFinite(observedAt))return null;
   const unique=new Map();
   for(const row of samples){
    const t=Date.parse(row?.timestamp);
-   if(!Number.isFinite(t)||t<=observedAt||t>Date.now()+60000)continue;
+   if(!Number.isFinite(t)||t<=observedAt||t>now+60000)continue;
    // A source outage or unknown official realm state cannot establish downtime.
    const state=row?.website==='available'?row?.realms?.[realm]:null;
    // Deduplicate matching timestamps from GitHub and Cloudflare.
@@ -33,7 +33,7 @@
   }
   return null;
  }
- function compute(realm,references,now,samples=[]){
+ function compute(realm,references,now,confirmedIncident=null){
   const selected=referenceFor(realm,references);
   if(!selected)return {kind:'unknown'};
   const {sourceRealm,reference}=selected;
@@ -41,7 +41,7 @@
   const elapsed=reference?.elapsed_seconds;
   if(!Number.isFinite(anchor)||anchor>now||!Number.isInteger(elapsed)||elapsed<0)
    return {kind:'unknown',sourceRealm};
-  const interruption=confirmedOffline(samples,sourceRealm,anchor);
+  const interruption=confirmedIncident?.confirmed>anchor?confirmedIncident:null;
   if(interruption)return {kind:'interrupted',sourceRealm,interruption};
   const totalSeconds=elapsed+Math.floor((now-anchor)/1000);
   return {kind:'running',sourceRealm,seconds:totalSeconds,anchor,estimated:true};
