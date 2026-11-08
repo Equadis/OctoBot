@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import worker,{parseOnline} from '../src/index.js';
+import worker,{parseOnline,collect} from '../src/index.js';
 test('parse exact census counter and reject unsafe responses',()=>{
  assert.equal(parseOnline('Players online now: <b>2,351</b>'),2351);
  assert.equal(parseOnline('Players online now: <b>0</b>'),0);
@@ -42,4 +42,24 @@ test('anonymous viewer heartbeat deduplicates a browser tab and rejects bad IDs'
  const preflight=await worker.fetch(new Request(url,{method:'OPTIONS'}),env);
  assert.equal(preflight.status,204);
  assert.equal(preflight.headers.get('access-control-allow-headers'),'Content-Type');
+});
+
+
+test('website-wide census writes All Realms only and preserves original count',async()=>{
+ const originalFetch=globalThis.fetch;
+ const inserted=[];
+ const DB={prepare(sql){return {bind(...args){this.args=args;return this;},
+  async run(){if(sql.includes('INSERT OR IGNORE INTO readings'))inserted.push(this.args);return {success:true};}
+ };}};
+ try{
+  globalThis.fetch=async()=>new Response('Players online now: <b>1,406</b>',{status:200});
+  const observations=await collect({DB});
+  assert.equal(observations.length,1);
+  assert.equal(observations[0].realm,'all');
+  assert.equal(observations[0].online,1406);
+  assert.equal(inserted.length,1);
+  assert.equal(inserted[0][0],'all');
+  assert.equal(inserted[0][2],1406);
+  assert.equal(inserted[0][3],'official census');
+ }finally{globalThis.fetch=originalFetch;}
 });
