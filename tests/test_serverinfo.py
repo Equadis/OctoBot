@@ -86,8 +86,10 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
   bot=NS(config=NS(database_path=Path('/tmp/unused-population-test.db')));cog=ServerInfoCog(bot);cog.store=NS(all=lambda realm:[])
   command=ServerInfoCog.serverinfo;self.assertTrue(command.default_permissions.administrator)
   self.assertEqual([choice.value for choice in command.get_parameter('server').choices],
-                   ['all','total','nzoth','cthun','yshaarj'])
+                   ['all','nzoth','cthun','yshaarj'])
   self.assertEqual(command.get_parameter('server').default,'all')
+  self.assertEqual([choice.name for choice in command.get_parameter('server').choices],
+                   ['Total','nzoth','cthun','yshaarj'])
   event=self.event(False);await command.callback(cog,event);event.followup.send.assert_not_awaited()
   event=self.event();await command.callback(cog,event,'cthun')
   sent=event.followup.send.call_args.kwargs;self.assertFalse(sent.get('ephemeral',False));self.assertIn('C\'Thun',sent['embed'].title)
@@ -98,7 +100,6 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
  async def test_default_and_other_realm_link_destinations(self):
   bot=NS(config=NS(database_path=Path('/tmp/unused-population-test.db')));cog=ServerInfoCog(bot);cog.store=NS(all=lambda realm:[])
   for selected,expected in [('all','https://equadis.github.io/OctoBot/'),
-                            ('total','https://equadis.github.io/OctoBot/'),
                             ('nzoth','https://equadis.github.io/OctoBot/#server=nzoth'),
                             ('cthun','https://equadis.github.io/OctoBot/#server=cthun'),
                             ('yshaarj','https://equadis.github.io/OctoBot/#server=yshaarj')]:
@@ -108,7 +109,7 @@ class ServerInfoInteractionTests(unittest.IsolatedAsyncioTestCase):
    sent=event.followup.send.call_args.kwargs
    self.assertEqual(sent['view'].children[0].url,expected)
    self.assertEqual(sent['embed'].url,expected)
-   if selected=='total':self.assertIn('All Realms',sent['embed'].title)
+   if selected=='all':self.assertIn('All Realms',sent['embed'].title)
    sent['file'].close();sent['view'].stop()
  def test_interactive_url_never_uses_legacy_host(self):
   import os
