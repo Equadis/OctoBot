@@ -171,9 +171,10 @@ test('legacy website-wide census is never shown as N\'Zoth population',async()=>
   assert.equal(env.get('online-now').textContent,'101');
   assert.ok(env.requests.some(url=>url.includes('/api/history?realm=nzoth')),
     'All Realms is allowed to retrieve the old Worker census until redeploy');
+  const legacyCalls=env.requests.filter(url=>url.includes('/api/history?realm=nzoth')).length;
   env.get('server-select').fire('change',{target:{value:'nzoth'}});
   await settle();
   assert.equal(env.get('online-now').textContent,'NO DATA');
-  assert.ok(!env.requests.some(url=>url.includes('/api/history?realm=nzoth')&&url.includes('legacy-realms-only')),
-    'The legacy N\'Zoth census may not be used as a N\'Zoth feed');
+  assert.equal(env.requests.filter(url=>url.includes('/api/history?realm=nzoth')).length,legacyCalls,
+    'The legacy census must only be read by All Realms, not by N\'Zoth');
 });
