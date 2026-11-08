@@ -57,11 +57,17 @@ test('zoom follows Players online: mouse-centred, smooth and bounded',()=>{
   assert.ok(s.view.end-s.view.start>=600000);
 });
 
-test('Shift+scroll pans horizontally and preserves zoom, using deltaX when remapped',()=>{
+test('Shift+scroll down moves left, up moves right, without zoom (deltaX included)',()=>{
   const s=setup(),before=s.view,handler=s.handlers.get('wheel');
+  // Browser remaps Shift + wheel to positive deltaX: move to earlier history.
   wheel(handler,120,{shiftKey:true,deltaX:120});
+  const earlier=s.view;
+  assert.equal(earlier.end-earlier.start,before.end-before.start);
+  assert.ok(earlier.start<before.start);
+  // Shift + wheel up is negative deltaY: move forward/right again.
+  wheel(handler,-120,{shiftKey:true,deltaX:0});
   assert.equal(s.view.end-s.view.start,before.end-before.start);
-  assert.ok(s.view.start>before.start);
+  assert.ok(s.view.start>earlier.start);
 });
 
 test('pointer drag pans without changing zoom and hover resumes afterwards',()=>{
