@@ -177,7 +177,7 @@ class PopulationStore:
                                    [(r.realm, r.time.isoformat(), r.online) for r in rows])
             connection.commit()
 
-    def all(self, realm: str = 'nzoth') -> list[Reading]:
+    def all(self, realm: str = 'all') -> list[Reading]:
         with closing(self.connect()) as connection:
             data = connection.execute('SELECT timestamp, online FROM population_readings_v2 WHERE realm=? ORDER BY timestamp', (realm,)).fetchall()
         return [Reading(parse_time(t), n, realm) for t, n in data]
