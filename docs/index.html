@@ -19,7 +19,7 @@
 <div class="stat"><strong id="online-now">NO DATA</strong><span id="online-label">Online now</span><small id="online-freshness">Waiting for a reading</small></div>
 <div class="stat"><strong id="peak24"></strong><span>24h peak</span></div>
 <div class="stat"><strong id="all-peak">NO DATA</strong><span>All-time peak</span></div>
-<div class="stat"><strong id="uptime">NO DATA</strong><span>Server uptime</span><small id="uptime-freshness">Awaiting uptime telemetry</small></div>
+<div class="stat"><strong id="uptime">NO DATA</strong><span id="uptime-label">Server uptime</span><small id="uptime-freshness">Awaiting uptime telemetry</small></div>
 </section>
 <section class="chart-card" aria-label="Interactive population chart">
 <div class="chart-head"><div class="chart-title"><h2>Players online</h2><label class="server-label" for="server-select">Server: <select id="server-select" aria-label="Server"></select></label></div><span class="range-label" id="range-label"></span></div>
@@ -36,13 +36,14 @@
 </main>
 <script src="chart-data.js"></script>
 <script src="population-history.js"></script>
+<script src="uptime-clock.js"></script>
 <script src="viewer-presence.js"></script>
 <script>
 'use strict';
-const D=window.PopulationData,$=id=>document.getElementById(id),day=86400000;
+const D=window.PopulationData,U=window.OctoBotUptime,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false;
+let period='1D',rows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=null,uptimeStatusBusy=false,uptimeIncident=null;
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -74,19 +75,75 @@ function updateHeadline(){
 
 }
 function updateUptime(){
- const reference=uptimeReference[realm],time=reference&&Date.parse(reference.observed_at),age=Date.now()-time;
- const valid=reference&&Number.isFinite(time)&&Number.isInteger(reference.elapsed_seconds)&&reference.elapsed_seconds>=0&&age>=0&&age<=12*3600000;
- if(!valid){
+ const state=U.compute(realm,uptimeReference,Date.now(),uptimeIncident);
+ // The site-wide population figure and realm uptime are different metrics.
+ // The only in-game uptime reference currently available is for N'Zoth.
+ $('uptime-label').textContent=realm==='all'?"N'Zoth uptime":'Server uptime';
+ if(state.kind==='running'){
+  $('uptime').textContent=U.format(state.seconds);
+  $('uptime').style.color='';
+  $('uptime-freshness').textContent='Estimated';
+ }else{
   $('uptime').textContent='NO DATA';
   $('uptime').style.color='#e3bd57';
-  $('uptime-freshness').textContent=reference?'Stale':'Unverified';
-  return;
+  $('uptime-freshness').textContent=state.kind==='interrupted'
+    ?'Offline observed · new reading needed':'Unverified';
  }
- $('uptime').style.color='';
- const seconds=reference.elapsed_seconds+Math.floor(age/1000);
- const d=Math.floor(seconds/86400),h=Math.floor(seconds%86400/3600),m=Math.floor(seconds%3600/60),s=seconds%60;
- $('uptime').textContent=d+'D '+h+'H '+m+'M '+s+'S';
- $('uptime-freshness').textContent='Estimated';
+}
+function addUptimeStatus(rows,anchor){
+ if(!Array.isArray(rows))return;
+ for(const row of rows){
+  const t=Date.parse(row?.timestamp);
+  if(!Number.isFinite(t)||t<=anchor||t>Date.now()+60000||
+     typeof row?.realms!=='object')continue;
+  const old=uptimeStatusRows.get(t);
+  // A good source must not be overwritten by an incomplete duplicate.
+  if(!old||old.website!=='available'||row.website==='available')
+   uptimeStatusRows.set(t,row);
+ }
+}
+// Read all available observations since the last in-game anchor. An outage
+// must remain detectable after the realm has recovered or a page is reopened.
+async function refreshUptimeEvidence(){
+ if(uptimeStatusBusy)return;
+ const anchor=Date.parse(uptimeReference.nzoth?.observed_at);
+ if(!Number.isFinite(anchor))return;
+ uptimeStatusBusy=true;
+ try{
+  if(telemetryEndpoint){
+   let since=uptimeStatusCursor===null?anchor:Math.max(anchor,uptimeStatusCursor);
+   for(let page=0;page<24;page++){
+    const payload=await workerJson('/api/status/history?since='+Math.floor(since));
+    if(!payload||!Array.isArray(payload.samples))
+     throw Error('Invalid status-history response');
+    addUptimeStatus(payload.samples,anchor);
+    const next=Number(payload.next_since);
+    if(!Number.isFinite(next)||next<since)
+     throw Error('Invalid status-history cursor');
+    if(payload.has_more&&next<=since)
+     throw Error('Status-history pagination stalled');
+    since=next;
+    uptimeStatusCursor=since;
+    if(!payload.has_more)break;
+    if(page===23)throw Error('Status-history page limit reached');
+   }
+  }
+ }catch(error){console.warn('Live uptime status history unavailable',error);}
+ try{
+  // GitHub observations remain an independent fallback during Worker outages.
+  const [history,latest]=await Promise.all([
+   fetchLatestJson('status/history.json'),
+   fetchLatestJson('status/latest.json')
+  ]);
+  addUptimeStatus(history,anchor);
+  if(latest?.sample)addUptimeStatus([latest.sample],anchor);
+ }catch(error){console.warn('Backup uptime status history unavailable',error);}
+ finally{
+  uptimeIncident=U.confirmedOffline(
+   [...uptimeStatusRows.values()], 'nzoth',anchor,Date.now());
+  uptimeStatusBusy=false;
+  updateUptime();
+ }
 }
 function workerUrl(path){return telemetryEndpoint+path;}
 async function workerJson(path){
@@ -367,7 +424,7 @@ $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from')
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
 const url=String(telemetryConfig.endpoint||'').replace(/\/$/,'').trim();
- if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,30000);setInterval(updateUptime,1000);setInterval(updateHeadline,30000);}catch(e){console.error('Population configuration unavailable',e);}})();
+ if(url&&new URL(url).protocol==='https:')telemetryEndpoint=url;void refreshUptimeEvidence();for(const r of realms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;$('server-select').append(option);}const wanted=new URLSearchParams(location.hash.slice(1)).get('server');if(realms.some(r=>r.id===wanted))realm=wanted;$('server-select').value=realm;const date=new Date(now).toISOString().slice(0,10);$('date-to').value=date;$('date-from').value=new Date(now-day).toISOString().slice(0,10);$('date-from').max=date;$('date-to').max=date;$('date-from').min='2026-04-28';$('date-to').min='2026-04-28';await load();setInterval(load,300000);setInterval(refreshLive,30000);setInterval(updateUptime,1000);setInterval(refreshUptimeEvidence,60000);setInterval(updateHeadline,30000);}catch(e){console.error('Population configuration unavailable',e);}})();
 
 </script>
 </body></html>
