@@ -79,9 +79,12 @@ function updateSourceNote(){
   $('source-note').textContent=note+' · Cloudflare collector not configured; showing recorded GitHub observations';
   return;
  }
- const last=realm==='all'
-  ? ['nzoth','yshaarj','cthun'].map(liveRow).filter(Boolean).sort((a,b)=>a.t-b.t)[0]
-  :liveRow(realm);
+ const allParts=realm==='all'?['nzoth','yshaarj','cthun'].map(liveRow):null;
+ if(allParts&&allParts.some(v=>!v)){
+  $('source-note').textContent=note+' · All Realms requires three independently verified live feeds; one or more are unavailable';
+  return;
+ }
+ const last=allParts?allParts.sort((a,b)=>a.t-b.t)[0]:liveRow(realm);
  const age=last?Date.now()-last.t:Infinity;
  const feed=liveFeedSource==='worker'?'Cloudflare':'GitHub fallback';
  const status=age<=3*60000
@@ -264,7 +267,13 @@ function draw(){
 }
 async function load(){const ticket=++loadNumber;try{
  const selected=realm==='all'?realms.filter(r=>r.id!=='all'):[realms.find(r=>r.id===realm)];
- const histories=await Promise.all(selected.map(async r=>D.normalise(await fetchLatestJson(r.history))));
+ const histories=await Promise.all(selected.map(async r=>{
+  try{return D.normalise(await fetchLatestJson(r.history));}
+  catch(error){
+   console.warn('GitHub population archive unavailable; attempting Cloudflare history',r.id,error);
+   return [];
+  }
+ }));
  if(ticket!==loadNumber)return;
  if(telemetryEndpoint){
   const current=await Promise.all(selected.map((r,i)=>liveWorkerHistory(r.id,histories[i])));
