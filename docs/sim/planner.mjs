@@ -91,8 +91,6 @@ function createSlots() {
     copy.append(element('span', 'slot-name', name), itemName);
     button.append(gameIcon(SLOT_ICONS[slot], 'slot-icon'), copy);
     button.addEventListener('click', () => openItem(slot));
-    const link = element('a', 'db-link', 'Database ↗');
-    link.target = '_blank'; link.rel = 'noopener noreferrer'; link.hidden = true;
     attachTooltip(button, async () => {
       const item = build.gear[slot];
       if (!item) return {title:SLOTS[slot],lines:['Empty']};
@@ -100,8 +98,8 @@ function createSlots() {
       return equipmentTooltip(metadata, item);
     });
     const enchantLabel=element('span','slot-enchant','No enchant');
-    container.append(button, link, enchantLabel);
-    slotElements.set(slot, { container, itemName, link, enchantLabel, image: button.querySelector('img') });
+    container.append(button, enchantLabel);
+    slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
@@ -163,7 +161,7 @@ function render() {
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, link, image, enchantLabel }] of slotElements) {
+  for (const [slot, { container, itemName, image, enchantLabel }] of slotElements) {
     const item = build.gear[slot];
     const metadata = item && picker?.lookup(item.id);
     itemName.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
@@ -175,9 +173,8 @@ function render() {
     itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
     container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
-    link.hidden = !item;
-    if (item) link.href = `https://octowow.st/db/?item=${item.id}`;
-    else link.removeAttribute('href');
+    if (item) container.dataset.quality = String(metadata?.quality ?? 1);
+    else delete container.dataset.quality;
   }
   for (const talent of data.talents) {
     const rank = build.talents[talent.id] ?? 0;
@@ -246,6 +243,7 @@ function wireControls() {
     onClear: slot => {delete build.gear[slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();},onError:error=>feedback(error.message,true)});
+  $('reset-gear').addEventListener('click',()=>{build.gear={};persistDraft();render();refreshTooltip();feedback('Equipment cleared.');});
   $('clear-talents').addEventListener('click',()=>{build.talents={};selectedId=null;persistDraft();render();refreshTooltip();feedback('Talent points cleared.');});
   config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {

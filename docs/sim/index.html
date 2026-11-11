@@ -7,8 +7,8 @@
   <title>OctoBot · DPS Sim / Gear Planner</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261111-picker1">
-  <script type="module" src="planner.mjs?v=20261111-picker1"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261111-gear2">
+  <script type="module" src="planner.mjs?v=20261111-gear2"></script>
 </head>
 <body>
 <main>
@@ -34,7 +34,7 @@
     <div class="planner-grid">
       <div class="planner-column left-column">
       <section class="card equipment-card" id="equipment" aria-labelledby="equipment-heading">
-        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span></div>
+        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span><button id="reset-gear" type="button" aria-label="Reset gear">Reset</button></div>
         <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
         <details class="character-options">
           <summary>Build details</summary>
