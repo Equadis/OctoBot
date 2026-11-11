@@ -9,13 +9,11 @@
   <link rel="stylesheet" href="planner.css">
   <link rel="stylesheet" href="combat-layout.css?v=20261111-talents3">
   <script type="module" src="planner.mjs?v=20261111-gear2"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
 <main>
-  <header class="site-header">
-    <div><div class="brand">OCTOBOT</div><h1>DPS Sim / Gear Planner</h1></div>
-    <span class="badge">In development</span>
-  </header>
+  <header class="site-header"><div class="site-identity"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>DPS Sim / Gear Planner</h1></div></div><div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
   <nav class="page-nav" aria-label="Dashboard pages">
     <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">DPS Sim / Gear Planner</a>
   </nav>
@@ -116,5 +114,6 @@
 <dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>
 <input id="import-file" type="file" accept=".json,application/json" hidden>
+<script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </body>
 </html>

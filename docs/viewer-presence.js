@@ -9,6 +9,7 @@
   const count = document.getElementById('viewer-count');
   if (!status || !count) return;
 
+  const configurationUrl = new URL('telemetry.json', document.currentScript.src);
   let endpoint = '';
   let sessionId = null;
   let inFlight = false;
@@ -47,7 +48,7 @@
       if (!Number.isInteger(result.viewers) || result.viewers < 0) throw Error('Invalid presence count');
       count.textContent = result.viewers.toLocaleString('en-GB');
       status.classList.remove('is-offline');
-      status.title = result.viewers + ' active dashboard viewers across Population and Server Status (last 90 seconds)';
+      status.title = result.viewers + ' active dashboard viewers across Population, Server Status and DPS Sim (last 90 seconds)';
     } catch (error) {
       console.warn('Site-wide viewer count unavailable', error);
       unavailable();
@@ -62,7 +63,7 @@
 
   (async () => {
     try {
-      const response = await fetch('telemetry.json', { cache: 'no-store' });
+      const response = await fetch(configurationUrl.href, { cache: 'no-store' });
       if (!response.ok) throw Error('Missing telemetry configuration');
       const config = await response.json();
       const value = String(config.endpoint || '').trim().replace(/\/$/, '');
