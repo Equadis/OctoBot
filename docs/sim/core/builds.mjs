@@ -8,7 +8,7 @@ export const SLOTS = Object.freeze({
 
 export function newBuild() {
   return { schemaVersion: 1, classId: 'warrior', name: 'My Warrior Build', level: 60,
-    race: 'Human', talents: {}, gear: {} };
+    race: 'Human', talents: {}, gear: {}, planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211 } };
 }
 
 export function parseItemReference(input) {
@@ -44,10 +44,24 @@ export function validateBuild(input, data) {
         typeof item.label !== 'string' || item.label.length > 80) throw new Error('Invalid item reference.');
     gear[slot] = { id: item.id, label: item.label };
   }
+  const planning = { ...newBuild().planning };
+  if (input.planning !== undefined) {
+    if (!input.planning || typeof input.planning !== 'object' || Array.isArray(input.planning)) throw new Error('Invalid planning settings.');
+    for (const key of ['buffs', 'debuffs', 'rotation']) {
+      const value = input.planning[key] ?? '';
+      if (typeof value !== 'string' || value.length > 2000) throw new Error('Planning notes must be at most 2,000 characters each.');
+      planning[key] = value;
+    }
+    for (const [key,min,max] of [['duration',1,3600],['iterations',1,100000],['targetLevel',1,70],['targetArmour',0,50000]]) {
+      const value = input.planning[key] ?? planning[key];
+      if (!Number.isInteger(value) || value < min || value > max) throw new Error(`Invalid ${key} setting.`);
+      planning[key] = value;
+    }
+  }
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
   return { schemaVersion: 1, classId: 'warrior', name: input.name.trim(),
-    race: input.race.trim(), level: input.level, talents, gear };
+    race: input.race.trim(), level: input.level, talents, gear, planning };
 }
 
 export function encodeBuild(build) {

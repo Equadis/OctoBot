@@ -1,13 +1,13 @@
 export const CLASSES = Object.freeze([
   { id: 'warrior', name: 'Warrior', colour: '#c79c6e', available: true },
   { id: 'paladin', name: 'Paladin', colour: '#f58cba' },
-  { id: 'hunter', name: 'Hunter', colour: '#abd473' },
   { id: 'rogue', name: 'Rogue', colour: '#fff569' },
-  { id: 'priest', name: 'Priest', colour: '#ffffff' },
+  { id: 'druid', name: 'Druid', colour: '#ff7d0a' },
   { id: 'shaman', name: 'Shaman', colour: '#388bff' },
+  { id: 'hunter', name: 'Hunter', colour: '#abd473' },
   { id: 'mage', name: 'Mage', colour: '#69ccf0' },
   { id: 'warlock', name: 'Warlock', colour: '#9482c9' },
-  { id: 'druid', name: 'Druid', colour: '#ff7d0a' },
+  { id: 'priest', name: 'Priest', colour: '#ffffff' },
 ]);
 
 export const SLOT_ICONS = Object.freeze({

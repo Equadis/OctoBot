@@ -94,3 +94,23 @@ calculator. It supports the revised class-page presentation, including the
 rank-1 attack-power coefficient. Higher ability ranks, hidden mechanics and
 controlled combat observations remain necessary for numerical validation.
 These remaining checks do not prevent independent UI or engine development.
+
+### Equipment catalogue and revised planner layout (11 November 2026)
+
+The class chooser has no intro hero and uses the requested 3 × 3 class order. The Warrior planner has independent desktop columns: Character then Buffs & Debuffs on the left; Talents, Rotation, Settings, Results and Combat Log on the right. On narrow screens the sections stack. Notes and settings survive local saving, JSON export and share links; these controls do not imply that a combat engine exists.
+
+`data/items/catalogue.json` retains recovered official item listings; `equipment.json` is the searchable equipment subset. `manifest.json` records source coverage and failed/capped partitions. **This is not a verified complete database export.** The public lists cap at approximately 500 rows. Category and item-level partitioning recovered all discovered equipment listing branches, but some non-equipment partitions remain incomplete. Listing records omit class/race masks, some inventory types, and full attributes.
+
+The picker filters slot, Warrior weapon/armour proficiency and level. It checks official detail-page class/race masks, inventory type, additional requirements and unique-item duplication before equipping. Detail requests run in the browser and can fail because of CORS, source availability or source protection; a failure does not equip the item. Only two downloaded detail records are bundled initially. Unknown restrictions remain unknown. Unsupported profession/reputation requirements are rejected. Base stats, racial/talent effects, set bonuses and procs are not included in displayed equipment attributes. Existing imported references remain compatible and are marked red until verified; changing character level/race flags incompatible equipment.
+
+Rebuild listing snapshots with:
+
+```sh
+python tools/sim/import-items.py --menu-html /path/to/the-linked-locale_enus.js
+# Recover partial cached downloads without further network requests:
+python tools/sim/import-items.py --menu-html /path/to/the-linked-locale_enus.js --cached-only
+# Extract facts from previously downloaded individual item pages:
+python tools/sim/import-item-details.py 12345:/path/to/item-12345.html
+```
+
+The source menu is the script actually linked by the database, not an assumed API. The importer parses data literals without executing source JavaScript, caches source responses outside tracked files, partitions capped lists, and retains successful downloads after a later failure. A complete official item-data export would remove the remaining list-limit and per-item metadata limitations.

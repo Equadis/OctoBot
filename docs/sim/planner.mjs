@@ -1,9 +1,13 @@
 import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs';
-import { SLOTS, newBuild, validateBuild, parseItemReference, encodeBuild, decodeBuild } from './core/builds.mjs';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs';
+import { itemPicker } from './item-picker.mjs';
+import { equipmentTotals } from './core/items.mjs';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs';
 
 const $ = id => document.getElementById(id);
 const DRAFT_KEY = 'octosim.planner.draft.v1', SAVED_KEY = 'octosim.planner.saved.v1';
+let picker;
+const PLANNING_FIELDS = {"buff-notes":"buffs","debuff-notes":"debuffs","rotation-notes":"rotation","fight-duration":"duration","fight-iterations":"iterations","target-level":"targetLevel","target-armour":"targetArmour"};
 let data, build = newBuild(), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 
@@ -65,8 +69,10 @@ function applyBuild(candidate, message) {
   $('build-name').value = build.name;
   $('character-level').value = build.level;
   $('character-race').value = build.race;
+  for (const [id,key] of Object.entries(PLANNING_FIELDS)) $(id).value = build.planning[key];
   persistDraft();
   render();
+  picker?.verifyGear().then(warnings => { if (warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); render(); }).catch(() => {});
   feedback(message);
 }
 
@@ -84,7 +90,7 @@ function createSlots() {
     const link = element('a', 'db-link', 'Database ↗');
     link.target = '_blank'; link.rel = 'noopener noreferrer'; link.hidden = true;
     container.append(button, link);
-    slotElements.set(slot, { container, itemName, link });
+    slotElements.set(slot, { container, itemName, link, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
@@ -148,11 +154,16 @@ function render() {
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, link }] of slotElements) {
+  for (const [slot, { container, itemName, link, image }] of slotElements) {
     const item = build.gear[slot];
-    itemName.textContent = item ? item.label || `Item #${item.id}` : 'Empty';
+    const metadata = item && picker?.lookup(item.id);
+    itemName.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
+    image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
+    if (metadata) itemName.className = `item-name q${metadata.quality}`;
+    else itemName.className = 'item-name';
     itemName.title = itemName.textContent;
     container.classList.toggle('has-item', Boolean(item));
+    container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
     link.hidden = !item;
     if (item) link.href = `https://octowow.st/db/?item=${item.id}`;
     else link.removeAttribute('href');
@@ -168,6 +179,11 @@ function render() {
     button.classList.toggle('locked', rank === 0 && validateTalents(data,
       { ...build.talents, [talent.id]: 1 }, build.level).length > 0);
   }
+  const stats = equipmentTotals(Object.fromEntries(Object.entries(build.gear).map(([slot,item]) => [slot, {attributes:picker?.usable(slot,item.id) ? picker.lookup(item.id).attributes : {}}])));
+  $('gear-stats').replaceChildren(...Object.entries(stats).map(([name,value]) => {
+    const row=element('div','gear-stat');row.append(element('span','',name),element('strong','',String(value)));return row;
+  }));
+  if (!Object.keys(stats).length) $('gear-stats').textContent = 'Choose an item to load its attributes.';
   renderSelected();
 }
 
@@ -204,14 +220,8 @@ function changeRank(delta) {
 }
 
 function openItem(slot) {
-  editingSlot = slot;
-  const item = build.gear[slot];
-  $('editing-slot').textContent = SLOTS[slot];
-  $('item-reference').value = item?.id ?? '';
-  $('item-label').value = item?.label ?? '';
-  $('item-error').textContent = '';
-  $('clear-item').disabled = !item;
-  $('item-dialog').showModal();
+  $('editing-slot').textContent = `${SLOTS[slot]} · ${build.race} Warrior · Level ${build.level}`;
+  picker.open(slot);
 }
 
 function savedBuilds() {
@@ -229,27 +239,33 @@ function wireControls() {
     });
   }));
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
+  picker = itemPicker({
+    getBuild: () => ({...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,item])=>[slot,{...item,twoHanded:picker?.lookup(item.id)?.slot===17}]))}),
+    onEquip: (slot,item) => {
+      build.gear[slot] = {id:item.id,label:item.label};
+      if(item.twoHanded) delete build.gear.offhand;
+      persistDraft();render();feedback(`${SLOTS[slot]} equipped.`);
+    },
+    onClear: slot => {delete build.gear[slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
+  });
+  for (const [id,key] of Object.entries(PLANNING_FIELDS)) $(id).addEventListener('change', () => {
+    try {
+      const value = ['buffs','debuffs','rotation'].includes(key) ? $(id).value : Number($(id).value);
+      build = validateBuild({...build,planning:{...build.planning,[key]:value}},data);persistDraft();feedback('Planning settings saved.');
+    } catch (error) { $(id).value=build.planning[key];feedback(error.message,true); }
+  });
   $('rank-up').addEventListener('click', () => changeRank(1));
   $('rank-down').addEventListener('click', () => changeRank(-1));
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', () => {
       try {
         build = validateBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
-        $(id).value = build[key]; persistDraft(); render(); feedback('Build updated.');
+        $(id).value = build[key]; persistDraft(); render(); feedback('Build updated.'); picker.verifyGear().then(warnings => { if(warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); }).catch(()=>{});
       } catch (error) { $(id).value = build[key]; feedback(error.message, true); }
     });
   }
-  $('item-form').addEventListener('submit', event => {
-    event.preventDefault();
-    try {
-      const id = parseItemReference($('item-reference').value);
-      build.gear[editingSlot] = { id, label: $('item-label').value.trim() };
-      persistDraft(); render(); $('item-dialog').close(); feedback(`${SLOTS[editingSlot]} reference saved.`);
-    } catch (error) { $('item-error').textContent = error.message; }
-  });
-  $('clear-item').addEventListener('click', () => {
-    delete build.gear[editingSlot]; persistDraft(); render(); $('item-dialog').close(); feedback(`${SLOTS[editingSlot]} cleared.`);
-  });
+  let levelTimer;
+  $('character-level').addEventListener('input', () => { clearTimeout(levelTimer); levelTimer = setTimeout(() => $('character-level').dispatchEvent(new Event('change')), 300); });
   $('new-build').addEventListener('click', () => applyBuild(newBuild(), 'New build started. Named saved builds are still available.'));
   $('save-build').addEventListener('click', () => {
     try {
