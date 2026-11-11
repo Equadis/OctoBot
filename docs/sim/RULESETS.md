@@ -3,6 +3,20 @@
 The target/default is OctoWoW. Vanilla and Turtle are references, not aliases.
 No verified OctoWoW ruleset has yet been created.
 
+## Official talent calculator — metadata resolved
+
+[The official calculator](https://octowow.st/talents/) publishes all nine class
+trees. [Its Warrior page](https://octowow.st/talents/warrior/) supplies 54 talent
+definitions; its tree point totals are 49/55/53. Names, positions, maximum ranks,
+prerequisites, spell IDs and numeric rank vectors are now captured in
+`data/talents/warrior.json`. This is the primary published talent-data source.
+
+The talent-unlocked rank-1 ability (spell ID 23881) is described as base damage
+100 plus 35% AP, with a 10% movement-speed increase for 6 seconds. This supports
+the revised class-page description. It must not be substituted directly for the
+rank-4 ability's base amount: the calculator does not establish that amount.
+Higher-rank scaling and observed combat behaviour remain separate checks.
+
 ## Conflicting first-party evidence
 
 Both pages were retrieved on 11 November 2026:
@@ -20,7 +34,7 @@ Both pages were retrieved on 11 November 2026:
 | Rank-4 coefficient | 45% AP | Base damage plus 35% AP; base amount absent | WarriorSim Turtle: `200 + 0.35 × AP`; WoWSims Turtle: `0.45 × AP` | Conflicting; live formula not established |
 | Rage from swings | No usable formula established | Damage and weapon-speed contribution; no complete numerical formula | WarriorSim includes separate modes and hand/crit paths | Unknown live parameters |
 | Ability rank scaling | Individual entries available | Several spells described qualitatively | WarriorSim contains a lower-level TODO for the changed coefficient | Lower levels cannot be advertised validated |
-| Talent tree | Calculator linked from official site; full current dataset not audited | Replacements, rank and row changes described | Upstream trees must be reconciled individually | Unknown live version and exact ranks |
+| Talent tree | Database is not the selected tree source | Calculator provides exact published ranks and prerequisites | Imported 54 official Warrior talent definitions | Published metadata confirmed; combat effects require implementation and tests |
 | Item phases | Item identity does not prove current obtainability | Not established by the class page | Upstream phase numbers belong to their own data | Unknown Octo progression mapping |
 | Proc/queue/batching rules | Tooltips do not establish hidden behaviour | Insufficient numerical detail | Implementations have mode-specific paths | Controlled testing needed |
 
@@ -35,6 +49,13 @@ The official site and database are publicly readable over HTTPS. Entity pages
 contain server-rendered descriptions and related-list JavaScript. A documented
 bulk API or structured export was **not established** in this audit; no guessed
 endpoint is used. No API absence is claimed.
+
+The calculator's class pages provide structured metadata inside JSON-encoded
+React transport records. `tools/sim/import-talents.py` parses these without
+executing JavaScript, validates prerequisites and fails on incomplete data.
+There is no assumed undocumented API. A network refresh returned non-calculator
+content/503 during this session; the successful Warrior HTML retrieval was
+parsed offline, and no failed response replaced the snapshot.
 
 Any importer should retain entity ID, canonical verified page, retrieval date,
 source revision/hash, exact stat/rank fields, availability evidence and unresolved
@@ -52,6 +73,7 @@ class. `node tools/sim/check-evidence.mjs` fails until they have confirmed
 evidence. Clearing those entries is necessary but not sufficient: actual engine,
 UI and numerical reference acceptance must also pass.
 
-The sequential class requirement leaves Rogue and later engines unstarted while
-Warrior's validation gate is unresolved. An unverified reference mode, if later
-provided for development, must not be renamed OctoWoW or presented as completion.
+The sequential class requirement leaves Rogue and later engines unstarted until
+Warrior acceptance. Remaining validation questions do not block further Warrior
+UI/engine implementation. An unverified reference mode, if later provided for
+development, must not be renamed OctoWoW or presented as completion.

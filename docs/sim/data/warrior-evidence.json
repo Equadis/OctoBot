@@ -12,8 +12,8 @@
     {
       "id": "rank-4-bloodthirst",
       "status": "conflicting",
-      "sources": ["https://octowow.st/warrior", "https://octowow.st/db/?spell=23894"],
-      "notes": "Database: 45% AP. Official class page: base damage plus 35% AP. Base amount and live revision need confirmation."
+      "sources": ["https://octowow.st/warrior", "https://octowow.st/db/?spell=23894", "https://octowow.st/talents/warrior/"],
+      "notes": "Database rank 4: 45% AP. Official calculator talent-unlocked rank 1 (23881): 100 + 35% AP, supporting the revised class-page presentation. Do not infer rank-4 base damage from rank 1."
     },
     {
       "id": "swing-rage-formula",
@@ -23,9 +23,9 @@
     },
     {
       "id": "talent-rank-data",
-      "status": "unknown",
-      "sources": ["https://octowow.st/warrior"],
-      "notes": "Reconcile current live tree/ranks with proposed changes before importing an upstream tree."
+      "status": "confirmed",
+      "sources": ["https://octowow.st/talents/warrior/"],
+      "notes": "Published official calculator metadata imported: 54 talents; tree totals 49/55/53; names, positions, maximum ranks, prerequisites, spell IDs and numeric rank parameters. Source scope is published definitions, not observed combat."
     }
   ]
 }
