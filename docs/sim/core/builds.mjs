@@ -1,3 +1,4 @@
+import { defaultControls, validateControls } from './configuration.mjs';
 import { validateTalents } from './talents.mjs';
 
 export const SLOTS = Object.freeze({
@@ -8,7 +9,7 @@ export const SLOTS = Object.freeze({
 
 export function newBuild() {
   return { schemaVersion: 1, classId: 'warrior', name: 'My Warrior Build', level: 60,
-    race: 'Human', talents: {}, gear: {}, planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211 } };
+    race: 'Human', talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211 } };
 }
 
 export function parseItemReference(input) {
@@ -61,7 +62,7 @@ export function validateBuild(input, data) {
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
   return { schemaVersion: 1, classId: 'warrior', name: input.name.trim(),
-    race: input.race.trim(), level: input.level, talents, gear, planning };
+    race: input.race.trim(), level: input.level, talents, gear, planning, controls: validateControls(input.controls) };
 }
 
 export function encodeBuild(build) {

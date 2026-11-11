@@ -2,12 +2,14 @@ import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs';
 import { itemPicker } from './item-picker.mjs';
 import { equipmentTotals } from './core/items.mjs';
+import { configuration } from './configuration.mjs';
+import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs';
 
 const $ = id => document.getElementById(id);
 const DRAFT_KEY = 'octosim.planner.draft.v1', SAVED_KEY = 'octosim.planner.saved.v1';
-let picker;
-const PLANNING_FIELDS = {"buff-notes":"buffs","debuff-notes":"debuffs","rotation-notes":"rotation","fight-duration":"duration","fight-iterations":"iterations","target-level":"targetLevel","target-armour":"targetArmour"};
+let picker, config;
+const PLANNING_FIELDS = {"fight-duration":"duration","fight-iterations":"iterations","target-level":"targetLevel","target-armour":"targetArmour"};
 let data, build = newBuild(), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 
@@ -71,6 +73,7 @@ function applyBuild(candidate, message) {
   $('character-race').value = build.race;
   for (const [id,key] of Object.entries(PLANNING_FIELDS)) $(id).value = build.planning[key];
   persistDraft();
+  config?.render();
   render();
   picker?.verifyGear().then(warnings => { if (warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); render(); }).catch(() => {});
   feedback(message);
@@ -89,6 +92,12 @@ function createSlots() {
     button.addEventListener('click', () => openItem(slot));
     const link = element('a', 'db-link', 'Database ↗');
     link.target = '_blank'; link.rel = 'noopener noreferrer'; link.hidden = true;
+    attachTooltip(button, async () => {
+      const item = build.gear[slot];
+      if (!item) return {title:SLOTS[slot],lines:['Empty']};
+      const metadata = await picker.inspect(item.id);
+      return equipmentTooltip(metadata, item);
+    });
     container.append(button, link);
     slotElements.set(slot, { container, itemName, link, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
@@ -111,8 +120,11 @@ function createTalents() {
       button.type = 'button';
       button.style.gridColumn = String(talent.column + 1);
       button.style.gridRow = String(talent.row + 1);
-      button.title = talent.name;
-      button.setAttribute('aria-controls', 'talent-detail');
+      button.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown');
+      attachTooltip(button, () => talentTooltip(talent));
+      button.addEventListener('keydown', event => {
+        if (['ArrowUp','ArrowDown','+','-'].includes(event.key)) { event.preventDefault(); selectedId=talent.id; changeRank(['ArrowUp','+'].includes(event.key)?1:-1); }
+      });
       const rank = element('span', 'rank');
       const source = typeof talent.iconSource === 'string' && /^https:\/\/octowow\.st\/talents\/icons\/[a-z0-9_]+\.png$/i.test(talent.iconSource) ? talent.iconSource : null;
       button.append(gameIcon(talent.icon || 'inv_misc_questionmark', 'talent-icon', source), element('span', 'talent-short', talent.name), rank);
@@ -147,6 +159,8 @@ function render() {
   $('character-description').textContent = `${build.race} · Level ${build.level}`;
   $('talent-split').textContent = totals.join(' / ');
   $('points-left').textContent = `${Math.max(0, build.level - 9) - spent} points left`;
+  $('talents-total').textContent=totals.join(' / ');
+  $('talents-points-left').textContent=`Points left: ${Math.max(0,build.level-9)-spent}`;
   $('equipment-count').textContent = `${Object.keys(build.gear).length} / ${Object.keys(SLOTS).length} slots planned`;
   $('tree-summary').replaceChildren(...data.trees.map(tree => {
     const row = element('div', '', tree.name);
@@ -161,7 +175,7 @@ function render() {
     image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
     if (metadata) itemName.className = `item-name q${metadata.quality}`;
     else itemName.className = 'item-name';
-    itemName.title = itemName.textContent;
+    itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
     container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
     link.hidden = !item;
@@ -183,30 +197,17 @@ function render() {
   $('gear-stats').replaceChildren(...Object.entries(stats).map(([name,value]) => {
     const row=element('div','gear-stat');row.append(element('span','',name),element('strong','',String(value)));return row;
   }));
-  if (!Object.keys(stats).length) $('gear-stats').textContent = 'Choose an item to load its attributes.';
-  renderSelected();
+  if (!Object.keys(stats).length) $('gear-stats').textContent = '—';
 }
 
-function renderSelected() {
-  const talent = data.talents.find(t => t.id === selectedId);
-  if (!talent) {
-    $('selected-name').textContent = 'Select a talent';
-    $('selected-description').textContent = 'Rank limits and prerequisites come from the official OctoWoW calculator.';
-    $('selected-rank').textContent = '—';
-    $('rank-down').disabled = true; $('rank-up').disabled = true;
-    return;
-  }
-  const rank = build.talents[talent.id] ?? 0;
-  const prerequisite = talent.requires === null ? null : data.talents.find(t =>
-    t.tree === talent.tree && t.position === talent.requires);
-  $('selected-name').textContent = talent.name;
-  const parts = [`Tier ${talent.row + 1} · requires ${talent.row * 5} points in lower tiers.`];
-  if (prerequisite) parts.push(`Requires ${prerequisite.name} rank ${talent.requiresRanks}.`);
-  parts.push('Use the official calculator for effect descriptions.');
-  $('selected-description').textContent = parts.join(' ');
-  $('selected-rank').textContent = `${rank} / ${talent.maxRanks}`;
-  $('rank-up').disabled = rank >= talent.maxRanks;
-  $('rank-down').disabled = rank === 0;
+function talentTooltip(talent) {
+  const rank=build.talents[talent.id] || 0;
+  const lines=[`Rank ${rank} / ${talent.maxRanks}`];
+  if(rank>0)lines.push(talent.descriptions?.[rank-1] || 'Effect unavailable.');
+  if(rank<talent.maxRanks)lines.push(`Next rank:\n${talent.descriptions?.[rank] || 'Effect unavailable.'}`);
+  if(talent.requires!==null){const parent=data.talents.find(t=>t.tree===talent.tree && t.position===talent.requires);if(parent)lines.push(`Requires ${talent.requiresRanks} points in ${parent.name}.`);}
+  if(talent.row>0)lines.push(`Requires ${talent.row*5} points in lower tiers.`);
+  return {title:talent.name,lines};
 }
 
 function changeRank(delta) {
@@ -214,7 +215,7 @@ function changeRank(delta) {
   try {
     build.talents = setTalentRank(data, build.talents, selectedId,
       (build.talents[selectedId] ?? 0) + delta, build.level);
-    persistDraft(); render();
+    persistDraft(); render(); refreshTooltip();
     feedback(`${data.talents.find(t => t.id === selectedId).name}: rank ${build.talents[selectedId] ?? 0}.`);
   } catch (error) { feedback(error.message, true); }
 }
@@ -254,8 +255,7 @@ function wireControls() {
       build = validateBuild({...build,planning:{...build.planning,[key]:value}},data);persistDraft();feedback('Planning settings saved.');
     } catch (error) { $(id).value=build.planning[key];feedback(error.message,true); }
   });
-  $('rank-up').addEventListener('click', () => changeRank(1));
-  $('rank-down').addEventListener('click', () => changeRank(-1));
+  config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', () => {
       try {
@@ -331,18 +331,31 @@ function wireControls() {
   });
 }
 
+function createDisclosures() {
+  for(const card of document.querySelectorAll('.planner-column > section.card')) {
+    const heading=card.querySelector(':scope > .card-heading') || card.querySelector(':scope > h2');
+    const title=heading.matches('h2')?heading:heading.querySelector('h2');
+    const body=element('div','panel-body');body.id=`${card.id}-body`;
+    for(const child of [...card.children])if(child!==heading)body.append(child);
+    card.append(body);
+    const toggle=element('button','panel-toggle',title.textContent);toggle.type='button';
+    toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-controls',body.id);
+    toggle.addEventListener('click',()=>{body.hidden=!body.hidden;toggle.setAttribute('aria-expanded',String(!body.hidden));});
+    title.replaceChildren(toggle);
+  }
+}
+
 async function initialise() {
   createClasses();
   if (plannerView(location.href) !== 'warrior') return;
   document.body.classList.add('planner-view');
   $('class-selection').hidden = true;
-  $('planner-notice').hidden = false;
   try {
     const response = await fetch(new URL('./data/talents/warrior.json', import.meta.url));
     if (!response.ok) throw new Error(`Talent data request failed (${response.status}).`);
     data = await response.json();
     if (data.classId !== 'warrior' || !Array.isArray(data.talents) || data.talents.length !== 54) throw new Error('Incomplete Warrior talent data.');
-    createSlots(); createTalents(); wireControls();
+    createSlots(); createTalents(); wireControls(); createDisclosures();
     let message = 'Planner ready.';
     try {
       const stored = localStorage.getItem(DRAFT_KEY);

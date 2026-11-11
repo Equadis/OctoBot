@@ -20,11 +20,10 @@
     <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">DPS Sim / Gear Planner</a>
   </nav>
   <section id="class-selection" aria-labelledby="classes-title">
-    <div class="class-heading"><h2 id="classes-title">Classes</h2><p class="small muted">Warrior planning is available. Combat simulation is still in development.</p></div>
+    <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
     <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>
-    <div class="scope-card"><h3>Available now</h3><p>Warrior talent allocation, equipment search, local builds and build sharing.</p><p class="muted">Equipment search and attributes use the OctoWoW database. Combat simulation is in development. Planned classes cannot be opened yet.</p></div>
   </section>
-  <div id="planner-notice" class="notice" hidden><strong>Warrior planner · in development.</strong> Talents, equipment and planning settings are saved with your build. Combat simulation is in development.</div>
+
   <div id="startup-error" class="notice error" role="alert" hidden></div>
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
   <div id="planner" hidden>
@@ -35,65 +34,61 @@
     <div class="planner-grid">
       <div class="planner-column left-column">
       <section class="card equipment-card" id="equipment" aria-labelledby="equipment-heading">
-        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status">OctoWoW equipment</span></div>
+        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span></div>
         <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
         <details class="character-options">
           <summary>Build details</summary>
           <label class="field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off"></label>
-
-          <p class="small muted">Race is used to check item restrictions. Base stats and racial effects are not calculated yet.</p>
           <div class="build-summary" id="tree-summary"></div>
           <p id="storage-status" class="small muted">Build changes are kept in this browser.</p>
         </details>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
-          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><p class="small muted">Choose a slot to search usable equipment.</p><div class="summary-divider"></div><span class="small muted">Equipment attributes</span><div id="gear-stats" class="gear-stats">Equip items to see their attributes.</div></div>
+          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><div class="summary-divider"></div><span class="small muted">Equipment attributes</span><div id="gear-stats" class="gear-stats">Equip items to see their attributes.</div></div>
           <div id="slots-right" class="slot-column"></div>
         </div>
         <div id="slots-weapons" class="weapons"></div>
-        <p class="small muted">Equipment attributes include only verified, usable items and exclude base stats, talents, buffs and proc effects. Red item names indicate unverified or unusable equipment. Weapon proficiencies are assumed trained at the selected level.</p>
       </section>
         <section class="card" id="buffs" aria-labelledby="buffs-heading">
-          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><span class="status-label">Planning notes</span></div>
-          <label class="field">Raid buffs &amp; consumables<textarea id="buff-notes" rows="7" maxlength="2000" placeholder="Plan raid buffs, consumables and temporary effects…"></textarea></label>
-          <label class="field">Target debuffs<textarea id="debuff-notes" rows="5" maxlength="2000" placeholder="Plan target debuffs…"></textarea></label>
-          <p class="small muted">Saved with your build. Buff and debuff calculations are in development.</p>
+          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2></div>
+          <div id="buff-list"></div>
         </section>
       </div>
       <div class="planner-column right-column">
     <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><div><h2 id="talents-heading">Talents</h2><p class="small muted">Left-click to add a point. Right-click to remove one. Keyboard users can also use the + and − controls.</p></div><a href="https://octowow.st/talents/warrior/" target="_blank" rel="noopener noreferrer" class="small">Official calculator ↗</a></div>
-      <div class="talent-detail" id="talent-detail"><div><strong id="selected-name">Select a talent</strong><p id="selected-description" class="small muted">Rank limits and prerequisites come from the official OctoWoW calculator.</p></div><div class="rank-controls"><button id="rank-down" aria-label="Remove one talent point" disabled>−</button><strong id="selected-rank">—</strong><button id="rank-up" aria-label="Add one talent point" disabled>+</button></div></div>
+      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div></div>
+
       <div id="talent-trees" class="talent-trees"></div>
-      <p class="small muted">Talent effects are not applied to character stats or combat yet.</p>
     </section>
         <section class="card" id="rotation" aria-labelledby="rotation-heading">
-          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><span class="status-label">Planning notes</span></div>
-          <label class="field">Ability priority<textarea id="rotation-notes" rows="5" maxlength="2000" placeholder="Write your intended ability priority, top to bottom…"></textarea></label>
-          <p class="small muted">Saved with your build. Rotation execution is in development.</p>
+          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2></div>
+          <label class="field">Preset<select id="rotation-preset"></select></label>
+          <p id="rotation-description" class="rotation-description"></p>
+          <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
+          <div id="rotation-rows"></div>
+          <select id="rotation-add" aria-label="Add ability"><option value="">Add ability…</option></select>
+          <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
         </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
           <div class="card-heading"><h2 id="settings-heading">Settings</h2></div>
           <div class="simulation-fields"><label class="field">Fight duration (s)<input id="fight-duration" type="number" min="1" max="3600" value="60"></label><label class="field">Iterations<input id="fight-iterations" type="number" min="1" max="100000" value="1000"></label><label class="field">Target level<input id="target-level" type="number" min="1" max="70" value="63"></label><label class="field">Target armour<input id="target-armour" type="number" min="0" max="50000" value="4211"></label></div>
-          <p class="small muted">Settings are saved for your build. The combat engine is in development.</p>
         </section>
         <section class="card" id="simulation" aria-labelledby="simulation-heading">
-          <div class="card-heading"><h2 id="simulation-heading">Results</h2><span class="status-label">In development</span></div>
-          <button disabled class="run-button">Run Simulation · not available yet</button>
-          <p class="small muted">Results will appear here when the Warrior combat engine is implemented and validated.</p>
+          <div class="card-heading"><h2 id="simulation-heading">Results</h2></div>
+          <button disabled class="run-button">Run Simulation</button>
         </section>
-        <section class="card" id="combat-log" aria-labelledby="log-heading"><h2 id="log-heading">Combat Log</h2><p class="small muted">Run a simulation to see the combat log. Combat simulation is in development.</p></section>
+        <section class="card" id="combat-log" aria-labelledby="log-heading"><h2 id="log-heading">Combat Log</h2><p class="small muted">Run a simulation to see the combat log.</p></section>
       </div>
     </div>
   </div>
   <p id="feedback" role="status" aria-live="polite"></p>
-  <footer><span>OctoSim · community build planner</span><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></span></footer>
+  <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></span></footer>
 </main>
 <dialog id="item-dialog" aria-labelledby="item-dialog-heading">
   <div class="card-heading"><h2 id="item-dialog-heading">Choose equipment</h2><button type="button" data-close="item-dialog" aria-label="Close equipment picker">×</button></div>
   <p id="editing-slot" class="muted"></p>
   <form id="item-form"><div class="item-filters"><label class="field">Search name, item ID or database link<input id="item-reference" maxlength="200" placeholder="Search equipment…" autocomplete="off"></label><label class="field">Quality<select id="item-quality"><option value="">All qualities</option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label><button type="submit">Search</button></div></form>
-  <p class="small muted">Candidates are filtered by slot, class equipment type and level. Class/race masks and additional requirements are checked before equipping. Items requiring professions or reputation cannot be equipped yet.</p>
+
   <p id="item-error" class="error" role="alert"></p><p id="item-count" class="small muted" role="status"></p>
   <div id="item-results" class="item-results"></div>
   <div class="item-pagination"><button id="item-previous">← Previous</button><button id="item-next">Next →</button><button id="clear-item">Clear slot</button></div>

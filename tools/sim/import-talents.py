@@ -2,8 +2,8 @@
 """Extract factual talent metadata from the official calculator; never execute JS.
 
 Uses the page's JSON-encoded React transport data. Fails on schema changes rather
-than silently emitting an incomplete tree. No UI code, images or descriptions
-are copied. Run from any directory; --class limits a refresh to one class.
+than silently emitting an incomplete tree. No UI code or images are copied. Effect text is extracted as plain
+rank-specific data for tooltips. Run from any directory; --class limits a refresh to one class.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -109,6 +109,23 @@ def resolve(value, records, seen=frozenset()):
     return value
 
 
+def effect_text(value, rank):
+    """Flatten only description data; never emit source markup or component code."""
+    if isinstance(value, str): return value
+    if isinstance(value, (int, float)): return str(value)
+    if isinstance(value, list):
+        if len(value) == 4 and value[0] == '$' and isinstance(value[3], dict):
+            if value[1] == 'br': return '\n'
+            return effect_text(value[3], rank)
+        return ''.join(effect_text(child, rank) for child in value)
+    if isinstance(value, dict):
+        if isinstance(value.get('values'), list):
+            values = value['values']
+            return str(values[min(rank - 1, len(values) - 1)]) if values else ''
+        return effect_text(value.get('children', ''), rank)
+    return ''
+
+
 def extract(html, class_id, source_url, retrieved_at):
     records = records_from_html(html)
     page = Page()
@@ -165,6 +182,13 @@ def extract(html, class_id, source_url, retrieved_at):
                 'requiresRanks': None if node.get('reqRanks') == '$undefined' else node.get('reqRanks'),
                 'rankParameters': rank_parameters,
             }
+            descriptions = [item[3].get('children', '') for item in walk(tooltip)
+                            if isinstance(item, list) and len(item) == 4
+                            and item[:2] == ['$', 'p'] and isinstance(item[3], dict)
+                            and 'whitespace-pre-wrap' in item[3].get('className', '')]
+            if not descriptions: raise ValueError(f'Missing effect text for {headings[0]}')
+            talent['descriptions'] = ['\n'.join(effect_text(part, rank) for part in descriptions)
+                                      for rank in range(1, maximum + 1)]
             key = (tree, position)
             if key in talents and talents[key] != talent:
                 raise ValueError(f'Conflicting talent {key}')

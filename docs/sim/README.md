@@ -114,3 +114,10 @@ python tools/sim/import-item-details.py 12345:/path/to/item-12345.html
 ```
 
 The source menu is the script actually linked by the database, not an assumed API. The importer parses data literals without executing source JavaScript, caches source responses outside tracked files, partitions capped lists, and retains successful downloads after a later failure. A complete official item-data export would remove the remaining list-limit and per-item metadata limitations.
+
+
+### Buff lists, priorities and tooltips (11 November 2026)
+
+Buffs are grouped checkbox options based on the Combat Gum text supplied by the user, with per-group selection controls and collapsed SP consumables. The listed effects are reference display values; they have not been validated as OctoWoW calculations. Class-specific options such as Thistle Tea are disabled for Warrior. Selection, key-press timing, rotation presets and editable priority conditions round-trip through saved builds and share links. Four Warrior starter presets and a custom priority editor replace the rotation notes field. Named custom rotations are saved in browser storage. Existing free-text planning notes remain in imported build data for compatibility.
+
+All 54 official Warrior talents now have rank-specific plain-text effect descriptions extracted by the existing data-only importer. The inline selected-talent panel has been removed; talent and equipment information appears on hover or keyboard focus. Arrow Up/Down and +/− adjust the focused talent. Item tooltips use retrieved source data where available and show a concise fallback when details cannot be loaded. Retrieved Equip/Use/Chance-on-hit text is displayed without executing or inserting source HTML. Headings collapse their panels. No new combat calculations or generated DPS results are implied by these UI controls.

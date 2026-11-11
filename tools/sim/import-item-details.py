@@ -13,7 +13,7 @@ import re
 class Node:
     def __init__(self, tag='', attrs=()): self.tag,self.attrs,self.children=tag,dict(attrs),[]
     def text(self):
-        return ''.join(child if isinstance(child,str) else child.text() for child in self.children)+ ('\n' if self.tag in ('br','td','th') else '')
+        return ('\n' if self.tag=='table' else '')+''.join(child if isinstance(child,str) else child.text() for child in self.children)+ ('\n' if self.tag in ('br','td','th') else '')
     def find(self, predicate):
         if predicate(self): return self
         for child in self.children:
@@ -58,6 +58,7 @@ def parse_detail(html,id_):
         return int(m[1])
     return dict(id=id_,name=name,classMask=mask('Class'),raceMask=mask('Race'),slot=slot,
         requiredLevel=int(re.search(r'Requires Level (\d+)',text)[1]) if re.search(r'Requires Level (\d+)',text) else 0,
+        effects=list(dict.fromkeys(n.text().strip() for n in tooltip.descendants() if n.tag=='span' and re.match(r'^(Equip:|Use:|Chance on hit:)',n.text().strip()))),
         requirements=requirements,unique=bool(re.search(r'\bUnique(?:-Equipped)?\b',text)),attributes=attributes,summary=text,
         source=f'https://octowow.st/db/?item={id_}')
 

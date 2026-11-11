@@ -27,6 +27,12 @@ class ImportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 MODULE.resolve('$a', records)
 
+    def test_effect_text_resolves_rank_values_and_discards_source_markup(self):
+        effect=['Costs ', ['$', '$L1e', None, {'values':['1','2','3']}], ' rage.']
+        self.assertEqual(MODULE.effect_text(effect,1),'Costs 1 rage.')
+        self.assertEqual(MODULE.effect_text(effect,3),'Costs 3 rage.')
+        self.assertEqual(MODULE.effect_text(['$', 'strong', None, {'children':'text'}],1),'text')
+
     def test_non_calculator_and_incomplete_pages_are_rejected(self):
         with self.assertRaises(ValueError):
             MODULE.records_from_html('<html>Unavailable</html>')

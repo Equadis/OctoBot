@@ -1,3 +1,4 @@
+import { attachTooltip, equipmentTooltip } from './tooltip.mjs';
 import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs';
 import {iconUrl} from './core/interface.mjs';
 
@@ -57,6 +58,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
       const row=node('div',undefined,'item-row'), image=node('img');image.src=iconUrl(item.icon);image.alt='';image.loading='lazy';
       const copy=node('div'),link=node('a',item.name,`q${item.quality}`);link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener noreferrer';
       const summary=node('div',`Item ${item.id} · Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}`,'item-description');
+      attachTooltip(link,async()=>{try{const source=await detail(item);return equipmentTooltip(source,item);}catch{return {title:item.name,lines:[`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}`,'Full details unavailable.']};}});
       copy.append(link,summary);
       const button=node('button',details[item.id]?'Equip':'Check & equip');button.type='button';
       button.addEventListener('click',async()=>{
@@ -71,7 +73,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
         }catch(error){$('item-error').textContent=`Could not verify this item’s restrictions. ${error.message} Open its database link to check the source; the item has not been equipped.`;}
         finally{button.disabled=false;button.textContent=details[item.id]?'Equip':'Check & equip';}
       });
-      if(details[item.id])summary.textContent=details[item.id].summary;
+      // Full tooltip text is shown on hover rather than in every search row.
       row.append(image,copy,button);$('item-results').append(row);
     }
     $('item-previous').disabled=page===0;$('item-next').disabled=(page+1)*limit>=candidates.length;
@@ -82,6 +84,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   $('item-previous').addEventListener('click',()=>{page--;search();});$('item-next').addEventListener('click',()=>{page++;search();});
   $('clear-item').addEventListener('click',()=>{onClear(slot);$('item-dialog').close();});
   return {
+    async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
     async open(nextSlot){slot=nextSlot;page=0;$('item-reference').value='';$('item-error').textContent='';$('item-count').textContent='Loading equipment catalogue…';$('item-results').replaceChildren();$('clear-item').disabled=!getBuild().gear[slot];$('item-dialog').showModal();try{await load();search();}catch(error){$('item-error').textContent=error.message;}},
     usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
     lookup(id){const item=items?.find(item=>item.id===id); return item ? {...item,...details[id]} : null;},
