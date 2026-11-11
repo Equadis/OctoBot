@@ -2,14 +2,14 @@ import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs';
 import { itemPicker } from './item-picker.mjs';
 import { equipmentTotals } from './core/items.mjs';
+import { settings } from './settings.mjs';
 import { configuration } from './configuration.mjs';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs';
 
 const $ = id => document.getElementById(id);
 const DRAFT_KEY = 'octosim.planner.draft.v1', SAVED_KEY = 'octosim.planner.saved.v1';
-let picker, config;
-const PLANNING_FIELDS = {"fight-duration":"duration","fight-iterations":"iterations","target-level":"targetLevel","target-armour":"targetArmour"};
+let picker, config, settingsControls;
 let data, build = newBuild(), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 
@@ -71,9 +71,9 @@ function applyBuild(candidate, message) {
   $('build-name').value = build.name;
   $('character-level').value = build.level;
   $('character-race').value = build.race;
-  for (const [id,key] of Object.entries(PLANNING_FIELDS)) $(id).value = build.planning[key];
   persistDraft();
   config?.render();
+  settingsControls?.render();
   render();
   picker?.verifyGear().then(warnings => { if (warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); render(); }).catch(() => {});
   feedback(message);
@@ -141,14 +141,7 @@ function createTalents() {
       talentButtons.set(talent.id, { button, rank });
       grid.append(button);
     }
-    const clear = element('button', 'clear-tree', `Clear ${tree.name} points`);
-    clear.type = 'button';
-    clear.addEventListener('click', () => {
-      const next = { ...build.talents };
-      for (const talent of data.talents) if (talent.tree === tree.index) delete next[talent.id];
-      build.talents = next; persistDraft(); render(); feedback(`${tree.name} points cleared.`);
-    });
-    section.append(heading, grid, clear);
+    section.append(heading, grid);
     $('talent-trees').append(section);
   }
 }
@@ -249,12 +242,8 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
-  for (const [id,key] of Object.entries(PLANNING_FIELDS)) $(id).addEventListener('change', () => {
-    try {
-      const value = ['buffs','debuffs','rotation'].includes(key) ? $(id).value : Number($(id).value);
-      build = validateBuild({...build,planning:{...build.planning,[key]:value}},data);persistDraft();feedback('Planning settings saved.');
-    } catch (error) { $(id).value=build.planning[key];feedback(error.message,true); }
-  });
+  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();},onError:error=>feedback(error.message,true)});
+  $('clear-talents').addEventListener('click',()=>{build.talents={};selectedId=null;persistDraft();render();refreshTooltip();feedback('Talent points cleared.');});
   config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', () => {

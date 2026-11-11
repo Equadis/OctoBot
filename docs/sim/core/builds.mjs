@@ -1,3 +1,4 @@
+import { TARGET_IDS } from './targets.mjs';
 import { defaultControls, validateControls } from './configuration.mjs';
 import { validateTalents } from './talents.mjs';
 
@@ -9,7 +10,7 @@ export const SLOTS = Object.freeze({
 
 export function newBuild() {
   return { schemaVersion: 1, classId: 'warrior', name: 'My Warrior Build', level: 60,
-    race: 'Human', talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211 } };
+    race: 'Human', talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
 }
 
 export function parseItemReference(input) {
@@ -53,12 +54,16 @@ export function validateBuild(input, data) {
       if (typeof value !== 'string' || value.length > 2000) throw new Error('Planning notes must be at most 2,000 characters each.');
       planning[key] = value;
     }
-    for (const [key,min,max] of [['duration',1,3600],['iterations',1,100000],['targetLevel',1,70],['targetArmour',0,50000]]) {
+    for (const [key,min,max] of [['duration',1,3600],['iterations',1,100000],['targetLevel',1,70],['targetArmour',0,50000],['durationVariation',0,100],['targetNatureRes',0,10000],['targetFireRes',0,10000],['targetFrostRes',0,10000],['targetShadowRes',0,10000],['targetArcaneRes',0,10000],['targetEnergyPerSecond',0,1000]]) {
       const value = input.planning[key] ?? planning[key];
       if (!Number.isInteger(value) || value < min || value > max) throw new Error(`Invalid ${key} setting.`);
       planning[key] = value;
     }
   }
+  planning.durationVary = input.planning?.durationVary ?? false;
+  if (typeof planning.durationVary !== 'boolean') throw new Error('Invalid fight duration variation.');
+  planning.targetPreset = input.planning?.targetPreset ?? 'custom';
+  if (!TARGET_IDS.includes(planning.targetPreset)) throw new Error('Unknown target preset.');
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
   return { schemaVersion: 1, classId: 'warrior', name: input.name.trim(),

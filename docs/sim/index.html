@@ -56,7 +56,7 @@
       </div>
       <div class="planner-column right-column">
     <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div></div>
+      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span><button id="clear-talents" type="button">Clear points</button></div></div>
 
       <div id="talent-trees" class="talent-trees"></div>
     </section>
@@ -71,7 +71,22 @@
         </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
           <div class="card-heading"><h2 id="settings-heading">Settings</h2></div>
-          <div class="simulation-fields"><label class="field">Fight duration (s)<input id="fight-duration" type="number" min="1" max="3600" value="60"></label><label class="field">Iterations<input id="fight-iterations" type="number" min="1" max="100000" value="1000"></label><label class="field">Target level<input id="target-level" type="number" min="1" max="70" value="63"></label><label class="field">Target armour<input id="target-armour" type="number" min="0" max="50000" value="4211"></label></div>
+          <div class="fight-controls">
+            <label class="field">Fight Duration (s)<input id="fight-duration" type="number" min="1" max="3600" value="60"></label>
+            <div class="fight-variation"><label><input id="fight-vary" type="checkbox"> Vary ±</label><label class="variation-percent"><input id="fight-variation" type="number" min="0" max="100" value="20" aria-label="Fight duration variation percentage" disabled> %</label></div>
+            <label class="field">Iterations<input id="fight-iterations" type="number" min="1" max="100000" value="1000"></label>
+          </div>
+          <div class="target-heading">Target</div><div id="target-name" class="target-name">Custom</div>
+          <div class="target-fields">
+            <label class="target-field"><input id="target-level" type="number" min="1" max="70" value="63">Level</label>
+            <label class="target-field"><input id="target-armour" type="number" min="0" max="50000" value="4211">Armour</label>
+            <label class="target-field"><input id="target-nature-res" type="number" min="0" max="10000" value="0">Nature Res</label>
+            <label class="target-field"><input id="target-fire-res" type="number" min="0" max="10000" value="0">Fire Res</label>
+            <label class="target-field"><input id="target-frost-res" type="number" min="0" max="10000" value="0">Frost Res</label>
+            <label class="target-field"><input id="target-shadow-res" type="number" min="0" max="10000" value="0">Shadow Res</label>
+            <label class="target-field"><input id="target-arcane-res" type="number" min="0" max="10000" value="0">Arcane Res</label>
+          </div>
+          <div class="target-presets"><select id="boss-preset" aria-label="Boss target"><option value="">Boss…</option></select><button id="expert-dummy" type="button">Expert Training Dummy</button><button id="heroic-dummy" type="button">Heroic Training Dummy</button></div>
         </section>
         <section class="card" id="simulation" aria-labelledby="simulation-heading">
           <div class="card-heading"><h2 id="simulation-heading">Results</h2></div>
