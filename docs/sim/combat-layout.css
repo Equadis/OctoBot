@@ -46,3 +46,8 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .slot[data-quality="0"],.slot[data-quality="1"]{--item-quality:#fff}.slot[data-quality="2"]{--item-quality:#1eff00}.slot[data-quality="3"]{--item-quality:#0070dd}.slot[data-quality="4"]{--item-quality:#a335ee}.slot[data-quality="5"],.slot[data-quality="6"]{--item-quality:#ff8000}
 .planner-view .slot.has-item .slot-name,.planner-view .slot.has-item .slot-icon{border-color:var(--item-quality);box-shadow:0 0 5px color-mix(in srgb,var(--item-quality) 60%,transparent)}
 #reset-gear{padding:1px 0;min-height:22px;border:0;border-radius:0;background:transparent;color:#ed6969;font-size:11px}#reset-gear:hover{color:#ff9696;text-decoration:underline}
+
+/* Talent allocation: green while incomplete, yellow at maximum rank. */
+.planner-view .talent-node.allocated:not(.maxed) .talent-icon{outline:2px solid #1eff00;outline-offset:0}
+.planner-view .talent-node.maxed .talent-icon{outline:2px solid #ffd100;outline-offset:0}
+.planner-view .talent-node.allocated:not(.maxed) .rank{color:#1eff00}.planner-view .talent-node.maxed .rank{color:#ffd100}
