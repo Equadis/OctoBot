@@ -21,6 +21,18 @@ test has been performed. Existing dashboard files have not been changed.
 
 ## Required numerical reference fixture
 
+### Official talent follow-up checks
+
+`node --test tests/sim/*.test.mjs`: 10 tests pass (five existing core tests and
+five talent tests). `python -m unittest discover -s tests/sim -p 'test_*.py'`:
+four offline importer tests pass. The additional checks cover the 54-entry
+snapshot, tree totals and prerequisites, custom rank parameters, tier/level
+restrictions, transactional removal, serialisation, split JSON chunks, lazy
+references, cyclic references and rejecting incomplete/non-calculator pages.
+
+No network is used by these tests. Passing them verifies parsing/allocation,
+not the talents' combat effects or server accuracy.
+
 Each case must store:
 
 1. Class/spec, engine and ruleset revisions, upstream commit or live version.
@@ -45,7 +57,9 @@ different random events.
 
 ## Warrior acceptance gate — all outstanding
 
-- Resolve first-party ruleset contradictions and exact ability/talent ranks.
+- Talent ranks/prerequisites: published calculator metadata imported; combat
+  effects and higher ability-rank data still require implementation/validation.
+- Resolve remaining first-party ability-rank and hidden-mechanic discrepancies.
 - Verify race/base stats, one/two-handed/dual-wield restrictions and item effects.
 - Check attack tables, mitigation, rage generation/spending and swing timing.
 - Validate abilities, queue interactions, stances, cooldowns, talents and procs.

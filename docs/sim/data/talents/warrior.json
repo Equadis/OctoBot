@@ -1,0 +1,1329 @@
+{
+  "schemaVersion": 1,
+  "classId": "warrior",
+  "source": {
+    "url": "https://octowow.st/talents/warrior/",
+    "retrievedAt": "2026-11-11T13:10:17.356905+00:00",
+    "htmlSha256": "f55cf4bff8f7cb6b2ee953e6587752683afc43a8f527fb48230299619600984a",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Arms",
+      "maxPoints": 49
+    },
+    {
+      "index": 1,
+      "name": "Fury",
+      "maxPoints": 55
+    },
+    {
+      "index": 2,
+      "name": "Protection",
+      "maxPoints": 53
+    }
+  ],
+  "talents": [
+    {
+      "id": 56,
+      "name": "Improved Heroic Strike",
+      "tree": 0,
+      "position": 0,
+      "row": 0,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        12282,
+        12663,
+        12664
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 57,
+      "name": "Tactical Mastery",
+      "tree": 0,
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        12295,
+        12676,
+        12677,
+        12678,
+        12679
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      ]
+    },
+    {
+      "id": 58,
+      "name": "Improved Rend",
+      "tree": 0,
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        12286,
+        12658
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 59,
+      "name": "Improved Charge",
+      "tree": 0,
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        12285,
+        12697
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ]
+    },
+    {
+      "id": 60,
+      "name": "Deflection",
+      "tree": 0,
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16462,
+        16463,
+        16464,
+        16465,
+        16466
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 61,
+      "name": "Improved Thunder Clap",
+      "tree": 0,
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        12287,
+        12665,
+        12666
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          4
+        ],
+        [
+          20,
+          40,
+          60
+        ]
+      ]
+    },
+    {
+      "id": 62,
+      "name": "Master Strike",
+      "tree": 0,
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        54023
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 63,
+      "name": "Improved Overpower",
+      "tree": 0,
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        12290,
+        12963
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50
+        ]
+      ]
+    },
+    {
+      "id": 64,
+      "name": "Deep Wounds",
+      "tree": 0,
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        12834,
+        12849,
+        12867
+      ],
+      "requires": 2,
+      "requiresRanks": 2,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60
+        ]
+      ]
+    },
+    {
+      "id": 65,
+      "name": "Two-Handed Weapon Specialization",
+      "tree": 0,
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        12163,
+        12711,
+        12712
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 66,
+      "name": "Impale",
+      "tree": 0,
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        16493,
+        16494
+      ],
+      "requires": 10,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 67,
+      "name": "Master of Arms",
+      "tree": 0,
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        51644,
+        51655,
+        51656,
+        51657,
+        51658
+      ],
+      "requires": 8,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          1.2,
+          2.4,
+          3.6,
+          4.8,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          0.4,
+          0.8,
+          1.2,
+          1.6,
+          2.0
+        ]
+      ]
+    },
+    {
+      "id": 68,
+      "name": "Sweeping Strikes",
+      "tree": 0,
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        12292
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 69,
+      "name": "Boundless Anger",
+      "tree": 0,
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        57709,
+        57710,
+        57711
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ]
+      ]
+    },
+    {
+      "id": 70,
+      "name": "Improved Disciplines",
+      "tree": 0,
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        45576,
+        45577,
+        45578
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12
+        ]
+      ]
+    },
+    {
+      "id": 71,
+      "name": "Improved Slam",
+      "tree": 0,
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        12862,
+        12330
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.3,
+          0.5
+        ]
+      ]
+    },
+    {
+      "id": 72,
+      "name": "Precision Cut",
+      "tree": 0,
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51641,
+        51642,
+        51643
+      ],
+      "requires": 18,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          25,
+          50,
+          75
+        ]
+      ]
+    },
+    {
+      "id": 73,
+      "name": "Mortal Strike",
+      "tree": 0,
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        12294
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": []
+    },
+    {
+      "id": 93,
+      "name": "Booming Voice",
+      "tree": 1,
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        12321,
+        12835,
+        12836,
+        12837,
+        12838
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          12,
+          24,
+          36,
+          48,
+          60
+        ],
+        [
+          12,
+          24,
+          36,
+          48,
+          60
+        ]
+      ]
+    },
+    {
+      "id": 94,
+      "name": "Cruelty",
+      "tree": 1,
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        12320,
+        12852,
+        12853,
+        12855,
+        12856
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 95,
+      "name": "Dual Wield Specialization",
+      "tree": 1,
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        23584,
+        23585,
+        23586,
+        23587,
+        23588
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ]
+    },
+    {
+      "id": 96,
+      "name": "Unbridled Wrath",
+      "tree": 1,
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        12322,
+        12999,
+        13000,
+        13001,
+        13002
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45,
+          60,
+          75
+        ]
+      ]
+    },
+    {
+      "id": 97,
+      "name": "Improved Shouts",
+      "tree": 1,
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        51609,
+        51610,
+        51611,
+        51612,
+        51613
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        [
+          8,
+          16,
+          24,
+          32,
+          40
+        ]
+      ]
+    },
+    {
+      "id": 98,
+      "name": "Piercing Howl",
+      "tree": 1,
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        12323
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 99,
+      "name": "Blood Craze",
+      "tree": 1,
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        16487,
+        16489,
+        16492
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ]
+    },
+    {
+      "id": 100,
+      "name": "Battlefield Mobility",
+      "tree": 1,
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        20504,
+        20505
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          2,
+          4
+        ]
+      ]
+    },
+    {
+      "id": 101,
+      "name": "Enrage",
+      "tree": 1,
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        12317,
+        13045,
+        13046,
+        13047,
+        13048
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 102,
+      "name": "Improved Pummel",
+      "tree": 1,
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        51614,
+        51615
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "id": 103,
+      "name": "Ravager",
+      "tree": 1,
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        51616,
+        51617,
+        51618
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          1.5,
+          2
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 104,
+      "name": "Death Wish",
+      "tree": 1,
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        12328
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 105,
+      "name": "Improved Execute",
+      "tree": 1,
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        20502,
+        20503
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 106,
+      "name": "Improved Berserker Rage",
+      "tree": 1,
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        20500,
+        20501
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          50,
+          100
+        ]
+      ]
+    },
+    {
+      "id": 107,
+      "name": "Flurry",
+      "tree": 1,
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        12319,
+        12971,
+        12972,
+        12973,
+        12974
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          10,
+          15,
+          20,
+          25,
+          30
+        ]
+      ]
+    },
+    {
+      "id": 108,
+      "name": "Blood Drinker",
+      "tree": 1,
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51623,
+        51624,
+        51625
+      ],
+      "requires": 14,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          1,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "id": 109,
+      "name": "Bloodthirst",
+      "tree": 1,
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        23881
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 74,
+      "name": "Improved Bloodrage",
+      "tree": 2,
+      "position": 0,
+      "row": 0,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        12301,
+        12818
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ]
+    },
+    {
+      "id": 75,
+      "name": "Shield Specialization",
+      "tree": 2,
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        12298,
+        12724,
+        12725,
+        12726,
+        12727
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 76,
+      "name": "Anticipation",
+      "tree": 2,
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        12297,
+        12750,
+        12751
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          7,
+          14,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 77,
+      "name": "Iron Will",
+      "tree": 2,
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        12300,
+        12959,
+        12960,
+        12961,
+        12962
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ]
+    },
+    {
+      "id": 78,
+      "name": "Toughness",
+      "tree": 2,
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        12299,
+        12761,
+        12762,
+        12763,
+        12764
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ]
+    },
+    {
+      "id": 79,
+      "name": "Last Stand",
+      "tree": 2,
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        12975
+      ],
+      "requires": 0,
+      "requiresRanks": 2,
+      "rankParameters": []
+    },
+    {
+      "id": 80,
+      "name": "Improved Intervene",
+      "tree": 2,
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        51591,
+        51592
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ]
+    },
+    {
+      "id": 81,
+      "name": "Improved Taunt",
+      "tree": 2,
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        12302,
+        12765
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "id": 82,
+      "name": "Improved Revenge",
+      "tree": 2,
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        12797,
+        12799,
+        12800
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45
+        ],
+        [
+          0.5,
+          1,
+          1.5
+        ]
+      ]
+    },
+    {
+      "id": 83,
+      "name": "Gag Order",
+      "tree": 2,
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        12311,
+        12958
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ],
+        [
+          50,
+          100
+        ]
+      ]
+    },
+    {
+      "id": 84,
+      "name": "Improved Disarm",
+      "tree": 2,
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        12313,
+        12804
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 85,
+      "name": "Defiance",
+      "tree": 2,
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        12303,
+        12788,
+        12789,
+        12791,
+        12792
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          15,
+          20
+        ]
+      ]
+    },
+    {
+      "id": 86,
+      "name": "One-Handed Weapon Specialization",
+      "tree": 2,
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        16538,
+        16539,
+        16540,
+        16541,
+        16542
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ]
+    },
+    {
+      "id": 87,
+      "name": "Shield Slam",
+      "tree": 2,
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        23922
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": []
+    },
+    {
+      "id": 88,
+      "name": "Improved Shield Slam",
+      "tree": 2,
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        51598,
+        51599
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          0.75,
+          1.5
+        ],
+        [
+          35,
+          70
+        ]
+      ]
+    },
+    {
+      "id": 89,
+      "name": "Reprisal",
+      "tree": 2,
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        51593,
+        51594
+      ],
+      "requires": 11,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          25,
+          50
+        ],
+        [
+          50,
+          100
+        ]
+      ]
+    },
+    {
+      "id": 90,
+      "name": "Improved Shield Wall",
+      "tree": 2,
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        12312,
+        12803
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ],
+        [
+          5,
+          10
+        ]
+      ]
+    },
+    {
+      "id": 91,
+      "name": "Defensive Tactics",
+      "tree": 2,
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51606,
+        51607,
+        51608
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          60,
+          120,
+          180
+        ]
+      ]
+    },
+    {
+      "id": 92,
+      "name": "Concussion Blow",
+      "tree": 2,
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        12809
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": []
+    }
+  ]
+}

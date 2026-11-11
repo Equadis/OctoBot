@@ -21,6 +21,7 @@ Node 20 or newer, no package installation required:
 
 ```sh
 node --test tests/sim/*.test.mjs
+python -m unittest discover -s tests/sim -p 'test_*.py'
 node tools/sim/check-evidence.mjs
 ```
 
@@ -31,6 +32,31 @@ remain unresolved. This is a release gate, separate from passing unit tests.
 `core/random.mjs` supplies deterministic iteration streams independent of worker
 partitioning. `core/contracts.d.ts` defines the common engine and worker
 messages. These files contain no class damage formulas or assumed server rules.
+
+`core/talents.mjs` validates allocations against the official calculator's
+published metadata: ranks, tier requirements, prerequisites and level budgets.
+The Warrior snapshot contains 54 talents with tree totals 49/55/53. This does
+not implement the talents' combat effects.
+
+## Official talent data
+
+Use `https://octowow.st/talents/` as the primary source for published talent
+definitions. `data/talents/warrior.json` contains identifiers, positions, rank
+limits, prerequisites and numeric rank parameters, with source URL and HTML hash.
+It copies no calculator UI code, artwork or tooltip prose. Parameter vectors are
+unlabelled source facts; they must be mapped to effects explicitly, not interpreted
+automatically as damage modifiers.
+
+Refresh with `python tools/sim/import-talents.py --class warrior`, or parse an
+already retrieved official page offline:
+
+```sh
+python tools/sim/import-talents.py --class warrior --html /path/to/warrior.html --source-url https://octowow.st/talents/warrior/
+```
+
+The importer fails on missing records, incomplete trees or invalid dependencies.
+Only Warrior has been imported. Other classes' source collection can use the
+same parser without beginning their simulation implementation.
 
 ## Intended architecture
 
@@ -52,8 +78,8 @@ If a build tool is introduced, its output must preserve `/OctoBot/sim/` paths.
 
 ## Next required evidence
 
-Establish which Warrior changes are live: the official class page describes
-changed abilities but calls the changes proposed; the database and available
-engines disagree. A current authoritative ruleset revision, exact rank/talent
-data and controlled combat observations are needed for the numerical validation
-gate. See RULESETS.md for the specific discrepancy rather than guessing.
+Talent names, ranks and prerequisites are now established from the official
+calculator. It supports the revised class-page presentation, including the
+rank-1 attack-power coefficient. Higher ability ranks, hidden mechanics and
+controlled combat observations remain necessary for numerical validation.
+These remaining checks do not prevent independent UI or engine development.

@@ -77,12 +77,28 @@ source-licence finding is claimed from that inspection.
 Auditing later sources does not constitute implementing those classes.
 **No class is implemented or validated. No completion box is checked.**
 
+## Official calculator follow-up
+
+The official `https://octowow.st/talents/` page links all nine original classes.
+Its Warrior page exposes 54 talent entries, three tree names, grid positions,
+maximum ranks, prerequisite positions/ranks, spell IDs and numeric rank vectors
+in JSON-encoded page data. That data has now been imported with an original
+parser that does not execute remote JavaScript. The snapshot retains its source
+URL, retrieval timestamp and HTML SHA-256.
+
+This resolves the missing published talent metadata finding. It does not prove
+hidden combat behaviour or higher ability-rank scaling. Talent allocation is
+implemented as a browser module, with transactional edits and checks for ranks,
+point budget, prerequisites and tier requirements. No calculator code, art or
+tooltip descriptions are copied. Only Warrior data is currently imported.
+
 ## Current delivered foundation
 
 - Stable, tested chronological event queue, with priority and insertion ordering.
 - Seeded RNG and independent per-iteration seeds, tested across 1,000 streams.
 - Shared TypeScript contracts for builds, adapters, result counters and worker messages.
 - Machine-readable unresolved Warrior evidence and a failing release gate.
+- Official Warrior talent metadata importer and snapshot; allocation validation.
 
 ## Unfinished acceptance checklist
 

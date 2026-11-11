@@ -19,6 +19,12 @@ runtime accuracy, build success or OctoWoW compatibility.
 
 ## Dependencies and integration implications
 
+Additional first-party game-data source: [OctoWoW talent calculator](https://octowow.st/talents/),
+with [Warrior definitions](https://octowow.st/talents/warrior/). The page identifies
+Haaxor1689 as its creator. We extracted factual talent metadata, not application
+code, images or tooltip prose. The source hash and retrieval time are recorded in
+`data/talents/warrior.json`; application-code reuse permissions are not assumed.
+
 WarriorSim uses JavaScript globals, mutable data selection and a synchronous
 iteration loop inside a classic worker. Its `Player.getConfig()` reads jQuery;
 an adapter must supply explicit config and remove frontend assumptions from
@@ -38,6 +44,7 @@ Prefer a licensed TypeScript or WASM implementation; use Pyodide only after
 measuring payload and runtime costs. Missing licence evidence blocks copying
 their implementation, not independent implementation or public-behaviour study.
 
-No third-party simulation code, data files, logos or art are included in this
-branch. If later vendored, include exact pinned revisions, licence texts and
+No third-party simulation code, upstream engine data files, logos or art are
+included in this branch. Official calculator factual metadata is now included
+with provenance. If an engine is later vendored, include exact pinned revisions, licence texts and
 notices, documented local modifications, and visible upstream attribution.
