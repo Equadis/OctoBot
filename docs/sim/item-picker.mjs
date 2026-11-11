@@ -1,5 +1,5 @@
-import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs';
-import {SLOTS} from './core/builds.mjs';
+import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs?v=20261111-picker1';
+import {SLOTS} from './core/builds.mjs?v=20261111-picker1';
 import {iconUrl} from './core/interface.mjs';
 import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs';
 
@@ -22,7 +22,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  async function load(){
   if(items)return;if(loading)return loading;
   loading=(async()=>{
-   const responses=await Promise.all(['equipment.json','details.json','manifest.json','reference-tooltips.json'].map(name=>fetch(new URL(`./data/items/${name}`,import.meta.url))));
+   const responses=await Promise.all(['equipment.json','details.json','manifest.json','reference-tooltips.json'].map(name=>fetch(new URL(`./data/items/${name}?v=20261111-picker1`,import.meta.url))));
    if(responses.some(response=>!response.ok))throw new Error('The equipment catalogue could not load.');
    const [catalogue,bundled,manifest,referenceData]=await Promise.all(responses.map(response=>response.json()));details=bundled;references=referenceData.items;
    try{for(const entry of JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').slice(-128)){const d=entry.detail;if(Date.now()-entry.savedAt<86400000 && Number.isInteger(d?.id) && Number.isInteger(d.classMask) && Number.isInteger(d.raceMask) && Array.isArray(d.requirements) && typeof d.summary==='string' && d.source===`https://octowow.st/db/?item=${d.id}`)details[d.id]=d;}}catch{}

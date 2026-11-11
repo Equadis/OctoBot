@@ -1,11 +1,11 @@
 import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs';
-import { itemPicker } from './item-picker.mjs';
-import { equipmentTotals } from './core/items.mjs';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs?v=20261111-picker1';
+import { itemPicker } from './item-picker.mjs?v=20261111-picker1';
+import { equipmentTotals } from './core/items.mjs?v=20261111-picker1';
 import { ENCHANTS } from './core/equipment-options.mjs';
 import { settings } from './settings.mjs';
-import { configuration } from './configuration.mjs';
-import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs';
+import { configuration } from './configuration.mjs?v=20261111-picker1';
+import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-picker1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs';
 
 const $ = id => document.getElementById(id);

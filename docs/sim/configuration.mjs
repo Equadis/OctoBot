@@ -1,5 +1,5 @@
 import { BUFF_GROUPS, ROTATION_PRESETS, ABILITIES, METRICS, OPERATORS, validateRotationRows } from './core/configuration.mjs';
-import { attachTooltip } from './tooltip.mjs';
+import { attachTooltip } from './tooltip.mjs?v=20261111-picker1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,click,label)=>{const b=node('button',text);b.type='button';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',click);return b;};
