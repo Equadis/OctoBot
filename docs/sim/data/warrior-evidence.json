@@ -1,0 +1,31 @@
+{
+  "ruleset": "octowow",
+  "classId": "warrior",
+  "auditedAt": "2026-11-11",
+  "requiredMechanics": [
+    {
+      "id": "live-warrior-revision",
+      "status": "unknown",
+      "sources": ["https://octowow.st/warrior"],
+      "notes": "Class page refers to proposed changes; exact live activation revision has not been established."
+    },
+    {
+      "id": "rank-4-bloodthirst",
+      "status": "conflicting",
+      "sources": ["https://octowow.st/warrior", "https://octowow.st/db/?spell=23894"],
+      "notes": "Database: 45% AP. Official class page: base damage plus 35% AP. Base amount and live revision need confirmation."
+    },
+    {
+      "id": "swing-rage-formula",
+      "status": "unknown",
+      "sources": ["https://octowow.st/warrior"],
+      "notes": "Qualitative damage-plus-speed description does not specify all constants and hand/crit/avoidance behaviour."
+    },
+    {
+      "id": "talent-rank-data",
+      "status": "unknown",
+      "sources": ["https://octowow.st/warrior"],
+      "notes": "Reconcile current live tree/ranks with proposed changes before importing an upstream tree."
+    }
+  ]
+}
