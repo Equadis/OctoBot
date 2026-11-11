@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="OctoSim: plan Warrior talents and equipment references, and save and share builds. DPS simulation is in development.">
+  <meta name="description" content="Choose a class in OctoSim. Plan Warrior talents and equipment references, save builds and share them. Combat simulation is in development.">
   <title>OctoBot · DPS Sim / Gear Planner</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
+  <link rel="stylesheet" href="combat-layout.css">
   <script type="module" src="planner.mjs"></script>
 </head>
 <body>
@@ -18,30 +19,36 @@
   <nav class="page-nav" aria-label="Dashboard pages">
     <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">DPS Sim / Gear Planner</a>
   </nav>
-  <div class="notice"><strong>Warrior planning is available.</strong> Allocate talents and store equipment references. Item stats, enchants and combat simulation are still in development; this page does not calculate DPS.</div>
+  <section id="class-selection" aria-labelledby="classes-title">
+    <div class="class-hero"><img src="../favicon.png" alt="" width="112" height="112"><div><h2 id="classes-title">OctoSim</h2><p class="hero-subtitle">DPS simulation &amp; gear planning for OctoWoW</p><p class="muted">Choose your class to plan a build. Classes are being developed one at a time, starting with Warrior.</p><a class="primary-link" href="?class=warrior">Open the Warrior planner <span aria-hidden="true">→</span></a></div></div>
+    <div class="class-heading"><h2>Classes</h2><p class="small muted">Warrior planning is available. Combat simulation is still in development.</p></div>
+    <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>
+    <div class="scope-card"><h3>Available now</h3><p>Warrior talent allocation, equipment references, local builds and build sharing.</p><p class="muted">Item statistics, buffs and combat simulation are in development. Planned classes cannot be opened yet.</p></div>
+  </section>
+  <div id="planner-notice" class="notice" hidden><strong>Warrior planner · in development.</strong> Talents and equipment references are saved with your build. Item stats and combat simulation are not calculated yet.</div>
   <div id="startup-error" class="notice error" role="alert" hidden></div>
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
   <div id="planner" hidden>
     <div class="toolbar">
-      <div class="section-links"><a href="#equipment">Equipment</a><a href="#talents">Talents</a><a href="#simulation">Simulation</a></div>
-      <div class="actions"><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="share-build">Share Build</button><button id="export-build">Export</button><button id="import-build">Import</button><button id="new-build" class="subtle">New Build</button></div>
+      <div class="section-links" aria-label="Planner sections"><img class="rail-class-icon" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt="Warrior"><a href="#equipment" class="active">Gear &amp; Build</a><a href="#talents">Talents</a><span class="unavailable" aria-disabled="true">Rotation <small>Planned</small></span><a href="#build-settings">Settings</a><span class="unavailable" aria-disabled="true">Results <small>Planned</small></span><span class="unavailable" aria-disabled="true">Combat Log <small>Planned</small></span><a href="#simulation" class="rail-run">DPS Simulation</a></div>
+      <div class="actions"><div class="rail-brand"><strong>OctoSim</strong><span>Warrior Build Planner</span></div><a class="all-classes" href="./">← All classes</a><button id="share-build">Share Build</button><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="export-build">Export Build</button><button id="import-build">Import Build</button><button id="new-build" class="subtle">Reset Build</button></div>
     </div>
     <div class="planner-grid">
       <section class="card equipment-card" id="equipment" aria-labelledby="equipment-heading">
         <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted">Equipment references</span></div>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
-          <div class="character-summary"><span class="class-mark" aria-hidden="true">W</span><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><p class="small muted">Choose a slot to add an item ID or database link.</p></div>
+          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><p class="small muted">Choose a slot to add an item ID or database link.</p><div class="summary-divider"></div><span class="small muted">Character stats</span><span class="small">In development</span></div>
           <div id="slots-right" class="slot-column"></div>
         </div>
         <div id="slots-weapons" class="weapons"></div>
         <p class="small muted">Item references are saved with your build. Their stats, availability and equipment restrictions are not verified here yet.</p>
       </section>
       <div class="configuration">
-        <section class="card" aria-labelledby="build-heading">
+        <section class="card" id="build-settings" aria-labelledby="build-heading">
           <div class="card-heading"><h2 id="build-heading">Build Configuration</h2><span class="small muted">Browser storage</span></div>
           <label class="field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off"></label>
-          <div class="field-grid"><label class="field">Class<select id="class-select"><option>Warrior</option><option disabled>Rogue · not available yet</option><option disabled>Shaman · not available yet</option><option disabled>Mage · not available yet</option><option disabled>Druid · not available yet</option><option disabled>Warlock · not available yet</option><option disabled>Hunter · not available yet</option><option disabled>Paladin · not available yet</option><option disabled>Priest · not available yet</option></select></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
+          <div class="field-grid"><label class="field">Class<select id="class-select"><option>Warrior</option></select></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
           <label class="field">Race<input id="character-race" maxlength="40" value="Human" autocomplete="off"></label>
           <p class="small muted">Race is stored as a planning note. Base stats and racial effects are not calculated yet.</p>
           <div class="build-summary" id="tree-summary"></div>
@@ -56,14 +63,14 @@
       </div>
     </div>
     <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><div><h2 id="talents-heading">Talents</h2><p class="small muted">Select a talent to inspect it. Use + and − to allocate points.</p></div><a href="https://octowow.st/talents/warrior/" target="_blank" rel="noopener noreferrer" class="small">Official calculator ↗</a></div>
-      <div id="talent-trees" class="talent-trees"></div>
+      <div class="card-heading"><div><h2 id="talents-heading">Talents</h2><p class="small muted">Left-click to add a point. Right-click to remove one. Keyboard users can also use the + and − controls.</p></div><a href="https://octowow.st/talents/warrior/" target="_blank" rel="noopener noreferrer" class="small">Official calculator ↗</a></div>
       <div class="talent-detail" id="talent-detail"><div><strong id="selected-name">Select a talent</strong><p id="selected-description" class="small muted">Rank limits and prerequisites come from the official OctoWoW calculator.</p></div><div class="rank-controls"><button id="rank-down" aria-label="Remove one talent point" disabled>−</button><strong id="selected-rank">—</strong><button id="rank-up" aria-label="Add one talent point" disabled>+</button></div></div>
+      <div id="talent-trees" class="talent-trees"></div>
       <p class="small muted">Talent effects are not applied to character stats or combat yet.</p>
     </section>
   </div>
   <p id="feedback" role="status" aria-live="polite"></p>
-  <footer><span>OctoSim · community build planner</span><a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></footer>
+  <footer><span>OctoSim · community build planner</span><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></span></footer>
 </main>
 <dialog id="item-dialog" aria-labelledby="item-dialog-heading">
   <form id="item-form"><div class="card-heading"><h2 id="item-dialog-heading">Equipment reference</h2><button type="button" data-close="item-dialog" aria-label="Close equipment editor">×</button></div><p id="editing-slot" class="muted"></p><label class="field">Item ID or OctoWoW database URL<input id="item-reference" required maxlength="200" placeholder="12345 or https://octowow.st/db/?item=12345"></label><label class="field">Label (optional)<input id="item-label" maxlength="80" placeholder="Your name for this item"></label><p class="small muted">This stores a reference only; it does not import or validate item stats.</p><p id="item-error" class="error" role="alert"></p><div class="actions"><button type="submit">Set reference</button><button type="button" id="clear-item">Clear slot</button><button type="button" data-close="item-dialog">Cancel</button></div></form>

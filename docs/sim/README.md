@@ -12,6 +12,14 @@ Open the DPS Sim / Gear Planner navigation tab or `/OctoBot/sim/`. The other
 dashboard pages have only gained the new navigation link. No monitoring or
 Discord behaviour changes.
 
+The entry page is a nine-class selection screen. Open Warrior at
+`/OctoBot/sim/?class=warrior`; other class cards show their planned status.
+Existing shared builds using `#build=...` still open the Warrior planner.
+The planner follows Combat Gum's two-column equipment/configuration layout,
+fixed side controls and icon-based talent grid. Game-icon sources and attribution
+are recorded in SOURCES.md. Left-click adds a talent point; right-click removes
+one. The selected-talent controls provide the same edits for keyboard users.
+
 - [Specification](SPECIFICATION.md): full implementation brief and source priority.
 - [Implementation](IMPLEMENTATION.md): observed interface and sequential milestones.
 - [Sources](SOURCES.md): pinned sources, licences and actual coverage.

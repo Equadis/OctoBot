@@ -76,3 +76,12 @@ The new planner has browser checks for loading, talent allocation, equipment
 reference editing, local saving and share-link generation. The Node build tests
 cover Unicode sharing and rejection of invalid imports/URLs. Existing dashboard
 JavaScript regressions pass. No combat performance or accuracy claim is made.
+
+## Combat Gum-inspired interface follow-up
+
+The class screen and planner were inspected in the browser. All nine class
+icons, 17 equipment icons and 54 official Warrior talent icons loaded without
+fallbacks. Left-click allocation and right-click removal updated the selected
+rank correctly, and Share Build generated a link retaining the class route.
+Unit tests cover the class availability distinction, legacy shared-build and
+section routes, and safe icon identifiers. No simulation accuracy claim is made.

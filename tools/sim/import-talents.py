@@ -25,6 +25,7 @@ class Page(HTMLParser):
         super().__init__()
         self.scripts = []
         self.links = []
+        self.images = {}
         self.script = None
 
     def handle_starttag(self, tag, attrs):
@@ -33,6 +34,8 @@ class Page(HTMLParser):
             self.script = []
         if tag == 'a' and attrs.get('href'):
             self.links.append(attrs['href'])
+        if tag == 'img' and attrs.get('alt') and attrs.get('src'):
+            self.images[attrs['alt']] = attrs['src']
 
     def handle_data(self, data):
         if self.script is not None:
@@ -108,6 +111,8 @@ def resolve(value, records, seen=frozenset()):
 
 def extract(html, class_id, source_url, retrieved_at):
     records = records_from_html(html)
+    page = Page()
+    page.feed(html)
     names, talents = [], {}
     for record in records.values():
         for node in walk(record):
@@ -144,9 +149,16 @@ def extract(html, class_id, source_url, retrieved_at):
             position, tree, maximum = node['i'], node['index'], node['ranks']
             if not all(type(v) is int for v in (position, tree, maximum)) or not 0 <= tree < 3 or maximum < 1:
                 raise ValueError('Invalid talent coordinates/ranks')
+            icon = node.get('icon')
+            if not isinstance(icon, str) or not re.fullmatch(r'[a-zA-Z0-9_]+', icon) or icon not in page.images:
+                raise ValueError('Missing or invalid talent icon metadata')
+            icon_source = urljoin(source_url, page.images[icon])
+            if not icon_source.startswith('https://octowow.st/talents/icons/'):
+                raise ValueError('Unexpected talent icon source')
             requirement = node.get('requires')
             talent = {
                 'id': talent_id, 'name': headings[0], 'tree': tree,
+                'icon': icon, 'iconSource': icon_source,
                 'position': position, 'row': position // 4, 'column': position % 4,
                 'maxRanks': maximum, 'spellIds': spell_ids,
                 'requires': None if requirement == '$undefined' else requirement,

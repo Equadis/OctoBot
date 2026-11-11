@@ -1,5 +1,27 @@
 # Simulation source audit
 
+## Interface and icon follow-up
+
+OctoSim now uses an independently written class-selection grid and planner
+layout based on the observed Combat Gum home and Rogue screens: navy/slate
+panels, gold headings, fixed build controls on the left, section controls on
+the right, equipment columns around the centre panel, and compact talent grids.
+Combat Gum branding, logo, source code and bundled artwork are not copied.
+
+Class and empty equipment-slot icons use the same public WoW icon paths observed
+in Combat Gum, served by `https://wow.zamimg.com/images/wow/icons/large/`.
+Warrior talent icons use their actual image URLs exposed by the official OctoWoW
+calculator, including custom icons. The importer preserves those URLs and icon
+identifiers with the talent metadata. Image bytes are not redistributed in the
+repository; this is not a claim that the game artwork is project-owned or MIT
+licensed. The UI attributes game icons to Blizzard Entertainment. External icon
+hosts receive normal browser image requests; image failures retain usable labels
+and fall back to a question-mark icon.
+
+The reference's availability badges are not copied as class-status facts.
+Only the Warrior planner is available in OctoSim; eight other classes remain
+planned, and no combat simulator is advertised as implemented.
+
 Audited 11 November 2026. Revision pins prevent later source changes from
 silently changing validation expectations. Source presence is not proof of
 runtime accuracy, build success or OctoWoW compatibility.

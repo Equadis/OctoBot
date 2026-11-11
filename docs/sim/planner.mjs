@@ -1,5 +1,6 @@
 import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs';
 import { SLOTS, newBuild, validateBuild, parseItemReference, encodeBuild, decodeBuild } from './core/builds.mjs';
+import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs';
 
 const $ = id => document.getElementById(id);
 const DRAFT_KEY = 'octosim.planner.draft.v1', SAVED_KEY = 'octosim.planner.saved.v1';
@@ -11,6 +12,36 @@ function element(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+function gameIcon(name, className = '', source = null) {
+  const image = element('img', className);
+  image.src = source || iconUrl(name);
+  image.alt = '';
+  image.decoding = 'async';
+  image.referrerPolicy = 'no-referrer';
+  image.addEventListener('error', () => {
+    if (!image.src.endsWith('/inv_misc_questionmark.jpg')) image.src = iconUrl('inv_misc_questionmark');
+    else image.hidden = true;
+  });
+  return image;
+}
+
+function createClasses() {
+  if ($('class-grid').childElementCount) return;
+  for (const cls of CLASSES) {
+    const card = element(cls.available ? 'a' : 'div', `class-card${cls.available ? ' available' : ' planned'}`);
+    card.style.setProperty('--class-colour', cls.colour);
+    if (cls.available) card.href = `?class=${cls.id}`;
+    else card.setAttribute('aria-disabled', 'true');
+    const title = element('div', 'class-card-title');
+    title.append(element('strong', '', cls.name), element('span', 'class-status', cls.available ? 'Planner available' : 'Planned'));
+    const text = element('div', 'class-card-copy');
+    text.append(title, element('span', 'class-card-note', cls.available ? 'Open planner' : 'Not available yet'));
+    card.append(gameIcon(`classicon_${cls.id}`, 'class-card-icon'), text);
+    if (cls.available) card.append(element('span', 'card-arrow', '→'));
+    $('class-grid').append(card);
+  }
 }
 
 function feedback(message, error = false) {
@@ -46,7 +77,9 @@ function createSlots() {
     button.type = 'button';
     button.setAttribute('aria-label', `Edit ${name}`);
     const itemName = element('span', 'item-name', 'Empty');
-    button.append(element('span', 'slot-name', name), itemName);
+    const copy = element('span', 'slot-copy');
+    copy.append(element('span', 'slot-name', name), itemName);
+    button.append(gameIcon(SLOT_ICONS[slot], 'slot-icon'), copy);
     button.addEventListener('click', () => openItem(slot));
     const link = element('a', 'db-link', 'Database ↗');
     link.target = '_blank'; link.rel = 'noopener noreferrer'; link.hidden = true;
@@ -54,6 +87,7 @@ function createSlots() {
     slotElements.set(slot, { container, itemName, link });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
+    container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
     $(weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
   }
 }
@@ -64,7 +98,7 @@ function createTalents() {
     section.setAttribute('aria-label', `${tree.name} talents`);
     const heading = element('div', 'tree-heading');
     const total = element('span'); total.id = `tree-total-${tree.index}`;
-    heading.append(element('h3', '', tree.name), total);
+    heading.append(gameIcon(['inv_sword_27', 'ability_warrior_battleshout', 'inv_shield_06'][tree.index], 'tree-icon'), element('h3', '', tree.name), total);
     const grid = element('div', 'talent-grid');
     for (const talent of data.talents.filter(t => t.tree === tree.index)) {
       const button = element('button', 'talent-node');
@@ -74,8 +108,18 @@ function createTalents() {
       button.title = talent.name;
       button.setAttribute('aria-controls', 'talent-detail');
       const rank = element('span', 'rank');
-      button.append(element('span', 'talent-short', talent.name), rank);
-      button.addEventListener('click', () => { selectedId = talent.id; render(); });
+      const source = typeof talent.iconSource === 'string' && /^https:\/\/octowow\.st\/talents\/icons\/[a-z0-9_]+\.png$/i.test(talent.iconSource) ? talent.iconSource : null;
+      button.append(gameIcon(talent.icon || 'inv_misc_questionmark', 'talent-icon', source), element('span', 'talent-short', talent.name), rank);
+      button.addEventListener('click', () => {
+        selectedId = talent.id;
+        if ((build.talents[talent.id] ?? 0) < talent.maxRanks) changeRank(1);
+        render();
+      });
+      button.addEventListener('contextmenu', event => {
+        event.preventDefault(); selectedId = talent.id;
+        if ((build.talents[talent.id] ?? 0) > 0) changeRank(-1);
+        render();
+      });
       talentButtons.set(talent.id, { button, rank });
       grid.append(button);
     }
@@ -177,6 +221,13 @@ function savedBuilds() {
 }
 
 function wireControls() {
+  document.querySelectorAll('.section-links a').forEach(link => link.addEventListener('click', () => {
+    document.querySelectorAll('.section-links a').forEach(other => {
+      other.classList.toggle('active', other === link);
+      if (other === link) other.setAttribute('aria-current', 'location');
+      else other.removeAttribute('aria-current');
+    });
+  }));
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
   $('rank-up').addEventListener('click', () => changeRank(1));
   $('rank-down').addEventListener('click', () => changeRank(-1));
@@ -265,6 +316,11 @@ function wireControls() {
 }
 
 async function initialise() {
+  createClasses();
+  if (plannerView(location.href) !== 'warrior') return;
+  document.body.classList.add('planner-view');
+  $('class-selection').hidden = true;
+  $('planner-notice').hidden = false;
   try {
     const response = await fetch(new URL('./data/talents/warrior.json', import.meta.url));
     if (!response.ok) throw new Error(`Talent data request failed (${response.status}).`);
@@ -290,4 +346,7 @@ async function initialise() {
   }
 }
 
+window.addEventListener('hashchange', () => {
+  if (!document.body.classList.contains('planner-view') && plannerView(location.href) === 'warrior') initialise();
+});
 initialise();
