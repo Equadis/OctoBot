@@ -1,0 +1,46 @@
+name: Import official simulator equipment
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/sim/sync-equipment.py'
+      - '.github/workflows/sim-equipment.yml'
+permissions:
+  contents: read
+concurrency:
+  group: sim-equipment-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resume official item details
+        id: import
+        continue-on-error: true
+        run: python tools/sim/sync-equipment.py --workers 3
+      - name: Persist verified records and coverage
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/sim/data/items/details.json docs/sim/data/items/manifest.json docs/sim/data/items/detail-coverage.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh official equipment details and import coverage'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Report incomplete import
+        if: steps.import.outcome != 'success'
+        run: |
+          echo 'Import incomplete. See docs/sim/data/items/detail-coverage.json; rerun resumes missing records.'
+          exit 1
