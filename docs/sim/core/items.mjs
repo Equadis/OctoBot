@@ -62,7 +62,7 @@ export function detailFromDocument(doc, id) {
   };
   const copy = tooltip.cloneNode(true);
   for (const br of copy.querySelectorAll('br')) br.replaceWith(doc.createTextNode('\n'));
-  for (const table of copy.querySelectorAll('table')) table.prepend(doc.createTextNode('\n'));
+  for (const table of copy.querySelectorAll('table,div')) table.prepend(doc.createTextNode('\n'));
   for (const td of copy.querySelectorAll('td,th')) td.append(doc.createTextNode('\n'));
   const text = copy.textContent.replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n\s*\n/g,'\n').trim();
   const primary = copy.querySelector('b').closest('td').textContent;
@@ -80,5 +80,5 @@ export function detailFromDocument(doc, id) {
     requiredLevel:Number(primary.match(/Requires Level (\d+)/)?.[1] || 0),requirements,unique:/\bUnique(?:-Equipped)?\b/.test(primary),attributes,
     // Only the item's own text before set bonuses is used for the picker summary.
     effects:[...new Set([...tooltip.querySelectorAll('span')].map(span=>span.textContent.trim()).filter(text=>/^(Equip:|Use:|Chance on hit:)/.test(text)))],
-    summary:primary.trim(),source:`https://octowow.st/db/?item=${id}`};
+    tooltipText:text,summary:primary.trim(),source:`https://octowow.st/db/?item=${id}`};
 }

@@ -2,6 +2,7 @@ import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs';
 import { itemPicker } from './item-picker.mjs';
 import { equipmentTotals } from './core/items.mjs';
+import { ENCHANTS } from './core/equipment-options.mjs';
 import { settings } from './settings.mjs';
 import { configuration } from './configuration.mjs';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs';
@@ -98,8 +99,9 @@ function createSlots() {
       const metadata = await picker.inspect(item.id);
       return equipmentTooltip(metadata, item);
     });
-    container.append(button, link);
-    slotElements.set(slot, { container, itemName, link, image: button.querySelector('img') });
+    const enchantLabel=element('span','slot-enchant','No enchant');
+    container.append(button, link, enchantLabel);
+    slotElements.set(slot, { container, itemName, link, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
@@ -161,13 +163,15 @@ function render() {
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, link, image }] of slotElements) {
+  for (const [slot, { container, itemName, link, image, enchantLabel }] of slotElements) {
     const item = build.gear[slot];
     const metadata = item && picker?.lookup(item.id);
     itemName.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
     image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
     if (metadata) itemName.className = `item-name q${metadata.quality}`;
     else itemName.className = 'item-name';
+    enchantLabel.textContent=ENCHANTS.find(enchant=>enchant.id===item?.enchantId)?.name || 'No enchant';
+    enchantLabel.classList.toggle('enchanted',Boolean(item?.enchantId));
     itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
     container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
@@ -214,7 +218,6 @@ function changeRank(delta) {
 }
 
 function openItem(slot) {
-  $('editing-slot').textContent = `${SLOTS[slot]} · ${build.race} Warrior · Level ${build.level}`;
   picker.open(slot);
 }
 
@@ -236,7 +239,7 @@ function wireControls() {
   picker = itemPicker({
     getBuild: () => ({...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,item])=>[slot,{...item,twoHanded:picker?.lookup(item.id)?.slot===17}]))}),
     onEquip: (slot,item) => {
-      build.gear[slot] = {id:item.id,label:item.label};
+      build.gear[slot] = {id:item.id,label:item.label,...(item.enchantId?{enchantId:item.enchantId}:{})};
       if(item.twoHanded) delete build.gear.offhand;
       persistDraft();render();feedback(`${SLOTS[slot]} equipped.`);
     },

@@ -1,3 +1,4 @@
+import {ENCHANTS} from './core/equipment-options.mjs';
 // Plain-text, viewport-clamped tooltips shared by equipment and talents.
 const tooltip=document.createElement('div');tooltip.id='planner-tooltip';tooltip.className='planner-tooltip';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;document.body.append(tooltip);
 let generation=0,anchor=null,point=null,activeContent=null;
@@ -37,5 +38,6 @@ export function refreshTooltip(){if(activeContent && !tooltip.hidden){const cont
 export function equipmentTooltip(metadata, fallback={}) {
   if(!metadata)return {title:fallback.label || `Item #${fallback.id}`,lines:['Details unavailable.']};
   const summary=(metadata.summary || `Item level ${metadata.level || 0} · Requires level ${metadata.reqlevel || 0}`).split('\n').filter((line,index)=>index!==0 || line!==metadata.name).join('\n');
-  return {title:metadata.name,lines:[summary,...(Array.isArray(metadata.effects)?metadata.effects:[])]};
+  const enchant=ENCHANTS.find(enchant=>enchant.id===fallback.enchantId);
+  return {title:metadata.name,lines:[summary,...(Array.isArray(metadata.effects)?metadata.effects:[]),...(enchant?[`Enchant: ${enchant.name}`]:[])]};
 }

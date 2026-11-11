@@ -99,14 +99,19 @@
   <p id="feedback" role="status" aria-live="polite"></p>
   <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></span></footer>
 </main>
-<dialog id="item-dialog" aria-labelledby="item-dialog-heading">
-  <div class="card-heading"><h2 id="item-dialog-heading">Choose equipment</h2><button type="button" data-close="item-dialog" aria-label="Close equipment picker">×</button></div>
-  <p id="editing-slot" class="muted"></p>
-  <form id="item-form"><div class="item-filters"><label class="field">Search name, item ID or database link<input id="item-reference" maxlength="200" placeholder="Search equipment…" autocomplete="off"></label><label class="field">Quality<select id="item-quality"><option value="">All qualities</option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label><button type="submit">Search</button></div></form>
-
-  <p id="item-error" class="error" role="alert"></p><p id="item-count" class="small muted" role="status"></p>
-  <div id="item-results" class="item-results"></div>
-  <div class="item-pagination"><button id="item-previous">← Previous</button><button id="item-next">Next →</button><button id="clear-item">Clear slot</button></div>
+<dialog id="item-dialog" class="equipment-picker" aria-labelledby="item-dialog-heading">
+  <form id="item-form" class="item-picker-header"><h2 id="item-dialog-heading">Equipment</h2><input id="item-reference" maxlength="200" placeholder="Search items…" aria-label="Search items" autocomplete="off"><span id="item-count" class="small muted" role="status"></span><button type="button" data-close="item-dialog" aria-label="Close equipment picker">×</button></form>
+  <div class="item-picker-grid">
+    <aside class="item-picker-controls" aria-label="Equipment filters">
+      <label class="field">Sort By<select id="item-sort"></select></label>
+      <label class="field">Direction<button id="item-direction" type="button">Descending ▼</button></label>
+      <label class="field">Quality<select id="item-quality"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
+      <label class="field enchant-field">Enchant<select id="item-enchant"><option value="">— None —</option></select></label>
+      <div class="item-picker-actions"><p id="item-error" class="error" role="alert"></p><button id="select-item" type="button" disabled>Select</button><button id="clear-item" type="button">Clear Slot</button></div>
+    </aside>
+    <div id="item-results" class="item-results" role="listbox" aria-label="Items"></div>
+    <section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section>
+  </div>
 </dialog>
 <dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>

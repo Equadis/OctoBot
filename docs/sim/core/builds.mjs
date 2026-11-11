@@ -1,3 +1,4 @@
+import { validEnchant } from './equipment-options.mjs';
 import { TARGET_IDS } from './targets.mjs';
 import { defaultControls, validateControls } from './configuration.mjs';
 import { validateTalents } from './talents.mjs';
@@ -45,6 +46,10 @@ export function validateBuild(input, data) {
     if (!Number.isInteger(item.id) || item.id < 1 || item.id > 2147483647 ||
         typeof item.label !== 'string' || item.label.length > 80) throw new Error('Invalid item reference.');
     gear[slot] = { id: item.id, label: item.label };
+    if (item.enchantId !== undefined && item.enchantId !== '') {
+      if (!validEnchant(item.enchantId,slot,input.classId)) throw new Error('Invalid enchant for this equipment slot.');
+      gear[slot].enchantId=item.enchantId;
+    }
   }
   const planning = { ...newBuild().planning };
   if (input.planning !== undefined) {
