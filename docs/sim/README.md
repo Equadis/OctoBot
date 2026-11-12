@@ -4,27 +4,41 @@ OctoSim's target is a complete nine-class, browser-only simulator at
 `https://equadis.github.io/OctoBot/sim/`, using Combat Gum as its principal
 interface, workflow, functionality and Rogue reference.
 
-**Current state: a public Warrior build planner, with talent allocation, item
-references, local saves, JSON import/export and shareable builds. Combat
-simulation and derived item statistics are not implemented.**
+**Current state: nine class build planners, with official OctoWoW talent trees,
+class-aware equipment filters, editable class rotations/resources and class options (poisons, forms, pets, aspects, imbues, stances and starting resources), profession
+requirements, local saves, JSON import/export and share links. Combat simulation
+and complete derived combat statistics are still in development.**
 
-Open the DPS Sim / Gear Planner navigation tab or `/OctoBot/sim/`. The other
-dashboard pages have only gained the new navigation link. No monitoring or
-Discord behaviour changes.
+All nine cards open the same planner at `/OctoBot/sim/?class=CLASS_ID`.
+Legacy shared builds without a class route still open Warrior. The page retains
+the unified site header, navigation and site-wide viewer counter.
 
-The entry page is a nine-class selection screen. Open Warrior at
-`/OctoBot/sim/?class=warrior`; other class cards show their planned status.
-Existing shared builds using `#build=...` still open the Warrior planner.
-The planner follows Combat Gum's two-column equipment/configuration layout,
-fixed side controls and icon-based talent grid. Game-icon sources and attribution
-are recorded in SOURCES.md. Left-click adds a talent point; right-click removes
-one. The selected-talent controls provide the same edits for keyboard users.
+Named builds use IndexedDB with **100 slots per class**, separate drafts and
+rotation collections. A name updates only that class's existing save. Load lists
+support search, delete, undo and whole-class JSON backup/restore. Batch imports are transactional and reject over-capacity or invalid backups without changing existing saves. The original localStorage collection is migrated
+once per class and retained unchanged as a recovery backup. Nothing is synced to
+an account; exports and share links are the portable backup mechanisms. Actual
+browser quota remains device/browser dependent; quota failures preserve existing
+records and offer export rather than removing saves.
 
-- [Specification](SPECIFICATION.md): full implementation brief and source priority.
-- [Implementation](IMPLEMENTATION.md): observed interface and sequential milestones.
-- [Sources](SOURCES.md): pinned sources, licences and actual coverage.
-- [Rulesets](RULESETS.md): unresolved OctoWoW evidence and release blockers.
-- [Validation](VALIDATION.md): reference methodology and checks actually run.
+All 476 published talent definitions are stored in `data/talents/`, with rank
+text, IDs, coordinates, prerequisites and official icon URLs. Source HTML was
+read from the ordinary official calculator in the browser and parsed with the
+same data-only importer. Imported metadata does not validate combat effects.
+
+Equipment covers all published weapons, armour, shirts, tabards, relics,
+ammunition and quivers. `manifest.json` distinguishes complete equipment
+**listings** from complete equipment **details**. `detail-coverage.json` records
+missing IDs and source errors. The non-equipment catalogue retains three capped
+miscellaneous/quest partitions; those do not hide equipable gear.
+
+`tools/sim/sync-equipment.py` resumes official detail ingestion and checkpoints
+class/race masks, inventory slots, level, profession requirements and full
+item tooltips. `.github/workflows/sim-equipment.yml` runs the large import outside
+the browser; all planning and eventual simulation calculations remain local.
+Unknown source requirements remain blocked rather than silently assumed met.
+Vanilla weapon proficiency baselines still require a complete OctoWoW audit;
+class masks and published talent definitions are checked independently.
 
 ## Development checks
 
@@ -118,7 +132,7 @@ The source menu is the script actually linked by the database, not an assumed AP
 
 ### Buff lists, priorities and tooltips (11 November 2026)
 
-Buffs are grouped checkbox options based on the Combat Gum text supplied by the user, with per-group selection controls and collapsed SP consumables. The listed effects are reference display values; they have not been validated as OctoWoW calculations. Class-specific options such as Thistle Tea are disabled for Warrior. Selection, key-press timing, rotation presets and editable priority conditions round-trip through saved builds and share links. Four Warrior starter presets and a custom priority editor replace the rotation notes field. Named custom rotations are saved in browser storage. Existing free-text planning notes remain in imported build data for compatibility.
+Buffs are grouped checkbox options based on the Combat Gum text supplied by the user, with per-group selection controls and collapsed SP consumables. The listed effects are reference display values; they have not been validated as OctoWoW calculations. Class-specific options such as Thistle Tea are disabled for Warrior. Selection, key-press timing, rotation presets and editable priority conditions round-trip through saved builds and share links. Each class has its own starter presets, abilities, resources and custom priority editor. These are planning controls, not validated optimal rotations. Named custom rotations are saved in browser storage. Existing free-text planning notes remain in imported build data for compatibility.
 
 All 54 official Warrior talents now have rank-specific plain-text effect descriptions extracted by the existing data-only importer. The inline selected-talent panel has been removed; talent and equipment information appears on hover or keyboard focus. Arrow Up/Down and +/− adjust the focused talent. Item tooltips use retrieved source data where available and show a concise fallback when details cannot be loaded. Retrieved Equip/Use/Chance-on-hit text is displayed without executing or inserting source HTML. Headings collapse their panels. No new combat calculations or generated DPS results are implied by these UI controls.
 

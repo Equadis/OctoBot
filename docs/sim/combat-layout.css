@@ -51,3 +51,13 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .talent-node.allocated:not(.maxed) .talent-icon{outline:2px solid #1eff00;outline-offset:0}
 .planner-view .talent-node.maxed .talent-icon{outline:2px solid #ffd100;outline-offset:0}
 .planner-view .talent-node.allocated:not(.maxed) .rank{color:#1eff00}.planner-view .talent-node.maxed .rank{color:#ffd100}
+
+.saved-actions{display:flex;gap:7px;flex:none}.saved-row>span{min-width:0;flex:1}.saved-actions .delete-build{color:#ed6969;background:transparent}#load-dialog{width:min(620px,calc(100vw - 30px))}#saved-builds{max-height:50vh;overflow:auto}#save-dialog{width:min(440px,calc(100vw - 30px))}#save-error:empty{display:none}
+
+.planner-view .extra-slots{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}.extra-slots:empty,.extra-slots:not(:has(.slot:not([hidden]))){display:none}.appearance-slots{margin-top:15px}.appearance-slots summary{font-size:11px;color:#a1adbd;cursor:pointer}
+
+.profession-row{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:9px}.profession-controls{display:grid;gap:4px}.profession-controls>label{display:grid;grid-template-columns:1fr 72px;align-items:center;gap:9px}.profession-controls .field{margin-bottom:8px}
+
+.library-actions{display:flex;gap:8px;flex-wrap:wrap}#saved-library-status:empty{display:none}
+
+.class-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin-top:15px}.class-options .field{margin-bottom:10px}

@@ -1,0 +1,1553 @@
+{
+  "schemaVersion": 1,
+  "classId": "paladin",
+  "source": {
+    "url": "https://octowow.st/talents/paladin/",
+    "retrievedAt": "2026-11-11T23:29:44.018448+00:00",
+    "htmlSha256": "16f76bfbdb4faba8636986e58db45a38ccc6ef84e83395d99ce7c7849de35ee4",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Holy",
+      "maxPoints": 53
+    },
+    {
+      "index": 1,
+      "name": "Protection",
+      "maxPoints": 50
+    },
+    {
+      "index": 2,
+      "name": "Retribution",
+      "maxPoints": 50
+    }
+  ],
+  "talents": [
+    {
+      "id": 444,
+      "name": "Divine Strength",
+      "tree": 0,
+      "icon": "ability_golemthunderclap",
+      "iconSource": "https://octowow.st/talents/icons/ability_golemthunderclap.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20262,
+        20263,
+        20264,
+        20265,
+        20266
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases your Strength by 2%.",
+        "Increases your Strength by 4%.",
+        "Increases your Strength by 6%.",
+        "Increases your Strength by 8%.",
+        "Increases your Strength by 10%."
+      ]
+    },
+    {
+      "id": 445,
+      "name": "Divine Intellect",
+      "tree": 0,
+      "icon": "spell_nature_sleep",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_sleep.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        20257,
+        20258,
+        20259,
+        20260,
+        20261
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases your total Intellect by 2%.",
+        "Increases your total Intellect by 4%.",
+        "Increases your total Intellect by 6%.",
+        "Increases your total Intellect by 8%.",
+        "Increases your total Intellect by 10%."
+      ]
+    },
+    {
+      "id": 446,
+      "name": "Holy Judgement",
+      "tree": 0,
+      "icon": "ability_paladin_judgementblue",
+      "iconSource": "https://octowow.st/talents/icons/ability_paladin_judgementblue.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        51304,
+        51306,
+        51308
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.3,
+          0.6,
+          1
+        ]
+      ],
+      "descriptions": [
+        "Casting Judgement reduces the casting time of your next Holy Light by 0.3 sec.",
+        "Casting Judgement reduces the casting time of your next Holy Light by 0.6 sec.",
+        "Casting Judgement reduces the casting time of your next Holy Light by 1 sec."
+      ]
+    },
+    {
+      "id": 447,
+      "name": "Spiritual Focus",
+      "tree": 0,
+      "icon": "spell_arcane_blink",
+      "iconSource": "https://octowow.st/talents/icons/spell_arcane_blink.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        20205,
+        20206
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          35,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives your Flash of Light and Holy Light spells a 35% chance to not lose casting time when you take damage.",
+        "Gives your Flash of Light and Holy Light spells a 70% chance to not lose casting time when you take damage."
+      ]
+    },
+    {
+      "id": 448,
+      "name": "Improved Seal of Righteousness",
+      "tree": 0,
+      "icon": "ability_thunderbolt",
+      "iconSource": "https://octowow.st/talents/icons/ability_thunderbolt.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        20224,
+        20225,
+        20330,
+        20331,
+        20332
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 2%.",
+        "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 4%.",
+        "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 6%.",
+        "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 8%.",
+        "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 10%."
+      ]
+    },
+    {
+      "id": 449,
+      "name": "Healing Light",
+      "tree": 0,
+      "icon": "spell_holy_holybolt",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_holybolt.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        20237,
+        20238,
+        20239
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12
+        ]
+      ],
+      "descriptions": [
+        "Increases the amount healed by your Holy Light, Flash of Light and Holy Shock spells by 4%.",
+        "Increases the amount healed by your Holy Light, Flash of Light and Holy Shock spells by 8%.",
+        "Increases the amount healed by your Holy Light, Flash of Light and Holy Shock spells by 12%."
+      ]
+    },
+    {
+      "id": 450,
+      "name": "Sanctity Aura",
+      "tree": 0,
+      "icon": "spell_holy_mindvision",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_mindvision.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        20218
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases Holy damage done by party members within 30 yards by 10%.  Players may only have one Aura on them per Paladin at any one time."
+      ]
+    },
+    {
+      "id": 451,
+      "name": "Improved Lay on Hands",
+      "tree": 0,
+      "icon": "spell_holy_layonhands",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_layonhands.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        20234,
+        20235
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Gives the target of your Lay on Hands spell a 15% bonus to their armor value from items for 2 min.  In addition, the cooldown for your Lay on Hands spell is reduced by 10 min.",
+        "Gives the target of your Lay on Hands spell a 30% bonus to their armor value from items for 2 min.  In addition, the cooldown for your Lay on Hands spell is reduced by 20 min."
+      ]
+    },
+    {
+      "id": 452,
+      "name": "Unyielding Faith",
+      "tree": 0,
+      "icon": "spell_holy_unyieldingfaith",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_unyieldingfaith.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        9453,
+        25836
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to resist Fear and Disorient effects by an additional 5%.",
+        "Increases your chance to resist Fear and Disorient effects by an additional 10%."
+      ]
+    },
+    {
+      "id": 453,
+      "name": "Improved Concentration Aura",
+      "tree": 0,
+      "icon": "spell_holy_mindsooth",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_mindsooth.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        20254,
+        20255,
+        20256
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the effect of your Concentration Aura by an additional 5% and gives all group members affected by the aura an additional 5% chance to resist Silence and Interrupt effects.",
+        "Increases the effect of your Concentration Aura by an additional 10% and gives all group members affected by the aura an additional 10% chance to resist Silence and Interrupt effects.",
+        "Increases the effect of your Concentration Aura by an additional 15% and gives all group members affected by the aura an additional 15% chance to resist Silence and Interrupt effects."
+      ]
+    },
+    {
+      "id": 454,
+      "name": "Illumination",
+      "tree": 0,
+      "icon": "spell_holy_greaterheal",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_greaterheal.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20210,
+        20212,
+        20213,
+        20214,
+        20215
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          12,
+          24,
+          36,
+          48,
+          60
+        ]
+      ],
+      "descriptions": [
+        "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 12% of the base cost of the spell.",
+        "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 24% of the base cost of the spell.",
+        "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 36% of the base cost of the spell.",
+        "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 48% of the base cost of the spell.",
+        "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 60% of the base cost of the spell."
+      ]
+    },
+    {
+      "id": 455,
+      "name": "Ironclad",
+      "tree": 0,
+      "icon": "inv_shoulder_30",
+      "iconSource": "https://octowow.st/talents/icons/inv_shoulder_30.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        51310,
+        51311
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Increases healing done by spells and effects by up to 1% of your Armor from items.",
+        "Increases healing done by spells and effects by up to 2% of your Armor from items."
+      ]
+    },
+    {
+      "id": 456,
+      "name": "Divine Favor",
+      "tree": 0,
+      "icon": "spell_holy_heal",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_heal.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        51312,
+        51313,
+        51314,
+        51315,
+        51316
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Improves your chance to get a critical strike with Holy Shock by 10%.",
+        "Improves your chance to get a critical strike with Holy Shock by 20%.",
+        "Improves your chance to get a critical strike with Holy Shock by 30%.",
+        "Improves your chance to get a critical strike with Holy Shock by 40%.",
+        "Improves your chance to get a critical strike with Holy Shock by 50%."
+      ]
+    },
+    {
+      "id": 457,
+      "name": "Holy Shock",
+      "tree": 0,
+      "icon": "spell_holy_searinglight",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_searinglight.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        20473
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Blasts the target with Holy energy, causing 97 to 104 Holy damage to an enemy, or 311 to 320 healing to an ally. Casting Holy Shock has a chance to have no cooldown for its next cast."
+      ]
+    },
+    {
+      "id": 458,
+      "name": "Holy Power",
+      "tree": 0,
+      "icon": "spell_holy_power",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_power.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        5923,
+        5924,
+        5925
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical effect chance of your Holy Light and Flash of Light by 2%.",
+        "Increases the critical effect chance of your Holy Light and Flash of Light by 4%.",
+        "Increases the critical effect chance of your Holy Light and Flash of Light by 6%."
+      ]
+    },
+    {
+      "id": 459,
+      "name": "Blessed Strikes",
+      "tree": 0,
+      "icon": "spell_holy_revivechampion",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_revivechampion.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        51317,
+        51318,
+        51319,
+        51320,
+        51321
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Crusader Strike has a 20% chance to reset the cooldown of your Holy Shock.  In addition, the healing effect of your Holy Strike is increased by 20% and benefits from an additional 5% of your healing power.",
+        "Crusader Strike has a 40% chance to reset the cooldown of your Holy Shock.  In addition, the healing effect of your Holy Strike is increased by 40% and benefits from an additional 10% of your healing power.",
+        "Crusader Strike has a 60% chance to reset the cooldown of your Holy Shock.  In addition, the healing effect of your Holy Strike is increased by 60% and benefits from an additional 15% of your healing power.",
+        "Crusader Strike has a 80% chance to reset the cooldown of your Holy Shock.  In addition, the healing effect of your Holy Strike is increased by 80% and benefits from an additional 20% of your healing power.",
+        "Crusader Strike has a 100% chance to reset the cooldown of your Holy Shock.  In addition, the healing effect of your Holy Strike is increased by 100% and benefits from an additional 25% of your healing power."
+      ]
+    },
+    {
+      "id": 460,
+      "name": "Daybreak",
+      "tree": 0,
+      "icon": "spell_holy_auramastery",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_auramastery.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51323
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Critically healing an ally applies Daybreak for 30 sec. When the ally takes damage, Daybreak is consumed to heal them for 248 to 289."
+      ]
+    },
+    {
+      "id": 461,
+      "name": "Improved Devotion Aura",
+      "tree": 1,
+      "icon": "spell_holy_devotionaura",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_devotionaura.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20138,
+        20139,
+        20140,
+        20141,
+        20142
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Increases the armor bonus of your Devotion Aura by 5%.",
+        "Increases the armor bonus of your Devotion Aura by 10%.",
+        "Increases the armor bonus of your Devotion Aura by 15%.",
+        "Increases the armor bonus of your Devotion Aura by 20%.",
+        "Increases the armor bonus of your Devotion Aura by 25%."
+      ]
+    },
+    {
+      "id": 462,
+      "name": "Redoubt",
+      "tree": 1,
+      "icon": "ability_defend",
+      "iconSource": "https://octowow.st/talents/icons/ability_defend.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        45818,
+        45819,
+        45820,
+        45821,
+        45822
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Successful melee and ranged attacks against you have a 2% chance to increase your chance to block by 3%. Lasts 10 sec or 5 blocks.",
+        "Successful melee and ranged attacks against you have a 4% chance to increase your chance to block by 6%. Lasts 10 sec or 5 blocks.",
+        "Successful melee and ranged attacks against you have a 6% chance to increase your chance to block by 9%. Lasts 10 sec or 5 blocks.",
+        "Successful melee and ranged attacks against you have a 8% chance to increase your chance to block by 12%. Lasts 10 sec or 5 blocks.",
+        "Successful melee and ranged attacks against you have a 10% chance to increase your chance to block by 15%. Lasts 10 sec or 5 blocks."
+      ]
+    },
+    {
+      "id": 463,
+      "name": "Precision",
+      "tree": 1,
+      "icon": "ability_rogue_ambush",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_ambush.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        20189,
+        20192,
+        20193
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to hit with melee attacks and spells by 1%.",
+        "Increases your chance to hit with melee attacks and spells by 2%.",
+        "Increases your chance to hit with melee attacks and spells by 3%."
+      ]
+    },
+    {
+      "id": 464,
+      "name": "Guardian's Favor",
+      "tree": 1,
+      "icon": "spell_holy_sealofprotection",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_sealofprotection.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        20174,
+        20175
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          60,
+          120
+        ],
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of your Hand of Protection by 60 sec and increases the duration of your Hand of Freedom by 3 sec.",
+        "Reduces the cooldown of your Hand of Protection by 120 sec and increases the duration of your Hand of Freedom by 6 sec."
+      ]
+    },
+    {
+      "id": 465,
+      "name": "Toughness",
+      "tree": 1,
+      "icon": "spell_holy_devotion",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_devotion.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 5,
+      "spellIds": [
+        20143,
+        20144,
+        20145,
+        20146,
+        20147
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases your armor value from items by 2%.",
+        "Increases your armor value from items by 4%.",
+        "Increases your armor value from items by 6%.",
+        "Increases your armor value from items by 8%.",
+        "Increases your armor value from items by 10%."
+      ]
+    },
+    {
+      "id": 466,
+      "name": "Improved Righteous Fury",
+      "tree": 1,
+      "icon": "spell_holy_sealoffury",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_sealoffury.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        20468,
+        20469,
+        20470
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "descriptions": [
+        "Increases the amount of threat generated by your Righteous Fury spell by 25%.",
+        "Increases the amount of threat generated by your Righteous Fury spell by 50%.",
+        "Increases the amount of threat generated by your Righteous Fury spell by 75%."
+      ]
+    },
+    {
+      "id": 467,
+      "name": "Blessing of Sanctuary",
+      "tree": 1,
+      "icon": "spell_nature_lightningshield",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_lightningshield.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        20911
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Places a Blessing on the friendly target, reducing damage taken from all sources by up to 10 for 10 min.  In addition, when the target blocks a melee attack, the attacker takes 14 Holy damage.  Players may only have one Blessing on them per Paladin at any one time."
+      ]
+    },
+    {
+      "id": 468,
+      "name": "Shield Specialization",
+      "tree": 1,
+      "icon": "inv_shield_06",
+      "iconSource": "https://octowow.st/talents/icons/inv_shield_06.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        20148,
+        20149,
+        20150
+      ],
+      "requires": 2,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          33,
+          66,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases the amount of damage absorbed by your shield by 10% and has a 33% chance to restore 2% of maximum mana when a block occurs. This effect cannot occur more than once every 5 sec.",
+        "Increases the amount of damage absorbed by your shield by 20% and has a 66% chance to restore 2% of maximum mana when a block occurs. This effect cannot occur more than once every 5 sec.",
+        "Increases the amount of damage absorbed by your shield by 30% and has a 100% chance to restore 2% of maximum mana when a block occurs. This effect cannot occur more than once every 5 sec."
+      ]
+    },
+    {
+      "id": 469,
+      "name": "Anticipation",
+      "tree": 1,
+      "icon": "spell_magic_lesserinvisibilty",
+      "iconSource": "https://octowow.st/talents/icons/spell_magic_lesserinvisibilty.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        20096,
+        20097,
+        20098
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          7,
+          14,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases your Defense skill by 7.",
+        "Increases your Defense skill by 14.",
+        "Increases your Defense skill by 20."
+      ]
+    },
+    {
+      "id": 470,
+      "name": "Improved Hand of Reckoning",
+      "tree": 1,
+      "icon": "spell_holy_redemption",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_redemption.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        51334,
+        51335
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8
+        ]
+      ],
+      "descriptions": [
+        "Improves your chance to hit with Hand of Reckoning by 4%.",
+        "Improves your chance to hit with Hand of Reckoning by 8%."
+      ]
+    },
+    {
+      "id": 471,
+      "name": "Improved Hammer of Justice",
+      "tree": 1,
+      "icon": "spell_holy_sealofmight",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_sealofmight.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        20487,
+        20488,
+        20489
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Decreases the cooldown of your Hammer of Justice spell by 5 sec.",
+        "Decreases the cooldown of your Hammer of Justice spell by 10 sec.",
+        "Decreases the cooldown of your Hammer of Justice spell by 15 sec."
+      ]
+    },
+    {
+      "id": 472,
+      "name": "Righteous Defense",
+      "tree": 1,
+      "icon": "ability_warrior_swordandboard",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_swordandboard.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        51328,
+        51329,
+        51330
+      ],
+      "requires": 8,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "While Righteous Fury is active, your damage taken is reduced by 3%.",
+        "While Righteous Fury is active, your damage taken is reduced by 6%.",
+        "While Righteous Fury is active, your damage taken is reduced by 10%."
+      ]
+    },
+    {
+      "id": 473,
+      "name": "Holy Shield",
+      "tree": 1,
+      "icon": "spell_holy_blessingofprotection",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofprotection.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        20925
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases chance to block by 45% for 10 sec. While active, each blocked attack deals 35 Holy damage to the attacker.  Damage caused by Holy Shield generates 50% additional threat.  Each block expends a charge.  4 charges."
+      ]
+    },
+    {
+      "id": 474,
+      "name": "Reckoning",
+      "tree": 1,
+      "icon": "spell_holy_blessingofstrength",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofstrength.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        45823,
+        45824,
+        45825,
+        45826,
+        45837
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 10% chance after blocking an attack to generate an additional attack.",
+        "Gives you a 20% chance after blocking an attack to generate an additional attack.",
+        "Gives you a 30% chance after blocking an attack to generate an additional attack.",
+        "Gives you a 40% chance after blocking an attack to generate an additional attack.",
+        "Gives you a 50% chance after blocking an attack to generate an additional attack."
+      ]
+    },
+    {
+      "id": 475,
+      "name": "Righteous Strikes",
+      "tree": 1,
+      "icon": "spell_holy_sealofblood",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_sealofblood.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        51341,
+        51342,
+        51343,
+        51344,
+        51345
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the threat generated by your Holy Strike by 5% and its damage by 5%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked attack by 6%.",
+        "Increases the threat generated by your Holy Strike by 10% and its damage by 10%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked attack by 12%.",
+        "Increases the threat generated by your Holy Strike by 15% and its damage by 15%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked attack by 18%.",
+        "Increases the threat generated by your Holy Strike by 20% and its damage by 20%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked attack by 24%.",
+        "Increases the threat generated by your Holy Strike by 25% and its damage by 25%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked attack by 30%."
+      ]
+    },
+    {
+      "id": 476,
+      "name": "Bulwark of the Righteous",
+      "tree": 1,
+      "icon": "ability_warrior_victoryrush",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_victoryrush.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51346
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Bash the target with your shield, dealing 274 to 301 Holy damage and reducing the damage you take by 30% for 12 sec."
+      ]
+    },
+    {
+      "id": 428,
+      "name": "Improved Blessings",
+      "tree": 2,
+      "icon": "spell_holy_spiritualguidence",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_spiritualguidence.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20042,
+        20045,
+        20046,
+        20047,
+        20048
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the effectiveness your Blessing of Might and Wisdom by 4%.",
+        "Increases the effectiveness your Blessing of Might and Wisdom by 8%.",
+        "Increases the effectiveness your Blessing of Might and Wisdom by 12%.",
+        "Increases the effectiveness your Blessing of Might and Wisdom by 16%.",
+        "Increases the effectiveness your Blessing of Might and Wisdom by 20%."
+      ]
+    },
+    {
+      "id": 429,
+      "name": "Benediction",
+      "tree": 2,
+      "icon": "spell_frost_windwalkon",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_windwalkon.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        20101,
+        20102,
+        20103,
+        20104,
+        20105
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of your Judgement and Seal spells by 3%.",
+        "Reduces the Mana cost of your Judgement and Seal spells by 6%.",
+        "Reduces the Mana cost of your Judgement and Seal spells by 9%.",
+        "Reduces the Mana cost of your Judgement and Seal spells by 12%.",
+        "Reduces the Mana cost of your Judgement and Seal spells by 15%."
+      ]
+    },
+    {
+      "id": 430,
+      "name": "Improved Judgement",
+      "tree": 2,
+      "icon": "spell_holy_righteousfury",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_righteousfury.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        25956,
+        25957
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Decreases the cooldown of your Judgement spell by 1 sec.",
+        "Decreases the cooldown of your Judgement spell by 2 sec."
+      ]
+    },
+    {
+      "id": 431,
+      "name": "Improved Seal of the Crusader",
+      "tree": 2,
+      "icon": "spell_holy_holysmite",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_holysmite.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        20335,
+        20336,
+        20337
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 5%.",
+        "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 10%.",
+        "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 15%."
+      ]
+    },
+    {
+      "id": 432,
+      "name": "Deflection",
+      "tree": 2,
+      "icon": "ability_parry",
+      "iconSource": "https://octowow.st/talents/icons/ability_parry.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        20060,
+        20061,
+        20062,
+        20063,
+        20064
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your Parry chance by 1%.",
+        "Increases your Parry chance by 2%.",
+        "Increases your Parry chance by 3%.",
+        "Increases your Parry chance by 4%.",
+        "Increases your Parry chance by 5%."
+      ]
+    },
+    {
+      "id": 433,
+      "name": "Improved Retribution Aura",
+      "tree": 2,
+      "icon": "spell_holy_auraoflight",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_auraoflight.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        20091,
+        20092
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Retribution Aura by 25%.",
+        "Increases the damage done by your Retribution Aura by 50%."
+      ]
+    },
+    {
+      "id": 434,
+      "name": "Conviction",
+      "tree": 2,
+      "icon": "spell_holy_retributionaura",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_retributionaura.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20117,
+        20118,
+        20119,
+        20120,
+        20121
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to get a critical strike with melee weapons by 1%.",
+        "Increases your chance to get a critical strike with melee weapons by 2%.",
+        "Increases your chance to get a critical strike with melee weapons by 3%.",
+        "Increases your chance to get a critical strike with melee weapons by 4%.",
+        "Increases your chance to get a critical strike with melee weapons by 5%."
+      ]
+    },
+    {
+      "id": 435,
+      "name": "Blessing of Kings",
+      "tree": 2,
+      "icon": "spell_magic_magearmor",
+      "iconSource": "https://octowow.st/talents/icons/spell_magic_magearmor.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        20217
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Places a Blessing on the friendly target, increasing total stats by 10% for 10 min.  Players may only have one Blessing on them per Paladin at any one time."
+      ]
+    },
+    {
+      "id": 436,
+      "name": "Pursuit of Justice",
+      "tree": 2,
+      "icon": "spell_holy_persuitofjustice",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_persuitofjustice.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        26022,
+        26023
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8
+        ]
+      ],
+      "descriptions": [
+        "Increases movement and mounted movement speed by 4%.  This does not stack with other movement speed increasing effects.",
+        "Increases movement and mounted movement speed by 8%.  This does not stack with other movement speed increasing effects."
+      ]
+    },
+    {
+      "id": 437,
+      "name": "Two-Handed Weapon Specialization",
+      "tree": 2,
+      "icon": "inv_hammer_04",
+      "iconSource": "https://octowow.st/talents/icons/inv_hammer_04.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        20111,
+        20112,
+        20113
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage you deal with two-handed melee weapons by 2%, and your weapon skill with two-handed swords, maces and axes by 1.",
+        "Increases the damage you deal with two-handed melee weapons by 4%, and your weapon skill with two-handed swords, maces and axes by 2.",
+        "Increases the damage you deal with two-handed melee weapons by 6%, and your weapon skill with two-handed swords, maces and axes by 3."
+      ]
+    },
+    {
+      "id": 438,
+      "name": "Vindication",
+      "tree": 2,
+      "icon": "spell_holy_vindication",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_vindication.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        9452,
+        26016,
+        26021
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "descriptions": [
+        "Gives the Paladin's damaging melee attacks a chance to reduce the target's damage dealt by 3% for 10 sec. Only affects targets of level 62 or lower.",
+        "Gives the Paladin's damaging melee attacks a chance to reduce the target's damage dealt by 6% for 10 sec. Only affects targets of level 62 or lower.",
+        "Gives the Paladin's damaging melee attacks a chance to reduce the target's damage dealt by 9% for 10 sec. Only affects targets of level 62 or lower."
+      ]
+    },
+    {
+      "id": 439,
+      "name": "Eye for an Eye",
+      "tree": 2,
+      "icon": "spell_holy_eyeforaneye",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_eyeforaneye.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        9799,
+        25988
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "All spell criticals against you cause 15% of the damage taken to the caster as well.  The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health.",
+        "All spell criticals against you cause 30% of the damage taken to the caster as well.  The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health."
+      ]
+    },
+    {
+      "id": 440,
+      "name": "Vengeance",
+      "tree": 2,
+      "icon": "ability_racial_avatar",
+      "iconSource": "https://octowow.st/talents/icons/ability_racial_avatar.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        20049,
+        20056,
+        20057,
+        20058,
+        20059
+      ],
+      "requires": 9,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 1% bonus to all damage you deal and decreases threat you generate by 2% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This effect stacks up to 3 times. Threat reduction does not apply if the Paladin is under the effect of Righteous Fury.",
+        "Gives you a 2% bonus to all damage you deal and decreases threat you generate by 4% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This effect stacks up to 3 times. Threat reduction does not apply if the Paladin is under the effect of Righteous Fury.",
+        "Gives you a 3% bonus to all damage you deal and decreases threat you generate by 6% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This effect stacks up to 3 times. Threat reduction does not apply if the Paladin is under the effect of Righteous Fury.",
+        "Gives you a 4% bonus to all damage you deal and decreases threat you generate by 8% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This effect stacks up to 3 times. Threat reduction does not apply if the Paladin is under the effect of Righteous Fury.",
+        "Gives you a 5% bonus to all damage you deal and decreases threat you generate by 10% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This effect stacks up to 3 times. Threat reduction does not apply if the Paladin is under the effect of Righteous Fury."
+      ]
+    },
+    {
+      "id": 441,
+      "name": "Seal of Command",
+      "tree": 2,
+      "icon": "ability_warrior_innerrage",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_innerrage.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        20375
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Gives the Paladin a chance to deal additional Holy damage equal to 70% of melee damage.  Only one Seal can be active on the Paladin at any one time.  Lasts 30 sec.\n\nUnleashing this Seal's energy will judge an enemy, instantly causing 68 to 72 Holy damage, 137 to 145 if the target is stunned or incapacitated. This damage is increased by 15% of your attack power."
+      ]
+    },
+    {
+      "id": 442,
+      "name": "Vengeful Strikes",
+      "tree": 2,
+      "icon": "spell_holy_crusaderstrike",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_crusaderstrike.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        51355,
+        51356,
+        51357,
+        51358,
+        51359
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Crusader Strike deals an additional 2% damage and Zeal increases your attack and casting speed by an additional 2% per stack.\r\nHoly Strike infuses you with Holy Might, increasing your Strength by 4% for 20 sec.",
+        "Crusader Strike deals an additional 4% damage and Zeal increases your attack and casting speed by an additional 2% per stack.\r\nHoly Strike infuses you with Holy Might, increasing your Strength by 8% for 20 sec.",
+        "Crusader Strike deals an additional 6% damage and Zeal increases your attack and casting speed by an additional 2% per stack.\r\nHoly Strike infuses you with Holy Might, increasing your Strength by 12% for 20 sec.",
+        "Crusader Strike deals an additional 8% damage and Zeal increases your attack and casting speed by an additional 2% per stack.\r\nHoly Strike infuses you with Holy Might, increasing your Strength by 16% for 20 sec.",
+        "Crusader Strike deals an additional 10% damage and Zeal increases your attack and casting speed by an additional 2% per stack.\r\nHoly Strike infuses you with Holy Might, increasing your Strength by 20% for 20 sec."
+      ]
+    },
+    {
+      "id": 443,
+      "name": "Repentance",
+      "tree": 2,
+      "icon": "spell_holy_prayerofhealing",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_prayerofhealing.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        20066
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Puts the enemy target in a state of meditation, incapacitating them for up to 6 sec.  Any damage caused will awaken the target.\n\nIf the target is immune to the effect, they repent for their sins, taking 80 Holy damage each time they perform a melee attack for 20 sec."
+      ]
+    }
+  ]
+}

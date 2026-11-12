@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'tools/sim/sync-equipment.py'
+      - 'tools/sim/import-item-details.py'
+      - 'tools/sim/merge-equipment-import.py'
+      - 'docs/sim/data/items/equipment.json'
       - '.github/workflows/sim-equipment.yml'
 permissions:
   contents: read
@@ -31,14 +34,27 @@ jobs:
       - name: Persist verified records and coverage
         if: always()
         run: |
+          cp docs/sim/data/items/details.json /tmp/imported-details.json
+          cp docs/sim/data/items/detail-coverage.json /tmp/imported-coverage.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/sim/data/items/details.json docs/sim/data/items/manifest.json docs/sim/data/items/detail-coverage.json
-          if ! git diff --cached --quiet; then
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python tools/sim/merge-equipment-import.py /tmp/imported-details.json /tmp/imported-coverage.json
+            git add docs/sim/data/items/details.json docs/sim/data/items/manifest.json docs/sim/data/items/detail-coverage.json
+            if git diff --cached --quiet; then exit 0; fi
             git commit -m 'Refresh official equipment details and import coverage'
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-equipment-import-checkpoint
+          path: |
+            /tmp/imported-details.json
+            /tmp/imported-coverage.json
       - name: Report incomplete import
         if: steps.import.outcome != 'success'
         run: |

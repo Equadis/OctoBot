@@ -1,0 +1,1675 @@
+{
+  "schemaVersion": 1,
+  "classId": "rogue",
+  "source": {
+    "url": "https://octowow.st/talents/rogue/",
+    "retrievedAt": "2026-11-11T23:29:43.972862+00:00",
+    "htmlSha256": "865b889058c29c8485d457a3817094b4c289fd588ead58d9ec7d1a295b5fbf65",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Assassination",
+      "maxPoints": 47
+    },
+    {
+      "index": 1,
+      "name": "Combat",
+      "maxPoints": 54
+    },
+    {
+      "index": 2,
+      "name": "Subtlety",
+      "maxPoints": 47
+    }
+  ],
+  "talents": [
+    {
+      "id": 128,
+      "name": "Improved Eviscerate",
+      "tree": 0,
+      "icon": "ability_rogue_eviscerate",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_eviscerate.png",
+      "position": 0,
+      "row": 0,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        14162,
+        14163,
+        14164
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Eviscerate ability by 5%.",
+        "Increases the damage done by your Eviscerate ability by 10%.",
+        "Increases the damage done by your Eviscerate ability by 15%."
+      ]
+    },
+    {
+      "id": 129,
+      "name": "Remorseless Attacks",
+      "tree": 0,
+      "icon": "ability_fiegndead",
+      "iconSource": "https://octowow.st/talents/icons/ability_fiegndead.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        14144,
+        14148
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40
+        ]
+      ],
+      "descriptions": [
+        "After killing an opponent that yields experience or honor, gives you a 20% increased critical strike chance on your next Combo Point generating ability.  Lasts 40 sec.",
+        "After killing an opponent that yields experience or honor, gives you a 40% increased critical strike chance on your next Combo Point generating ability.  Lasts 40 sec."
+      ]
+    },
+    {
+      "id": 130,
+      "name": "Malice",
+      "tree": 0,
+      "icon": "ability_racial_bloodrage",
+      "iconSource": "https://octowow.st/talents/icons/ability_racial_bloodrage.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        14138,
+        14139,
+        14140,
+        14141,
+        14142
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your critical strike chance by 1%.",
+        "Increases your critical strike chance by 2%.",
+        "Increases your critical strike chance by 3%.",
+        "Increases your critical strike chance by 4%.",
+        "Increases your critical strike chance by 5%."
+      ]
+    },
+    {
+      "id": 131,
+      "name": "Ruthlessness",
+      "tree": 0,
+      "icon": "ability_druid_disembowel",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_disembowel.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        14156,
+        14160,
+        14161
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          33,
+          66,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives your finishing moves a 33% chance to add a combo point to your target.",
+        "Gives your finishing moves a 66% chance to add a combo point to your target.",
+        "Gives your finishing moves a 100% chance to add a combo point to your target."
+      ]
+    },
+    {
+      "id": 132,
+      "name": "Murder",
+      "tree": 0,
+      "icon": "spell_shadow_deathscream",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_deathscream.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        14158,
+        14159
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Increases all damage caused against Humanoid, Giant, Beast and Dragonkin targets by 1%.",
+        "Increases all damage caused against Humanoid, Giant, Beast and Dragonkin targets by 2%."
+      ]
+    },
+    {
+      "id": 133,
+      "name": "Improved Blade Tactics",
+      "tree": 0,
+      "icon": "ability_rogue_slicedice",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_slicedice.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        14165,
+        14166,
+        14167
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45
+        ]
+      ],
+      "descriptions": [
+        "Increases the duration of your Slice and Dice and Flourish abilities by 15%.",
+        "Increases the duration of your Slice and Dice and Flourish abilities by 30%.",
+        "Increases the duration of your Slice and Dice and Flourish abilities by 45%."
+      ]
+    },
+    {
+      "id": 134,
+      "name": "Relentless Strikes",
+      "tree": 0,
+      "icon": "ability_warrior_decisivestrike",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_decisivestrike.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        14179
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Your finishing moves have a 20% chance per combo point to restore 20 energy and increase the damage of your finishing moves by 5% for 30 sec.  Stacks up to 5 times."
+      ]
+    },
+    {
+      "id": 135,
+      "name": "Throwing Weapon Specialization",
+      "tree": 0,
+      "icon": "inv_throwingknife_01",
+      "iconSource": "https://octowow.st/talents/icons/inv_throwingknife_01.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        13710,
+        13859
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of Throw and Deadly Throw by 3 yards and gives your Deadly Throw a 50% chance to apply your off-hand weapon poison.",
+        "Increases the range of Throw and Deadly Throw by 6 yards and gives your Deadly Throw a 100% chance to apply your off-hand weapon poison."
+      ]
+    },
+    {
+      "id": 136,
+      "name": "Lethality",
+      "tree": 0,
+      "icon": "ability_criticalstrike",
+      "iconSource": "https://octowow.st/talents/icons/ability_criticalstrike.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        14128,
+        14132,
+        14135,
+        14136,
+        14137
+      ],
+      "requires": 2,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike damage bonus of your combo point generating abilities by 6%.",
+        "Increases the critical strike damage bonus of your combo point generating abilities by 12%.",
+        "Increases the critical strike damage bonus of your combo point generating abilities by 18%.",
+        "Increases the critical strike damage bonus of your combo point generating abilities by 24%.",
+        "Increases the critical strike damage bonus of your combo point generating abilities by 30%."
+      ]
+    },
+    {
+      "id": 137,
+      "name": "Taste for Blood",
+      "tree": 0,
+      "icon": "inv_misc_bone_09",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_bone_09.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        14174,
+        14175
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          6
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Increases the duration of your Rupture by 4 sec. Each time you use Rupture, your melee damage is increased by 1% per combo point for its full duration, regardless of successful application.",
+        "Increases the duration of your Rupture by 6 sec. Each time you use Rupture, your melee damage is increased by 2% per combo point for its full duration, regardless of successful application."
+      ]
+    },
+    {
+      "id": 138,
+      "name": "Vile Poisons",
+      "tree": 0,
+      "icon": "ability_rogue_feigndeath",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_feigndeath.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        16513,
+        16514,
+        16515
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          14,
+          27,
+          40
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage dealt by your poisons by 10% and gives your poisons an additional 14% chance to resist dispel effects.",
+        "Increases the damage dealt by your poisons by 20% and gives your poisons an additional 27% chance to resist dispel effects.",
+        "Increases the damage dealt by your poisons by 30% and gives your poisons an additional 40% chance to resist dispel effects."
+      ]
+    },
+    {
+      "id": 139,
+      "name": "Improved Poisons",
+      "tree": 0,
+      "icon": "ability_poisons",
+      "iconSource": "https://octowow.st/talents/icons/ability_poisons.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        14113,
+        14114,
+        14115
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the chance to apply poisons to your target by 3%.",
+        "Increases the chance to apply poisons to your target by 6%.",
+        "Increases the chance to apply poisons to your target by 10%."
+      ]
+    },
+    {
+      "id": 140,
+      "name": "Efficient Poisons",
+      "tree": 0,
+      "icon": "ability_creature_poison_06",
+      "iconSource": "https://octowow.st/talents/icons/ability_creature_poison_06.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        52518,
+        52519,
+        52520
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12
+        ],
+        [
+          15,
+          30,
+          45
+        ]
+      ],
+      "descriptions": [
+        "Reduces the chance your poisons will be resisted by 4% and gives your poison applications a 15% chance to not consume a charge.",
+        "Reduces the chance your poisons will be resisted by 8% and gives your poison applications a 30% chance to not consume a charge.",
+        "Reduces the chance your poisons will be resisted by 12% and gives your poison applications a 45% chance to not consume a charge."
+      ]
+    },
+    {
+      "id": 141,
+      "name": "Envenom",
+      "tree": 0,
+      "icon": "inv_sword_31",
+      "iconSource": "https://octowow.st/talents/icons/inv_sword_31.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52531
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Finishing move that increases the effectiveness and the chance to apply poisons to your target by 30%.  Lasts longer per combo point:\n   1 point  : 12 seconds\n   2 points: 16 seconds\n   3 points: 20 seconds\n   4 points: 24 seconds\n   5 points: 28 seconds"
+      ]
+    },
+    {
+      "id": 142,
+      "name": "Cold Blood",
+      "tree": 0,
+      "icon": "spell_ice_lament",
+      "iconSource": "https://octowow.st/talents/icons/spell_ice_lament.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        14177
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, increases the critical strike chance of your next Sinister Strike, Backstab, Ambush, Noxious Assault, or Eviscerate by 100%."
+      ]
+    },
+    {
+      "id": 143,
+      "name": "Vigor",
+      "tree": 0,
+      "icon": "spell_nature_earthbindtotem",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_earthbindtotem.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        14983,
+        52527
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases your maximum Energy by 5.  Each time you apply poison to your target, you have a 50% chance to gain 2 Energy.",
+        "Increases your maximum Energy by 10.  Each time you apply poison to your target, you have a 100% chance to gain 2 Energy."
+      ]
+    },
+    {
+      "id": 144,
+      "name": "Seal Fate",
+      "tree": 0,
+      "icon": "spell_shadow_chilltouch",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_chilltouch.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        14186,
+        14190,
+        14193,
+        14194,
+        14195
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Your critical strikes from abilities that add combo points have a 20% chance to add an additional combo point.",
+        "Your critical strikes from abilities that add combo points have a 40% chance to add an additional combo point.",
+        "Your critical strikes from abilities that add combo points have a 60% chance to add an additional combo point.",
+        "Your critical strikes from abilities that add combo points have a 80% chance to add an additional combo point.",
+        "Your critical strikes from abilities that add combo points have a 100% chance to add an additional combo point."
+      ]
+    },
+    {
+      "id": 145,
+      "name": "Noxious Assault",
+      "tree": 0,
+      "icon": "spell_double_dose_3",
+      "iconSource": "https://octowow.st/talents/icons/spell_double_dose_3.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52714
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Strikes with both weapons, dealing 30 damage plus 30% of your Attack Power and applies poisons from both weapons. Awards 1 combo point."
+      ]
+    },
+    {
+      "id": 110,
+      "name": "Opportunity",
+      "tree": 1,
+      "icon": "ability_warrior_warcry",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_warcry.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        14057,
+        14072,
+        14073,
+        14074,
+        14075
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 3%.",
+        "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 6%.",
+        "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 9%.",
+        "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 12%.",
+        "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 15%."
+      ]
+    },
+    {
+      "id": 111,
+      "name": "Lightning Reflexes",
+      "tree": 1,
+      "icon": "spell_nature_invisibilty",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_invisibilty.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        13712,
+        13788,
+        13789,
+        13790,
+        13791
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your Dodge chance by 1%.",
+        "Increases your Dodge chance by 2%.",
+        "Increases your Dodge chance by 3%.",
+        "Increases your Dodge chance by 4%.",
+        "Increases your Dodge chance by 5%."
+      ]
+    },
+    {
+      "id": 112,
+      "name": "Deflection",
+      "tree": 1,
+      "icon": "ability_parry",
+      "iconSource": "https://octowow.st/talents/icons/ability_parry.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        13713,
+        13853,
+        13854,
+        13855,
+        13856
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your Parry chance by 1%.",
+        "Increases your Parry chance by 2%.",
+        "Increases your Parry chance by 3%.",
+        "Increases your Parry chance by 4%.",
+        "Increases your Parry chance by 5%."
+      ]
+    },
+    {
+      "id": 113,
+      "name": "Improved Backstab",
+      "tree": 1,
+      "icon": "ability_backstab",
+      "iconSource": "https://octowow.st/talents/icons/ability_backstab.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        13733,
+        13865,
+        13866
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          15,
+          30,
+          45
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your Backstab ability by 10% and gives your Backstab a 15% chance to award an additional combo point.",
+        "Increases the critical strike chance of your Backstab ability by 20% and gives your Backstab a 30% chance to award an additional combo point.",
+        "Increases the critical strike chance of your Backstab ability by 30% and gives your Backstab a 45% chance to award an additional combo point."
+      ]
+    },
+    {
+      "id": 114,
+      "name": "Precision",
+      "tree": 1,
+      "icon": "ability_marksmanship",
+      "iconSource": "https://octowow.st/talents/icons/ability_marksmanship.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        13705,
+        13832,
+        13843,
+        13844,
+        13845
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to hit with melee weapons by 1%.",
+        "Increases your chance to hit with melee weapons by 2%.",
+        "Increases your chance to hit with melee weapons by 3%.",
+        "Increases your chance to hit with melee weapons by 4%.",
+        "Increases your chance to hit with melee weapons by 5%."
+      ]
+    },
+    {
+      "id": 115,
+      "name": "Riposte",
+      "tree": 1,
+      "icon": "ability_warrior_challange",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_challange.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        14251
+      ],
+      "requires": 4,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "A strike that becomes active after parrying an opponent's attack.  This attack deals 150% weapon damage and disarms the target for 6 sec."
+      ]
+    },
+    {
+      "id": 116,
+      "name": "Improved Sprint",
+      "tree": 1,
+      "icon": "ability_rogue_sprint",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_sprint.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        13743,
+        13875
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives a 50% chance to remove all movement impairing effects when you activate your Sprint ability.",
+        "Gives a 100% chance to remove all movement impairing effects when you activate your Sprint ability."
+      ]
+    },
+    {
+      "id": 117,
+      "name": "Setup",
+      "tree": 1,
+      "icon": "spell_nature_mirrorimage",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_mirrorimage.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        13983,
+        14070,
+        14071
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 15% chance to add a combo point to your target after dodging their attack or fully resisting one of their spells.",
+        "Gives you a 30% chance to add a combo point to your target after dodging their attack or fully resisting one of their spells.",
+        "Gives you a 45% chance to add a combo point to your target after dodging their attack or fully resisting one of their spells."
+      ]
+    },
+    {
+      "id": 118,
+      "name": "Improved Kick",
+      "tree": 1,
+      "icon": "ability_kick",
+      "iconSource": "https://octowow.st/talents/icons/ability_kick.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        13754,
+        13867
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives your Kick ability a 50% chance to silence the target for 2 sec.",
+        "Gives your Kick ability a 100% chance to silence the target for 2 sec."
+      ]
+    },
+    {
+      "id": 119,
+      "name": "Concussive Blows",
+      "tree": 1,
+      "icon": "inv_mace_01",
+      "iconSource": "https://octowow.st/talents/icons/inv_mace_01.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        13709,
+        13800,
+        13801,
+        13802,
+        13803
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 1% chance to stun your target for 3 sec with a mace.",
+        "Gives you a 2% chance to stun your target for 3 sec with a mace.",
+        "Gives you a 3% chance to stun your target for 3 sec with a mace.",
+        "Gives you a 4% chance to stun your target for 3 sec with a mace.",
+        "Gives you a 6% chance to stun your target for 3 sec with a mace."
+      ]
+    },
+    {
+      "id": 120,
+      "name": "Dual Wield Specialization",
+      "tree": 1,
+      "icon": "ability_dualwield",
+      "iconSource": "https://octowow.st/talents/icons/ability_dualwield.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        13715,
+        13848,
+        13849,
+        13851,
+        13852
+      ],
+      "requires": 6,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your offhand weapon by 10%.",
+        "Increases the damage done by your offhand weapon by 20%.",
+        "Increases the damage done by your offhand weapon by 30%.",
+        "Increases the damage done by your offhand weapon by 40%.",
+        "Increases the damage done by your offhand weapon by 50%."
+      ]
+    },
+    {
+      "id": 121,
+      "name": "Close Quarters Combat",
+      "tree": 1,
+      "icon": "inv_weapon_shortblade_05",
+      "iconSource": "https://octowow.st/talents/icons/inv_weapon_shortblade_05.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        13706,
+        13804
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to get a critical strike with Maces, Daggers and Fist Weapons by 2%.",
+        "Increases your chance to get a critical strike with Maces, Daggers and Fist Weapons by 5%."
+      ]
+    },
+    {
+      "id": 122,
+      "name": "Surprise Attack",
+      "tree": 1,
+      "icon": "ability_rogue_surpriseattack",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_surpriseattack.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52511
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "A surprise strike that deals 25% of your Attack Power as damage.\nOnly useable after the target dodges and cannot be blocked, dodged or parried by the target.  Awards 1 combo points."
+      ]
+    },
+    {
+      "id": 123,
+      "name": "Hack and Slash",
+      "tree": 1,
+      "icon": "inv_sword_27",
+      "iconSource": "https://octowow.st/talents/icons/inv_sword_27.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        13960,
+        13961
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 2% chance to get an extra attack on the same target after dealing damage with your Axe or Sword.",
+        "Gives you a 5% chance to get an extra attack on the same target after dealing damage with your Axe or Sword."
+      ]
+    },
+    {
+      "id": 124,
+      "name": "Weapon Expertise",
+      "tree": 1,
+      "icon": "spell_holy_blessingofstrength",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofstrength.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        30919,
+        30920
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your skill with Axe, Dagger, Fist, Mace and Sword weapons by 3.",
+        "Increases your skill with Axe, Dagger, Fist, Mace and Sword weapons by 5."
+      ]
+    },
+    {
+      "id": 125,
+      "name": "Blade Rush",
+      "tree": 1,
+      "icon": "ability_warrior_weaponmastery",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_weaponmastery.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        52507,
+        52508
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          2,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your melee attack speed by 2% and reduces the time between your Energy regeneration ticks by an amount equal to your Agility. More effective than Blade Rush (Rank 1).",
+        "Increases your melee attack speed by 5% and reduces the time between your Energy regeneration ticks by an amount equal to your Agility. More effective than Blade Rush (Rank 1)."
+      ]
+    },
+    {
+      "id": 126,
+      "name": "Aggression",
+      "tree": 1,
+      "icon": "ability_racial_avatar",
+      "iconSource": "https://octowow.st/talents/icons/ability_racial_avatar.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        18427,
+        18428,
+        18429
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of your Sinister Strike, Eviscerate, Riposte and Surprise Attack abilities by 3%.",
+        "Increases the damage of your Sinister Strike, Eviscerate, Riposte and Surprise Attack abilities by 6%.",
+        "Increases the damage of your Sinister Strike, Eviscerate, Riposte and Surprise Attack abilities by 10%."
+      ]
+    },
+    {
+      "id": 127,
+      "name": "Adrenaline Rush",
+      "tree": 1,
+      "icon": "spell_shadow_shadowworddominate",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadowworddominate.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        13750
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases your Energy regeneration rate by 100% for 15 sec."
+      ]
+    },
+    {
+      "id": 146,
+      "name": "Camouflage",
+      "tree": 2,
+      "icon": "ability_stealth",
+      "iconSource": "https://octowow.st/talents/icons/ability_stealth.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        13975,
+        14062,
+        14063,
+        14064,
+        14065
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your speed while stealthed by 3% and reduces the cooldown of your Stealth ability by 1 sec. In addition, reduces the chance enemies have to detect you while in Stealth mode. More effective than Camouflage (Rank 1).",
+        "Increases your speed while stealthed by 6% and reduces the cooldown of your Stealth ability by 2 sec. In addition, reduces the chance enemies have to detect you while in Stealth mode. More effective than Camouflage (Rank 1).",
+        "Increases your speed while stealthed by 9% and reduces the cooldown of your Stealth ability by 3 sec. In addition, reduces the chance enemies have to detect you while in Stealth mode. More effective than Camouflage (Rank 1).",
+        "Increases your speed while stealthed by 12% and reduces the cooldown of your Stealth ability by 4 sec. In addition, reduces the chance enemies have to detect you while in Stealth mode. More effective than Camouflage (Rank 1).",
+        "Increases your speed while stealthed by 15% and reduces the cooldown of your Stealth ability by 5 sec. In addition, reduces the chance enemies have to detect you while in Stealth mode. More effective than Camouflage (Rank 1)."
+      ]
+    },
+    {
+      "id": 147,
+      "name": "Improved Expose Armor",
+      "tree": 2,
+      "icon": "ability_warrior_riposte",
+      "iconSource": "https://octowow.st/talents/icons/ability_warrior_riposte.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        14168,
+        14169
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases the armor reduced by your Expose Armor ability by 25%.",
+        "Increases the armor reduced by your Expose Armor ability by 50%."
+      ]
+    },
+    {
+      "id": 148,
+      "name": "Improved Gouge",
+      "tree": 2,
+      "icon": "ability_gouge",
+      "iconSource": "https://octowow.st/talents/icons/ability_gouge.png",
+      "position": 3,
+      "row": 0,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        13741,
+        13793,
+        13792
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.5,
+          1,
+          1.5
+        ]
+      ],
+      "descriptions": [
+        "Increases the effect duration of your Gouge ability by 0.5 sec.",
+        "Increases the effect duration of your Gouge ability by 1 sec.",
+        "Increases the effect duration of your Gouge ability by 1.5 sec."
+      ]
+    },
+    {
+      "id": 149,
+      "name": "Improved Ambush",
+      "tree": 2,
+      "icon": "ability_rogue_ambush",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_ambush.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        14079,
+        14080,
+        14081
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your Ambush ability by 15%.  Your Ambush will refund 5 Energy if it does not result in a critical strike.",
+        "Increases the critical strike chance of your Ambush ability by 30%.  Your Ambush will refund 10 Energy if it does not result in a critical strike.",
+        "Increases the critical strike chance of your Ambush ability by 45%.  Your Ambush will refund 15 Energy if it does not result in a critical strike."
+      ]
+    },
+    {
+      "id": 150,
+      "name": "Elusiveness",
+      "tree": 2,
+      "icon": "spell_magic_lesserinvisibilty",
+      "iconSource": "https://octowow.st/talents/icons/spell_magic_lesserinvisibilty.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        13981,
+        14066
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          45,
+          1.5
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of your Vanish and Blind abilities by 45 min.",
+        "Reduces the cooldown of your Vanish and Blind abilities by 1.5 min."
+      ]
+    },
+    {
+      "id": 151,
+      "name": "Serrated Blades",
+      "tree": 2,
+      "icon": "inv_sword_17",
+      "iconSource": "https://octowow.st/talents/icons/inv_sword_17.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        14171,
+        14172,
+        14173
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          100,
+          200,
+          300
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage dealt by your Rupture and Garrote abilities by 10% and causes your attacks to ignore 100 of your target's Armor.",
+        "Increases the damage dealt by your Rupture and Garrote abilities by 20% and causes your attacks to ignore 200 of your target's Armor.",
+        "Increases the damage dealt by your Rupture and Garrote abilities by 30% and causes your attacks to ignore 300 of your target's Armor."
+      ]
+    },
+    {
+      "id": 152,
+      "name": "Initiative",
+      "tree": 2,
+      "icon": "spell_shadow_fumble",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_fumble.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        13976,
+        13979,
+        13980
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          33,
+          66,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 33% chance to add an additional combo point to your target when using your Ambush, Garrote, or Cheap Shot ability.",
+        "Gives you a 66% chance to add an additional combo point to your target when using your Ambush, Garrote, or Cheap Shot ability.",
+        "Gives you a 100% chance to add an additional combo point to your target when using your Ambush, Garrote, or Cheap Shot ability."
+      ]
+    },
+    {
+      "id": 153,
+      "name": "Improved Ghostly Strike",
+      "tree": 2,
+      "icon": "inv_sword_02",
+      "iconSource": "https://octowow.st/talents/icons/inv_sword_02.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        51970,
+        51971,
+        51972
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Your Ghostly Strike increases your movement speed by 5% and increases your party members' movement speed by 2% within 30 yards for 5 sec. In addition, reduces the Energy cost of your Ghostly Strike by 3.",
+        "Your Ghostly Strike increases your movement speed by 10% and increases your party members' movement speed by 4% within 30 yards for 5 sec. In addition, reduces the Energy cost of your Ghostly Strike by 6.",
+        "Your Ghostly Strike increases your movement speed by 15% and increases your party members' movement speed by 6% within 30 yards for 5 sec. In addition, reduces the Energy cost of your Ghostly Strike by 10."
+      ]
+    },
+    {
+      "id": 154,
+      "name": "Smoke Bomb",
+      "tree": 2,
+      "icon": "spell_smoke_bomb_5",
+      "iconSource": "https://octowow.st/talents/icons/spell_smoke_bomb_5.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        51969
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Creates a cloud of thick smoke in 8 yards around you for 8 sec. All targets inside the smoke have a 20% reduced chance of being hit by attacks and spells for the duration."
+      ]
+    },
+    {
+      "id": 155,
+      "name": "Hemorrhage",
+      "tree": 2,
+      "icon": "spell_shadow_lifedrain",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_lifedrain.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 1,
+      "spellIds": [
+        16511
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "An instant strike that deals 110% weapon damage and causes the target to hemorrhage, increasing any Physical damage dealt to the target by 2%.  Lasts 50 charges or 15 sec.  Awards 1 combo point."
+      ]
+    },
+    {
+      "id": 156,
+      "name": "Cloaked in Shadows",
+      "tree": 2,
+      "icon": "spell_cloaked_in_shadows_2",
+      "iconSource": "https://octowow.st/talents/icons/spell_cloaked_in_shadows_2.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        52707,
+        52709
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          6,
+          12
+        ]
+      ],
+      "descriptions": [
+        "Whenever you Vanish, you and nearby party members within 20 yards are cloaked in shadows, gaining a barrier that absorbs up to 6% of your maximum health for 20 sec.",
+        "Whenever you Vanish, you and nearby party members within 20 yards are cloaked in shadows, gaining a barrier that absorbs up to 12% of your maximum health for 20 sec."
+      ]
+    },
+    {
+      "id": 157,
+      "name": "Blackjack",
+      "tree": 2,
+      "icon": "ability_sap",
+      "iconSource": "https://octowow.st/talents/icons/ability_sap.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        14076,
+        14094
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Your Sap and Blind abilities reduce the target's damage dealt by 5% for 8 sec when their effect ends or fails to apply. In addition, you have a 50% chance to return to stealth after using your Sap ability.",
+        "Your Sap and Blind abilities reduce the target's damage dealt by 10% for 8 sec when their effect ends or fails to apply. In addition, you have a 100% chance to return to stealth after using your Sap ability."
+      ]
+    },
+    {
+      "id": 158,
+      "name": "Blinding Haze",
+      "tree": 2,
+      "icon": "ability_rogue_shadowstep",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_shadowstep.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51680,
+        51681,
+        51682
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Energy cost of your Distract by 5. In addition, targets hit by your Distract have their chance to hit reduced by 2% for 6 sec. This effect is guaranteed to be applied.",
+        "Reduces the Energy cost of your Distract by 10. In addition, targets hit by your Distract have their chance to hit reduced by 4% for 6 sec. This effect is guaranteed to be applied.",
+        "Reduces the Energy cost of your Distract by 15. In addition, targets hit by your Distract have their chance to hit reduced by 6% for 6 sec. This effect is guaranteed to be applied."
+      ]
+    },
+    {
+      "id": 159,
+      "name": "Dirty Deeds",
+      "tree": 2,
+      "icon": "spell_shadow_summonsuccubus",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_summonsuccubus.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        14082,
+        14083
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Energy cost of your Cheap Shot and Garrote abilities by 10.",
+        "Reduces the Energy cost of your Cheap Shot and Garrote abilities by 20."
+      ]
+    },
+    {
+      "id": 160,
+      "name": "Preparation",
+      "tree": 2,
+      "icon": "spell_shadow_antishadow",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_antishadow.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        14185
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, this ability immediately finishes the cooldown on your other Rogue abilities."
+      ]
+    },
+    {
+      "id": 161,
+      "name": "Shadow of Death",
+      "tree": 2,
+      "icon": "spell_shadow_of_death_3b",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_of_death_3b.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        52710
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "A finishing move that etches a sigil onto the target for 6 sec. The sigil accumulates damage equal to a percentage of all damage the target takes during its duration, up to a percentage of your Attack Power. When the maximum capacity is reached or the sigil expires, the stored damage is unleashed as Physical damage. Both values increase with each combo point:\n   1 point : 10% of damage accumulated, up to 50% of Attack Power\n   2 points: 20% of damage accumulated, up to 100% of Attack Power\n   3 points: 30% of damage accumulated, up to 150% of Attack Power\n   4 points: 40% of damage accumulated, up to 200% of Attack Power\n   5 points: 50% of damage accumulated, up to 250% of Attack Power"
+      ]
+    },
+    {
+      "id": 162,
+      "name": "Bloody Mess",
+      "tree": 2,
+      "icon": "spell_shadow_bloodboil",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_bloodboil.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        51974,
+        51975
+      ],
+      "requires": 11,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          2,
+          5
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Energy cost of your Hemorrhage by 2 and increases the Physical damage dealt bonus of your Hemorrhage by 50%.",
+        "Reduces the Energy cost of your Hemorrhage by 5 and increases the Physical damage dealt bonus of your Hemorrhage by 100%."
+      ]
+    },
+    {
+      "id": 163,
+      "name": "Honor Among Thieves",
+      "tree": 2,
+      "icon": "inv_throwingknife_05",
+      "iconSource": "https://octowow.st/talents/icons/inv_throwingknife_05.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        52512,
+        52514
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Physical critical strikes by you or party members within 20 yards grant you 2 Energy.",
+        "Physical critical strikes by you or party members within 20 yards grant you 5 Energy."
+      ]
+    },
+    {
+      "id": 164,
+      "name": "Tricks of the Trade",
+      "tree": 2,
+      "icon": "inv_misc_key_03",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_key_03.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        52541,
+        52542,
+        52543,
+        52544,
+        52545
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Your opening moves have a 20% chance and your finishing moves have a 4% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This effect stacks up to 2 times.",
+        "Your opening moves have a 40% chance and your finishing moves have a 8% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This effect stacks up to 2 times.",
+        "Your opening moves have a 60% chance and your finishing moves have a 12% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This effect stacks up to 2 times.",
+        "Your opening moves have a 80% chance and your finishing moves have a 16% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This effect stacks up to 2 times.",
+        "Your opening moves have a 100% chance and your finishing moves have a 20% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This effect stacks up to 2 times."
+      ]
+    },
+    {
+      "id": 165,
+      "name": "Mark for Death",
+      "tree": 2,
+      "icon": "ability_creature_cursed_02",
+      "iconSource": "https://octowow.st/talents/icons/ability_creature_cursed_02.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52538
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "A marking strike that deals 135% weapon damage and reveals the target’s vulnerabilities, increasing your party members' Attack Power by 30% and damage done by magical spells and effects up to 18% of your melee Attack Power for 8 sec. Cannot be blocked, dodged or parried by the target. Awards 2 combo point."
+      ]
+    }
+  ]
+}

@@ -36,7 +36,7 @@ class Document(HTMLParser):
             if self.stack[i].tag==tag:self.stack=self.stack[:i];break
     def handle_data(self,data):self.stack[-1].children.append(data)
 
-TYPES={'head':1,'neck':2,'shoulder':3,'back':16,'chest':5,'robe':20,'wrist':9,'hands':10,'waist':6,'legs':7,'feet':8,'finger':11,'trinket':12,'one-hand':13,'two-hand':17,'main hand':21,'off hand':22,'held in off-hand':23,'ranged':26,'thrown':25,'relic':28}
+TYPES={'shirt':4,'tabard':19,'projectile':24,'head':1,'neck':2,'shoulder':3,'back':16,'chest':5,'robe':20,'wrist':9,'hands':10,'waist':6,'legs':7,'feet':8,'finger':11,'trinket':12,'one-hand':13,'two-hand':17,'main hand':21,'off hand':22,'held in off-hand':23,'ranged':26,'thrown':25,'relic':28}
 def parse_detail(html,id_):
     doc=Document();doc.feed(html)
     tooltip=doc.root.find(lambda n:n.attrs.get('id')==f'tooltip{id_}-generic')
@@ -47,6 +47,7 @@ def parse_detail(html,id_):
     text=primary.text().strip()
     slot=next((TYPES[n.text().strip().lower()] for n in tooltip.descendants() if n.tag=='td' and n.text().strip().lower() in TYPES),None)
     if slot==22 and any(n.tag=='th' and n.text().strip()=='Shield' for n in tooltip.descendants()):slot=14
+    if not slot and re.search(r'\b\d+ Slot Bag\b',text):slot=18
     if not slot:raise ValueError('Unknown equipment slot')
     attributes={k:int(v) for v,k in re.findall(r'(?:^|\n)\s*\+(\d+) (Strength|Agility|Stamina|Intellect|Spirit|[A-Za-z]+ Resistance)\b',text)}
     armor=re.search(r'(?:^|\n)\s*(\d+) Armor\b',text)
@@ -56,7 +57,8 @@ def parse_detail(html,id_):
         m=re.search(key+r' Mask:\s*(-?\d+)',facts.text())
         if not m:raise ValueError('Missing restriction mask')
         return int(m[1])
-    return dict(id=id_,name=name,classMask=mask('Class'),raceMask=mask('Race'),slot=slot,
+    ammo=re.search(r'Adds ([0-9.]+) damage per second',text)
+    return dict(**({'ammunitionDps':float(ammo[1])} if ammo else {}),id=id_,name=name,classMask=mask('Class'),raceMask=mask('Race'),slot=slot,
         requiredLevel=int(re.search(r'Requires Level (\d+)',text)[1]) if re.search(r'Requires Level (\d+)',text) else 0,
         effects=list(dict.fromkeys(n.text().strip() for n in tooltip.descendants() if n.tag=='span' and re.match(r'^(Equip:|Use:|Chance on hit:)',n.text().strip()))),
         requirements=requirements,unique=bool(re.search(r'\bUnique(?:-Equipped)?\b',text)),attributes=attributes,tooltipText=re.sub(r'\n\s*\n','\n',tooltip.text()).strip(),summary=text,

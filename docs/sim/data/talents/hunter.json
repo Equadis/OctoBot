@@ -1,0 +1,1726 @@
+{
+  "schemaVersion": 1,
+  "classId": "hunter",
+  "source": {
+    "url": "https://octowow.st/talents/hunter/",
+    "retrievedAt": "2026-11-11T23:29:44.044344+00:00",
+    "htmlSha256": "5de146011a25875988790d305d181c8798dd371aa5d74d058fd2f4d81f0e0854",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Beast Mastery",
+      "maxPoints": 52
+    },
+    {
+      "index": 1,
+      "name": "Marksmanship",
+      "maxPoints": 48
+    },
+    {
+      "index": 2,
+      "name": "Survival",
+      "maxPoints": 51
+    }
+  ],
+  "talents": [
+    {
+      "id": 373,
+      "name": "Swift Aspects",
+      "tree": 0,
+      "icon": "spell_nature_ravenform",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_ravenform.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        19552,
+        19553,
+        19554,
+        19555,
+        19556
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 3% for 12 sec.  While Aspect of the Wolf is active, all normal melee attacks have a 10% chance of increasing melee attack speed by 3% for 12 sec.",
+        "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 6% for 12 sec.  While Aspect of the Wolf is active, all normal melee attacks have a 10% chance of increasing melee attack speed by 6% for 12 sec.",
+        "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 9% for 12 sec.  While Aspect of the Wolf is active, all normal melee attacks have a 10% chance of increasing melee attack speed by 9% for 12 sec.",
+        "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 12% for 12 sec.  While Aspect of the Wolf is active, all normal melee attacks have a 10% chance of increasing melee attack speed by 12% for 12 sec.",
+        "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 15% for 12 sec.  While Aspect of the Wolf is active, all normal melee attacks have a 10% chance of increasing melee attack speed by 15% for 12 sec."
+      ]
+    },
+    {
+      "id": 374,
+      "name": "Endurance Training",
+      "tree": 0,
+      "icon": "spell_nature_reincarnation",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_reincarnation.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19583,
+        19584,
+        19585,
+        19586,
+        19587
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Adds 6% of your Stamina to your pets' Stamina and increases their health by 2%.",
+        "Adds 12% of your Stamina to your pets' Stamina and increases their health by 4%.",
+        "Adds 18% of your Stamina to your pets' Stamina and increases their health by 6%.",
+        "Adds 24% of your Stamina to your pets' Stamina and increases their health by 8%.",
+        "Adds 30% of your Stamina to your pets' Stamina and increases their health by 10%."
+      ]
+    },
+    {
+      "id": 375,
+      "name": "Improved Eyes of the Beast",
+      "tree": 0,
+      "icon": "ability_eyeoftheowl",
+      "iconSource": "https://octowow.st/talents/icons/ability_eyeoftheowl.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        19557,
+        19558
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          30,
+          60
+        ],
+        [
+          15,
+          30
+        ],
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the duration of your Eyes of the Beast by 30 sec.\n\nWhile channeling Eyes of the Beast, your pet deals 15% additional damage and gains 15% increased Focus regeneration.",
+        "Increases the duration of your Eyes of the Beast by 60 sec.\n\nWhile channeling Eyes of the Beast, your pet deals 30% additional damage and gains 30% increased Focus regeneration."
+      ]
+    },
+    {
+      "id": 376,
+      "name": "Improved Primal Aspects",
+      "tree": 0,
+      "icon": "ability_hunter_aspectofthemonkey",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_aspectofthemonkey.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        19549,
+        19550,
+        19551
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the Dodge bonus of your Aspect of the Monkey by 2%. While Aspect of the Wolf is active, you're healed for 2% of your melee damage.",
+        "Increases the Dodge bonus of your Aspect of the Monkey by 4%. While Aspect of the Wolf is active, you're healed for 4% of your melee damage.",
+        "Increases the Dodge bonus of your Aspect of the Monkey by 6%. While Aspect of the Wolf is active, you're healed for 6% of your melee damage."
+      ]
+    },
+    {
+      "id": 377,
+      "name": "Thick Hide",
+      "tree": 0,
+      "icon": "inv_misc_pelt_bear_03",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_pelt_bear_03.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        19609,
+        19610,
+        19612
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          12,
+          24,
+          36
+        ],
+        [
+          7,
+          14,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Adds 12% of your armor value from items to the armor value of your pets and increases the armor value of your pets by 7%.",
+        "Adds 24% of your armor value from items to the armor value of your pets and increases the armor value of your pets by 14%.",
+        "Adds 36% of your armor value from items to the armor value of your pets and increases the armor value of your pets by 20%."
+      ]
+    },
+    {
+      "id": 378,
+      "name": "Improved Revive Pet",
+      "tree": 0,
+      "icon": "ability_hunter_beastsoothe",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_beastsoothe.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        24443,
+        19575
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ],
+        [
+          20,
+          40
+        ],
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Revive Pet's casting time is reduced by 3 sec, mana cost is reduced by 20%, and increases the health your pet returns with by an additional 15%.",
+        "Revive Pet's casting time is reduced by 6 sec, mana cost is reduced by 40%, and increases the health your pet returns with by an additional 30%."
+      ]
+    },
+    {
+      "id": 379,
+      "name": "Pathfinding",
+      "tree": 0,
+      "icon": "ability_mount_jungletiger",
+      "iconSource": "https://octowow.st/talents/icons/ability_mount_jungletiger.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        19559,
+        19560
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ],
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the speed bonus of your Aspect of the Cheetah and Aspect of the Pack by 3% and increases your pet's movement speed by 15%. ",
+        "Increases the speed bonus of your Aspect of the Cheetah and Aspect of the Pack by 6% and increases your pet's movement speed by 30%. "
+      ]
+    },
+    {
+      "id": 380,
+      "name": "Coordinated Assault",
+      "tree": 0,
+      "icon": "spell_coordinated_assault_1",
+      "iconSource": "https://octowow.st/talents/icons/spell_coordinated_assault_1.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        49559
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Hitting an enemy with Arcane Shot, Steady Shot, or Raptor Strike causes your pet's next attack within 6 sec to also strike for Physical damage equal to 20% of your Attack Power. This effect can only occur once every 3 sec."
+      ]
+    },
+    {
+      "id": 381,
+      "name": "Unleashed Fury",
+      "tree": 0,
+      "icon": "ability_bullrush",
+      "iconSource": "https://octowow.st/talents/icons/ability_bullrush.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19616,
+        19617,
+        19618,
+        19619,
+        19620
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your pets by 4%.",
+        "Increases the damage done by your pets by 8%.",
+        "Increases the damage done by your pets by 12%.",
+        "Increases the damage done by your pets by 16%.",
+        "Increases the damage done by your pets by 20%."
+      ]
+    },
+    {
+      "id": 382,
+      "name": "Bestial Discipline",
+      "tree": 0,
+      "icon": "spell_nature_abolishmagic",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_abolishmagic.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        19590,
+        19592
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          5
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the Focus regeneration of your pets by 2 each tick and reduces the cooldown of your pets' special ability by 10%.",
+        "Increases the Focus regeneration of your pets by 5 each tick and reduces the cooldown of your pets' special ability by 20%."
+      ]
+    },
+    {
+      "id": 383,
+      "name": "Improved Mend Pet",
+      "tree": 0,
+      "icon": "ability_hunter_mendpet",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_mendpet.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        19572,
+        19573
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40
+        ],
+        [
+          15,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases amount you heal your pet with Mend Pet by 20% and gives the spell a 15% chance of cleansing 1 Curse, Disease, Magic or Poison effect from the pet each tick.",
+        "Increases amount you heal your pet with Mend Pet by 40% and gives the spell a 50% chance of cleansing 1 Curse, Disease, Magic or Poison effect from the pet each tick."
+      ]
+    },
+    {
+      "id": 384,
+      "name": "Ferocity",
+      "tree": 0,
+      "icon": "inv_misc_monsterclaw_04",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_monsterclaw_04.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19598,
+        19599,
+        19600,
+        19601,
+        19602
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your pets by 3%.",
+        "Increases the critical strike chance of your pets by 6%.",
+        "Increases the critical strike chance of your pets by 9%.",
+        "Increases the critical strike chance of your pets by 12%.",
+        "Increases the critical strike chance of your pets by 15%."
+      ]
+    },
+    {
+      "id": 385,
+      "name": "Scent of Blood",
+      "tree": 0,
+      "icon": "ability_hunter_goforthethroat",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_goforthethroat.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        52994,
+        52996,
+        52997
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Your attacks have a 5% chance to send your pet into a rage, causing it to deal 40% additional damage for 8 sec.",
+        "Your attacks have a 10% chance to send your pet into a rage, causing it to deal 40% additional damage for 8 sec.",
+        "Your attacks have a 15% chance to send your pet into a rage, causing it to deal 40% additional damage for 8 sec."
+      ]
+    },
+    {
+      "id": 386,
+      "name": "Bestial Wrath",
+      "tree": 0,
+      "icon": "ability_druid_ferociousbite",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_ferociousbite.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        19574
+      ],
+      "requires": 16,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "Sends your pet into a rage, granting it Scent of Blood for 18 sec. While enraged, the beast does not feel pity, remorse, or fear, and cannot be stopped except by death."
+      ]
+    },
+    {
+      "id": 387,
+      "name": "Intimidation",
+      "tree": 0,
+      "icon": "ability_devour",
+      "iconSource": "https://octowow.st/talents/icons/ability_devour.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 1,
+      "spellIds": [
+        19577
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Command your pet to intimidate the target on the next successful melee attack, stunning the target for 3 sec, and increasing the pet's threat generation by 50% for 8 sec."
+      ]
+    },
+    {
+      "id": 388,
+      "name": "Bestial Precision",
+      "tree": 0,
+      "icon": "ability_druid_rake",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_rake.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51554,
+        51555
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the physical hit chance of your pets by 4% and the spell hit chance of your pets by 9%. In addition, increases the weapon skill of your pets by 5.",
+        "Increases the physical hit chance of your pets by 8% and the spell hit chance of your pets by 18%. In addition, increases the weapon skill of your pets by 10."
+      ]
+    },
+    {
+      "id": 389,
+      "name": "Spirit Bond",
+      "tree": 0,
+      "icon": "ability_druid_demoralizingroar",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_demoralizingroar.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        19578,
+        20895
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          12,
+          25
+        ],
+        [
+          7,
+          15
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Your pet gains melee attack power equal to 12% of your ranged attack power and spell power equal to 7% of your ranged attack power. While your pet is active, you and your pet will regenerate 1% of total health every 5 sec.",
+        "Your pet gains melee attack power equal to 25% of your ranged attack power and spell power equal to 15% of your ranged attack power. While your pet is active, you and your pet will regenerate 2% of total health every 5 sec."
+      ]
+    },
+    {
+      "id": 390,
+      "name": "Frenzy",
+      "tree": 0,
+      "icon": "inv_misc_monsterclaw_03",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_monsterclaw_03.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19621,
+        19622,
+        19623,
+        19624,
+        19625
+      ],
+      "requires": 14,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives your pet a 20% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike.",
+        "Gives your pet a 40% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike.",
+        "Gives your pet a 60% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike.",
+        "Gives your pet a 80% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike.",
+        "Gives your pet a 100% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike."
+      ]
+    },
+    {
+      "id": 391,
+      "name": "Kill Command",
+      "tree": 0,
+      "icon": "ability_hunter_killcommand",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_killcommand.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        41827
+      ],
+      "requires": 21,
+      "requiresRanks": 2,
+      "rankParameters": [],
+      "descriptions": [
+        "Commands your pet to instantly attack for 80% of its Attack Power. Can only be used after the Hunter lands a critical strike on the target."
+      ]
+    },
+    {
+      "id": 412,
+      "name": "Improved Concussive Shot",
+      "tree": 1,
+      "icon": "spell_frost_stun",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_stun.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        19407,
+        19412,
+        19413,
+        19414,
+        19415
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Gives your Concussive Shot a 4% chance to stun the target for 3 sec.",
+        "Gives your Concussive Shot a 8% chance to stun the target for 3 sec.",
+        "Gives your Concussive Shot a 12% chance to stun the target for 3 sec.",
+        "Gives your Concussive Shot a 16% chance to stun the target for 3 sec.",
+        "Gives your Concussive Shot a 20% chance to stun the target for 3 sec."
+      ]
+    },
+    {
+      "id": 413,
+      "name": "Efficiency",
+      "tree": 1,
+      "icon": "spell_frost_wizardmark",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_wizardmark.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19416,
+        19417,
+        19418,
+        19419,
+        19420
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of your Shots and Stings by 2%.",
+        "Reduces the Mana cost of your Shots and Stings by 4%.",
+        "Reduces the Mana cost of your Shots and Stings by 6%.",
+        "Reduces the Mana cost of your Shots and Stings by 8%.",
+        "Reduces the Mana cost of your Shots and Stings by 10%."
+      ]
+    },
+    {
+      "id": 414,
+      "name": "Improved Stings",
+      "tree": 1,
+      "icon": "ability_hunter_quickshot",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_quickshot.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        19464,
+        19465,
+        19466,
+        19467,
+        19468
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of Serpent Sting by 6%, increases the mana drained by Viper Sting by 1%, and causes Scorpid Sting to reduce attack speed by an additional 2%.",
+        "Increases the damage of Serpent Sting by 12%, increases the mana drained by Viper Sting by 2%, and causes Scorpid Sting to reduce attack speed by an additional 4%.",
+        "Increases the damage of Serpent Sting by 18%, increases the mana drained by Viper Sting by 3%, and causes Scorpid Sting to reduce attack speed by an additional 6%.",
+        "Increases the damage of Serpent Sting by 24%, increases the mana drained by Viper Sting by 4%, and causes Scorpid Sting to reduce attack speed by an additional 8%.",
+        "Increases the damage of Serpent Sting by 30%, increases the mana drained by Viper Sting by 5%, and causes Scorpid Sting to reduce attack speed by an additional 10%."
+      ]
+    },
+    {
+      "id": 415,
+      "name": "Lethal Shots",
+      "tree": 1,
+      "icon": "ability_searingarrow",
+      "iconSource": "https://octowow.st/talents/icons/ability_searingarrow.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19426,
+        19427,
+        19429,
+        19430,
+        19431
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your critical strike chance with ranged weapons by 1%.",
+        "Increases your critical strike chance with ranged weapons by 2%.",
+        "Increases your critical strike chance with ranged weapons by 3%.",
+        "Increases your critical strike chance with ranged weapons by 4%.",
+        "Increases your critical strike chance with ranged weapons by 5%."
+      ]
+    },
+    {
+      "id": 416,
+      "name": "Hawk Eye",
+      "tree": 1,
+      "icon": "ability_townwatch",
+      "iconSource": "https://octowow.st/talents/icons/ability_townwatch.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        19498,
+        19499
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of your ranged weapons by 3 yards.",
+        "Increases the range of your ranged weapons by 6 yards."
+      ]
+    },
+    {
+      "id": 417,
+      "name": "Aimed Shot",
+      "tree": 1,
+      "icon": "inv_spear_07",
+      "iconSource": "https://octowow.st/talents/icons/inv_spear_07.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        19434
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "An aimed shot that increases ranged damage by 70."
+      ]
+    },
+    {
+      "id": 418,
+      "name": "Swiftshot",
+      "tree": 1,
+      "icon": "ability_impalingbolt",
+      "iconSource": "https://octowow.st/talents/icons/ability_impalingbolt.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        19454,
+        19455,
+        19456
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.5,
+          1,
+          1.5
+        ],
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of Arcane Shot by 0.5 sec and the cooldown of Aimed Shot by 2 sec.",
+        "Reduces the cooldown of Arcane Shot by 1 sec and the cooldown of Aimed Shot by 4 sec.",
+        "Reduces the cooldown of Arcane Shot by 1.5 sec and the cooldown of Aimed Shot by 6 sec."
+      ]
+    },
+    {
+      "id": 419,
+      "name": "Endless Quiver",
+      "tree": 1,
+      "icon": "inv_misc_quiver_03",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_quiver_03.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51517,
+        51518
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Your Auto Shot, Arcane Shot, Steady Shot and Multi-Shot have a 3% chance to fire an additional normal ranged attack.  This additional shot does not spend ammo.",
+        "Your Auto Shot, Arcane Shot, Steady Shot and Multi-Shot have a 6% chance to fire an additional normal ranged attack.  This additional shot does not spend ammo."
+      ]
+    },
+    {
+      "id": 420,
+      "name": "Mortal Shots",
+      "tree": 1,
+      "icon": "ability_piercedamage",
+      "iconSource": "https://octowow.st/talents/icons/ability_piercedamage.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19485,
+        19487,
+        19488,
+        19489,
+        19490
+      ],
+      "requires": 6,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases your ranged weapon critical strike damage bonus by 6%.",
+        "Increases your ranged weapon critical strike damage bonus by 12%.",
+        "Increases your ranged weapon critical strike damage bonus by 18%.",
+        "Increases your ranged weapon critical strike damage bonus by 24%.",
+        "Increases your ranged weapon critical strike damage bonus by 30%."
+      ]
+    },
+    {
+      "id": 421,
+      "name": "Scatter Shot",
+      "tree": 1,
+      "icon": "ability_golemstormbolt",
+      "iconSource": "https://octowow.st/talents/icons/ability_golemstormbolt.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        19503
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "A short-range shot that deals 50% weapon damage and disorients the target for 4 sec.  Any damage caused will remove the effect.  Turns off your attack when used."
+      ]
+    },
+    {
+      "id": 422,
+      "name": "Experimental Ammunition",
+      "tree": 1,
+      "icon": "spell_hunter_exoticmunitions_poisoned",
+      "iconSource": "https://octowow.st/talents/icons/spell_hunter_exoticmunitions_poisoned.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        58108
+      ],
+      "requires": 9,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Your Aimed Shot deals an additional 5% of its damage as Fire, Arcane, or Nature damage, based on the active effect. Grants a further benefit depending on the element:\n\nExplosive Ammunition: Your next Multi-Shot causes hits to explode, dealing 20% ranged weapon damage to enemies within 5 yards of the targets.\n\nPoisonous Ammunition: Your next Serpent Sting deals 100% increased damage and applies a corrosive poison that reduces the target's armor by 240 for 15 sec.\n\nEnchanted Ammunition: Your next Arcane Shot deals 100% increased damage and weakens the target's resistance to magic, increasing magic damage taken by 3% for 6 sec."
+      ]
+    },
+    {
+      "id": 423,
+      "name": "Piercing Shots",
+      "tree": 1,
+      "icon": "ability_hunter_disarmingshot",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_disarmingshot.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        51512,
+        51513
+      ],
+      "requires": 14,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Your critical strikes from Multi-Shot, Steady Shot and Aimed Shot cause the target to bleed, dealing 15% of the damage over 8 sec.  This damage generates no threat.",
+        "Your critical strikes from Multi-Shot, Steady Shot and Aimed Shot cause the target to bleed, dealing 30% of the damage over 8 sec.  This damage generates no threat."
+      ]
+    },
+    {
+      "id": 424,
+      "name": "Barrage",
+      "tree": 1,
+      "icon": "ability_upgrademoonglaive",
+      "iconSource": "https://octowow.st/talents/icons/ability_upgrademoonglaive.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        19461,
+        19462,
+        24691
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          1,
+          1.5,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of Multi-Shot and Volley by 5% and reduces the cast time of Volley by 1 sec.",
+        "Increases the damage of Multi-Shot and Volley by 10% and reduces the cast time of Volley by 1.5 sec.",
+        "Increases the damage of Multi-Shot and Volley by 15% and reduces the cast time of Volley by 2 sec."
+      ]
+    },
+    {
+      "id": 425,
+      "name": "Improved Marksmanship",
+      "tree": 1,
+      "icon": "ability_marksmanship",
+      "iconSource": "https://octowow.st/talents/icons/ability_marksmanship.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51515,
+        51516
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of Steady Shot and Aimed Shot by 5%.",
+        "Increases the damage of Steady Shot and Aimed Shot by 10%."
+      ]
+    },
+    {
+      "id": 426,
+      "name": "Ranged Weapon Specialization",
+      "tree": 1,
+      "icon": "inv_weapon_rifle_06",
+      "iconSource": "https://octowow.st/talents/icons/inv_weapon_rifle_06.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19507,
+        19508,
+        19509,
+        19510,
+        19511
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage you deal with ranged weapons by 2%.",
+        "Increases the damage you deal with ranged weapons by 4%.",
+        "Increases the damage you deal with ranged weapons by 6%.",
+        "Increases the damage you deal with ranged weapons by 8%.",
+        "Increases the damage you deal with ranged weapons by 10%."
+      ]
+    },
+    {
+      "id": 427,
+      "name": "Lock and Load",
+      "tree": 1,
+      "icon": "ability_hunter_lockandload",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_lockandload.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52920
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Your Steady Shot, Aimed Shot, and Arcane Shot critical strikes have a 100% chance to reset the cooldown of Aimed Shot and trigger Lock and Load. Lock and Load reduces the cast time of Aimed Shot by 1 sec and causes Aimed Shot to hit all enemies between you and the target. Lasts 10 sec or until Aimed Shot is cast."
+      ]
+    },
+    {
+      "id": 392,
+      "name": "Improved Slaying",
+      "tree": 2,
+      "icon": "spell_holy_prayerofhealing",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_prayerofhealing.png",
+      "position": 0,
+      "row": 0,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        45977,
+        45978,
+        45979
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "descriptions": [
+        "Increases all damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by 1% and increases critical damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by an additional 1%.",
+        "Increases all damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by 2% and increases critical damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by an additional 2%.",
+        "Increases all damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by 3% and increases critical damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by an additional 3%."
+      ]
+    },
+    {
+      "id": 393,
+      "name": "Resourcefulness",
+      "tree": 2,
+      "icon": "inv_misc_book_08",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_book_08.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        51570,
+        51571,
+        51572,
+        51573,
+        51574
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of all traps and melee abilities by 2%.",
+        "Reduces the Mana cost of all traps and melee abilities by 4%.",
+        "Reduces the Mana cost of all traps and melee abilities by 6%.",
+        "Reduces the Mana cost of all traps and melee abilities by 8%.",
+        "Reduces the Mana cost of all traps and melee abilities by 10%."
+      ]
+    },
+    {
+      "id": 394,
+      "name": "Swift Reflexes",
+      "tree": 2,
+      "icon": "ability_parry",
+      "iconSource": "https://octowow.st/talents/icons/ability_parry.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        19295,
+        19297
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Increases your Parry chance and attack speed by 1%.",
+        "Increases your Parry chance and attack speed by 2%."
+      ]
+    },
+    {
+      "id": 395,
+      "name": "Entrapment",
+      "tree": 2,
+      "icon": "spell_nature_stranglevines",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_stranglevines.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        19184,
+        19387,
+        19388
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          8,
+          16,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 8% chance to entrap the target, preventing them from moving for 5 sec.",
+        "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 16% chance to entrap the target, preventing them from moving for 5 sec.",
+        "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 25% chance to entrap the target, preventing them from moving for 5 sec."
+      ]
+    },
+    {
+      "id": 396,
+      "name": "Savage Strikes",
+      "tree": 2,
+      "icon": "ability_racial_bloodrage",
+      "iconSource": "https://octowow.st/talents/icons/ability_racial_bloodrage.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        19159,
+        19160
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          13,
+          25
+        ],
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your offhand weapon by 13% and the critical strike chance of your Lacerate, Raptor Strike, Mongoose Bite, Carve and Wing Clip abilities by 3%.",
+        "Increases the damage done by your offhand weapon by 25% and the critical strike chance of your Lacerate, Raptor Strike, Mongoose Bite, Carve and Wing Clip abilities by 6%."
+      ]
+    },
+    {
+      "id": 397,
+      "name": "Improved Wing Clip",
+      "tree": 2,
+      "icon": "ability_rogue_trip",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_trip.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        19228,
+        19232,
+        19233
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          14,
+          28,
+          40
+        ]
+      ],
+      "descriptions": [
+        "Gives your Wing Clip ability a 14% chance to immobilize the target for 5 sec.",
+        "Gives your Wing Clip ability a 28% chance to immobilize the target for 5 sec.",
+        "Gives your Wing Clip ability a 40% chance to immobilize the target for 5 sec."
+      ]
+    },
+    {
+      "id": 398,
+      "name": "Alone Against the World",
+      "tree": 2,
+      "icon": "ability_hunter_improvedtracking",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_improvedtracking.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        52891,
+        52892
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "While you have no pet under your control, all damage dealt is increased by 3%.",
+        "While you have no pet under your control, all damage dealt is increased by 6%."
+      ]
+    },
+    {
+      "id": 399,
+      "name": "Planning Ahead",
+      "tree": 2,
+      "icon": "inv_misc_map_01",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_map_01.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51576,
+        51577
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          13,
+          25
+        ]
+      ],
+      "descriptions": [
+        "The duration of Freezing and Frost Trap effects and the damage of Immolation and Explosive Trap effects are increased by 13% if the traps are not triggered within the first 5 sec after being placed.",
+        "The duration of Freezing and Frost Trap effects and the damage of Immolation and Explosive Trap effects are increased by 25% if the traps are not triggered within the first 5 sec after being placed."
+      ]
+    },
+    {
+      "id": 400,
+      "name": "Survivalist",
+      "tree": 2,
+      "icon": "trade_survival",
+      "iconSource": "https://octowow.st/talents/icons/trade_survival.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        19255,
+        19256,
+        19257,
+        19258,
+        19259
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases total health by 2%.",
+        "Increases total health by 4%.",
+        "Increases total health by 6%.",
+        "Increases total health by 8%.",
+        "Increases total health by 10%."
+      ]
+    },
+    {
+      "id": 401,
+      "name": "Carve",
+      "tree": 2,
+      "icon": "inv_throwingknife_06",
+      "iconSource": "https://octowow.st/talents/icons/inv_throwingknife_06.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        51575
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "A sweeping attack that strikes up to 5 enemies in a 10 yard cone in front of you, dealing 60% weapon damage.\nThis ability shares a cooldown with Multi-Shot."
+      ]
+    },
+    {
+      "id": 402,
+      "name": "Deterrence",
+      "tree": 2,
+      "icon": "ability_whirlwind",
+      "iconSource": "https://octowow.st/talents/icons/ability_whirlwind.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 1,
+      "spellIds": [
+        19263
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, increases your Dodge and Parry chance by 25% for 10 sec."
+      ]
+    },
+    {
+      "id": 403,
+      "name": "Stinging Nettle",
+      "tree": 2,
+      "icon": "inv_misc_herb_16",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_herb_16.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51579,
+        51580
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40
+        ]
+      ],
+      "descriptions": [
+        "Your Mongoose Bite and triggered Fire traps now apply your highest rank of Serpent Sting for 20% of the duration. Serpent Stings applied this way ignore resistances and immunities.",
+        "Your Mongoose Bite and triggered Fire traps now apply your highest rank of Serpent Sting for 40% of the duration. Serpent Stings applied this way ignore resistances and immunities."
+      ]
+    },
+    {
+      "id": 404,
+      "name": "Surefooted",
+      "tree": 2,
+      "icon": "ability_kick",
+      "iconSource": "https://octowow.st/talents/icons/ability_kick.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        19290,
+        19294,
+        24283
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases hit chance by 1%, and by an additional 1% while dual wielding.\nIn addition, increases the chance to resist movement impairing effects by 5%.",
+        "Increases hit chance by 2%, and by an additional 2% while dual wielding.\nIn addition, increases the chance to resist movement impairing effects by 10%.",
+        "Increases hit chance by 3%, and by an additional 3% while dual wielding.\nIn addition, increases the chance to resist movement impairing effects by 15%."
+      ]
+    },
+    {
+      "id": 405,
+      "name": "Improved Feign Death",
+      "tree": 2,
+      "icon": "ability_rogue_feigndeath",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_feigndeath.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        19286,
+        19287
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8
+        ]
+      ],
+      "descriptions": [
+        "Reduces the chance your Feign Death ability will be resisted by 4%.",
+        "Reduces the chance your Feign Death ability will be resisted by 8%."
+      ]
+    },
+    {
+      "id": 406,
+      "name": "Killer Instinct",
+      "tree": 2,
+      "icon": "spell_holy_blessingofstamina",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofstamina.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        19370,
+        19371,
+        19373
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          7,
+          14,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases your critical strike chance with all attacks by 1%, increases your melee critical strike damage bonus by 7%.",
+        "Increases your critical strike chance with all attacks by 2%, increases your melee critical strike damage bonus by 14%.",
+        "Increases your critical strike chance with all attacks by 3%, increases your melee critical strike damage bonus by 20%."
+      ]
+    },
+    {
+      "id": 407,
+      "name": "Trap Mastery",
+      "tree": 2,
+      "icon": "ability_ensnare",
+      "iconSource": "https://octowow.st/talents/icons/ability_ensnare.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        19376,
+        19377,
+        51581
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          4,
+          7,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the duration of Freezing and Frost Trap effects by 10% and the damage of Immolation and Explosive Trap effects by 10%.  In addition, reduces the chance that enemies will resist trap effects by 4%.",
+        "Increases the duration of Freezing and Frost Trap effects by 20% and the damage of Immolation and Explosive Trap effects by 20%.  In addition, reduces the chance that enemies will resist trap effects by 7%.",
+        "Increases the duration of Freezing and Frost Trap effects by 30% and the damage of Immolation and Explosive Trap effects by 30%.  In addition, reduces the chance that enemies will resist trap effects by 10%."
+      ]
+    },
+    {
+      "id": 408,
+      "name": "Lacerate",
+      "tree": 2,
+      "icon": "spell_lacerate_1c",
+      "iconSource": "https://octowow.st/talents/icons/spell_lacerate_1c.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        48049
+      ],
+      "requires": 10,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Deepens the target's open wound, dealing damage equal to 40% of melee Attack Power and causing the target to bleed for 20% of that damage over 8 sec. Can only be used after critically striking the target. Using this ability from the target's sides increases its damage by 15%."
+      ]
+    },
+    {
+      "id": 409,
+      "name": "Vicious Strikes",
+      "tree": 2,
+      "icon": "ability_hunter_swiftstrike",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_swiftstrike.png",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51584,
+        51585
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.5,
+          1
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of Raptor Strike and Mongoose Bite by 0.5 sec and increases the damage they deal by 5%.",
+        "Reduces the cooldown of Raptor Strike and Mongoose Bite by 1 sec and increases the damage they deal by 10%."
+      ]
+    },
+    {
+      "id": 410,
+      "name": "Lightning Reflexes",
+      "tree": 2,
+      "icon": "spell_nature_invisibilty",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_invisibilty.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        19168,
+        19180,
+        19181,
+        24296,
+        24297
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases your Agility by 2% and increases your melee attack power by an amount equal to 20% of your Agility.",
+        "Increases your Agility by 4% and increases your melee attack power by an amount equal to 40% of your Agility.",
+        "Increases your Agility by 6% and increases your melee attack power by an amount equal to 60% of your Agility.",
+        "Increases your Agility by 8% and increases your melee attack power by an amount equal to 80% of your Agility.",
+        "Increases your Agility by 10% and increases your melee attack power by an amount equal to 100% of your Agility."
+      ]
+    },
+    {
+      "id": 411,
+      "name": "Untamed Trapper",
+      "tree": 2,
+      "icon": "spell_nature_slow",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_slow.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51586
+      ],
+      "requires": 17,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "Reduces the mana cost of your Immolation Trap and Explosive Trap effects by 20% and increases their damage based on your melee Attack Power. In addition, all traps can be placed while in combat."
+      ]
+    }
+  ]
+}

@@ -19,8 +19,7 @@ hosts receive normal browser image requests; image failures retain usable labels
 and fall back to a question-mark icon.
 
 The reference's availability badges are not copied as class-status facts.
-Only the Warrior planner is available in OctoSim; eight other classes remain
-planned, and no combat simulator is advertised as implemented.
+All nine class planners are available. No combat simulator is advertised as implemented.
 
 Audited 11 November 2026. Revision pins prevent later source changes from
 silently changing validation expectations. Source presence is not proof of
@@ -43,8 +42,8 @@ runtime accuracy, build success or OctoWoW compatibility.
 
 Additional first-party game-data source: [OctoWoW talent calculator](https://octowow.st/talents/),
 with [Warrior definitions](https://octowow.st/talents/warrior/). The page identifies
-Haaxor1689 as its creator. We extracted factual talent metadata, not application
-code, images or tooltip prose. The source hash and retrieval time are recorded in
+Haaxor1689 as its creator. We extracted factual talent metadata and rank descriptions, not application
+code or image bytes. The source hash and retrieval time are recorded in
 `data/talents/warrior.json`; application-code reuse permissions are not assumed.
 
 WarriorSim uses JavaScript globals, mutable data selection and a synchronous
@@ -67,6 +66,6 @@ measuring payload and runtime costs. Missing licence evidence blocks copying
 their implementation, not independent implementation or public-behaviour study.
 
 No third-party simulation code, upstream engine data files, logos or art are
-included in this branch. Official calculator factual metadata is now included
+included in this branch. Official calculator factual metadata for all nine classes (476 talents) is included
 with provenance. If an engine is later vendored, include exact pinned revisions, licence texts and
 notices, documented local modifications, and visible upstream attribution.

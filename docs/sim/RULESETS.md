@@ -3,6 +3,15 @@
 The target/default is OctoWoW. Vanilla and Turtle are references, not aliases.
 No verified OctoWoW ruleset has yet been created.
 
+## Nine-class planner snapshot
+
+All nine official trees are now imported (476 talents), including rank text and
+prerequisites. Class, race, level, inventory, uniqueness and supported profession
+requirements are checked separately from the combat engine. Equipment proficiency
+rules use a Vanilla baseline and must still be audited against OctoWoW's live
+customisations. A complete item catalogue or talent editor does not establish
+server combat formulas or turn an upstream Turtle engine into an Octo engine.
+
 ## Official talent calculator — metadata resolved
 
 [The official calculator](https://octowow.st/talents/) publishes all nine class

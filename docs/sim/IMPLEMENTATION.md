@@ -1,5 +1,19 @@
 # OctoSim implementation audit — 11 November 2026
 
+## Current planner expansion
+
+All nine class planners now share the same interface, with 476 official talents,
+class-aware item masks/proficiencies, class rotation choices/resources, professions,
+relics and ammunition. Named builds use transactional IndexedDB storage with
+100 slots per class, legacy-save migration, search, deletion and undo. Browser
+checks cover concurrent capacity, class isolation, reopening and migration.
+
+A fresh 70-page official equipment listing refresh found 14,087 records and no
+capped/failed equipment partitions. Full detail ingestion is a separate resumable
+job; `detail-coverage.json` is the completion authority. This expansion does not
+complete or validate any of the nine combat engines. The earlier combat acceptance
+gates remain outstanding.
+
 ## Product standard and source priority
 
 Combat Gum is the primary reference for UX, relevant functionality, simulation

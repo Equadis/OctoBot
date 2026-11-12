@@ -1,3 +1,4 @@
+import { CLASS_ROTATIONS } from './class-rotations.mjs?v=20261111-classes1';
 // Display reference supplied by the user from Combat Gum. These values are not
 // ruleset validation and are not applied to combat or character calculations.
 const group=(id,name,all,rows,collapsed=false)=>({id,name,all,collapsed,options:rows.map(([id,name,effect,classes])=>({id,name,effect,...(classes?{classes}:{})}))});
@@ -15,7 +16,7 @@ export const BUFF_GROUPS=Object.freeze([
 ]);
 export const BUFF_OPTIONS=Object.freeze(BUFF_GROUPS.flatMap(group=>group.options));
 export const ABILITIES=Object.freeze(['Execute','Bloodthirst','Mortal Strike','Whirlwind','Heroic Strike','Cleave','Slam','Overpower','Rend','Master Strike','Shield Slam','Revenge','Sunder Armor','Battle Shout','Demoralizing Shout','Thunder Clap','Bloodrage','Berserker Rage','Death Wish','Recklessness','Sweeping Strikes','Shield Block']);
-export const METRICS=Object.freeze({rage:'Rage',targetHealth:'Target Health %',auraDuration:'Aura Duration (s)'});
+export const METRICS=Object.freeze({rage:'Rage',energy:'Energy',comboPoints:'Combo Points',mana:'Mana',manaPercent:'Mana %',petFocus:'Pet Focus',soulShards:'Soul Shards',targetHealth:'Target Health %',auraDuration:'Aura Duration (s)',combatTime:'Combat Time (s)'});
 export const OPERATORS=Object.freeze(['>=','<=','>','<','=']);
 const c=(metric,operator,value,aura='')=>({metric,operator,value,aura});
 const row=(ability,conditions=[])=>({ability,conditions});
@@ -27,22 +28,32 @@ export const ROTATION_PRESETS=Object.freeze([
  {id:'custom',name:'New Custom Rotation',description:'',rows:[]},
 ]);
 export const defaultControls=()=>({buffIds:[],teaThreshold:20,rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
-export function validateRotationRows(rows){
+export function rotationProfile(classId='warrior'){
+ const profile=CLASS_ROTATIONS[classId]||{abilities:ABILITIES,resources:['rage'],presets:ROTATION_PRESETS};
+ return {...profile,metrics:Object.fromEntries(Object.entries(METRICS).filter(([key])=>profile.resources.includes(key)||['targetHealth','auraDuration','combatTime'].includes(key)))};
+}
+export function validateRotationRows(rows,classId='warrior'){
+ const profile=rotationProfile(classId);
  if(!Array.isArray(rows)||rows.length>30)throw new Error('A rotation can contain at most 30 abilities.');
  return rows.map(row=>{
-  if(!row||!ABILITIES.includes(row.ability)||!Array.isArray(row.conditions)||row.conditions.length>6)throw new Error('Invalid rotation ability or conditions.');
+  if(!row||!profile.abilities.includes(row.ability)||!Array.isArray(row.conditions)||row.conditions.length>6)throw new Error('Invalid rotation ability or conditions.');
   return {ability:row.ability,conditions:row.conditions.map(condition=>{
-   if(!condition||!Object.hasOwn(METRICS,condition.metric)||!OPERATORS.includes(condition.operator)||!Number.isFinite(condition.value)||condition.value<0||condition.value>10000||typeof condition.aura!=='string'||condition.aura.length>80)throw new Error('Invalid rotation condition.');
+   if(!condition||!Object.hasOwn(profile.metrics,condition.metric)||!OPERATORS.includes(condition.operator)||!Number.isFinite(condition.value)||condition.value<0||condition.value>10000||typeof condition.aura!=='string'||condition.aura.length>80)throw new Error('Invalid rotation condition.');
    return {metric:condition.metric,operator:condition.operator,value:condition.value,aura:condition.aura};
   })};
  });
 }
-export function validateControls(input){
+export function validateControls(input,classId='warrior'){
+ const profile=rotationProfile(classId);
  const defaults=defaultControls();if(input===undefined)return defaults;
  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Invalid configuration controls.');
  if(!Array.isArray(input.buffIds)||input.buffIds.length>BUFF_OPTIONS.length||input.buffIds.some(id=>!BUFF_OPTIONS.some(option=>option.id===id)))throw new Error('Invalid buff selection.');
- if(!ROTATION_PRESETS.some(preset=>preset.id===input.rotationPreset))throw new Error('Unknown rotation preset.');
+ const legacyRogue={
+  'assassination-noxious':'assassination-noxious','combat-sinister':'combat-sinister-envenom','subtlety-hemorrhage':'subtlety-hemorrhage'
+ };
+ const rotationPreset=classId==='rogue'?(legacyRogue[input.rotationPreset]||input.rotationPreset):input.rotationPreset;
+ if(!profile.presets.some(preset=>preset.id===rotationPreset))throw new Error('Unknown rotation preset.');
  for(const [key,min,max] of [['teaThreshold',0,100],['keyInterval',10,5000],['variabilityMs',0,5000]])if(!Number.isInteger(input[key])||input[key]<min||input[key]>max)throw new Error(`Invalid ${key}.`);
  if(typeof input.variability!=='boolean')throw new Error('Invalid key-press variability.');
- return {buffIds:[...new Set(input.buffIds)],teaThreshold:input.teaThreshold,rotationPreset:input.rotationPreset,rotationRows:validateRotationRows(input.rotationRows),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
+ return {buffIds:[...new Set(input.buffIds)],teaThreshold:input.teaThreshold,rotationPreset,rotationRows:validateRotationRows(input.rotationRows,classId),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
 }

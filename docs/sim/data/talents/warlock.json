@@ -1,0 +1,1594 @@
+{
+  "schemaVersion": 1,
+  "classId": "warlock",
+  "source": {
+    "url": "https://octowow.st/talents/warlock/",
+    "retrievedAt": "2026-11-11T23:29:44.072927+00:00",
+    "htmlSha256": "d468b1c035cfcbb2572a508d84e37d184e17c009bcfe5db399db175a4c6ced81",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Affliction",
+      "maxPoints": 44
+    },
+    {
+      "index": 1,
+      "name": "Demonology",
+      "maxPoints": 48
+    },
+    {
+      "index": 2,
+      "name": "Destruction",
+      "maxPoints": 51
+    }
+  ],
+  "talents": [
+    {
+      "id": 337,
+      "name": "Suppression",
+      "tree": 0,
+      "icon": "spell_shadow_unsummonbuilding",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_unsummonbuilding.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        18174,
+        18175,
+        18176,
+        18177,
+        18178
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the chance for enemies to resist your Affliction spells by 2%.",
+        "Reduces the chance for enemies to resist your Affliction spells by 4%.",
+        "Reduces the chance for enemies to resist your Affliction spells by 6%.",
+        "Reduces the chance for enemies to resist your Affliction spells by 8%.",
+        "Reduces the chance for enemies to resist your Affliction spells by 10%."
+      ]
+    },
+    {
+      "id": 338,
+      "name": "Improved Corruption",
+      "tree": 0,
+      "icon": "spell_shadow_abominationexplosion",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_abominationexplosion.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        17810,
+        17811,
+        17812,
+        17813,
+        17814
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.3,
+          0.6,
+          0.9,
+          1.2,
+          1.5
+        ]
+      ],
+      "descriptions": [
+        "Reduces the casting time of your Corruption spell by 0.3 sec.",
+        "Reduces the casting time of your Corruption spell by 0.6 sec.",
+        "Reduces the casting time of your Corruption spell by 0.9 sec.",
+        "Reduces the casting time of your Corruption spell by 1.2 sec.",
+        "Reduces the casting time of your Corruption spell by 1.5 sec."
+      ]
+    },
+    {
+      "id": 339,
+      "name": "Improved Curse of Weakness",
+      "tree": 0,
+      "icon": "spell_shadow_curseofmannoroth",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_curseofmannoroth.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        18179,
+        18180
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases the attack speed reduction of your Curse of Weakness by 3%.",
+        "Increases the attack speed reduction of your Curse of Weakness by 5%."
+      ]
+    },
+    {
+      "id": 340,
+      "name": "Resilient Shadows",
+      "tree": 0,
+      "icon": "spell_shadow_soulleech_1",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_soulleech_1.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        52547,
+        52548,
+        52549
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Reduces the chance your Affliction spells will be dispelled by an additional 5%.",
+        "Reduces the chance your Affliction spells will be dispelled by an additional 10%.",
+        "Reduces the chance your Affliction spells will be dispelled by an additional 15%."
+      ]
+    },
+    {
+      "id": 341,
+      "name": "Improved Life Tap",
+      "tree": 0,
+      "icon": "spell_shadow_burningspirit",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_burningspirit.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        18182,
+        18183
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the amount of Mana awarded by your Life Tap spell by 10%.",
+        "Increases the amount of Mana awarded by your Life Tap spell by 20%."
+      ]
+    },
+    {
+      "id": 342,
+      "name": "Improved Drains",
+      "tree": 0,
+      "icon": "spell_shadow_lifedrain02",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_lifedrain02.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        45913,
+        45914
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the effectiveness of your Drain Soul, Drain Life and Drain Mana by 5%.",
+        "Increases the effectiveness of your Drain Soul, Drain Life and Drain Mana by 10%."
+      ]
+    },
+    {
+      "id": 343,
+      "name": "Improved Curse of Agony",
+      "tree": 0,
+      "icon": "spell_shadow_curseofsargeras",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_curseofsargeras.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        18827,
+        18829,
+        18830
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Curse of Agony by 3%.",
+        "Increases the damage done by your Curse of Agony by 6%.",
+        "Increases the damage done by your Curse of Agony by 10%."
+      ]
+    },
+    {
+      "id": 344,
+      "name": "Fel Concentration",
+      "tree": 0,
+      "icon": "spell_shadow_fingerofdeath",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_fingerofdeath.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        17783,
+        17784
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          35,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives your Affliction spells a 35% chance to not lose casting time when you take damage.",
+        "Gives your Affliction spells a 70% chance to not lose casting time when you take damage."
+      ]
+    },
+    {
+      "id": 345,
+      "name": "Curse of Exhaustion",
+      "tree": 0,
+      "icon": "spell_shadow_grimward",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_grimward.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        18223
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Reduces the target's movement speed by 10% for 12 sec.  Only one Curse per Warlock can be active on any one target."
+      ]
+    },
+    {
+      "id": 346,
+      "name": "Grim Reach",
+      "tree": 0,
+      "icon": "spell_shadow_callofbone",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_callofbone.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        18218,
+        18219
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of your Affliction spells by 10%.",
+        "Increases the range of your Affliction spells by 20%."
+      ]
+    },
+    {
+      "id": 347,
+      "name": "Nightfall",
+      "tree": 0,
+      "icon": "spell_shadow_twilight",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_twilight.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        18094,
+        18095
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4
+        ]
+      ],
+      "descriptions": [
+        "Gives your Corruption, Dark Harvest and Drain spells a 2% chance to cause you to enter a Shadow Trance state after damaging the opponent.  The Shadow Trance state reduces the casting time of your next Shadow Bolt spell by 100% and makes it guaranteed to land.",
+        "Gives your Corruption, Dark Harvest and Drain spells a 4% chance to cause you to enter a Shadow Trance state after damaging the opponent.  The Shadow Trance state reduces the casting time of your next Shadow Bolt spell by 100% and makes it guaranteed to land."
+      ]
+    },
+    {
+      "id": 348,
+      "name": "Soul Siphon",
+      "tree": 0,
+      "icon": "spell_shadow_haunting",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_haunting.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        52558,
+        52559,
+        52560
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of your Drain Soul, Dark Harvest and Death Coil by an additional 2% for each of your Affliction effects on the target, up to a maximum of 4 effects.",
+        "Increases the damage of your Drain Soul, Dark Harvest and Death Coil by an additional 4% for each of your Affliction effects on the target, up to a maximum of 4 effects.",
+        "Increases the damage of your Drain Soul, Dark Harvest and Death Coil by an additional 6% for each of your Affliction effects on the target, up to a maximum of 4 effects."
+      ]
+    },
+    {
+      "id": 349,
+      "name": "Rapid Deterioration",
+      "tree": 0,
+      "icon": "spell_shadow_detectinvisibility",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_detectinvisibility.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        52555,
+        52556
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases the casting speed of your Affliction spells by 6%.  In addition, casting speed increase effects increase the tick speed of your damage over time and channeled Affliction spells with 50% efficiency, reducing their duration.",
+        "Increases the casting speed of your Affliction spells by 6%.  In addition, casting speed increase effects increase the tick speed of your damage over time and channeled Affliction spells with 100% efficiency, reducing their duration."
+      ]
+    },
+    {
+      "id": 350,
+      "name": "Siphon Life",
+      "tree": 0,
+      "icon": "spell_shadow_requiem",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_requiem.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        18265
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Transfers 150 Health from the target to the caster over 30 sec."
+      ]
+    },
+    {
+      "id": 351,
+      "name": "Improved Curse of Exhaustion",
+      "tree": 0,
+      "icon": "spell_shadow_grimward",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_grimward.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        18310,
+        18311
+      ],
+      "requires": 10,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the speed reduction of your Curse of Exhaustion by 15%.",
+        "Increases the speed reduction of your Curse of Exhaustion by 30%."
+      ]
+    },
+    {
+      "id": 352,
+      "name": "Malediction",
+      "tree": 0,
+      "icon": "spell_shadow_curseofachimonde",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_curseofachimonde.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 1,
+      "spellIds": [
+        52546
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Your Curse of Agony can be used alongside your other curses, except Curse of Doom.\n\nApplying Curse of Recklessness, Curse of Shadows, or Curse of Elements also afflicts the target with the highest rank of your Curse of Agony."
+      ]
+    },
+    {
+      "id": 353,
+      "name": "Shadow Mastery",
+      "tree": 0,
+      "icon": "spell_shadow_shadetruesight",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadetruesight.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        18271,
+        18272,
+        18273,
+        18274,
+        18275
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage dealt or life drained by your Shadow spells by 2%.",
+        "Increases the damage dealt or life drained by your Shadow spells by 4%.",
+        "Increases the damage dealt or life drained by your Shadow spells by 6%.",
+        "Increases the damage dealt or life drained by your Shadow spells by 8%.",
+        "Increases the damage dealt or life drained by your Shadow spells by 10%."
+      ]
+    },
+    {
+      "id": 354,
+      "name": "Dark Harvest",
+      "tree": 0,
+      "icon": "spell_shadow_soulleech",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_soulleech.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        52550
+      ],
+      "requires": 21,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "Reaps the target's life, dealing 704 Shadow damage over 8 sec. While channeling, the time between periodic ticks of your Affliction spells on the target is reduced by 30%. If the target dies while channeling, the cooldown of Dark Harvest is reset."
+      ]
+    },
+    {
+      "id": 355,
+      "name": "Sinister Pursuit",
+      "tree": 1,
+      "icon": "ability_rogue_envelopingshadows",
+      "iconSource": "https://octowow.st/talents/icons/ability_rogue_envelopingshadows.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        52737,
+        52739
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the movement speed of your demons by 5%.",
+        "Increases the movement speed of your demons by 10%."
+      ]
+    },
+    {
+      "id": 356,
+      "name": "Demonic Embrace",
+      "tree": 1,
+      "icon": "spell_shadow_metamorphosis",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_metamorphosis.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        18697,
+        18698,
+        18699,
+        18700,
+        18701
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your total Stamina by 3% but reduces your total Spirit by 1%.",
+        "Increases your total Stamina by 6% but reduces your total Spirit by 2%.",
+        "Increases your total Stamina by 9% but reduces your total Spirit by 3%.",
+        "Increases your total Stamina by 12% but reduces your total Spirit by 4%.",
+        "Increases your total Stamina by 15% but reduces your total Spirit by 5%."
+      ]
+    },
+    {
+      "id": 357,
+      "name": "Soul Entrapment",
+      "tree": 1,
+      "icon": "trade_archaeology_highbornesoulmirror",
+      "iconSource": "https://octowow.st/talents/icons/trade_archaeology_highbornesoulmirror.png",
+      "position": 3,
+      "row": 0,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        51706,
+        51707,
+        51708
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "While you have no demon under your control, all damage dealt is increased by 2%.",
+        "While you have no demon under your control, all damage dealt is increased by 4%.",
+        "While you have no demon under your control, all damage dealt is increased by 6%."
+      ]
+    },
+    {
+      "id": 358,
+      "name": "Soul Funnel",
+      "tree": 1,
+      "icon": "spell_shadow_lifedrain",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_lifedrain.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        18703,
+        18704
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the amount of Health transferred by your Health Funnel by 10% of your demon's missing Health and the Mana transferred by your Mana Funnel by 10% of your demon's missing Mana. This additional transfer drains 30% of that amount from you.",
+        "Increases the amount of Health transferred by your Health Funnel by 20% of your demon's missing Health and the Mana transferred by your Mana Funnel by 20% of your demon's missing Mana. This additional transfer drains 30% of that amount from you."
+      ]
+    },
+    {
+      "id": 359,
+      "name": "Demonic Aegis",
+      "tree": 1,
+      "icon": "spell_shadow_ragingscream",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_ragingscream.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        45921,
+        45922,
+        45923
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60
+        ]
+      ],
+      "descriptions": [
+        "Increases the effectiveness of your Demon Armor spell by 20%.",
+        "Increases the effectiveness of your Demon Armor spell by 40%.",
+        "Increases the effectiveness of your Demon Armor spell by 60%."
+      ]
+    },
+    {
+      "id": 360,
+      "name": "Fel Intellect",
+      "tree": 1,
+      "icon": "spell_holy_magicalsentry",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_magicalsentry.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        18731,
+        18743,
+        18744
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases your demon's Intellect by 10% of your total Intellect and allows 5% of its Mana regeneration to continue while casting.",
+        "Increases your demon's Intellect by 20% of your total Intellect and allows 10% of its Mana regeneration to continue while casting.",
+        "Increases your demon's Intellect by 30% of your total Intellect and allows 15% of its Mana regeneration to continue while casting."
+      ]
+    },
+    {
+      "id": 361,
+      "name": "Fel Domination",
+      "tree": 1,
+      "icon": "spell_nature_removecurse",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_removecurse.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        18708
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Your next Common demon summoning spell has its casting time reduced by 4.5 sec and its Mana cost reduced by 40%."
+      ]
+    },
+    {
+      "id": 362,
+      "name": "Fel Stamina",
+      "tree": 1,
+      "icon": "spell_shadow_antishadow",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_antishadow.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        18748,
+        18749,
+        18750,
+        18751,
+        18752
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases your demon's Stamina by 10% of your total Stamina and reduces its chance to be critically struck by 1%.",
+        "Increases your demon's Stamina by 20% of your total Stamina and reduces its chance to be critically struck by 2%.",
+        "Increases your demon's Stamina by 30% of your total Stamina and reduces its chance to be critically struck by 3%.",
+        "Increases your demon's Stamina by 40% of your total Stamina and reduces its chance to be critically struck by 4%.",
+        "Increases your demon's Stamina by 50% of your total Stamina and reduces its chance to be critically struck by 5%."
+      ]
+    },
+    {
+      "id": 363,
+      "name": "Demonic Sacrifice",
+      "tree": 1,
+      "icon": "spell_shadow_psychicscream",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_psychicscream.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 1,
+      "spellIds": [
+        18788
+      ],
+      "requires": 3,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, sacrifices your summoned demon to grant you an effect. The effect is canceled if any demon is summoned or enslaved.\n\nImp: Increases spell damage done by 4%.\n\nVoidwalker: Restores 3% of total Health every 4 sec.\n\nSuccubus: Reduces threat generated by 10%.\n\nFelhunter: Restores 3% of total Mana every 4 sec."
+      ]
+    },
+    {
+      "id": 364,
+      "name": "Improved Stones",
+      "tree": 1,
+      "icon": "inv_jewelry_talisman_fireice",
+      "iconSource": "https://octowow.st/talents/icons/inv_jewelry_talisman_fireice.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51712,
+        51713
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases the effectiveness of your Felstone, Wrathstone, Voidstone, and Spellstone by 25%, and increases the critical strike chance bonus of your Firestone by 50%.",
+        "Increases the effectiveness of your Felstone, Wrathstone, Voidstone, and Spellstone by 50%, and increases the critical strike chance bonus of your Firestone by 100%."
+      ]
+    },
+    {
+      "id": 365,
+      "name": "Master Summoner",
+      "tree": 1,
+      "icon": "spell_shadow_impphaseshift",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_impphaseshift.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        18709,
+        18710
+      ],
+      "requires": 9,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          2,
+          4
+        ],
+        [
+          30,
+          60
+        ],
+        [
+          25,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Reduces the casting time of your Imp, Voidwalker, Succubus, and Felhunter summoning spells by 2 sec and their mana cost by 30%. In addition, reduces the cooldown of Inferno, Ritual of Doom, and Demon Gate by 25%.",
+        "Reduces the casting time of your Imp, Voidwalker, Succubus, and Felhunter summoning spells by 4 sec and their mana cost by 60%. In addition, reduces the cooldown of Inferno, Ritual of Doom, and Demon Gate by 50%."
+      ]
+    },
+    {
+      "id": 366,
+      "name": "Nether Studies",
+      "tree": 1,
+      "icon": "inv_misc_book_06",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_book_06.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51709,
+        51710,
+        51711
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45
+        ]
+      ],
+      "descriptions": [
+        "Increases the effect of your Succubus' Seduction, your Voidwalker's Torment, your Imp's Blood Pact, and your Felhunter's Tainted Blood spells by 15%.",
+        "Increases the effect of your Succubus' Seduction, your Voidwalker's Torment, your Imp's Blood Pact, and your Felhunter's Tainted Blood spells by 30%.",
+        "Increases the effect of your Succubus' Seduction, your Voidwalker's Torment, your Imp's Blood Pact, and your Felhunter's Tainted Blood spells by 45%."
+      ]
+    },
+    {
+      "id": 367,
+      "name": "Unholy Power",
+      "tree": 1,
+      "icon": "spell_shadow_shadowworddominate",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadowworddominate.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        18769,
+        18770,
+        18771
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your demons by 5%.",
+        "Increases the damage done by your demons by 10%.",
+        "Increases the damage done by your demons by 15%."
+      ]
+    },
+    {
+      "id": 368,
+      "name": "Power Overwhelming",
+      "tree": 1,
+      "icon": "ability_warlock_power_overwhelming",
+      "iconSource": "https://octowow.st/talents/icons/ability_warlock_power_overwhelming.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51714
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Channel energy into your demon, breaking all crowd control effects and increasing its damage dealt by 20% for 10 sec. The demon takes 40% of its base health as damage over the duration."
+      ]
+    },
+    {
+      "id": 369,
+      "name": "Demonic Precision",
+      "tree": 1,
+      "icon": "spell_shadow_curseoftounges",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_curseoftounges.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51715,
+        51716,
+        51717
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          30,
+          60,
+          90
+        ]
+      ],
+      "descriptions": [
+        "Your demons gain 1% increased chance to hit and critically strike, and they also inherit 30% of your spell hit and crit chance as melee and spell hit and crit chance, respectively.",
+        "Your demons gain 2% increased chance to hit and critically strike, and they also inherit 60% of your spell hit and crit chance as melee and spell hit and crit chance, respectively.",
+        "Your demons gain 3% increased chance to hit and critically strike, and they also inherit 90% of your spell hit and crit chance as melee and spell hit and crit chance, respectively."
+      ]
+    },
+    {
+      "id": 370,
+      "name": "Master Demonologist",
+      "tree": 1,
+      "icon": "spell_shadow_shadowpact",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadowpact.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        23785,
+        23822,
+        23823,
+        23824,
+        23825
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          12,
+          24,
+          36,
+          48,
+          60
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Grants both the Warlock and the summoned demon an effect as long as that demon is active.\n\nImp - Reduces spell costs by 3%.\n\nVoidwalker - Reduces physical damage taken by 2%.\n\nSuccubus - Increases all damage done by 2%.\n\nFelhunter - Increases all resistances by 12.\n\nGreater Demons - Increases spell critical strike chance by 2%.\n",
+        "Grants both the Warlock and the summoned demon an effect as long as that demon is active.\n\nImp - Reduces spell costs by 6%.\n\nVoidwalker - Reduces physical damage taken by 4%.\n\nSuccubus - Increases all damage done by 4%.\n\nFelhunter - Increases all resistances by 24.\n\nGreater Demons - Increases spell critical strike chance by 4%.\n",
+        "Grants both the Warlock and the summoned demon an effect as long as that demon is active.\n\nImp - Reduces spell costs by 9%.\n\nVoidwalker - Reduces physical damage taken by 6%.\n\nSuccubus - Increases all damage done by 6%.\n\nFelhunter - Increases all resistances by 36.\n\nGreater Demons - Increases spell critical strike chance by 6%.\n",
+        "Grants both the Warlock and the summoned demon an effect as long as that demon is active.\n\nImp - Reduces spell costs by 12%.\n\nVoidwalker - Reduces physical damage taken by 8%.\n\nSuccubus - Increases all damage done by 8%.\n\nFelhunter - Increases all resistances by 48.\n\nGreater Demons - Increases spell critical strike chance by 8%.\n",
+        "Grants both the Warlock and the summoned demon an effect as long as that demon is active.\n\nImp - Reduces spell costs by 15%.\n\nVoidwalker - Reduces physical damage taken by 10%.\n\nSuccubus - Increases all damage done by 10%.\n\nFelhunter - Increases all resistances by 60.\n\nGreater Demons - Increases spell critical strike chance by 10%.\n"
+      ]
+    },
+    {
+      "id": 371,
+      "name": "Unleashed Potential",
+      "tree": 1,
+      "icon": "ability_warlock_demonicpower",
+      "iconSource": "https://octowow.st/talents/icons/ability_warlock_demonicpower.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51721,
+        51722,
+        51723
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Your direct damage spell hits allow your demon to benefit from 5% of your Fire and Shadow spell bonus damage for 20 sec. Each tick of your funnel spells refreshes its duration. Stacks up to 3 times.",
+        "Your direct damage spell hits allow your demon to benefit from 10% of your Fire and Shadow spell bonus damage for 20 sec. Each tick of your funnel spells refreshes its duration. Stacks up to 3 times.",
+        "Your direct damage spell hits allow your demon to benefit from 15% of your Fire and Shadow spell bonus damage for 20 sec. Each tick of your funnel spells refreshes its duration. Stacks up to 3 times."
+      ]
+    },
+    {
+      "id": 372,
+      "name": "Soul Link",
+      "tree": 1,
+      "icon": "spell_shadow_gathershadows",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_gathershadows.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        19028
+      ],
+      "requires": 21,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "While a demon is under your control, the damage dealt by you and your demon is increased by 5%. In addition, 20% of all damage you take is taken by your demon.  Your Greater and Enslaved Demons can no longer break free from your control early."
+      ]
+    },
+    {
+      "id": 321,
+      "name": "Shadow Vulnerability",
+      "tree": 2,
+      "icon": "spell_shadow_shadowbolt",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadowbolt.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17793,
+        17796,
+        17801,
+        17802,
+        17803
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Your Shadow Bolt and Drain Soul have a 2% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits.",
+        "Your Shadow Bolt and Drain Soul have a 4% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits.",
+        "Your Shadow Bolt and Drain Soul have a 6% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits.",
+        "Your Shadow Bolt and Drain Soul have a 8% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits.",
+        "Your Shadow Bolt and Drain Soul have a 10% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits."
+      ]
+    },
+    {
+      "id": 322,
+      "name": "Cataclysm",
+      "tree": 2,
+      "icon": "spell_fire_windsofwoe",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_windsofwoe.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        17778,
+        17779,
+        17780,
+        17781,
+        17782
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of your Destruction spells by 2%.",
+        "Reduces the Mana cost of your Destruction spells by 4%.",
+        "Reduces the Mana cost of your Destruction spells by 6%.",
+        "Reduces the Mana cost of your Destruction spells by 8%.",
+        "Reduces the Mana cost of your Destruction spells by 10%."
+      ]
+    },
+    {
+      "id": 323,
+      "name": "Demonic Swiftness",
+      "tree": 2,
+      "icon": "spell_shadow_curseoftounges",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_curseoftounges.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        57730,
+        57731
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.3,
+          0.5
+        ],
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Reduces the casting time of your Imp's Firebolt spell by 0.3 sec and reduces the cooldown of your Succubus' Lash of Pain spell by 3 sec.",
+        "Reduces the casting time of your Imp's Firebolt spell by 0.5 sec and reduces the cooldown of your Succubus' Lash of Pain spell by 6 sec."
+      ]
+    },
+    {
+      "id": 324,
+      "name": "Bane",
+      "tree": 2,
+      "icon": "spell_shadow_deathpact",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_deathpact.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17788,
+        17789,
+        17790,
+        17791,
+        17792
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        [
+          0.4,
+          0.8,
+          1.2,
+          1.6,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.1 sec and your Soul Fire spell by 0.4 sec.",
+        "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.2 sec and your Soul Fire spell by 0.8 sec.",
+        "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.3 sec and your Soul Fire spell by 1.2 sec.",
+        "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.4 sec and your Soul Fire spell by 1.6 sec.",
+        "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.5 sec and your Soul Fire spell by 2 sec."
+      ]
+    },
+    {
+      "id": 325,
+      "name": "Aftermath",
+      "tree": 2,
+      "icon": "spell_fire_fire",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_fire.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        18119,
+        18120,
+        18121
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          4,
+          7,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the periodic damage of your Immolate spell by 2% and gives your Destruction spells a 4% chance to slow the target by 50% for 5 sec.",
+        "Increases the periodic damage of your Immolate spell by 4% and gives your Destruction spells a 7% chance to slow the target by 50% for 5 sec.",
+        "Increases the periodic damage of your Immolate spell by 6% and gives your Destruction spells a 10% chance to slow the target by 50% for 5 sec."
+      ]
+    },
+    {
+      "id": 326,
+      "name": "Intensity",
+      "tree": 2,
+      "icon": "spell_fire_lavaspawn",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_lavaspawn.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        18135,
+        18136
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          35,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives your Fire spells a 35% chance to not lose casting time when you take damage.",
+        "Gives your Fire spells a 70% chance to not lose casting time when you take damage."
+      ]
+    },
+    {
+      "id": 327,
+      "name": "Shadowburn",
+      "tree": 2,
+      "icon": "spell_shadow_scourgebuild",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_scourgebuild.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        17877
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Instantly blasts the target for 91 to 103 Shadow damage.  If the target dies within 5 sec of Shadowburn, and yields experience or honor, the caster gains a Soul Shard."
+      ]
+    },
+    {
+      "id": 328,
+      "name": "Devastation",
+      "tree": 2,
+      "icon": "spell_fire_flameshock",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_flameshock.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        18130,
+        18131,
+        18132,
+        18133,
+        18134
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your Destruction spells by 1%.",
+        "Increases the critical strike chance of your Destruction spells by 2%.",
+        "Increases the critical strike chance of your Destruction spells by 3%.",
+        "Increases the critical strike chance of your Destruction spells by 4%.",
+        "Increases the critical strike chance of your Destruction spells by 5%."
+      ]
+    },
+    {
+      "id": 329,
+      "name": "Pyroclasm",
+      "tree": 2,
+      "icon": "spell_fire_volcano",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_volcano.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        18096,
+        18073
+      ],
+      "requires": 8,
+      "requiresRanks": 2,
+      "rankParameters": [
+        [
+          13,
+          26
+        ]
+      ],
+      "descriptions": [
+        "Gives your Rain of Fire, Hellfire, Conflagrate, and Soul Fire spells a 13% chance to stun the target for 3 sec.",
+        "Gives your Rain of Fire, Hellfire, Conflagrate, and Soul Fire spells a 26% chance to stun the target for 3 sec."
+      ]
+    },
+    {
+      "id": 330,
+      "name": "Destructive Reach",
+      "tree": 2,
+      "icon": "spell_shadow_corpseexplode",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_corpseexplode.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        17917,
+        17918
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of your Destruction spells by 10% and the radius of your Hellfire by 10%.",
+        "Increases the range of your Destruction spells by 20% and the radius of your Hellfire by 20%."
+      ]
+    },
+    {
+      "id": 331,
+      "name": "Improved Searing Pain",
+      "tree": 2,
+      "icon": "spell_fire_soulburn",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_soulburn.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 5,
+      "spellIds": [
+        17927,
+        17929,
+        17930,
+        17931,
+        17932
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your Searing Pain spell by 2%.",
+        "Increases the critical strike chance of your Searing Pain spell by 4%.",
+        "Increases the critical strike chance of your Searing Pain spell by 6%.",
+        "Increases the critical strike chance of your Searing Pain spell by 8%.",
+        "Increases the critical strike chance of your Searing Pain spell by 10%."
+      ]
+    },
+    {
+      "id": 332,
+      "name": "Improved Soul Fire",
+      "tree": 2,
+      "icon": "spell_fire_fireball02",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_fireball02.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51736,
+        51737
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Your Soul Fire has a 50% chance to refund a Soul Shard and increase your Fire damage by 10% for 30 sec.",
+        "Your Soul Fire has a 100% chance to refund a Soul Shard and increase your Fire damage by 10% for 30 sec."
+      ]
+    },
+    {
+      "id": 333,
+      "name": "Improved Immolate",
+      "tree": 2,
+      "icon": "spell_fire_immolation",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_immolation.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17815,
+        17833,
+        17834,
+        17835,
+        17836
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of your Immolate spell by 4%.",
+        "Increases the damage of your Immolate spell by 8%.",
+        "Increases the damage of your Immolate spell by 12%.",
+        "Increases the damage of your Immolate spell by 16%.",
+        "Increases the damage of your Immolate spell by 20%."
+      ]
+    },
+    {
+      "id": 334,
+      "name": "Ruin",
+      "tree": 2,
+      "icon": "spell_shadow_shadowwordpain",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_shadowwordpain.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        17959
+      ],
+      "requires": 10,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases the critical strike damage bonus of your Destruction spells by 100%."
+      ]
+    },
+    {
+      "id": 335,
+      "name": "Emberstorm",
+      "tree": 2,
+      "icon": "spell_fire_selfdestruct",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_selfdestruct.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        17954,
+        17955,
+        17956,
+        17957,
+        17958
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Fire spells by 2%.",
+        "Increases the damage done by your Fire spells by 4%.",
+        "Increases the damage done by your Fire spells by 6%.",
+        "Increases the damage done by your Fire spells by 8%.",
+        "Increases the damage done by your Fire spells by 10%."
+      ]
+    },
+    {
+      "id": 336,
+      "name": "Conflagrate",
+      "tree": 2,
+      "icon": "spell_fire_fireball",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_fireball.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        17962
+      ],
+      "requires": 17,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "Ignites the target, dealing 249 to 315 Fire damage and consuming 3 sec of your Immolate spell to deal an amount of damage equal to it."
+      ]
+    }
+  ]
+}

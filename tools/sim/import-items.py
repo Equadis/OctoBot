@@ -80,7 +80,7 @@ class Literal:
 
 
 def fetch(query, filters=None):
-    CACHE.mkdir(exist_ok=True)
+    CACHE.mkdir(exist_ok=True, parents=True)
     signature = query + json.dumps(filters, sort_keys=True)
     path = CACHE / (sha256(signature.encode()).hexdigest() + '.html')
     if path.exists(): return path.read_text()
@@ -144,13 +144,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--menu-html', type=Path, required=True, help='The linked locale_enus.js menu source')
     parser.add_argument('--cached-only', action='store_true', help='Recover downloaded records without network requests')
+    parser.add_argument('--equipment-only', action='store_true', help='Refresh weapons, armour, ammunition and quivers; retain other catalogue categories')
+    parser.add_argument('--refresh', action='store_true', help='Use a fresh source-page cache for this import')
     args = parser.parse_args()
-    global CACHE_ONLY
+    global CACHE_ONLY, CACHE
     CACHE_ONLY = args.cached_only
+    if args.refresh: CACHE = CACHE / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
     source = args.menu_html.read_text(); start = source.index('var mn_items =') + len('var mn_items =')
     menu = Literal(source[start:]).value()
-    branches = categories(menu)
+    all_branches = categories(menu)
+    branches = [(q,b) for q,b in all_branches if not args.equipment_only or b[0] in (2,4,6,11)]
     records, saturated, pages, failures, completed = {}, [], 0, [], set()
+    previous = json.loads((OUTPUT / 'manifest.json').read_text()) if (OUTPUT / 'manifest.json').exists() else {}
+    if args.equipment_only and (OUTPUT / 'catalogue.json').exists():
+        records = {r['id']:r for r in json.loads((OUTPUT / 'catalogue.json').read_text()) if r.get('classs') not in (2,4,6,11)}
+        saturated = previous.get('cappedPartitions', [])
     with ThreadPoolExecutor(max_workers=3) as executor:
         futures = {executor.submit(collect_category, query, branch): query for query, branch in branches}
         for future in as_completed(futures):
@@ -185,14 +193,17 @@ def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).isoformat()
     all_rows = sorted(records.values(), key=lambda row: row['id'])
-    equipment = [row for row in all_rows if row.get('classs') in (2, 4) and row.get('slot', 0) > 0]
+    for row in all_rows:
+        if row.get('classs') in (6,11): row['slot']=24 if row['classs']==6 else 18
+    equipment = [row for row in all_rows if row.get('classs') in (2,4,6,11) and row.get('slot',0)>0]
     manifest = {'source': ROOT, 'retrievedAt': stamp, 'itemCount': len(all_rows),
-                'equipmentCount': len(equipment), 'categoryCount': len(branches), 'sourcePages': pages,
+                'equipmentCount': len(equipment), 'categoryCount': len(all_branches), 'sourcePages': pages,
                 'complete': not saturated and not failures, 'cappedPartitions': saturated,
                 'failedPartitions': failures,
-                'equipmentListingsComplete': all(query in completed for query,branch in branches if branch[0] in (2,4)),
+                'equipmentListingsComplete': all(query in completed for query,branch in branches if branch[0] in (2,4,6,11)),
                 'detailRecordCount': len(json.loads((OUTPUT / 'details.json').read_text())) if (OUTPUT / 'details.json').exists() else 0,
                 'detailCoverage': 'Listing metadata. Class masks and full effects require individual item details.'}
+    if args.equipment_only: manifest['equipmentRetrievedAt'] = stamp
     for name, value in [('catalogue.json', all_rows), ('equipment.json', equipment), ('manifest.json', manifest)]:
         (OUTPUT / name).write_text(json.dumps(value, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps(manifest), flush=True)

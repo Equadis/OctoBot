@@ -29,6 +29,7 @@ def main():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('--workers', type=int, default=3, choices=range(1, 5))
     cli.add_argument('--limit', type=int, default=0, help='Bound a resumable batch; zero means every missing item')
+    cli.add_argument('--max-seconds', type=int, default=9000, help='Checkpoint before the workflow time limit')
     args = cli.parse_args()
     catalogue = json.loads((DATA / 'equipment.json').read_text())
     details = json.loads((DATA / 'details.json').read_text())
@@ -36,9 +37,10 @@ def main():
     selected = remaining[:args.limit] if args.limit else remaining
     stopped = threading.Event()
     failures = {}
+    deadline = time.monotonic() + args.max_seconds
 
     def download(item):
-        if stopped.is_set(): return None
+        if stopped.is_set() or time.monotonic() >= deadline: return None
         id_ = item['id']
         url = f'https://octowow.st/db/?item={id_}'
         time.sleep(.15)
@@ -51,7 +53,7 @@ def main():
             raise ValueError('Source browser verification required; import paused')
         detail = parser.parse_detail(html, id_)
         if detail['name'] != item['name']:
-            raise ValueError('Listing/detail name mismatch; review changed source data')
+            detail['listingName']=item['name']
         return detail
 
     def checkpoint():

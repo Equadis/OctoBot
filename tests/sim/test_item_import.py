@@ -7,6 +7,10 @@ def module(name,path):
 items=module('items','tools/sim/import-items.py');details=module('details','tools/sim/import-item-details.py')
 
 class ItemImportTests(unittest.TestCase):
+    def test_additional_equippable_inventory_types(self):
+        for label,slot in [('Shirt',4),('Tabard',19),('Projectile',24),('6 Slot Bag',18)]:
+            source=f'<table class="infobox"><tr><td>Class Mask: -1<br>Race Mask: -1</td></tr></table><div id="tooltip42-generic"><table><tr><td><b>Example</b><table><tr><td>{label}</td></tr></table></td></tr></table></div>'
+            self.assertEqual(details.parse_detail(source,42)['slot'],slot)
     def test_data_parser_does_not_execute_source(self):
         self.assertEqual(items.Literal("[{id:42,name:'2Example',flags:null,ok:true},,]").value(),[{'id':42,'name':'2Example','flags':None,'ok':True},None])
         with self.assertRaises(ValueError):items.Literal("{id: fetch('https://example.com')}").value()

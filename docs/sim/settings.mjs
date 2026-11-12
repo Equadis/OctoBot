@@ -1,4 +1,4 @@
-import {BOSS_PRESETS,applyTarget,targetName} from './core/targets.mjs';
+import {BOSS_PRESETS,applyTarget,targetName} from './core/targets.mjs?v=20261111-classes1';
 const $=id=>document.getElementById(id);
 const NUMERIC_FIELDS=Object.freeze({'fight-duration':'duration','fight-iterations':'iterations','fight-variation':'durationVariation','target-level':'targetLevel','target-armour':'targetArmour','target-nature-res':'targetNatureRes','target-fire-res':'targetFireRes','target-frost-res':'targetFrostRes','target-shadow-res':'targetShadowRes','target-arcane-res':'targetArcaneRes'});
 export function settings({getBuild,onChange,onError}){

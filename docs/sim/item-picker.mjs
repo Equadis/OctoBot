@@ -1,17 +1,18 @@
-import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs?v=20261111-picker1';
-import {SLOTS} from './core/builds.mjs?v=20261111-picker1';
-import {iconUrl} from './core/interface.mjs';
-import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs';
+import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs?v=20261111-classes1';
+import {SLOTS} from './core/builds.mjs?v=20261111-classes1';
+import {iconUrl} from './core/interface.mjs?v=20261111-classes1';
+import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261111-classes1';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
  const labels={Strength:'Str',Agility:'Agi',Stamina:'Sta',Intellect:'Int',Spirit:'Spirit',Armour:'armour'};
  const parts=Object.entries(item.attributes||{}).map(([key,value])=>`+${value} ${labels[key]||key}`);
  if(item.armor!==undefined && !item.attributes?.Armour)parts.push(`+${item.armor} armour`);
+ if(item.ammunitionDps!==undefined)parts.push(`+${item.ammunitionDps} ranged DPS`);
  if(item.dps!==undefined)parts.push(`${item.dps} DPS`);
  if(item.speed!==undefined)parts.push(`${item.speed.toFixed(2)} speed`);
  if(item.effects?.length)parts.push(...item.effects.map(effect=>effect.replace(/^Equip:\s*/,'')));
- return parts.join(', ') || `Requires level ${item.reqlevel || 0}`;
+ return parts.join(', ') || (item.reqlevel>0?`Requires level ${item.reqlevel}`:'');
 };
 
 export function itemPicker({getBuild,onEquip,onClear}) {
@@ -25,8 +26,8 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const responses=await Promise.all(['equipment.json','details.json','manifest.json','reference-tooltips.json'].map(name=>fetch(new URL(`./data/items/${name}?v=20261111-picker1`,import.meta.url))));
    if(responses.some(response=>!response.ok))throw new Error('The equipment catalogue could not load.');
    const [catalogue,bundled,manifest,referenceData]=await Promise.all(responses.map(response=>response.json()));details=bundled;references=referenceData.items;
-   try{for(const entry of JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').slice(-128)){const d=entry.detail;if(Date.now()-entry.savedAt<86400000 && Number.isInteger(d?.id) && Number.isInteger(d.classMask) && Number.isInteger(d.raceMask) && Array.isArray(d.requirements) && typeof d.summary==='string' && d.source===`https://octowow.st/db/?item=${d.id}`)details[d.id]=d;}}catch{}
-   items=catalogue.map(item=>({...item,icon:/^[a-z0-9_]+$/i.test(item.icon||'')?item.icon:'inv_misc_questionmark'}));$('catalogue-status').textContent=`${manifest.equipmentCount.toLocaleString()} equipment records`;
+   try{for(const entry of JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').slice(-128)){const d=entry.detail;if(Date.now()-entry.savedAt<86400000 && Number.isInteger(d?.id) && Number.isInteger(d.classMask) && Number.isInteger(d.raceMask) && Array.isArray(d.requirements) && typeof d.summary==='string' && d.source===`https://octowow.st/db/?item=${d.id}`)if(!details[d.id])details[d.id]=d;}}catch{}
+   items=catalogue.map(item=>({...item,...(details[item.id]?{name:details[item.id].name,slot:details[item.id].slot,reqlevel:details[item.id].requiredLevel}:{}),icon:/^[a-z0-9_]+$/i.test(item.icon||'')?item.icon:'inv_misc_questionmark'}));$('catalogue-status').textContent=`${manifest.equipmentCount.toLocaleString()} equipment records`;
   })();try{await loading;}finally{loading=null;}
  }
  async function detail(item){
@@ -34,7 +35,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   if(!pending.has(item.id))pending.set(item.id,(async()=>{
    const response=await fetch(`https://octowow.st/db/?item=${item.id}`,{credentials:'omit',signal:AbortSignal.timeout(15000)});
    if(!response.ok)throw new Error(`Database detail request failed (${response.status}).`);
-   const parsed=detailFromDocument(new DOMParser().parseFromString(await response.text(),'text/html'),item.id);details[item.id]=parsed;
+   const parsed=detailFromDocument(new DOMParser().parseFromString(await response.text(),'text/html'),item.id);details[item.id]=parsed;item.slot=parsed.slot;item.reqlevel=parsed.requiredLevel;
    try{const cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').filter(entry=>entry.detail?.id!==item.id).slice(-127);cached.push({savedAt:Date.now(),detail:parsed});localStorage.setItem(CACHE_KEY,JSON.stringify(cached));}catch{}
    return parsed;
   })().finally(()=>pending.delete(item.id)));
@@ -76,7 +77,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  function search(){
   if(!items)return;
   const build=getBuild();
-  candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],build,slot)) && (!references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
+  candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],build,slot)) && (details[item.id] || !references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
   $('item-count').textContent=`${candidates.length.toLocaleString()} ${candidates.length===1?'item':'items'}`;
   const fragment=document.createDocumentFragment();rowElements=new Map();
   for(const [index,item] of candidates.entries()){

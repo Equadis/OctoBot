@@ -1,17 +1,20 @@
-import { validEnchant } from './equipment-options.mjs';
-import { TARGET_IDS } from './targets.mjs';
-import { defaultControls, validateControls } from './configuration.mjs';
-import { validateTalents } from './talents.mjs';
+import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261111-classes1';
+import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261111-classes1';
+import { validEnchant } from './equipment-options.mjs?v=20261111-classes1';
+import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
+import { defaultControls, validateControls } from './configuration.mjs?v=20261111-classes1';
+import { validateTalents } from './talents.mjs?v=20261111-classes1';
 
 export const SLOTS = Object.freeze({
   head: 'Head', neck: 'Neck', shoulder: 'Shoulder', back: 'Back', chest: 'Chest', wrist: 'Wrist',
   hands: 'Hands', waist: 'Waist', legs: 'Legs', feet: 'Feet', ring1: 'Ring 1', ring2: 'Ring 2',
-  trinket1: 'Trinket 1', trinket2: 'Trinket 2', mainhand: 'Main Hand', offhand: 'Off Hand', ranged: 'Ranged',
+  trinket1: 'Trinket 1', trinket2: 'Trinket 2', mainhand: 'Main Hand', offhand: 'Off Hand', ranged: 'Ranged', shirt:'Shirt',tabard:'Tabard',ammo:'Ammunition',quiver:'Quiver / Ammo Pouch',
 });
 
-export function newBuild() {
-  return { schemaVersion: 1, classId: 'warrior', name: 'My Warrior Build', level: 60,
-    race: 'Human', talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
+export function newBuild(classId='warrior') {
+  const cls=classDefinition(classId);
+  return { schemaVersion: 1, classId, name: `My ${cls.name} Build`, level: 60,
+    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
 }
 
 export function parseItemReference(input) {
@@ -34,9 +37,16 @@ export function parseItemReference(input) {
 
 export function validateBuild(input, data) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid build file.');
-  if (input.schemaVersion !== 1 || input.classId !== 'warrior') throw new Error('Only version 1 Warrior planner builds are supported.');
+  if(input.schemaVersion!==1||input.classId!==data.classId)throw new Error('Build class does not match the selected planner.');
+  classDefinition(input.classId);
   if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 80) throw new Error('Build name must be 1–80 characters.');
   if (typeof input.race !== 'string' || !input.race.trim() || input.race.length > 40) throw new Error('Race must be 1–40 characters.');
+  const skills={};
+  if(input.skills!==undefined){
+    if(!input.skills||typeof input.skills!=='object'||Array.isArray(input.skills))throw new Error('Invalid profession skills.');
+    for(const [name,rank] of Object.entries(input.skills)){if(![...PRIMARY_PROFESSIONS,...SECONDARY_SKILLS].includes(name)||!Number.isInteger(rank)||rank<0||rank>300)throw new Error('Invalid profession skill or rank.');if(rank>0)skills[name]=rank;}
+    if(Object.keys(skills).filter(name=>PRIMARY_PROFESSIONS.includes(name)).length>2)throw new Error('Choose at most two primary professions.');
+  }
   const errors = validateTalents(data, input.talents, input.level);
   if (errors.length) throw new Error(errors[0]);
   if (!input.gear || typeof input.gear !== 'object' || Array.isArray(input.gear)) throw new Error('Invalid equipment references.');
@@ -51,7 +61,7 @@ export function validateBuild(input, data) {
       gear[slot].enchantId=item.enchantId;
     }
   }
-  const planning = { ...newBuild().planning };
+  const planning = { ...newBuild(input.classId).planning };
   if (input.planning !== undefined) {
     if (!input.planning || typeof input.planning !== 'object' || Array.isArray(input.planning)) throw new Error('Invalid planning settings.');
     for (const key of ['buffs', 'debuffs', 'rotation']) {
@@ -71,8 +81,8 @@ export function validateBuild(input, data) {
   if (!TARGET_IDS.includes(planning.targetPreset)) throw new Error('Unknown target preset.');
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
-  return { schemaVersion: 1, classId: 'warrior', name: input.name.trim(),
-    race: input.race.trim(), level: input.level, talents, gear, planning, controls: validateControls(input.controls) };
+  return { schemaVersion: 1, classId: input.classId, name: input.name.trim(),
+    race: input.race.trim(), skills, classOptions:validateClassOptions(input.classOptions,input.classId), level: input.level, talents, gear, planning, controls: validateControls(input.controls,input.classId) };
 }
 
 export function encodeBuild(build) {

@@ -1,4 +1,4 @@
-import {ENCHANTS} from './core/equipment-options.mjs';
+import {ENCHANTS} from './core/equipment-options.mjs?v=20261111-classes1';
 // Plain-text, viewport-clamped tooltips shared by equipment and talents.
 const tooltip=document.createElement('div');tooltip.id='planner-tooltip';tooltip.className='planner-tooltip';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;document.body.append(tooltip);
 let generation=0,anchor=null,point=null,activeContent=null;

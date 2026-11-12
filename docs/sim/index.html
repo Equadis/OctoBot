@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Choose a class, plan Warrior talents and equipment, save builds and share them. Combat simulation is in development.">
+  <meta name="description" content="Plan talents and equipment for all nine classes, save builds and share them. Combat simulation is in development.">
   <title>OctoBot · DPS Sim / Gear Planner</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261111-talents3">
-  <script type="module" src="planner.mjs?v=20261111-gear2"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261111-classes1">
+  <script type="module" src="planner.mjs?v=20261111-classes1"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
@@ -37,7 +37,7 @@
         <details class="character-options">
           <summary>Build details</summary>
           <label class="field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off"></label>
-          <div class="build-summary" id="tree-summary"></div>
+          <div id="profession-controls" class="profession-controls"></div><div class="build-summary" id="tree-summary"></div>
           <p id="storage-status" class="small muted">Build changes are kept in this browser.</p>
         </details>
         <div class="paperdoll">
@@ -45,7 +45,7 @@
           <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><div class="summary-divider"></div><span class="small muted">Equipment attributes</span><div id="gear-stats" class="gear-stats">Equip items to see their attributes.</div></div>
           <div id="slots-right" class="slot-column"></div>
         </div>
-        <div id="slots-weapons" class="weapons"></div>
+        <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div><details class="appearance-slots"><summary>Appearance</summary><div id="slots-appearance" class="weapons extra-slots"></div></details>
       </section>
         <section class="card" id="buffs" aria-labelledby="buffs-heading">
           <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2></div>
@@ -111,8 +111,10 @@
     <section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section>
   </div>
 </dialog>
-<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><div id="saved-builds"></div></dialog>
+<dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" required autocomplete="off"></label><p id="save-build-count" class="muted small"></p><p id="save-error" class="error" role="status"></p><button type="submit">Save</button></form></dialog>
+<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><p id="saved-build-count" class="muted small"></p><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off"></label><div class="library-actions"><button id="export-library" type="button">Export class builds</button><button id="import-library" type="button">Import class builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>
+<input id="import-library-file" type="file" accept=".json,application/json" hidden>
 <input id="import-file" type="file" accept=".json,application/json" hidden>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </body>

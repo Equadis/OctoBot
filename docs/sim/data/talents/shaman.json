@@ -1,0 +1,1563 @@
+{
+  "schemaVersion": 1,
+  "classId": "shaman",
+  "source": {
+    "url": "https://octowow.st/talents/shaman/",
+    "retrievedAt": "2026-11-11T23:29:44.031212+00:00",
+    "htmlSha256": "8340d1af2ba89a41d8c28c5e9829f7cf5679b11864f6a7d00307fa1e2a02d2ac",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Elemental",
+      "maxPoints": 47
+    },
+    {
+      "index": 1,
+      "name": "Enhancement",
+      "maxPoints": 48
+    },
+    {
+      "index": 2,
+      "name": "Restoration",
+      "maxPoints": 48
+    }
+  ],
+  "talents": [
+    {
+      "id": 218,
+      "name": "Convection",
+      "tree": 0,
+      "icon": "spell_nature_wispsplode",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_wispsplode.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16039,
+        16109,
+        16110,
+        16111,
+        16112
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 2%.",
+        "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 4%.",
+        "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 6%.",
+        "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 8%.",
+        "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 10%."
+      ]
+    },
+    {
+      "id": 219,
+      "name": "Concussion",
+      "tree": 0,
+      "icon": "spell_fire_fireball",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_fireball.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16035,
+        16105,
+        16106,
+        16107,
+        16108
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Fire, Frost, and Nature spells by 1%.",
+        "Increases the damage done by your Fire, Frost, and Nature spells by 2%.",
+        "Increases the damage done by your Fire, Frost, and Nature spells by 3%.",
+        "Increases the damage done by your Fire, Frost, and Nature spells by 4%.",
+        "Increases the damage done by your Fire, Frost, and Nature spells by 5%."
+      ]
+    },
+    {
+      "id": 220,
+      "name": "Earth's Grasp",
+      "tree": 0,
+      "icon": "spell_nature_stoneclawtotem",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_stoneclawtotem.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        16043,
+        16130
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          25,
+          50
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the health of your Stoneclaw Totem by 25% and the radius of your Earthbind Totem by 10%.",
+        "Increases the health of your Stoneclaw Totem by 50% and the radius of your Earthbind Totem by 20%."
+      ]
+    },
+    {
+      "id": 221,
+      "name": "Elemental Warding",
+      "tree": 0,
+      "icon": "spell_nature_elementalabsorption",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_elementalabsorption.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        28996,
+        28997,
+        28998
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          7,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces damage taken from Fire, Frost and Nature effects by 4%.",
+        "Reduces damage taken from Fire, Frost and Nature effects by 7%.",
+        "Reduces damage taken from Fire, Frost and Nature effects by 10%."
+      ]
+    },
+    {
+      "id": 222,
+      "name": "Elemental Devastation",
+      "tree": 0,
+      "icon": "spell_fire_elementaldevastation",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_elementaldevastation.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        30160,
+        29179,
+        29180
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to hit with spells and melee attacks by 1% and your melee critical strikes increase your chance to hit with spells by additional 3% for 10 sec.",
+        "Increases your chance to hit with spells and melee attacks by 2% and your melee critical strikes increase your chance to hit with spells by additional 6% for 10 sec.",
+        "Increases your chance to hit with spells and melee attacks by 3% and your melee critical strikes increase your chance to hit with spells by additional 9% for 10 sec."
+      ]
+    },
+    {
+      "id": 223,
+      "name": "Elemental Focus",
+      "tree": 0,
+      "icon": "spell_shadow_manaburn",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_manaburn.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 1,
+      "spellIds": [
+        45541
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "After landing a critical strike with a Fire, Frost, or Nature damage spell or melee attack, you enter a Clearcasting state.  The Clearcasting state reduces the mana cost of your next two damage spells or abilities by 60%."
+      ]
+    },
+    {
+      "id": 224,
+      "name": "Reverberation",
+      "tree": 0,
+      "icon": "spell_frost_frostward",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_frostward.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        16040,
+        16113,
+        16114
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.3,
+          0.7,
+          1
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of your Shock spells by 0.3 sec.",
+        "Reduces the cooldown of your Shock spells by 0.7 sec.",
+        "Reduces the cooldown of your Shock spells by 1 sec."
+      ]
+    },
+    {
+      "id": 225,
+      "name": "Call of Thunder",
+      "tree": 0,
+      "icon": "spell_nature_callstorm",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_callstorm.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16041,
+        16117,
+        16118,
+        16119,
+        16120
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike chance of your Lightning Bolt and Chain Lightning spells by an additional 1%.",
+        "Increases the critical strike chance of your Lightning Bolt and Chain Lightning spells by an additional 2%.",
+        "Increases the critical strike chance of your Lightning Bolt and Chain Lightning spells by an additional 3%.",
+        "Increases the critical strike chance of your Lightning Bolt and Chain Lightning spells by an additional 4%.",
+        "Increases the critical strike chance of your Lightning Bolt and Chain Lightning spells by an additional 6%."
+      ]
+    },
+    {
+      "id": 226,
+      "name": "Improved Molten Blast",
+      "tree": 0,
+      "icon": "spell_fire_meteorstorm",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_meteorstorm.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        46107,
+        46108
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          30,
+          60
+        ]
+      ],
+      "descriptions": [
+        "Refreshing Flame Shock with Molten Blast deals damage equal to 30% of the refreshed duration.",
+        "Refreshing Flame Shock with Molten Blast deals damage equal to 60% of the refreshed duration."
+      ]
+    },
+    {
+      "id": 227,
+      "name": "Improved Fire Totems",
+      "tree": 0,
+      "icon": "spell_fire_sealoffire",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_sealoffire.png",
+      "position": 12,
+      "row": 3,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        16086,
+        16544
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ],
+        [
+          25,
+          50
+        ],
+        [
+          10,
+          20
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the delay before your Fire Nova Totem activates by 1 sec, decreases the threat generated by your Magma Totem by 25%, and increases your Searing Totem's attack speed by 10% and its attack range by 5 yards.",
+        "Reduces the delay before your Fire Nova Totem activates by 2 sec, decreases the threat generated by your Magma Totem by 50%, and increases your Searing Totem's attack speed by 20% and its attack range by 10 yards."
+      ]
+    },
+    {
+      "id": 228,
+      "name": "Call of Earth",
+      "tree": 0,
+      "icon": "earthshaker_slam_16",
+      "iconSource": "https://octowow.st/talents/icons/earthshaker_slam_16.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        58238,
+        58239
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4
+        ],
+        [
+          25,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases the maximum charges of your Earth Shield by 2. While Earth Shield is active, increases your chance to avoid interruption caused by damage while casting damaging spells by an additional 25%, and causes your direct damaging spells to replenish 1 charge.",
+        "Increases the maximum charges of your Earth Shield by 4. While Earth Shield is active, increases your chance to avoid interruption caused by damage while casting damaging spells by an additional 50%, and causes your direct damaging spells to replenish 1 charge."
+      ]
+    },
+    {
+      "id": 229,
+      "name": "Call of Flame",
+      "tree": 0,
+      "icon": "spell_fire_immolation",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_immolation.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        16038,
+        16160,
+        16161
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage done by your Fire Totems and Fire spells by 5%, and the range of your Flame Shock by 3 yards.",
+        "Increases the damage done by your Fire Totems and Fire spells by 10%, and the range of your Flame Shock by 6 yards.",
+        "Increases the damage done by your Fire Totems and Fire spells by 15%, and the range of your Flame Shock by 10 yards."
+      ]
+    },
+    {
+      "id": 230,
+      "name": "Storm Reach",
+      "tree": 0,
+      "icon": "spell_nature_stormreach",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_stormreach.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        28999,
+        29000
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of your Lightning Bolt and Chain Lightning spells by 3 yards.",
+        "Increases the range of your Lightning Bolt and Chain Lightning spells by 6 yards."
+      ]
+    },
+    {
+      "id": 231,
+      "name": "Elemental Mastery",
+      "tree": 0,
+      "icon": "spell_nature_wispheal",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_wispheal.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        16166
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases your Fire, Frost, and Nature damage by 15% and reduces the mana cost of your offensive spells by 20% for 10 sec."
+      ]
+    },
+    {
+      "id": 232,
+      "name": "Elemental Fury",
+      "tree": 0,
+      "icon": "spell_fire_volcano",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_volcano.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        56556,
+        56557
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases damage done by your Frost, Fire, and Nature spells by 5%, and increases the critical strike damage bonus of Searing, Magma, and Fire Nova Totems, as well as your Fire, Frost, and Nature spells, by 50%.",
+        "Increases damage done by your Frost, Fire, and Nature spells by 10%, and increases the critical strike damage bonus of Searing, Magma, and Fire Nova Totems, as well as your Fire, Frost, and Nature spells, by 100%."
+      ]
+    },
+    {
+      "id": 233,
+      "name": "Lightning Mastery",
+      "tree": 0,
+      "icon": "spell_lightning_lightningbolt01",
+      "iconSource": "https://octowow.st/talents/icons/spell_lightning_lightningbolt01.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16578,
+        16579,
+        16580,
+        16581,
+        16582
+      ],
+      "requires": 10,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          0.2,
+          0.4,
+          0.6,
+          0.8,
+          1
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 0.2 sec.",
+        "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 0.4 sec.",
+        "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 0.6 sec.",
+        "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 0.8 sec.",
+        "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 1 sec."
+      ]
+    },
+    {
+      "id": 234,
+      "name": "Earthquake",
+      "tree": 0,
+      "icon": "spell_nature_earthquake",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_earthquake.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        48306
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [],
+      "descriptions": [
+        "Breaks the earth beneath the target, dealing 262 to 291 Nature damage to the target and an additional 35% of that damage as Nature damage to other enemies within 10 yards. Creates a patch of broken earth that slows enemies inside it by 15%. After 4 sec, the broken earth erupts in an aftershock, dealing Nature damage equal to 30% of the initial damage to all enemies within the area."
+      ]
+    },
+    {
+      "id": 251,
+      "name": "Ancestral Knowledge",
+      "tree": 1,
+      "icon": "spell_shadow_grimward",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_grimward.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17485,
+        17486,
+        17487,
+        17488,
+        17489
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases the total value of all your stats by 1%.",
+        "Increases the total value of all your stats by 2%.",
+        "Increases the total value of all your stats by 3%.",
+        "Increases the total value of all your stats by 4%.",
+        "Increases the total value of all your stats by 5%."
+      ]
+    },
+    {
+      "id": 252,
+      "name": "Shield Specialization",
+      "tree": 1,
+      "icon": "inv_shield_06",
+      "iconSource": "https://octowow.st/talents/icons/inv_shield_06.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16253,
+        16298,
+        16299,
+        16300,
+        16301
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          6,
+          12,
+          18,
+          24,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases your chance to block attacks with a shield by 1% and increases the amount blocked by 6%.",
+        "Increases your chance to block attacks with a shield by 2% and increases the amount blocked by 12%.",
+        "Increases your chance to block attacks with a shield by 3% and increases the amount blocked by 18%.",
+        "Increases your chance to block attacks with a shield by 4% and increases the amount blocked by 24%.",
+        "Increases your chance to block attacks with a shield by 5% and increases the amount blocked by 30%."
+      ]
+    },
+    {
+      "id": 253,
+      "name": "Totemic Alignment",
+      "tree": 1,
+      "icon": "spell_nature_agitatingtotem",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_agitatingtotem.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51381,
+        51382
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          45,
+          90
+        ]
+      ],
+      "descriptions": [
+        "45% of the threat generated by your totems is transferred to you.",
+        "90% of the threat generated by your totems is transferred to you."
+      ]
+    },
+    {
+      "id": 254,
+      "name": "Thundering Strikes",
+      "tree": 1,
+      "icon": "ability_thunderbolt",
+      "iconSource": "https://octowow.st/talents/icons/ability_thunderbolt.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16255,
+        16302,
+        16303,
+        16304,
+        16305
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Improves your chance to get a critical strike with your weapon attacks by 1%.",
+        "Improves your chance to get a critical strike with your weapon attacks by 2%.",
+        "Improves your chance to get a critical strike with your weapon attacks by 3%.",
+        "Improves your chance to get a critical strike with your weapon attacks by 4%.",
+        "Improves your chance to get a critical strike with your weapon attacks by 5%."
+      ]
+    },
+    {
+      "id": 255,
+      "name": "Stable Shields",
+      "tree": 1,
+      "icon": "spell_nature_lightningshield",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_lightningshield.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        16261,
+        16290,
+        16291
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases the number of charges of your shield spells by 2, but increases the cooldown between activations by 1 sec.",
+        "Increases the number of charges of your shield spells by 4, but increases the cooldown between activations by 1 sec.",
+        "Increases the number of charges of your shield spells by 6, but increases the cooldown between activations by 1 sec."
+      ]
+    },
+    {
+      "id": 256,
+      "name": "Improved Ghost Wolf",
+      "tree": 1,
+      "icon": "spell_nature_spiritwolf",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_spiritwolf.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        16262,
+        16287
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time of your Ghost Wolf spell by 1 sec.",
+        "Reduces the cast time of your Ghost Wolf spell by 2 sec."
+      ]
+    },
+    {
+      "id": 257,
+      "name": "Calming Winds",
+      "tree": 1,
+      "icon": "spell_nature_tranquility",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_tranquility.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        51383,
+        51384,
+        51385
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          8,
+          16,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Reduces threat generated by your physical attacks, weapon imbue effects, and your Lightning Strike and Stormstrike abilities by 8%. This effect does not apply while Rockbiter Weapon is active.",
+        "Reduces threat generated by your physical attacks, weapon imbue effects, and your Lightning Strike and Stormstrike abilities by 16%. This effect does not apply while Rockbiter Weapon is active.",
+        "Reduces threat generated by your physical attacks, weapon imbue effects, and your Lightning Strike and Stormstrike abilities by 25%. This effect does not apply while Rockbiter Weapon is active."
+      ]
+    },
+    {
+      "id": 258,
+      "name": "Lightning Strike",
+      "tree": 1,
+      "icon": "spell_nature_thunderclap",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_thunderclap.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        51387
+      ],
+      "requires": 6,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "Instantly strikes your target, causing 20% weapon damage and an additional 10% as Nature damage.  This strike also triggers an empowered version of your active shield, consuming 1 charge."
+      ]
+    },
+    {
+      "id": 259,
+      "name": "Ancestral Guardian",
+      "tree": 1,
+      "icon": "spell_nature_ancestralguardian",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_ancestralguardian.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        45545,
+        45546,
+        45547
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases your armor value from items by 5% and chance to dodge by an additional 2%.",
+        "Increases your armor value from items by 10% and chance to dodge by an additional 4%.",
+        "Increases your armor value from items by 15% and chance to dodge by an additional 6%."
+      ]
+    },
+    {
+      "id": 260,
+      "name": "Flurry",
+      "tree": 1,
+      "icon": "ability_ghoulfrenzy",
+      "iconSource": "https://octowow.st/talents/icons/ability_ghoulfrenzy.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16256,
+        16281,
+        16282,
+        16283,
+        16284
+      ],
+      "requires": 5,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          8,
+          11,
+          14,
+          17,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases your attack speed by 8% for your next 3 swings after dealing a critical strike.",
+        "Increases your attack speed by 11% for your next 3 swings after dealing a critical strike.",
+        "Increases your attack speed by 14% for your next 3 swings after dealing a critical strike.",
+        "Increases your attack speed by 17% for your next 3 swings after dealing a critical strike.",
+        "Increases your attack speed by 20% for your next 3 swings after dealing a critical strike."
+      ]
+    },
+    {
+      "id": 261,
+      "name": "Spirit Armor",
+      "tree": 1,
+      "icon": "spell_nature_spiritarmor",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_spiritarmor.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        45951,
+        45952
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the armor gained from shields by 15% and threat generated by 5% while wearing a shield.",
+        "Increases the armor gained from shields by 30% and threat generated by 10% while wearing a shield."
+      ]
+    },
+    {
+      "id": 262,
+      "name": "Enhancing Totems",
+      "tree": 1,
+      "icon": "spell_nature_earthbindtotem",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_earthbindtotem.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        16259,
+        16295
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          12,
+          25
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          15,
+          30
+        ],
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the effect of your Strength of Earth and Grace of Air Totems by 12% and reduces the cooldown of your Grounding Totem by 1 sec. Stoneskin Totem's damage reduction is increased by 15%, and in addition, it increases block amount by 15%.",
+        "Increases the effect of your Strength of Earth and Grace of Air Totems by 25% and reduces the cooldown of your Grounding Totem by 2 sec. Stoneskin Totem's damage reduction is increased by 30%, and in addition, it increases block amount by 30%."
+      ]
+    },
+    {
+      "id": 263,
+      "name": "Elemental Weapons",
+      "tree": 1,
+      "icon": "spell_fire_flametounge",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_flametounge.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        16266,
+        29079,
+        29080
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          8,
+          16,
+          25
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Imbuing your weapon grants a special benefit based on the imbue: \n\nFlametongue: Hitting enemies with your attacks increases damage done by Fire Totems and Fire spells by 10% for 5 sec. \n\nFrostbrand: Increases the chance to trigger the effect by 8% and causes it to critically hit if the target is afflicted with Frost Shock. \n\nWindfury: Gaining extra attacks increases attack speed by 1% for 5 sec. Stacks up to 2 times. \n\nRockbiter: Physical damage builds up an earthen bulwark equal to 20% of damage dealt, tripled while wearing a shield. The bulwark absorbs 5% of incoming damage for 8 sec or until it mitigates enough damage. Its durability cannot exceed 20% of maximum health.",
+        "Imbuing your weapon grants a special benefit based on the imbue: \n\nFlametongue: Hitting enemies with your attacks increases damage done by Fire Totems and Fire spells by 20% for 5 sec. \n\nFrostbrand: Increases the chance to trigger the effect by 16% and causes it to critically hit if the target is afflicted with Frost Shock. \n\nWindfury: Gaining extra attacks increases attack speed by 2% for 5 sec. Stacks up to 2 times. \n\nRockbiter: Physical damage builds up an earthen bulwark equal to 20% of damage dealt, tripled while wearing a shield. The bulwark absorbs 10% of incoming damage for 8 sec or until it mitigates enough damage. Its durability cannot exceed 20% of maximum health.",
+        "Imbuing your weapon grants a special benefit based on the imbue: \n\nFlametongue: Hitting enemies with your attacks increases damage done by Fire Totems and Fire spells by 30% for 5 sec. \n\nFrostbrand: Increases the chance to trigger the effect by 25% and causes it to critically hit if the target is afflicted with Frost Shock. \n\nWindfury: Gaining extra attacks increases attack speed by 3% for 5 sec. Stacks up to 2 times. \n\nRockbiter: Physical damage builds up an earthen bulwark equal to 20% of damage dealt, tripled while wearing a shield. The bulwark absorbs 15% of incoming damage for 8 sec or until it mitigates enough damage. Its durability cannot exceed 20% of maximum health."
+      ]
+    },
+    {
+      "id": 264,
+      "name": "Stormstrike",
+      "tree": 1,
+      "icon": "ability_shaman_stormstrike",
+      "iconSource": "https://octowow.st/talents/icons/ability_shaman_stormstrike.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        17364
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Gives you an extra attack for 100% weapon damage and increases the next 2 sources of Nature damage you deal by 25%.  Lasts 12 sec."
+      ]
+    },
+    {
+      "id": 265,
+      "name": "Element's Grace",
+      "tree": 1,
+      "icon": "spell_fire_enchantweapon",
+      "iconSource": "https://octowow.st/talents/icons/spell_fire_enchantweapon.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        29082,
+        29084,
+        29086,
+        29087,
+        29088
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage you deal with all weapons, Stormstrike and Lightning Strike abilities by 2%. Increases the critical strike chance of your instant cast spells by 2%.",
+        "Increases the damage you deal with all weapons, Stormstrike and Lightning Strike abilities by 4%. Increases the critical strike chance of your instant cast spells by 4%.",
+        "Increases the damage you deal with all weapons, Stormstrike and Lightning Strike abilities by 6%. Increases the critical strike chance of your instant cast spells by 6%.",
+        "Increases the damage you deal with all weapons, Stormstrike and Lightning Strike abilities by 8%. Increases the critical strike chance of your instant cast spells by 8%.",
+        "Increases the damage you deal with all weapons, Stormstrike and Lightning Strike abilities by 10%. Increases the critical strike chance of your instant cast spells by 10%."
+      ]
+    },
+    {
+      "id": 266,
+      "name": "Bloodlust",
+      "tree": 1,
+      "icon": "spell_nature_bloodlust",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_bloodlust.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        45509
+      ],
+      "requires": 17,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "Fly into a frenzy, increasing your attack speed by 20% and spell casting speed by 20% for 30 sec.  While under this effect, your melee critical strikes increase the attack and spell casting speed of all party members within 30 yards by 8% for 6 sec."
+      ]
+    },
+    {
+      "id": 235,
+      "name": "Improved Healing Wave",
+      "tree": 2,
+      "icon": "spell_nature_magicimmunity",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_magicimmunity.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16182,
+        16226,
+        16227,
+        16228,
+        16229
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          0.3,
+          45,
+          0.6,
+          75
+        ]
+      ],
+      "descriptions": [
+        "Reduces the casting time of your Healing Wave spell by 15 sec.",
+        "Reduces the casting time of your Healing Wave spell by 0.3 sec.",
+        "Reduces the casting time of your Healing Wave spell by 45 sec.",
+        "Reduces the casting time of your Healing Wave spell by 0.6 sec.",
+        "Reduces the casting time of your Healing Wave spell by 75 sec."
+      ]
+    },
+    {
+      "id": 236,
+      "name": "Tidal Focus",
+      "tree": 2,
+      "icon": "spell_frost_manarecharge",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_manarecharge.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16179,
+        16214,
+        16215,
+        16216,
+        16217
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of your healing spells by 1% and your totems by 5%.",
+        "Reduces the Mana cost of your healing spells by 2% and your totems by 10%.",
+        "Reduces the Mana cost of your healing spells by 3% and your totems by 15%.",
+        "Reduces the Mana cost of your healing spells by 4% and your totems by 20%.",
+        "Reduces the Mana cost of your healing spells by 5% and your totems by 25%."
+      ]
+    },
+    {
+      "id": 237,
+      "name": "Improved Reincarnation",
+      "tree": 2,
+      "icon": "spell_nature_reincarnation",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_reincarnation.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        16184,
+        16209
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cooldown of your Reincarnation spell by 10 min and increases the amount of health and mana you reincarnate with by an additional 10%.",
+        "Reduces the cooldown of your Reincarnation spell by 20 min and increases the amount of health and mana you reincarnate with by an additional 20%."
+      ]
+    },
+    {
+      "id": 238,
+      "name": "Ancestral Healing",
+      "tree": 2,
+      "icon": "spell_nature_undyingstrength",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_undyingstrength.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        16176,
+        16235,
+        16240
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          8,
+          16,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Increases your target's armor value by 8% for 15 sec after getting a critical effect from one of your healing spells.",
+        "Increases your target's armor value by 16% for 15 sec after getting a critical effect from one of your healing spells.",
+        "Increases your target's armor value by 25% for 15 sec after getting a critical effect from one of your healing spells."
+      ]
+    },
+    {
+      "id": 239,
+      "name": "Tidal Mastery",
+      "tree": 2,
+      "icon": "spell_nature_tranquility",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_tranquility.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16194,
+        16218,
+        16219,
+        16220,
+        16221
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical effect chance of your healing and lightning spells by 1%.",
+        "Increases the critical effect chance of your healing and lightning spells by 2%.",
+        "Increases the critical effect chance of your healing and lightning spells by 3%.",
+        "Increases the critical effect chance of your healing and lightning spells by 4%.",
+        "Increases the critical effect chance of your healing and lightning spells by 5%."
+      ]
+    },
+    {
+      "id": 240,
+      "name": "Healing Way",
+      "tree": 2,
+      "icon": "spell_nature_healingway",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_healingway.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        29206,
+        29205,
+        29202
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          33,
+          66,
+          100
+        ],
+        [
+          11,
+          22,
+          33
+        ]
+      ],
+      "descriptions": [
+        "Your Healing Wave and Lesser Healing Wave spells each have a 33% chance, and your Chain Heal spell has a 11% chance to increase the healing of your next Healing Wave or Chain Heal on that target by 6% for 15 sec. This effect stacks up to 3 times.",
+        "Your Healing Wave and Lesser Healing Wave spells each have a 66% chance, and your Chain Heal spell has a 22% chance to increase the healing of your next Healing Wave or Chain Heal on that target by 6% for 15 sec. This effect stacks up to 3 times.",
+        "Your Healing Wave and Lesser Healing Wave spells each have a 100% chance, and your Chain Heal spell has a 33% chance to increase the healing of your next Healing Wave or Chain Heal on that target by 6% for 15 sec. This effect stacks up to 3 times."
+      ]
+    },
+    {
+      "id": 241,
+      "name": "Healing Focus",
+      "tree": 2,
+      "icon": "spell_nature_regenerate",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_regenerate.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        16181,
+        16230
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          35,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 35% chance to avoid interruption caused by damage while casting any healing spell.",
+        "Gives you a 70% chance to avoid interruption caused by damage while casting any healing spell."
+      ]
+    },
+    {
+      "id": 242,
+      "name": "Totemic Mastery",
+      "tree": 2,
+      "icon": "spell_nature_nullward",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_nullward.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        16189
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Increases the duration of your helpful totems by 20% and the amount of mana refunded by Totemic Recall by an additional 15%."
+      ]
+    },
+    {
+      "id": 243,
+      "name": "Nature's Grace",
+      "tree": 2,
+      "icon": "spell_nature_healingtouch",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_healingtouch.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        29187,
+        29189,
+        29191
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Reduces the threat generated by your Nature spells by 5%.",
+        "Reduces the threat generated by your Nature spells by 10%.",
+        "Reduces the threat generated by your Nature spells by 15%."
+      ]
+    },
+    {
+      "id": 244,
+      "name": "Restorative Totems",
+      "tree": 2,
+      "icon": "spell_nature_manaregentotem",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_manaregentotem.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16187,
+        16205,
+        16206,
+        16207,
+        16208
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Reduces mana cost of your Mana Spring Totem by 10% and increases the effect of your Healing Stream Totem by 5%.",
+        "Reduces mana cost of your Mana Spring Totem by 20% and increases the effect of your Healing Stream Totem by 10%.",
+        "Reduces mana cost of your Mana Spring Totem by 30% and increases the effect of your Healing Stream Totem by 15%.",
+        "Reduces mana cost of your Mana Spring Totem by 40% and increases the effect of your Healing Stream Totem by 20%.",
+        "Reduces mana cost of your Mana Spring Totem by 50% and increases the effect of your Healing Stream Totem by 25%."
+      ]
+    },
+    {
+      "id": 245,
+      "name": "Improved Water Shield",
+      "tree": 2,
+      "icon": "ability_shaman_watershield",
+      "iconSource": "https://octowow.st/talents/icons/ability_shaman_watershield.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        51369,
+        51370,
+        51371
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9
+        ],
+        [
+          1,
+          1.5,
+          2
+        ]
+      ],
+      "descriptions": [
+        "While your Water Shield is active, you restore 3 Mana every 5 sec, and your total mana regeneration is increased by 1% for each active Water Shield globe.",
+        "While your Water Shield is active, you restore 6 Mana every 5 sec, and your total mana regeneration is increased by 1.5% for each active Water Shield globe.",
+        "While your Water Shield is active, you restore 9 Mana every 5 sec, and your total mana regeneration is increased by 2% for each active Water Shield globe."
+      ]
+    },
+    {
+      "id": 246,
+      "name": "Tidal Surge",
+      "tree": 2,
+      "icon": "spell_arcane_manatap",
+      "iconSource": "https://octowow.st/talents/icons/spell_arcane_manatap.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51491,
+        51492
+      ],
+      "requires": 8,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          15,
+          30
+        ]
+      ],
+      "descriptions": [
+        "After healing a target affected by your Healing Way effect, you have a 15% chance to regain mana equal to 15% of the base cost of the spell.",
+        "After healing a target affected by your Healing Way effect, you have a 30% chance to regain mana equal to 15% of the base cost of the spell."
+      ]
+    },
+    {
+      "id": 247,
+      "name": "Ancestral Swiftness",
+      "tree": 2,
+      "icon": "spell_nature_ravenform",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_ravenform.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        16188
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, your next Nature spell with a casting time less than 10 sec becomes an instant cast spell. Affected damaging spells have 25% reduced effectiveness."
+      ]
+    },
+    {
+      "id": 248,
+      "name": "Undertow",
+      "tree": 2,
+      "icon": "spell_shaman_tidalwaves",
+      "iconSource": "https://octowow.st/talents/icons/spell_shaman_tidalwaves.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        51372,
+        51373
+      ],
+      "requires": 14,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          25,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Your Healing Wave and Lesser Healing Wave spells have a 25% chance to restore a charge of your active Water Shield.  When your Water Shield is at maximum charges, this effect consumes a charge instead.",
+        "Your Healing Wave and Lesser Healing Wave spells have a 50% chance to restore a charge of your active Water Shield.  When your Water Shield is at maximum charges, this effect consumes a charge instead."
+      ]
+    },
+    {
+      "id": 249,
+      "name": "Improved Chain Heal",
+      "tree": 2,
+      "icon": "spell_nature_healingwavegreater",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_healingwavegreater.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        51374,
+        51375,
+        51376,
+        51377,
+        51378
+      ],
+      "requires": 13,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          0.2,
+          0.4,
+          0.6,
+          0.8,
+          1
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time of your Chain Heal spell by 0.2 sec.",
+        "Reduces the cast time of your Chain Heal spell by 0.4 sec.",
+        "Reduces the cast time of your Chain Heal spell by 0.6 sec.",
+        "Reduces the cast time of your Chain Heal spell by 0.8 sec.",
+        "Reduces the cast time of your Chain Heal spell by 1 sec."
+      ]
+    },
+    {
+      "id": 250,
+      "name": "Spirit Link",
+      "tree": 2,
+      "icon": "spell_shaman_spiritlink",
+      "iconSource": "https://octowow.st/talents/icons/spell_shaman_spiritlink.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51363
+      ],
+      "requires": 21,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "Links the spirit of an ally to that of other group members within 35 yards. When the target takes damage, 30% is distributed among nearby allies. Lasts 20 sec."
+      ]
+    }
+  ]
+}

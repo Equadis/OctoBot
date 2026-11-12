@@ -119,6 +119,8 @@ def effect_text(value, rank):
             return effect_text(value[3], rank)
         return ''.join(effect_text(child, rank) for child in value)
     if isinstance(value, dict):
+        if isinstance(value.get('description'), str) and type(value.get('rank')) is int:
+            return value['description'] if value['rank'] == rank - 1 else ''
         if isinstance(value.get('values'), list):
             values = value['values']
             return str(values[min(rank - 1, len(values) - 1)]) if values else ''

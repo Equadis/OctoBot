@@ -1,0 +1,1659 @@
+{
+  "schemaVersion": 1,
+  "classId": "druid",
+  "source": {
+    "url": "https://octowow.st/talents/druid/",
+    "retrievedAt": "2026-11-11T23:29:44.058837+00:00",
+    "htmlSha256": "7137a9837ef004335ceefa79899e196be18fcdde24f303cbbd4615deb26d5bdc",
+    "scope": "Published calculator metadata; not observed server combat"
+  },
+  "trees": [
+    {
+      "index": 0,
+      "name": "Balance",
+      "maxPoints": 51
+    },
+    {
+      "index": 1,
+      "name": "Feral Combat",
+      "maxPoints": 47
+    },
+    {
+      "index": 2,
+      "name": "Restoration",
+      "maxPoints": 56
+    }
+  ],
+  "talents": [
+    {
+      "id": 301,
+      "name": "Improved Wrath",
+      "tree": 0,
+      "icon": "spell_nature_abolishmagic",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_abolishmagic.png",
+      "position": 0,
+      "row": 0,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        16814,
+        16815,
+        16816,
+        16817,
+        16818
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time and global cooldown of your Wrath spell by 0.1 sec.",
+        "Reduces the cast time and global cooldown of your Wrath spell by 0.2 sec.",
+        "Reduces the cast time and global cooldown of your Wrath spell by 0.3 sec.",
+        "Reduces the cast time and global cooldown of your Wrath spell by 0.4 sec.",
+        "Reduces the cast time and global cooldown of your Wrath spell by 0.5 sec."
+      ]
+    },
+    {
+      "id": 302,
+      "name": "Nature's Grasp",
+      "tree": 0,
+      "icon": "spell_nature_natureswrath",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_natureswrath.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        16689
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1).  Only useable outdoors.  1 charge.  Lasts 45 sec."
+      ]
+    },
+    {
+      "id": 303,
+      "name": "Improved Nature's Grasp",
+      "tree": 0,
+      "icon": "spell_nature_natureswrath",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_natureswrath.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 4,
+      "spellIds": [
+        17245,
+        17247,
+        17248,
+        17249
+      ],
+      "requires": 1,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          15,
+          30,
+          45,
+          65
+        ]
+      ],
+      "descriptions": [
+        "Increases the chance for your Nature's Grasp to entangle an enemy by 15%.",
+        "Increases the chance for your Nature's Grasp to entangle an enemy by 30%.",
+        "Increases the chance for your Nature's Grasp to entangle an enemy by 45%.",
+        "Increases the chance for your Nature's Grasp to entangle an enemy by 65%."
+      ]
+    },
+    {
+      "id": 304,
+      "name": "Sylvan Blessing",
+      "tree": 0,
+      "icon": "inv_misc_gem_emerald_01",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_gem_emerald_01.png",
+      "position": 3,
+      "row": 0,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        51421,
+        51422
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 50% chance after killing a target that yields experience or honor to allow your Mana to regenerate at a 100% rate while casting.  Lasts 15 sec.",
+        "Gives you a 100% chance after killing a target that yields experience or honor to allow your Mana to regenerate at a 100% rate while casting.  Lasts 15 sec."
+      ]
+    },
+    {
+      "id": 305,
+      "name": "Guidance of the Dream",
+      "tree": 0,
+      "icon": "spell_nature_sleep",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_sleep.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        51423,
+        51424,
+        51425
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          23,
+          46,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 23% chance to avoid interruption caused by damage while casting your Balance spells.",
+        "Gives you a 46% chance to avoid interruption caused by damage while casting your Balance spells.",
+        "Gives you a 70% chance to avoid interruption caused by damage while casting your Balance spells."
+      ]
+    },
+    {
+      "id": 306,
+      "name": "Improved Moonfire",
+      "tree": 0,
+      "icon": "spell_nature_starfall",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_starfall.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        16821,
+        16822
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage and critical strike chance of your Moonfire spell by 5%.",
+        "Increases the damage and critical strike chance of your Moonfire spell by 10%."
+      ]
+    },
+    {
+      "id": 307,
+      "name": "Natural Weapons",
+      "tree": 0,
+      "icon": "inv_staff_01",
+      "iconSource": "https://octowow.st/talents/icons/inv_staff_01.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        45715,
+        45716,
+        45717
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage you deal with physical attacks in all forms by 3%. Also increases chance to hit with melee attacks and spells by 1%.",
+        "Increases the damage you deal with physical attacks in all forms by 6%. Also increases chance to hit with melee attacks and spells by 2%.",
+        "Increases the damage you deal with physical attacks in all forms by 10%. Also increases chance to hit with melee attacks and spells by 3%."
+      ]
+    },
+    {
+      "id": 308,
+      "name": "Natural Shapeshifter",
+      "tree": 0,
+      "icon": "spell_nature_wispsplode",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_wispsplode.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        16833,
+        16834,
+        16835
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Reduces the mana cost of all shapeshifting by 10%.",
+        "Reduces the mana cost of all shapeshifting by 20%.",
+        "Reduces the mana cost of all shapeshifting by 30%."
+      ]
+    },
+    {
+      "id": 309,
+      "name": "Moonfury",
+      "tree": 0,
+      "icon": "spell_nature_moonglow",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_moonglow.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        16896,
+        16897,
+        16899
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of your Starfire, Moonfire, Hurricane, Insect Swarm, and Wrath spells by 4%.",
+        "Increases the damage of your Starfire, Moonfire, Hurricane, Insect Swarm, and Wrath spells by 8%.",
+        "Increases the damage of your Starfire, Moonfire, Hurricane, Insect Swarm, and Wrath spells by 12%."
+      ]
+    },
+    {
+      "id": 310,
+      "name": "Omen of Clarity",
+      "tree": 0,
+      "icon": "spell_nature_crystalball",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_crystalball.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        16864
+      ],
+      "requires": 6,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "Imbues the Druid with natural energy.  Each of the Druid's melee attacks or offensive spell casts has a chance of causing the caster to enter a Clearcasting state.  The Clearcasting state reduces the Mana, Rage or Energy cost of your next damage or healing spell or offensive ability by 100%."
+      ]
+    },
+    {
+      "id": 311,
+      "name": "Nature's Reach",
+      "tree": 0,
+      "icon": "spell_nature_naturetouchgrow",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_naturetouchgrow.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        16819,
+        16820
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, Insect Swarm, Hurricane, Remove Curse, Abolish Poison, and Cure Poison spells by 10%.",
+        "Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, Insect Swarm, Hurricane, Remove Curse, Abolish Poison, and Cure Poison spells by 20%."
+      ]
+    },
+    {
+      "id": 312,
+      "name": "Vengeance",
+      "tree": 0,
+      "icon": "spell_nature_purge",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_purge.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16909,
+        16910,
+        16911,
+        16912,
+        16913
+      ],
+      "requires": 5,
+      "requiresRanks": 2,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 20%.",
+        "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 40%.",
+        "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 60%.",
+        "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 80%.",
+        "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 100%."
+      ]
+    },
+    {
+      "id": 313,
+      "name": "Moonglow",
+      "tree": 0,
+      "icon": "spell_nature_sentinal",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_sentinal.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        16845,
+        16846,
+        16847
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "descriptions": [
+        "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Hurricane, Insect Swarm, Healing Touch, Regrowth and Rejuvenation spells by 3%.",
+        "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Hurricane, Insect Swarm, Healing Touch, Regrowth and Rejuvenation spells by 6%.",
+        "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Hurricane, Insect Swarm, Healing Touch, Regrowth and Rejuvenation spells by 9%."
+      ]
+    },
+    {
+      "id": 314,
+      "name": "Owlkin Frenzy",
+      "tree": 0,
+      "icon": "ability_druid_owlkinfrenzy",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_owlkinfrenzy.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        45734,
+        51426,
+        51427
+      ],
+      "requires": 17,
+      "requiresRanks": 1,
+      "rankParameters": [
+        [
+          30,
+          25,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage while casting and regenerating 1% of your maximum mana per second for 10 sec. This effect can only trigger once every 30 seconds.",
+        "Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage while casting and regenerating 1% of your maximum mana per second for 10 sec. This effect can only trigger once every 25 seconds.",
+        "Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage while casting and regenerating 1% of your maximum mana per second for 10 sec. This effect can only trigger once every 20 seconds."
+      ]
+    },
+    {
+      "id": 315,
+      "name": "Moonkin Form",
+      "tree": 0,
+      "icon": "spell_nature_forceofnature",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_forceofnature.png",
+      "position": 17,
+      "row": 4,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        24858
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Transforms the Druid into Moonkin Form. While in this form the armor contribution from items is increased by 180%, the Mana cost of your Balance spells is reduced by 20%, and all party members within 30 yards have their spell critical chance increased by 3%. The Moonkin can only cast Balance spells, Innervate, and Remove Curse while shapeshifted. The act of shapeshifting frees the caster of Polymorph and Movement Impairing effects."
+      ]
+    },
+    {
+      "id": 316,
+      "name": "Nature's Grace",
+      "tree": 0,
+      "icon": "spell_nature_naturesblessing",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_naturesblessing.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        16880
+      ],
+      "requires": 14,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec."
+      ]
+    },
+    {
+      "id": 317,
+      "name": "Improved Starfire",
+      "tree": 0,
+      "icon": "spell_arcane_starfire",
+      "iconSource": "https://octowow.st/talents/icons/spell_arcane_starfire.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        16850,
+        16923,
+        16924
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.2,
+          0.3,
+          0.5
+        ],
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time of Starfire by 0.2 sec and gives it a 5% chance to stun the target for 3 sec.",
+        "Reduces the cast time of Starfire by 0.3 sec and gives it a 10% chance to stun the target for 3 sec.",
+        "Reduces the cast time of Starfire by 0.5 sec and gives it a 15% chance to stun the target for 3 sec."
+      ]
+    },
+    {
+      "id": 318,
+      "name": "Balance of All Things",
+      "tree": 0,
+      "icon": "ability_druid_manatree",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_manatree.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        51433,
+        51434,
+        51435
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "descriptions": [
+        "Damaging a target afflicted by Insect Swarm with Wrath refunds 10% of its mana cost.\n\nStarfire has a 3% increased chance to critically strike against targets affected by Moonfire.",
+        "Damaging a target afflicted by Insect Swarm with Wrath refunds 20% of its mana cost.\n\nStarfire has a 6% increased chance to critically strike against targets affected by Moonfire.",
+        "Damaging a target afflicted by Insect Swarm with Wrath refunds 30% of its mana cost.\n\nStarfire has a 9% increased chance to critically strike against targets affected by Moonfire."
+      ]
+    },
+    {
+      "id": 319,
+      "name": "Gale Winds",
+      "tree": 0,
+      "icon": "ability_druid_galewinds",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_galewinds.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        51440,
+        51441
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20
+        ],
+        [
+          12,
+          25
+        ]
+      ],
+      "descriptions": [
+        "Reduces the mana cost of Hurricane by 10% and causes it to reduce the attack speed of affected enemies by 12%.",
+        "Reduces the mana cost of Hurricane by 20% and causes it to reduce the attack speed of affected enemies by 25%."
+      ]
+    },
+    {
+      "id": 320,
+      "name": "Eclipse",
+      "tree": 0,
+      "icon": "ability_druid_eclipse",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_eclipse.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        51444
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Aligns natural and astral energies. Damage from Wrath has a 40% chance to grant Arcane Eclipse, increasing Arcane damage dealt. Damage from Starfire has a 60% chance to grant Nature Eclipse, increasing Nature damage dealt.\n\nThe damage bonus is 10% plus 60% of your spell critical strike chance. Each effect lasts 15 sec and has its own 30 sec cooldown. Only one Eclipse can be active at a time."
+      ]
+    },
+    {
+      "id": 267,
+      "name": "Ferocity",
+      "tree": 1,
+      "icon": "ability_hunter_pet_hyena",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_pet_hyena.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        16934,
+        16935,
+        16936,
+        16937,
+        16938
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 1 Rage or Energy.",
+        "Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 2 Rage or Energy.",
+        "Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 3 Rage or Energy.",
+        "Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 4 Rage or Energy.",
+        "Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 5 Rage or Energy."
+      ]
+    },
+    {
+      "id": 268,
+      "name": "Feral Aggression",
+      "tree": 1,
+      "icon": "ability_druid_demoralizingroar",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_demoralizingroar.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        16858,
+        16859,
+        16860,
+        16861,
+        16862
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          8,
+          16,
+          24,
+          32,
+          40
+        ],
+        [
+          3,
+          6,
+          9,
+          12,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the Attack Power reduction of your Demoralizing Roar by 8% and the damage caused by your Ferocious Bite by 3%.",
+        "Increases the Attack Power reduction of your Demoralizing Roar by 16% and the damage caused by your Ferocious Bite by 6%.",
+        "Increases the Attack Power reduction of your Demoralizing Roar by 24% and the damage caused by your Ferocious Bite by 9%.",
+        "Increases the Attack Power reduction of your Demoralizing Roar by 32% and the damage caused by your Ferocious Bite by 12%.",
+        "Increases the Attack Power reduction of your Demoralizing Roar by 40% and the damage caused by your Ferocious Bite by 15%."
+      ]
+    },
+    {
+      "id": 269,
+      "name": "Feral Instinct",
+      "tree": 1,
+      "icon": "ability_ambush",
+      "iconSource": "https://octowow.st/talents/icons/ability_ambush.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 3,
+      "spellIds": [
+        16947,
+        16948,
+        16949
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases threat caused in Bear and Dire Bear Form by 5% and reduces the chance enemies have to detect you while Prowling.",
+        "Increases threat caused in Bear and Dire Bear Form by 10% and reduces the chance enemies have to detect you while Prowling.",
+        "Increases threat caused in Bear and Dire Bear Form by 15% and reduces the chance enemies have to detect you while Prowling."
+      ]
+    },
+    {
+      "id": 270,
+      "name": "Brutal Impact",
+      "tree": 1,
+      "icon": "ability_druid_bash",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_bash.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 2,
+      "spellIds": [
+        16940,
+        16941
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.5,
+          1
+        ]
+      ],
+      "descriptions": [
+        "Increases the stun duration of your Bash and Pounce abilities by 0.5 sec.",
+        "Increases the stun duration of your Bash and Pounce abilities by 1 sec."
+      ]
+    },
+    {
+      "id": 271,
+      "name": "Thick Hide",
+      "tree": 1,
+      "icon": "inv_misc_pelt_bear_03",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_pelt_bear_03.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        16929,
+        16930,
+        16931
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases your Armor contribution from items by 3%.",
+        "Increases your Armor contribution from items by 6%.",
+        "Increases your Armor contribution from items by 10%."
+      ]
+    },
+    {
+      "id": 272,
+      "name": "Open Wounds",
+      "tree": 1,
+      "icon": "ability_druid_disembowel",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_disembowel.png",
+      "position": 7,
+      "row": 1,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        51402,
+        51403,
+        51404
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ],
+        [
+          10,
+          20,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of Rip by 5%. In addition, increases the damage of Claw by 10% for each of your active Bleed effects on the target.",
+        "Increases the damage of Rip by 10%. In addition, increases the damage of Claw by 20% for each of your active Bleed effects on the target.",
+        "Increases the damage of Rip by 15%. In addition, increases the damage of Claw by 30% for each of your active Bleed effects on the target."
+      ]
+    },
+    {
+      "id": 273,
+      "name": "Feral Swiftness",
+      "tree": 1,
+      "icon": "spell_nature_spiritwolf",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_spiritwolf.png",
+      "position": 8,
+      "row": 2,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        17002,
+        24866
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          15,
+          30
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "descriptions": [
+        "Increases your movement speed by 15% while outdoors in Cat Form and increases your chance to dodge while in Bear, Dire Bear and Cat Form by 2%.",
+        "Increases your movement speed by 30% while outdoors in Cat Form and increases your chance to dodge while in Bear, Dire Bear and Cat Form by 4%."
+      ]
+    },
+    {
+      "id": 274,
+      "name": "Feral Charge",
+      "tree": 1,
+      "icon": "ability_hunter_pet_bear",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_pet_bear.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        16979
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec."
+      ]
+    },
+    {
+      "id": 275,
+      "name": "Sharpened Claws",
+      "tree": 1,
+      "icon": "inv_misc_monsterclaw_04",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_monsterclaw_04.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        16942,
+        16943,
+        16944
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6
+        ]
+      ],
+      "descriptions": [
+        "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 2%.",
+        "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 4%.",
+        "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 6%."
+      ]
+    },
+    {
+      "id": 276,
+      "name": "Primal Fury",
+      "tree": 1,
+      "icon": "ability_racial_cannibalize",
+      "iconSource": "https://octowow.st/talents/icons/ability_racial_cannibalize.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        45719,
+        45720
+      ],
+      "requires": 10,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          50,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 50% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form and your critical strikes from Cat Form abilities that add combo points have a chance to add an additional combo point.",
+        "Gives you a 100% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form and your critical strikes from Cat Form abilities that add combo points have a chance to add an additional combo point."
+      ]
+    },
+    {
+      "id": 277,
+      "name": "Predatory Strikes",
+      "tree": 1,
+      "icon": "ability_hunter_pet_cat",
+      "iconSource": "https://octowow.st/talents/icons/ability_hunter_pet_cat.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 3,
+      "spellIds": [
+        16972,
+        16974,
+        16975
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          3,
+          6,
+          10
+        ],
+        [
+          7,
+          14,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases your melee attack power in Cat, Bear, and Dire Bear Forms by 3%. In addition, increases the damage caused by your Claw, Rake, Maul, Swipe, and Savage Bite abilities by 7%.",
+        "Increases your melee attack power in Cat, Bear, and Dire Bear Forms by 6%. In addition, increases the damage caused by your Claw, Rake, Maul, Swipe, and Savage Bite abilities by 14%.",
+        "Increases your melee attack power in Cat, Bear, and Dire Bear Forms by 10%. In addition, increases the damage caused by your Claw, Rake, Maul, Swipe, and Savage Bite abilities by 20%."
+      ]
+    },
+    {
+      "id": 278,
+      "name": "Blood Frenzy",
+      "tree": 1,
+      "icon": "ability_ghoulfrenzy",
+      "iconSource": "https://octowow.st/talents/icons/ability_ghoulfrenzy.png",
+      "position": 14,
+      "row": 3,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        45721,
+        45722
+      ],
+      "requires": 10,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          6,
+          12
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases the duration of Tiger's Fury by 6 sec, and causes Enrage to instantly generate 5 Rage. In addition, Tiger's Fury and Enrage increase your attack speed by 10% for 9 sec.",
+        "Increases the duration of Tiger's Fury by 12 sec, and causes Enrage to instantly generate 10 Rage. In addition, Tiger's Fury and Enrage increase your attack speed by 20% for 18 sec."
+      ]
+    },
+    {
+      "id": 279,
+      "name": "Improved Shred",
+      "tree": 1,
+      "icon": "spell_shadow_vampiricaura",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_vampiricaura.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 2,
+      "spellIds": [
+        16966,
+        16968
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          12
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage of Shred by 5% and reduces its Energy cost by 6.",
+        "Increases the damage of Shred by 10% and reduces its Energy cost by 12."
+      ]
+    },
+    {
+      "id": 280,
+      "name": "Ancient Brutality",
+      "tree": 1,
+      "icon": "spell_shadow_unholyfrenzy",
+      "iconSource": "https://octowow.st/talents/icons/spell_shadow_unholyfrenzy.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51415,
+        51416
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "descriptions": [
+        "Dodging an attack while in Bear or Dire Bear Form imbues you with the spirit of the Ancients, generating 2 Rage per second for 5 sec. This effect can only occur once every 9 seconds.  While in Cat Form, periodic ticks of your Bleed effects restore 3 Energy.",
+        "Dodging an attack while in Bear or Dire Bear Form imbues you with the spirit of the Ancients, generating 4 Rage per second for 5 sec. This effect can only occur once every 9 seconds.  While in Cat Form, periodic ticks of your Bleed effects restore 5 Energy."
+      ]
+    },
+    {
+      "id": 281,
+      "name": "Berserk",
+      "tree": 1,
+      "icon": "ability_druid_berserk",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_berserk.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        45708
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Removes all Fear effects and increases your energy regeneration rate by 100% while in Cat form, and increases your total health by 20% while in Bear form. After the effect ends, the health is lost. Effect lasts 20 seconds."
+      ]
+    },
+    {
+      "id": 282,
+      "name": "Heart of the Wild",
+      "tree": 1,
+      "icon": "spell_holy_blessingofagility",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofagility.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17003,
+        17004,
+        17005,
+        17006,
+        24894
+      ],
+      "requires": 13,
+      "requiresRanks": 3,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ],
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ],
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Increases your Intellect by 4%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 4% and while in Cat Form your Strength is increased by 4%.",
+        "Increases your Intellect by 8%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 8% and while in Cat Form your Strength is increased by 8%.",
+        "Increases your Intellect by 12%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 12% and while in Cat Form your Strength is increased by 12%.",
+        "Increases your Intellect by 16%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 16% and while in Cat Form your Strength is increased by 16%.",
+        "Increases your Intellect by 20%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 20% and while in Cat Form your Strength is increased by 20%."
+      ]
+    },
+    {
+      "id": 283,
+      "name": "Carnage",
+      "tree": 1,
+      "icon": "ability_druid_ravage",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_ravage.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        16998,
+        16999
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10
+        ],
+        [
+          10,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Your Maul, Swipe, and Savage Bite abilities return 5% of their damage as healing to you. In addition, gives your Ferocious Bite a 10% chance per combo point spent to refresh your active Rake and Rip effects and to add an additional combo point.",
+        "Your Maul, Swipe, and Savage Bite abilities return 10% of their damage as healing to you. In addition, gives your Ferocious Bite a 20% chance per combo point spent to refresh your active Rake and Rip effects and to add an additional combo point."
+      ]
+    },
+    {
+      "id": 284,
+      "name": "Leader of the Pack",
+      "tree": 1,
+      "icon": "spell_nature_unyeildingstamina",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_unyeildingstamina.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        17007
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "While in Cat, Bear or Dire Bear Form, the Leader of the Pack increases ranged and melee critical chance of all party members within 45 yards by 3%."
+      ]
+    },
+    {
+      "id": 285,
+      "name": "Improved Mark of the Wild",
+      "tree": 2,
+      "icon": "spell_nature_regeneration",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_regeneration.png",
+      "position": 1,
+      "row": 0,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17050,
+        17051,
+        17053,
+        17054,
+        17055
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          7,
+          14,
+          21,
+          28,
+          35
+        ]
+      ],
+      "descriptions": [
+        "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 7%.",
+        "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 14%.",
+        "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 21%.",
+        "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 28%.",
+        "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 35%."
+      ]
+    },
+    {
+      "id": 286,
+      "name": "Furor",
+      "tree": 2,
+      "icon": "spell_holy_blessingofstamina",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_blessingofstamina.png",
+      "position": 2,
+      "row": 0,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        17056,
+        17058,
+        17059,
+        17060,
+        17061
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40,
+          60,
+          80,
+          100
+        ]
+      ],
+      "descriptions": [
+        "Gives you 20% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+        "Gives you 40% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+        "Gives you 60% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+        "Gives you 80% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+        "Gives you 100% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form."
+      ]
+    },
+    {
+      "id": 287,
+      "name": "Improved Healing Touch",
+      "tree": 2,
+      "icon": "spell_nature_healingtouch",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_healingtouch.png",
+      "position": 4,
+      "row": 1,
+      "column": 0,
+      "maxRanks": 5,
+      "spellIds": [
+        17069,
+        17070,
+        17071,
+        17072,
+        17073
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ]
+      ],
+      "descriptions": [
+        "Reduces the cast time of your Healing Touch spell by 0.1 sec.",
+        "Reduces the cast time of your Healing Touch spell by 0.2 sec.",
+        "Reduces the cast time of your Healing Touch spell by 0.3 sec.",
+        "Reduces the cast time of your Healing Touch spell by 0.4 sec.",
+        "Reduces the cast time of your Healing Touch spell by 0.5 sec."
+      ]
+    },
+    {
+      "id": 288,
+      "name": "Nature's Focus",
+      "tree": 2,
+      "icon": "spell_nature_healingwavegreater",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_healingwavegreater.png",
+      "position": 5,
+      "row": 1,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17063,
+        17065,
+        17066,
+        17067,
+        17068
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          14,
+          28,
+          42,
+          56,
+          70
+        ]
+      ],
+      "descriptions": [
+        "Gives you a 14% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells.",
+        "Gives you a 28% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells.",
+        "Gives you a 42% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells.",
+        "Gives you a 56% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells.",
+        "Gives you a 70% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells."
+      ]
+    },
+    {
+      "id": 289,
+      "name": "Subtlety",
+      "tree": 2,
+      "icon": "ability_eyeoftheowl",
+      "iconSource": "https://octowow.st/talents/icons/ability_eyeoftheowl.png",
+      "position": 6,
+      "row": 1,
+      "column": 2,
+      "maxRanks": 5,
+      "spellIds": [
+        17118,
+        17119,
+        17120,
+        17121,
+        17122
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      ],
+      "descriptions": [
+        "Reduces the threat generated by your spells by 4%.",
+        "Reduces the threat generated by your spells by 8%.",
+        "Reduces the threat generated by your spells by 12%.",
+        "Reduces the threat generated by your spells by 16%.",
+        "Reduces the threat generated by your spells by 20%."
+      ]
+    },
+    {
+      "id": 290,
+      "name": "Swiftmend",
+      "tree": 2,
+      "icon": "inv_relics_idolofrejuvenation",
+      "iconSource": "https://octowow.st/talents/icons/inv_relics_idolofrejuvenation.png",
+      "position": 9,
+      "row": 2,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        18562
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [],
+      "descriptions": [
+        "Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation or 18 sec. of Regrowth."
+      ]
+    },
+    {
+      "id": 291,
+      "name": "Genesis",
+      "tree": 2,
+      "icon": "btnorbofdepths",
+      "iconSource": "https://octowow.st/talents/icons/btnorbofdepths.png",
+      "position": 10,
+      "row": 2,
+      "column": 2,
+      "maxRanks": 3,
+      "spellIds": [
+        17111,
+        17112,
+        17113
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Increases the damage and healing of your periodic magical spells and effects by 5%.",
+        "Increases the damage and healing of your periodic magical spells and effects by 10%.",
+        "Increases the damage and healing of your periodic magical spells and effects by 15%."
+      ]
+    },
+    {
+      "id": 292,
+      "name": "Reflection",
+      "tree": 2,
+      "icon": "spell_frost_windwalkon",
+      "iconSource": "https://octowow.st/talents/icons/spell_frost_windwalkon.png",
+      "position": 11,
+      "row": 2,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        17106,
+        17107,
+        17108
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          5,
+          10,
+          15
+        ]
+      ],
+      "descriptions": [
+        "Allows 5% of your Mana regeneration to continue while casting.",
+        "Allows 10% of your Mana regeneration to continue while casting.",
+        "Allows 15% of your Mana regeneration to continue while casting."
+      ]
+    },
+    {
+      "id": 293,
+      "name": "Gift of Nature",
+      "tree": 2,
+      "icon": "spell_nature_protectionformnature",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_protectionformnature.png",
+      "position": 13,
+      "row": 3,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17104,
+        24943,
+        24944,
+        24945,
+        24946
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Increases the effectiveness of all healing spells by 2%.",
+        "Increases the effectiveness of all healing spells by 4%.",
+        "Increases the effectiveness of all healing spells by 6%.",
+        "Increases the effectiveness of all healing spells by 8%.",
+        "Increases the effectiveness of all healing spells by 10%."
+      ]
+    },
+    {
+      "id": 294,
+      "name": "Tranquil Spirit",
+      "tree": 2,
+      "icon": "spell_holy_elunesgrace",
+      "iconSource": "https://octowow.st/talents/icons/spell_holy_elunesgrace.png",
+      "position": 15,
+      "row": 3,
+      "column": 3,
+      "maxRanks": 5,
+      "spellIds": [
+        24968,
+        24969,
+        24970,
+        24971,
+        24972
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          2,
+          4,
+          6,
+          8,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 2%.",
+        "Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 4%.",
+        "Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 6%.",
+        "Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 8%.",
+        "Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 10%."
+      ]
+    },
+    {
+      "id": 295,
+      "name": "Aessina's Bloom",
+      "tree": 2,
+      "icon": "inv_misc_herb_02",
+      "iconSource": "https://octowow.st/talents/icons/inv_misc_herb_02.png",
+      "position": 16,
+      "row": 4,
+      "column": 0,
+      "maxRanks": 2,
+      "spellIds": [
+        51446,
+        51447
+      ],
+      "requires": 4,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          15,
+          30
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "descriptions": [
+        "Healing a target affected by Regrowth or Rejuvenation with your Healing Touch spells reduces the casting time of your next Healing Touch spell by 0.15 sec and refunds 5% of its mana cost within 20 sec.",
+        "Healing a target affected by Regrowth or Rejuvenation with your Healing Touch spells reduces the casting time of your next Healing Touch spell by 0.30 sec and refunds 10% of its mana cost within 20 sec."
+      ]
+    },
+    {
+      "id": 296,
+      "name": "Nature's Swiftness",
+      "tree": 2,
+      "icon": "spell_nature_ravenform",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_ravenform.png",
+      "position": 18,
+      "row": 4,
+      "column": 2,
+      "maxRanks": 1,
+      "spellIds": [
+        17116
+      ],
+      "requires": 10,
+      "requiresRanks": 3,
+      "rankParameters": [],
+      "descriptions": [
+        "When activated, your next Nature spell becomes an instant cast spell."
+      ]
+    },
+    {
+      "id": 297,
+      "name": "Preservation",
+      "tree": 2,
+      "icon": "inv_relics_idolofhealth",
+      "iconSource": "https://octowow.st/talents/icons/inv_relics_idolofhealth.png",
+      "position": 19,
+      "row": 4,
+      "column": 3,
+      "maxRanks": 3,
+      "spellIds": [
+        51448,
+        51449,
+        51450
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30
+        ]
+      ],
+      "descriptions": [
+        "Increases the periodic healing of Regrowth by 10% if the friendly target is affected by Rejuvenation.",
+        "Increases the periodic healing of Regrowth by 20% if the friendly target is affected by Rejuvenation.",
+        "Increases the periodic healing of Regrowth by 30% if the friendly target is affected by Rejuvenation."
+      ]
+    },
+    {
+      "id": 298,
+      "name": "Improved Regrowth",
+      "tree": 2,
+      "icon": "spell_nature_resistnature",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_resistnature.png",
+      "position": 21,
+      "row": 5,
+      "column": 1,
+      "maxRanks": 5,
+      "spellIds": [
+        17074,
+        17075,
+        17076,
+        17077,
+        17078
+      ],
+      "requires": 13,
+      "requiresRanks": 5,
+      "rankParameters": [
+        [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      ],
+      "descriptions": [
+        "Increases the critical effect chance of your Regrowth spell by 10%.",
+        "Increases the critical effect chance of your Regrowth spell by 20%.",
+        "Increases the critical effect chance of your Regrowth spell by 30%.",
+        "Increases the critical effect chance of your Regrowth spell by 40%.",
+        "Increases the critical effect chance of your Regrowth spell by 50%."
+      ]
+    },
+    {
+      "id": 299,
+      "name": "Improved Tranquility",
+      "tree": 2,
+      "icon": "spell_nature_tranquility",
+      "iconSource": "https://octowow.st/talents/icons/spell_nature_tranquility.png",
+      "position": 22,
+      "row": 5,
+      "column": 2,
+      "maxRanks": 2,
+      "spellIds": [
+        17123,
+        17124
+      ],
+      "requires": null,
+      "requiresRanks": null,
+      "rankParameters": [
+        [
+          20,
+          40
+        ]
+      ],
+      "descriptions": [
+        "Increases the healing done by your Tranquility spell by 20%.",
+        "Increases the healing done by your Tranquility spell by 40%."
+      ]
+    },
+    {
+      "id": 300,
+      "name": "Tree of Life Form",
+      "tree": 2,
+      "icon": "ability_druid_treeoflife",
+      "iconSource": "https://octowow.st/talents/icons/ability_druid_treeoflife.png",
+      "position": 25,
+      "row": 6,
+      "column": 1,
+      "maxRanks": 1,
+      "spellIds": [
+        45705
+      ],
+      "requires": 21,
+      "requiresRanks": 5,
+      "rankParameters": [],
+      "descriptions": [
+        "Shapeshift into the Tree of Life.  While in this form armor contribution from items is inreased by 180%, the healing power of nearby party members is increased by an amount equal to 20% of your spirit, your movement speed is reduced by 20%, and you cannot cast damaging spells or Healing Touch, but the mana cost of heal over time spells is reduced by 20%.\n\nThe act of shapeshifting frees the caster of Polymorph and Movement Impairing effects."
+      ]
+    }
+  ]
+}

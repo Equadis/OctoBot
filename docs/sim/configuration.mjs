@@ -1,11 +1,15 @@
-import { BUFF_GROUPS, ROTATION_PRESETS, ABILITIES, METRICS, OPERATORS, validateRotationRows } from './core/configuration.mjs';
-import { attachTooltip } from './tooltip.mjs?v=20261111-picker1';
+import { BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261111-classes1';
+import { attachTooltip } from './tooltip.mjs?v=20261111-classes1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,click,label)=>{const b=node('button',text);b.type='button';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',click);return b;};
 const select=(options,value,label)=>{const s=node('select');s.setAttribute('aria-label',label);for(const [id,text] of options){const o=node('option',text);o.value=id;s.append(o);}s.value=value;return s;};
-const SAVED_KEY='octosim.rotations.warrior.v1';
+
 export function configuration({getBuild,onChange}){
+ const classId=getBuild().classId;
+ const SAVED_KEY=`octosim.rotations.${classId}.v1`;
+ const {abilities:ABILITIES,metrics:METRICS,presets:ROTATION_PRESETS,resources}=rotationProfile(classId);
+ const validateRows=rows=>validateRotationRows(rows,classId);
  const checkboxes=new Map();
  const update=patch=>onChange({...getBuild().controls,...patch});
  for(const group of BUFF_GROUPS){
@@ -39,7 +43,7 @@ export function configuration({getBuild,onChange}){
   $('buff-list').append(section);
  }
  function renderChecks(){for(const [id,input] of checkboxes)input.checked=getBuild().controls.buffIds.includes(id);$('tea-threshold').value=getBuild().controls.teaThreshold;}
- function saved(){try{const entries=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');if(!Array.isArray(entries))return[];return entries.slice(0,20).filter(entry=>typeof entry.name==='string'&&entry.name.length<=80).map(entry=>({...entry,rows:validateRotationRows(entry.rows)}));}catch{return[];}}
+ function saved(){try{const entries=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');if(!Array.isArray(entries))return[];return entries.slice(0,20).filter(entry=>typeof entry.name==='string'&&entry.name.length<=80).map(entry=>({...entry,rows:validateRows(entry.rows)}));}catch{return[];}}
  function choices(){
   const dropdown=$('rotation-preset');dropdown.replaceChildren();
   for(const preset of ROTATION_PRESETS){const option=node('option',preset.name);option.value=preset.id;dropdown.append(option);}
@@ -71,7 +75,7 @@ export function configuration({getBuild,onChange}){
     const value=node('input');value.type='number';value.min=0;value.max=10000;value.step='any';value.value=condition.value;value.setAttribute('aria-label',`Value for ability ${index+1}, condition ${ci+1}`);value.addEventListener('change',()=>{try{mutate(index,r=>r.conditions[ci].value=Number(value.value));}catch{value.value=condition.value;}});
     line.append(operator,value,button('×',()=>{mutate(index,r=>r.conditions.splice(ci,1));renderRows();},`Remove condition ${ci+1} for ability ${index+1}`));section.append(line);
    }
-   const add=button('+ Condition',()=>{mutate(index,r=>r.conditions.push({metric:'rage',operator:'>=',value:30,aura:''}));renderRows();},`Add condition for ability ${index+1}`);add.disabled=row.conditions.length>=6;section.append(add);container.append(section);
+   const add=button('+ Condition',()=>{mutate(index,r=>r.conditions.push({metric:resources[0],operator:'>=',value:30,aura:''}));renderRows();},`Add condition for ability ${index+1}`);add.disabled=row.conditions.length>=6;section.append(add);container.append(section);
   }
  }
  $('rotation-preset').addEventListener('change',()=>{
@@ -85,7 +89,7 @@ export function configuration({getBuild,onChange}){
  add.addEventListener('change',()=>{if(!add.value)return;edit([...getBuild().controls.rotationRows,{ability:add.value,conditions:[]}]);add.value='';renderRows();});
  $('rotation-save').addEventListener('click',()=>{
   const name=$('rotation-name').value.trim();if(!name){$('rotation-name').focus();return;}
-  try{const entries=saved().filter(entry=>entry.name!==name);if(entries.length>=20)throw new Error('You can save up to 20 rotations.');entries.push({name,rows:validateRotationRows(getBuild().controls.rotationRows)});localStorage.setItem(SAVED_KEY,JSON.stringify(entries));choices();$('rotation-save-status').textContent='Saved.';}catch(error){$('rotation-save-status').textContent=error.message;}
+  try{const entries=saved().filter(entry=>entry.name!==name);if(entries.length>=20)throw new Error('You can save up to 20 rotations.');entries.push({name,rows:validateRows(getBuild().controls.rotationRows)});localStorage.setItem(SAVED_KEY,JSON.stringify(entries));choices();$('rotation-save-status').textContent='Saved.';}catch(error){$('rotation-save-status').textContent=error.message;}
  });
  for(const [id,key] of [['key-interval','keyInterval'],['key-variability','variability'],['key-variability-ms','variabilityMs']])$(id).addEventListener('change',()=>{
   try{update({[key]:key==='variability'?$(id).checked:Number($(id).value)});$('key-variability-ms').disabled=!getBuild().controls.variability;}catch{render();}
