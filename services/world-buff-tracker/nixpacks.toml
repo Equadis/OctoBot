@@ -1,0 +1,8 @@
+# Railway/Nixpacks build. Force devDependencies (TypeScript) even if the service
+# sets NODE_ENV=production, then compile to dist/. The start command runs plain
+# Node on the compiled output, so no dev tooling is needed at runtime.
+[phases.install]
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = ["npm run build"]

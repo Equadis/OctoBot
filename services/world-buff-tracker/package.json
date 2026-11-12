@@ -1,0 +1,35 @@
+{
+  "name": "turtle-onyxia-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clientless WoW 1.12 bot that watches Onyxia's Lair via /who and pushes enter/leave alerts to Discord.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node --max-old-space-size=96 --max-semi-space-size=2 dist/index.js",
+    "start:dev": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "//dependencies": "Both pinned EXACT (no caret) at proven releases. mongodb 6.21.0 (~9 months) backs the subscriber store; its optional peers (kerberos, snappy, aws-sdk, zstd, client-encryption) are not installed. ws 8.21.1 (~6 weeks, past the <8.17.1 DoS fix) is the Discord gateway transport; it has zero runtime deps and its optional native peers (bufferutil, utf-8-validate) are not installed.",
+  "dependencies": {
+    "mongodb": "6.21.0",
+    "ws": "8.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "@types/ws": "8.18.1",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "3.2.7"
+  },
+  "//overrides": "Security pins, dev-tooling only: esbuild<=0.24.2 GHSA-67mh-4wv8-2f99, vite<=6.4.2 GHSA-4w7w-66w2-5vf9 / GHSA-fx2h-pf6j-xcff, launch-editor GHSA-v6wh-96g9-6wx3 — all dev-server issues. vitest 3.2.4 pulls fixed vite 7; esbuild forced to 0.25.0 so tsx is covered too.",
+  "overrides": {
+    "esbuild": "0.25.0"
+  }
+}
