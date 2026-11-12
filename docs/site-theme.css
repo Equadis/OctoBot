@@ -31,7 +31,8 @@ button[aria-pressed=true]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
 .dates{align-items:flex-end}
 .date-fields{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-height:30px}
 .date-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0}
-.date-actions button{width:auto;white-space:nowrap;border-radius:4px}
+.controls button{border-radius:4px}
+.date-actions button{width:auto;white-space:nowrap}
 .date-actions .jump-to-present{font-size:11px;line-height:15px;padding:5px 9px}
 .dates input[type="date"]{border-radius:4px}
 .jump-to-present:disabled,.jump-to-present:disabled:hover{opacity:.45;color:#a1adbd;background:#1e2938;border-color:#39465a;cursor:not-allowed}
