@@ -10,6 +10,7 @@ import {pathToFileURL} from 'node:url';
 const root=join(import.meta.dirname,'..');
 const html=readFileSync(join(root,'docs/status.html'),'utf8');
 const script=readFileSync(join(root,'docs/status-archive.js'),'utf8');
+const chartMath=readFileSync(join(root,'docs/chart-data.js'),'utf8');
 
 function element(tag='div'){
   const n={tag,children:[],attributes:{},textContent:'',hidden:false,value:'',style:{},
@@ -59,6 +60,7 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   const CustomEvent=function(type,{detail}){this.type=type;this.detail=detail;};
   const fetch=async()=>({ok:true,json:async()=>fixture});
   const console={error:(...args)=>errors.push(args.join(' '))};
+  new Function('window',chartMath)(window);
   new Function('document','window','CustomEvent','fetch','console',script)(
     document,window,CustomEvent,fetch,console);
   await new Promise(resolve=>setImmediate(resolve));
@@ -78,6 +80,7 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   assert.equal(attached.length,1);
   assert.equal(attached[0].hit,$('archive-hit'));
   assert.equal($('archive-ranges').children.length,6);
+  assert.equal($('archive-jump-to-present').disabled,true,'Already at the archive right edge');
   assert.ok($('archive-bars').children.length>0);
   assert.match($('archive-view-label').textContent,/1M/);
 
@@ -94,6 +97,16 @@ test('archived monitoring chart, calendar and incidents render after import',asy
   assert.equal($('archive-view-label').textContent,'Custom');
   assert.equal($('archive-date-to').value,'2026-11-07');
   assert.ok($('archive-bars').children.length>0);
+
+  // Shift into an older section, then jump to latest recorded history without zooming.
+  attached[0].navigate({start:end-2*86400000,end:end-86400000});
+  const historical=attached[0].range();
+  assert.equal($('archive-jump-to-present').disabled,false);
+  $('archive-jump-to-present').onclick();
+  const returned=attached[0].range();
+  assert.equal(returned.end,end);
+  assert.equal(returned.end-returned.start,historical.end-historical.start);
+  assert.equal($('archive-jump-to-present').disabled,true);
 
   // Metric switching should re-bound the chart, without missing-data invention.
   $('archive-signal').onchange({target:{value:'auth'}});
