@@ -409,7 +409,10 @@
       el.append(b);
     }
   }
-  function draw() {timeline();}
+  function updateJumpToPresent() {
+    $('jump-to-present').disabled=period!=='CUSTOM'||viewEnd>=Date.now()-30000;
+  }
+  function draw() {timeline();updateJumpToPresent();}
   function changeRange(next) {
     if(!next||Math.abs(viewStart-next.start)<1&&Math.abs(viewEnd-next.end)<1)return;
     viewStart=next.start;viewEnd=next.end;period='CUSTOM';draw();syncDates();
@@ -434,6 +437,10 @@
     });
     window.OctoChartInteractions.attach({...shared,hit:$('latency-hit'),
       hover:latencyInspection,leave:hideLatencyInspection
+    });
+    $('jump-to-present').addEventListener('click',()=>{
+      const {floor,now}=boundaries();
+      changeRange(D.panRange(viewStart,viewEnd,now-viewEnd,floor,now));
     });
     $('apply-dates').addEventListener('click',()=>{
       const a=Date.parse($('date-from').value+'T00:00:00Z');
