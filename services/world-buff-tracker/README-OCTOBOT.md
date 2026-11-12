@@ -30,7 +30,7 @@ WOW_CHARACTER=<primary-character>
 DARKMOON_WATCH_LOCATION=elwynn
 WOW_BWL_ENABLED=true
 WOW_WHO_MIN_GAP_SECONDS=31
-WOW_LISTENERS=[{"account":"<secondary-username>","password":"<secondary-password>","character":"<secondary-character>","onLogin":"none","yeller":false,"darkmoonWatchLocation":"mulgore"}]
+WOW_LISTENERS=[{"account":"<secondary-username>","character":"<secondary-character>","onLogin":"none","yeller":false,"darkmoonWatchLocation":"mulgore"}]
 ```
 
 Secondary DMF observation is implemented in this integration branch. Configure the secondary listener with `darkmoonWatchLocation: "mulgore"` in the private `WOW_LISTENERS` JSON.
