@@ -204,6 +204,24 @@ test('Shift+scroll up pans population left and down pans right, including browse
   assert.ok(Math.abs((right.windowEnd-right.start)-(left.windowEnd-left.start))<1);
 });
 
+test('Jump to present preserves the population time scale and disables at the right edge',async()=>{
+  const env=fixture();await settle();
+  const jump=env.get('jump-to-present');
+  assert.equal(jump.disabled,true,'A present-anchored preset cannot jump any further');
+  const hit=env.get('plot-hit');
+  hit.fire('wheel',{clientX:450,deltaX:0,deltaY:-140,deltaMode:0,shiftKey:false,
+    preventDefault(){}});
+  const before=env.view();
+  assert.equal(jump.disabled,false,'Zoomed historical view should enable Jump to present');
+  const span=before.windowEnd-before.start;
+  jump.fire('click');
+  const after=env.view();
+  assert.equal(after.windowEnd,Date.parse('2026-11-08T01:00:00Z'));
+  assert.ok(Math.abs((after.windowEnd-after.start)-span)<1,
+    'Jump must pan the timeline, not restore a preset zoom level');
+  assert.equal(jump.disabled,true,'Jump button must be greyed out after arriving at present');
+});
+
 test('legacy website-wide census is never shown as N\'Zoth population',async()=>{
   const env=fixture();await settle();
   assert.equal(env.get('online-now').textContent,'101');

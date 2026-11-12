@@ -105,7 +105,12 @@
     hideInspection();draw();syncDates();
     $('archive-date-error').textContent='';
   }
+  function updateJumpToPresent(){
+    const {now}=archiveBounds();
+    $('archive-jump-to-present').disabled=!Number.isFinite(now)||!lower||!upper||upper>=now-1000;
+  }
   function draw(){
+    updateJumpToPresent();
     const axis=$('archive-axis'),bands=$('archive-bars'),missing=$('archive-missing');
     axis.replaceChildren();bands.replaceChildren();missing.replaceChildren();
     for(const b of $('archive-ranges').querySelectorAll('button'))
@@ -254,6 +259,11 @@
       b.addEventListener('click',()=>setRange(name));
       $('archive-ranges').append(b);
     }
+    $('archive-jump-to-present').addEventListener('click',()=>{
+      const {floor,now}=archiveBounds();
+      if(!Number.isFinite(floor)||!Number.isFinite(now)||!lower||!upper||upper<=lower)return;
+      navigateArchive(D.panRange(lower,upper,now-upper,floor,now));
+    });
     $('archive-apply-dates').addEventListener('click',()=>{
       const start=Date.parse($('archive-date-from').value+'T00:00:00Z');
       const end=Date.parse($('archive-date-to').value+'T23:59:59Z');

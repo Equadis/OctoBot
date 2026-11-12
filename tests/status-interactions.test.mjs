@@ -118,3 +118,12 @@ test('all three charts use the shared navigation and identical plot styling',()=
   assert.match(status,/function latencyInspection\(/);
   assert.match(archive,/function archiveInspection\(/);
 });
+
+test('Jump to present controls exist above Apply on both status timelines and preserve their range',()=>{
+  assert.match(page,/id="jump-to-present"[^>]*>Jump to present →<\/button><button type="button" id="apply-dates">Apply<\/button>/);
+  assert.match(page,/id="archive-jump-to-present"[^>]*>Jump to present →<\/button><button type="button" id="archive-apply-dates">Apply<\/button>/);
+  assert.match(status,/changeRange\(D\.panRange\(viewStart,viewEnd,now-viewEnd,floor,now\)\)/);
+  assert.match(status,/\$\('jump-to-present'\)\.disabled=period!=='CUSTOM'\|\|viewEnd>=Date\.now\(\)-30000/);
+  assert.match(archive,/navigateArchive\(D\.panRange\(lower,upper,now-upper,floor,now\)\)/);
+  assert.match(archive,/\$\('archive-jump-to-present'\)\.disabled=/);
+});

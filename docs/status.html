@@ -137,7 +137,7 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <div class="tip" id="tooltip" hidden></div>
 </div>
 <div class="legend"><span><i class="key"></i>Online / responsive</span><span><i class="key down"></i>Offline / failed</span><span><i class="key missing"></i>Unknown / unobserved</span></div>
-<div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button type="button" id="apply-dates">Apply</button></div></div>
+<div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><div class="date-actions"><button type="button" id="jump-to-present" class="jump-to-present" disabled>Jump to present →</button><button type="button" id="apply-dates">Apply</button></div></div></div>
 <p class="muted" id="date-error" role="status"></p>
 <div class="panel-head" style="margin-top:22px"><h3>Authentication Response Time</h3></div>
 <p class="readout" id="latency-readout" aria-live="polite"></p>
@@ -159,7 +159,7 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <div class="chart-head"><div class="chart-title"><h3>Historical Status</h3><label class="server-label" for="archive-signal">Metric: <select id="archive-signal"></select></label></div><span class="muted" id="archive-view-label"></span></div>
 <p class="readout" id="archive-readout" aria-live="polite"></p>
 <div class="graph archive-graph"><svg viewBox="0 0 1050 145" role="img" aria-label="Archived bot-confirmed monitoring status timeline"><g id="archive-axis"></g><g id="archive-missing"></g><g id="archive-bars"></g><line id="archive-crosshair" y1="31" y2="84" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><circle id="archive-hover-dot" r="4" stroke="#f4fff8" stroke-width="1.5" style="display:none"></circle><rect id="archive-hit" x="65" y="28" width="920" height="58" fill="transparent"></rect></svg><div class="tip" id="archive-tooltip" hidden></div></div>
-<div class="controls"><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div><div class="dates"><label for="archive-date-from">From</label><input type="date" id="archive-date-from"><label for="archive-date-to">To</label><input type="date" id="archive-date-to"><button type="button" id="archive-apply-dates">Apply</button></div></div>
+<div class="controls"><div class="ranges" id="archive-ranges" role="group" aria-label="Archived time range"></div><div class="dates"><label for="archive-date-from">From</label><input type="date" id="archive-date-from"><label for="archive-date-to">To</label><input type="date" id="archive-date-to"><div class="date-actions"><button type="button" id="archive-jump-to-present" class="jump-to-present" disabled>Jump to present →</button><button type="button" id="archive-apply-dates">Apply</button></div></div></div>
 <p class="muted" id="archive-date-error" role="status"></p>
 <div class="legend"><span><i class="key"></i>Confirmed healthy</span><span><i class="key down"></i>Confirmed problem</span><span><i class="key missing"></i>No recorded state</span></div>
 
