@@ -95,7 +95,7 @@ The [Population dashboard's **Players online** graph](https://equadis.github.io/
 is the canonical interaction and visual design for all OctoBot time-series charts.
 
 - Cursor-anchored mouse-wheel zoom with a ten-minute minimum and dataset-aware boundaries.
-- Click-and-drag panning; Shift + scroll down moves left (earlier), while Shift + scroll up moves right (later), without changing zoom (including browsers that remap the wheel to `deltaX`).
+- Click-and-drag panning; Shift + scroll up moves left (earlier), while Shift + scroll down moves right (later), without changing zoom (including browsers that remap the wheel to `deltaX`).
 - Hoverable, timestamped **recorded** readings and clear `NO DATA` regions rather than assumed uptime or fabricated latency.
 - Matching dark backgrounds, gridlines, time axes, legends, crosshairs, tooltips and active-range controls.
 - Time-range presets and UTC custom date selectors; the status and latency charts deliberately share one range and synchronise when either graph is moved.
