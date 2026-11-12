@@ -1,5 +1,5 @@
-import {filterItems,detailRestriction,detailFromDocument,listingRestriction} from './core/items.mjs?v=20261111-classes1';
-import {SLOTS} from './core/builds.mjs?v=20261111-classes1';
+import {filterItems,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261112-audit1';
+import {SLOTS} from './core/builds.mjs?v=20261112-audit1';
 import {iconUrl} from './core/interface.mjs?v=20261111-classes1';
 import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261111-classes1';
 
@@ -72,7 +72,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const reason=detailRestriction(item,source,getBuild(),slot);selectedDetail=reason?null:source;
    paintPreview(item,source);$('select-item').disabled=Boolean(reason);if(reason)error(reason);
    const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
-  }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return;referenceSelection=true;$('select-item').disabled=false;$('select-item').textContent='Select reference';paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This will save an unverified planning reference.');}
+  }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return;referenceSelection=false;$('select-item').disabled=true;$('select-item').textContent='Select';paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
   if(!items)return;
@@ -105,7 +105,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   else{++previewVersion;selected=null;selectedDetail=null;$('select-item').disabled=true;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
  }
  function selectItem(){
-  if(!selected || (!selectedDetail && !referenceSelection))return;
+  if(!selected || !selectedDetail)return;
   const reason=selectedDetail?detailRestriction(selected,selectedDetail,getBuild(),slot):listingRestriction(selected,getBuild(),slot);if(reason){error(reason);return;}
   const enchantId=$('item-enchant').value;
   if(enchantId && !enchantsForSlot(slot,getBuild().classId,selected).some(enchant=>enchant.id===enchantId)){error('This enchant cannot be used in this slot.');return;}
@@ -120,9 +120,11 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  $('item-dialog').addEventListener('close',()=>{++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);});
  return {
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot){slot=nextSlot;selected=null;selectedDetail=null;$('item-reference').value='';$('item-dialog-heading').textContent=SLOTS[slot];error();$('select-item').disabled=true;$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('clear-item').disabled=!getBuild().gear[slot];$('item-dialog').showModal();try{await load();search();const enchantId=getBuild().gear[slot]?.enchantId;if(enchantId && [...$('item-enchant').options].some(option=>option.value===enchantId))$('item-enchant').value=enchantId;}catch(failure){error(failure.message);}},
+  async open(nextSlot){if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;selected=null;selectedDetail=null;$('item-reference').value='';$('item-dialog-heading').textContent=SLOTS[slot];error();$('select-item').disabled=true;$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('clear-item').disabled=!getBuild().gear[slot];$('item-dialog').showModal();try{await load();search();const enchantId=getBuild().gear[slot]?.enchantId;if(enchantId && [...$('item-enchant').options].some(option=>option.value===enchantId))$('item-enchant').value=enchantId;}catch(failure){error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
+  async repairCandidate(candidate){await load();for(const ref of Object.values(candidate.gear)){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];return {build:repaired,changes:errors.map(e=>`${e.slot}: ${e.reason}`)};},
+  async verifyCandidate(candidate){await load();for(const ref of Object.values(candidate.gear)){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(errors.length)throw new Error(errors.map(e=>`${e.slot}: ${e.reason}`).join(' '));return candidate;},
   async verifyGear(){await load();const build=getBuild(),invalid=[];for(const [slot,equipped] of Object.entries(build.gear)){const item=items.find(item=>item.id===equipped.id);const reason=item?listingRestriction(item,build,slot)||(details[item.id]&&detailRestriction(item,details[item.id],build,slot)):'Item is absent from the catalogue.';if(reason)invalid.push(`${slot}: ${reason}`);}return invalid;},
  };
 }

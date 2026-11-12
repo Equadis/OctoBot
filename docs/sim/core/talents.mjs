@@ -47,3 +47,18 @@ export function talentTotals(data, ranks) {
   return data.trees.map(tree => data.talents.reduce((total, talent) =>
     talent.tree === tree.index ? total + (ranks[talent.id] ?? 0) : total, 0));
 }
+
+/** Find the furthest legal rank; never partially commit an invalid build. */
+export function maximiseTalent(data,ranks,id,level=60){
+ const t=data.talents.find(t=>String(t.id)===String(id));if(!t)throw new Error('Unknown talent');
+ if(validateTalents(data,ranks,level).length)throw new Error('Repair the invalid build before editing talents.');
+ for(let rank=t.maxRanks;rank>=(ranks[id]||0);rank--){const next={...ranks,[id]:rank};if(!validateTalents(data,next,level).length)return setTalentRank(data,ranks,id,rank,level);}
+ return {...ranks};
+}
+/** Retain the minimum rank satisfying every prerequisite AND every tier gate. */
+export function minimiseTalent(data,ranks,id,level=60){
+ if(!data.talents.some(t=>String(t.id)===String(id)))throw new Error('Unknown talent');
+ if(validateTalents(data,ranks,level).length)throw new Error('Repair the invalid build before editing talents.');
+ for(let rank=0;rank<=(ranks[id]||0);rank++){const next={...ranks,[id]:rank};if(!validateTalents(data,next,level).length)return setTalentRank(data,ranks,id,rank,level);}
+ return {...ranks};
+}

@@ -1,3 +1,5 @@
+import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261112-audit1';
+import {classDefinition} from './classes.mjs?v=20261112-audit1';
 import {normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import { CLASS_ROTATIONS } from './class-rotations.mjs?v=20261111-classes1';
 // Display reference supplied by the user from Combat Gum. These values are not
@@ -28,7 +30,7 @@ export const ROTATION_PRESETS=Object.freeze([
  {id:'protection-shield',name:'Protection | Shield',description:'Shield Slam and Revenge; maintain Sunder Armor and spend excess rage with Heroic Strike.',rows:[row('Shield Slam'),row('Revenge'),row('Sunder Armor'),row('Heroic Strike',[c('rage','>=',60)])]},
  {id:'custom',name:'New Custom Rotation',description:'',rows:[]},
 ]);
-export const defaultControls=()=>({buffIds:[],teaThreshold:20,rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
+export const defaultControls=()=>({buffIds:[],consumableIds:[],teaThreshold:20,rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
 export function rotationProfile(classId='warrior'){
  const profile=CLASS_ROTATIONS[classId]||{abilities:ABILITIES,resources:['rage'],presets:ROTATION_PRESETS};
  return {...profile,metrics:Object.fromEntries(Object.entries(METRICS).filter(([key])=>profile.resources.includes(key)||['targetHealth','auraDuration','combatTime'].includes(key)))};
@@ -44,11 +46,15 @@ export function validateRotationRows(rows,classId='warrior'){
   })};
  });
 }
-export function validateControls(input,classId='warrior'){
+export function validateControls(input,classId='warrior',context={}){
+ const build={classId,race:classDefinition(classId).race,level:60,gear:{},skills:{},...context};
  const profile=rotationProfile(classId);
  const defaults=defaultControls();if(input===undefined)return defaults;
  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Invalid configuration controls.');
  if(!Array.isArray(input.buffIds)||input.buffIds.length>BUFF_OPTIONS.length||input.buffIds.some(id=>!BUFF_OPTIONS.some(option=>option.id===id)))throw new Error('Invalid buff selection.');
+ for(const id of input.buffIds){const reason=buffRestriction(BUFF_OPTIONS.find(b=>b.id===id),build);if(reason)throw new Error(reason);}
+ const consumableIds=validateConsumables(input.consumableIds,build);
+ const crossErrors=crossConsumableErrors({...input,consumableIds});if(crossErrors.length)throw new Error(crossErrors[0]);
  const legacyRogue={
   'assassination-noxious':'assassination-noxious','combat-sinister':'combat-sinister-envenom','subtlety-hemorrhage':'subtlety-hemorrhage'
  };
@@ -56,5 +62,13 @@ export function validateControls(input,classId='warrior'){
  if(!profile.presets.some(preset=>preset.id===rotationPreset))throw new Error('Unknown rotation preset.');
  for(const [key,min,max] of [['teaThreshold',0,100],['keyInterval',10,5000],['variabilityMs',0,5000]])if(!Number.isInteger(input[key])||input[key]<min||input[key]>max)throw new Error(`Invalid ${key}.`);
  if(typeof input.variability!=='boolean')throw new Error('Invalid key-press variability.');
- return {buffIds:normaliseBuffs(input.buffIds),teaThreshold:input.teaThreshold,rotationPreset,rotationRows:validateRotationRows(input.rotationRows,classId),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
+ return {buffIds:normaliseBuffs(input.buffIds),consumableIds,teaThreshold:input.teaThreshold,rotationPreset,rotationRows:validateRotationRows(input.rotationRows,classId),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
+}
+
+export function buffRestriction(option,build){
+ if(!option)return 'Unknown buff.';
+ if(option.classes&&!option.classes.includes(build.classId))return `${option.name} is not applicable to this class.`;
+ if(option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(build.classId))return 'This class cannot coat an off-hand weapon.';
+ const item=CONSUMABLES.find(item=>item.buffId===option.id&&item.verified);
+ return item?consumableRestriction(item,build):null;
 }

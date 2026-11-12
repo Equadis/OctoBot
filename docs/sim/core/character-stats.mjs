@@ -1,3 +1,5 @@
+import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
+import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-audit1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261111-classes1';
@@ -16,7 +18,7 @@ export function passiveItemStats(item){
  const result={};const add=(key,value)=>{result[key]=(result[key]||0)+value;};
  for(const [key,value] of Object.entries(item.attributes||{}))if(ATTRIBUTES[key]&&Number.isFinite(value))add(ATTRIBUTES[key],value);
  for(const raw of item.effects||[]){
-  const text=raw.replace(/^Equip:\s*/,'');if(/chance|when|after|for \d+ sec|every|on hit/i.test(text))continue;
+  const text=raw.replace(/^Equip:\s*/,'');if(/chance on hit|when|after|for \d+ sec|every|on hit/i.test(text))continue;
   let m;
   if((m=text.match(/^\+(\d+) Attack Power\.?$/i)))add('ap',+m[1]);
   else if((m=text.match(/Increases (?:your )?attack power by (\d+)\.?$/i)))add('ap',+m[1]);
@@ -43,13 +45,16 @@ function enchantStats(id){
  return result;
 }
 export function characterStats(build,talentData,gear={}){
+ if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
+ const racial=racialPassives(build.race);
  const c=build.classId,level=build.level,base=BASE_STATS[`${build.race}:${c}`]?.[level-1];
- const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0};
+ const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0};
  let haste=1;
  const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key in s&&s[key]!==null)s[key]+=value;}};
  for(const [slot,item] of Object.entries(gear)){add(passiveItemStats(item));add(enchantStats(build.gear[slot]?.enchantId));}
  const buffs=normaliseBuffs(build.controls.buffIds);for(const id of buffs)add(BUFF_STATS[id]||{});
  const has=id=>buffs.includes(id);
+ for(const id of build.controls.consumableIds||[]){const item=CONSUMABLE_BY_ID.get(id);if(!consumableRestriction(item,build))add(consumablePassiveStats(item));}
  const talents=new Map((talentData?.talents||[]).map(t=>[t.name,{...t,rank:build.talents[t.id]||0}]));
  const value=name=>{const t=talents.get(name);return t?.rank?Number(t.descriptions[t.rank-1]?.match(/(\d+(?:\.\d+)?)%?/)?.[1]||0):0;};
  const selected=name=>(talents.get(name)?.rank||0)>0;
@@ -63,7 +68,8 @@ export function characterStats(build,talentData,gear={}){
  if(c==='shaman'){for(const k of ['str','agi','sta','int','spi'])mult(k,value('Ancestral Knowledge'));s.crit+=value('Thundering Strikes');}
  if(c==='druid'){mult('int',value('Heart of the Wild'));if(build.classOptions.form==='Cat')mult('str',value('Heart of the Wild'));if(build.classOptions.form==='Bear')mult('sta',value('Heart of the Wild'));if(selected('Natural Weapons')){const t=talents.get('Natural Weapons');const text=t.descriptions[t.rank-1];s.hit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);s.spellHit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);}}
  if(has('kings'))for(const k of ['str','agi','sta','int','spi'])mult(k,10);
- if(build.race==='Gnome')mult('int',5);
+ if(racial.intellectMultiplier)mult('int',(racial.intellectMultiplier-1)*100);
+ if(racial.agilityMultiplier)mult('agi',(racial.agilityMultiplier-1)*100);
  s.parry+=value('Deflection');s.defense+=value('Anticipation');
  s.armour*=1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0);
  const [aps,apa,critAgi,dodgeAgi,critInt,baseCrit,baseSpellCrit]=COEFFICIENTS[c];
@@ -74,20 +80,20 @@ export function characterStats(build,talentData,gear={}){
  if(c==='hunter'&&selected('Lightning Reflexes')&&base)ap+=s.agi*value('Lightning Reflexes')*10/100;
  if(has('trueshot')&&ap!==null)ap*=1.03;
  if(c==='priest'&&base)s.sp+=s.spi*value('Spiritual Guidance')/100;
- const health=base?(base[5]+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(build.race==='Tauren'?1.05:1):null;
+ const health=base?(base[5]+s.health+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(racial.healthMultiplier||1):null;
  let armour=base?s.armour+s.agi*2:null;
  if(c==='druid'&&base){
   if(build.classOptions.form==='Bear')armour=s.armour*(level>=40?4.6:2.8)+s.agi*2;
   if(build.classOptions.form==='Moonkin')armour=selected('Moonkin Form')?s.armour*(1+value('Moonkin Form')/100)+s.agi*2:null;
  }
- if(build.race==='Dwarf')s.frostRes+=10;if(build.race==='Night Elf'||build.race==='Tauren')s.natureRes+=10;if(build.race==='Undead')s.shadowRes+=10;
+ for(const name of ['Arcane','Fire','Nature','Frost','Shadow'])s[name.toLowerCase()+'Res']+=racial[name.toLowerCase()+'Resistance']||0;
  let spellCrit=level===60&&base?baseSpellCrit+s.int*critInt+s.spellCrit:null;
  if(c==='druid'&&build.classOptions.form==='Moonkin'&&selected('Moonkin Form')&&spellCrit!==null)spellCrit+=3;
  const parryClasses=['warrior','paladin','rogue','hunter','shaman'];
  const parry=parryClasses.includes(c)?5+s.parry+s.defense*.04:0;
- const dodge=level===60&&base?baseCrit+s.agi*dodgeAgi+s.dodge+s.defense*.04:null;
+ const dodge=level===60&&base?baseCrit+s.agi*dodgeAgi+s.dodge+s.defense*.04+(racial.dodge||0):null;
  const target=build.planning,targetDefense=target.targetLevel*5;
- const weaponSkill=slot=>{const weapon=gear[slot];let bonus=0;if(build.race==='Human'&&[4,5,7,8].includes(weapon?.subclass))bonus=5;if(build.race==='Orc'&&[0,1].includes(weapon?.subclass))bonus=5;return level*5+s.weaponSkill+bonus;};
+ const weaponSkill=slot=>{const weapon=gear[slot];const bonus=racial.meleeSkills?.[weapon?.subclass]||0;return level*5+s.weaponSkill+bonus;};
  const skills=['mainhand','offhand'].map(weaponSkill),delta=skills.map(skill=>Math.max(0,targetDefense-skill));
  const wsCrit=skills.map(skill=>(skill-level*5)*.04);
  const crit=skills.map((_,i)=>level===60&&base?baseCrit+s.agi*critAgi+s.crit+wsCrit[i]+(c==='warrior'&&build.classOptions.stance==='Berserker'?3:0)+(c==='rogue'&&[4,15,13].includes(gear[i?'offhand':'mainhand']?.subclass)?value('Close Quarters Combat'):0):null);
@@ -111,7 +117,7 @@ export function characterStats(build,talentData,gear={}){
  ['Miss %',pair(miss.map(n=>pct(n)))],['Yellow Miss %',pct(yellow)],['Dodge %',pair(dodgeTarget.map(n=>pct(n)))],['Spell Miss %',pct(spellMiss)],['Poison Resist %',pct(target.targetNatureRes?null:spellMiss),'Against zero Nature resistance; additional resistance modelling is pending.'],['Glance Dmg',pair(glance.map(n=>pct(n,0)))],['Crit Cap',pair(cap.map(n=>pct(n)))],['Eff. Crit',pair(effectiveCrit.map(n=>pct(n,2)))],['Armour',num(targetArmour)],['Phys Reduced',pct(mitigation)]
  ]);
  group('Defence',[
- ['Health',num(health)],['Parry %',pct(parry)],['Dodge %',pct(dodge)],['Armour',num(armour)],...['Arcane','Fire','Nature','Frost','Shadow'].map(name=>[name+' Res',num(s[name.toLowerCase()+'Res'])])
+ ['Health',num(health)],...(!['warrior','rogue'].includes(c)?[['Mana',num(base?base[6]+s.mana+Math.min(20,s.int)+Math.max(0,s.int-20)*15:null)],['Mana / 5s',num(s.mp5)]]:[]),['Parry %',pct(parry)],['Dodge %',pct(dodge)],['Armour',num(armour)],...['Arcane','Fire','Nature','Frost','Shadow'].map(name=>[name+' Res',num(s[name.toLowerCase()+'Res'])])
  ]);
  group('Spell',[
  ['Spell Power',num(s.sp)],['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s[name.toLowerCase()+'Sp'])])

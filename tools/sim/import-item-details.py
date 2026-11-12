@@ -47,7 +47,7 @@ def parse_detail(html,id_):
     text=primary.text().strip()
     slot=next((TYPES[n.text().strip().lower()] for n in tooltip.descendants() if n.tag=='td' and n.text().strip().lower() in TYPES),None)
     if slot==22 and any(n.tag=='th' and n.text().strip()=='Shield' for n in tooltip.descendants()):slot=14
-    if not slot and re.search(r'\b\d+ Slot Bag\b',text):slot=18
+    if not slot and re.search(r'\b\d+ Slot (?:Bag|Quiver|Ammo Pouch)\b',text):slot=18
     if not slot:raise ValueError('Unknown equipment slot')
     attributes={k:int(v) for v,k in re.findall(r'(?:^|\n)\s*\+(\d+) (Strength|Agility|Stamina|Intellect|Spirit|[A-Za-z]+ Resistance)\b',text)}
     armor=re.search(r'(?:^|\n)\s*(\d+) Armor\b',text)

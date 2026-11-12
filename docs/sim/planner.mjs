@@ -1,13 +1,15 @@
-import {characterStats} from './core/character-stats.mjs?v=20261112-stats3';
+import {equipmentErrors} from './core/items.mjs?v=20261112-audit1';
+import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
+import {characterStats} from './core/character-stats.mjs?v=20261112-audit1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261111-classes1';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261111-classes1';
-import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261111-classes1';
-import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs?v=20261111-classes1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs?v=20261112-stats1';
-import { itemPicker } from './item-picker.mjs?v=20261112-catalogue1';
+import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
+import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261112-audit1';
+import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261112-audit1';
+import { itemPicker } from './item-picker.mjs?v=20261112-audit1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';
-import { configuration } from './configuration.mjs?v=20261112-stats2';
+import { configuration } from './configuration.mjs?v=20261112-audit1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs?v=20261111-classes1';
 
@@ -71,8 +73,10 @@ function persistDraft() {
   }
 }
 
-function applyBuild(candidate, message) {
-  const next = validateBuild(candidate, data);
+function applyBuild(candidate, message, legacy=false) {
+  const restored=legacy?restoreLegacyBuild(candidate,data):null;
+  const next = restored?.build || validateBuild(candidate, data);
+  if(restored?.changes.length)message+=` ${restored.changes.join('; ')}. Original saved copy retained.`;
   build = next;
   selectedId = null;
   $('build-name').value = build.name;
@@ -111,7 +115,7 @@ function createSlots() {
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     const extra=['ammo','quiver'].includes(slot),appearance=['shirt','tabard'].includes(slot);
-    if(extra&&!['warrior','rogue','hunter'].includes(classId))container.hidden=true;
+    if(!slotAllowed(classId,slot))container.hidden=true;
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
     $(appearance?'slots-appearance':extra?'slots-ammo':weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
   }
@@ -138,13 +142,15 @@ function createTalents() {
       const rank = element('span', 'rank');
       const source = typeof talent.iconSource === 'string' && /^https:\/\/octowow\.st\/talents\/icons\/[a-z0-9_]+\.png$/i.test(talent.iconSource) ? talent.iconSource : null;
       button.append(gameIcon(talent.icon || 'inv_misc_questionmark', 'talent-icon', source), element('span', 'talent-short', talent.name), rank);
-      button.addEventListener('click', () => {
+      button.addEventListener('click', event => {
         selectedId = talent.id;
+        if(event.shiftKey){changeTalentExtent(true);return;}
         if ((build.talents[talent.id] ?? 0) < talent.maxRanks) changeRank(1);
         render();
       });
       button.addEventListener('contextmenu', event => {
         event.preventDefault(); selectedId = talent.id;
+        if(event.shiftKey){changeTalentExtent(false);return;}
         if ((build.talents[talent.id] ?? 0) > 0) changeRank(-1);
         render();
       });
@@ -164,7 +170,7 @@ function render() {
   $('points-left').textContent = `${Math.max(0, build.level - 9) - spent} points left`;
   $('talents-total').textContent=totals.join(' / ');
   $('talents-points-left').textContent=`Points left: ${Math.max(0,build.level-9)-spent}`;
-  $('equipment-count').textContent = `${Object.keys(build.gear).length} / ${Object.keys(SLOTS).length} slots planned`;
+  $('equipment-count').textContent = `${Object.keys(build.gear).length} / ${Object.keys(SLOTS).filter(slot=>slotAllowed(classId,slot)).length} slots planned`;
   $('tree-summary').replaceChildren(...data.trees.map(tree => {
     const row = element('div', '', tree.name);
     row.append(element('strong', '', String(totals[tree.index])));
@@ -223,6 +229,10 @@ function talentTooltip(talent) {
   return {title:talent.name,lines};
 }
 
+function changeTalentExtent(maximise){
+  try{build.talents=(maximise?maximiseTalent:minimiseTalent)(data,build.talents,selectedId,build.level);persistDraft();render();refreshTooltip();feedback(`Talent rank ${build.talents[selectedId]||0}.`);}catch(error){feedback(error.message,true);}
+}
+
 function changeRank(delta) {
   if (selectedId === null) return;
   try {
@@ -231,6 +241,13 @@ function changeRank(delta) {
     persistDraft(); render(); refreshTooltip();
     feedback(`${data.talents.find(t => t.id === selectedId).name}: rank ${build.talents[selectedId] ?? 0}.`);
   } catch (error) { feedback(error.message, true); }
+}
+
+async function restoreSaved(candidate){
+ const initial=restoreLegacyBuild(candidate,data),verified=await picker.repairCandidate(initial.build);
+ const changes=[...initial.changes,...verified.changes];
+ if(changes.length)try{localStorage.setItem(`octosim.recovery.${classId}.${Date.now()}`,JSON.stringify(candidate));}catch{}
+ return {build:verified.build,changes};
 }
 
 function downloadJson(value,filename){
@@ -254,7 +271,7 @@ async function showSavedBuilds(){
     label.append(element('small','',`Level ${entry.build.level} ${currentClass.name} · ${new Date(entry.savedAt).toLocaleDateString()}`));
     const actions=element('div','saved-actions');
     const load=element('button','','Load');load.type='button';
-    load.addEventListener('click',()=>{try{applyBuild(entry.build,'Saved build loaded.');$('load-dialog').close();}catch(error){feedback(error.message,true);}});
+    load.addEventListener('click',async()=>{try{const restored=await restoreSaved(entry.build);applyBuild(restored.build,'Saved build loaded.'+(restored.changes.length?' '+restored.changes.join('; ')+'. Original saved copy retained.':''));$('load-dialog').close();}catch(error){feedback(error.message,true);}});
     const remove=element('button','delete-build','Delete');remove.type='button';remove.setAttribute('aria-label',`Delete ${entry.name}`);
     remove.addEventListener('click',async()=>{try{await library.remove(entry.name);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.addEventListener('click',async()=>{try{await library.save(entry.build,entry.savedAt);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);$('saved-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;}catch(error){feedback(error.message,true);}});
     actions.append(load,remove);row.append(label,actions);$('saved-builds').append(row);
@@ -266,7 +283,7 @@ function createClassOptions(){
     const label=element('label','field',option.label),input=element(option.values?'select':'input');input.id=`class-option-${option.key}`;
     if(option.values){for(const value of option.values){const node=element('option','',value);node.value=value;input.append(node);}}
     else{input.type='number';input.min=option.min;input.max=option.max;}
-    input.addEventListener('change',()=>{try{applyBuild({...build,classOptions:{...build.classOptions,[option.key]:option.values?input.value:Number(input.value)}},'Class options updated.');}catch(error){feedback(error.message,true);renderClassOptions();}});
+    input.addEventListener('change',()=>{try{const value=option.values?input.value:Number(input.value);const controls={...build.controls};if(value!=='None'&&['mhPoison','mhImbue','ohPoison'].includes(option.key))controls.buffIds=controls.buffIds.filter(id=>id!==`wizard-oil-${option.key==='ohPoison'?'oh':'mh'}`);applyBuild({...build,controls,classOptions:{...build.classOptions,[option.key]:value}},'Class options updated.');config.render();}catch(error){feedback(error.message,true);renderClassOptions();}});
     label.append(input);$('class-options').append(label);
   }
 }
@@ -287,11 +304,11 @@ function renderSkills(){
   for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';$(`profession-rank-${i}`).value=build.skills[selected[i]]||300;$(`profession-rank-${i}`).disabled=!selected[i];}
   for(const name of SECONDARY_SKILLS)$(`skill-${name.replaceAll(' ','-')}`).value=build.skills[name]||0;
 }
-function updateSkills(){
+async function updateSkills(){
   const skills={};
   for(let i=0;i<2;i++){const name=$(`profession-${i}`).value;if(name){if(skills[name]){feedback('Select different primary professions.',true);renderSkills();return;}skills[name]=Number($(`profession-rank-${i}`).value);}}
   for(const name of SECONDARY_SKILLS){const rank=Number($(`skill-${name.replaceAll(' ','-')}`).value);if(rank)skills[name]=rank;}
-  try{applyBuild({...build,skills},'Profession skills updated.');}catch(error){feedback(error.message,true);renderSkills();}
+  try{const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Profession skills updated.');}catch(error){feedback(error.message,true);renderSkills();}
 }
 
 function wireControls() {
@@ -301,18 +318,23 @@ function wireControls() {
     onEquip: (slot,item) => {
       build.gear[slot] = {id:item.id,label:item.label,...(item.enchantId?{enchantId:item.enchantId}:{})};
       if(item.twoHanded) delete build.gear.offhand;
+      for(const error of equipmentErrors(build,id=>picker.lookup(id)))delete build.gear[error.slot];
       persistDraft();render();feedback(`${SLOTS[slot]} equipped.`);
     },
-    onClear: slot => {delete build.gear[slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
+    onClear: slot => {delete build.gear[slot];for(const error of equipmentErrors(build,id=>picker.lookup(id)))delete build.gear[error.slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>{build.gear={};persistDraft();render();refreshTooltip();feedback('Equipment cleared.');});
   $('clear-talents').addEventListener('click',()=>{build.talents={};selectedId=null;persistDraft();render();refreshTooltip();feedback('Talent points cleared.');});
-  config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();render();}});
+  config=configuration({getBuild:()=>build,onChange:controls=>{const classOptions={...build.classOptions};if(controls.buffIds.includes('wizard-oil-mh')){if(classId==='rogue')classOptions.mhPoison='None';if(classId==='shaman')classOptions.mhImbue='None';}if(controls.buffIds.includes('wizard-oil-oh')&&classId==='rogue')classOptions.ohPoison='None';build=validateBuild({...build,classOptions,controls},data);renderClassOptions();persistDraft();render();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
-    $(id).addEventListener('change', () => {
+    $(id).addEventListener('change', async () => {
       try {
-        build = validateBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
+        const restored=restoreLegacyBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
+        const repaired=await picker.repairCandidate(restored.build);
+        repaired.changes.push(...restored.changes);
+        if(repaired.changes.length)try{localStorage.setItem(`octosim.recovery.${classId}.${Date.now()}`,JSON.stringify(build));}catch{}
+        build = repaired.build;
         $(id).value = build[key]; persistDraft(); render(); feedback('Build updated.'); picker.verifyGear().then(warnings => { if(warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); }).catch(()=>{});
       } catch (error) { $(id).value = build[key]; feedback(error.message, true); }
     });
@@ -326,7 +348,7 @@ function wireControls() {
   });
   $('save-form').addEventListener('submit',async event=>{
     event.preventDefault();
-    try{const next=validateBuild({...build,name:$('save-name').value.trim()},data);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
+    try{const next=validateBuild({...build,name:$('save-name').value.trim()},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
     catch(error){$('save-error').textContent=error.message;}
   });
   $('load-build').addEventListener('click',async()=>{try{$('saved-build-search').value='';$('saved-library-status').textContent='';await showSavedBuilds();$('load-dialog').showModal();}catch(error){feedback(error.message,true);}});
@@ -337,12 +359,13 @@ function wireControls() {
   });
   $('import-library').addEventListener('click',()=>$('import-library-file').click());
   $('import-library-file').addEventListener('change',async()=>{
-    try{const file=$('import-library-file').files[0];if(!file)return;if(file.size>8*1024*1024)throw new Error('Class backups must be smaller than 8 MB.');const backup=JSON.parse(await file.text());if(backup.librarySchema!==1||backup.classId!==classId)throw new Error('Open the matching class before importing this backup.');const count=await library.importBuilds(backup.builds);await showSavedBuilds();$('saved-library-status').textContent=`Imported ${count} builds.`;}
+    try{const file=$('import-library-file').files[0];if(!file)return;if(file.size>8*1024*1024)throw new Error('Class backups must be smaller than 8 MB.');const backup=JSON.parse(await file.text());if(backup.librarySchema!==1||backup.classId!==classId)throw new Error('Open the matching class before importing this backup.');if(!Array.isArray(backup.builds))throw new Error('Invalid class backup.');for(const candidate of backup.builds)await picker.verifyCandidate(validateBuild(candidate,data));const count=await library.importBuilds(backup.builds);await showSavedBuilds();$('saved-library-status').textContent=`Imported ${count} builds.`;}
     catch(error){$('saved-library-status').textContent=error.message;}
     finally{$('import-library-file').value='';}
   });
-  $('share-build').addEventListener('click', () => {
+  $('share-build').addEventListener('click', async () => {
     try {
+      await picker.verifyCandidate(build);
       const url = new URL(location.href); url.searchParams.set('class',classId); url.hash = `build=${encodeBuild(build)}`;
       $('share-url').value = url.href; $('share-dialog').showModal();
     } catch (error) { feedback(error.message, true); }
@@ -351,7 +374,8 @@ function wireControls() {
     try { await navigator.clipboard.writeText($('share-url').value); $('share-dialog').close(); feedback('Build link copied.'); }
     catch { $('share-url').focus(); $('share-url').select(); feedback('Copy the selected link to share your build.'); }
   });
-  $('export-build').addEventListener('click', () => {
+  $('export-build').addEventListener('click', async () => {
+    try{await picker.verifyCandidate(build);}catch(error){feedback(error.message,true);return;}
     const url = URL.createObjectURL(new Blob([JSON.stringify(build, null, 2)], { type: 'application/json' }));
     const link = element('a'); link.href = url;
     link.download = `${build.name.replace(/[^a-zA-Z0-9_-]/g, '_') || `${currentClass.name}_Build`}.json`;
@@ -366,13 +390,14 @@ function wireControls() {
       if (file.size > 64000) throw new Error('Build files must be smaller than 64 KB.');
       const imported=JSON.parse(await file.text());
       if(imported.classId!==classId){classDefinition(imported.classId);const response=await fetch(new URL(`./data/talents/${imported.classId}.json`,import.meta.url));if(!response.ok)throw new Error('Class data unavailable.');const verified=validateBuild(imported,await response.json());const url=new URL(location.href);url.searchParams.set('class',verified.classId);url.hash=`build=${encodeBuild(verified)}`;location.href=url.href;return;}
+      await picker.verifyCandidate(validateBuild(imported,data));
       applyBuild(imported, 'Build imported.');
     } catch (error) { feedback(`Could not import build: ${error.message}`, true); }
     finally { $('import-file').value = ''; }
   });
-  window.addEventListener('hashchange', () => {
+  window.addEventListener('hashchange', async () => {
     if (!location.hash.startsWith('#build=')) return;
-    try { applyBuild(decodeBuild(location.hash.slice(7), data), 'Shared build loaded.'); }
+    try { const candidate=decodeBuild(location.hash.slice(7),data);await picker.verifyCandidate(candidate);applyBuild(candidate,'Shared build loaded.'); }
     catch (error) { feedback(error.message, true); }
   });
 }
@@ -395,13 +420,15 @@ async function initialise() {
   createClasses();
   if (plannerView(location.href) === 'classes') return;
   document.body.classList.add('planner-view');
+  document.body.style.setProperty('--class-colour',currentClass.colour);
+  $('character-race').replaceChildren(...CLASS_RACES[classId].map(race=>{const option=element('option','',race);option.value=race;return option;}));
   $('class-selection').hidden = true;
   try {
     const response = await fetch(new URL(`./data/talents/${classId}.json`, import.meta.url));
     if (!response.ok) throw new Error(`Talent data request failed (${response.status}).`);
     data = await response.json();
     if(data.classId!==classId||!Array.isArray(data.talents)||data.talents.length<30||data.trees.length!==3)throw new Error('Incomplete class talent data.');
-    library=buildLibrary(classId,value=>validateBuild(value,data));
+    library=buildLibrary(classId,value=>validateBuild(value,data),{legacyValidate:value=>restoreLegacyBuild(value,data).build});
     document.querySelector('.rail-brand span').textContent=`${currentClass.name} Build Planner`;
     document.querySelector('.character-summary>strong').textContent=currentClass.name;
     for(const image of document.querySelectorAll('.class-mark,.rail-class-icon')){image.src=iconUrl(`classicon_${classId}`);image.alt=currentClass.name;}
@@ -411,11 +438,11 @@ async function initialise() {
     let message = 'Planner ready.';
     try {
       const stored = localStorage.getItem(DRAFT_KEY) || (classId==='warrior'?localStorage.getItem('octosim.planner.draft.v1'):null);
-      if (stored) { build = validateBuild(JSON.parse(stored), data); message = 'Your previous build was restored.'; }
+      if (stored) { const restored=await restoreSaved(JSON.parse(stored));build=restored.build;message='Your previous build was restored.'+(restored.changes.length?' '+restored.changes.join('; ')+'.':''); }
     } catch { message = 'Browser storage could not be restored. Import or share a build to load it.'; }
     let invalidShare = null;
     if (location.hash.startsWith('#build=')) {
-      try { build = decodeBuild(location.hash.slice(7), data); message = 'Shared build loaded.'; }
+      try { const candidate=decodeBuild(location.hash.slice(7),data);await picker.verifyCandidate(candidate);build=candidate;message='Shared build loaded.'; }
       catch (error) { invalidShare = error.message; }
     }
     applyBuild(build, message);

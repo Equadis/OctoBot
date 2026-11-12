@@ -1,21 +1,27 @@
-import { classDefinition } from './classes.mjs?v=20261111-classes1';
+import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
+import { classDefinition } from './classes.mjs?v=20261112-audit1';
 // Database listing filters are preliminary. Equipping requires the source detail masks.
 export const SLOT_TYPES = Object.freeze({ head:[1],neck:[2],shoulder:[3],back:[16],chest:[5,20],wrist:[9],hands:[10],waist:[6],legs:[7],feet:[8],ring1:[11],ring2:[11],trinket1:[12],trinket2:[12],mainhand:[13,17,21],offhand:[13,14,22,23],ranged:[15,25,26,28],shirt:[4],tabard:[19],ammo:[24],quiver:[18] });
-export const RACES = Object.freeze({Human:1,Orc:2,Dwarf:4,'Night Elf':8,Undead:16,Tauren:32,Gnome:64,Troll:128});
+export const RACES = RACE_MASKS;
 
 
 export function listingRestriction(item, build, slot) {
+  if(!validRace(build.classId,build.race))return 'Invalid class/race combination.';
+  if(!slotAllowed(build.classId,slot))return 'This slot is not applicable to this class.';
   if (!item || !SLOT_TYPES[slot]?.includes(item.slot)) return 'Wrong equipment slot.';
   let cls;try{cls=classDefinition(build.classId);}catch{return 'Class equipment rules are not implemented.';}
   if ((item.reqlevel || 0) > build.level) return `Requires level ${item.reqlevel}.`;
   if(['ammo','quiver'].includes(slot)){
-    if(!['warrior','rogue','hunter'].includes(cls.id))return 'This class cannot use ranged ammunition.';
+    if(cls.id!=='hunter')return 'This class cannot use ranged ammunition.';
     if(slot==='ammo'&&item.classs!==6||slot==='quiver'&&item.classs!==11)return 'Wrong equipment type.';
     const weapon=build.gear.ranged?.subclass;
-    if(weapon!==undefined&&![2,3,18].includes(weapon))return 'Select a bow, crossbow or gun first.';
+    if(weapon===undefined||![2,3,18].includes(weapon))return 'Select a bow, crossbow or gun first.';
     if(weapon!==undefined&&item.subclass!==(weapon===3?3:2))return 'Ammunition or container does not match the ranged weapon.';
     return null;
   }
+  if(slot==='ranged'&&item.classs===2&&!(['mage','warlock','priest'].includes(cls.id)?[19]:[2,3,16,18]).includes(item.subclass))return 'Wrong ranged weapon type for this class.';
+  if(item.classs===2&&['mainhand','offhand'].includes(slot)&&[2,3,16,18,19].includes(item.subclass))return 'A ranged weapon cannot be equipped in a melee slot.';
+  if(item.classs===2&&slot==='offhand'&&[1,5,6,8,10,20].includes(item.subclass))return 'A two-handed weapon cannot be equipped in the off hand.';
   if (item.classs === 2 && !cls.weapons.includes(item.subclass) && !(item.subclass===20 && (build.skills?.Fishing||0)>0)) return `Weapon type cannot be used by a ${cls.name}.`;
   if(item.classs===4&&item.subclass===4&&cls.armour===4&&build.level<40)return 'Plate armour requires level 40.';
   if(item.classs===4&&item.subclass===3&&cls.armour===3&&build.level<40)return 'Mail armour requires level 40.';
@@ -43,7 +49,7 @@ export function detailRestriction(item, detail, build, slot) {
   if (detail.raceMask !== -1 && !(detail.raceMask & race)) return 'This item is restricted to another race.';
   if (detail.requiredLevel > build.level) return `Requires level ${detail.requiredLevel}.`;
   if (!SLOT_TYPES[slot]?.includes(detail.slot)) return 'The source item detail specifies a different equipment slot.';
-  const unmet=detail.requirements.filter(requirement=>{const skill=requirement.match(/^Requires ([A-Za-z ]+) \((\d+)\)$/);return !skill||(build.skills?.[skill[1]]||0)<Number(skill[2]);});
+  const unmet=detail.requirements.filter(requirement=>{const skill=requirement.match(/^Requires ([A-Za-z ]+) \((\d+)\)$/);return !skill||((build.skills?.[skill[1]]||0)+((build.skills?.[skill[1]]||0)>0?(racialPassives(build.race).skillBonuses?.[skill[1]]||0):0))<Number(skill[2]);});
   if(unmet.length)return `Additional requirement: ${unmet.join('; ')}.`;
   if (detail.unique && Object.entries(build.gear).some(([other, equipped]) => other !== slot && equipped.id === item.id)) return 'This unique item is already equipped.';
   return null;
@@ -89,7 +95,7 @@ export function detailFromDocument(doc, id) {
   let slot = types[inventory?.toLowerCase()];
   // Shields use the Off Hand label as well as an explicit Shield armour type.
   if (slot === 22 && [...tooltip.querySelectorAll('th')].some(th=>th.textContent.trim()==='Shield')) slot=14;
-  if(!slot&&/\b\d+ Slot Bag\b/.test(primary))slot=18;
+  if(!slot&&/\b\d+ Slot (?:Bag|Quiver|Ammo Pouch)\b/.test(primary))slot=18;
   if (!slot) throw new Error('The source equipment slot could not be verified.');
   const attributes = {};
   for (const match of primary.matchAll(/(?:^|\n)\s*\+(\d+) (Strength|Agility|Stamina|Intellect|Spirit|[A-Za-z]+ Resistance)\b/g)) attributes[match[2]] = Number(match[1]);
@@ -100,4 +106,15 @@ export function detailFromDocument(doc, id) {
     // Only the item's own text before set bonuses is used for the picker summary.
     effects:[...new Set([...tooltip.querySelectorAll('span')].map(span=>span.textContent.trim()).filter(text=>/^(Equip:|Use:|Chance on hit:)/.test(text)))],
     tooltipText:text,summary:primary.trim(),source:`https://octowow.st/db/?item=${id}`};
+}
+
+// Validates both sides of weapon/ammunition relationships using trusted metadata.
+export function equipmentErrors(build,lookup){
+ const enriched={...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,ref])=>{const item=lookup(ref.id);return [slot,{...ref,subclass:item?.subclass,twoHanded:item?.slot===17}];}))};
+ const errors=[];
+ for(const [slot,ref] of Object.entries(build.gear)){
+  const item=lookup(ref.id);const reason=item?detailRestriction(item,item,enriched,slot):'Official item data unavailable.';
+  if(reason)errors.push({slot,id:ref.id,reason});
+ }
+ return errors;
 }

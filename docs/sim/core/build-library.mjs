@@ -1,4 +1,4 @@
-import { classDefinition } from './classes.mjs?v=20261111-classes1';
+import { classDefinition } from './classes.mjs?v=20261112-audit1';
 export const BUILDS_PER_CLASS=100;
 export const MAX_BUILD_BYTES=64000;
 export function buildRecord(build,validate,savedAt=new Date().toISOString()){
@@ -15,7 +15,7 @@ function database(name){return new Promise((resolve,reject)=>{
  request.onsuccess=()=>{request.result.onversionchange=()=>request.result.close();resolve(request.result);};
 });}
 const errorMessage=error=>error?.name==='QuotaExceededError'?new Error('Browser storage is full. Export a backup and remove an old saved build.'):error;
-export function buildLibrary(classId,validate,{databaseName='octosim-build-library'}={}){
+export function buildLibrary(classId,validate,{databaseName='octosim-build-library',legacyValidate=validate}={}){
  classDefinition(classId);let ready;
  async function open(){
   if(!ready)ready=(async()=>{
@@ -31,7 +31,7 @@ export function buildLibrary(classId,validate,{databaseName='octosim-build-libra
      const seen=new Set();
      for(const entry of legacy){
       if(entry.build?.classId!==classId||seen.size>=BUILDS_PER_CLASS)continue;
-      try{const record=buildRecord(entry.build,validate,entry.savedAt);if(!seen.has(record.name)){seen.add(record.name);tx.objectStore('builds').put(record);}}catch{}
+      try{const record=buildRecord(entry.build,legacyValidate,entry.savedAt);if(!seen.has(record.name)){seen.add(record.name);tx.objectStore('builds').put(record);}}catch{}
      }
      meta.put(true,`legacy:${classId}`);
     };

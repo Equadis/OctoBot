@@ -1,9 +1,11 @@
+import {resolveConsumableSelection,CONSUMABLE_BY_ID,consumableRestriction} from './consumables.mjs?v=20261112-audit1';
+import {validRace,slotAllowed,CLASS_RACES} from './class-rules.mjs?v=20261112-audit1';
 import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261111-classes1';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261111-classes1';
+import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261112-audit1';
 import { validEnchant } from './equipment-options.mjs?v=20261111-classes1';
 import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
-import { defaultControls, validateControls } from './configuration.mjs?v=20261112-stats1';
-import { validateTalents } from './talents.mjs?v=20261111-classes1';
+import { defaultControls, validateControls, BUFF_OPTIONS, buffRestriction } from './configuration.mjs?v=20261112-audit1';
+import { validateTalents } from './talents.mjs?v=20261112-audit1';
 
 export const SLOTS = Object.freeze({
   head: 'Head', neck: 'Neck', shoulder: 'Shoulder', back: 'Back', chest: 'Chest', wrist: 'Wrist',
@@ -40,7 +42,7 @@ export function validateBuild(input, data) {
   if(input.schemaVersion!==1||input.classId!==data.classId)throw new Error('Build class does not match the selected planner.');
   classDefinition(input.classId);
   if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 80) throw new Error('Build name must be 1–80 characters.');
-  if (typeof input.race !== 'string' || !input.race.trim() || input.race.length > 40) throw new Error('Race must be 1–40 characters.');
+  if(!validRace(input.classId,input.race))throw new Error(`Invalid race for ${classDefinition(input.classId).name}.`);
   const skills={};
   if(input.skills!==undefined){
     if(!input.skills||typeof input.skills!=='object'||Array.isArray(input.skills))throw new Error('Invalid profession skills.');
@@ -52,7 +54,7 @@ export function validateBuild(input, data) {
   if (!input.gear || typeof input.gear !== 'object' || Array.isArray(input.gear)) throw new Error('Invalid equipment references.');
   const gear = {};
   for (const [slot, item] of Object.entries(input.gear)) {
-    if (!Object.hasOwn(SLOTS, slot) || !item || typeof item !== 'object' || Array.isArray(item)) throw new Error('Unknown equipment slot.');
+    if (!Object.hasOwn(SLOTS, slot) || !slotAllowed(input.classId,slot) || !item || typeof item !== 'object' || Array.isArray(item)) throw new Error('Unknown equipment slot.');
     if (!Number.isInteger(item.id) || item.id < 1 || item.id > 2147483647 ||
         typeof item.label !== 'string' || item.label.length > 80) throw new Error('Invalid item reference.');
     gear[slot] = { id: item.id, label: item.label };
@@ -79,10 +81,13 @@ export function validateBuild(input, data) {
   if (typeof planning.durationVary !== 'boolean') throw new Error('Invalid fight duration variation.');
   planning.targetPreset = input.planning?.targetPreset ?? 'custom';
   if (!TARGET_IDS.includes(planning.targetPreset)) throw new Error('Unknown target preset.');
+  const classOptions=validateClassOptions(input.classOptions,input.classId);
+  if(input.classId==='rogue')for(const [hand,key] of [['mh','mhPoison'],['oh','ohPoison']])if(classOptions[key]!=='None'&&input.controls?.buffIds?.includes(`wizard-oil-${hand}`))throw new Error('A weapon cannot have both poison and wizard oil.');
+  if(input.classId==='shaman'&&classOptions.mhImbue!=='None'&&input.controls?.buffIds?.includes('wizard-oil-mh'))throw new Error('A weapon cannot have both an imbue and wizard oil.');
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
   return { schemaVersion: 1, classId: input.classId, name: input.name.trim(),
-    race: input.race.trim(), skills, classOptions:validateClassOptions(input.classOptions,input.classId), level: input.level, talents, gear, planning, controls: validateControls(input.controls,input.classId) };
+    race: input.race.trim(), skills, classOptions, level: input.level, talents, gear, planning, controls: validateControls(input.controls,input.classId,{...input,gear,skills}) };
 }
 
 export function encodeBuild(build) {
@@ -101,4 +106,15 @@ export function decodeBuild(encoded, data) {
     return validateBuild(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
       Uint8Array.from(binary, char => char.charCodeAt(0)))), data);
   } catch (error) { throw new Error(`Could not load the shared build: ${error.message}`); }
+}
+
+// Repair local legacy records only. Raw saved records are left intact for backup.
+// External imports and shared links still use strict validateBuild.
+export function restoreLegacyBuild(input,data){
+ const changes=[],copy=structuredClone(input);
+ if(!validRace(copy.classId,copy.race)){changes.push(`Race changed from ${copy.race} to ${classDefinition(copy.classId).race}`);copy.race=classDefinition(copy.classId).race;}
+ for(const slot of Object.keys(copy.gear||{}))if(!slotAllowed(copy.classId,slot)){delete copy.gear[slot];changes.push(`Removed unsupported ${slot} slot`);}
+ if(copy.controls){const next=(copy.controls.buffIds||[]).filter(id=>!buffRestriction(BUFF_OPTIONS.find(o=>o.id===id),copy));if(next.length!==(copy.controls.buffIds||[]).length)changes.push('Removed inapplicable consumables');copy.controls.buffIds=next;}
+ if(copy.controls){const ids=copy.controls.consumableIds||[];copy.controls.consumableIds=ids.filter(id=>!consumableRestriction(CONSUMABLE_BY_ID.get(id),copy));if(copy.controls.consumableIds.length!==ids.length)changes.push('Removed inapplicable additional consumables');const previous=JSON.stringify(copy.controls);copy.controls=resolveConsumableSelection(copy.controls,'buffs');if(previous!==JSON.stringify(copy.controls))changes.push('Removed conflicting consumables');for(const [hand,key] of [['mh','mhPoison'],['oh','ohPoison']])if(copy.classOptions?.[key]&&copy.classOptions[key]!=='None'&&copy.controls.buffIds.includes(`wizard-oil-${hand}`)){copy.classOptions[key]='None';changes.push('Removed a conflicting weapon poison');}if(copy.classId==='shaman'&&copy.classOptions?.mhImbue!=='None'&&copy.controls.buffIds.includes('wizard-oil-mh'))copy.classOptions.mhImbue='None';}
+ const value=validateBuild(copy,data);return {build:value,changes};
 }

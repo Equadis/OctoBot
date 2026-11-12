@@ -1,5 +1,6 @@
+import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection} from './core/consumables.mjs?v=20261112-audit1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
-import { BUFF_OPTIONS, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-stats1';
+import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-audit1';
 import { attachTooltip } from './tooltip.mjs?v=20261111-classes1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -12,13 +13,13 @@ export function configuration({getBuild,onChange}){
  const {abilities:ABILITIES,metrics:METRICS,presets:ROTATION_PRESETS,resources}=rotationProfile(classId);
  const validateRows=rows=>validateRotationRows(rows,classId);
  const checkboxes=new Map();
- const update=patch=>onChange({...getBuild().controls,...patch});
+ const update=patch=>onChange(resolveConsumableSelection({...getBuild().controls,...patch},Object.hasOwn(patch,'consumableIds')?'consumables':'buffs'));
  for(const group of BUFF_GROUPS){
   const section=node(group.collapsed?'details':'section',undefined,'buff-group');if(group.collapsed)section.open=false;
   const heading=node(group.collapsed?'summary':'div',undefined,'buff-group-heading');heading.append(node('h3',group.name));
   const actions=node('div',undefined,'buff-actions');
   const setGroup=enabled=>{
-   const ids=group.options.filter(option=>!enabled||!option.classes||option.classes.includes(classId)).map(option=>option.id);
+   const ids=group.options.filter(option=>!enabled||!buffRestriction(option,getBuild())).map(option=>option.id);
    const selected=selectBuffGroup(getBuild().controls.buffIds,ids,enabled);
    update({buffIds:[...selected]});renderChecks();
   };
@@ -27,13 +28,14 @@ export function configuration({getBuild,onChange}){
   if(!group.collapsed)heading.append(actions);
   section.append(heading);if(group.collapsed)section.append(actions);
   for(const option of group.options){
+   if(option.classes&&!option.classes.includes(classId)||option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(classId))continue;
    const label=node('label',undefined,'buff-row');const input=node('input');input.type='checkbox';input.value=option.id;
-   input.disabled=Boolean(option.classes && !option.classes.includes(getBuild().classId));
+   input.disabled=Boolean(buffRestriction(option,getBuild()));
    const name=node('span',option.name,'buff-name'),effect=node('span',option.effect,'buff-effect');label.append(input,name,effect);
    input.addEventListener('change',()=>{
     let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
-   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?['Rogue only.']:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']}));
+   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?[buffRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']}));
    checkboxes.set(option.id,input);section.append(label);
    if(option.id==='tea'){
     const threshold=node('label',undefined,'tea-threshold');threshold.append(node('span','Use at <'));
@@ -43,7 +45,24 @@ export function configuration({getBuild,onChange}){
   }
   $('buff-list').append(section);
  }
- function renderChecks(){for(const [id,input] of checkboxes)input.checked=getBuild().controls.buffIds.includes(id);$('tea-threshold').value=getBuild().controls.teaThreshold;}
+ function renderChecks(){for(const [id,input] of checkboxes){input.checked=getBuild().controls.buffIds.includes(id);input.disabled=Boolean(buffRestriction(BUFF_OPTIONS.find(o=>o.id===id),getBuild()));}if($('tea-threshold'))$('tea-threshold').value=getBuild().controls.teaThreshold;renderAdditional();}
+ const extra=node('details',undefined,'additional-consumables'),summary=node('summary','Class Consumables');extra.append(summary);
+ const search=node('input');search.type='search';search.placeholder='Search consumables…';search.setAttribute('aria-label','Search class consumables');
+ const kind=select(['All','Potion','Flask','Elixir','Rune','Bandage','Food & Utility'].map(v=>[v,v]),'All','Consumable type');
+ const count=node('div',undefined,'small muted'),list=node('div',undefined,'additional-consumable-list');extra.append(search,kind,count,list);$('buff-list').append(extra);
+ function renderAdditional(){
+  const build=getBuild(),query=search.value.trim().toLowerCase(),selected=build.controls.consumableIds||[];
+  const candidates=CONSUMABLES.filter(item=>!item.buffId&&item.verified&&!consumableRestriction(item,build)&&(kind.value==='All'||item.category===kind.value)&&(!query||item.name.toLowerCase().includes(query)||String(item.id)===query));
+  candidates.sort((a,b)=>Number(selected.includes(b.id))-Number(selected.includes(a.id))||a.name.localeCompare(b.name));
+  count.textContent=`${candidates.length} verified applicable consumables`;list.replaceChildren();
+  for(const item of candidates.slice(0,60)){
+   const row=node('label',undefined,'buff-row'),input=node('input');input.type='checkbox';input.checked=selected.includes(item.id);input.value=String(item.id);
+   const text=node('span',item.name,'buff-name'),effect=node('span',item.requiredLevel?`Lv ${item.requiredLevel}`:'','buff-effect');row.append(input,text,effect);
+   input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderAdditional();});
+   attachTooltip(row,()=>({title:item.name,lines:[...item.effects,...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]}));list.append(row);
+  }
+ }
+ search.addEventListener('input',renderAdditional);kind.addEventListener('change',renderAdditional);
  function saved(){try{const entries=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');if(!Array.isArray(entries))return[];return entries.slice(0,20).filter(entry=>typeof entry.name==='string'&&entry.name.length<=80).map(entry=>({...entry,rows:validateRows(entry.rows)}));}catch{return[];}}
  function choices(){
   const dropdown=$('rotation-preset');dropdown.replaceChildren();

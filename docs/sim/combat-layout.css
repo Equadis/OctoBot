@@ -107,3 +107,22 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
  .planner-view #equipment{order:0}.planner-view #talents{order:1}.planner-view #buffs{order:2}.planner-view #rotation{order:3}.planner-view #build-settings{order:4}.planner-view #simulation{order:5}.planner-view #combat-log{order:6}
 }
 @media(max-width:780px){.class-card-title strong{font-size:22px}}
+
+/* Class-specific accents and a single border for each selectable element. */
+.class-card-title strong{font-size:16px;line-height:1.3}
+@media(max-width:780px){.class-card-title strong{font-size:14px}}
+@media(max-width:480px){.class-card-title strong{font-size:16px}}
+.planner-view .character-summary>strong:first-of-type{color:var(--class-colour)}
+.planner-view .class-mark{border-color:var(--class-colour)}
+.planner-view .talent-node[aria-pressed=true]{box-shadow:none}
+.planner-view .talent-node:focus:not(:focus-visible){outline:none}
+.planner-view .talent-node:focus-visible{outline:0;box-shadow:none}
+.planner-view .talent-node{--talent-border:#a8c1dd}
+.planner-view .talent-node.allocated:not(.maxed){--talent-border:#1eff00}
+.planner-view .talent-node.maxed{--talent-border:#ffd100}
+.planner-view .talent-node:focus-visible .talent-icon{outline:2px solid var(--talent-border);outline-offset:0;box-shadow:none}
+#item-dialog .item-row.equipped.previewed{box-shadow:none}
+#item-dialog .item-row:focus:not(:focus-visible){outline:none}
+#item-dialog .item-row:focus-visible{outline:0;box-shadow:none;border-left-color:#a8c1dd}
+
+.additional-consumables{margin-top:20px}.additional-consumables>summary{font-size:12px;font-weight:600;color:var(--gold);cursor:pointer}.additional-consumables>input,.additional-consumables>select{width:100%;margin:8px 0;padding:7px;background:#172230;color:#e5e9ef;border:1px solid var(--line);border-radius:4px}.additional-consumable-list{max-height:500px;overflow:auto;margin-top:8px}
