@@ -10,6 +10,7 @@ const inline=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
 assert.ok(inline,'Population page must include its controller');
 const math=readFileSync(join(root,'chart-data.js'),'utf8');
 const history=readFileSync(join(root,'population-history.js'),'utf8');
+const estimates=readFileSync(join(root,'realm-estimates.js'),'utf8');
 const uptime=readFileSync(join(root,'uptime-clock.js'),'utf8');
 
 function mockElement(tag='div'){
@@ -58,7 +59,9 @@ function fixture(options={}){
   };
   const realms=[
     {id:'all',name:'All Realms',history:'online-history.json'},
-    {id:'nzoth',name:"N'Zoth (Normal)",history:'history/nzoth.json'}
+    {id:'nzoth',name:"N'Zoth (Normal)",history:'history/nzoth.json'},
+    {id:'cthun',name:"C'Thun (Hardcore)",history:'history/cthun.json'},
+    {id:'yshaarj',name:"Y'Shaarj (PvP)",history:'history/yshaarj.json'}
   ];
   const requests=[];
   const fetch=async path=>{
@@ -74,19 +77,21 @@ function fixture(options={}){
     }
     if(url.includes('/api/latest')){
       if(failed)throw Error('Worker temporarily unavailable');
-      return {ok:true,json:async()=>({nzoth:{...worker.at(-1),source:'official census'}})};
+      return {ok:true,json:async()=>(options.snapshots||{nzoth:{...worker.at(-1),source:'official census'}})};
     }
     if(url.includes('/api/history?')){
       if(failed)throw Error('Worker history temporarily unavailable');
       const params=new URL(url).searchParams;
-      if(params.get('realm')==='all')return {ok:false,status:400};
+      const realmId=params.get('realm');
+      if(realmId==='all'&&!options.allWorker)return {ok:false,status:400};
       const since=Number(params.get('since'));
+      const source=realmId==='all'?(options.allWorker||[]):(options.realmWorker?.[realmId]||worker);
       return {ok:true,json:async()=>({
-        readings:worker.filter(r=>Date.parse(r.timestamp)>since),has_more:false
+        readings:source.filter(r=>Date.parse(r.timestamp)>since),has_more:false
       })};
     }
     if(url.includes('online-history.json'))return {ok:true,json:async()=>archival};
-    if(url.includes('history/nzoth.json'))return {ok:true,json:async()=>([])};
+    if(url.includes('history/nzoth.json')||url.includes('history/cthun.json')||url.includes('history/yshaarj.json'))return {ok:true,json:async()=>([])};
     if(url.includes('live.json'))return {ok:true,json:async()=>({
       nzoth:{...archival.at(-1),source:'official census'}
     })};
@@ -115,6 +120,7 @@ function fixture(options={}){
   });
   vm.runInContext(math,context);
   vm.runInContext(history,context);
+  vm.runInContext(estimates,context);
   vm.runInContext(uptime,context);
   vm.runInContext(inline,context);
   return {
@@ -361,12 +367,11 @@ test('legacy website-wide census is never shown as N\'Zoth population',async()=>
   assert.equal(env.get('online-now').textContent,'101');
   assert.ok(env.requests.some(url=>url.includes('/api/history?realm=nzoth')),
     'All Realms is allowed to retrieve the old Worker census until redeploy');
-  const legacyCalls=env.requests.filter(url=>url.includes('/api/history?realm=nzoth')).length;
   env.get('server-select').fire('change',{target:{value:'nzoth'}});
   await settle();
   assert.equal(env.get('online-now').textContent,'NO DATA');
-  assert.equal(env.requests.filter(url=>url.includes('/api/history?realm=nzoth')).length,legacyCalls,
-    'The legacy census must only be read by All Realms, not by N\'Zoth');
+  assert.equal(env.get('raw-population').getAttribute('d'),'',
+    'Realm history must reject legacy source-less census data');
 });
 
 
@@ -448,4 +453,32 @@ test('two explicit N\'Zoth offline observations interrupt uptime until a fresh i
  await env.intervals.get(60000)?.[0]();await settle();
  assert.equal(env.get('uptime').textContent,'NO DATA',
   'Confirmed downtime requires a new in-game uptime reference even after recovery');
+});
+
+test('realm graph renders current real counts and yellow proportional backfill',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z'),week=now-7*86400000;
+ const stamp=t=>new Date(t).toISOString();
+ const observed={source:'in-game .server info',timestamp:stamp(now-30000),online:800};
+ const snapshots={
+  all:{source:'official census',timestamp:stamp(now-30000),online:1000},
+  nzoth:observed,
+  cthun:{source:'in-game .server info',timestamp:stamp(now-30000),online:100},
+  yshaarj:{source:'in-game .server info',timestamp:stamp(now-30000),online:100}
+ };
+ const env=fixture({
+  snapshots,archival:[{timestamp:stamp(week),online:2000},{timestamp:stamp(week+60000),online:2100}],
+  allWorker:[{timestamp:stamp(now-60000),online:1000,source:'official census'}],
+  realmWorker:{nzoth:[observed]}
+ });
+ await settle();
+ env.get('server-select').fire('change',{target:{value:'nzoth'}});await settle();
+ assert.equal(env.get('online-now').textContent,'800');
+ env.navigate({start:week-120000,end:week+600000});
+ assert.match(env.get('estimate-path').getAttribute('d'),/L/,
+  'Earlier All Realms history must render as a connected yellow dashed estimate');
+ assert.equal(env.get('raw-population').getAttribute('d'),'',
+  'Estimated data must not be drawn as recorded green data');
+ env.get('plot-hit').fire('pointermove',{clientX:189,pointerId:1});
+ assert.match(env.get('readout').textContent,/ESTIMATED/);
+ assert.match(env.get('readout').textContent,/1,6/);
 });

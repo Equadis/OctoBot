@@ -5,6 +5,8 @@ import {collectStatus,statusLatest,statusHistory,cleanOldStatus} from './status.
  * Public endpoints serve only population aggregates, never player identifiers.
  */
 const CENSUS_URL='https://octowow.st/player-census';
+const METRICS_SUMMARY_URL='https://octometrics.eqvoice.workers.dev/api/summary';
+const METRICS_MAX_AGE=10*60*1000;
 const REALMS=['all','nzoth','yshaarj','cthun'];
 const MAX_PAGE=10000;
 export function parseOnline(page){
@@ -39,18 +41,58 @@ async function collectOne(env,realm,source,format){
   .bind(realm,timestamp,online,format==='html'?'official census':'verified realm feed').run();
  return {timestamp:new Date(timestamp).toISOString(),online,realm};
 }
+function metricsRealmId(value){
+ const id=typeof value==='string'?value.replace(/[^a-z]/gi,'').toLowerCase():'';
+ return id==='nzoth'||id==='cthun'||id==='yshaarj'?id:null;
+}
+export function parseMetricsPopulation(payload,now=Date.now()){
+ if(!payload||!Array.isArray(payload.realms))throw Error('Invalid OctoMetrics summary');
+ const observations=new Map();
+ for(const item of payload.realms){
+  const realm=metricsRealmId(item?.realm);
+  const online=item?.population?.online;
+  const at=Date.parse(item?.population?.at);
+  if(!realm||!Number.isSafeInteger(online)||online<0||!Number.isFinite(at)||
+     at>now+60000||now-at>METRICS_MAX_AGE)continue;
+  const previous=observations.get(realm);
+  if(!previous||at>previous.timestamp_ms)
+   observations.set(realm,{realm,timestamp_ms:at,online});
+ }
+ return [...observations.values()];
+}
+async function collectMetrics(env){
+ const response=await fetch(METRICS_SUMMARY_URL,{
+  headers:{'Accept':'application/json','Cache-Control':'no-cache'},
+  cf:{cacheTtl:0}
+ });
+ if(!response.ok)throw Error('OctoMetrics HTTP '+response.status);
+ const body=await response.text();
+ if(body.length>2000000)throw Error('Unexpectedly large OctoMetrics summary');
+ const observations=parseMetricsPopulation(JSON.parse(body));
+ await Promise.all(observations.map(async reading=>
+  env.DB.prepare('INSERT OR IGNORE INTO readings (realm,timestamp_ms,online,source) VALUES (?,?,?,?)')
+   .bind(reading.realm,reading.timestamp_ms,reading.online,'in-game .server info').run()
+ ));
+ return observations.map(reading=>({
+  realm:reading.realm,timestamp:new Date(reading.timestamp_ms).toISOString(),online:reading.online
+ }));
+}
 export async function collect(env){
  if(!env.DB)throw Error('D1 binding missing');
  const feeds=[['all',CENSUS_URL+'?t='+Date.now(),'html']];
  for(const [realm,key] of [['nzoth','POPULATION_NZOTH_URL'],['yshaarj','POPULATION_YSHAARJ_URL'],['cthun','POPULATION_CTHUN_URL']]){
   if(typeof env[key]==='string'&&env[key].trim())feeds.push([realm,env[key].trim(),'json']);
  }
- const settled=await Promise.allSettled(feeds.map(([id,url,format])=>collectOne(env,id,url,format)));
+ const settled=await Promise.allSettled([
+  ...feeds.map(([id,url,format])=>collectOne(env,id,url,format)),
+  collectMetrics(env)
+ ]);
  for(let i=0;i<settled.length;i++){
-  if(settled[i].status==='rejected')console.error('Population source failed: '+feeds[i][0],settled[i].reason);
+  if(settled[i].status==='rejected')
+   console.error('Population source failed: '+(feeds[i]?.[0]||'OctoMetrics'),settled[i].reason);
  }
  if(settled.every(x=>x.status==='rejected'))throw Error('All realm sources failed');
- return settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
+ return settled.filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
 }
 const worker={
  async scheduled(controller,env,ctx){
@@ -112,10 +154,10 @@ const worker={
     const since=Number(url.searchParams.get('since')||'0');
     if(!Number.isSafeInteger(since)||since<0)return json({error:'invalid_since'},400);
     const {results}=await env.DB.prepare(
-     'SELECT timestamp_ms,online FROM readings WHERE realm=? AND timestamp_ms>? ORDER BY timestamp_ms ASC LIMIT ?'
+     "SELECT timestamp_ms,online,source FROM readings WHERE realm=? AND timestamp_ms>? AND NOT (realm='nzoth' AND source='official census') ORDER BY timestamp_ms ASC LIMIT ?"
     ).bind(realm,since,MAX_PAGE+1).all();
     const all=results||[],has_more=all.length>MAX_PAGE,rows=all.slice(0,MAX_PAGE);
-    return json({realm,readings:rows.map(r=>({timestamp:new Date(r.timestamp_ms).toISOString(),online:r.online})),has_more});
+    return json({realm,readings:rows.map(r=>({timestamp:new Date(r.timestamp_ms).toISOString(),online:r.online,source:r.source})),has_more});
    }
    if(url.pathname==='/api/health'){
     const row=await env.DB.prepare('SELECT MAX(timestamp_ms) AS last FROM readings').first();
