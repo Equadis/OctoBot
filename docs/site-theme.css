@@ -27,8 +27,14 @@ h2,h3,.milestone strong{color:var(--gold)}
 .stat strong,.archive-stat strong{color:var(--gold)}
 .stat strong.is-down{color:#f08f8f}.stat strong.is-unknown{color:#e3bd57}
 button[aria-pressed=true]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
-.date-actions{display:flex;flex-direction:column;gap:6px;min-width:145px;align-items:stretch}
-.date-actions button{width:100%;white-space:nowrap}
+/* Align From/To with Apply on the bottom row; keep Jump compact above it. */
+.dates{align-items:flex-end}
+.date-fields{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-height:30px}
+.date-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0}
+.controls button{border-radius:4px}
+.date-actions button{width:auto;white-space:nowrap}
+.date-actions .jump-to-present{font-size:11px;line-height:15px;padding:5px 9px}
+.dates input[type="date"]{border-radius:4px}
 .jump-to-present:disabled,.jump-to-present:disabled:hover{opacity:.45;color:#a1adbd;background:#1e2938;border-color:#39465a;cursor:not-allowed}
 select,.dates input,.archive-controls select,.server-label select{background:#182333;border-color:#4a596e;color:#e5e9ef}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:var(--gold)}
