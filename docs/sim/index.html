@@ -4,18 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Plan talents and equipment for all nine classes, save builds and share them. Combat simulation is in development.">
-  <title>OctoBot · DPS Sim / Gear Planner</title>
+  <title>OctoBot · WIP --- GEAR PLANNER / DPS SIM</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261112-trees1">
-  <script type="module" src="planner.mjs?v=20261112-trees1"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261112-stats1">
+  <script type="module" src="planner.mjs?v=20261112-stats1"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
 <main>
-  <header class="site-header"><div class="site-identity"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>DPS Sim / Gear Planner</h1></div></div><div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
+  <header class="site-header"><div class="site-identity"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>WIP --- GEAR PLANNER / DPS SIM</h1></div></div><div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
   <nav class="page-nav" aria-label="Dashboard pages">
-    <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">DPS Sim / Gear Planner</a>
+    <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">WIP --- GEAR PLANNER / DPS SIM</a>
   </nav>
   <section id="class-selection" aria-labelledby="classes-title">
     <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
@@ -42,7 +42,7 @@
         </details>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
-          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div class="summary-divider"></div><span class="muted">Talent build</span><strong id="talent-split">0 / 0 / 0</strong><span id="points-left"></span><div class="summary-divider"></div><span id="equipment-count"></span><div class="summary-divider"></div><span class="small muted">Equipment attributes</span><div id="gear-stats" class="gear-stats">Equip items to see their attributes.</div></div>
+          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div id="gear-stats" class="gear-stats" aria-label="Character statistics"></div><div class="character-build-meta"><span id="talent-split">0 / 0 / 0</span><span id="points-left"></span><span id="equipment-count"></span></div></div>
           <div id="slots-right" class="slot-column"></div>
         </div>
         <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div><details class="appearance-slots"><summary>Appearance</summary><div id="slots-appearance" class="weapons extra-slots"></div></details>

@@ -71,3 +71,19 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view #rotation-preset{display:block;width:100%;height:34px;min-height:34px;padding:6px 10px;border:1px solid #526278;border-radius:4px;background:#172230;color:#edf2f8;font-family:inherit;font-size:12px;font-weight:600;line-height:1.4;color-scheme:dark}
 .planner-view #rotation-preset:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media(max-width:700px){.planner-view .talent-tree{padding:16px}.planner-view .tree-heading h3{font-size:13px}}
+
+/* Compact, shared character sheet: aligned labels and values. */
+.planner-view .character-summary{display:flex;flex-direction:column;gap:5px;padding:10px 7px;text-align:left;justify-content:flex-start}
+.planner-view .character-summary>.class-mark{align-self:center;width:36px;height:36px}
+.planner-view .character-summary>strong,.planner-view #character-description{text-align:center;width:100%}
+.planner-view #gear-stats{width:100%;min-width:0;display:block;margin-top:2px}
+.planner-view .character-stat-group{margin:0 0 10px}
+.planner-view .character-stat-group h3{font-size:10px;line-height:1.4;color:var(--gold);margin:0 0 5px;padding-bottom:3px;border-bottom:1px solid #2c3b4f;text-align:left}
+.planner-view .gear-stat{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:9px;line-height:1.65;white-space:nowrap}
+.planner-view .gear-stat>span{color:#92a8c0;min-width:0}
+.planner-view .gear-stat>strong{color:#e1e9f3;font-size:9px;font-weight:400;text-align:right;flex:none}
+.planner-view .stat-unavailable>strong{color:#7b8ba0}
+.planner-view .character-build-meta{display:flex;flex-direction:column;width:100%;border-top:1px solid #2c3b4f;padding-top:7px;text-align:center;font-size:9px;color:var(--muted)}
+.planner-view .paperdoll{grid-template-columns:minmax(0,1fr) minmax(153px,1.18fr) minmax(0,1fr)}
+@media(max-width:560px){.planner-view .paperdoll{gap:5px;grid-template-columns:minmax(0,1fr) minmax(147px,1.2fr) minmax(0,1fr)}.planner-view .character-summary{padding:9px 5px}.planner-view .gear-stat,.planner-view .gear-stat>strong{font-size:8px}}
+.planner-view .gear-stat{padding:0;border:0;margin:0}

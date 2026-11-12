@@ -1,13 +1,13 @@
+import {characterStats} from './core/character-stats.mjs?v=20261112-stats1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261111-classes1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261111-classes1';
 import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261111-classes1';
 import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs?v=20261111-classes1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs?v=20261111-classes1';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs?v=20261112-stats1';
 import { itemPicker } from './item-picker.mjs?v=20261112-catalogue1';
-import { equipmentTotals } from './core/items.mjs?v=20261111-classes1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';
-import { configuration } from './configuration.mjs?v=20261111-classes1';
+import { configuration } from './configuration.mjs?v=20261112-stats1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs?v=20261111-classes1';
 
@@ -48,7 +48,7 @@ function createClasses() {
     if (cls.available) card.href = `?class=${cls.id}&v=20261111-classes1`;
     else card.setAttribute('aria-disabled', 'true');
     const title = element('div', 'class-card-title');
-    title.append(element('strong', '', cls.name), element('span', 'class-status', cls.available ? 'Planner available' : 'Planned'));
+    title.append(element('strong', '', cls.name));
     const text = element('div', 'class-card-copy');
     text.append(title, element('span', 'class-card-note', cls.available ? 'Open planner' : 'Not available yet'));
     card.append(gameIcon(`classicon_${cls.id}`, 'class-card-icon'), text);
@@ -197,11 +197,20 @@ function render() {
     button.classList.toggle('locked', rank === 0 && validateTalents(data,
       { ...build.talents, [talent.id]: 1 }, build.level).length > 0);
   }
-  const stats = equipmentTotals(Object.fromEntries(Object.entries(build.gear).map(([slot,item]) => [slot, {attributes:picker?.usable(slot,item.id) ? picker.lookup(item.id).attributes : {}}])));
-  $('gear-stats').replaceChildren(...Object.entries(stats).map(([name,value]) => {
-    const row=element('div','gear-stat');row.append(element('span','',name),element('strong','',String(value)));return row;
+  const verifiedGear=Object.fromEntries(Object.entries(build.gear).filter(([slot,item])=>picker?.usable(slot,item.id)).map(([slot,item])=>[slot,picker.lookup(item.id)]));
+  const sheet=characterStats(build,data,verifiedGear);
+  $('gear-stats').replaceChildren(...sheet.groups.map(group=>{
+    const section=element('section','character-stat-group');
+    const heading=element('h3','',group.name);section.append(heading);
+    for(const stat of group.rows){
+      const row=element('div','gear-stat');row.append(element('span','',stat.label),element('strong','',stat.value));
+      row.title=stat.note||sheet.sourceNote;
+      if(stat.value==='—')row.classList.add('stat-unavailable');
+      section.append(row);
+    }
+    return section;
   }));
-  if (!Object.keys(stats).length) $('gear-stats').textContent = '—';
+  $('gear-stats').title=sheet.sourceNote;
 }
 
 function talentTooltip(talent) {
@@ -303,10 +312,10 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
-  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();},onError:error=>feedback(error.message,true)});
+  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>{build.gear={};persistDraft();render();refreshTooltip();feedback('Equipment cleared.');});
   $('clear-talents').addEventListener('click',()=>{build.talents={};selectedId=null;persistDraft();render();refreshTooltip();feedback('Talent points cleared.');});
-  config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();}});
+  config=configuration({getBuild:()=>build,onChange:controls=>{build=validateBuild({...build,controls},data);persistDraft();render();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', () => {
       try {

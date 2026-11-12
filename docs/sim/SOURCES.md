@@ -69,3 +69,42 @@ No third-party simulation code, upstream engine data files, logos or art are
 included in this branch. Official calculator factual metadata for all nine classes (476 talents) is included
 with provenance. If an engine is later vendored, include exact pinned revisions, licence texts and
 notices, documented local modifications, and visible upstream attribution.
+
+## Character sheet and buff replacement — 12 November 2026
+
+- Combat Gum **Alpha v3.01** was tested through its visible checkbox controls in
+  both listing orders. Raw observations are in
+  `data/reference/combatgum-buff-observations.json`. The additional pair tests
+  capture the asymmetric Dreamwater/Dreamtonic and Arcane Giant/Greater Arcane
+  cases. OctoBot resolves those pairs symmetrically, with the last selection
+  winning. Other confirmed combinations remain allowed; an entire consumable
+  category is not incorrectly treated as exclusive.
+- `core/base-stats.mjs` contains factual numeric rows for levels 1–60 extracted
+  from [CMaNGOS Classic's player_levelstats and player_classlevelstats tables](https://github.com/cmangos/mangos-classic/blob/master/sql/base/mangos.sql).
+  The source is published under GPL-2.0-or-later. Only numeric game facts were
+  extracted; no upstream executable implementation was copied. The retrieval
+  date and source SHA-256 are recorded in the data module.
+- Level-60 class coefficients were checked against
+  [WoWSims Classic base_stats.go](https://github.com/wowsims/classic/blob/master/sim/core/base_stats.go)
+  (MIT). Rogue's 29 agility per crit and 14.5 agility per dodge reproduce the
+  visible Combat Gum fixture. Character calculations are original code.
+- The Human Rogue fixture is: no gear or talents, level 60, target 63/4211 armour,
+  Weapon Skill Book, Mongoose, Scorpok, Juju Might, Juju Power, Dreamshard. All
+  supplied stat values are reproduced, including 305 skill, 430 AP, 8.41% crit,
+  5.41% effective crit, 2093 health, 12.4% dodge and 15 SP.
+
+These remain **planning estimates**, not a verified OctoWoW combat ruleset.
+Only supported passive item/enchant effects and explicitly mapped static talents
+contribute. Triggered procs, temporary rotation auras, conditional talent effects,
+unimplemented set bonuses and school-specific spell crit are not averaged into
+permanent totals. School damage enchants and buffs are displayed separately from
+general spell power. Level-dependent crit/dodge coefficients below 60 are not
+invented: affected fields display a dash. Unsupported race/class pairs similarly
+show unavailable base attributes. Fortune shows flat bonuses only. Additional
+Nature resistance modelling is pending, so Poison Resist displays a dash when
+that resistance is non-zero. Hover notes identify these calculation boundaries.
+
+The attack table is an independently represented Combat Gum display baseline,
+including its miss/skill, dodge/skill and glancing display conventions. Agreement
+with that UI does not establish agreement with the OctoWoW server. Run Simulation
+remains unavailable until a verified combat engine exists.

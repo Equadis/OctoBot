@@ -2,7 +2,7 @@ import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261111-classes1';
 import { validEnchant } from './equipment-options.mjs?v=20261111-classes1';
 import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
-import { defaultControls, validateControls } from './configuration.mjs?v=20261111-classes1';
+import { defaultControls, validateControls } from './configuration.mjs?v=20261112-stats1';
 import { validateTalents } from './talents.mjs?v=20261111-classes1';
 
 export const SLOTS = Object.freeze({

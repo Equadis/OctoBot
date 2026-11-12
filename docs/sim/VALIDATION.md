@@ -85,3 +85,13 @@ fallbacks. Left-click allocation and right-click removal updated the selected
 rank correctly, and Share Build generated a link retaining the class route.
 Unit tests cover the class availability distinction, legacy shared-build and
 section routes, and safe icon identifiers. No simulation accuracy claim is made.
+
+### Character sheet and buff conflicts (2026-11-12)
+
+`tests/sim/character-stats.test.mjs` checks the observed Human Rogue stat fixture,
+every exclusive pair in both selection orders, normalisation through sharing,
+all nine default race/class combinations at every level 1–60, item/enchant and
+talent contributions, weapon-specific skill, target armour changes and exclusion
+of triggered effects from permanent AP. Browser QA additionally exercises
+cross-group checkbox replacement and live sheet updates. This verifies planner
+behaviour, not the OctoWoW server or unimplemented DPS calculations.

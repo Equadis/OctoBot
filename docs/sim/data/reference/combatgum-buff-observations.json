@@ -1,0 +1,311 @@
+{
+  "source": "https://www.combatgum.app/rogue",
+  "observedAt": "2026-11-12",
+  "version": "Alpha v3.01",
+  "sweep": [
+    {
+      "enabled": "Elixir of Greater Agility",
+      "removed": [
+        "Elixir of the Mongoose"
+      ]
+    },
+    {
+      "enabled": "Juju Might",
+      "removed": [
+        "Winterfall Firewater"
+      ]
+    },
+    {
+      "enabled": "Juju Power",
+      "removed": [
+        "Elixir of Giants"
+      ]
+    },
+    {
+      "enabled": "Concoction of the Emerald Mongoose",
+      "removed": [
+        "Elixir of Greater Agility",
+        "Dreamshard Elixir"
+      ]
+    },
+    {
+      "enabled": "Concoction of the Dreamwater",
+      "removed": [
+        "Juju Might"
+      ]
+    },
+    {
+      "enabled": "Concoction of the Arcane Giant",
+      "removed": [
+        "Juju Power"
+      ]
+    },
+    {
+      "enabled": "Danonzo's Tel'Abim Medley",
+      "removed": [
+        "Dragonbreath Chili"
+      ]
+    },
+    {
+      "enabled": "Sour Mountain Berry",
+      "removed": [
+        "Danonzo's Tel'Abim Medley"
+      ]
+    },
+    {
+      "enabled": "Squid Eel Skewer",
+      "removed": [
+        "Sour Mountain Berry"
+      ]
+    },
+    {
+      "enabled": "Crunchy Sandwept Carrots",
+      "removed": [
+        "Squid Eel Skewer"
+      ]
+    },
+    {
+      "enabled": "Dirge's Kicken Chimaerek Chops",
+      "removed": [
+        "Crunchy Sandwept Carrots"
+      ]
+    },
+    {
+      "enabled": "Le Fishe Au Chocolat",
+      "removed": [
+        "Dirge's Kicken Chimaerek Chops"
+      ]
+    },
+    {
+      "enabled": "Rumsey Rum",
+      "removed": [
+        "Medievh's Merlot"
+      ]
+    },
+    {
+      "enabled": "Sunder Armor (5 stacks)",
+      "removed": [
+        "Improved Expose Armor"
+      ]
+    },
+    {
+      "enabled": "Shar'tateth",
+      "removed": [
+        "Annihilator (3 stacks)"
+      ]
+    },
+    {
+      "enabled": "Annihilator (3 stacks)",
+      "removed": [
+        "Shar'tateth"
+      ]
+    },
+    {
+      "enabled": "Improved Expose Armor",
+      "removed": [
+        "Sunder Armor (5 stacks)"
+      ]
+    },
+    {
+      "enabled": "Medievh's Merlot",
+      "removed": [
+        "Rumsey Rum"
+      ]
+    },
+    {
+      "enabled": "Dirge's Kicken Chimaerek Chops",
+      "removed": [
+        "Le Fishe Au Chocolat"
+      ]
+    },
+    {
+      "enabled": "Crunchy Sandwept Carrots",
+      "removed": [
+        "Dirge's Kicken Chimaerek Chops"
+      ]
+    },
+    {
+      "enabled": "Squid Eel Skewer",
+      "removed": [
+        "Crunchy Sandwept Carrots"
+      ]
+    },
+    {
+      "enabled": "Sour Mountain Berry",
+      "removed": [
+        "Squid Eel Skewer"
+      ]
+    },
+    {
+      "enabled": "Danonzo's Tel'Abim Medley",
+      "removed": [
+        "Sour Mountain Berry"
+      ]
+    },
+    {
+      "enabled": "Dragonbreath Chili",
+      "removed": [
+        "Danonzo's Tel'Abim Medley"
+      ]
+    },
+    {
+      "enabled": "Concoction of the Arcane Giant",
+      "removed": [
+        "Greater Arcane Elixir"
+      ]
+    },
+    {
+      "enabled": "Concoction of the Dreamwater",
+      "removed": [
+        "Dreamtonic"
+      ]
+    },
+    {
+      "enabled": "Dreamshard Elixir",
+      "removed": [
+        "Concoction of the Emerald Mongoose"
+      ]
+    },
+    {
+      "enabled": "Juju Power",
+      "removed": [
+        "Concoction of the Arcane Giant"
+      ]
+    },
+    {
+      "enabled": "Elixir of Giants",
+      "removed": [
+        "Juju Power",
+        "Elixir of Brute Force"
+      ]
+    },
+    {
+      "enabled": "Juju Might",
+      "removed": [
+        "Concoction of the Dreamwater"
+      ]
+    },
+    {
+      "enabled": "Winterfall Firewater",
+      "removed": [
+        "Juju Might"
+      ]
+    },
+    {
+      "enabled": "Elixir of the Mongoose",
+      "removed": [
+        "Elixir of Greater Agility"
+      ]
+    }
+  ],
+  "pairChecks": [
+    {
+      "first": "Elixir of Brute Force",
+      "second": "Juju Power",
+      "checked": [
+        "Juju Power",
+        "Elixir of Brute Force",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Juju Power",
+      "second": "Elixir of Brute Force",
+      "checked": [
+        "Juju Power",
+        "Elixir of Brute Force",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Concoction of the Arcane Giant",
+      "second": "Greater Arcane Elixir",
+      "checked": [
+        "Concoction of the Arcane Giant",
+        "Greater Arcane Elixir",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Greater Arcane Elixir",
+      "second": "Concoction of the Arcane Giant",
+      "checked": [
+        "Concoction of the Arcane Giant",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Concoction of the Dreamwater",
+      "second": "Dreamtonic",
+      "checked": [
+        "Concoction of the Dreamwater",
+        "Dreamtonic",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Dreamtonic",
+      "second": "Concoction of the Dreamwater",
+      "checked": [
+        "Concoction of the Dreamwater",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Concoction of the Emerald Mongoose",
+      "second": "Ground Scorpok Assay",
+      "checked": [
+        "Ground Scorpok Assay",
+        "Concoction of the Emerald Mongoose",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Ground Scorpok Assay",
+      "second": "Concoction of the Emerald Mongoose",
+      "checked": [
+        "Ground Scorpok Assay",
+        "Concoction of the Emerald Mongoose",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Concoction of the Arcane Giant",
+      "second": "Elixir of Brute Force",
+      "checked": [
+        "Concoction of the Arcane Giant",
+        "Elixir of Brute Force",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    },
+    {
+      "first": "Elixir of Brute Force",
+      "second": "Concoction of the Arcane Giant",
+      "checked": [
+        "Concoction of the Arcane Giant",
+        "Elixir of Brute Force",
+        "Thistle Tea",
+        "Weapon Skill Book",
+        "Variability ±"
+      ]
+    }
+  ]
+}

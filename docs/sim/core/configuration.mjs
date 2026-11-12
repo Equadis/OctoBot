@@ -1,6 +1,7 @@
+import {normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import { CLASS_ROTATIONS } from './class-rotations.mjs?v=20261111-classes1';
 // Display reference supplied by the user from Combat Gum. These values are not
-// ruleset validation and are not applied to combat or character calculations.
+// ruleset validation. Supported passive values feed planning estimates only.
 const group=(id,name,all,rows,collapsed=false)=>({id,name,all,collapsed,options:rows.map(([id,name,effect,classes])=>({id,name,effect,...(classes?{classes}:{})}))});
 export const BUFF_GROUPS=Object.freeze([
  group('raid','Raid Buffs',true,[
@@ -55,5 +56,5 @@ export function validateControls(input,classId='warrior'){
  if(!profile.presets.some(preset=>preset.id===rotationPreset))throw new Error('Unknown rotation preset.');
  for(const [key,min,max] of [['teaThreshold',0,100],['keyInterval',10,5000],['variabilityMs',0,5000]])if(!Number.isInteger(input[key])||input[key]<min||input[key]>max)throw new Error(`Invalid ${key}.`);
  if(typeof input.variability!=='boolean')throw new Error('Invalid key-press variability.');
- return {buffIds:[...new Set(input.buffIds)],teaThreshold:input.teaThreshold,rotationPreset,rotationRows:validateRotationRows(input.rotationRows,classId),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
+ return {buffIds:normaliseBuffs(input.buffIds),teaThreshold:input.teaThreshold,rotationPreset,rotationRows:validateRotationRows(input.rotationRows,classId),keyInterval:input.keyInterval,variability:input.variability,variabilityMs:input.variabilityMs};
 }

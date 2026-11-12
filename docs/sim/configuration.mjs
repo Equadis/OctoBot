@@ -1,4 +1,5 @@
-import { BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261111-classes1';
+import {selectBuff,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats1';
+import { BUFF_OPTIONS, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-stats1';
 import { attachTooltip } from './tooltip.mjs?v=20261111-classes1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -17,8 +18,8 @@ export function configuration({getBuild,onChange}){
   const heading=node(group.collapsed?'summary':'div',undefined,'buff-group-heading');heading.append(node('h3',group.name));
   const actions=node('div',undefined,'buff-actions');
   const setGroup=enabled=>{
-   const selected=new Set(getBuild().controls.buffIds);
-   for(const option of group.options){if(enabled && (!option.classes || option.classes.includes(getBuild().classId)))selected.add(option.id);else selected.delete(option.id);}
+   let selected=[...getBuild().controls.buffIds];
+   for(const option of group.options){if(enabled && (!option.classes || option.classes.includes(getBuild().classId)))selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);}
    update({buffIds:[...selected]});renderChecks();
   };
   if(group.all)actions.append(button('Select All',()=>setGroup(true),`Select all ${group.name}`));
@@ -30,9 +31,9 @@ export function configuration({getBuild,onChange}){
    input.disabled=Boolean(option.classes && !option.classes.includes(getBuild().classId));
    const name=node('span',option.name,'buff-name'),effect=node('span',option.effect,'buff-effect');label.append(input,name,effect);
    input.addEventListener('change',()=>{
-    const selected=new Set(getBuild().controls.buffIds);if(input.checked)selected.add(option.id);else selected.delete(option.id);update({buffIds:[...selected]});
+    let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
-   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?['Rogue only.']:[]),'Combat Gum reference value. Combat calculations are in development.']}));
+   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?['Rogue only.']:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']}));
    checkboxes.set(option.id,input);section.append(label);
    if(option.id==='tea'){
     const threshold=node('label',undefined,'tea-threshold');threshold.append(node('span','Use at <'));
