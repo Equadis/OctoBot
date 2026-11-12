@@ -1,5 +1,5 @@
 import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
-import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-audit1';
+import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261111-classes1';

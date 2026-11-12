@@ -10,7 +10,7 @@ import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacy
 import { itemPicker } from './item-picker.mjs?v=20261112-audit1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';
-import { configuration } from './configuration.mjs?v=20261112-audit1';
+import { configuration } from './configuration.mjs?v=20261112-consumes1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberClass, rememberedClass } from './core/interface.mjs?v=20261112-display1';
 
@@ -352,7 +352,10 @@ function wireControls() {
   }
   let levelTimer;
   $('character-level').addEventListener('input', () => { clearTimeout(levelTimer); levelTimer = setTimeout(() => $('character-level').dispatchEvent(new Event('change')), 300); });
-  $('new-build').addEventListener('click', () => applyBuild(newBuild(classId), 'New build started. Named saved builds are still available.'));
+  const resetAll=()=>applyBuild(newBuild(classId),'Build reset. Named saved builds are still available.');
+  $('new-build').addEventListener('click',resetAll);
+  $('reset-all').hidden=false;
+  $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
     try{$('save-name').value=build.name;$('save-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
     catch(error){feedback(error.message,true);}

@@ -36,7 +36,7 @@ test('consumable eligibility follows source class masks, resources and levels',(
  const mana=CONSUMABLE_BY_ID.get(13444),rage=CONSUMABLE_BY_ID.get(13442);assert.ok(mana.verified&&rage.verified);
  for(const cls of CLASS_DEFINITIONS){assert.equal(Boolean(consumableRestriction(mana,newBuild(cls.id))),['warrior','rogue'].includes(cls.id));assert.equal(Boolean(consumableRestriction(rage,newBuild(cls.id))),!['warrior','druid'].includes(cls.id));}
  assert.ok(consumableRestriction(mana,{...newBuild('mage'),level:48}));assert.deepEqual(consumablePassiveStats(rage),{});
- assert.deepEqual(selectConsumable([13442],13444),[13444]);
+ assert.deepEqual(selectConsumable([13442],13444),[13442,13444]);
 });
 test('new and shared flasks cannot be stacked through imports or controls',()=>{
  const build=newBuild('mage');build.controls.buffIds=['supreme-power'];build.controls.consumableIds=[13511];assert.throws(()=>validateBuild(build,data('mage')),/conflicts/);assert.deepEqual(resolveConsumableSelection(build.controls).buffIds,[]);

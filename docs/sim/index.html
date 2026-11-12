@@ -7,16 +7,16 @@
   <title>OctoBot · WIP --- GEAR PLANNER / DPS SIM</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261112-display2">
-  <script type="module" src="planner.mjs?v=20261112-display1"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261112-consumes1">
+  <script type="module" src="planner.mjs?v=20261112-consumes1"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
 <main>
   <header class="site-header"><div class="site-identity"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>WIP --- GEAR PLANNER / DPS SIM</h1></div></div><div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
-  <nav class="page-nav" aria-label="Dashboard pages">
+  <div class="planner-topbar"><nav class="page-nav" aria-label="Dashboard pages">
     <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">WIP --- GEAR PLANNER / DPS SIM</a>
-  </nav>
+  </nav><button id="reset-all" type="button" hidden>Reset all</button></div>
   <section id="class-selection" aria-labelledby="classes-title">
     <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
     <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>

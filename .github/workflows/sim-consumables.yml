@@ -1,0 +1,67 @@
+name: Verify official simulator consumable tooltips
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sim-consumables.yml'
+      - 'tools/sim/import-consumables.py'
+permissions:
+  contents: read
+concurrency:
+  group: sim-consumable-audit
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resume official tooltips with bounded source requests
+        id: import
+        continue-on-error: true
+        run: python tools/sim/import-consumables.py --workers 3
+      - name: Preserve verified results and refresh stacking coverage
+        if: always()
+        run: |
+          cp docs/sim/data/consumables/catalogue.json /tmp/imported-consumables.json
+          cp docs/sim/data/consumables/manifest.json /tmp/consumable-import-manifest.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python tools/sim/merge-consumables.py /tmp/imported-consumables.json
+            node tools/sim/audit-consumables.mjs
+            node --test tests/sim/*.test.mjs
+            git add docs/sim/core/consumable-data.mjs docs/sim/data/consumables/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Refresh official consumable tooltips and stacking coverage'
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consumable-source-audit
+          path: |
+            /tmp/imported-consumables.json
+            /tmp/consumable-import-manifest.json
+      - name: Report unresolved source coverage
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('docs/sim/data/consumables/manifest.json'))
+          if not data['complete']:
+              raise SystemExit(f"Incomplete tooltip coverage: {data['verifiedCount']}/{data['listingCount']}")
+          PY

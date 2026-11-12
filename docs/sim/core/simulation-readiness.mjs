@@ -1,6 +1,6 @@
 import {validateBuild} from './builds.mjs?v=20261112-audit1';
 import {equipmentErrors} from './items.mjs?v=20261112-audit1';
-import {consumableEngineErrors} from './consumables.mjs?v=20261112-audit1';
+import {consumableEngineErrors} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */

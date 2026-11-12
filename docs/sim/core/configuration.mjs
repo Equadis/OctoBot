@@ -1,4 +1,4 @@
-import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261112-audit1';
+import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261112-consumes1';
 import {classDefinition} from './classes.mjs?v=20261112-audit1';
 import {normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import { CLASS_ROTATIONS } from './class-rotations.mjs?v=20261111-classes1';

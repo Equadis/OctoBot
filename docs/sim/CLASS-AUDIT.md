@@ -56,3 +56,21 @@ Run `node --test tests/sim/*.test.mjs` and `python -m unittest discover -s tests
 Regression coverage exercises every class/race pair; every class's talent shortcuts against the complete validator; insufficient points; mixed prerequisite/tier retention; unavailable engines; mana/rage restrictions; legacy repair; missing equipment metadata; ammo matching; cross-list flask conflicts; and selected passive facts. Existing build, item, target, rotation and character-sheet fixtures remain required.
 
 Interactive browser QA was unavailable in the editing session. CSS and event handlers were inspected, but mouse/keyboard focus appearance and every visual breakpoint require a browser pass. Full class engine implementation, full consumable source coverage and independent OctoWoW combat validation remain outstanding acceptance criteria.
+
+## Consumable follow-up — 12 November 2026
+
+The Class Consumables list now has Clear All, retains alphabetical order after selections, and exposes all filtered results rather than silently limiting them to the first 60. Reset all shares the existing current-class reset action and preserves the named build library.
+
+The source refresh checkpoint contains 165 verified tooltips out of 1,302 listings. `data/consumables/stacking-audit.json` records coverage for every listing. `Verify official simulator consumable tooltips` resumes the remaining public source requests in GitHub Actions, with at most three workers, source-challenge stopping, and verified-record merging that preserves concurrent changes. It is triggered by importer changes or manual dispatch, not a recurring schedule. Completing tooltip coverage does not complete server stacking verification.
+
+Confirmed official tooltip rules:
+
+- [Item 13510](https://octowow.st/db/?item=13510), [13511](https://octowow.st/db/?item=13511), [13512](https://octowow.st/db/?item=13512), [13513](https://octowow.st/db/?item=13513) and [13506](https://octowow.st/db/?item=13506) explicitly limit the player to one flask effect. This is direct item evidence, not inferred from the word flask.
+- [Item 20079](https://octowow.st/db/?item=20079), [20080](https://octowow.st/db/?item=20080) and [20081](https://octowow.st/db/?item=20081) explicitly limit the player to one Zanza effect. Selection and imported controls now enforce this symmetrically.
+- Identical source spell IDs are deduplicated as one configured effect, including alternate faction/combat versions of the same item.
+
+A shared cooldown does **not** establish aura exclusivity. The previous single-potion selection group incorrectly prevented different potion effects being planned together; it has been removed. Existing cooldown fields remain unresolved and cannot be used as proof of effect stacking. Source recipes accidentally included in the database's consumable listing are excluded from combat selections.
+
+[The published effect for spell 17538](https://octowow.st/db/?spell=17538) exposes aura types and duration, but not server aura-exclusivity groups. [DopingControl's source notes](https://octowow.st/git/ShempError/DopingControl/src/branch/main/data/consumables.lua) explicitly rely on community Turtle rules and document unverified cases and simplifications. Its disagreements with the tested Combat Gum baseline are not treated as confirmed OctoWoW changes. No community implementation code was copied.
+
+Only the eight explicit item exclusivity statements above are marked verified in the stacking report. Existing replacement groups are labelled reference rules; other interactions are labelled unresolved. Unknown does not mean confirmed stackable. Complete server-specific stacking validation still requires authoritative aura-group rules or reproducible in-game evidence. No DPS engine or cooldown model has been introduced by this change.

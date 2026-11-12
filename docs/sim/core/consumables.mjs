@@ -1,4 +1,4 @@
-import {CONSUMABLE_DATA} from './consumable-data.mjs?v=20261112-audit1';
+import {CONSUMABLE_DATA} from './consumable-data.mjs?v=20261112-consumes1';
 import {classDefinition} from './classes.mjs?v=20261112-audit1';
 import {isManaClass,validRace,RACE_MASKS,CLASS_RESOURCES} from './class-rules.mjs?v=20261112-audit1';
 const canonical=name=>name.toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]/g,'');
@@ -21,6 +21,7 @@ export function consumableRestriction(item,build){
  if(item.raceMask!==-1&&!(item.raceMask&RACE_MASKS[build.race]))return 'This consumable is restricted to another race.';
  if(item.requiredLevel>build.level)return `Requires level ${item.requiredLevel}.`;
  if(!item.effects.length)return 'No verified usable effect.';
+ if(/^(?:Plans|Recipe|Pattern|Schematic|Formula|Design|Manual):/i.test(item.name)||/teaches you how to|learn how to (?:make|create)/i.test(item.effects.join(' ')))return 'Crafting recipes are not combat consumables.';
  if(item.resource==='mana'&&!isManaClass(build.classId)&&!/restores?[^.]*mana and health|health and mana/i.test(item.effects.join(' ')))return 'Requires a Mana-using class.';
  if(item.resource==='rage'&&!['warrior','druid'].includes(build.classId))return 'Requires Rage.';
  if(item.resource==='energy'&&!['rogue','druid'].includes(build.classId))return 'Requires Energy.';
@@ -32,9 +33,8 @@ export function consumableRestriction(item,build){
  return null;
 }
 export function consumableGroup(item){
- if(item.sharedCooldown)return item.sharedCooldown;
+ const explicit=explicitStacking(item);if(explicit.group)return explicit.group;
  if(item.category==='Flask')return 'flask';
- if(/Dreamless Sleep/i.test(item.name))return 'potion';
  if(item.category==='Food & Utility'&&/well fed/i.test((item.effects||[]).join(' ')))return 'food';
  if(/(?:Agility|Mongoose)/i.test(item.name))return 'agility-elixir';
  if(/(?:Giants|Strength)/i.test(item.name))return 'strength-elixir';
@@ -43,7 +43,7 @@ export function consumableGroup(item){
 }
 export function selectConsumable(ids,id){
  const item=CONSUMABLE_BY_ID.get(id);if(!item)throw new Error('Unknown consumable.');
- const group=consumableGroup(item);return [...ids.filter(other=>other!==id&&(!group||consumableGroup(CONSUMABLE_BY_ID.get(other)||{})!==group)),id];
+ return [...ids.filter(other=>!consumablesConflict(item,CONSUMABLE_BY_ID.get(other))),id];
 }
 export function validateConsumables(ids,build){
  if(ids===undefined)return [];
@@ -71,10 +71,33 @@ export function consumablePassiveStats(item){
 // cooldown. Displaying an item is not counted as simulation support.
 export function consumableEngineErrors(build,supportedIds=[]){return (build.controls.consumableIds||[]).flatMap(id=>{const item=CONSUMABLE_BY_ID.get(id);return [...(!supportedIds.includes(id)?[`Consumable ${id} is not implemented by the combat engine.`]:[]),...(item?.sharedCooldown&&!item.cooldownVerified?[`Consumable ${id}: server cooldown is unresolved.`]:[])];});}
 
-const LEGACY_GROUPS={potion:['quickness'],'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
+const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
 export function resolveConsumableSelection(controls,prefer='consumables'){
  let buffIds=[...controls.buffIds],consumableIds=[...(controls.consumableIds||[])];
  for(const id of consumableIds){const group=consumableGroup(CONSUMABLE_BY_ID.get(id)||{}),old=LEGACY_GROUPS[group]||[];if(!old.some(id=>buffIds.includes(id)))continue;if(prefer==='consumables')buffIds=buffIds.filter(id=>!old.includes(id));else consumableIds=consumableIds.filter(other=>other!==id);}
  return {...controls,buffIds,consumableIds};
 }
 export function crossConsumableErrors(controls){const next=resolveConsumableSelection(controls);return next.buffIds.length===controls.buffIds.length?[]:['A consumable conflicts with a selected shared buff.'];}
+
+// Published item text is evidence of exclusivity; shared cooldowns and similar
+// stat names alone are not. Unlisted interactions remain explicitly unresolved.
+export function explicitStacking(item){
+ const text=(item.effects||[]).join(' ');
+ if(/(?:only have the effect of one Zanza potion at a time|Only one type of Zanza potion may be active)/i.test(text))return {group:'zanza',status:'verified-tooltip',source:item.source};
+ if(/only have the effect of one flask at a time/i.test(text))return {group:'flask',status:'verified-tooltip',source:item.source};
+ return {group:null,status:'unresolved',source:item.source};
+}
+export function consumablesConflict(a,b){
+ if(!a||!b)return false;if(a.id===b.id)return true;
+ const group=consumableGroup(a);if(group&&group===consumableGroup(b))return true;
+ // Two items applying the identical source spell represent one selected effect.
+ return Boolean(a.verified&&b.verified&&a.spellIds?.some(id=>b.spellIds?.includes(id)));
+}
+export function stackingNote(item){
+ const fact=explicitStacking(item);
+ if(fact.group)return `Stacking: only one ${fact.group} effect, confirmed by the official item tooltip.`;
+ if(consumableGroup(item))return 'Stacking: reference replacement group; OctoWoW-specific behaviour is not independently verified.';
+ return 'Stacking: OctoWoW-specific interactions are unresolved. A shared cooldown alone does not mean mutually exclusive buffs.';
+}
+// Fixed display order must not depend on current selection.
+export function orderConsumables(items){return [...items].sort((a,b)=>a.name.localeCompare(b.name)||a.id-b.id);}
