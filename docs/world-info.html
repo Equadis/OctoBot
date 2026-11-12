@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
+<title>OctoBot · WIP --- World Info</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="site-theme.css?v=20261111-theme1">
+<link rel="stylesheet" href="world-info.css?v=20261112-mvp1">
+<script src="world-info.js?v=20261112-mvp1" defer></script>
+<script src="viewer-presence.js?v=20261111-theme1" defer></script>
+</head>
+<body><main>
+<header class="site-header">
+  <div class="site-identity"><img class="site-logo" src="favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>WIP --- World Info</h1></div></div>
+  <div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div>
+</header>
+<nav class="page-nav" aria-label="Dashboard pages">
+  <a href="./#server=all">Population</a>
+  <a href="status.html">Server Status</a>
+  <a href="world-info.html" aria-current="page">WIP --- World Info</a>
+  <a href="sim/">WIP --- GEAR PLANNER / DPS SIM</a>
+</nav>
+<div class="world-intro">
+  <p class="muted">N'Zoth world events · Live observations where available, estimates clearly labelled.</p>
+  <span class="source-label" id="source-status" role="status" aria-live="polite">Connecting to OctoMetrics…</span>
+</div>
+
+<section aria-labelledby="raids-heading">
+  <div class="section-title"><h2 id="raids-heading">Raid Activity</h2><span class="muted">Updated from in-game /who observations</span></div>
+  <div class="world-grid two">
+    <article class="world-panel" aria-labelledby="ony-heading">
+      <div class="panel-heading"><div><span class="eyebrow">ONY RAID</span><h3 id="ony-heading">Onyxia's Lair</h3></div><span class="state-tag" id="ony-state">AWAITING DATA</span></div>
+      <div class="hero-stat"><strong id="ony-count">NO DATA</strong><span id="ony-count-label">Raid(s) in progress</span></div>
+      <div class="mini-divider"></div>
+      <div class="field-header"><span>Raid(s) in progress</span><span class="field-hint">Elapsed time</span></div>
+      <div class="timer-list" id="ony-active"><p class="empty">No confirmed raid sessions yet.</p></div>
+      <div class="bottom-line"><span>Last raid finished</span><strong class="mono" id="ony-finished">NO DATA</strong></div>
+      <p class="evidence" id="ony-evidence">Waiting for an in-game raid observation.</p>
+    </article>
+
+    <article class="world-panel" aria-labelledby="bwl-heading">
+      <div class="panel-heading"><div><span class="eyebrow">BWL RAID</span><h3 id="bwl-heading">Blackwing Lair</h3></div><span class="state-tag" id="bwl-state">AWAITING DATA</span></div>
+      <div class="hero-stat"><strong id="bwl-count">NO DATA</strong><span id="bwl-count-label">Raid(s) in progress</span></div>
+      <div class="mini-divider"></div>
+      <div class="field-header"><span>Raid(s) in progress</span><span class="field-hint">Elapsed time</span></div>
+      <div class="timer-list" id="bwl-active"><p class="empty">No confirmed raid sessions yet.</p></div>
+      <div class="bottom-line"><span>Last raid finished</span><strong class="mono" id="bwl-finished">NO DATA</strong></div>
+      <p class="evidence" id="bwl-evidence">Waiting for an in-game raid observation.</p>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="buff-heading">
+  <div class="section-title"><h2 id="buff-heading">Rallying Cry of the Dragonslayer</h2><span class="muted">Onyxia and Nefarian head drops share this buff</span></div>
+  <div class="world-grid two">
+    <article class="world-panel" aria-labelledby="alliance-heading">
+      <div class="panel-heading"><h3 id="alliance-heading">Alliance · Stormwind</h3><span class="state-tag" id="alliance-state">AWAITING DATA</span></div>
+      <div class="buff-grid">
+        <div><span class="field-label">Buff drop estimated in</span><strong class="clock mono" id="alliance-estimate">NO DATA</strong><small id="alliance-estimate-note">No reliable prediction available</small></div>
+        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="alliance-last">NO DATA</strong><small id="alliance-last-note">No confirmed announcement received</small></div>
+      </div>
+    </article>
+    <article class="world-panel" aria-labelledby="horde-heading">
+      <div class="panel-heading"><h3 id="horde-heading">Horde · Orgrimmar</h3><span class="state-tag" id="horde-state">AWAITING DATA</span></div>
+      <div class="buff-grid">
+        <div><span class="field-label">Buff drop estimated in</span><strong class="clock mono" id="horde-estimate">NO DATA</strong><small id="horde-estimate-note">No reliable prediction available</small></div>
+        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="horde-last">NO DATA</strong><small id="horde-last-note">No confirmed announcement received</small></div>
+      </div>
+    </article>
+  </div>
+  <p class="disclaimer">A raid finishing does not confirm that a head was turned in. Buff estimates will only appear once supported by recorded raid/drop data.</p>
+</section>
+
+<div class="world-grid two bottom-grid">
+  <section class="world-panel" aria-labelledby="dmf-heading">
+    <div class="panel-heading"><div><span class="eyebrow">DARKMOON FAIRE</span><h2 id="dmf-heading">DMF Location</h2></div><span class="state-tag" id="dmf-state">AWAITING DATA</span></div>
+    <div class="dmf-location"><strong id="dmf-location">MIA</strong><div><span id="dmf-description">No verified location available</span><small id="dmf-observed">NPC / addon sighting integration pending</small></div></div>
+    <div class="location-key"><span><strong>SW</strong> Elwynn Forest</span><span><strong>TB</strong> Mulgore</span><span><strong>MIA</strong> Unconfirmed</span></div>
+  </section>
+  <section class="world-panel" aria-labelledby="eom-heading">
+    <div class="panel-heading"><div><span class="eyebrow">ZUL'GURUB</span><h2 id="eom-heading">Edge of Madness</h2></div><span class="state-tag" id="eom-source">CLASSIC ERA</span></div>
+    <div class="boss-grid">
+      <div><span class="field-label">Current boss</span><strong class="boss-name" id="eom-current">LOADING</strong><small id="eom-current-until">Checking rotation…</small></div>
+      <div><span class="field-label">Next boss</span><strong class="boss-name" id="eom-next">—</strong><small id="eom-next-at">—</small></div>
+    </div>
+    <div class="bottom-line"><span>Next rotation in</span><strong class="mono" id="eom-countdown">—</strong></div>
+  </section>
+</div>
+
+<section class="world-panel calendar-panel" aria-labelledby="calendar-heading">
+  <div class="calendar-title"><div><h2 id="calendar-heading">Edge of Madness Calendar</h2><p class="muted">Classic Era / Pacific rotation · Not yet verified for OctoWoW</p></div><div class="calendar-controls"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="calendar-next" aria-label="Next month">›</button><button type="button" id="calendar-today">Today</button></div></div>
+  <div class="madness-calendar" id="madness-calendar" aria-label="Edge of Madness boss rotation calendar"></div>
+  <div class="rotation-key" id="rotation-key" aria-label="Boss colour key"></div>
+  <p class="source-note">Source: <a href="https://edgeofmadnesscalendar.com/era/calendar" target="_blank" rel="noopener noreferrer">Edge of Madness Calendar</a> · <a href="https://edgeofmadnesscalendar.com/api/era" target="_blank" rel="noopener noreferrer">Classic Era API</a>. The retail/Classic Era schedule may not match OctoWoW. Verify against the tablets in Zul'Gurub.</p>
+</section>
+
+<footer><span>Timers are shown in UTC · Data is not guaranteed complete</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community world tracker</span></footer>
+<noscript><p class="disclaimer">Enable JavaScript to display live world information and the calendar.</p></noscript>
+</main></body></html>
