@@ -154,10 +154,10 @@ const worker={
     const since=Number(url.searchParams.get('since')||'0');
     if(!Number.isSafeInteger(since)||since<0)return json({error:'invalid_since'},400);
     const {results}=await env.DB.prepare(
-     'SELECT timestamp_ms,online FROM readings WHERE realm=? AND timestamp_ms>? ORDER BY timestamp_ms ASC LIMIT ?'
+     "SELECT timestamp_ms,online,source FROM readings WHERE realm=? AND timestamp_ms>? AND NOT (realm='nzoth' AND source='official census') ORDER BY timestamp_ms ASC LIMIT ?"
     ).bind(realm,since,MAX_PAGE+1).all();
     const all=results||[],has_more=all.length>MAX_PAGE,rows=all.slice(0,MAX_PAGE);
-    return json({realm,readings:rows.map(r=>({timestamp:new Date(r.timestamp_ms).toISOString(),online:r.online})),has_more});
+    return json({realm,readings:rows.map(r=>({timestamp:new Date(r.timestamp_ms).toISOString(),online:r.online,source:r.source})),has_more});
    }
    if(url.pathname==='/api/health'){
     const row=await env.DB.prepare('SELECT MAX(timestamp_ms) AS last FROM readings').first();
