@@ -295,13 +295,6 @@ function updateSkills(){
 }
 
 function wireControls() {
-  document.querySelectorAll('.section-links a').forEach(link => link.addEventListener('click', () => {
-    document.querySelectorAll('.section-links a').forEach(other => {
-      other.classList.toggle('active', other === link);
-      if (other === link) other.setAttribute('aria-current', 'location');
-      else other.removeAttribute('aria-current');
-    });
-  }));
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
   picker = itemPicker({
     getBuild: () => ({...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,item])=>[slot,{...item,twoHanded:picker?.lookup(item.id)?.slot===17,subclass:picker?.lookup(item.id)?.subclass}]))}),

@@ -87,3 +87,23 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .paperdoll{grid-template-columns:minmax(0,1fr) minmax(153px,1.18fr) minmax(0,1fr)}
 @media(max-width:560px){.planner-view .paperdoll{gap:5px;grid-template-columns:minmax(0,1fr) minmax(147px,1.2fr) minmax(0,1fr)}.planner-view .character-summary{padding:9px 5px}.planner-view .gear-stat,.planner-view .gear-stat>strong{font-size:8px}}
 .planner-view .gear-stat{padding:0;border:0;margin:0}
+
+/* Character, talents/controls and buffs share three desktop columns. */
+.planner-view .planner-grid{grid-template-columns:minmax(340px,.9fr) minmax(560px,1.5fr) minmax(280px,.85fr);width:min(1740px,calc(100vw - 210px));margin-left:calc((100% - min(1740px,100vw - 210px))/2 + 65px);gap:18px;align-items:start}
+.planner-view .buffs-column{min-width:0}
+.class-card-title strong{font-size:24px;line-height:1.2}
+.class-card-title{width:100%}
+.class-card-copy{flex:1;min-width:0}
+@media(max-width:1499px){
+ .planner-view .toolbar{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+ .planner-view .toolbar .actions{position:static;transform:none;flex-direction:row;width:auto;flex-wrap:wrap;align-items:center;order:-1}
+ .planner-view .toolbar .actions button,.planner-view .toolbar .actions>a{width:auto;min-height:30px;padding:7px 11px}
+ .planner-view .rail-brand{display:none}
+ .planner-view .planner-grid{width:calc(100vw - 64px);margin-left:calc((100% - (100vw - 64px))/2)}
+}
+@media(max-width:1279px){
+ .planner-view .planner-grid{grid-template-columns:minmax(0,1fr);width:100%;margin-left:0;max-width:900px;margin-right:auto;margin-left:auto}
+ .planner-view .planner-column{display:contents}
+ .planner-view #equipment{order:0}.planner-view #talents{order:1}.planner-view #buffs{order:2}.planner-view #rotation{order:3}.planner-view #build-settings{order:4}.planner-view #simulation{order:5}.planner-view #combat-log{order:6}
+}
+@media(max-width:780px){.class-card-title strong{font-size:22px}}
