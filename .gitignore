@@ -9,3 +9,5 @@ data/*.db-shm
 data/*.db-wal
 
 .consumable-cache/
+
+.rotation-source-cache/

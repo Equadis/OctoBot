@@ -1,10 +1,10 @@
 import {resolveConsumableSelection,CONSUMABLE_BY_ID,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {validRace,slotAllowed,CLASS_RACES} from './class-rules.mjs?v=20261112-audit1';
-import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261111-classes1';
+import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261112-rotations1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261112-audit1';
 import { validEnchant } from './equipment-options.mjs?v=20261111-classes1';
 import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
-import { defaultControls, validateControls, BUFF_OPTIONS, buffRestriction } from './configuration.mjs?v=20261112-consumes1';
+import { defaultControls, validateControls, BUFF_OPTIONS, buffRestriction } from './configuration.mjs?v=20261112-rotations1';
 import { validateTalents } from './talents.mjs?v=20261112-audit1';
 
 export const SLOTS = Object.freeze({

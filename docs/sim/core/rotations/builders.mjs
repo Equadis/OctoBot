@@ -1,0 +1,14 @@
+export const C=(metric,operator,value,aura='')=>({metric,operator,value,aura});
+export const yes=(metric,aura='')=>C(metric,'=',1,aura),no=(metric,aura='')=>C(metric,'=',0,aura);
+export const A=(ability,...conditions)=>({ability,conditions:[yes('cooldownReady',ability),...conditions]});
+export const raw=(ability,...conditions)=>({ability,conditions});
+export const buff=(ability,aura=ability,seconds=1)=>A(ability,C('buffRemaining','<=',seconds,aura));
+export const dot=(ability,seconds=0,lifetime=9)=>A(ability,C('ownDebuffRemaining','<=',seconds,ability),C('targetTimeToDie','>=',lifetime));
+export const cycle=(ability,lifetime=12)=>({...dot(ability,0,lifetime),target:'cycle'});
+export const heal=(ability,health=70,...conditions)=>({...A(ability,C('allyHealth','<=',health),...conditions),target:'ally'});
+export const execute=()=>A('Execute',C('targetHealth','<=',20));
+export const dump=(ability,rage=70)=>A(ability,C('rage','>=',rage));
+export const weave=(ability,ranged=false)=>A(ability,yes(ranged?'safeRangedWindow':'safeSwingWindow',ability));
+export const petAttack=()=>raw('Pet Attack',yes('petAlive'),no('petEngaged'));
+export const autoShot=()=>raw('Auto Shot',no('autoShotActive'));
+export const P=(id,name,description,rows,requirements={},role='dps')=>({id,name,description,rows,requirements,role});

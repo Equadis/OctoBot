@@ -110,3 +110,7 @@ The attack table is an independently represented Combat Gum display baseline,
 including its miss/skill, dodge/skill and glancing display conventions. Agreement
 with that UI does not establish agreement with the OctoWoW server. Run Simulation
 remains unavailable until a verified combat engine exists.
+
+## Expanded rotation configuration
+
+See [the rotation catalogue and engine support contract](ROTATIONS.md) for all 125 built-in priorities, source evidence, compatibility checks, legacy save handling and unresolved OctoWoW mechanics. These are configuration templates; combat execution remains unavailable.

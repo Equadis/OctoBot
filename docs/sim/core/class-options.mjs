@@ -7,12 +7,12 @@ export const CLASS_OPTIONS=Object.freeze({
  warrior:[choice('stance','Stance',['Battle','Berserker','Defensive']),number('startingRage','Starting Rage',0,0,100)],
  rogue:[choice('mhPoison','MH Poison',poison),choice('ohPoison','OH Poison',poison),number('startingEnergy','Starting Energy',100,0,100),number('comboPoints','Starting Combo Points',0,0,5)],
  paladin:[choice('seal','Seal',['None','Seal of Command','Seal of Righteousness','Seal of the Crusader','Seal of Wisdom','Seal of Light']),choice('aura','Aura',['None','Retribution Aura','Sanctity Aura','Devotion Aura']),mana()],
- druid:[choice('form','Form',['Humanoid','Moonkin','Cat','Bear']),mana(),number('startingEnergy','Starting Energy',100,0,100),number('startingRage','Starting Rage',0,0,100)],
+ druid:[choice('form','Form',['Humanoid','Moonkin','Cat','Bear']),choice('catBuilder','Cat Builder',['Shred','Claw']),mana(),number('startingEnergy','Starting Energy',100,0,100),number('startingRage','Starting Rage',0,0,100)],
  shaman:[choice('mhImbue','Weapon Imbue',['None','Windfury Weapon','Flametongue Weapon','Rockbiter Weapon','Frostbrand Weapon']),mana()],
- hunter:[choice('aspect','Aspect',['None','Aspect of the Hawk','Aspect of the Monkey','Aspect of the Wild']),choice('pet','Pet',['None','Cat','Wolf','Wind Serpent','Raptor','Boar','Bear']),number('petLevel','Pet Level',60,1,60),mana()],
+ hunter:[choice('aspect','Aspect',['None','Aspect of the Hawk','Aspect of the Monkey','Aspect of the Wild','Aspect of the Wolf']),choice('pet','Pet',['None','Cat','Wolf','Wind Serpent','Raptor','Boar','Bear']),number('petLevel','Pet Level',60,1,60),mana()],
  mage:[choice('armour','Armour',['None','Mage Armor','Ice Armor','Frost Armor']),mana()],
- warlock:[choice('pet','Demon',['None','Imp','Voidwalker','Succubus','Felhunter']),mana(),number('soulShards','Soul Shards',10,0,100)],
- priest:[choice('form','Form',['Humanoid','Shadowform']),mana()],
+ warlock:[choice('pet','Demon',['None','Imp','Voidwalker','Succubus','Felhunter','Felguard','Doomguard']),choice('curse','Assigned Curse',['Curse of Agony','Curse of the Elements','Curse of Shadow','Curse of Recklessness','None']),mana(),number('soulShards','Soul Shards',10,0,100)],
+ priest:[choice('form','Form',['Humanoid','Shadowform']),choice('useVampiricEmbrace','Vampiric Embrace',['Off','On']),mana()],
 });
 export function defaultClassOptions(classId){return Object.fromEntries(CLASS_OPTIONS[classId].map(option=>[option.key,option.value]));}
 export function validateClassOptions(input,classId){

@@ -1,0 +1,69 @@
+{
+  "warrior": [
+    "arms-twohand",
+    "fury-dual",
+    "fury-twohand",
+    "protection-shield",
+    "custom"
+  ],
+  "rogue": [
+    "assassination-noxious-rupture",
+    "assassination-noxious",
+    "assassination-noxious-expose-rupture",
+    "assassination-noxious-expose",
+    "combat-spam",
+    "combat-sinister-ar-rupture",
+    "combat-sinister-ar",
+    "combat-sinister-envenom-rupture",
+    "combat-sinister-envenom",
+    "combat-backstab-ar-rupture",
+    "combat-backstab-ar",
+    "combat-backstab-envenom-rupture",
+    "combat-backstab-envenom",
+    "subtlety-hemorrhage-expose",
+    "subtlety-hemorrhage",
+    "custom"
+  ],
+  "paladin": [
+    "retribution",
+    "holy-shock",
+    "protection",
+    "custom"
+  ],
+  "druid": [
+    "balance",
+    "feral-cat",
+    "feral-bear",
+    "custom"
+  ],
+  "shaman": [
+    "elemental",
+    "enhancement",
+    "restoration-damage",
+    "custom"
+  ],
+  "hunter": [
+    "beast-mastery",
+    "marksmanship",
+    "survival",
+    "custom"
+  ],
+  "mage": [
+    "arcane",
+    "fire",
+    "frost",
+    "custom"
+  ],
+  "warlock": [
+    "affliction",
+    "demonology",
+    "destruction",
+    "custom"
+  ],
+  "priest": [
+    "discipline",
+    "holy",
+    "shadow",
+    "custom"
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "warrior": [
+    "Arms | Two-Handed (Slam Weave)",
+    "Arms | Two-Handed (No Slam)",
+    "Arms | Sweeping Strikes (Cleave)",
+    "Fury | Dual Wield (Execute Focus)",
+    "Fury | Two-Handed (Swing-Timed Slam)",
+    "Fury | Two-Handed (No Slam)",
+    "Fury | Lawnmower (Sweeping Strikes)",
+    "Fury | Dual Wield (Tank Threat)",
+    "Protection | Shield (AoE Threat)"
+  ],
+  "rogue": [
+    "Assassination | Noxious Assault (Cold Blood)",
+    "Assassination | Noxious Assault Expose Armour (Cold Blood)",
+    "Combat | Sinister Strike Envenom (Expose Armour)",
+    "Combat | Backstab Envenom (Expose Armour)",
+    "Combat | Sinister Strike AR (Expose Armour)",
+    "Combat | Backstab AR (Expose Armour)",
+    "Combat | Blade Flurry (Cleave)",
+    "Subtlety | Hemorrhage (Mark for Death)",
+    "Subtlety | Hemorrhage (Shadow of Death Burst)"
+  ],
+  "paladin": [
+    "Retribution | Seal of Righteousness",
+    "Retribution | Seal of Command",
+    "Retribution | Zeal / Holy Might",
+    "Retribution | Judgement Weave",
+    "Retribution | Consecration (AoE)",
+    "Protection | Holy Shield (Single Target)",
+    "Protection | Consecration (AoE)",
+    "Holy | Holy Strike / Holy Shock (Healing)",
+    "Holy | Flash of Light / Holy Light (Healing)"
+  ],
+  "hunter": [
+    "Beast Mastery | Kill Command",
+    "Beast Mastery | Steady Shot Weave",
+    "Beast Mastery | Multi-Shot Cleave",
+    "Marksmanship | Aimed Shot / Steady Shot",
+    "Marksmanship | Steady Shot Weave (No Aimed)",
+    "Marksmanship | Lock and Load",
+    "Marksmanship | Multi-Shot Cleave",
+    "Survival | Melee (Raptor Strike)",
+    "Survival | Melee (Trap Weave)",
+    "Survival | Melee (Carve AoE)"
+  ],
+  "priest": [
+    "Discipline | Holy Fire / Smite",
+    "Discipline | Holy Fire / Smite (T3.5)",
+    "Holy | Flash Heal (Tank Healing)",
+    "Holy | Greater Heal (Raid Healing)",
+    "Holy | Holy Nova (AoE Healing)",
+    "Shadow | Pain / Mind Blast / Mind Flay",
+    "Shadow | Multi-DoT",
+    "Shadow | Fade Snapshot (T3.5)"
+  ],
+  "shaman": [
+    "Elemental | Flame Shock / Molten Blast",
+    "Elemental | Chain Lightning (Clearcasting)",
+    "Elemental | Earthquake (AoE)",
+    "Enhancement | Two-Handed Windfury",
+    "Enhancement | Spellhance (Flametongue)",
+    "Enhancement | Fire Totem Weave",
+    "Enhancement | Fire Nova Cleave",
+    "Warden | Shield Tank (Single Target)",
+    "Warden | Shield Tank (AoE)",
+    "Restoration | Chain Heal",
+    "Restoration | Healing Wave (Tank Healing)"
+  ],
+  "mage": [
+    "Arcane | Rupture / Missiles",
+    "Arcane | Arcane Power Burn",
+    "Arcane | Arcane Explosion (AoE)",
+    "Fire | Scorch / Fireball",
+    "Fire | Hot Streak / Pyroblast",
+    "Fire | Flamestrike (AoE)",
+    "Frost | Frostbolt / Flash Freeze",
+    "Frost | Icicles (Boss Rotation)",
+    "Frost | Blizzard (AoE)",
+    "Frost | Cone of Cold (AoE)"
+  ],
+  "warlock": [
+    "Affliction | Corruption / Drain Soul",
+    "Affliction | Dark Harvest",
+    "Affliction | Multi-DoT",
+    "Demonology | Pet / Shadow Bolt",
+    "Demonology | Felstorm (AoE)",
+    "Destruction | Shadow Bolt",
+    "Destruction | Fire (Immolate / Conflagrate)",
+    "Destruction | Fire (Searing Pain)",
+    "Destruction | Hellfire (AoE)"
+  ],
+  "druid": [
+    "Balance | Eclipse (Starfire / Wrath)",
+    "Balance | Starfire Focus",
+    "Balance | Wrath Focus",
+    "Balance | Hurricane (AoE)",
+    "Feral | Cat (Rip / Bite)",
+    "Feral | Cat (Powershift)",
+    "Feral | Bear (Single-Target Threat)",
+    "Feral | Bear (Swipe AoE)",
+    "Restoration | Regrowth / Rejuvenation (Healing)",
+    "Restoration | Swiftmend / HoT (Healing)"
+  ]
+}

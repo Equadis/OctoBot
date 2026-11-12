@@ -84,3 +84,30 @@ export type WorkerResponse =
   | { type: 'progress'; jobId: string; completed: number; total: number }
   | { type: 'complete'; jobId: string; iterations: IterationResult[] }
   | { type: 'error'; jobId: string; message: string };
+
+/** Planner rotation configuration. These contracts do not implement combat. */
+export type RotationRole = 'dps' | 'tank' | 'healing';
+export type RotationTarget = 'primary' | 'cycle' | 'ally' | 'self' | 'pet';
+export interface RotationCondition {
+  metric: string;
+  operator: '>=' | '<=' | '>' | '<' | '=';
+  value: number;
+  /** Legacy field, also the named subject of advanced predicates. */
+  aura: string;
+}
+export interface RotationRow {
+  ability: string;
+  abilityId?: string;
+  target?: RotationTarget;
+  conditions: RotationCondition[];
+}
+export interface RotationEngineCapabilities {
+  rulesetRevision: string;
+  supportedRoles: RotationRole[];
+  supportedOutputTypes: ('DPS' | 'TPS' | 'HPS')[];
+  supportedAbilityIds: string[];
+  verifiedAbilityIds: string[];
+  validatedPresetIds: string[];
+  supportedRotationMetrics: string[];
+  supportedRotationTargets: RotationTarget[];
+}

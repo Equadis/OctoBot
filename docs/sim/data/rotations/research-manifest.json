@@ -1,0 +1,260 @@
+{
+  "retrievedAt": "2026-11-12",
+  "knowledgeBaseRevision": "b88d4445d9fdb21beb31ea013eefd5a2540f4787",
+  "aegisRevision": "95e2fa99d37d416eb0493cdea9edbe29b94dbe05",
+  "note": "Research only. No third-party implementation code or game artwork copied. Sources disagree on several live mechanics.",
+  "files": [
+    {
+      "path": "guide/classes/druid/balance.md",
+      "sha256": "98834017883cdbf0c7683e3b700cfaae1a16a92998039f6930b8facf82ec2b99"
+    },
+    {
+      "path": "guide/classes/druid/feral-bear.md",
+      "sha256": "03caf46a1a8652102f431f372b445b39545836cb748bc22c9c1b0936f7985d71"
+    },
+    {
+      "path": "guide/classes/druid/feral-cat.md",
+      "sha256": "175e48375120a0730417f80c5e331e21f16c2f6525d3644aad25152741fb3fc8"
+    },
+    {
+      "path": "guide/classes/druid/restoration.md",
+      "sha256": "88e05ca7865f0288fea456c5d8b21c7df68086bb089c6af05cddef9deba93de6"
+    },
+    {
+      "path": "guide/classes/hunter/beast-mastery.md",
+      "sha256": "02837362f27286712fe426c52b867de5f0724f5be2abaa518ed3a65804093bec"
+    },
+    {
+      "path": "guide/classes/hunter/marksmanship.md",
+      "sha256": "9f034e016cb565bc68e218ffb5418fac1191261fd863150c2d53c8eae5a57fb2"
+    },
+    {
+      "path": "guide/classes/hunter/survival.md",
+      "sha256": "2d47398aa3c53ee7b53d37cd3b4c1eca5aaac356f60c9f1bcb0ccfda9a2b612d"
+    },
+    {
+      "path": "guide/classes/mage/arcane.md",
+      "sha256": "60203f6b06c90f291b99319d18291845a219e272a6c623449c13285507b3d74a"
+    },
+    {
+      "path": "guide/classes/mage/fire.md",
+      "sha256": "d6937f76e278c9fb20d0163bd76d5c21841a16e67bbb31873c33f8a94be6798a"
+    },
+    {
+      "path": "guide/classes/mage/frost.md",
+      "sha256": "4430f4429ef614b15465abd83bb602d1dce0c8adec1d3778cfbac9533b9ba41f"
+    },
+    {
+      "path": "guide/classes/paladin/holy.md",
+      "sha256": "ba4cd4492e87914dcee6dd1815eeee2a2662992bb9c78b8369f7783c89981639"
+    },
+    {
+      "path": "guide/classes/paladin/protection.md",
+      "sha256": "e6de59c72702b571933e32537f6d2e39ace3a3e97641879b628814a3fb610ac4"
+    },
+    {
+      "path": "guide/classes/paladin/retribution.md",
+      "sha256": "45fa44946ec0972166d799b6b2be643abc8c950095e0277cb2ad82e05f427840"
+    },
+    {
+      "path": "guide/classes/priest/discipline.md",
+      "sha256": "2f2829762ece18a85cdb2fc691191b8570f62049091f376a3c76545c59808c31"
+    },
+    {
+      "path": "guide/classes/priest/holy.md",
+      "sha256": "85099cfd8b73e687a0150dc21e5b612137757a206bb5e3e4096152a80e87db4c"
+    },
+    {
+      "path": "guide/classes/priest/shadow.md",
+      "sha256": "12d2f0dbcb2c2d86a0d6e9c9fd6f3dc586fc7f90632624de1733d91a15737269"
+    },
+    {
+      "path": "guide/classes/rogue/assassination.md",
+      "sha256": "c566db68d2bbe61cc61f6f4973b174d7702fb88526df49da4c9f1443e4543fe9"
+    },
+    {
+      "path": "guide/classes/rogue/combat.md",
+      "sha256": "6a3806379104541cdfc1e10f713f5dc9117c8fa2670f7484920e3726255d2144"
+    },
+    {
+      "path": "guide/classes/rogue/subtlety.md",
+      "sha256": "8b754075acc465fb6e7c667a9b5b6f9e935a60126d8289adf7caf961e15f06d4"
+    },
+    {
+      "path": "guide/classes/rogue/tank.md",
+      "sha256": "6e568cb8ab65feecbee19fe5641cb7a2a55a83b01c61590677a14fd1806532c2"
+    },
+    {
+      "path": "guide/classes/shaman/elemental.md",
+      "sha256": "da9986e36bf67a3e127277c5509cc167bba2d6bd6a449a6b1feaba18322eaad5"
+    },
+    {
+      "path": "guide/classes/shaman/enhancement.md",
+      "sha256": "6424a396c4d985d7450797caf2a05aa84a92ebdc896d464dde6f29903c0bff70"
+    },
+    {
+      "path": "guide/classes/shaman/restoration.md",
+      "sha256": "6087c60fe59d8b3ba431401bbe61c59663bfc3805017601d50a197f87d2d98b5"
+    },
+    {
+      "path": "guide/classes/shaman/tank.md",
+      "sha256": "8e924cf876b5bec1c8e04b8dea19f64ee2597d5510863999e20123e61f27d252"
+    },
+    {
+      "path": "guide/classes/warlock/affliction.md",
+      "sha256": "f13445b1a42da7da7f184c57cf46f356765de25262662886ec69f5ab50e9fd03"
+    },
+    {
+      "path": "guide/classes/warlock/demonology.md",
+      "sha256": "957a69730aef68f2b6028cabb62d01e4d202ed897ddea2a3b365b936e9fd8ee2"
+    },
+    {
+      "path": "guide/classes/warlock/destruction.md",
+      "sha256": "1db1ad0b0c66d31d20a5cd78ef1f56293409dc6d271ca1ef1cad39e6fb332f3a"
+    },
+    {
+      "path": "guide/classes/warlock/warlock-tank.md",
+      "sha256": "27b169229a9f98c975ef48bfccdc2bcb45673ce54ec6917f7dfa6b7be33ddda7"
+    },
+    {
+      "path": "guide/classes/warrior/arms.md",
+      "sha256": "06197256c9c66e6799c6d74796563ce2f850cde446fd6804ce582ed0cbec118f"
+    },
+    {
+      "path": "guide/classes/warrior/fury.md",
+      "sha256": "8677884c82a9b8bbfad6ea9054bb2d5b56e5a04f313d35c9f56d58d982faf78b"
+    },
+    {
+      "path": "guide/classes/warrior/protection.md",
+      "sha256": "b59d1a9688e0509188d9a427e81ffcd51f52f50c8c666d93afafb47271237b89"
+    },
+    {
+      "path": "structured/classes/druid/balance-ranged-dps.yaml",
+      "sha256": "8e80b287370ed0f2e15141017ef5633834cee2a0c5f5c29f726fd2fa6d8ecc36"
+    },
+    {
+      "path": "structured/classes/druid/feral-melee-dps.yaml",
+      "sha256": "7b221199ef367f1be5d5603275341e5e6dc03ec994402e390b8af15af156b88f"
+    },
+    {
+      "path": "structured/classes/druid/feral-tank.yaml",
+      "sha256": "0c1de8af5ceb19b45f5d30e228b5ea899bff9869be2c44dfd5bd839f1e085569"
+    },
+    {
+      "path": "structured/classes/druid/restoration-healer.yaml",
+      "sha256": "438114471feac5a06000f283db70d3609207ae2751f2fd3a88e1d49c9dbafe3f"
+    },
+    {
+      "path": "structured/classes/hunter/beast-mastery-ranged-dps.yaml",
+      "sha256": "44dcf72005501eaa78c2c7ff67849342ddab5f56d13b46c650e6d297c71a83a4"
+    },
+    {
+      "path": "structured/classes/hunter/marksmanship-ranged-dps.yaml",
+      "sha256": "d7b6fbdb4451e996ff65d9142a52a5241fba48140a4e20a140c33b40a6826203"
+    },
+    {
+      "path": "structured/classes/hunter/survival-melee-dps.yaml",
+      "sha256": "cc7de524cd04408ec9a6f90bbf25b334a9f8112d65ba3678d79dd92fb6913fd5"
+    },
+    {
+      "path": "structured/classes/mage/arcane-ranged-dps.yaml",
+      "sha256": "2ef5cef34ae21ca4432859191d09cc21f0934a3f2579bfeb5ffbd42374a0d58e"
+    },
+    {
+      "path": "structured/classes/mage/fire-ranged-dps.yaml",
+      "sha256": "e4c2e2723285e23d16f35587675fb47b01476dcd9b3b0370c3566126b3a71a81"
+    },
+    {
+      "path": "structured/classes/mage/frost-ranged-dps.yaml",
+      "sha256": "86526ee2701366950c17a2c20a62c28d021d4f771e6e38fe859c3bdfab25f805"
+    },
+    {
+      "path": "structured/classes/paladin/holy-healer.yaml",
+      "sha256": "ee5fad31cb98016a6dc28bd69420e5be97018f3146162db74e429e7a7b3b3803"
+    },
+    {
+      "path": "structured/classes/paladin/protection-tank.yaml",
+      "sha256": "6fc3bed36c07ac35d8b77802a0a74eccd03864f136f06abb47127d577a753bed"
+    },
+    {
+      "path": "structured/classes/paladin/retribution-melee-dps.yaml",
+      "sha256": "245d2333930e9f063a984f6df49c52465c3b9908a26c60b720f6338dd6c48176"
+    },
+    {
+      "path": "structured/classes/priest/discipline-ranged-dps.yaml",
+      "sha256": "56124f2e248071c294b87f10eb0ba89d008b3dd6ecfdff2902bea853b2d87696"
+    },
+    {
+      "path": "structured/classes/priest/holy-healer.yaml",
+      "sha256": "c3dc31f476ac37ef463f9350407d39da20e231ca953cfd2dbd36985e317ac881"
+    },
+    {
+      "path": "structured/classes/priest/shadow-ranged-dps.yaml",
+      "sha256": "ef476c848e9a568e75356f64d0e7da4933148a9116bd9e1fff72c94a7043ba52"
+    },
+    {
+      "path": "structured/classes/rogue/assassination-melee-dps.yaml",
+      "sha256": "3d5df78431017c52c525dcda8dcb751fd81fee858c2dc5f4a312c6dc3e494fb4"
+    },
+    {
+      "path": "structured/classes/rogue/combat-melee-dps.yaml",
+      "sha256": "c6e1fde6438de83716b24fe779027bc65d150919ab50c06c024203b0476c5b75"
+    },
+    {
+      "path": "structured/classes/rogue/combat-tank.yaml",
+      "sha256": "c15560403476235d0def6846b545beeffd99fd98da5a5aba51e8a4ba74a2f046"
+    },
+    {
+      "path": "structured/classes/rogue/subtlety-melee-dps.yaml",
+      "sha256": "7dfc15f4a6409da825cfe491e4880c0a7873d27406dc24d787624c4140be2e84"
+    },
+    {
+      "path": "structured/classes/shaman/elemental-ranged-dps.yaml",
+      "sha256": "785177b241bf60d6f8baaff35234cfd3f88449a6acc4d9be23889ffea514c382"
+    },
+    {
+      "path": "structured/classes/shaman/enhancement-melee-dps.yaml",
+      "sha256": "c351762309f49eb2b4c2824e805df28391f22bdf329967f03495f2d372e82121"
+    },
+    {
+      "path": "structured/classes/shaman/enhancement-tank.yaml",
+      "sha256": "0156a49a2110f2cfd698460ecde3ba8537e4ed3709173d93ede8d26c24bc8f09"
+    },
+    {
+      "path": "structured/classes/shaman/restoration-healer.yaml",
+      "sha256": "5721ee81adf42b17495beb52495122b0fffb950aee7248bf3641f9afa5d0ec25"
+    },
+    {
+      "path": "structured/classes/warlock/affliction-ranged-dps.yaml",
+      "sha256": "47646f36ec3d89d5903a0b306ed885939ce9831e1237f72b82b7f6e3acb93ae4"
+    },
+    {
+      "path": "structured/classes/warlock/demonology-ranged-dps.yaml",
+      "sha256": "2291e84a8e9c1696339e86218a2be51af6733c08e9d4887cb3ba9762c461aec6"
+    },
+    {
+      "path": "structured/classes/warlock/destruction-fire-ranged-dps.yaml",
+      "sha256": "4e651250fea1fd1136bd598470b42964bea26f0f6453d96bb7564526977051ad"
+    },
+    {
+      "path": "structured/classes/warlock/destruction-shadow-ranged-dps.yaml",
+      "sha256": "e5ae543e3b0d371f2765c2549bc99adfbba8fdea5299b2a112c94f7bf9081219"
+    },
+    {
+      "path": "structured/classes/warrior/arms-melee-dps.yaml",
+      "sha256": "90d087ea835de793b337d26b0c9d54a5184e6f683696d9bc651ea217d315bec5"
+    },
+    {
+      "path": "structured/classes/warrior/fury-melee-dps.yaml",
+      "sha256": "93ab0b042744d8bdfeb006bd194afe7349a9ce897cbe0c36d8d5999fe859a4b7"
+    },
+    {
+      "path": "structured/classes/warrior/fury-tank.yaml",
+      "sha256": "0637aba4a97d95011978449d69867cd1374bced17e10c98f58e7d81aa1850808"
+    },
+    {
+      "path": "structured/classes/warrior/protection-tank.yaml",
+      "sha256": "157c46899267e9fd786abc1f9d7a2738a172f98bf09e291fe42b59251cf65d0c"
+    }
+  ]
+}

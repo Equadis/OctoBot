@@ -1,4 +1,5 @@
-import {validateBuild} from './builds.mjs?v=20261112-audit1';
+import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
+import {validateBuild} from './builds.mjs?v=20261112-rotations1';
 import {equipmentErrors} from './items.mjs?v=20261112-audit1';
 import {consumableEngineErrors} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
@@ -8,6 +9,7 @@ export function prepareSimulation(input,talents,{lookup=()=>null,engine=null}={}
  const build=validateBuild(input,talents),errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
  if(!BASE_STATS[`${build.race}:${build.classId}`]?.[build.level-1])errors.push('Base attributes for this race/class/level have not been verified.');
  if(!engine||engine.classId!==build.classId||!['implemented-unverified','validated'].includes(engine.status))errors.push(`The ${build.classId} combat engine is not implemented.`);
+ errors.push(...rotationEngineErrors(build,engine,{talents,lookup}));
  errors.push(...consumableEngineErrors(build,engine?.supportedConsumableIds||[]));
  if(engine&&!(engine.supportedRaces||[]).includes(build.race))errors.push('This engine has not implemented the selected race and its racial effects.');
  if(engine&&!(engine.supportedBuffIds||[]).every(id=>typeof id==='string'))errors.push('Invalid engine buff capabilities.');

@@ -170,3 +170,9 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view .card-heading>.panel-reset:hover{color:#ff9a93;text-decoration:underline}
 .planner-view .card-heading>.talent-count+.panel-reset{margin-left:12px}
 #clear-talents.panel-reset,#reset-gear.panel-reset{align-self:flex-start;min-height:0;padding:0}
+
+.rotation-status,.rotation-recommendation{font-size:11px;line-height:1.5;color:#9cafc7;margin:7px 0;overflow-wrap:anywhere}
+.rotation-status.incompatible{color:#efb078}
+.rotation-evidence{font-size:11px;color:#9cafc7;margin:8px 0 13px}.rotation-evidence summary{cursor:pointer}.rotation-evidence a{display:block;overflow-wrap:anywhere;margin:5px 0}.rotation-evidence p{margin:5px 0}
+.rotation-role-field{max-width:200px;margin-top:8px}
+.rotation-row-heading{flex-wrap:wrap}.rotation-row-heading select{min-width:0;max-width:100%}
