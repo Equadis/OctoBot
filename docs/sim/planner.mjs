@@ -1,4 +1,4 @@
-import {characterStats} from './core/character-stats.mjs?v=20261112-stats1';
+import {characterStats} from './core/character-stats.mjs?v=20261112-stats3';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261111-classes1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261111-classes1';
 import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261111-classes1';

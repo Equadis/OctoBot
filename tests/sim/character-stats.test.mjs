@@ -48,3 +48,11 @@ test('Select All matches observed stronger consumable and target preferences',()
  assert.deepEqual(new Set(selectBuffGroup([],['expose','sunder','annihilator','shartateth'])),new Set(['expose','annihilator']));
  assert.deepEqual(selectBuffGroup(['scorpok','kings'],ids,false),['kings']);
 });
+
+test('Moonkin armour uses the published Octo talent, not the older Vanilla multiplier',()=>{
+ const b=newBuild('druid');b.classOptions.form='Moonkin';const talent=data('druid').talents.find(t=>t.name==='Moonkin Form');
+ const gear={chest:{attributes:{Armour:100},effects:[]}};
+ assert.equal(rows(b,gear).Defence.Armour,'—');b.talents[talent.id]=1;
+ const agility=Number(rows(b,gear)['Base Stats'].Agility);
+ assert.equal(rows(b,gear).Defence.Armour,String(280+agility*2));
+});

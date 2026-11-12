@@ -65,7 +65,7 @@ export function characterStats(build,talentData,gear={}){
  if(has('kings'))for(const k of ['str','agi','sta','int','spi'])mult(k,10);
  if(build.race==='Gnome')mult('int',5);
  s.parry+=value('Deflection');s.defense+=value('Anticipation');
- const itemArmour=s.armour;s.armour*=1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0);
+ s.armour*=1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0);
  const [aps,apa,critAgi,dodgeAgi,critInt,baseCrit,baseSpellCrit]=COEFFICIENTS[c];
  let apBase=['warrior','paladin'].includes(c)?3*level-20:['rogue','hunter','shaman'].includes(c)?2*level-20:c==='druid'?-20:-10;
  let ap=base?apBase+s.str*aps+s.agi*apa+s.ap:null;
@@ -75,9 +75,14 @@ export function characterStats(build,talentData,gear={}){
  if(has('trueshot')&&ap!==null)ap*=1.03;
  if(c==='priest'&&base)s.sp+=s.spi*value('Spiritual Guidance')/100;
  const health=base?(base[5]+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(build.race==='Tauren'?1.05:1):null;
- let armour=base?s.armour+s.agi*2:null;if(c==='druid'&&['Bear','Moonkin'].includes(build.classOptions.form)&&base)armour+=itemArmour*(build.classOptions.form==='Bear'?3.6:3.6);
+ let armour=base?s.armour+s.agi*2:null;
+ if(c==='druid'&&base){
+  if(build.classOptions.form==='Bear')armour=s.armour*(level>=40?4.6:2.8)+s.agi*2;
+  if(build.classOptions.form==='Moonkin')armour=selected('Moonkin Form')?s.armour*(1+value('Moonkin Form')/100)+s.agi*2:null;
+ }
  if(build.race==='Dwarf')s.frostRes+=10;if(build.race==='Night Elf'||build.race==='Tauren')s.natureRes+=10;if(build.race==='Undead')s.shadowRes+=10;
  let spellCrit=level===60&&base?baseSpellCrit+s.int*critInt+s.spellCrit:null;
+ if(c==='druid'&&build.classOptions.form==='Moonkin'&&selected('Moonkin Form')&&spellCrit!==null)spellCrit+=3;
  const parryClasses=['warrior','paladin','rogue','hunter','shaman'];
  const parry=parryClasses.includes(c)?5+s.parry+s.defense*.04:0;
  const dodge=level===60&&base?baseCrit+s.agi*dodgeAgi+s.dodge+s.defense*.04:null;
