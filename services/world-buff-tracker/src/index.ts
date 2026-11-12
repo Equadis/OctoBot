@@ -1081,7 +1081,8 @@ async function runListener(
             );
           }
           // A listener that hears nothing is doing nothing, and looks perfectly healthy doing it.
-          silenceTimer = setInterval(() => {
+          if (listener.darkmoonWatchLocation === null) {
+            silenceTimer = setInterval(() => {
             const now = Date.now();
             if (!silence.shouldReport(now)) return;
             const quiet = humanSpan(silence.silentFor(now));
@@ -1091,7 +1092,8 @@ async function runListener(
             );
             void onListenerSilent(listener.characterName, quiet);
           }, LISTENER_SILENCE_CHECK_MS);
-          silenceTimer.unref?.();
+            silenceTimer.unref?.();
+          }
           if (listener.onLogin === "sit") world.sit();
           else if (listener.onLogin === "interact") {
             // The object burst trickles in over several seconds, so we WAIT for it to settle
@@ -1156,6 +1158,16 @@ async function runListener(
         },
         onCreatureName: (entry, name) => {
           deathWatch.creatureName(entry, name);
+          const faireSite = listener.darkmoonWatchLocation;
+          if (faireSite !== null && name !== null) {
+            logger.debug(`darkmoon: ${listener.characterName} nearby npc ${entry} = ${JSON.stringify(name)}`);
+            void faire
+              .observeNearbyNpc(name, faireSite, Date.now())
+              .then((accepted) => {
+                if (accepted) logger.info(`darkmoon: ${listener.characterName} observed the faire at ${faireSite} — ${name}`);
+              })
+              .catch((error) => logger.error(`darkmoon: listener onsite observe failed (${describeError(error)})`));
+          }
           if (name === null || !isSpiritHealer(name) || deadReported) return;
           // A Spirit Healer only stands at a graveyard, and this character only reaches one by
           // dying and releasing. Reported immediately rather than waiting out the silence window:
