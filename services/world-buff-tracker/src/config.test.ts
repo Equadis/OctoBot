@@ -300,6 +300,15 @@ describe("loadConfig", () => {
     ]);
   });
 
+  it("inherits the primary password for a secondary account when omitted", () => {
+    const config = loadConfig({
+      ...minimalEnv,
+      WOW_LISTENERS: JSON.stringify([{ account: "MULGORE", character: "FaireWatch", darkmoonWatchLocation: "mulgore", yeller: false }]),
+    });
+    expect(config.listeners[0]?.password).toBe("secret");
+    expect(config.listeners[0]?.darkmoonWatchLocation).toBe("mulgore");
+  });
+
   it("rejects invalid secondary darkmoon site names", () => {
     expect(() => loadConfig({ ...minimalEnv, WOW_LISTENERS: JSON.stringify([
       { account: "PVP", password: "test", character: "Scout", darkmoonWatchLocation: "stranglethorn" },
@@ -316,7 +325,7 @@ describe("loadConfig", () => {
   it("errors on a listener object missing required fields", () => {
     expect(() =>
       loadConfig({ ...minimalEnv, WOW_LISTENERS: JSON.stringify([{ account: "A" }]) }),
-    ).toThrow(/entry 1 needs a non-empty "password"[\s\S]*entry 1 needs a non-empty "character"/);
+    ).toThrow(/entry 1 needs a non-empty "character"/);
   });
 
   it("rejects a bad faction / onLogin / yeller / logNpcChat value in a listener object", () => {
