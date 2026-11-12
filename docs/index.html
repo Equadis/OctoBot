@@ -174,8 +174,17 @@ async function workerJson(path){
 const readWorkerHistory=window.PopulationHistory.createHistoryReader({
  fetchPage:async(id,since)=>{
   const suffix='&since='+encodeURIComponent(since);
-  try{return await workerJson('/api/history?realm='+encodeURIComponent(id)+suffix);}
-  catch(error){
+  try{
+   const payload=await workerJson('/api/history?realm='+encodeURIComponent(id)+suffix);
+   if(id==='nzoth'){
+    // An older Worker labels website-wide census rows as N'Zoth and omits
+    // the source in history; refuse those unverified rows, even if nonzero.
+    if(!Array.isArray(payload.readings)||payload.readings.some(row=>typeof row.source!=='string'))
+     return {readings:[],has_more:false};
+    payload.readings=payload.readings.filter(row=>row.source!=='official census');
+   }
+   return payload;
+  }catch(error){
    // Until the Worker is redeployed, the old API still calls the census 'nzoth'.
    // Only All Realms may read that legacy census series.
    if(id!=='all')throw error;
