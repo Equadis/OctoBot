@@ -56,6 +56,15 @@
     const secs = seconds % 60;
     return String(hours).padStart(2, '0') + 'h ' + String(minutes).padStart(2, '0') + 'm ' + String(secs).padStart(2, '0') + 's';
   }
+  function spanWithDays(ms) {
+    if (!Number.isFinite(ms)) return 'NO DATA';
+    const seconds = Math.floor(Math.max(0, ms) / 1000);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor(seconds % 86400 / 3600);
+    const minutes = Math.floor(seconds % 3600 / 60);
+    const secs = seconds % 60;
+    return days + 'd ' + String(hours).padStart(2, '0') + 'h ' + String(minutes).padStart(2, '0') + 'm ' + String(secs).padStart(2, '0') + 's';
+  }
   function when(ms) {
     if (!validPast(ms, Date.now() + 365 * DAY)) return 'Unknown';
     return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)) + ' UTC';
@@ -304,7 +313,7 @@
     $('eom-next').textContent = rotation.next;
     $('eom-current-until').textContent = 'Until ' + (rotation.end ? when(rotation.end) : 'unknown');
     $('eom-next-at').textContent = rotation.end ? 'From ' + when(rotation.end) : 'Start unknown';
-    $('eom-countdown').textContent = rotation.end ? span(rotation.end - Date.now()) : 'NO DATA';
+    $('eom-countdown').textContent = rotation.end ? spanWithDays(rotation.end - Date.now()) : 'NO DATA';
     labelState('eom-source', rotation.api ? 'ERA API' : 'ERA REFERENCE', rotation.api ? 'estimated' : 'unknown');
   }
   async function loadEra() {
