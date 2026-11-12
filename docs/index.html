@@ -37,14 +37,15 @@
 </main>
 <script src="chart-data.js"></script>
 <script src="population-history.js"></script>
+<script src="realm-estimates.js"></script>
 <script src="uptime-clock.js"></script>
 <script src="viewer-presence.js?v=20261111-theme1"></script>
 <script>
 'use strict';
-const D=window.PopulationData,U=window.OctoBotUptime,$=id=>document.getElementById(id),day=86400000;
+const D=window.PopulationData,E=window.RealmEstimates,U=window.OctoBotUptime,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=null,uptimeStatusBusy=false,uptimeIncident=null;
+let period='1D',rows=[],estimatedRows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=null,uptimeStatusBusy=false,uptimeIncident=null;
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
 const weekday=t=>new Intl.DateTimeFormat('en-GB',{weekday:'long',timeZone:'UTC'}).format(new Date(t));
@@ -184,7 +185,7 @@ const readWorkerHistory=window.PopulationHistory.createHistoryReader({
  normalise:D.normalise
 });
 async function liveWorkerHistory(realmId,existing){
- if(!telemetryEndpoint||!['all','yshaarj','cthun'].includes(realmId))return existing;
+ if(!telemetryEndpoint||!['all','nzoth','yshaarj','cthun'].includes(realmId))return existing;
  return readWorkerHistory(realmId,existing);
 }
 async function fetchLatestJson(path){
@@ -240,7 +241,7 @@ async function refreshLive(){
   // A realm change can happen while fetches are in flight. Discard the old
   // graph's response instead of overwriting the newly selected chart.
   if(ticket!==loadNumber||selectedRealm!==realm)return;
-  const selectedIds=[selectedRealm];
+  const selectedIds=selectedRealm==='all'?['all']:['all',selectedRealm];
   if(telemetryEndpoint){
    const updated=await Promise.all(selectedIds.map(async id=>
     [id,await liveWorkerHistory(id,realmHistories.get(id)||[])]));
@@ -311,7 +312,8 @@ function refreshCursorSelection(){
  if(value!==null){
   show(time,value,true);
  }else{
-  const estimate=D.estimateAt(rows,time);
+  const projected=D.at(estimatedRows,time);
+  const estimate=projected??D.estimateAt(rows,time);
   show(time,estimate,true,null,estimate!==null);
  }
  return true;
@@ -322,11 +324,14 @@ function updateJumpToPresent(){
 function draw(){
  if(period!=='CUSTOM'){windowEnd=now;start=period==='YTD'?Date.UTC(new Date(now).getUTCFullYear(),0,1):now-({'1H':3600000,'1D':day,'1W':7*day,'1M':30*day,'1Y':365*day}[period]);}else start=customStart;
  start=Math.max(LAUNCH,start);
+ estimatedRows=E.estimateRealmHistory(realmHistories.get('all')||[],liveSnapshots,realm,rows,now);
  const latest=rows.at(-1),peak=rows.length?rows.reduce((a,b)=>a.value>=b.value?a:b):null;
  const recent=rows.filter(r=>now-day<=r.t&&r.t<=now),peak24=recent.length?Math.max(...recent.map(r=>r.value)):null;
  $('peak24').textContent=num(peak24);$('all-peak').textContent=num(peak?.value??null);updateHeadline();updateUptime();
  $('all-peak').title=rows.length?'Recorded since '+fmt(rows[0].t)+' UTC':'No recorded observations';
- const info=D.intervals(rows,start,windowEnd);missing=info.unknown;ceiling=Math.max(500,Math.ceil((peak?.value||0)*1.15/500)*500);
+ const info=D.intervals(rows,start,windowEnd);missing=info.unknown;
+ const estimatedPeak=estimatedRows.reduce((max,row)=>Math.max(max,row.value),0);
+ ceiling=Math.max(500,Math.ceil(Math.max(peak?.value||0,estimatedPeak)*1.15/500)*500);
  $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();$('recorded-points').replaceChildren();
  const step=Math.max(100,Math.ceil(ceiling/6/100)*100);
  for(let v=0;v<=ceiling;v+=step)$('axes').append(svg('line',{x1:56,x2:964,y1:y(v),y2:y(v),stroke:'#343a43'}),svg('text',{x:46,y:y(v)+4,'text-anchor':'end'},num(v)));
@@ -336,10 +341,12 @@ function draw(){
   const label=new Intl.DateTimeFormat('en-GB',options).format(new Date(t));
   $('axes').append(svg('text',{x:x(t),y:318,'text-anchor':'middle'},label));
 }
- for(const [a,b]of missing)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
+ for(const [a,b]of missing){
+  const left=estimatedRows.length?Math.max(a,rows[0]?.t??Infinity):a;
+  if(left<b)$('outages').append(svg('rect',{x:x(left),y:28,width:Math.max(1,x(b)-x(left)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(left),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
+ }
  for(const [a,b]of info.estimated)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));
  let estimatePath='';for(const [a,b]of info.estimated){const va=D.estimateAt(rows,a),vb=D.estimateAt(rows,b);if(va!==null&&vb!==null)estimatePath+='M'+x(a).toFixed(2)+','+y(va).toFixed(2)+' L'+x(b).toFixed(2)+','+y(vb).toFixed(2)+' ';}
- $('estimate-path').setAttribute('d',estimatePath);
  function pathFor(points,curved=false){
   if(!points.length)return '';
   let result='M'+x(points[0].t).toFixed(2)+','+y(points[0].value).toFixed(2)+' ';
@@ -366,6 +373,9 @@ function draw(){
   }
  }
  for(const segment of visible.smoothed)path+=pathFor(segment,true);
+ const projected=D.visibleSeries(estimatedRows,start,windowEnd,0);
+ for(const segment of projected.recorded)estimatePath+=pathFor(segment);
+ $('estimate-path').setAttribute('d',estimatePath);
  $('raw-population').setAttribute('d',rawPath);$('population').setAttribute('d',path);
  for(const [id,val]of [['average-line',info.average],['peak-line',peak?.value??null]]){const line=$(id);line.style.display=val===null?'none':'';line.setAttribute('y1',y(val??0));line.setAttribute('y2',y(val??0));}
  
@@ -387,12 +397,17 @@ function draw(){
    if(nearest&&nearest.t>=start&&nearest.t<=windowEnd)show(nearest.t,nearest.value);
    else if(lastVisible){
     show(lastVisible.t,lastVisible.value,false);
-   }else show(windowEnd,null);
+   }else{
+    const projectedLatest=estimatedRows.filter(row=>row.t>=start&&row.t<=windowEnd).at(-1);
+    if(projectedLatest)show(projectedLatest.t,projectedLatest.value,false,null,true);
+    else show(windowEnd,null);
+   }
   }
  }
 }
 async function load(){const ticket=++loadNumber;try{
- const selected=[realms.find(r=>r.id===realm)];
+ const selected=realm==='all'?[realms.find(r=>r.id==='all')]:
+  [realms.find(r=>r.id==='all'),realms.find(r=>r.id===realm)];
  const histories=await Promise.all(selected.map(async r=>{
   try{return D.normalise(await fetchLatestJson(r.history));}
   catch(error){
@@ -407,7 +422,7 @@ async function load(){const ticket=++loadNumber;try{
  }
  if(ticket!==loadNumber)return;
  for(let i=0;i<selected.length;i++)realmHistories.set(selected[i].id,histories[i]);
-  rows=histories[0];now=Date.now();draw();await refreshLive();
+  rows=realmHistories.get(realm)||[];now=Date.now();draw();await refreshLive();
  }catch(e){if(ticket!==loadNumber)return;rows=[];draw();console.warn('Population history unavailable',e);}}
 function selectRealm(id){realm=id;location.hash='server='+realm;rows=[];draw();load();updateUptime();}
 for(const p of periods){const b=document.createElement('button');b.type='button';b.textContent=p;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{period=p;draw();});document.querySelector('.ranges').append(b);}
