@@ -54,7 +54,7 @@ jobs:
       - name: Test Discord /serverinfo options and links
         run: python -m unittest discover -s tests -p 'test_serverinfo.py'
       - name: Test real Population history backfill
-        run: node --test tests/population-history.test.mjs tests/population-live.test.mjs tests/uptime-clock.test.mjs
+        run: node --test tests/population-history.test.mjs tests/population-live.test.mjs tests/realm-estimates.test.mjs tests/uptime-clock.test.mjs
       - name: Test Cloudflare Worker
         working-directory: cloudflare/population
         run: npm test
