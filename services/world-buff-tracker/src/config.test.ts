@@ -278,15 +278,15 @@ describe("loadConfig", () => {
     const config = loadConfig({
       ...minimalEnv,
       WOW_LISTENERS: JSON.stringify([
-        { account: "ONYXIABUFFOG", password: "pw;1:with!specials", character: "Onyxiabuffog", faction: "horde", onLogin: "sit", yeller: true },
+        { account: "ONYXIABUFFOG", password: "pw;1:with!specials", character: "Onyxiabuffog", faction: "horde", onLogin: "sit", yeller: true, darkmoonWatchLocation: "mulgore" },
         { account: "ONYXIABUFFSW", password: "pw2", character: "Onyxiabuffsw", faction: "alliance", onLogin: "interact" },
         { account: "ONYXIABUFFOGB", password: "pw3", character: "Onybuffogb", faction: "horde", onLogin: "sit", yeller: false, logNpcChat: true },
       ]),
     });
     expect(config.listeners).toEqual([
-      { account: "ONYXIABUFFOG", password: "pw;1:with!specials", characterName: "Onyxiabuffog", onLogin: "sit", faction: "horde", yeller: true, logNpcChat: false },
-      { account: "ONYXIABUFFSW", password: "pw2", characterName: "Onyxiabuffsw", onLogin: "interact", faction: "alliance", yeller: true, logNpcChat: false }, // yeller defaults true
-      { account: "ONYXIABUFFOGB", password: "pw3", characterName: "Onybuffogb", onLogin: "sit", faction: "horde", yeller: false, logNpcChat: true },
+      { account: "ONYXIABUFFOG", password: "pw;1:with!specials", characterName: "Onyxiabuffog", onLogin: "sit", faction: "horde", yeller: true, logNpcChat: false, darkmoonWatchLocation: "mulgore" },
+      { account: "ONYXIABUFFSW", password: "pw2", characterName: "Onyxiabuffsw", onLogin: "interact", faction: "alliance", yeller: true, logNpcChat: false, darkmoonWatchLocation: null }, // yeller defaults true
+      { account: "ONYXIABUFFOGB", password: "pw3", characterName: "Onybuffogb", onLogin: "sit", faction: "horde", yeller: false, logNpcChat: true, darkmoonWatchLocation: null },
     ]);
   });
 
@@ -296,8 +296,14 @@ describe("loadConfig", () => {
       WOW_LISTENERS: JSON.stringify([{ account: "A", password: "p", character: "Ca" }]),
     });
     expect(config.listeners).toEqual([
-      { account: "A", password: "p", characterName: "Ca", onLogin: "none", faction: null, yeller: true, logNpcChat: false },
+      { account: "A", password: "p", characterName: "Ca", onLogin: "none", faction: null, yeller: true, logNpcChat: false, darkmoonWatchLocation: null },
     ]);
+  });
+
+  it("rejects invalid secondary darkmoon site names", () => {
+    expect(() => loadConfig({ ...minimalEnv, WOW_LISTENERS: JSON.stringify([
+      { account: "PVP", password: "test", character: "Scout", darkmoonWatchLocation: "stranglethorn" },
+    ]) })).toThrow(/darkmoonWatchLocation/);
   });
 
   it("rejects invalid WOW_LISTENERS JSON with a clear error", () => {
