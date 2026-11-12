@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import worker,{parseOnline,collect} from '../src/index.js';
+import worker,{parseOnline,parseMetricsPopulation,collect} from '../src/index.js';
 test('parse exact census counter and reject unsafe responses',()=>{
  assert.equal(parseOnline('Players online now: <b>2,351</b>'),2351);
  assert.equal(parseOnline('Players online now: <b>0</b>'),0);
@@ -61,5 +61,45 @@ test('website-wide census writes All Realms only and preserves original count',a
   assert.equal(inserted[0][0],'all');
   assert.equal(inserted[0][2],1406);
   assert.equal(inserted[0][3],'official census');
+ }finally{globalThis.fetch=originalFetch;}
+});
+
+test('validates realm populations from OctoMetrics summary and ignores stale readings',()=>{
+ const now=Date.parse('2026-11-12T22:00:00Z');
+ const at=new Date(now-20000).toISOString();
+ const readings=parseMetricsPopulation({realms:[
+  {realm:"N'Zoth",population:{online:800,at}},
+  {realm:"C'Thun",population:{online:100,at}},
+  {realm:"Y’Shaarj",population:{online:100,at}},
+  {realm:"all",population:{online:1000,at}},
+  {realm:"C'Thun",population:{online:400,at:new Date(now-700000).toISOString()}}
+ ]},now);
+ assert.deepEqual(readings.map(r=>[r.realm,r.online]),[
+  ['nzoth',800],['cthun',100],['yshaarj',100]
+ ]);
+ assert.equal(readings[0].timestamp_ms,now-20000);
+});
+test('collector stores original observed realm readings without altering the census total',async()=>{
+ const originalFetch=globalThis.fetch,inserted=[];
+ const DB={prepare(sql){return {bind(...args){this.args=args;return this;},
+  async run(){if(sql.includes('INSERT OR IGNORE INTO readings'))inserted.push(this.args);return {success:true};}
+ };}};
+ const at=new Date().toISOString();
+ try{
+  globalThis.fetch=async url=>String(url).includes('/api/summary')
+   ?new Response(JSON.stringify({realms:[
+    {realm:'nzoth',population:{online:800,at}},
+    {realm:'cthun',population:{online:100,at}},
+    {realm:'yshaarj',population:{online:100,at}}
+   ]}),{status:200})
+   :new Response('Players online now: <b>1,000</b>',{status:200});
+  const readings=await collect({DB});
+  assert.deepEqual([...new Set(readings.map(x=>x.realm))],['all','nzoth','cthun','yshaarj']);
+  assert.equal(inserted.length,4);
+  assert.deepEqual(inserted.map(x=>[x[0],x[2]]),[
+   ['all',1000],['nzoth',800],['cthun',100],['yshaarj',100]
+  ]);
+  assert.equal(inserted[0][3],'official census');
+  assert.ok(inserted.slice(1).every(x=>x[3]==='in-game .server info'));
  }finally{globalThis.fetch=originalFetch;}
 });
