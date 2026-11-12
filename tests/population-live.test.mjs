@@ -238,10 +238,10 @@ test('minute-level historical panning renders boundary readings without false NO
  assert.equal(view.windowEnd,end);
  const raw=env.get('raw-population').getAttribute('d');
  const smooth=env.get('population').getAttribute('d');
- assert.match(raw,/^M56\\.00,/,'Recorded path must begin at the exact left boundary');
- assert.match(raw,/L964\\.00,/,'Recorded path must reach the exact right boundary');
- assert.match(smooth,/^M56\\.00,/);
- assert.match(smooth,/964\\.00,/);
+ assert.match(raw,/^M56\.00,/,'Recorded path must begin at the exact left boundary');
+ assert.match(raw,/L964\.00,/,'Recorded path must reach the exact right boundary');
+ assert.match(smooth,/^M56\.00,/);
+ assert.match(smooth,/964\.00,/);
  assert.equal(env.get('outages').children.length,0,'Continuous data must not create a missing-data band');
  assert.doesNotMatch(env.get('readout').textContent,/NO DATA/,
   'A historical graph with visible readings must not show an unrelated NO DATA headline');
@@ -253,8 +253,8 @@ test('minute-level historical panning renders boundary readings without false NO
    shiftKey:true,preventDefault(){}});
   const visible=env.view(),d=env.get('raw-population').getAttribute('d');
   assert.equal(visible.windowEnd-visible.start,600000);
-  assert.match(d,/^M56\\.00,/);
-  assert.match(d,/L964\\.00,/);
+  assert.match(d,/^M56\.00,/);
+  assert.match(d,/L964\.00,/);
   assert.doesNotMatch(env.get('readout').textContent,/NO DATA/);
  }
  for(let i=0;i<25;i++){
