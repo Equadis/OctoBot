@@ -5,8 +5,8 @@ describe("OwnCharacters", () => {
   const ours = OwnCharacters.of({
     characterName: "Bufftracker",
     listeners: [
-      { characterName: "Onyxiabuffog", account: "a", password: "p", faction: "horde", onLogin: "none", yeller: true, logNpcChat: false },
-      { characterName: "Onybuffswb", account: "b", password: "p", faction: "alliance", onLogin: "none", yeller: false, logNpcChat: false },
+      { characterName: "Onyxiabuffog", account: "a", password: "p", faction: "horde", onLogin: "none", yeller: true, logNpcChat: false, darkmoonWatchLocation: null },
+      { characterName: "Onybuffswb", account: "b", password: "p", faction: "alliance", onLogin: "none", yeller: false, logNpcChat: false, darkmoonWatchLocation: null },
     ],
   });
 
