@@ -3,7 +3,7 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261111-classes1';
 import { validateTalents, setTalentRank, talentTotals } from './core/talents.mjs?v=20261111-classes1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild } from './core/builds.mjs?v=20261111-classes1';
-import { itemPicker } from './item-picker.mjs?v=20261111-classes1';
+import { itemPicker } from './item-picker.mjs?v=20261112-catalogue1';
 import { equipmentTotals } from './core/items.mjs?v=20261111-classes1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';

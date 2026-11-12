@@ -42,7 +42,7 @@ test('planning settings round trip and legacy builds gain safe defaults',async()
 test('snapshot IDs and equipment slots are unique and provenance remains explicitly partial',async()=>{
  const base=new URL('../../docs/sim/data/items/',import.meta.url);
  const items=JSON.parse(await readFile(new URL('equipment.json',base)));
- const manifest=JSON.parse(await readFile(new URL('manifest.json',base)));
+ const manifest=JSON.parse(await readFile(new URL('catalogue-manifest.json',base)));
  assert.equal(items.length,manifest.equipmentCount);
  assert.equal(new Set(items.map(x=>x.id)).size,items.length);
  assert.equal(manifest.complete,false);

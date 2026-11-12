@@ -27,8 +27,8 @@ read from the ordinary official calculator in the browser and parsed with the
 same data-only importer. Imported metadata does not validate combat effects.
 
 Equipment covers all published weapons, armour, shirts, tabards, relics,
-ammunition and quivers. `manifest.json` distinguishes complete equipment
-**listings** from complete equipment **details**. `detail-coverage.json` records
+ammunition and quivers. `catalogue-manifest.json` records equipment listing coverage independently of the
+long-running detail import. The older `manifest.json` remains for compatibility. `detail-coverage.json` records
 missing IDs and source errors. The non-equipment catalogue retains three capped
 miscellaneous/quest partitions; those do not hide equipable gear.
 

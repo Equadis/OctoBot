@@ -1,0 +1,38 @@
+{
+  "source": "https://octowow.st/db/",
+  "retrievedAt": "2026-11-11T23:47:53.062002+00:00",
+  "itemCount": 19840,
+  "equipmentCount": 14087,
+  "categoryCount": 108,
+  "sourcePages": 70,
+  "complete": false,
+  "cappedPartitions": [
+    {
+      "query": "?items=0.0",
+      "returned": 500,
+      "itemLevelRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "query": "?items=12",
+      "returned": 500,
+      "itemLevelRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "query": "?items=15.0",
+      "returned": 500,
+      "itemLevelRange": [
+        0,
+        1
+      ]
+    }
+  ],
+  "failedPartitions": [],
+  "equipmentListingsComplete": true,
+  "equipmentRetrievedAt": "2026-11-11T23:47:53.062002+00:00"
+}

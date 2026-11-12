@@ -155,7 +155,9 @@ def main():
     all_branches = categories(menu)
     branches = [(q,b) for q,b in all_branches if not args.equipment_only or b[0] in (2,4,6,11)]
     records, saturated, pages, failures, completed = {}, [], 0, [], set()
-    previous = json.loads((OUTPUT / 'manifest.json').read_text()) if (OUTPUT / 'manifest.json').exists() else {}
+    previous_path=OUTPUT/'catalogue-manifest.json'
+    if not previous_path.exists():previous_path=OUTPUT/'manifest.json'
+    previous=json.loads(previous_path.read_text()) if previous_path.exists() else {}
     if args.equipment_only and (OUTPUT / 'catalogue.json').exists():
         records = {r['id']:r for r in json.loads((OUTPUT / 'catalogue.json').read_text()) if r.get('classs') not in (2,4,6,11)}
         saturated = previous.get('cappedPartitions', [])
@@ -204,7 +206,7 @@ def main():
                 'detailRecordCount': len(json.loads((OUTPUT / 'details.json').read_text())) if (OUTPUT / 'details.json').exists() else 0,
                 'detailCoverage': 'Listing metadata. Class masks and full effects require individual item details.'}
     if args.equipment_only: manifest['equipmentRetrievedAt'] = stamp
-    for name, value in [('catalogue.json', all_rows), ('equipment.json', equipment), ('manifest.json', manifest)]:
+    for name, value in [('catalogue.json', all_rows), ('equipment.json', equipment), ('catalogue-manifest.json', manifest)]:
         (OUTPUT / name).write_text(json.dumps(value, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps(manifest), flush=True)
 

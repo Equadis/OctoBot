@@ -33,6 +33,8 @@ def main():
     args = cli.parse_args()
     catalogue = json.loads((DATA / 'equipment.json').read_text())
     details = json.loads((DATA / 'details.json').read_text())
+    if (DATA/'details-supplement.json').exists():
+        details={**json.loads((DATA/'details-supplement.json').read_text()),**details}
     remaining = [item for item in catalogue if str(item['id']) not in details]
     selected = remaining[:args.limit] if args.limit else remaining
     stopped = threading.Event()
