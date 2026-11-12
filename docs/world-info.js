@@ -71,12 +71,12 @@
 
   function findRaid(root, key) {
     const world = object(root.worldInfo) || object(root.world_info) || root;
-    const raids = object(world.raids) || object(root.raids) || {};
+    const raids = first(world.raids, root.raids) || {};
+    if (Array.isArray(raids)) return raids.find(r => key === 'ony' ? /onyxia|2159/i.test(String(r.zoneName || r.zone || '')) : /blackwing|2677/i.test(String(r.zoneName || r.zone || ''))) || null;
     const direct = key === 'ony'
       ? first(raids.onyxia, raids.ony, raids.onxyia, raids.sw, world.onyxia)
       : first(raids.bwl, raids.blackwingLair, raids.blackwing_lair, raids.org, world.bwl);
     if (object(direct)) return direct;
-    if (Array.isArray(raids)) return raids.find(r => key === 'ony' ? /onyxia/i.test(r.zoneName || r.zone || '') : /blackwing/i.test(r.zoneName || r.zone || '')) || null;
     if (object(root.raid_activity)) {
       const r = root.raid_activity;
       return key === 'ony' ? first(r.onyxia, r.ony) : first(r.bwl, r.blackwingLair);
@@ -89,7 +89,7 @@
     const stateText = String(first(row.status, row.state, '')).toLowerCase();
     if (['ended', 'finished', 'cleared', 'cancelled'].includes(stateText) || row.active === false) return null;
     if (!validPast(startedAt)) return null;
-    return { id: String(first(row.id, row.number, row.raidNumber, 'Raid')), startedAt, confidence: String(first(row.confidence, 'tracked')) };
+    return { id: String(first(row.id, row.number, row.raidNumber, 'Raid')), startedAt, confidence: String(first(row.confidence, 'inferred')).toLowerCase() };
   }
   function normaliseRaid(raw, root) {
     if (!object(raw)) return null;
@@ -122,7 +122,8 @@
     }
     if (raid.sessions.length) {
       count.textContent = String(raid.sessions.length);
-      labelState(key + '-state', 'TRACKED', 'online');
+      const confirmed = raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence));
+      labelState(key + '-state', confirmed ? 'VERIFIED' : 'ESTIMATED', confirmed ? 'online' : 'estimated');
       for (const session of raid.sessions) {
         const line = document.createElement('div');
         line.className = 'timer-row';
@@ -134,10 +135,10 @@
         line.append(title, timer);
         activeNode.append(line);
       }
-      evidence.textContent = 'Cohort tracking · ' + (raid.players === null ? 'Roster observed' : raid.players + ' players observed in /who');
+      evidence.textContent = 'Separate groups ' + (raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence)) ? 'verified' : 'inferred') + ' from rosters · ' + (raid.players === null ? 'Roster observed' : raid.players + ' players observed in /who') + '. /who alone cannot prove instance IDs.';
     } else if (raid.count !== null) {
       count.textContent = raid.count === 0 ? 'NO RAID' : String(raid.count);
-      labelState(key + '-state', raid.count ? 'TRACKED' : 'NO RAID', raid.count ? 'online' : 'unknown');
+      labelState(key + '-state', raid.count ? 'ESTIMATED' : 'NO RAID', raid.count ? 'estimated' : 'unknown');
       appendEmpty(activeNode, raid.count ? 'Start timestamps not yet available.' : 'No raid currently detected.');
       evidence.textContent = raid.players !== null ? raid.players + ' players listed in the latest /who response.' : 'Latest roster observation received.';
     } else if (raid.active === true) {
@@ -199,7 +200,7 @@
       estimate.textContent = 'NO DATA';
       estimateNote.textContent = 'No reliable prediction available';
     }
-    labelState(faction + '-state', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'RECORDED' : 'AWAITING DATA', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'estimated' : 'unknown');
+    labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : buff && validPast(buff.estimate, Date.now() + 365 * DAY) ? 'ESTIMATED' : 'AWAITING DATA', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'estimated' : 'unknown');
   }
 
   function findDmf(root) {
