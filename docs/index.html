@@ -26,7 +26,7 @@
 <div class="chart-head"><div class="chart-title"><h2>Players online</h2><label class="server-label" for="server-select">Server: <select id="server-select" aria-label="Server"></select></label></div><span class="range-label" id="range-label"></span></div>
 <p class="readout" id="readout" aria-live="polite"></p>
 <div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><line id="average-line" x1="56" x2="964" stroke="#74b6ff" stroke-width="1.5"></line><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><div class="tip" id="tooltip" hidden></div></div>
-<div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><button id="apply-dates" type="button">Apply</button></div></div>
+<div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"><div class="date-actions"><button id="jump-to-present" class="jump-to-present" type="button" disabled>Jump to present →</button><button id="apply-dates" type="button">Apply</button></div></div></div>
 <div id="date-error" role="status"></div>
 <div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Smoothed</span><span><i class="key" style="border-color:#82efb3;border-bottom-style:dashed"></i>Recorded</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated</span></div>
 
@@ -278,6 +278,9 @@ function marker(release,px,py,extra=''){
  if(extra==='Scheduled'||release.timestamp===null)g.append(svg('text',{x:fx+15,y:fy-7,'text-anchor':'middle',style:'fill:#aab4c1;font-size:10px'},extra==='Scheduled'?'Scheduled':'Date unconfirmed'));
  g.append(svg('title',{},label+' · '+(time===null?release.date_note:fmt(time)+' UTC')));return g;
 }
+function updateJumpToPresent(){
+ $('jump-to-present').disabled=period!=='CUSTOM'||windowEnd>=Date.now()-30000;
+}
 function draw(){
  if(period!=='CUSTOM'){windowEnd=now;start=period==='YTD'?Date.UTC(new Date(now).getUTCFullYear(),0,1):now-({'1H':3600000,'1D':day,'1W':7*day,'1M':30*day,'1Y':365*day}[period]);}else start=customStart;
  start=Math.max(LAUNCH,start);
@@ -324,7 +327,7 @@ function draw(){
  for(const release of releases){const t=release.timestamp?Date.parse(release.timestamp):null;if(t===null){$('release-markers').append(marker(release,80+undated++*45,78,'launch date unconfirmed'));continue;}if(t>now){const group=marker(release,930-upcoming++*45,78,'Scheduled');$('release-markers').append(group);continue;}if(start<=t&&t<=windowEnd){const value=D.at(rows,t);$('release-markers').append(marker(release,x(t),value===null?280:y(value),value===null?'NO DATA at this date':''));}}
  for(const b of document.querySelectorAll('.ranges button'))b.setAttribute('aria-pressed',String(b.textContent===period));
  $('range-label').textContent=period==='CUSTOM'?timeSpanText(windowEnd-start):period;
-
+ updateJumpToPresent();
  updateHeadline();
  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
 }
@@ -421,6 +424,12 @@ plotHit.addEventListener('wheel',e=>{
   navigateTimeline(D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now()));
  }
 },{passive:false});
+$('jump-to-present').addEventListener('click',()=>{
+ const right=Date.now(),span=windowEnd-start;
+ if(!(span>0))return;
+ now=right;
+ navigateTimeline(D.panRange(start,windowEnd,right-windowEnd,LAUNCH,right));
+});
 $('apply-dates').addEventListener('click',()=>{const a=Date.parse($('date-from').value+'T00:00:00Z'),b=Math.min(now,Date.parse($('date-to').value+'T23:59:59Z'));if(!Number.isFinite(a)||!Number.isFinite(b)||a>=b||b<LAUNCH){$('date-error').textContent='Choose a valid start and end date before now.';return;}$('date-error').textContent='';customStart=a;windowEnd=b;period='CUSTOM';draw();});
 $('server-select').addEventListener('change',e=>selectRealm(e.target.value));
 (async()=>{try{const responses=await Promise.all([fetch('realms.json',{cache:'no-store'}),fetch('releases.json',{cache:'no-store'}),fetch('uptime-reference.json',{cache:'no-store'}),fetch('telemetry.json',{cache:'no-store'})]);if(responses.some(r=>!r.ok))throw Error('Configuration unavailable');const [realmConfig,releaseConfig,uptimeConfig,telemetryConfig]=await Promise.all(responses.map(r=>r.json()));realms=realmConfig;releases=releaseConfig;uptimeReference=uptimeConfig;
