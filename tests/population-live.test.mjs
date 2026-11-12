@@ -119,6 +119,7 @@ function fixture(){
   vm.runInContext(inline,context);
   return {
     get,requests,intervals,worker,statusSamples,
+    view(){return vm.runInContext('({start,windowEnd})',context);},
     advance(ms){timestamp+=ms},
     setWorkerFailed(v){failed=v}
   };
@@ -181,6 +182,27 @@ test('custom time ranges are not reset as new observations arrive',async()=>{
   assert.equal(env.get('date-to').value,initialEnd);
 });
 
+
+test('Shift+scroll up pans population left and down pans right, including browser deltaX',async()=>{
+  const env=fixture();await settle();
+  const hit=env.get('plot-hit');
+  function turn(deltaY,deltaX=0,shiftKey=true){
+    hit.fire('wheel',{clientX:450,deltaX,deltaY,deltaMode:0,shiftKey,
+      preventDefault(){}});
+  }
+  // Zoom first to leave room on both sides of the starting one-day range.
+  turn(-120,0,false);
+  const before=env.view();
+  turn(-120,0,true); // Scroll up must move to earlier time.
+  const left=env.view();
+  assert.ok(left.start<before.start);
+  assert.ok(Math.abs((left.windowEnd-left.start)-(before.windowEnd-before.start))<1,
+    'Horizontal panning does not change the zoom level');
+  turn(120,120,true); // Browser remaps Shift+scroll down to deltaX.
+  const right=env.view();
+  assert.ok(right.start>left.start);
+  assert.ok(Math.abs((right.windowEnd-right.start)-(left.windowEnd-left.start))<1);
+});
 
 test('legacy website-wide census is never shown as N\'Zoth population',async()=>{
   const env=fixture();await settle();

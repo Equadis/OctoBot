@@ -57,17 +57,25 @@ test('zoom follows Players online: mouse-centred, smooth and bounded',()=>{
   assert.ok(s.view.end-s.view.start>=600000);
 });
 
-test('Shift+scroll down moves left, up moves right, without zoom (deltaX included)',()=>{
+test('Shift+scroll up moves left, down moves right, without zoom (deltaX included)',()=>{
   const s=setup(),before=s.view,handler=s.handlers.get('wheel');
-  // Browser remaps Shift + wheel to positive deltaX: move to earlier history.
-  wheel(handler,120,{shiftKey:true,deltaX:120});
+  // Shift + wheel up has negative deltaY: move to earlier history.
+  wheel(handler,-120,{shiftKey:true,deltaX:0});
   const earlier=s.view;
   assert.equal(earlier.end-earlier.start,before.end-before.start);
   assert.ok(earlier.start<before.start);
-  // Shift + wheel up is negative deltaY: move forward/right again.
-  wheel(handler,-120,{shiftKey:true,deltaX:0});
+  // Browsers may remap Shift + wheel down to positive deltaX: move right.
+  wheel(handler,120,{shiftKey:true,deltaX:120});
   assert.equal(s.view.end-s.view.start,before.end-before.start);
   assert.ok(s.view.start>earlier.start);
+  const returned=s.view;
+  // The opposite horizontal remapping also moves left.
+  wheel(handler,-120,{shiftKey:true,deltaX:-120});
+  assert.ok(s.view.start<returned.start);
+  // Vertical wheel down, without a deltaX remapping, moves right again.
+  const leftAgain=s.view;
+  wheel(handler,120,{shiftKey:true,deltaX:0});
+  assert.ok(s.view.start>leftAgain.start);
 });
 
 test('pointer drag pans without changing zoom and hover resumes afterwards',()=>{

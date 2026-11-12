@@ -413,9 +413,9 @@ plotHit.addEventListener('wheel',e=>{
  e.preventDefault();
  const unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
  if(e.shiftKey){
-  // Shift+scroll down pans left (earlier); up pans right (later), including deltaX remapping.
+  // Shift+scroll up pans left (earlier); down pans right (later), including deltaX remapping.
   const wheel=(Math.abs(e.deltaX)>0?e.deltaX:e.deltaY)*unit;
-  navigateTimeline(D.panRange(start,windowEnd,-wheel/100*0.12*(windowEnd-start),LAUNCH,Date.now()));
+  navigateTimeline(D.panRange(start,windowEnd,wheel/100*0.12*(windowEnd-start),LAUNCH,Date.now()));
  }else{
   const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
   navigateTimeline(D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now()));
