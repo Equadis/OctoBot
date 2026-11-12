@@ -80,3 +80,40 @@ test('a new in-game reference after an outage permits counting again',()=>{
  assert.equal(U.compute('nzoth',next,anchor+30*60000,offline).kind,'running');
  assert.equal(U.compute('nzoth',next,anchor+30*60000,offline).seconds,850);
 });
+
+
+test('NO DATA is temporary: recovery resumes from the original uptime, including the entire gap',()=>{
+ const online=reading(2,'online'),missing=reading(3,'unknown'),recovered=reading(4,'online');
+ const start=U.compute('nzoth',references,anchor+2*60000);
+ assert.equal(U.monitorStatus([online],'nzoth',anchor,anchor+2*60000).kind,'online');
+ assert.equal(U.monitorStatus([online,missing],'nzoth',anchor,anchor+3*60000).kind,'unknown');
+ assert.equal(U.confirmedOffline([online,missing,recovered],'nzoth',anchor,anchor+4*60000),null);
+ assert.equal(U.monitorStatus([online,missing,recovered],'nzoth',anchor,anchor+4*60000).kind,'online');
+ const resumed=U.compute('nzoth',references,anchor+4*60000);
+ assert.equal(resumed.kind,'running');
+ assert.equal(resumed.seconds,start.seconds+120,'Gap time is included rather than resetting the clock');
+});
+
+test('stale monitoring hides the estimate without invalidating its anchor',()=>{
+ const online=reading(1,'online');
+ assert.equal(U.monitorStatus([online],'nzoth',anchor,anchor+2*60000).kind,'online');
+ assert.equal(U.monitorStatus([online],'nzoth',anchor,anchor+20*60000).kind,'unknown');
+ assert.equal(U.confirmedOffline([online],'nzoth',anchor,anchor+20*60000),null);
+ const recovered=reading(21,'online');
+ assert.equal(U.monitorStatus([online,recovered],'nzoth',anchor,anchor+21*60000).kind,'online');
+ assert.equal(U.compute('nzoth',references,anchor+21*60000).seconds,374822+21*60);
+});
+
+test('NO DATA between DOWN reports prevents a false confirmation',()=>{
+ const gap=[reading(2,'offline'),reading(3,'unknown'),reading(4,'offline')];
+ assert.equal(U.confirmedOffline(gap,'nzoth',anchor,anchor+6*60000),null);
+ const inaccessible=[reading(2,'offline'),reading(3,'offline','unavailable'),reading(4,'offline')];
+ assert.equal(U.confirmedOffline(inaccessible,'nzoth',anchor,anchor+6*60000),null);
+ assert.equal(U.monitorStatus([reading(2,'offline')],'nzoth',anchor,anchor+2*60000).kind,'uncertain');
+});
+
+test('conflicting same-time source observations cannot verify DOWN',()=>{
+ const samples=[reading(2,'offline'),reading(3,'offline'),reading(3,'online')];
+ assert.equal(U.confirmedOffline(samples,'nzoth',anchor,anchor+6*60000),null);
+ assert.equal(U.monitorStatus(samples,'nzoth',anchor,anchor+3*60000).kind,'unknown');
+});
