@@ -1,37 +1,56 @@
-/* Uptime is extrapolated from a real in-game reading, not from poll freshness.
- * Only repeated explicit official-realm offline observations interrupt it.
- * Missing/stale/unknown checks and shared TCP failures cannot prove a restart.
+/* The uptime estimate is tied to a real in-game reading.
+ * NO DATA is a visibility gap, not an outage or an opportunity to reset the timer.
+ * Only consecutive, explicit official-realm DOWN observations invalidate the anchor.
  */
 (function(root){
  'use strict';
  const OFFLINE_CONFIRMATION_MS=15*60000;
+ const MONITOR_STALE_MS=10*60000;
+
  function referenceFor(realm,references){
   if(!references||typeof references!=='object')return null;
-  // All Realms has no verified combined uptime. Display a clearly labelled
-  // N'Zoth-based uptime instead of hiding the last real in-game reference.
+  // All Realms has no combined uptime reference; label the N'Zoth reading.
   const sourceRealm=realm==='all'?'nzoth':realm;
   return {sourceRealm,reference:references[sourceRealm]||null};
  }
- function confirmedOffline(samples,realm,observedAt,now=Date.now()){
-  if(!Array.isArray(samples)||!Number.isFinite(observedAt))return null;
+ function realmState(row,realm){
+  if(row?.website!=='available')return 'unknown';
+  const state=row?.realms?.[realm];
+  return state==='online'||state==='offline'?state:'unknown';
+ }
+ function observations(samples,realm,observedAt,now){
+  if(!Array.isArray(samples))return [];
   const unique=new Map();
   for(const row of samples){
    const t=Date.parse(row?.timestamp);
    if(!Number.isFinite(t)||t<=observedAt||t>now+60000)continue;
-   // A source outage or unknown official realm state cannot establish downtime.
-   const state=row?.website==='available'?row?.realms?.[realm]:null;
-   // Deduplicate matching timestamps from GitHub and Cloudflare.
-   if(state==='offline'||state==='online'||state==='unknown')
-    unique.set(t,state);
+   const state=realmState(row,realm);
+   // Conflicting sources for the same timestamp cannot establish downtime.
+   if(unique.has(t)&&unique.get(t)!==state)unique.set(t,'unknown');
+   else if(!unique.has(t))unique.set(t,state);
   }
+  return [...unique].sort((a,b)=>a[0]-b[0]);
+ }
+ function confirmedOffline(samples,realm,observedAt,now=Date.now()){
+  if(!Number.isFinite(observedAt))return null;
   let previous=null;
-  for(const [time,state] of [...unique].sort((a,b)=>a[0]-b[0])){
+  for(const [time,state] of observations(samples,realm,observedAt,now)){
+   // Unknown observations *break* confirmation: do not bridge a NO DATA gap.
    if(state!=='offline'){previous=null;continue;}
    if(previous!==null&&time>previous&&time-previous<=OFFLINE_CONFIRMATION_MS)
     return {first:previous,confirmed:time};
    previous=time;
   }
   return null;
+ }
+ function monitorStatus(samples,realm,observedAt,now=Date.now()){
+  const last=observations(samples,realm,observedAt,now).at(-1);
+  if(!last)return {kind:'unobserved'};
+  const [timestamp,state]=last;
+  if(now-timestamp>MONITOR_STALE_MS)return {kind:'unknown',reason:'stale',timestamp};
+  if(state==='online')return {kind:'online',timestamp};
+  if(state==='offline')return {kind:'uncertain',reason:'offline report awaiting confirmation',timestamp};
+  return {kind:'unknown',reason:'monitoring gap',timestamp};
  }
  function compute(realm,references,now,confirmedIncident=null){
   const selected=referenceFor(realm,references);
@@ -43,6 +62,7 @@
    return {kind:'unknown',sourceRealm};
   const interruption=confirmedIncident?.confirmed>anchor?confirmedIncident:null;
   if(interruption)return {kind:'interrupted',sourceRealm,interruption};
+  // Always include elapsed wall-clock time, including all NO DATA intervals.
   const totalSeconds=elapsed+Math.floor((now-anchor)/1000);
   return {kind:'running',sourceRealm,seconds:totalSeconds,anchor,estimated:true};
  }
@@ -52,7 +72,7 @@
   const m=Math.floor(seconds%3600/60),s=seconds%60;
   return d+'D '+h+'H '+m+'M '+s+'S';
  }
- const api={referenceFor,confirmedOffline,compute,format};
+ const api={referenceFor,realmState,confirmedOffline,monitorStatus,compute,format};
  root.OctoBotUptime=api;
  if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

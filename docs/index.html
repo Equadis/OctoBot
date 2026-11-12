@@ -76,19 +76,29 @@ function updateHeadline(){
 
 }
 function updateUptime(){
- const state=U.compute(realm,uptimeReference,Date.now(),uptimeIncident);
- // The site-wide population figure and realm uptime are different metrics.
+ const current=Date.now();
+ const state=U.compute(realm,uptimeReference,current,uptimeIncident);
  // The only in-game uptime reference currently available is for N'Zoth.
  $('uptime-label').textContent=realm==='all'?"N'Zoth uptime":'Server uptime';
  if(state.kind==='running'){
-  $('uptime').textContent=U.format(state.seconds);
-  $('uptime').style.color='';
-  $('uptime-freshness').textContent='Estimated';
+  const monitor=U.monitorStatus([...uptimeStatusRows.values()],state.sourceRealm,state.anchor,current);
+  if(monitor.kind==='unknown'||monitor.kind==='uncertain'){
+   // Hide an unverifiable reading, but never reset its underlying uptime anchor.
+   $('uptime').textContent='NO DATA';
+   $('uptime').style.color='#e3bd57';
+   $('uptime-freshness').textContent=monitor.kind==='uncertain'
+     ?'Unconfirmed offline report · clock preserved'
+     :'Monitoring unavailable · clock preserved';
+  }else{
+   $('uptime').textContent=U.format(state.seconds);
+   $('uptime').style.color='';
+   $('uptime-freshness').textContent='Estimated';
+  }
  }else{
   $('uptime').textContent='NO DATA';
   $('uptime').style.color='#e3bd57';
   $('uptime-freshness').textContent=state.kind==='interrupted'
-    ?'Offline observed · new reading needed':'Unverified';
+    ?'Confirmed DOWN · new uptime reading needed':'No in-game uptime reference';
  }
 }
 function addUptimeStatus(rows,anchor){
@@ -98,9 +108,15 @@ function addUptimeStatus(rows,anchor){
   if(!Number.isFinite(t)||t<=anchor||t>Date.now()+60000||
      typeof row?.realms!=='object')continue;
   const old=uptimeStatusRows.get(t);
-  // A good source must not be overwritten by an incomplete duplicate.
-  if(!old||old.website!=='available'||row.website==='available')
+  // Prefer authoritative observations, but treat conflicting same-time sources as unknown.
+  if(old?.conflict)continue;
+  if(old?.website==='available'&&row.website==='available'&&
+     old.realms?.nzoth!==row.realms?.nzoth){
+   uptimeStatusRows.set(t,{timestamp:row.timestamp,website:'available',
+     realms:{...old.realms,nzoth:'unknown'},conflict:true});
+  }else if(!old||old.website!=='available'||row.website==='available'){
    uptimeStatusRows.set(t,row);
+  }
  }
 }
 // Read all available observations since the last in-game anchor. An outage
