@@ -339,7 +339,8 @@ test('minute-level historical panning renders boundary readings without false NO
  assert.ok(Math.abs(returned.start-first.start)<1);
  assert.ok(Math.abs(returned.windowEnd-first.windowEnd)<1);
  hit.fire('pointermove',{clientX:0,pointerId:9});
- assert.match(env.get('readout').textContent,/INTERPOLATED/);
+ assert.doesNotMatch(env.get('readout').textContent,/INTERPOLATED/);
+ assert.match(env.get('readout').textContent,/players/);
  assert.notEqual(env.get('dot').style.display,'none',
   'An interpolated but valid edge has a real visible value');
 });

@@ -7,8 +7,8 @@
   <title>OctoBot · WIP --- GEAR PLANNER / DPS SIM</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261112-consumes1">
-  <script type="module" src="planner.mjs?v=20261112-consumes2"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261112-polish2">
+  <script type="module" src="planner.mjs?v=20261112-polish2"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
@@ -16,7 +16,7 @@
   <header class="site-header"><div class="site-identity"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>WIP --- GEAR PLANNER / DPS SIM</h1></div></div><div class="header-status"><span class="badge">In development</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
   <div class="planner-topbar"><nav class="page-nav" aria-label="Dashboard pages">
     <a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="./" aria-current="page">WIP --- GEAR PLANNER / DPS SIM</a>
-  </nav><button id="reset-all" type="button" hidden>Reset all</button></div>
+  </nav><div class="planner-actions-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" type="button" hidden>Reset all</button></div></div>
   <section id="class-selection" aria-labelledby="classes-title">
     <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
     <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>
@@ -31,7 +31,7 @@
     <div class="planner-grid">
       <div class="planner-column left-column">
       <section class="card equipment-card" id="equipment" aria-labelledby="equipment-heading">
-        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span><button id="reset-gear" type="button" aria-label="Reset gear">Reset</button></div>
+        <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span><button id="reset-gear" class="panel-reset" type="button" aria-label="Reset gear">Reset</button></div>
         <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
         <details class="character-options">
           <summary>Build details</summary>
@@ -50,12 +50,12 @@
       </div>
       <div class="planner-column right-column">
     <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span><button id="clear-talents" type="button">Clear points</button></div></div>
+      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div><button id="clear-talents" class="panel-reset" type="button" aria-label="Reset talents">Reset</button></div>
 
       <div id="talent-trees" class="talent-trees"></div>
     </section>
         <section class="card" id="rotation" aria-labelledby="rotation-heading">
-          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2></div>
+          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><button id="reset-rotation" class="panel-reset" type="button" aria-label="Reset rotation">Reset</button></div>
           <label class="field rotation-preset-field">Preset<select id="rotation-preset"></select></label>
           <p id="rotation-description" class="rotation-description"></p>
           <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
@@ -64,7 +64,7 @@
           <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
         </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
-          <div class="card-heading"><h2 id="settings-heading">Settings</h2></div>
+          <div class="card-heading"><h2 id="settings-heading">Settings</h2><button id="reset-settings" class="panel-reset" type="button" aria-label="Reset settings">Reset</button></div>
           <div class="fight-controls">
             <label class="field">Fight Duration (s)<input id="fight-duration" type="number" min="1" max="3600" value="60"></label>
             <div class="fight-variation"><label><input id="fight-vary" type="checkbox"> Vary ±</label><label class="variation-percent"><input id="fight-variation" type="number" min="0" max="100" value="20" aria-label="Fight duration variation percentage" disabled> %</label></div>
@@ -83,20 +83,19 @@
           <div class="target-presets"><select id="boss-preset" aria-label="Boss target"><option value="">Boss…</option></select><button id="expert-dummy" type="button">Expert Training Dummy</button><button id="heroic-dummy" type="button">Heroic Training Dummy</button></div>
         </section>
         <section class="card" id="simulation" aria-labelledby="simulation-heading">
-          <div class="card-heading"><h2 id="simulation-heading">Results</h2></div>
-          <button disabled class="run-button" title="Combat engines are not implemented yet.">Run Simulation</button>
+          <div class="card-heading"><h2 id="simulation-heading">Results</h2><button id="reset-results" class="panel-reset" type="button" aria-label="Reset results">Reset</button></div>
+          <button disabled class="run-button" title="Combat engines are not implemented yet.">Run Simulation</button><div id="simulation-output"></div>
         </section>
-        <section class="card" id="combat-log" aria-labelledby="log-heading"><h2 id="log-heading">Combat Log</h2><p class="small muted">Run a simulation to see the combat log.</p></section>
+        <section class="card" id="combat-log" aria-labelledby="log-heading"><div class="card-heading"><h2 id="log-heading">Combat Log</h2><button id="reset-combat-log" class="panel-reset" type="button" aria-label="Reset combat log">Reset</button></div><div id="combat-log-output"><p class="small muted">Run a simulation to see the combat log.</p></div></section>
       </div>
       <div class="planner-column buffs-column">
         <section class="card" id="buffs" aria-labelledby="buffs-heading">
-          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2></div>
+          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
           <div id="buff-list"></div>
         </section>
       </div>
     </div>
   </div>
-  <p id="feedback" role="status" aria-live="polite"></p>
   <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a></span><span class="source-credits">Based on forks of <a href="https://thrunk112.github.io/WarriorSim-TurtleWoW/turtle.html" target="_blank" rel="noopener noreferrer">TurtleSim</a> and <a href="https://www.combatgum.app/" target="_blank" rel="noopener noreferrer">Combat Gum</a>. <span class="reference-forks">(<a href="https://github.com/isfir/wowsims-turtle" target="_blank" rel="noopener noreferrer">WoWSims Turtle</a> · <a href="https://github.com/Barwaat/huntersim2-twow" target="_blank" rel="noopener noreferrer">HunterSim Turtle</a>)</span></span></footer>
 </main>
 <dialog id="item-dialog" class="equipment-picker" aria-labelledby="item-dialog-heading">

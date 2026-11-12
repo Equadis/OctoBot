@@ -28,5 +28,5 @@ export function settings({getBuild,onChange,onError}){
   dropdown.value=BOSS_PRESETS.some(p=>p.id===planning.targetPreset)?planning.targetPreset:'';
   for(const id of ['expert-dummy','heroic-dummy']){const selected=planning.targetPreset===id;$(id).classList.toggle('selected',selected);$(id).setAttribute('aria-pressed',String(selected));}
  }
- return {render};
+ return {render,cancelPending(){for(const timer of pending.values())clearTimeout(timer);pending.clear();}};
 }

@@ -309,8 +309,7 @@ function refreshCursorSelection(){
  const time=start+(windowEnd-start)*hoverRatio;
  const value=D.at(rows,time);
  if(value!==null){
-  const recorded=D.nearest(rows,time)?.t===time;
-  show(time,value,true,recorded?null:'INTERPOLATED · '+num(value)+' players');
+  show(time,value,true);
  }else{
   const estimate=D.estimateAt(rows,time);
   show(time,estimate,true,null,estimate!==null);
@@ -387,9 +386,7 @@ function draw(){
    const lastVisible=visible.recorded.at(-1)?.at(-1);
    if(nearest&&nearest.t>=start&&nearest.t<=windowEnd)show(nearest.t,nearest.value);
    else if(lastVisible){
-    const exact=D.nearest(rows,lastVisible.t)?.t===lastVisible.t;
-    show(lastVisible.t,lastVisible.value,false,
-     exact?null:'INTERPOLATED · '+num(lastVisible.value)+' players');
+    show(lastVisible.t,lastVisible.value,false);
    }else show(windowEnd,null);
   }
  }

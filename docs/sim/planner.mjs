@@ -1,3 +1,4 @@
+import {resetPlannerSection} from './core/panel-resets.mjs?v=20261112-polish2';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261112-audit1';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
@@ -9,7 +10,7 @@ import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseT
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261112-audit1';
 import { itemPicker } from './item-picker.mjs?v=20261112-audit1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
-import { settings } from './settings.mjs?v=20261111-classes1';
+import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261112-consumes2';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberClass, rememberedClass } from './core/interface.mjs?v=20261112-display1';
@@ -83,6 +84,7 @@ function applyBuild(candidate, message, legacy=false) {
   const restored=legacy?restoreLegacyBuild(candidate,data):null;
   const next = restored?.build || validateBuild(candidate, data);
   if(restored?.changes.length)message+=` ${restored.changes.join('; ')}. Original saved copy retained.`;
+  settingsControls?.cancelPending();
   build = next;
   selectedId = null;
   $('build-name').value = build.name;
@@ -335,8 +337,11 @@ function wireControls() {
     onClear: slot => {delete build.gear[slot];for(const error of equipmentErrors(build,id=>picker.lookup(id)))delete build.gear[error.slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
-  $('reset-gear').addEventListener('click',()=>{build.gear={};persistDraft();render();refreshTooltip();feedback('Equipment cleared.');});
-  $('clear-talents').addEventListener('click',()=>{build.talents={};selectedId=null;persistDraft();render();refreshTooltip();feedback('Talent points cleared.');});
+  $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
+  $('clear-talents').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'talents'),'Talents reset.'));
+  for(const [id,section,label] of [['reset-buffs','buffs','Buffs & Debuffs'],['reset-rotation','rotation','Rotation'],['reset-settings','build-settings','Settings']])$(id).addEventListener('click',()=>{applyBuild(resetPlannerSection(build,section),`${label} reset.`);if(section==='rotation'){for(const field of ['rotation-name','rotation-save-status'])$(field)[field==='rotation-name'?'value':'textContent']='';$('rotation-add').value='';}});
+  $('reset-results').addEventListener('click',()=>{$('simulation-output').replaceChildren();feedback('Results reset.');});
+  $('reset-combat-log').addEventListener('click',()=>{$('combat-log-output').replaceChildren(element('p','small muted','Run a simulation to see the combat log.'));feedback('Combat log reset.');});
   config=configuration({getBuild:()=>build,onChange:controls=>{const classOptions={...build.classOptions};if(controls.buffIds.includes('wizard-oil-mh')){if(classId==='rogue')classOptions.mhPoison='None';if(classId==='shaman')classOptions.mhImbue='None';}if(controls.buffIds.includes('wizard-oil-oh')&&classId==='rogue')classOptions.ohPoison='None';build=validateBuild({...build,classOptions,controls},data);renderClassOptions();persistDraft();render();}});
   for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', async () => {

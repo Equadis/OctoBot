@@ -117,10 +117,9 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .talent-node[aria-pressed=true]{box-shadow:none}
 .planner-view .talent-node:focus:not(:focus-visible){outline:none}
 .planner-view .talent-node:focus-visible{outline:0;box-shadow:none}
-.planner-view .talent-node{--talent-border:#a8c1dd}
 .planner-view .talent-node.allocated:not(.maxed){--talent-border:#1eff00}
 .planner-view .talent-node.maxed{--talent-border:#ffd100}
-.planner-view .talent-node:focus-visible .talent-icon{outline:2px solid var(--talent-border);outline-offset:0;box-shadow:none}
+.planner-view .talent-node.allocated:focus-visible .talent-icon{outline:2px solid var(--talent-border);outline-offset:0;box-shadow:none}
 #item-dialog .item-row.equipped.previewed{box-shadow:none}
 #item-dialog .item-row:focus:not(:focus-visible){outline:none}
 #item-dialog .item-row:focus-visible{outline:0;box-shadow:none;border-left-color:#a8c1dd}
@@ -154,6 +153,20 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 #reset-all:hover{background:#4a292b;border-color:#c35c51}
 #reset-all:focus-visible{outline:2px solid #ff998f;outline-offset:3px}
 .additional-consumables>.buff-actions{display:flex;justify-content:flex-end;margin:8px 0}
-@media(min-width:1500px){.planner-view #reset-all{position:absolute;right:calc((100% - min(1740px,100vw - 210px))/2 - 65px)}}
-@media(min-width:1280px) and (max-width:1499px){.planner-view #reset-all{position:absolute;right:calc((100% - (100vw - 64px))/2)}}
-@media(max-width:560px){.planner-topbar{flex-wrap:wrap;gap:4px}.planner-topbar .page-nav{flex-basis:100%}#reset-all{margin-left:auto;margin-bottom:14px}}
+@media(min-width:1500px){.planner-view .planner-actions-status{position:absolute;right:calc((100% - min(1740px,100vw - 210px))/2 - 65px)}}
+@media(min-width:1280px) and (max-width:1499px){.planner-view .planner-actions-status{position:absolute;right:calc((100% - (100vw - 64px))/2)}}
+@media(max-width:560px){.planner-topbar{flex-wrap:wrap;gap:4px}.planner-topbar .page-nav{flex-basis:100%}.planner-actions-status{margin-left:auto;margin-bottom:14px}}
+
+/* Status shares the reset row; empty talent focus does not add an icon border. */
+.planner-actions-status{display:flex;align-items:center;justify-content:flex-end;gap:12px;max-width:500px;min-width:0}
+.planner-actions-status #feedback{margin:0;min-height:0;font-size:11px;text-align:right;overflow-wrap:anywhere}
+.planner-actions-status #feedback:empty{display:none}
+.planner-view .talent-node:not(.allocated):focus-visible .talent-icon{outline:none;box-shadow:none}
+.planner-view .talent-node:not(.allocated):focus-visible .rank{text-decoration:underline;text-underline-offset:2px;color:#ffd100}
+@media(max-width:1279px){.planner-actions-status{flex:0 1 auto;max-width:40%}}
+@media(max-width:560px){.planner-actions-status{max-width:100%;width:100%}}
+
+.planner-view .card-heading>.panel-reset{margin-left:auto;align-self:flex-start;border:0;background:transparent;box-shadow:none;color:#ff6b6b;font-size:11px;font-weight:400;padding:0;min-height:0;line-height:1.5;white-space:nowrap}
+.planner-view .card-heading>.panel-reset:hover{color:#ff9a93;text-decoration:underline}
+.planner-view .card-heading>.talent-count+.panel-reset{margin-left:12px}
+#clear-talents.panel-reset,#reset-gear.panel-reset{align-self:flex-start;min-height:0;padding:0}
