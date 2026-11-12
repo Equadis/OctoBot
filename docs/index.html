@@ -296,6 +296,27 @@ function marker(release,px,py,extra=''){
  if(extra==='Scheduled'||release.timestamp===null)g.append(svg('text',{x:fx+15,y:fy-7,'text-anchor':'middle',style:'fill:#aab4c1;font-size:10px'},extra==='Scheduled'?'Scheduled':'Date unconfirmed'));
  g.append(svg('title',{},label+' · '+(time===null?release.date_note:fmt(time)+' UTC')));return g;
 }
+// Keep the inspected point tied to the physical mouse position, not the
+// newest observation, while zooming or panning the viewport.
+let hoverRatio=null;
+function ratioAtCursor(clientX){
+ const rect=$('plot-hit').getBoundingClientRect();
+ if(!rect.width||!Number.isFinite(clientX))return null;
+ return Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+}
+function refreshCursorSelection(){
+ if(hoverRatio===null)return false;
+ const time=start+(windowEnd-start)*hoverRatio;
+ const value=D.at(rows,time);
+ if(value!==null){
+  const recorded=D.nearest(rows,time)?.t===time;
+  show(time,value,true,recorded?null:'INTERPOLATED · '+num(value)+' players');
+ }else{
+  const estimate=D.estimateAt(rows,time);
+  show(time,estimate,true,null,estimate!==null);
+ }
+ return true;
+}
 function updateJumpToPresent(){
  $('jump-to-present').disabled=period!=='CUSTOM'||windowEnd>=Date.now()-30000;
 }
@@ -356,18 +377,21 @@ function draw(){
  $('range-label').textContent=period==='CUSTOM'?timeSpanText(windowEnd-start):period;
  updateJumpToPresent();
  updateHeadline();
- // A historical view can contain recorded data even if the newest overall
- // sample is outside it. Avoid displaying a false NO DATA marker at its edge.
- if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);
- else{
-  const nearest=D.nearest(rows,windowEnd);
-  const lastVisible=visible.recorded.at(-1)?.at(-1);
-  if(nearest&&nearest.t>=start&&nearest.t<=windowEnd)show(nearest.t,nearest.value);
-  else if(lastVisible){
-   const exact=D.nearest(rows,lastVisible.t)?.t===lastVisible.t;
-   show(lastVisible.t,lastVisible.value,false,
-    exact?null:'INTERPOLATED · '+num(lastVisible.value)+' players');
-  }else show(windowEnd,null);
+ // Navigation redraws must honour the cursor's current screen position.
+ // Otherwise every Shift-scroll redraw selects the latest/rightmost sample.
+ if(!refreshCursorSelection()){
+  // Without an active hover, show the latest value *within* the window.
+  if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);
+  else{
+   const nearest=D.nearest(rows,windowEnd);
+   const lastVisible=visible.recorded.at(-1)?.at(-1);
+   if(nearest&&nearest.t>=start&&nearest.t<=windowEnd)show(nearest.t,nearest.value);
+   else if(lastVisible){
+    const exact=D.nearest(rows,lastVisible.t)?.t===lastVisible.t;
+    show(lastVisible.t,lastVisible.value,false,
+     exact?null:'INTERPOLATED · '+num(lastVisible.value)+' players');
+   }else show(windowEnd,null);
+  }
  }
 }
 async function load(){const ticket=++loadNumber;try{
@@ -410,37 +434,28 @@ plotHit.addEventListener('pointerdown',e=>{
  dragging={id:e.pointerId,lastX:e.clientX};
  plotHit.setPointerCapture(e.pointerId);
  plotHit.classList.add('is-panning');
+ hoverRatio=ratioAtCursor(e.clientX);
  $('tooltip').hidden=true;
  e.preventDefault();
 });
 plotHit.addEventListener('pointermove',e=>{
+ const ratio=ratioAtCursor(e.clientX);
+ if(ratio===null)return;
  if(dragging){
   if(e.pointerId!==dragging.id)return;
   const rect=plotHit.getBoundingClientRect();
   const dx=e.clientX-dragging.lastX;
   dragging.lastX=e.clientX;
+  hoverRatio=ratio;
   if(rect.width>0&&dx!==0){
    // Pulling right moves earlier observations into view, as on a map.
-   navigateTimeline(D.panRange(start,windowEnd,-dx/rect.width*(windowEnd-start),LAUNCH,Date.now()));
-  }
+   if(!navigateTimeline(D.panRange(start,windowEnd,-dx/rect.width*(windowEnd-start),LAUNCH,Date.now())))
+    refreshCursorSelection();
+  }else refreshCursorSelection();
   return;
  }
- const rect=plotHit.getBoundingClientRect();
- if(!rect.width)return;
- const time=start+(windowEnd-start)*Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
- const value=D.at(rows,time);
- if(value===null){
-  const estimate=D.estimateAt(rows,time);
-  show(time,estimate,true,null,estimate!==null);
- }else{
-  const point=D.nearest(rows,time);
-  // At minute-level zoom, the tooltip must stay at the cursor rather than
-  // jumping towards a recorded point outside the viewport.
-  const tolerance=(windowEnd-start)/rect.width;
-  if(point&&point.t>=start&&point.t<=windowEnd&&Math.abs(point.t-time)<=tolerance)
-   show(point.t,point.value,true);
-  else show(time,value,true,'INTERPOLATED · '+num(value)+' players');
- }
+ hoverRatio=ratio;
+ refreshCursorSelection();
 });
 function endPan(e){
  if(!dragging||e.pointerId!==dragging.id)return;
@@ -453,20 +468,27 @@ plotHit.addEventListener('pointercancel',endPan);
 plotHit.addEventListener('lostpointercapture',e=>{
  if(dragging&&dragging.id===e.pointerId){dragging=null;plotHit.classList.remove('is-panning');}
 });
-plotHit.addEventListener('pointerleave',()=>{$('tooltip').hidden=true;});
+plotHit.addEventListener('pointerleave',()=>{
+ hoverRatio=null;
+ $('tooltip').hidden=true;
+ $('dot').style.display='none';
+ $('crosshair').style.display='none';
+});
 plotHit.addEventListener('wheel',e=>{
- const rect=plotHit.getBoundingClientRect();
- if(!rect.width)return;
+ const ratio=ratioAtCursor(e.clientX);
+ if(ratio===null)return;
+ hoverRatio=ratio;
  e.preventDefault();
  const unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
+ let next;
  if(e.shiftKey){
   // Shift+scroll up pans left (earlier); down pans right (later), including deltaX remapping.
   const offset=D.wheelPanOffset(e.deltaX,e.deltaY,unit,windowEnd-start);
-  navigateTimeline(D.panRange(start,windowEnd,offset,LAUNCH,Date.now()));
+  next=D.panRange(start,windowEnd,offset,LAUNCH,Date.now());
  }else{
-  const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
-  navigateTimeline(D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now()));
+  next=D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now());
  }
+ if(!navigateTimeline(next))refreshCursorSelection();
 },{passive:false});
 $('jump-to-present').addEventListener('click',()=>{
  const right=Date.now(),span=windowEnd-start;
