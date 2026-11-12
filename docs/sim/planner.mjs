@@ -13,13 +13,14 @@ import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261112-rotations1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
-import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberClass, rememberedClass } from './core/interface.mjs?v=20261112-display1';
+import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
 const $ = id => document.getElementById(id);
-let savedClass=null;try{savedClass=rememberedClass(localStorage);}catch{}
-const selectedView=plannerView(location.href,savedClass);
+let savedView=null;try{savedView=rememberedPlannerView(localStorage);}catch{}
+const selectedView=plannerView(location.href,savedView);
 const classId=selectedView==='classes'?'warrior':selectedView;
-if(selectedView!=='classes'){try{rememberClass(classId,localStorage);}catch{}
+try{rememberPlannerView(selectedView,localStorage);}catch{}
+if(selectedView!=='classes'){
  const canonical=new URL(location.href);if(!canonical.searchParams.has('class')){canonical.searchParams.set('class',classId);history.replaceState(null,'',canonical);}
 }
 const currentClass=classDefinition(classId);
@@ -473,7 +474,15 @@ async function initialise() {
   }
 }
 
-window.addEventListener('hashchange', () => {
-  if (!document.body.classList.contains('planner-view') && plannerView(location.href) !== 'classes') location.reload();
-});
+function restoreNavigation() {
+  if (plannerView(location.href, selectedView) !== selectedView) {
+    location.reload();
+    return;
+  }
+  // Back/forward cache restores do not re-run this module.
+  try{rememberPlannerView(selectedView,localStorage);}catch{}
+}
+window.addEventListener('hashchange', restoreNavigation);
+window.addEventListener('popstate', restoreNavigation);
+window.addEventListener('pageshow', restoreNavigation);
 initialise();

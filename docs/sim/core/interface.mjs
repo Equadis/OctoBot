@@ -26,6 +26,22 @@ export function rememberedClass(storage){
   try{const value=storage.getItem(LAST_CLASS_KEY);return CLASSES.some(cls=>cls.id===value)?value:null;}catch{return null;}
 }
 
+// Navigation is independent of per-class drafts and the last selected class.
+export const PLANNER_VIEW_KEY='octosim.planner.view.v1';
+export function rememberPlannerView(view,storage){
+  if(view!=='classes'&&!CLASSES.some(cls=>cls.id===view))return;
+  try{storage.setItem(PLANNER_VIEW_KEY,view);}catch{}
+  if(view!=='classes')rememberClass(view,storage);
+}
+export function rememberedPlannerView(storage){
+  try{
+    const view=storage.getItem(PLANNER_VIEW_KEY);
+    if(view==='classes'||CLASSES.some(cls=>cls.id===view))return view;
+  }catch{}
+  // Preserve the refresh behaviour of browsers with an existing class preference.
+  return rememberedClass(storage);
+}
+
 export function plannerView(url, lastClass=null) {
   const parsed = new URL(url);
   const selected = parsed.searchParams.get('class');
