@@ -1,3 +1,4 @@
+import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261112-audit1';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {characterStats} from './core/character-stats.mjs?v=20261112-audit1';
@@ -11,10 +12,15 @@ import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';
 import { configuration } from './configuration.mjs?v=20261112-audit1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
-import { CLASSES, SLOT_ICONS, iconUrl, plannerView } from './core/interface.mjs?v=20261111-classes1';
+import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberClass, rememberedClass } from './core/interface.mjs?v=20261112-display1';
 
 const $ = id => document.getElementById(id);
-const classId=plannerView(location.href)==='classes'?'warrior':plannerView(location.href);
+let savedClass=null;try{savedClass=rememberedClass(localStorage);}catch{}
+const selectedView=plannerView(location.href,savedClass);
+const classId=selectedView==='classes'?'warrior':selectedView;
+if(selectedView!=='classes'){try{rememberClass(classId,localStorage);}catch{}
+ const canonical=new URL(location.href);if(!canonical.searchParams.has('class')){canonical.searchParams.set('class',classId);history.replaceState(null,'',canonical);}
+}
 const currentClass=classDefinition(classId);
 const DRAFT_KEY=`octosim.planner.draft.${classId}.v2`;
 let library;
@@ -110,6 +116,7 @@ function createSlots() {
       return equipmentTooltip(metadata, item);
     });
     const enchantLabel=element('span','slot-enchant','No enchant');
+    attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
     container.append(button, enchantLabel);
     slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
@@ -184,7 +191,10 @@ function render() {
     image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
     if (metadata) itemName.className = `item-name q${metadata.quality}`;
     else itemName.className = 'item-name';
-    enchantLabel.textContent=ENCHANTS.find(enchant=>enchant.id===item?.enchantId)?.name || 'No enchant';
+    const enchant=ENCHANTS.find(enchant=>enchant.id===item?.enchantId);
+    enchantLabel.textContent=enchantSummary(enchant);
+    enchantLabel.dataset.tone=bonusTone(enchantLabel.textContent);
+    enchantLabel.tabIndex=enchant?0:-1;
     enchantLabel.classList.toggle('enchanted',Boolean(item?.enchantId));
     itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
@@ -210,6 +220,7 @@ function render() {
     const heading=element('h3','',group.name);section.append(heading);
     for(const stat of group.rows){
       const row=element('div','gear-stat');row.append(element('span','',stat.label),element('strong','',stat.value));
+      row.dataset.tone=statTone(group.name,stat.label,stat.value);
       row.title=stat.note||sheet.sourceNote;
       if(stat.value==='—')row.classList.add('stat-unavailable');
       section.append(row);
@@ -418,7 +429,7 @@ function createDisclosures() {
 
 async function initialise() {
   createClasses();
-  if (plannerView(location.href) === 'classes') return;
+  if (selectedView === 'classes') return;
   document.body.classList.add('planner-view');
   document.body.style.setProperty('--class-colour',currentClass.colour);
   $('character-race').replaceChildren(...CLASS_RACES[classId].map(race=>{const option=element('option','',race);option.value=race;return option;}));
@@ -455,6 +466,6 @@ async function initialise() {
 }
 
 window.addEventListener('hashchange', () => {
-  if (!document.body.classList.contains('planner-view') && plannerView(location.href) !== 'classes') initialise();
+  if (!document.body.classList.contains('planner-view') && plannerView(location.href) !== 'classes') location.reload();
 });
 initialise();

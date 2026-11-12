@@ -17,12 +17,22 @@ export function iconUrl(name) {
   return `https://wow.zamimg.com/images/wow/icons/large/${name.toLowerCase()}.jpg`;
 }
 
-export function plannerView(url) {
+export const LAST_CLASS_KEY='octosim.last-class.v1';
+export function rememberClass(classId,storage){
+  if(!CLASSES.some(cls=>cls.id===classId))return;
+  try{storage.setItem(LAST_CLASS_KEY,classId);}catch{}
+}
+export function rememberedClass(storage){
+  try{const value=storage.getItem(LAST_CLASS_KEY);return CLASSES.some(cls=>cls.id===value)?value:null;}catch{return null;}
+}
+
+export function plannerView(url, lastClass=null) {
   const parsed = new URL(url);
   const selected = parsed.searchParams.get('class');
+  if (parsed.searchParams.has('classes'))return 'classes';
   if (selected && CLASSES.some(cls=>cls.id===selected)) return selected;
   if (selected) return 'classes';
   if (selected === 'warrior' || parsed.hash.startsWith('#build=') ||
       ['#equipment', '#talents', '#simulation', '#build-settings'].includes(parsed.hash)) return 'warrior';
-  return 'classes';
+  return CLASSES.some(cls=>cls.id===lastClass)?lastClass:'classes';
 }

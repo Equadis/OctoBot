@@ -7,8 +7,8 @@
   <title>OctoBot · WIP --- GEAR PLANNER / DPS SIM</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css">
-  <link rel="stylesheet" href="combat-layout.css?v=20261112-audit1">
-  <script type="module" src="planner.mjs?v=20261112-audit1"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261112-display1">
+  <script type="module" src="planner.mjs?v=20261112-display1"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
 </head>
 <body>
@@ -26,7 +26,7 @@
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
   <div id="planner" hidden>
     <div class="toolbar">
-      <div class="actions"><div class="rail-brand"><strong>OctoSim</strong><span>Warrior Build Planner</span></div><a class="all-classes" href="./">← All classes</a><button id="share-build">Share Build</button><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="export-build">Export Build</button><button id="import-build">Import Build</button><button id="new-build" class="subtle">Reset Build</button></div>
+      <div class="actions"><div class="rail-brand"><strong>OctoSim</strong><span>Warrior Build Planner</span></div><a class="all-classes" href="?classes">← All classes</a><button id="share-build">Share Build</button><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="export-build">Export Build</button><button id="import-build">Import Build</button><button id="new-build" class="subtle">Reset Build</button></div>
     </div>
     <div class="planner-grid">
       <div class="planner-column left-column">
@@ -97,7 +97,7 @@
     </div>
   </div>
   <p id="feedback" role="status" aria-live="polite"></p>
-  <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot">OctoBot source ↗</a></span></footer>
+  <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a></span><span class="source-credits">Based on forks of <a href="https://thrunk112.github.io/WarriorSim-TurtleWoW/turtle.html" target="_blank" rel="noopener noreferrer">TurtleSim</a> and <a href="https://www.combatgum.app/" target="_blank" rel="noopener noreferrer">Combat Gum</a>. <span class="reference-forks">(<a href="https://github.com/isfir/wowsims-turtle" target="_blank" rel="noopener noreferrer">WoWSims Turtle</a> · <a href="https://github.com/Barwaat/huntersim2-twow" target="_blank" rel="noopener noreferrer">HunterSim Turtle</a>)</span></span></footer>
 </main>
 <dialog id="item-dialog" class="equipment-picker" aria-labelledby="item-dialog-heading">
   <form id="item-form" class="item-picker-header"><h2 id="item-dialog-heading">Equipment</h2><input id="item-reference" maxlength="200" placeholder="Search items…" aria-label="Search items" autocomplete="off"><span id="item-count" class="small muted" role="status"></span><button type="button" data-close="item-dialog" aria-label="Close equipment picker">×</button></form>

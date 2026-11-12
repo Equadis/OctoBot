@@ -1,6 +1,6 @@
 import {filterItems,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261112-audit1';
 import {SLOTS} from './core/builds.mjs?v=20261112-audit1';
-import {iconUrl} from './core/interface.mjs?v=20261111-classes1';
+import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261111-classes1';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
