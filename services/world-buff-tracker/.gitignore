@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.log
+
+# Local diagnostic scripts / captures (not part of the bot)
+probe-auth.ts
+capture-proxy.mjs
+solve-integrity.mjs
+capture.json
+
+# Secrets: account credentials and the Discord webhook live here, never in git.
+.env
+.env.*
+!.env.example
+
+decode-mine.ts
+run.log
+world-capture-proxy.mjs
+world-capture.json
+decode-world.mjs

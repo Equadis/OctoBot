@@ -1,0 +1,31 @@
+name: World Buff Tracker CI
+on:
+  push:
+    branches:
+      - feat/world-buff-tracker-nzoth
+    paths:
+      - 'services/world-buff-tracker/**'
+      - '.github/workflows/world-buff-tracker-ci.yml'
+  pull_request:
+    paths:
+      - 'services/world-buff-tracker/**'
+      - '.github/workflows/world-buff-tracker-ci.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/world-buff-tracker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: services/world-buff-tracker/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
