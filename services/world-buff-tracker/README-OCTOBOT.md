@@ -4,8 +4,8 @@ This service is an authorised copy of [GeneralA6/octo-wow-world-buff-status](htt
 
 ## Scope
 
-- **Realm:** N'Zoth only. No Y'Shaarj or C'Thun accounts.
-- **Characters:** Two dedicated accounts, one parked at the Elwynn Forest Darkmoon Faire site and the other at the Mulgore site. The characters may be used as network connections for pooled `/who` queries; they do not need to enter raids.
+- **World Buff Tracker realm:** N'Zoth only. Separate `.server info`-only OctoMetrics collectors retain one Y'Shaarj and one C'Thun account; they are outside this service.
+- **World Buff Tracker characters:** Two dedicated N'Zoth accounts, one parked at the Elwynn Forest Darkmoon Faire site and the other at Mulgore.
 - **Raids:** Onyxia's Lair and Blackwing Lair tracked separately; the Onyxia/Nefarian head cooldown is shared.
 - **Site output:** OctoBot's future World Buffs dashboard is the main destination. Keep confirmed buff drops distinct from raid-based predictions and stale observations.
 - **No automated in-game broadcasting** from the OctoBot integration.
@@ -30,13 +30,17 @@ WOW_CHARACTER=<primary-character>
 DARKMOON_WATCH_LOCATION=elwynn
 WOW_BWL_ENABLED=true
 WOW_WHO_MIN_GAP_SECONDS=31
-WOW_LISTENERS=[{"account":"<secondary-username>","password":"<secondary-password>","character":"<secondary-character>","onLogin":"none","yeller":false}]
+WOW_LISTENERS=[{"account":"<secondary-username>","password":"<secondary-password>","character":"<secondary-character>","onLogin":"none","yeller":false,"darkmoonWatchLocation":"mulgore"}]
 ```
 
-Once secondary DMF observation is implemented, configure the secondary site as `mulgore`. Do not commit credentials or paste them into chat or deployment logs. Use distinct credentials for each WoW account. Both characters must already be parked at their designated sites through the normal game client before the headless bot logs in.
+Secondary DMF observation is implemented in this integration branch. Configure the secondary listener with `darkmoonWatchLocation: "mulgore"` in the private `WOW_LISTENERS` JSON.
 
 Avoid duplicate logins: the currently running `OBPVESW` OctoMetrics test uses a separate account and remains untouched until the replacement is verified. Any other service using either new account must be stopped before enabling it here.
 
 ## Source import
 
 The GitHub Actions workflow `.github/workflows/import-world-buff-tracker.yml` copies the full pinned upstream source and tests into this directory on the feature branch. Re-run tests after port changes, and merge only after the website integration and second Faire-site observation are validated.
+
+## Complementary PvP/HC collector
+
+A separate metrics-only OctoMetrics Railway worker handles only `OBPVPSW` and `OBHCSW`, with `/who` and NPC buff monitoring disabled and `.server info` collected once a minute for each realm. It uses the existing Cloudflare D1 receiver. Total target: **four accounts, two new monitoring services**. Do not mistake a code branch or successful build for a production deployment; the existing N'Zoth test is still running independently.
