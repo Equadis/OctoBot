@@ -441,7 +441,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
         }
         listeners.push({
           account: requiredString("account"),
-          password: requiredString("password"),
+          password: entry.password === undefined ? password : requiredString("password"),
           characterName: requiredString("character"),
           faction: parseFaction(optString(entry.faction), `WOW_LISTENERS entry ${nth} "faction"`),
           onLogin: parseOnLogin(optString(entry.onLogin), `WOW_LISTENERS entry ${nth} "onLogin"`),
