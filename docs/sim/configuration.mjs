@@ -54,13 +54,14 @@ export function configuration({getBuild,onChange}){
  function renderAdditional(){
   const build=getBuild(),query=search.value.trim().toLowerCase(),selected=build.controls.consumableIds||[];
   const candidates=orderConsumables(CONSUMABLES.filter(item=>!item.buffId&&item.verified&&!consumableRestriction(item,build)&&(kind.value==='All'||item.category===kind.value)&&(!query||item.name.toLowerCase().includes(query)||String(item.id)===query)));
-  count.textContent=`${candidates.length} verified applicable consumables`;const scrollTop=list.scrollTop;list.replaceChildren();
+  count.textContent=`${candidates.length} verified applicable consumables`;const scrollTop=list.scrollTop,focusedId=list.contains(document.activeElement)?document.activeElement.value:null;list.replaceChildren();
   for(const item of candidates){
    const row=node('label',undefined,'buff-row'),input=node('input');input.type='checkbox';input.checked=selected.includes(item.id);input.value=String(item.id);
    const text=node('span',item.name,'buff-name'),effect=node('span',item.requiredLevel?`Lv ${item.requiredLevel}`:'','buff-effect');row.append(input,text,effect);
-   input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderAdditional();});
+   input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderChecks();});
    attachTooltip(row,()=>({title:item.name,lines:[...item.effects,stackingNote(item),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]}));list.append(row);
   }
+  if(focusedId)list.querySelector(`input[value="${focusedId}"]`)?.focus({preventScroll:true});
   list.scrollTop=scrollTop;
  }
  search.addEventListener('input',renderAdditional);kind.addEventListener('change',renderAdditional);

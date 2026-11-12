@@ -10,7 +10,7 @@ import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacy
 import { itemPicker } from './item-picker.mjs?v=20261112-audit1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
 import { settings } from './settings.mjs?v=20261111-classes1';
-import { configuration } from './configuration.mjs?v=20261112-consumes1';
+import { configuration } from './configuration.mjs?v=20261112-consumes2';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberClass, rememberedClass } from './core/interface.mjs?v=20261112-display1';
 
