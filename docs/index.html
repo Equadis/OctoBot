@@ -25,7 +25,7 @@
 <section class="chart-card" aria-label="Interactive population chart">
 <div class="chart-head"><div class="chart-title"><h2>Players online</h2><label class="server-label" for="server-select">Server: <select id="server-select" aria-label="Server"></select></label></div><span class="range-label" id="range-label"></span></div>
 <p class="readout" id="readout" aria-live="polite"></p>
-<div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><line id="average-line" x1="56" x2="964" stroke="#74b6ff" stroke-width="1.5"></line><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><div class="tip" id="tooltip" hidden></div></div>
+<div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><line id="average-line" x1="56" x2="964" stroke="#74b6ff" stroke-width="1.5"></line><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><g id="recorded-points"></g><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><div class="tip" id="tooltip" hidden></div></div>
 <div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><div class="date-fields"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"></div><div class="date-actions"><button id="jump-to-present" class="jump-to-present" type="button" disabled>Jump to present →</button><button id="apply-dates" type="button">Apply</button></div></div></div>
 <div id="date-error" role="status"></div>
 <div class="legend-row"><span><i class="key" style="border-color:#63df9a"></i>Smoothed</span><span><i class="key" style="border-color:#82efb3;border-bottom-style:dashed"></i>Recorded</span><span><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated</span></div>
@@ -269,7 +269,9 @@ function svg(name,attrs,text){const e=document.createElementNS('http://www.w3.or
 function show(time,value,tooltip=false,custom=null,estimated=false){
  const label=custom|| (value===null?'NO DATA':(estimated?'ESTIMATED · ':'')+num(value)+' players'),colour=value===null||estimated?'#e3bd57':'#79dfa7';
  $('readout').textContent=(time===null?'':fmt(time)+' UTC · ')+label;$('readout').style.color=colour;
- const inWindow=time!==null&&start<=time&&time<=windowEnd;$('dot').style.display=inWindow?'':'none';$('crosshair').style.display=inWindow?'':'none';
+ const inWindow=time!==null&&start<=time&&time<=windowEnd;
+ $('dot').style.display=inWindow&&value!==null?'':'none';
+ $('crosshair').style.display=inWindow&&(tooltip||value!==null)?'':'none';
  $('dot').setAttribute('cx',time===null?56:x(time));$('dot').setAttribute('cy',y(value??0));$('dot').setAttribute('fill',colour);
  $('crosshair').setAttribute('x1',time===null?56:x(time));$('crosshair').setAttribute('x2',time===null?56:x(time));
  const tip=$('tooltip');tip.hidden=!tooltip;
@@ -305,7 +307,7 @@ function draw(){
  $('peak24').textContent=num(peak24);$('all-peak').textContent=num(peak?.value??null);updateHeadline();updateUptime();
  $('all-peak').title=rows.length?'Recorded since '+fmt(rows[0].t)+' UTC':'No recorded observations';
  const info=D.intervals(rows,start,windowEnd);missing=info.unknown;ceiling=Math.max(500,Math.ceil((peak?.value||0)*1.15/500)*500);
- $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();
+ $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();$('recorded-points').replaceChildren();
  const step=Math.max(100,Math.ceil(ceiling/6/100)*100);
  for(let v=0;v<=ceiling;v+=step)$('axes').append(svg('line',{x1:56,x2:964,y1:y(v),y2:y(v),stroke:'#343a43'}),svg('text',{x:46,y:y(v)+4,'text-anchor':'end'},num(v)));
  for(let i=0;i<6;i++){
@@ -332,9 +334,18 @@ function draw(){
   }
   return result;
  }
- let path='',rawPath='',segment=[],previous=null;
- const flush=()=>{if(!segment.length)return;const sample=D.downsample(segment,1200);rawPath+=pathFor(sample);path+=pathFor(D.smooth(sample,Math.max(45000,Math.min(600000,(windowEnd-start)/850))),true);segment=[];};
- for(const r of rows){if(r.t<start||r.t>windowEnd)continue;if(previous&&r.t-previous.t>D.GAP)flush();segment.push(r);previous=r;}flush();
+ const bandwidth=Math.max(45000,Math.min(600000,(windowEnd-start)/850));
+ const visible=D.visibleSeries(rows,start,windowEnd,bandwidth);
+ let path='',rawPath='';
+ for(const segment of visible.recorded){
+  rawPath+=pathFor(segment);
+  if(segment.length===1){
+   const point=segment[0];
+   $('recorded-points').append(svg('circle',{cx:x(point.t),cy:y(point.value),r:2.5,
+    fill:'#82efb3',stroke:'#f4fff8','stroke-width':0.8}));
+  }
+ }
+ for(const segment of visible.smoothed)path+=pathFor(segment,true);
  $('raw-population').setAttribute('d',rawPath);$('population').setAttribute('d',path);
  for(const [id,val]of [['average-line',info.average],['peak-line',peak?.value??null]]){const line=$(id);line.style.display=val===null?'none':'';line.setAttribute('y1',y(val??0));line.setAttribute('y2',y(val??0));}
  
@@ -345,7 +356,19 @@ function draw(){
  $('range-label').textContent=period==='CUSTOM'?timeSpanText(windowEnd-start):period;
  updateJumpToPresent();
  updateHeadline();
- if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);else show(windowEnd,null);
+ // A historical view can contain recorded data even if the newest overall
+ // sample is outside it. Avoid displaying a false NO DATA marker at its edge.
+ if(latest&&latest.t>=start&&latest.t<=windowEnd)show(latest.t,latest.value);
+ else{
+  const nearest=D.nearest(rows,windowEnd);
+  const lastVisible=visible.recorded.at(-1)?.at(-1);
+  if(nearest&&nearest.t>=start&&nearest.t<=windowEnd)show(nearest.t,nearest.value);
+  else if(lastVisible){
+   const exact=D.nearest(rows,lastVisible.t)?.t===lastVisible.t;
+   show(lastVisible.t,lastVisible.value,false,
+    exact?null:'INTERPOLATED · '+num(lastVisible.value)+' players');
+  }else show(windowEnd,null);
+ }
 }
 async function load(){const ticket=++loadNumber;try{
  const selected=[realms.find(r=>r.id===realm)];
@@ -411,7 +434,12 @@ plotHit.addEventListener('pointermove',e=>{
   show(time,estimate,true,null,estimate!==null);
  }else{
   const point=D.nearest(rows,time);
-  show(point.t,point.value,true);
+  // At minute-level zoom, the tooltip must stay at the cursor rather than
+  // jumping towards a recorded point outside the viewport.
+  const tolerance=(windowEnd-start)/rect.width;
+  if(point&&point.t>=start&&point.t<=windowEnd&&Math.abs(point.t-time)<=tolerance)
+   show(point.t,point.value,true);
+  else show(time,value,true,'INTERPOLATED · '+num(value)+' players');
  }
 });
 function endPan(e){
@@ -433,8 +461,8 @@ plotHit.addEventListener('wheel',e=>{
  const unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
  if(e.shiftKey){
   // Shift+scroll up pans left (earlier); down pans right (later), including deltaX remapping.
-  const wheel=(Math.abs(e.deltaX)>0?e.deltaX:e.deltaY)*unit;
-  navigateTimeline(D.panRange(start,windowEnd,wheel/100*0.12*(windowEnd-start),LAUNCH,Date.now()));
+  const offset=D.wheelPanOffset(e.deltaX,e.deltaY,unit,windowEnd-start);
+  navigateTimeline(D.panRange(start,windowEnd,offset,LAUNCH,Date.now()));
  }else{
   const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
   navigateTimeline(D.zoomRange(start,windowEnd,ratio,e.deltaY*unit,LAUNCH,Date.now()));

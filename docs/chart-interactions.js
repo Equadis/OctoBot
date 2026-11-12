@@ -48,8 +48,8 @@
       e.preventDefault();
       const view=range(),limits=bounds(),unit=e.deltaMode===1?16:e.deltaMode===2?800:1;
       if(e.shiftKey){
-        const wheel=(Math.abs(e.deltaX)>0?e.deltaX:e.deltaY)*unit;
-        move(D.panRange(view.start,view.end,wheel/100*.12*(view.end-view.start),limits.floor,limits.now));
+        const offset=D.wheelPanOffset(e.deltaX,e.deltaY,unit,view.end-view.start);
+        move(D.panRange(view.start,view.end,offset,limits.floor,limits.now));
       }else{
         const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
         move(D.zoomRange(view.start,view.end,ratio,e.deltaY*unit,limits.floor,limits.now));

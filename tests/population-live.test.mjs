@@ -30,18 +30,18 @@ function mockElement(tag='div'){
   };
   return node;
 }
-function fixture(){
+function fixture(options={}){
   let timestamp=Date.parse('2026-11-08T01:00:00Z');
   class FakeDate extends Date {
     constructor(...args){super(...(args.length?args:[timestamp]));}
     static now(){return timestamp;}
   }
   let failed=false;
-  const archival=[
+  const archival=options.archival||[
     {timestamp:new FakeDate(timestamp-180000).toISOString(),online:95},
     {timestamp:new FakeDate(timestamp-120000).toISOString(),online:98}
   ];
-  const worker=[
+  const worker=options.worker||[
     {timestamp:new FakeDate(timestamp-60000).toISOString(),online:101}
   ];
   const statusSamples=[];
@@ -120,6 +120,7 @@ function fixture(){
   return {
     get,requests,intervals,worker,statusSamples,
     view(){return vm.runInContext('({start,windowEnd})',context);},
+    navigate(view){return vm.runInContext('navigateTimeline',context)(view);},
     advance(ms){timestamp+=ms},
     setWorkerFailed(v){failed=v}
   };
@@ -220,6 +221,64 @@ test('Jump to present preserves the population time scale and disables at the ri
   assert.ok(Math.abs((after.windowEnd-after.start)-span)<1,
     'Jump must pan the timeline, not restore a preset zoom level');
   assert.equal(jump.disabled,true,'Jump button must be greyed out after arriving at present');
+});
+
+
+test('minute-level historical panning renders boundary readings without false NO DATA or right-edge snap',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z');
+ const archival=Array.from({length:90},(_,i)=>({
+  timestamp:new Date(now-(90-i)*60000).toISOString(),online:1300+i
+ }));
+ const env=fixture({archival});await settle();
+ const start=now-55*60000+25000,end=start+600000;
+ env.navigate({start,end});
+ assert.equal(env.get('range-label').textContent,'10m');
+ const view=env.view();
+ assert.equal(view.start,start);
+ assert.equal(view.windowEnd,end);
+ const raw=env.get('raw-population').getAttribute('d');
+ const smooth=env.get('population').getAttribute('d');
+ assert.match(raw,/^M56\.00,/,'Recorded path must begin at the exact left boundary');
+ assert.match(raw,/L964\.00,/,'Recorded path must reach the exact right boundary');
+ assert.match(smooth,/^M56\.00,/);
+ assert.match(smooth,/964\.00,/);
+ assert.equal(env.get('outages').children.length,0,'Continuous data must not create a missing-data band');
+ assert.doesNotMatch(env.get('readout').textContent,/NO DATA/,
+  'A historical graph with visible readings must not show an unrelated NO DATA headline');
+ const hit=env.get('plot-hit');
+ const delta=35;
+ const first=env.view();
+ for(let i=0;i<25;i++){
+  hit.fire('wheel',{clientX:450,deltaX:0,deltaY:-delta,deltaMode:0,
+   shiftKey:true,preventDefault(){}});
+  const visible=env.view(),d=env.get('raw-population').getAttribute('d');
+  assert.equal(visible.windowEnd-visible.start,600000);
+  assert.match(d,/^M56\.00,/);
+  assert.match(d,/L964\.00,/);
+  assert.doesNotMatch(env.get('readout').textContent,/NO DATA/);
+ }
+ for(let i=0;i<25;i++){
+  hit.fire('wheel',{clientX:450,deltaX:delta,deltaY:0,deltaMode:0,
+   shiftKey:true,preventDefault(){}});
+ }
+ const returned=env.view();
+ assert.ok(Math.abs(returned.start-first.start)<1);
+ assert.ok(Math.abs(returned.windowEnd-first.windowEnd)<1);
+ hit.fire('pointermove',{clientX:0,pointerId:9});
+ assert.match(env.get('readout').textContent,/INTERPOLATED/);
+ assert.notEqual(env.get('dot').style.display,'none',
+  'An interpolated but valid edge has a real visible value');
+});
+
+test('an unobserved minute-level period does not fabricate a line or yellow zero-value marker',async()=>{
+ const env=fixture();await settle();
+ const farPast=Date.parse('2026-11-07T01:00:00Z');
+ env.navigate({start:farPast,end:farPast+600000});
+ assert.equal(env.get('raw-population').getAttribute('d'),'');
+ assert.equal(env.get('population').getAttribute('d'),'');
+ assert.match(env.get('readout').textContent,/NO DATA/);
+ assert.equal(env.get('dot').style.display,'none',
+  'NO DATA must not be drawn as a fake population value of zero');
 });
 
 test('legacy website-wide census is never shown as N\'Zoth population',async()=>{

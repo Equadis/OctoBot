@@ -120,5 +120,70 @@
   const left=Math.max(minTime,Math.min(maxTime-span,start+offset));
   return {start:left,end:left+span};
  }
- const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,panRange,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
+ // A wheel event may contain an arbitrarily large horizontal delta, especially
+ // when a browser remaps Shift+wheel to deltaX. Cap each event, not total travel.
+ function wheelPanOffset(deltaX,deltaY,unit,span){
+  const raw=(Math.abs(deltaX)>0?deltaX:deltaY)*unit;
+  if(!Number.isFinite(raw)||!Number.isFinite(span)||span<=0)return 0;
+  return Math.max(-250,Math.min(250,raw))/100*.12*span;
+ }
+ // Binary search keeps minute-level navigation fast even with months of history.
+ function lowerBound(rows,time){
+  let lo=0,hi=rows.length;
+  while(lo<hi){const mid=(lo+hi)>>1;if(rows[mid].t<time)lo=mid+1;else hi=mid;}
+  return lo;
+ }
+ // Crop a *confirmed continuous* series. Interpolate only across consecutive
+ // recorded observations in the same segment, and never extrapolate outside them.
+ function clipConnected(rows,start,end){
+  if(!rows.length||rows[0].t>end||rows[rows.length-1].t<start)return [];
+  if(rows.length===1)return rows[0].t>=start&&rows[0].t<=end?[rows[0]]:[];
+  const clipped=[];
+  const interpolated=(a,b,time)=>{
+   if(time===a.t)return a;
+   if(time===b.t)return b;
+   return {t:time,value:a.value+(b.value-a.value)*(time-a.t)/(b.t-a.t)};
+  };
+  for(let i=1;i<rows.length;i++){
+   const a=rows[i-1],b=rows[i];
+   if(b.t<start)continue;
+   if(a.t>end)break;
+   const left=Math.max(a.t,start),right=Math.min(b.t,end);
+   if(left>right)continue;
+   if(!clipped.length||clipped[clipped.length-1].t!==left)
+    clipped.push(interpolated(a,b,left));
+   if(clipped[clipped.length-1].t!==right)
+    clipped.push(interpolated(a,b,right));
+  }
+  return clipped;
+ }
+ // Keep the immediate neighbours of the visible interval, plus the smoothing
+ // kernel's context. Without them, panning clips lines and changes smoothed
+ // endpoint values even when genuine observations exist just off-screen.
+ function visibleSeries(rows,start,end,bandwidth=0,limit=1200){
+  const recorded=[],smoothed=[];
+  if(!Array.isArray(rows)||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||!rows.length)
+   return {recorded,smoothed};
+  const pad=Math.max(0,bandwidth*3);
+  const from=Math.max(0,lowerBound(rows,start-pad)-1);
+  const until=Math.min(rows.length,lowerBound(rows,end+pad)+1);
+  const context=rows.slice(from,until);
+  if(!context.length)return {recorded,smoothed};
+  function addSegment(group){
+   if(!group.length)return;
+   const samples=downsample(group,limit);
+   const raw=clipConnected(samples,start,end);
+   if(raw.length)recorded.push(raw);
+   const curved=clipConnected(smooth(samples,bandwidth),start,end);
+   if(curved.length)smoothed.push(curved);
+  }
+  let group=[],previous=null;
+  for(const row of context){
+   if(previous!==null&&row.t-previous.t>GAP){addSegment(group);group=[];}
+   group.push(row);previous=row;
+  }
+  addSegment(group);
+  return {recorded,smoothed};
+ }
+ const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,panRange,wheelPanOffset,visibleSeries,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
