@@ -27,6 +27,9 @@ h2,h3,.milestone strong{color:var(--gold)}
 .stat strong,.archive-stat strong{color:var(--gold)}
 .stat strong.is-down{color:#f08f8f}.stat strong.is-unknown{color:#e3bd57}
 button[aria-pressed=true]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
+.date-actions{display:flex;flex-direction:column;gap:6px;min-width:145px;align-items:stretch}
+.date-actions button{width:100%;white-space:nowrap}
+.jump-to-present:disabled,.jump-to-present:disabled:hover{opacity:.45;color:#a1adbd;background:#1e2938;border-color:#39465a;cursor:not-allowed}
 select,.dates input,.archive-controls select,.server-label select{background:#182333;border-color:#4a596e;color:#e5e9ef}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:var(--gold)}
 .tip{background:#0d1420f7;border-color:#827547;border-radius:4px}
