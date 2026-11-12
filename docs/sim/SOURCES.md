@@ -78,7 +78,9 @@ notices, documented local modifications, and visible upstream attribution.
   capture the asymmetric Dreamwater/Dreamtonic and Arcane Giant/Greater Arcane
   cases. OctoBot resolves those pairs symmetrically, with the last selection
   winning. Other confirmed combinations remain allowed; an entire consumable
-  category is not incorrectly treated as exclusive.
+  category is not incorrectly treated as exclusive. Select All was separately
+  tested: Mongoose/Juju Might/Juju Power, Expose and Annihilator take priority
+  over weaker conflicting options.
 - `core/base-stats.mjs` contains factual numeric rows for levels 1–60 extracted
   from [CMaNGOS Classic's player_levelstats and player_classlevelstats tables](https://github.com/cmangos/mangos-classic/blob/master/sql/base/mangos.sql).
   The source is published under GPL-2.0-or-later. Only numeric game facts were

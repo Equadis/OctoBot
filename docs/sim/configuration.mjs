@@ -1,4 +1,4 @@
-import {selectBuff,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats1';
+import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
 import { BUFF_OPTIONS, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-stats1';
 import { attachTooltip } from './tooltip.mjs?v=20261111-classes1';
 const $=id=>document.getElementById(id);
@@ -18,8 +18,8 @@ export function configuration({getBuild,onChange}){
   const heading=node(group.collapsed?'summary':'div',undefined,'buff-group-heading');heading.append(node('h3',group.name));
   const actions=node('div',undefined,'buff-actions');
   const setGroup=enabled=>{
-   let selected=[...getBuild().controls.buffIds];
-   for(const option of group.options){if(enabled && (!option.classes || option.classes.includes(getBuild().classId)))selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);}
+   const ids=group.options.filter(option=>!enabled||!option.classes||option.classes.includes(classId)).map(option=>option.id);
+   const selected=selectBuffGroup(getBuild().controls.buffIds,ids,enabled);
    update({buffIds:[...selected]});renderChecks();
   };
   if(group.all)actions.append(button('Select All',()=>setGroup(true),`Select all ${group.name}`));

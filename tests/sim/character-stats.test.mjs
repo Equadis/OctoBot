@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {newBuild,encodeBuild,decodeBuild} from '../../docs/sim/core/builds.mjs';
 import {characterStats,passiveItemStats} from '../../docs/sim/core/character-stats.mjs';
-import {BUFF_CONFLICTS,normaliseBuffs,selectBuff} from '../../docs/sim/core/buffs.mjs';
+import {BUFF_CONFLICTS,normaliseBuffs,selectBuff,selectBuffGroup} from '../../docs/sim/core/buffs.mjs';
 import {CLASS_DEFINITIONS} from '../../docs/sim/core/classes.mjs';
 const data=cls=>JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${cls}.json`,import.meta.url)));
 const rows=(build,gear={})=>Object.fromEntries(characterStats(build,data(build.classId),gear).groups.map(g=>[g.name,Object.fromEntries(g.rows.map(r=>[r.label,r.value]))]));
@@ -40,4 +40,11 @@ test('gear, flat enchants, talent ranks, weapon types and target settings change
 });
 test('triggered item effects are not silently treated as permanent stats',()=>{
  const s=passiveItemStats({attributes:{Strength:8},effects:['Equip: +40 Attack Power.','Equip: Chance on hit: increases attack power by 500 for 10 sec.']});assert.deepEqual(s,{str:8,ap:40});
+});
+
+test('Select All matches observed stronger consumable and target preferences',()=>{
+ const ids=['mongoose','greater-agility','scorpok','firewater','juju-might','giants','juju-power','dreamshard'];
+ assert.deepEqual(new Set(selectBuffGroup([],ids)),new Set(['mongoose','scorpok','juju-might','juju-power','dreamshard']));
+ assert.deepEqual(new Set(selectBuffGroup([],['expose','sunder','annihilator','shartateth'])),new Set(['expose','annihilator']));
+ assert.deepEqual(selectBuffGroup(['scorpok','kings'],ids,false),['kings']);
 });

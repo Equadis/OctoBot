@@ -207,7 +207,7 @@
         "Elixir of Brute Force",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -218,7 +218,7 @@
         "Elixir of Brute Force",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -229,7 +229,7 @@
         "Greater Arcane Elixir",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -239,7 +239,7 @@
         "Concoction of the Arcane Giant",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -250,7 +250,7 @@
         "Dreamtonic",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -260,7 +260,7 @@
         "Concoction of the Dreamwater",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -271,7 +271,7 @@
         "Concoction of the Emerald Mongoose",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -282,7 +282,7 @@
         "Concoction of the Emerald Mongoose",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -293,7 +293,7 @@
         "Elixir of Brute Force",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     },
     {
@@ -304,8 +304,28 @@
         "Elixir of Brute Force",
         "Thistle Tea",
         "Weapon Skill Book",
-        "Variability ±"
+        "Variability \u00b1"
       ]
     }
-  ]
+  ],
+  "selectAllPreferences": {
+    "Consumables": [
+      "mongoose",
+      "scorpok",
+      "juju-might",
+      "juju-power",
+      "dreamshard"
+    ],
+    "Target Debuffs": [
+      "expose",
+      "eskhandar",
+      "recklessness",
+      "faerie",
+      "wind-serpent",
+      "annihilator",
+      "ripper",
+      "nightfall",
+      "arthas"
+    ]
+  }
 }

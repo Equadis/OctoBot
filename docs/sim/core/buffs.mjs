@@ -16,6 +16,12 @@ export function selectBuff(ids,id,enabled=true){
  if(enabled)next.push(id);return next;
 }
 export function normaliseBuffs(ids){return ids.reduce((selected,id)=>selectBuff(selected,id),[]);}
+// Observed Select All preferences: stronger options win within the group.
+const GROUP_PRIORITY={mongoose:1,'juju-might':1,'juju-power':1,expose:1,annihilator:1};
+export function selectBuffGroup(current,ids,enabled=true){
+ const ordered=enabled?[...ids].sort((a,b)=>(GROUP_PRIORITY[a]||0)-(GROUP_PRIORITY[b]||0)):ids;
+ return ordered.reduce((selected,id)=>selectBuff(selected,id,enabled),current);
+}
 // Percentage values use percentage points; haste is combined multiplicatively.
 export const BUFF_STATS=Object.freeze({
  'battle-shout':{ap:232},might:{ap:222},wild:{str:12,agi:12,sta:12},pack:{crit:3},earth:{str:96},air:{agi:96},trueshot:{ap:30,apMultiplier:1.03},tricks:{crit:4},
