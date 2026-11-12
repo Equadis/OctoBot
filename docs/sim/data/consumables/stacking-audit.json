@@ -1,6 +1,6 @@
 {
   "listingCount": 1302,
-  "verifiedTooltips": 1270,
+  "verifiedTooltips": 1302,
   "verifiedExclusivity": 11,
   "complete": false,
   "note": "Tooltip facts, reference replacement groups and cooldown categories are separate evidence. No rule listed means unresolved, not confirmed stacking. Community Turtle data is not OctoWoW server proof.",
@@ -351,7 +351,7 @@
       "id": 954,
       "name": "Scroll of Strength",
       "source": "https://octowow.st/db/?item=954",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -362,13 +362,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8118
+      ]
     },
     {
       "id": 955,
       "name": "Scroll of Intellect",
       "source": "https://octowow.st/db/?item=955",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -379,7 +381,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8096
+      ]
     },
     {
       "id": 961,
@@ -594,7 +598,7 @@
       "id": 1179,
       "name": "Ice Cold Milk",
       "source": "https://octowow.st/db/?item=1179",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -605,13 +609,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        431
+      ]
     },
     {
       "id": 1180,
       "name": "Scroll of Stamina",
       "source": "https://octowow.st/db/?item=1180",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -622,13 +628,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8099
+      ]
     },
     {
       "id": 1181,
       "name": "Scroll of Spirit",
       "source": "https://octowow.st/db/?item=1181",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -639,7 +647,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8112
+      ]
     },
     {
       "id": 1191,
@@ -681,7 +691,7 @@
       "id": 1205,
       "name": "Melon Juice",
       "source": "https://octowow.st/db/?item=1205",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -692,7 +702,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        432
+      ]
     },
     {
       "id": 1251,
@@ -888,7 +900,7 @@
       "id": 1477,
       "name": "Scroll of Agility II",
       "source": "https://octowow.st/db/?item=1477",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -899,7 +911,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8116
+      ]
     },
     {
       "id": 1478,
@@ -1000,7 +1014,7 @@
       "id": 1708,
       "name": "Sweet Nectar",
       "source": "https://octowow.st/db/?item=1708",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -1011,7 +1025,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1133
+      ]
     },
     {
       "id": 1710,
@@ -1169,7 +1185,7 @@
       "id": 2287,
       "name": "Haunch of Meat",
       "source": "https://octowow.st/db/?item=2287",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -1180,7 +1196,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        434
+      ]
     },
     {
       "id": 2288,
@@ -1205,7 +1223,7 @@
       "id": 2289,
       "name": "Scroll of Strength II",
       "source": "https://octowow.st/db/?item=2289",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -1216,7 +1234,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8119
+      ]
     },
     {
       "id": 2290,
@@ -1862,7 +1882,7 @@
       "id": 3012,
       "name": "Scroll of Agility",
       "source": "https://octowow.st/db/?item=3012",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -1873,7 +1893,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8115
+      ]
     },
     {
       "id": 3013,
@@ -2639,7 +2661,7 @@
       "id": 3927,
       "name": "Fine Aged Cheddar",
       "source": "https://octowow.st/db/?item=3927",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2650,7 +2672,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1129
+      ]
     },
     {
       "id": 3928,
@@ -2713,7 +2737,7 @@
       "id": 4421,
       "name": "Scroll of Protection III",
       "source": "https://octowow.st/db/?item=4421",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2724,13 +2748,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8095
+      ]
     },
     {
       "id": 4422,
       "name": "Scroll of Stamina III",
       "source": "https://octowow.st/db/?item=4422",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2741,13 +2767,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8101
+      ]
     },
     {
       "id": 4424,
       "name": "Scroll of Spirit III",
       "source": "https://octowow.st/db/?item=4424",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2758,13 +2786,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8114
+      ]
     },
     {
       "id": 4425,
       "name": "Scroll of Agility III",
       "source": "https://octowow.st/db/?item=4425",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2775,7 +2805,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        8117
+      ]
     },
     {
       "id": 4426,
@@ -2895,7 +2927,7 @@
       "id": 4537,
       "name": "Tel'Abim Banana",
       "source": "https://octowow.st/db/?item=4537",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2906,13 +2938,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        434
+      ]
     },
     {
       "id": 4538,
       "name": "Snapvine Watermelon",
       "source": "https://octowow.st/db/?item=4538",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2923,13 +2957,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        435
+      ]
     },
     {
       "id": 4539,
       "name": "Goldenbark Apple",
       "source": "https://octowow.st/db/?item=4539",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2940,7 +2976,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1127
+      ]
     },
     {
       "id": 4540,
@@ -2965,7 +3003,7 @@
       "id": 4541,
       "name": "Freshly Baked Bread",
       "source": "https://octowow.st/db/?item=4541",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2976,13 +3014,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        434
+      ]
     },
     {
       "id": 4542,
       "name": "Moist Cornbread",
       "source": "https://octowow.st/db/?item=4542",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -2993,13 +3033,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        435
+      ]
     },
     {
       "id": 4544,
       "name": "Mulgore Spice Bread",
       "source": "https://octowow.st/db/?item=4544",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3010,7 +3052,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1127
+      ]
     },
     {
       "id": 4546,
@@ -3149,7 +3193,7 @@
       "id": 4599,
       "name": "Cured Ham Steak",
       "source": "https://octowow.st/db/?item=4599",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3160,7 +3204,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1129
+      ]
     },
     {
       "id": 4600,
@@ -3204,7 +3250,7 @@
       "id": 4602,
       "name": "Moon Harvest Pumpkin",
       "source": "https://octowow.st/db/?item=4602",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3215,7 +3261,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1129
+      ]
     },
     {
       "id": 4603,
@@ -3259,7 +3307,7 @@
       "id": 4605,
       "name": "Red-speckled Mushroom",
       "source": "https://octowow.st/db/?item=4605",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3270,13 +3318,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        434
+      ]
     },
     {
       "id": 4606,
       "name": "Spongy Morel",
       "source": "https://octowow.st/db/?item=4606",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3287,13 +3337,15 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        435
+      ]
     },
     {
       "id": 4607,
       "name": "Delicious Cave Mold",
       "source": "https://octowow.st/db/?item=4607",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -3304,7 +3356,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1127
+      ]
     },
     {
       "id": 4608,
@@ -6437,7 +6491,7 @@
       "id": 8766,
       "name": "Morning Glory Dew",
       "source": "https://octowow.st/db/?item=8766",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -6448,7 +6502,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1137
+      ]
     },
     {
       "id": 8827,
@@ -6549,7 +6605,7 @@
       "id": 8948,
       "name": "Dried King Bolete",
       "source": "https://octowow.st/db/?item=8948",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -6560,7 +6616,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1131
+      ]
     },
     {
       "id": 8949,
@@ -6585,7 +6643,7 @@
       "id": 8950,
       "name": "Homemade Cherry Pie",
       "source": "https://octowow.st/db/?item=8950",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -6596,7 +6654,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1131
+      ]
     },
     {
       "id": 8951,
@@ -6640,7 +6700,7 @@
       "id": 8953,
       "name": "Deep Fried Plantains",
       "source": "https://octowow.st/db/?item=8953",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -6651,7 +6711,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        1131
+      ]
     },
     {
       "id": 8956,
@@ -7392,7 +7454,7 @@
       "id": 10308,
       "name": "Scroll of Intellect IV",
       "source": "https://octowow.st/db/?item=10308",
-      "tooltipVerified": false,
+      "tooltipVerified": true,
       "stacking": {
         "group": null,
         "status": "unresolved",
@@ -7403,7 +7465,9 @@
         "category": null,
         "verified": false
       },
-      "spellIds": []
+      "spellIds": [
+        12176
+      ]
     },
     {
       "id": 10309,
