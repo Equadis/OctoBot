@@ -37,6 +37,9 @@ def main():
         details={**json.loads((DATA/'details-supplement.json').read_text()),**details}
     remaining = [item for item in catalogue if str(item['id']) not in details]
     selected = remaining[:args.limit] if args.limit else remaining
+    if not remaining:
+        print('All equipment detail records are already present.', flush=True)
+        return
     stopped = threading.Event()
     failures = {}
     deadline = time.monotonic() + args.max_seconds

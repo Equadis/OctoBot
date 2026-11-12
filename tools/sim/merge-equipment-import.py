@@ -11,7 +11,7 @@ sync=importlib.util.module_from_spec(spec);spec.loader.exec_module(sync)
 
 def merge(imported,report):
     items=json.loads((DATA/'equipment.json').read_text());ids={item['id'] for item in items}
-    details=json.loads((DATA/'details.json').read_text())
+    details=json.loads((DATA/'details.json').read_text());before=dict(details)
     for key,record in imported.items():
         if record.get('id') not in ids:continue
         if str(record['id'])!=key or record.get('source')!=f"https://octowow.st/db/?item={record['id']}" or type(record.get('classMask')) is not int or type(record.get('raceMask')) is not int:
@@ -19,6 +19,9 @@ def merge(imported,report):
         details[key]={**record,**details.get(key,{})}
     missing=sorted(ids-{int(key) for key in details})
     failures={key:value for key,value in report.get('failures',{}).items() if int(key) in missing}
+    old=json.loads((DATA/'detail-coverage.json').read_text()) if (DATA/'detail-coverage.json').exists() else {}
+    if details==before and old.get('equipmentCount')==len(ids) and old.get('missingIds')==missing and old.get('failures')==failures and old.get('complete')==(not missing):
+        return old
     coverage={'source':'https://octowow.st/db/','updatedAt':datetime.now(timezone.utc).isoformat(),
               'equipmentCount':len(ids),'verifiedCount':len(ids)-len(missing),'complete':not missing,
               'missingIds':missing,'failures':failures,'pausedForVerification':report.get('pausedForVerification',False)}

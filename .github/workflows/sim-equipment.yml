@@ -1,6 +1,9 @@
 name: Import official simulator equipment
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Import official simulator equipment']
+    types: [completed]
   push:
     branches: [main]
     paths:
@@ -16,6 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   import:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
