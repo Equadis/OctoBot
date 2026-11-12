@@ -96,6 +96,8 @@ export interface ListenerConfig {
   /** Log every NPC line it hears — says, emotes, whispers — not only the yells every listener logs.
    *  For a listener parked to learn what the NPCs beside it say (e.g. by Thrall). Default false. */
   readonly logNpcChat: boolean;
+  /** On-site Darkmoon Faire detection for listeners parked at Elwynn or Mulgore. */
+  readonly darkmoonWatchLocation: FaireLocation | null;
 }
 
 export interface BotConfig {
@@ -431,6 +433,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
         else if (entry.logNpcChat !== undefined) {
           errors.push(`WOW_LISTENERS entry ${nth} "logNpcChat" must be true or false`);
         }
+        const listenerFaireRaw = entry.darkmoonWatchLocation;
+        const listenerFaireSite =
+          typeof listenerFaireRaw === "string" ? listenerFaireRaw.trim().toLowerCase() : null;
+        if (listenerFaireRaw !== undefined && (listenerFaireSite === null || !isFaireLocation(listenerFaireSite))) {
+          errors.push(`WOW_LISTENERS entry ${nth} "darkmoonWatchLocation" must be "elwynn" or "mulgore"`);
+        }
         listeners.push({
           account: requiredString("account"),
           password: requiredString("password"),
@@ -439,6 +447,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
           onLogin: parseOnLogin(optString(entry.onLogin), `WOW_LISTENERS entry ${nth} "onLogin"`),
           yeller,
           logNpcChat,
+          darkmoonWatchLocation:
+            listenerFaireSite !== null && isFaireLocation(listenerFaireSite) ? listenerFaireSite : null,
         });
       });
     }
