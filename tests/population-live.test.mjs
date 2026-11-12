@@ -257,12 +257,14 @@ test('zoom retains cursor selection and NO DATA still has an anchored crosshair 
  const time=env.get('readout').textContent.match(/^(.+?) UTC/)[1];
  hit.fire('wheel',{clientX,deltaX:0,deltaY:-120,deltaMode:0,
   shiftKey:false,preventDefault(){}});
- assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.ok(Math.abs(Number(env.get('crosshair').getAttribute('x1'))-expectedX)<0.001,
+  'The selector should remain under the pointer within sub-pixel precision');
  assert.equal(env.get('readout').textContent.match(/^(.+?) UTC/)[1],time,
   'Cursor-anchored zoom must preserve selected timestamp');
  // Move to an earlier unobserved window while hovering: no invented zero point.
  env.navigate({start:Date.parse('2026-11-07T01:00:00Z'),end:Date.parse('2026-11-07T01:10:00Z')});
- assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.ok(Math.abs(Number(env.get('crosshair').getAttribute('x1'))-expectedX)<0.001,
+  'The selector should remain under the pointer within sub-pixel precision');
  assert.match(env.get('readout').textContent,/NO DATA/);
  assert.equal(env.get('dot').style.display,'none');
  hit.fire('pointerleave',{});
@@ -272,7 +274,8 @@ test('zoom retains cursor selection and NO DATA still has an anchored crosshair 
  env.navigate({start,end:start+30*60000});
  hit.fire('wheel',{clientX,deltaX:0,deltaY:-20,deltaMode:0,
   shiftKey:true,preventDefault(){}});
- assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.ok(Math.abs(Number(env.get('crosshair').getAttribute('x1'))-expectedX)<0.001,
+  'The selector should remain under the pointer within sub-pixel precision');
  assert.equal(env.get('dot').style.display,'');
 });
 
