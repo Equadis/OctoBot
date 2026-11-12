@@ -123,7 +123,7 @@ function createTalents() {
     section.setAttribute('aria-label', `${tree.name} talents`);
     const heading = element('div', 'tree-heading');
     const total = element('span'); total.id = `tree-total-${tree.index}`;
-    heading.append(gameIcon(data.talents.find(t=>t.tree===tree.index)?.icon || `classicon_${classId}`, 'tree-icon'), element('h3', '', tree.name), total);
+    heading.append(element('h3', '', tree.name), total);
     const grid = element('div', 'talent-grid');
     for (const talent of data.talents.filter(t => t.tree === tree.index)) {
       const button = element('button', 'talent-node');

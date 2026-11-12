@@ -61,3 +61,13 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .library-actions{display:flex;gap:8px;flex-wrap:wrap}#saved-library-status:empty{display:none}
 
 .class-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin-top:15px}.class-options .field{margin-bottom:10px}
+
+/* Shared tree panels and compact preset selector for every class. */
+.planner-view .talent-tree,.planner-view .talent-tree:last-child{border:1px solid #39495d;border-radius:10px;background:#172230;padding:12px 6px 18px}
+.planner-view .tree-heading{display:grid;grid-template-columns:minmax(0,1fr);position:relative;min-height:32px;margin-bottom:12px;padding-top:10px;gap:0}
+.planner-view .tree-heading h3{width:100%;margin:0;text-align:center;text-transform:none;font-size:11px;line-height:1.4;letter-spacing:0;color:var(--gold)}
+.planner-view .tree-heading span{position:absolute;right:0;top:-3px;font-size:9px;line-height:1.2;color:var(--muted)}
+.planner-view #rotation .rotation-preset-field{display:flex;flex-direction:column;gap:6px;width:100%;font-size:11px;color:var(--muted)}
+.planner-view #rotation-preset{display:block;width:100%;height:34px;min-height:34px;padding:6px 10px;border:1px solid #526278;border-radius:4px;background:#172230;color:#edf2f8;font-family:inherit;font-size:12px;font-weight:600;line-height:1.4;color-scheme:dark}
+.planner-view #rotation-preset:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:700px){.planner-view .talent-tree{padding:16px}.planner-view .tree-heading h3{font-size:13px}}
