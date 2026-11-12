@@ -205,6 +205,77 @@ test('Shift+scroll up pans population left and down pans right, including browse
   assert.ok(Math.abs((right.windowEnd-right.start)-(left.windowEnd-left.start))<1);
 });
 
+test('Shift-scroll keeps the population selector at the cursor without new mousemove events',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z');
+ const archival=Array.from({length:120},(_,i)=>({
+  timestamp:new Date(now-(120-i)*60000).toISOString(),online:1200+i*2
+ }));
+ const env=fixture({archival});await settle();
+ const start=now-70*60000+25000;
+ env.navigate({start,end:start+600000});
+ const hit=env.get('plot-hit');
+ const mouseX=300,expectedX=56+mouseX;
+ hit.fire('pointermove',{clientX:mouseX,pointerId:4});
+ const firstTime=env.get('readout').textContent;
+ const firstX=Number(env.get('crosshair').getAttribute('x1'));
+ assert.ok(Math.abs(firstX-expectedX)<0.001,'Crosshair must be under the pointer');
+ assert.equal(env.get('dot').getAttribute('cx'),env.get('crosshair').getAttribute('x1'));
+ const startingWindow=env.view();
+ for(let i=0;i<8;i++){
+  hit.fire('wheel',{clientX:mouseX,deltaX:0,deltaY:-45,deltaMode:0,
+   shiftKey:true,preventDefault(){}});
+  assert.equal(Number(env.get('crosshair').getAttribute('x1')),firstX,
+   'Shift-scroll must not reposition selector at latest/right edge');
+  assert.equal(env.get('dot').getAttribute('cx'),env.get('crosshair').getAttribute('x1'));
+  assert.equal(env.get('tooltip').hidden,false);
+  assert.equal(env.get('dot').style.display,'');
+ }
+ assert.notEqual(env.get('readout').textContent,firstTime,
+  'Selected timestamp must update even without another pointermove');
+ for(let i=0;i<8;i++){
+  // Chrome can remap Shift-wheel down to positive deltaX.
+  hit.fire('wheel',{clientX:mouseX,deltaX:45,deltaY:0,deltaMode:0,
+   shiftKey:true,preventDefault(){}});
+  assert.equal(Number(env.get('crosshair').getAttribute('x1')),firstX);
+ }
+ const returned=env.view();
+ assert.ok(Math.abs(returned.start-startingWindow.start)<1);
+ assert.ok(Math.abs(returned.windowEnd-startingWindow.windowEnd)<1);
+ assert.equal(Number(env.get('crosshair').getAttribute('x1')),firstX);
+});
+
+test('zoom retains cursor selection and NO DATA still has an anchored crosshair without a false point',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z');
+ const archival=Array.from({length:90},(_,i)=>({
+  timestamp:new Date(now-(90-i)*60000).toISOString(),online:800+i
+ }));
+ const env=fixture({archival});await settle();
+ const start=now-50*60000+12000;
+ env.navigate({start,end:start+30*60000});
+ const hit=env.get('plot-hit'),clientX=600,expectedX=656;
+ hit.fire('pointermove',{clientX,pointerId:4});
+ const time=env.get('readout').textContent.match(/^(.+?) UTC/)[1];
+ hit.fire('wheel',{clientX,deltaX:0,deltaY:-120,deltaMode:0,
+  shiftKey:false,preventDefault(){}});
+ assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.equal(env.get('readout').textContent.match(/^(.+?) UTC/)[1],time,
+  'Cursor-anchored zoom must preserve selected timestamp');
+ // Move to an earlier unobserved window while hovering: no invented zero point.
+ env.navigate({start:Date.parse('2026-11-07T01:00:00Z'),end:Date.parse('2026-11-07T01:10:00Z')});
+ assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.match(env.get('readout').textContent,/NO DATA/);
+ assert.equal(env.get('dot').style.display,'none');
+ hit.fire('pointerleave',{});
+ assert.equal(env.get('crosshair').style.display,'none');
+ assert.equal(env.get('tooltip').hidden,true);
+ // Even if no pointermove happens first, a wheel event re-establishes cursor selection.
+ env.navigate({start,end:start+30*60000});
+ hit.fire('wheel',{clientX,deltaX:0,deltaY:-20,deltaMode:0,
+  shiftKey:true,preventDefault(){}});
+ assert.equal(Number(env.get('crosshair').getAttribute('x1')),expectedX);
+ assert.equal(env.get('dot').style.display,'');
+});
+
 test('Jump to present preserves the population time scale and disables at the right edge',async()=>{
   const env=fixture();await settle();
   const jump=env.get('jump-to-present');
