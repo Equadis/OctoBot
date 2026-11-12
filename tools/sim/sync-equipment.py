@@ -30,13 +30,17 @@ def main():
     cli.add_argument('--workers', type=int, default=3, choices=range(1, 5))
     cli.add_argument('--limit', type=int, default=0, help='Bound a resumable batch; zero means every missing item')
     cli.add_argument('--max-seconds', type=int, default=9000, help='Checkpoint before the workflow time limit')
+    cli.add_argument('--shard',type=int,default=0)
+    cli.add_argument('--shards',type=int,default=1)
     args = cli.parse_args()
+    if not 1<=args.shards<=64 or not 0<=args.shard<args.shards:cli.error('Invalid shard configuration')
     catalogue = json.loads((DATA / 'equipment.json').read_text())
     details = json.loads((DATA / 'details.json').read_text())
     if (DATA/'details-supplement.json').exists():
         details={**json.loads((DATA/'details-supplement.json').read_text()),**details}
     remaining = [item for item in catalogue if str(item['id']) not in details]
-    selected = remaining[:args.limit] if args.limit else remaining
+    selected=[item for item in remaining if item['id']%args.shards==args.shard]
+    if args.limit:selected=selected[:args.limit]
     if not remaining:
         print('All equipment detail records are already present.', flush=True)
         return
@@ -91,6 +95,7 @@ def main():
     report = checkpoint()
     print(json.dumps({k: v for k, v in report.items() if k not in ('missingIds', 'failures')}), flush=True)
     if failures: print(json.dumps(failures), flush=True)
-    if not report['complete']: raise SystemExit(2)
+    incomplete=any(str(item['id']) not in details for item in selected)
+    if incomplete or (args.shards==1 and not report['complete']):raise SystemExit(2)
 
 if __name__ == '__main__': main()

@@ -1,9 +1,6 @@
 name: Import official simulator equipment
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ['Import official simulator equipment']
-    types: [completed]
   push:
     branches: [main]
     paths:
@@ -19,7 +16,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   import:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out'
+    name: Import equipment shard ${{ matrix.shard }}
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
@@ -34,7 +36,7 @@ jobs:
       - name: Resume official item details
         id: import
         continue-on-error: true
-        run: python tools/sim/sync-equipment.py --workers 3
+        run: python tools/sim/sync-equipment.py --workers 1 --shards 16 --shard ${{ matrix.shard }}
       - name: Persist verified records and coverage
         if: always()
         run: |
@@ -55,7 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: official-equipment-import-checkpoint
+          name: official-equipment-import-${{ matrix.shard }}
           path: |
             /tmp/imported-details.json
             /tmp/imported-coverage.json
@@ -64,3 +66,27 @@ jobs:
         run: |
           echo 'Import incomplete. See docs/sim/data/items/detail-coverage.json; rerun resumes missing records.'
           exit 1
+
+  verify:
+    name: Verify full equipment coverage
+    needs: import
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check every published equipment ID
+        run: |
+          python - <<'PYTHON'
+          import json
+          from pathlib import Path
+          root=Path('docs/sim/data/items')
+          items=json.loads((root/'equipment.json').read_text())
+          details=json.loads((root/'details.json').read_text())
+          missing=[item['id'] for item in items if str(item['id']) not in details]
+          print(f'{len(items)-len(missing)}/{len(items)} official equipment details verified')
+          if missing:
+              print('Missing IDs:',missing)
+              raise SystemExit(1)
+          PYTHON

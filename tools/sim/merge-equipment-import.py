@@ -18,8 +18,8 @@ def merge(imported,report):
             raise ValueError('Invalid imported official item record')
         details[key]={**record,**details.get(key,{})}
     missing=sorted(ids-{int(key) for key in details})
-    failures={key:value for key,value in report.get('failures',{}).items() if int(key) in missing}
     old=json.loads((DATA/'detail-coverage.json').read_text()) if (DATA/'detail-coverage.json').exists() else {}
+    failures={key:value for key,value in {**old.get('failures',{}),**report.get('failures',{})}.items() if int(key) in missing}
     if details==before and old.get('equipmentCount')==len(ids) and old.get('missingIds')==missing and old.get('failures')==failures and old.get('complete')==(not missing):
         return old
     coverage={'source':'https://octowow.st/db/','updatedAt':datetime.now(timezone.utc).isoformat(),
