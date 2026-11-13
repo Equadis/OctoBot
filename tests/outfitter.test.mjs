@@ -38,3 +38,21 @@ test('undeployed service and missing model errors have distinct readable message
  await assert.rejects(requestJson('https://api.test',async()=>new Response('upstream error',{status:502})),/temporarily unavailable/);
  assert.deepEqual(await requestJson('https://api.test',async()=>new Response('{"id":16866}')),{id:16866});
 });
+
+test('native model preflight follows the M2 skin reference and reports broken geometry',async()=>{
+ const {skinIdsFromM2,preloadGeometry}=await import('../docs/outfitter/service.mjs');
+ const bytes=new Uint8Array(28),view=new DataView(bytes.buffer),tag=(at,text)=>bytes.set([...text].map(c=>c.charCodeAt(0)),at);
+ tag(0,'MD21');view.setUint32(4,4,true);view.setUint32(8,123,true);
+ tag(12,'SFID');view.setUint32(16,8,true);view.setUint32(20,471055,true);view.setUint32(24,471056,true);
+ assert.deepEqual(skinIdsFromM2(bytes.buffer),[471055,471056]);
+ assert.throws(()=>skinIdsFromM2(bytes.buffer.slice(0,25)),/incomplete/);
+ assert.throws(()=>skinIdsFromM2(new TextEncoder().encode('<html>error</html>').buffer),/valid M2/);
+ const calls=[];
+ const result=await preloadGeometry('https://assets.test/',119940,async url=>{
+  calls.push(url);return new Response(url.endsWith('.m2')?bytes:new TextEncoder().encode('SKIN'));
+ });
+ assert.deepEqual(result,{modelId:119940,skinId:471055});
+ assert.deepEqual(calls,['https://assets.test/m2/119940.m2','https://assets.test/skin/471055.skin']);
+ await assert.rejects(preloadGeometry('https://assets.test/',119940,async()=>new Response('{"error":"not_found"}',{status:404})),/needs an update/);
+ await assert.rejects(preloadGeometry('https://assets.test/',119940,async()=>new Response('',{status:502})),/m2\/119940.m2/);
+});

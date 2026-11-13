@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {assetPath,parseDisplayId,outfitter} from '../src/outfitter.js';
 import worker from '../src/index.js';
 test('appearance proxy accepts only model data and textures at the fixed origin',()=>{
- for(const path of ['meta/character/1.json','meta/charactercustomization/1.json','meta/armor/1/31260.json','meta/item/123.json','mo3/119940.mo3','textures/123.webp','bone/123.bone'])assert.equal(assetPath('/api/outfitter/assets/'+path),path);
- for(const path of ['https://evil.test/a','../../secrets','meta/character/1.json/../x','viewer/viewer.min.js','textures/x.svg','meta/character/1.json?url=https://evil.test'])assert.equal(assetPath('/api/outfitter/assets/'+path),null);
+ for(const path of ['meta/character/1.json','meta/charactercustomization/1.json','meta/armor/1/31260.json','meta/item/123.json','m2/119940.m2','skin/471055.skin','skel/123.skel','anim/123.anim','phys/123.phys','textures/123.webp','bone/123.bone'])assert.equal(assetPath('/api/outfitter/assets/'+path),path);
+ for(const path of ['https://evil.test/a','../../secrets','meta/character/1.json/../x','viewer/viewer.min.js','textures/x.svg','mo3/119940.mo3','m2/119940.skin','skin/471055.m2','meta/character/1.json?url=https://evil.test'])assert.equal(assetPath('/api/outfitter/assets/'+path),null);
  assert.equal(parseDisplayId('<div>Display ID: 31260</div>'),31260);
  assert.throws(()=>parseDisplayId('<html>item not found</html>'));
 });

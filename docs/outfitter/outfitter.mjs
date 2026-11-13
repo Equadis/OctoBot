@@ -1,7 +1,7 @@
-import {requestJson} from './service.mjs?v=20261113-dressing1';
+import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',PAGE_SIZE=10;
-let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,page=0,viewer=null,revision=0,endpoint='',saved=[],resizeTimer;
+let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,page=0,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
 function feedback(message){$('feedback').textContent=message;}
 function icon(item){return item?.icon&&/^[a-z0-9_]+$/i.test(item.icon)?`https://wow.zamimg.com/images/wow/icons/large/${item.icon.toLowerCase()}.jpg`:null;}
@@ -43,7 +43,8 @@ async function renderModel(){
   if(!endpoint)throw Error('The appearance service is not configured.');
   if(!window.ZamModelViewer||!window.jQuery)throw Error('The 3D viewer could not load. Check your connection and reload the preview.');
   // Detect an undeployed service before constructing a viewer that would stay blank.
-  await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
+  const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
+  await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
   const unavailable=[];
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
@@ -52,8 +53,9 @@ async function renderModel(){
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
-  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
+  viewer.setAdaptiveMode?.(true);
   // actorPromises resolves after model metadata; isLoaded also waits for geometry.
   await Promise.race([Promise.all(viewer?.renderer?.actorPromises||[]),new Promise((_,reject)=>setTimeout(()=>reject(Error('The character model timed out. Try reloading the preview.')),25000))]);
   if(token!==revision)return;
@@ -96,8 +98,9 @@ async function start(){
  $('import').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
  $('copy-code').onclick=()=>copy($('outfit-code').value,'Code copied.');$('apply-code').onclick=()=>{try{commit(fromText($('outfit-code').value),'Outfit imported.');$('exchange').close();}catch(error){$('exchange-status').textContent=error.message;}};
  window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#outfit=')){try{commit(decode(location.hash.slice(8)),'Shared outfit loaded.');}catch(error){feedback(error.message);}}});
- window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>renderModel(),300);});
- window.addEventListener('pagehide',()=>{revision++;clearViewer();});
+ const modelResize=new ResizeObserver(()=>{const wrap=$('model').parentElement,width=wrap.clientWidth,height=wrap.clientHeight;if(width&&height)viewer?.renderer?.onResize?.(width,height,width/height);});
+ modelResize.observe($('model').parentElement);
+ window.addEventListener('pagehide',()=>{revision++;modelResize.disconnect();clearViewer();});
 }
 // Modules can execute before deferred third-party scripts have finished.
 if(document.readyState==='complete')start();else window.addEventListener('load',start,{once:true});
