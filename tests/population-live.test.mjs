@@ -530,7 +530,7 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  const bar=env.get('reveal-lifespan');
  assert.equal(bar.hidden,false);
  const tooltip='Show full server lifespan (There is no data for this area).';
- assert.ok(html.includes('title="'+tooltip+'"'));
+ assert.equal(env.get('lifespan-tooltip').textContent,tooltip);
  assert.ok(html.includes('aria-label="'+tooltip+'"'));
  assert.match(html,/<button id="reveal-lifespan"[^>]*type="button"/,
   'Native button provides Enter/Space keyboard activation');
@@ -539,7 +539,7 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  assert.equal(env.view().windowEnd,Date.parse('2026-11-08T01:00:00Z'));
  assert.equal(bar.hidden,false,'Toggle remains available to collapse the lifespan');
  assert.equal(bar.getAttribute('aria-expanded'),'true');
- assert.equal(bar.getAttribute('title'),'Hide empty server lifespan.');
+ assert.equal(bar.getAttribute('aria-label'),'Hide empty server lifespan.');
  assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&n.getAttribute('fill')==='#e3bd57'));
  assert.match(env.get('raw-population').getAttribute('d'),/L/);
  await env.intervals.get(30000)[0]();await settle();
@@ -548,7 +548,7 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  assert.equal(env.view().start,first,'Second click restores the collapsed range');
  assert.equal(env.get('range-label').textContent,'1D','Restore the original preset');
  assert.equal(bar.getAttribute('aria-expanded'),'false');
- assert.equal(bar.getAttribute('title'),tooltip);
+ assert.equal(bar.getAttribute('aria-label'),tooltip);
  assert.equal(bar.getAttribute('aria-label'),tooltip);
  bar.fire('click');
  env.get('ranges').children.find(b=>b.textContent==='1D').fire('click');
@@ -621,4 +621,30 @@ test('triangle restores the previous custom range after opening the full lifespa
  assert.equal(env.view().start,first);
  assert.equal(env.view().windowEnd,end);
  assert.equal(toggle.getAttribute('aria-expanded'),'false');
+});
+
+
+test('triangle tooltip appears immediately on hover or focus and updates with its action',async()=>{
+ const env=fixture();await settle();
+ const toggle=env.get('reveal-lifespan'),tip=env.get('lifespan-tooltip');
+ // Real markup starts hidden; mock elements do not parse HTML attributes.
+ tip.hidden=true;
+ toggle.fire('pointerenter');
+ assert.equal(tip.hidden,false,'Hover displays the tooltip synchronously');
+ assert.equal(tip.textContent,'Show full server lifespan (There is no data for this area).');
+ assert.equal(env.get('tooltip').hidden,true,'Graph tooltip does not overlap toggle tooltip');
+ toggle.fire('click');
+ assert.equal(tip.hidden,false);
+ assert.equal(tip.textContent,'Hide empty server lifespan.');
+ toggle.fire('pointerleave');
+ assert.equal(tip.hidden,true);
+ toggle.fire('focus');
+ assert.equal(tip.hidden,false,'Keyboard focus displays the same tooltip immediately');
+ toggle.fire('blur');
+ assert.equal(tip.hidden,true);
+ assert.match(html,/class="tip" id="lifespan-tooltip" role="tooltip" hidden/);
+ assert.match(html,/aria-describedby="lifespan-tooltip"/);
+ assert.doesNotMatch(html,/<button id="reveal-lifespan"[^>]*title=/,'No delayed native tooltip');
+ assert.match(html,/\.reveal-lifespan\{[^}]*top:50%;transform:translateY\(-50%\)/,
+  'Triangle is vertically centred on the whole graph');
 });
