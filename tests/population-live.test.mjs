@@ -535,7 +535,7 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  assert.match(html,/<button id="reveal-lifespan"[^>]*type="button"/,
   'Native button provides Enter/Space keyboard activation');
  bar.fire('click');
- assert.equal(env.view().start,launch);
+ assert.equal(env.view().start,first,'Unlocking at the left edge preserves the visible range');
  assert.equal(env.view().windowEnd,Date.parse('2026-11-08T01:00:00Z'));
  assert.equal(bar.hidden,false,'Toggle remains available to collapse the lifespan');
  assert.equal(bar.getAttribute('aria-expanded'),'true');
@@ -543,10 +543,10 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&n.getAttribute('fill')==='#e3bd57'));
  assert.match(env.get('raw-population').getAttribute('d'),/L/);
  await env.intervals.get(30000)[0]();await settle();
- assert.equal(env.view().start,launch,'Refresh preserves the expanded lifespan');
+ assert.equal(env.view().start,first,'Refresh cannot re-expand a collapsed preset after unlocking');
  bar.fire('click');
  assert.equal(env.view().start,first,'Second click restores the collapsed range');
- assert.equal(env.get('range-label').textContent,'1D','Restore the original preset');
+ assert.equal(env.get('range-label').textContent,'3m','Keep the displayed zoom rather than the nominal preset');
  assert.equal(bar.getAttribute('aria-expanded'),'false');
  assert.equal(bar.getAttribute('aria-label'),tooltip);
  assert.equal(bar.getAttribute('aria-label'),tooltip);
@@ -593,7 +593,8 @@ test('all realms collapse to estimates before actual readings and keep shading a
   assert.equal(env.view().start,week,realm+' must count estimated lines as content');
   assert.equal(env.get('reveal-lifespan').hidden,false);
   env.get('reveal-lifespan').fire('click');
-  assert.equal(env.view().start,Date.parse('2026-04-28T17:00:00Z'));
+  assert.equal(env.view().start,week,'Unlocking estimated history preserves zoom');
+  env.navigate({start:Date.parse('2026-04-28T17:00:00Z'),end:now});
   assert.match(env.get('estimate-path').getAttribute('d'),/L/);
   assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&
    n.getAttribute('fill')==='#e3bd57'&&Number(n.getAttribute('fill-opacity'))>=.2));
@@ -674,8 +675,8 @@ test('unlocking timeline away from left edge keeps zoom, position and cursor, an
  assert.ok(env.view().start<first,'Unlocked timeline can scroll into previously hidden history');
  assert.equal(env.view().windowEnd-env.view().start,600000,'Panning preserves the zoom');
  toggle.fire('click');
- assert.equal(env.view().start,start,'Closing restores the previous custom range');
- assert.equal(env.view().windowEnd,end);
+ assert.equal(env.view().start,first,'Closing moves only as far as the data boundary');
+ assert.equal(env.view().windowEnd-env.view().start,end-start,'Closing preserves the current zoom');
 });
 
 test('unlocking from a later preset preserves the preset viewport',async()=>{
@@ -685,4 +686,25 @@ test('unlocking from a later preset preserves the preset viewport',async()=>{
  assert.equal(env.view().start,before.start);
  assert.equal(env.view().windowEnd,before.windowEnd);
  assert.equal(env.get('range-label').textContent,'1D');
+});
+
+
+test('timeline toggle never restores a stale window after panning or zooming',async()=>{
+ const env=navigationFixture();await settle();
+ const first=Date.parse('2026-11-06T01:00:00Z');
+ env.navigate({start:first,end:first+3600000});
+ const toggle=env.get('reveal-lifespan');
+ toggle.fire('click');
+ assert.equal(env.view().start,first);
+ assert.equal(env.view().windowEnd,first+3600000,'Opening at left edge must not zoom out');
+ const current={start:first+7200000,end:first+7800000};
+ env.navigate(current);
+ toggle.fire('click');
+ assert.equal(env.view().start,current.start,'Closing retains the new position');
+ assert.equal(env.view().windowEnd,current.end,'Closing retains the new zoom');
+ for(let i=0;i<4;i++){
+  toggle.fire('click');
+  assert.equal(env.view().start,current.start);
+  assert.equal(env.view().windowEnd,current.end);
+ }
 });
