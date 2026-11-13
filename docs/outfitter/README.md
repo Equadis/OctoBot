@@ -41,14 +41,15 @@ textures or databases. Reference: https://github.com/Otari98/Tmog at
 `0add080f75631ca2dda5d1e679292ee8b846420d`.
 
 The page loads jQuery 3.7.1 (SRI checked) and Wowhead/Zam's hosted Classic
-`ZamModelViewer`. The adapter's character/item contract was checked against the
+`ZamModelViewer`, pinned to deployment `35ee72d`. The adapter's character/item contract was checked against the
 renderer and https://github.com/Miorey/wow-model-viewer. No third-party renderer
 or game assets are vendored. Their availability and upstream changes affect 3D
 previews. WebGL must be supported/enabled.
 
 `GET /api/outfitter/item/:id` reads the item's published OctoWoW display ID.
 `GET /api/outfitter/assets/...` streams only allowlisted Classic model JSON,
-geometry, skeletons and textures from the fixed Zam origin. Both return CORS
+native M2 geometry, skin meshes, skeletons, animations, physics data and textures
+from the fixed Zam origin. Both return CORS
 headers and cacheable responses. No caller-selected upstream hosts, arbitrary
 scripts, cookies, credentials, writes or player data are accepted. Existing
 population/status/presence routes and scheduled jobs are unchanged.
@@ -71,3 +72,22 @@ reload, body selection and invalid-code feedback. The managed test browser has
 WebGL disabled, so full character/texture rendering and rotation require a final
 smoke test in a WebGL-capable browser after Worker deployment. The no-WebGL
 fallback is handled explicitly.
+
+
+## Model-loading compatibility
+
+The unversioned legacy viewer requests retired `.mo3` files. The pinned deployment
+uses native `.m2` and `.skin` files, with optional `.skel`, `.anim`, `.phys` and
+`.bone` dependencies. The Worker explicitly allowlists these matching path and
+extension pairs. Physics simulation is disabled in the outfit preview.
+
+Before starting the renderer, the page validates the character's M2 download and
+loads the first skin referenced by its SFID chunk. An unavailable or invalid
+critical asset produces an immediate, specific message instead of the renderer's
+long loading timeout. Browser HTTP caching reuses these downloads when the
+renderer requests them. ResizeObserver resizes the existing canvas rather than
+restarting asset loading, and desktop panels stretch to the same grid-row height.
+
+This change requires both the new page assets and the updated Worker. Deploy the
+Worker before testing the page. A Worker without the native asset routes produces
+an explicit service-update message.

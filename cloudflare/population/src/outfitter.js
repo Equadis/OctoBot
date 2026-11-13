@@ -11,7 +11,7 @@ export function parseDisplayId(html) {
 export function assetPath(path) {
  const value=path.replace(/^\/api\/outfitter\/assets\//,'');
  // Only model data and textures; no scripts, HTML, redirects or arbitrary paths.
- return /^(?:meta\/(?:character|charactercustomization|item|itemvisual)\/\d+\.json|meta\/armor\/\d+\/\d+\.json|(?:mo3|bone)\/\d+\.(?:mo3|bone)|textures\/\d+\.(?:webp|png))$/.test(value)?value:null;
+ return /^(?:meta\/(?:character|charactercustomization|item|itemvisual)\/\d+\.json|meta\/armor\/\d+\/\d+\.json|(?:m2\/\d+\.m2|skin\/\d+\.skin|skel\/\d+\.skel|anim\/\d+\.anim|phys\/\d+\.phys|bone\/\d+\.bone)|textures\/\d+\.(?:webp|png))$/.test(value)?value:null;
 }
 export async function outfitter(request,fetcher=fetch) {
  const url=new URL(request.url);
