@@ -16,5 +16,5 @@ test('left equipment column positions icons before slot labels',()=>{
 });
 test('cached module and stylesheet URLs are versioned for the left-slot fix',()=>{
  assert.match(html,/combat-layout\.css\?v=20261113-gear-position2/);
- assert.match(html,/planner\.mjs\?v=20261113-gear-position2/);
+ assert.match(html,/planner\.mjs\?v=20261113-swaps1/);
 });

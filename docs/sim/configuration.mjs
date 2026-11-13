@@ -5,7 +5,7 @@ import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-
 import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261112-consumes1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
 import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-rotations1';
-import { attachTooltip } from './tooltip.mjs?v=20261111-classes1';
+import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,click,label)=>{const b=node('button',text);b.type='button';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',click);return b;};

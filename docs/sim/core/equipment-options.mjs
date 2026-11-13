@@ -333,10 +333,19 @@ export const ENCHANTS=Object.freeze([
     "id": "enchant_ring2_stats",
     "name": "Stunning Imperial Gemstone (+3 All Stats)",
     "slot": "ring2"
-  }
+  },
+  {"id":"scope_4405","name":"Crude Scope (+1 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":5,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":1},"source":"https://octowow.st/db/?item=4405"},
+  {"id":"scope_4406","name":"Standard Scope (+2 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":10,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":2},"source":"https://octowow.st/db/?item=4406"},
+  {"id":"scope_4407","name":"Accurate Scope (+3 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":20,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":3},"source":"https://octowow.st/db/?item=4407"},
+  {"id":"scope_10546","name":"Deadly Scope (+5 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":30,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":5},"source":"https://octowow.st/db/?item=10546"},
+  {"id":"scope_10548","name":"Sniper Scope (+7 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":40,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":7},"source":"https://octowow.st/db/?item=10548"},
+  {"id":"scope_18283","name":"Biznicks 247x128 Accurascope (+3% Ranged Hit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedHit":3},"source":"https://octowow.st/db/?item=18283"},
+  {"id":"scope_33146","name":"Facetted Crystal Scope (+2% Ranged Crit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedCrit":2},"source":"https://octowow.st/db/?item=33146"}
 ].map(enchant=>Object.freeze(enchant)));
-export function enchantsForSlot(slot,classId='warrior',item=null){return ENCHANTS.filter(enchant=>enchant.slot===slot && (!enchant.classes || enchant.classes.includes(classId)) && (!['mainhand','offhand'].includes(slot) || !item || item.classs===2));}
-export function validEnchant(id,slot,classId='warrior'){return enchantsForSlot(slot,classId).some(enchant=>enchant.id===id);}
+export function enchantsForSlot(slot,classId='warrior',item=null,level=60){
+ return ENCHANTS.filter(enchant=>enchant.slot===slot && (!enchant.classes||enchant.classes.includes(classId)) && (!enchant.requiredLevel||level>=enchant.requiredLevel) && (!['mainhand','offhand'].includes(slot)||!item||item.classs===2) && (!enchant.weaponSubclasses||!item||item.classs===2&&enchant.weaponSubclasses.includes(item.subclass)));
+}
+export function validEnchant(id,slot,classId='warrior',item=null,level=60){return enchantsForSlot(slot,classId,item,level).some(enchant=>enchant.id===id);}
 export const SORT_OPTIONS=Object.freeze([['new','NEW ITEMS'],['level','Item Level'],['name','Name'],['dps','Weapon DPS'],['speed','Weapon Speed'],['armor','Armour'],['Strength','Strength'],['Agility','Agility'],['Stamina','Stamina'],['Intellect','Intellect'],['Spirit','Spirit'],['attackPower','Attack Power'],['hitRating','Hit %'],['critRating','Crit %'],['hastePercent','Haste %'],['armorPenetration','Armor Pen'],['spellDamage','Spell Damage'],['spellCritRating','Spell Crit %'],['hasProc','Has Proc'],['weaponSkill','Weapon Skill'],['spellstrike','Spellstrike']]);
 export function sortEquipment(items,sort='new',direction='desc',details={},references={}){
  const sign=direction==='asc'?1:-1;

@@ -156,3 +156,20 @@ The 65 enchant labels and slot references, 82 patch item tags, and reference too
 ## Expanded rotation configuration
 
 See [the rotation catalogue and engine support contract](ROTATIONS.md) for all 125 built-in priorities, source evidence, compatibility checks, legacy save handling and unresolved OctoWoW mechanics. These are configuration templates; combat execution remains unavailable.
+
+### Combat-drop swap setup and ranged enhancements (13 November 2026)
+
+Rogue has a **Vanish Trinket Swap** panel; Hunter has **Petless Feign Death Trinket
+Swap**. Enable the setup, choose seconds from the pull, and use the normal filtered
+item picker for replacement trinket slots. Starting trinkets remain in the gear
+panel, and unselected replacement slots keep their original item. Enabling the
+Hunter option selects Pet: None. Setup, replacements and timing round-trip through
+saves, exports and links; Equipment Reset also clears the setup. Imported active
+replacement gear is checked against official item restrictions and final unique
+item constraints, and local restoration disables an invalid swap for repair.
+
+Seven sourced ranged scopes are available through the ranged slot's enchant
+selector, filtered by weapon type and character level. Their bonuses remain
+ranged-specific and cannot inflate melee stats. See SOURCES.md for source pages.
+Combat simulation remains unavailable; the new controls do not simulate swaps or
+claim a DPS benefit. Future engines must explicitly support these features.
