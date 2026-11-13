@@ -1,3 +1,4 @@
+import {requestJson} from './service.mjs?v=20261113-dressing1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',PAGE_SIZE=10;
 let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,page=0,viewer=null,revision=0,endpoint='',saved=[],resizeTimer;
@@ -33,7 +34,7 @@ function renderItems(){
  }
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
 }
-async function getJson(url){const response=await fetch(url,{signal:AbortSignal.timeout(20000)});if(!response.ok)throw Error(`Appearance service returned HTTP ${response.status}.`);return response.json();}
+function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 function clearViewer(){if(viewer){try{viewer.destroy();}catch{}viewer=null;}$('model').replaceChildren();}
 async function renderModel(){
