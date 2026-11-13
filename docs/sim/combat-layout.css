@@ -137,13 +137,14 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .slot-icon{grid-column:2;grid-row:1;align-self:center}
 .planner-view .slot-name{grid-column:1;grid-row:1;min-height:33px;padding:2px;overflow-wrap:anywhere;align-self:stretch;display:flex;align-items:center;justify-content:center;min-width:0;margin:0}
 .planner-view .slot .item-name{grid-row:2;grid-column:1/-1;align-self:center;display:block;width:100%;line-height:1.3;text-align:center;overflow-wrap:anywhere;white-space:normal}
-/* Put icons before labels in the left equipment column; keep the right column unchanged. */
-.planner-view .slot[data-side=left] button{grid-template-columns:33px minmax(0,1fr)}
-.planner-view .slot[data-side=left] .slot-icon{grid-column:1}
-.planner-view .slot[data-side=left] .slot-name{grid-column:2}
+/* Position by actual equipment column, independent of any cached slot data attributes. */
+.planner-view #slots-left .slot button{grid-template-columns:33px minmax(0,1fr)}
+.planner-view #slots-left .slot .slot-icon{grid-column:1;grid-row:1}
+.planner-view #slots-left .slot .slot-name{grid-column:2;grid-row:1}
+.planner-view #slots-left .slot .item-name{grid-column:1/-1;grid-row:2;text-align:center}
 /* Only placeholder text loses italics; actual item names retain their styling. */
 .planner-view .slot:not(.has-item) .item-name{font-style:normal}
-@media(max-width:480px){.planner-view .slot[data-side=left] button{grid-template-columns:30px minmax(0,1fr)}}
+@media(max-width:480px){.planner-view #slots-left .slot button{grid-template-columns:30px minmax(0,1fr)}}
 .planner-view .slot-enchant{width:100%;margin-top:3px;text-align:center;white-space:normal;overflow-wrap:anywhere;overflow:visible}
 .slot-enchant.enchanted[data-tone=positive]{color:#83d9ac}
 .slot-enchant.enchanted[data-tone=negative]{color:#ff4b55}
