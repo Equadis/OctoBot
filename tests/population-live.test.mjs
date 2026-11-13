@@ -482,3 +482,35 @@ test('realm graph renders current real counts and yellow proportional backfill',
  assert.match(env.get('readout').textContent,/ESTIMATED/);
  assert.match(env.get('readout').textContent,/1,6/);
 });
+
+
+test('all three realm graphs retain yellow NO DATA shading behind historical estimates',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z'),week=now-7*86400000;
+ const stamp=t=>new Date(t).toISOString();
+ const snapshots={all:{source:'official census',timestamp:stamp(now-30000),online:1000}};
+ const realmWorker={};
+ for(const [realm,online]of [['nzoth',800],['cthun',100],['yshaarj',100]]){
+  const observed={source:'in-game .server info',timestamp:stamp(now-30000),online};
+  snapshots[realm]=observed;
+  realmWorker[realm]=[observed];
+ }
+ const env=fixture({
+  snapshots,realmWorker,
+  archival:[{timestamp:stamp(week),online:2000},{timestamp:stamp(week+60000),online:2100}],
+  allWorker:[{timestamp:stamp(now-60000),online:1000,source:'official census'}]
+ });
+ await settle();
+ for(const realm of ['nzoth','cthun','yshaarj']){
+  env.get('server-select').fire('change',{target:{value:realm}});
+  await settle();
+  env.navigate({start:week-120000,end:week+600000});
+  assert.match(env.get('estimate-path').getAttribute('d'),/L/,
+   realm+' must retain yellow dashed estimated history');
+  const backgrounds=env.get('outages').children.filter(
+   child=>child.tagName==='rect'&&child.getAttribute('fill')==='#e3bd57'&&
+    child.getAttribute('fill-opacity')==='.10'
+  );
+  assert.ok(backgrounds.length>0,
+   realm+' must retain the yellow NO DATA backdrop under estimated values');
+ }
+});
