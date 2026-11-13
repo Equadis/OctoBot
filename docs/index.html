@@ -353,7 +353,7 @@ function draw(){
  // The yellow NO DATA backdrop represents time without confirmed realm readings.
  // Keep it behind estimated yellow dashed values; estimates are not actual observations.
  for(const [a,b]of missing){
-  $('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
+  $('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':realm==='all'?'.10':'.24'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
  }
  for(const [a,b]of info.estimated)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));
  let estimatePath='';for(const [a,b]of info.estimated){const va=D.estimateAt(rows,a),vb=D.estimateAt(rows,b);if(va!==null&&vb!==null)estimatePath+='M'+x(a).toFixed(2)+','+y(va).toFixed(2)+' L'+x(b).toFixed(2)+','+y(vb).toFixed(2)+' ';}
