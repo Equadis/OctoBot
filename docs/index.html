@@ -350,9 +350,10 @@ function draw(){
   const label=new Intl.DateTimeFormat('en-GB',options).format(new Date(t));
   $('axes').append(svg('text',{x:x(t),y:318,'text-anchor':'middle'},label));
 }
+ // The yellow NO DATA backdrop represents time without confirmed realm readings.
+ // Keep it behind estimated yellow dashed values; estimates are not actual observations.
  for(const [a,b]of missing){
-  const left=estimatedRows.length?Math.max(a,rows[0]?.t??Infinity):a;
-  if(left<b)$('outages').append(svg('rect',{x:x(left),y:28,width:Math.max(1,x(b)-x(left)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(left),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
+  $('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.10'}),svg('line',{x1:x(a),x2:x(b),y1:290,y2:290,stroke:'#e3bd57','stroke-width':2,'stroke-dasharray':'6 4'}));
  }
  for(const [a,b]of info.estimated)$('outages').append(svg('rect',{x:x(a),y:28,width:Math.max(1,x(b)-x(a)),height:262,fill:'#e3bd57','fill-opacity':'.05'}));
  let estimatePath='';for(const [a,b]of info.estimated){const va=D.estimateAt(rows,a),vb=D.estimateAt(rows,b);if(va!==null&&vb!==null)estimatePath+='M'+x(a).toFixed(2)+','+y(va).toFixed(2)+' L'+x(b).toFixed(2)+','+y(vb).toFixed(2)+' ';}
