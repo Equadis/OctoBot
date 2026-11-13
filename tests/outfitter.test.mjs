@@ -30,3 +30,11 @@ test('browser searches name and ID, separates inventory slots, and combines filt
  assert.equal(filterItems(items,{slot:1,query:'azure',subclass:'4:1'}).length,0);
  assert.equal(filterItems(items,{slot:1,query:'azure',quality:'3'}).length,1);
 });
+
+test('undeployed service and missing model errors have distinct readable messages',async()=>{
+ const {requestJson}=await import('../docs/outfitter/service.mjs');
+ await assert.rejects(requestJson('https://api.test',async()=>new Response('{"error":"not_found"}',{status:404})),/service is not available yet/);
+ await assert.rejects(requestJson('https://api.test',async()=>new Response('{"error":"This appearance is not available"}',{status:404})),/Classic model library/);
+ await assert.rejects(requestJson('https://api.test',async()=>new Response('upstream error',{status:502})),/temporarily unavailable/);
+ assert.deepEqual(await requestJson('https://api.test',async()=>new Response('{"id":16866}')),{id:16866});
+});
