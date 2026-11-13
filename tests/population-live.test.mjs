@@ -537,11 +537,20 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  bar.fire('click');
  assert.equal(env.view().start,launch);
  assert.equal(env.view().windowEnd,Date.parse('2026-11-08T01:00:00Z'));
- assert.equal(bar.hidden,true);
+ assert.equal(bar.hidden,false,'Toggle remains available to collapse the lifespan');
+ assert.equal(bar.getAttribute('aria-expanded'),'true');
+ assert.equal(bar.getAttribute('title'),'Hide empty server lifespan.');
  assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&n.getAttribute('fill')==='#e3bd57'));
  assert.match(env.get('raw-population').getAttribute('d'),/L/);
  await env.intervals.get(30000)[0]();await settle();
  assert.equal(env.view().start,launch,'Refresh preserves the expanded lifespan');
+ bar.fire('click');
+ assert.equal(env.view().start,first,'Second click restores the collapsed range');
+ assert.equal(env.get('range-label').textContent,'1D','Restore the original preset');
+ assert.equal(bar.getAttribute('aria-expanded'),'false');
+ assert.equal(bar.getAttribute('title'),tooltip);
+ assert.equal(bar.getAttribute('aria-label'),tooltip);
+ bar.fire('click');
  env.get('ranges').children.find(b=>b.textContent==='1D').fire('click');
  assert.equal(env.view().start,first);
  assert.equal(bar.hidden,false);
@@ -589,4 +598,27 @@ test('all realms collapse to estimates before actual readings and keep shading a
   assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&
    n.getAttribute('fill')==='#e3bd57'&&Number(n.getAttribute('fill-opacity'))>=.2));
  }
+});
+
+
+test('lifespan toggle is a small triangle outside the graph scale and flips when expanded',()=>{
+ assert.match(html,/\.reveal-lifespan\{[^}]*left:-22px/);
+ assert.match(html,/\.reveal-lifespan\{[^}]*width:20px;height:28px/);
+ assert.match(html,/\.reveal-lifespan span\{[^}]*border-right:7px solid currentColor/);
+ assert.match(html,/\.reveal-lifespan\[aria-expanded=true\] span\{transform:rotate\(180deg\)/);
+ assert.doesNotMatch(html,/height:73\.8028%/,'Remove the full-height reveal bar');
+});
+
+test('triangle restores the previous custom range after opening the full lifespan',async()=>{
+ const env=navigationFixture();await settle();
+ const first=Date.parse('2026-11-06T01:00:00Z'),end=first+3600000;
+ env.navigate({start:first,end});
+ const toggle=env.get('reveal-lifespan');
+ toggle.fire('click');
+ assert.equal(toggle.getAttribute('aria-expanded'),'true');
+ assert.equal(toggle.hidden,false);
+ toggle.fire('click');
+ assert.equal(env.view().start,first);
+ assert.equal(env.view().windowEnd,end);
+ assert.equal(toggle.getAttribute('aria-expanded'),'false');
 });
