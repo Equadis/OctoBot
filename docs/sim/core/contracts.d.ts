@@ -111,3 +111,16 @@ export interface RotationEngineCapabilities {
   supportedRotationMetrics: string[];
   supportedRotationTargets: RotationTarget[];
 }
+
+/** Starting gear remains in the build; only named trinket slots are replaced. */
+export interface TrinketSwapConfiguration {
+  enabled: boolean;
+  atSeconds: number;
+  gear: Partial<Record<'trinket1' | 'trinket2', {id: number; label: string}>>;
+}
+/** Engine validation still checks combat-drop availability, downtime, retained
+ * buffs/procs, petlessness and equip/use cooldowns against the selected ruleset. */
+export interface TrinketSwapCapabilities {
+  supportedTrinketSwapModes?: ('vanish' | 'petless-feign-death')[];
+  supportedEnchantIds?: string[];
+}

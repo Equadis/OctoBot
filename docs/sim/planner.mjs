@@ -1,18 +1,19 @@
-import {resetPlannerSection} from './core/panel-resets.mjs?v=20261112-rotations1';
+import {trinketSwapControls} from './trinket-swaps.mjs?v=20261113-swaps1';
+import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
-import {equipmentErrors} from './core/items.mjs?v=20261112-audit1';
+import {equipmentErrors} from './core/items.mjs?v=20261113-swaps1';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
-import {characterStats} from './core/character-stats.mjs?v=20261112-audit1';
+import {characterStats} from './core/character-stats.mjs?v=20261113-swaps1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
 import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261112-audit1';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261112-rotations1';
-import { itemPicker } from './item-picker.mjs?v=20261112-rotations1';
-import { ENCHANTS } from './core/equipment-options.mjs?v=20261111-classes1';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261113-swaps1';
+import { itemPicker } from './item-picker.mjs?v=20261113-swaps1';
+import { ENCHANTS } from './core/equipment-options.mjs?v=20261113-swaps1';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261112-rotations1';
-import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261111-classes1';
+import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
 const $ = id => document.getElementById(id);
@@ -26,7 +27,7 @@ if(selectedView!=='classes'){
 const currentClass=classDefinition(classId);
 const DRAFT_KEY=`octosim.planner.draft.${classId}.v2`;
 let library;
-let picker, config, settingsControls;
+let picker, config, settingsControls, swapControls;
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 
@@ -173,6 +174,7 @@ function createTalents() {
 }
 
 function render() {
+  swapControls?.render();
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);
   $('character-description').textContent = `${build.race} · Level ${build.level}`;
@@ -337,6 +339,7 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];for(const error of equipmentErrors(build,id=>picker.lookup(id)))delete build.gear[error.slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
+  swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>picker.open(slot,options),inspect:id=>picker.inspect(id)});
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
   $('clear-talents').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'talents'),'Talents reset.'));

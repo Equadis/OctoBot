@@ -1,8 +1,9 @@
+import {TRINKET_SWAP_MODES,defaultTrinketSwap,validateTrinketSwap} from './trinket-swaps.mjs?v=20261113-swaps1';
 import {resolveConsumableSelection,CONSUMABLE_BY_ID,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {validRace,slotAllowed,CLASS_RACES} from './class-rules.mjs?v=20261112-audit1';
 import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261112-rotations1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261112-audit1';
-import { validEnchant } from './equipment-options.mjs?v=20261111-classes1';
+import { validEnchant } from './equipment-options.mjs?v=20261113-swaps1';
 import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
 import { defaultControls, validateControls, BUFF_OPTIONS, buffRestriction } from './configuration.mjs?v=20261112-rotations1';
 import { validateTalents } from './talents.mjs?v=20261112-audit1';
@@ -16,7 +17,7 @@ export const SLOTS = Object.freeze({
 export function newBuild(classId='warrior') {
   const cls=classDefinition(classId);
   return { schemaVersion: 1, classId, name: `My ${cls.name} Build`, level: 60,
-    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
+    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, ...(TRINKET_SWAP_MODES[classId]?{trinketSwap:defaultTrinketSwap()}:{}), controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
 }
 
 export function parseItemReference(input) {
@@ -59,7 +60,7 @@ export function validateBuild(input, data) {
         typeof item.label !== 'string' || item.label.length > 80) throw new Error('Invalid item reference.');
     gear[slot] = { id: item.id, label: item.label };
     if (item.enchantId !== undefined && item.enchantId !== '') {
-      if (!validEnchant(item.enchantId,slot,input.classId)) throw new Error('Invalid enchant for this equipment slot.');
+      if (!validEnchant(item.enchantId,slot,input.classId,null,input.level)) throw new Error('Invalid enchant for this equipment slot.');
       gear[slot].enchantId=item.enchantId;
     }
   }
@@ -82,12 +83,13 @@ export function validateBuild(input, data) {
   planning.targetPreset = input.planning?.targetPreset ?? 'custom';
   if (!TARGET_IDS.includes(planning.targetPreset)) throw new Error('Unknown target preset.');
   const classOptions=validateClassOptions(input.classOptions,input.classId);
+  const trinketSwap=validateTrinketSwap(input.trinketSwap,input.classId,classOptions);
   if(input.classId==='rogue')for(const [hand,key] of [['mh','mhPoison'],['oh','ohPoison']])if(classOptions[key]!=='None'&&input.controls?.buffIds?.includes(`wizard-oil-${hand}`))throw new Error('A weapon cannot have both poison and wizard oil.');
   if(input.classId==='shaman'&&classOptions.mhImbue!=='None'&&input.controls?.buffIds?.includes('wizard-oil-mh'))throw new Error('A weapon cannot have both an imbue and wizard oil.');
   const talents = {};
   for (const [id, rank] of Object.entries(input.talents)) if (rank > 0) talents[id] = rank;
   return { schemaVersion: 1, classId: input.classId, name: input.name.trim(),
-    race: input.race.trim(), skills, classOptions, level: input.level, talents, gear, planning, controls: validateControls(input.controls,input.classId,{...input,gear,skills}) };
+    race: input.race.trim(), skills, classOptions, ...(trinketSwap?{trinketSwap}:{}), level: input.level, talents, gear, planning, controls: validateControls(input.controls,input.classId,{...input,gear,skills}) };
 }
 
 export function encodeBuild(build) {

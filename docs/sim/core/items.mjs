@@ -1,3 +1,4 @@
+import {validEnchant} from './equipment-options.mjs?v=20261113-swaps1';
 import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
 import { classDefinition } from './classes.mjs?v=20261112-audit1';
 // Database listing filters are preliminary. Equipping requires the source detail masks.
@@ -113,7 +114,7 @@ export function equipmentErrors(build,lookup){
  const enriched={...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,ref])=>{const item=lookup(ref.id);return [slot,{...ref,subclass:item?.subclass,twoHanded:item?.slot===17}];}))};
  const errors=[];
  for(const [slot,ref] of Object.entries(build.gear)){
-  const item=lookup(ref.id);const reason=item?detailRestriction(item,item,enriched,slot):'Official item data unavailable.';
+  const item=lookup(ref.id);const reason=item?(detailRestriction(item,item,enriched,slot)||(ref.enchantId&&!validEnchant(ref.enchantId,slot,build.classId,item,build.level)?'Enhancement is incompatible with this weapon or character level.':null)):'Official item data unavailable.';
   if(reason)errors.push({slot,id:ref.id,reason});
  }
  return errors;

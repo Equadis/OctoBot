@@ -56,3 +56,12 @@ test('Moonkin armour uses the published Octo talent, not the older Vanilla multi
  const agility=Number(rows(b,gear)['Base Stats'].Agility);
  assert.equal(rows(b,gear).Defence.Armour,String(280+agility*2));
 });
+
+test('ranged scopes cannot raise melee hit, crit or damage',()=>{
+ const b=newBuild('rogue');const gear={ranged:{id:1,classs:2,subclass:3,attributes:{}}};
+ const before=rows(b,gear);
+ for(const enchantId of ['scope_18283','scope_33146','scope_10548']){
+  b.gear.ranged={id:1,label:'Gun',enchantId};
+  assert.deepEqual(rows(b,gear).Melee,before.Melee);
+ }
+});

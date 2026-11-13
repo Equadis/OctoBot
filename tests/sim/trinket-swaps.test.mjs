@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {newBuild,validateBuild,encodeBuild,decodeBuild} from '../../docs/sim/core/builds.mjs';
+import {defaultTrinketSwap,postSwapBuild,trinketSwapEngineErrors} from '../../docs/sim/core/trinket-swaps.mjs';
+import {resetPlannerSection} from '../../docs/sim/core/panel-resets.mjs';
+import {prepareSimulation} from '../../docs/sim/core/simulation-readiness.mjs';
+import {equipmentErrors} from '../../docs/sim/core/items.mjs';
+const talents=id=>JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${id}.json`,import.meta.url)));
+for(const classId of ['rogue','hunter'])test(`${classId} swap setup survives sharing while starting gear stays separate`,()=>{
+ const build=newBuild(classId);build.trinketSwap={enabled:true,atSeconds:22.5,gear:{trinket1:{id:11815,label:'Replacement'}}};
+ if(classId==='hunter')build.classOptions.pet='None';
+ build.gear={trinket1:{id:19954,label:'Opening trinket'},trinket2:{id:13965,label:'Unchanged'}};
+ const copy=decodeBuild(encodeBuild(build),talents(classId));assert.deepEqual(copy,build);
+ assert.equal(postSwapBuild(copy).gear.trinket1.id,11815);
+ assert.equal(postSwapBuild(copy).gear.trinket2.id,13965);
+ assert.equal(copy.gear.trinket1.id,19954);
+ const legacy=structuredClone(build);delete legacy.trinketSwap;
+ assert.deepEqual(validateBuild(legacy,talents(classId)).trinketSwap,defaultTrinketSwap());
+ const reset=resetPlannerSection(copy,'equipment');assert.deepEqual(reset.trinketSwap,defaultTrinketSwap());
+ assert.deepEqual(reset.gear,{});assert.deepEqual(reset.controls,copy.controls);
+ assert.deepEqual(resetPlannerSection(copy,'talents').trinketSwap,copy.trinketSwap);
+});
+test('invalid swaps and pet-dependent Hunter configurations cannot be imported',()=>{
+ const base=newBuild('rogue');
+ for(const patch of [{atSeconds:-1},{atSeconds:NaN},{atSeconds:3601},{enabled:'true'},{gear:[]},{gear:{head:{id:1,label:'Wrong slot'}}},{gear:{trinket1:{id:1.5,label:'Invalid'}}},{gear:{trinket1:{id:1,label:'No enchants',enchantId:'x'}}}])assert.throws(()=>validateBuild({...base,trinketSwap:{...defaultTrinketSwap(),...patch}},talents('rogue')),/trinket/i);
+ assert.throws(()=>validateBuild({...newBuild('warrior'),trinketSwap:defaultTrinketSwap()},talents('warrior')),/only supported/);
+ const hunter=newBuild('hunter');hunter.classOptions.pet='Cat';hunter.trinketSwap.enabled=true;
+ assert.throws(()=>validateBuild(hunter,talents('hunter')),/requires Pet: None/);
+});
+test('unimplemented swaps fail closed and metadata checks reject non-trinkets and duplicate uniques',()=>{
+ const b=newBuild('rogue');b.trinketSwap.enabled=true;
+ assert.match(trinketSwapEngineErrors(b,null).join(' '),/replacement trinket.*not implemented/);
+ b.trinketSwap.gear.trinket1={id:1,label:'Replacement'};b.trinketSwap.atSeconds=60;
+ assert.match(trinketSwapEngineErrors(b,{supportedTrinketSwapModes:['vanish']}).join(' '),/before the fight ends/);
+ b.trinketSwap.atSeconds=20;assert.deepEqual(trinketSwapEngineErrors(b,{supportedTrinketSwapModes:['vanish']}),[]);
+ assert.throws(()=>prepareSimulation(b,talents('rogue')),/Vanish Trinket Swap is not implemented/);
+ const item={id:1,classs:4,subclass:0,slot:1,reqlevel:1,requiredLevel:1,classMask:-1,raceMask:-1,requirements:[],unique:true};
+ assert.ok(equipmentErrors(postSwapBuild(b),()=>item).length,'A head item cannot be a replacement trinket');
+ item.slot=12;b.gear.trinket2={id:1,label:'Unique'};
+ assert.match(equipmentErrors(postSwapBuild(b),()=>item).map(e=>e.reason).join(' '),/unique/);
+});

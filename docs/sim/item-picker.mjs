@@ -1,7 +1,8 @@
-import {filterItems,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261112-audit1';
-import {SLOTS} from './core/builds.mjs?v=20261112-rotations1';
+import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
+import {filterItems,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261113-swaps1';
+import {SLOTS} from './core/builds.mjs?v=20261113-swaps1';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261111-classes1';
+import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261113-swaps1';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
@@ -18,6 +19,8 @@ const shortStats=item=>{
 export function itemPicker({getBuild,onEquip,onClear}) {
  const $=id=>document.getElementById(id);
  let items=null,details={},references={},referenceSelection=false,slot=null,loading=null,selected=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),selectedDetail=null;
+ let selectionContext={};
+ const selectionBuild=()=>selectionContext.getBuild?.()||getBuild();
  const CACHE_KEY='octosim.item-details.v2',pending=new Map();
  for(const [value,label] of SORT_OPTIONS){const option=node('option',label);option.value=value;$('item-sort').append(option);}
  async function load(){
@@ -44,7 +47,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  function error(message=''){$('item-error').textContent=message;}
  function updateEnchants(){
   const current=$('item-enchant').value;
-  const options=enchantsForSlot(slot,getBuild().classId,selected);
+  const options=enchantsForSlot(slot,selectionBuild().classId,selected,selectionBuild().level);
   const empty=node('option','— None —');empty.value='';$('item-enchant').replaceChildren(empty);
   for(const enchant of options){const option=node('option',enchant.name);option.value=enchant.id;$('item-enchant').append(option);}
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
@@ -69,14 +72,14 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   updateEnchants();paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
   try{
    const source=await detail(item);if(version!==previewVersion || !$('item-dialog').open)return;
-   const reason=detailRestriction(item,source,getBuild(),slot);selectedDetail=reason?null:source;
+   const reason=detailRestriction(item,source,selectionBuild(),slot);selectedDetail=reason?null:source;
    paintPreview(item,source);$('select-item').disabled=Boolean(reason);if(reason)error(reason);
    const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
   }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return;referenceSelection=false;$('select-item').disabled=true;$('select-item').textContent='Select';paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
   if(!items)return;
-  const build=getBuild();
+  const build=selectionBuild();
   candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],build,slot)) && (details[item.id] || !references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
   $('item-count').textContent=`${candidates.length.toLocaleString()} ${candidates.length===1?'item':'items'}`;
   const fragment=document.createDocumentFragment();rowElements=new Map();
@@ -106,25 +109,25 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  }
  function selectItem(){
   if(!selected || !selectedDetail)return;
-  const reason=selectedDetail?detailRestriction(selected,selectedDetail,getBuild(),slot):listingRestriction(selected,getBuild(),slot);if(reason){error(reason);return;}
+  const reason=selectedDetail?detailRestriction(selected,selectedDetail,selectionBuild(),slot):listingRestriction(selected,selectionBuild(),slot);if(reason){error(reason);return;}
   const enchantId=$('item-enchant').value;
-  if(enchantId && !enchantsForSlot(slot,getBuild().classId,selected).some(enchant=>enchant.id===enchantId)){error('This enchant cannot be used in this slot.');return;}
-  onEquip(slot,{id:selected.id,label:(selectedDetail?.name||selected.name).slice(0,80),enchantId,twoHanded:(selectedDetail?.slot||selected.slot)===17});$('item-dialog').close();
+  if(enchantId && !enchantsForSlot(slot,selectionBuild().classId,selected,selectionBuild().level).some(enchant=>enchant.id===enchantId)){error('This enchant cannot be used in this slot.');return;}
+  (selectionContext.onEquip||onEquip)(slot,{id:selected.id,label:(selectedDetail?.name||selected.name).slice(0,80),enchantId,twoHanded:(selectedDetail?.slot||selected.slot)===17});$('item-dialog').close();
  }
  $('item-form').addEventListener('submit',event=>{event.preventDefault();clearTimeout(searchTimer);search();});
  let searchTimer;$('item-reference').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(search,180);});
  for(const id of ['item-quality','item-sort'])$(id).addEventListener('change',search);
  $('item-direction').addEventListener('click',()=>{direction=direction==='desc'?'asc':'desc';$('item-direction').textContent=direction==='desc'?'Descending ▼':'Ascending ▲';search();});
  $('select-item').addEventListener('click',selectItem);
- $('clear-item').addEventListener('click',()=>{onClear(slot);$('item-dialog').close();});
+ $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);$('item-dialog').close();});
  $('item-dialog').addEventListener('close',()=>{++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);});
  return {
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot){if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;selected=null;selectedDetail=null;$('item-reference').value='';$('item-dialog-heading').textContent=SLOTS[slot];error();$('select-item').disabled=true;$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('clear-item').disabled=!getBuild().gear[slot];$('item-dialog').showModal();try{await load();search();const enchantId=getBuild().gear[slot]?.enchantId;if(enchantId && [...$('item-enchant').options].some(option=>option.value===enchantId))$('item-enchant').value=enchantId;}catch(failure){error(failure.message);}},
+  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;selected=null;selectedDetail=null;$('item-reference').value='';$('item-dialog-heading').textContent=options.heading||SLOTS[slot];error();$('select-item').disabled=true;$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('clear-item').disabled=!selectionBuild().gear[slot];$('item-dialog').showModal();try{await load();search();const enchantId=selectionBuild().gear[slot]?.enchantId;if(enchantId && [...$('item-enchant').options].some(option=>option.value===enchantId))$('item-enchant').value=enchantId;}catch(failure){error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
-  async repairCandidate(candidate){await load();for(const ref of Object.values(candidate.gear)){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];return {build:repaired,changes:errors.map(e=>`${e.slot}: ${e.reason}`)};},
-  async verifyCandidate(candidate){await load();for(const ref of Object.values(candidate.gear)){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(errors.length)throw new Error(errors.map(e=>`${e.slot}: ${e.reason}`).join(' '));return candidate;},
+  async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},
+  async verifyCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(candidate.trinketSwap?.enabled)errors.push(...equipmentErrors(postSwapBuild(candidate),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;}).map(e=>({...e,slot:'Swap '+e.slot})));if(errors.length)throw new Error(errors.map(e=>`${e.slot}: ${e.reason}`).join(' '));return candidate;},
   async verifyGear(){await load();const build=getBuild(),invalid=[];for(const [slot,equipped] of Object.entries(build.gear)){const item=items.find(item=>item.id===equipped.id);const reason=item?listingRestriction(item,build,slot)||(details[item.id]&&detailRestriction(item,details[item.id],build,slot)):'Item is absent from the catalogue.';if(reason)invalid.push(`${slot}: ${reason}`);}return invalid;},
  };
 }

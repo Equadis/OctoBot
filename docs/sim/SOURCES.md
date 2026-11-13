@@ -114,3 +114,35 @@ remains unavailable until a verified combat engine exists.
 ## Expanded rotation configuration
 
 See [the rotation catalogue and engine support contract](ROTATIONS.md) for all 125 built-in priorities, source evidence, compatibility checks, legacy save handling and unresolved OctoWoW mechanics. These are configuration templates; combat execution remains unavailable.
+
+## Ranged enhancements and combat-drop trinket setup (13 November 2026)
+
+The ranged enhancement list was checked against the ordinary OctoWoW item pages.
+Application levels are character requirements, not the Engineering skill needed
+to manufacture a scope. Only bow, gun and crossbow weapon subclasses are offered
+these enhancements; thrown weapons, wands and relics are excluded. These are
+source tooltip values, not independently measured server combat formulas.
+
+| Enhancement | Application level | Ranged effect | Primary source |
+| --- | ---: | --- | --- |
+| Crude Scope | 5 | +1 damage | https://octowow.st/db/?item=4405 |
+| Standard Scope | 10 | +2 damage | https://octowow.st/db/?item=4406 |
+| Accurate Scope | 20 | +3 damage | https://octowow.st/db/?item=4407 |
+| Deadly Scope | 30 | +5 damage | https://octowow.st/db/?item=10546 |
+| Sniper Scope | 40 | +7 damage | https://octowow.st/db/?item=10548 |
+| Biznicks 247x128 Accurascope | 50 | +3% hit | https://octowow.st/db/?item=18283 |
+| Facetted Crystal Scope | 50 | +2% crit | https://octowow.st/db/?item=33146 |
+
+The Jewelry Scope named in the Engineering catalogue is a crafting tool rather
+than a ranged augmentation and is excluded. The official site's Jewelcrafting
+guide describes its tool role: https://octowow.st/forum/viewtopic.php?t=1664.
+
+Rogue "Vanish Trinket Swap" and Hunter "Petless Feign Death Trinket Swap" store
+one scheduled swap, its timing and zero to two replacement trinkets separately
+from starting gear. Hunter requires Pet: None. These are requested configuration
+features, not evidence that either ability reliably drops raid combat on OctoWoW.
+The current repository has no executable combat engine. Simulation preparation
+rejects an active swap unless an adapter declares the exact swap mode, and rejects
+unsupported scoped enhancements. Any adapter must additionally verify combat-drop
+availability, action downtime, retained/removed buffs and procs, unique equipment,
+and equip/use cooldowns. No DPS results or fabricated cooldown mechanics are added.
