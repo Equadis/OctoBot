@@ -1,4 +1,4 @@
-import {trinketSwapControls} from './trinket-swaps.mjs?v=20261113-swaps1';
+import {trinketSwapControls} from './trinket-swaps.mjs?v=20261113-swap-label1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261113-swaps1';

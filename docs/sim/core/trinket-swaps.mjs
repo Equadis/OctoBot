@@ -1,7 +1,7 @@
 // Swap configuration is not evidence that combat-drop mechanics are implemented.
 export const TRINKET_SWAP_MODES=Object.freeze({
  rogue:{id:'vanish',label:'Vanish Trinket Swap'},
- hunter:{id:'petless-feign-death',label:'Petless Feign Death Trinket Swap'},
+ hunter:{id:'petless-feign-death',label:'Feign Death Trinket Swap'},
 });
 export function defaultTrinketSwap(){return {enabled:false,atSeconds:20,gear:{}};}
 export function validateTrinketSwap(input,classId,classOptions){
@@ -18,7 +18,7 @@ export function validateTrinketSwap(input,classId,classOptions){
   if(!['trinket1','trinket2'].includes(slot)||!item||!Number.isInteger(item.id)||item.id<1||item.id>2147483647||typeof item.label!=='string'||item.label.length>80||Object.keys(item).some(k=>!['id','label'].includes(k)))throw new Error('Invalid replacement trinket.');
   result.gear[slot]={id:item.id,label:item.label};
  }
- if(result.enabled&&classId==='hunter'&&classOptions.pet!=='None')throw new Error('Petless Feign Death Trinket Swap requires Pet: None.');
+ if(result.enabled&&classId==='hunter'&&classOptions.pet!=='None')throw new Error('Feign Death Trinket Swap requires Pet: None.');
  return result;
 }
 export function postSwapBuild(build){return {...build,gear:{...build.gear,...build.trinketSwap?.gear}};}

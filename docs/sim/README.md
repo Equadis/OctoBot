@@ -159,7 +159,7 @@ See [the rotation catalogue and engine support contract](ROTATIONS.md) for all 1
 
 ### Combat-drop swap setup and ranged enhancements (13 November 2026)
 
-Rogue has a **Vanish Trinket Swap** panel; Hunter has **Petless Feign Death Trinket
+Rogue has a **Vanish Trinket Swap** panel; Hunter has **Feign Death Trinket
 Swap**. Enable the setup, choose seconds from the pull, and use the normal filtered
 item picker for replacement trinket slots. Starting trinkets remain in the gear
 panel, and unselected replacement slots keep their original item. Enabling the

@@ -20,7 +20,7 @@ test('Hunter control sets Pet None, routes replacement picker separately, and re
  let build=newBuild('hunter'),selection;build.classOptions.pet='Cat';build.gear.trinket1={id:19953,label:'Opening'};
  trinketSwapControls({getBuild:()=>build,onChange:next=>{build=validateBuild(next,data)},openPicker:(slot,context)=>{selection={slot,context}},inspect:async()=>null});
  const nodes=descendants(options.sibling),find=id=>nodes.find(n=>n.id===id);
- assert.ok(nodes.some(n=>n.textContent==='Petless Feign Death Trinket Swap'));
+ assert.ok(nodes.some(n=>n.textContent==='Feign Death Trinket Swap'));
  const enabled=find('trinket-swap-enabled');enabled.checked=true;enabled.fire('change');
  assert.equal(build.classOptions.pet,'None');assert.equal(build.trinketSwap.enabled,true);
  const time=find('trinket-swap-time');time.value='25.5';time.fire('change');assert.equal(build.trinketSwap.atSeconds,25.5);

@@ -1,4 +1,4 @@
-import {TRINKET_SWAP_MODES,defaultTrinketSwap,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
+import {TRINKET_SWAP_MODES,defaultTrinketSwap,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
 import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261113-swaps1';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){

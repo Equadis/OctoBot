@@ -137,7 +137,7 @@ The Jewelry Scope named in the Engineering catalogue is a crafting tool rather
 than a ranged augmentation and is excluded. The official site's Jewelcrafting
 guide describes its tool role: https://octowow.st/forum/viewtopic.php?t=1664.
 
-Rogue "Vanish Trinket Swap" and Hunter "Petless Feign Death Trinket Swap" store
+Rogue "Vanish Trinket Swap" and Hunter "Feign Death Trinket Swap" store
 one scheduled swap, its timing and zero to two replacement trinkets separately
 from starting gear. Hunter requires Pet: None. These are requested configuration
 features, not evidence that either ability reliably drops raid combat on OctoWoW.
