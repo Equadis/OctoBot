@@ -12,7 +12,7 @@ test('viewer presence resolves root configuration from the shared script on ever
   const requests=[],count={},status={classList:{add(){},remove(){}}};
   const savedId='12345678-1234-1234-1234-123456789abc';
   vm.runInNewContext(script,{
-   URL,console,document:{currentScript:{src:new URL(src,pageUrl).href},visibilityState:'visible',
+   URL,AbortSignal,console,document:{currentScript:{src:new URL(src,pageUrl).href},visibilityState:'visible',
     getElementById:id=>id==='viewer-status'?status:count,addEventListener(){}},
    sessionStorage:{getItem:()=>savedId,setItem(){}},crypto:{randomUUID:()=>{throw Error('Session should be reused');}},
    setInterval(){},fetch:async(url,options)=>{
@@ -27,4 +27,48 @@ test('viewer presence resolves root configuration from the shared script on ever
   assert.match(status.title,/DPS Sim/);
   for(const id of ['viewer-status','viewer-count'])assert.ok(markup.includes(`id="${id}"`));
  }
+});
+
+
+test('viewer count updates every five seconds without navigation and renews presence every thirty',async()=>{
+ let now=100000,viewers=2,visible='visible',interval,timer,release;
+ const events=new Map(),requests=[],count={},status={classList:{add(){},remove(){}}};
+ const doc={currentScript:{src:'https://equadis.github.io/OctoBot/viewer-presence.js'},
+  get visibilityState(){return visible},getElementById:id=>id==='viewer-status'?status:count,
+  addEventListener:(name,fn)=>events.set(name,fn)};
+ let fail=false,stall=false;
+ vm.runInNewContext(script,{
+  URL,AbortSignal,Date:{now:()=>now},console:{warn(){}},document:doc,
+  sessionStorage:{getItem:()=> '12345678-1234-1234-1234-123456789abc',setItem(){}},
+  setInterval:(fn,ms)=>{interval=ms;timer=fn;},fetch:async(url,options)=>{
+   requests.push({url,options});
+   if(url.endsWith('telemetry.json'))return {ok:true,json:async()=>({endpoint:'https://presence.example'})};
+   if(stall)await new Promise(resolve=>{release=resolve});
+   if(fail)throw Error('Temporary outage');
+   return {ok:true,json:async()=>({viewers})};
+  }
+ });
+ const settle=()=>new Promise(resolve=>setImmediate(resolve));
+ await settle();
+ assert.equal(count.textContent,'2');
+ assert.equal(interval,5000);
+ viewers=4;now+=5000;await timer();
+ assert.equal(count.textContent,'4','Count changes while staying on the same page');
+ assert.ok(requests.at(-1).url.endsWith('/api/presence/count'));
+ assert.equal(requests.at(-1).options.method,'GET');
+ assert.equal(requests.at(-1).options.cache,'no-store');
+ assert.ok(requests.at(-1).options.signal,'Requests have a timeout signal');
+ now+=25000;await timer();
+ assert.ok(requests.at(-1).url.endsWith('/api/presence/heartbeat'));
+ const before=requests.length;visible='hidden';await timer();
+ assert.equal(requests.length,before,'Hidden tabs pause polling');
+ visible='visible';viewers=6;events.get('visibilitychange')();await settle();
+ assert.equal(count.textContent,'6');
+ assert.equal(requests.at(-1).options.method,'POST','Returning immediately renews presence');
+ fail=true;now+=5000;await timer();assert.equal(count.textContent,'—');
+ fail=false;viewers=7;now+=5000;await timer();assert.equal(count.textContent,'7','Next poll recovers after failure');
+ stall=true;now+=5000;const pending=timer();await settle();
+ const pendingCount=requests.length;await timer();
+ assert.equal(requests.length,pendingCount,'Requests cannot overlap');
+ stall=false;release();await pending;
 });
