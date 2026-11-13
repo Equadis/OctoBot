@@ -556,9 +556,9 @@ test('empty left lifespan is collapsed, revealed accessibly, and reset by preset
  assert.equal(bar.hidden,false);
 });
 
-test('reveal bar is hidden away from left edge and when no hidden content exists',async()=>{
+test('timeline toggle remains visible at every position, including empty or complete history',async()=>{
  const env=navigationFixture();await settle();
- assert.equal(env.get('reveal-lifespan').hidden,true,'Preset begins after earliest content');
+ assert.equal(env.get('reveal-lifespan').hidden,false,'Visible when preset begins after earliest content');
  const first=Date.parse('2026-11-06T01:00:00Z');
  env.navigate({start:first,end:first+3600000});
  assert.equal(env.get('reveal-lifespan').hidden,false);
@@ -566,13 +566,13 @@ test('reveal bar is hidden away from left edge and when no hidden content exists
   shiftKey:true,preventDefault(){}});
  assert.equal(env.view().start,first,'Panning cannot expose the collapsed blank area');
  env.navigate({start:first+3600000,end:first+7200000});
- assert.equal(env.get('reveal-lifespan').hidden,true);
+ assert.equal(env.get('reveal-lifespan').hidden,false);
  const empty=fixture({archival:[],worker:[],snapshots:{}});await settle();
- assert.equal(empty.get('reveal-lifespan').hidden,true,'No plotted content provides no reveal affordance');
+ assert.equal(empty.get('reveal-lifespan').hidden,false,'Always visible, even before readings arrive');
  const launch='2026-04-28T17:00:00Z';
  const complete=fixture({archival:[{timestamp:launch,online:0}]});await settle();
  complete.get('ranges').children.find(b=>b.textContent==='1Y').fire('click');
- assert.equal(complete.get('reveal-lifespan').hidden,true,'Zero at launch is valid content');
+ assert.equal(complete.get('reveal-lifespan').hidden,false,'Always visible when history starts at launch');
 });
 
 test('all realms collapse to estimates before actual readings and keep shading after reveal',async()=>{
@@ -601,8 +601,8 @@ test('all realms collapse to estimates before actual readings and keep shading a
 });
 
 
-test('lifespan toggle is a small triangle outside the graph scale and flips when expanded',()=>{
- assert.match(html,/\.reveal-lifespan\{[^}]*left:-22px/);
+test('lifespan toggle is a small triangle inside the graph frame beside the scale and flips when expanded',()=>{
+ assert.match(html,/\.reveal-lifespan\{[^}]*left:4px/);
  assert.match(html,/\.reveal-lifespan\{[^}]*width:20px;height:28px/);
  assert.match(html,/\.reveal-lifespan span\{[^}]*border-right:7px solid currentColor/);
  assert.match(html,/\.reveal-lifespan\[aria-expanded=true\] span\{transform:rotate\(180deg\)/);
@@ -647,4 +647,42 @@ test('triangle tooltip appears immediately on hover or focus and updates with it
  assert.doesNotMatch(html,/<button id="reveal-lifespan"[^>]*title=/,'No delayed native tooltip');
  assert.match(html,/\.reveal-lifespan\{[^}]*top:50%;transform:translateY\(-50%\)/,
   'Triangle is vertically centred on the whole graph');
+});
+
+
+test('graph frame has button-style border, requested fill and space for the internal arrow',()=>{
+ assert.match(html,/\.graph\{border:1px solid #384658;border-radius:4px;background:#202E40;padding:8px 8px 0 26px/);
+ assert.doesNotMatch(html,/<button id="reveal-lifespan"[^>]* hidden/);
+});
+
+test('unlocking timeline away from left edge keeps zoom, position and cursor, and enables earlier panning',async()=>{
+ const env=navigationFixture();await settle();
+ const first=Date.parse('2026-11-06T01:00:00Z');
+ const start=first+3600000,end=start+600000;
+ env.navigate({start,end});
+ const hit=env.get('plot-hit'),toggle=env.get('reveal-lifespan');
+ hit.fire('pointermove',{clientX:300,pointerId:4});
+ const cursor=env.get('crosshair').getAttribute('x1');
+ assert.equal(toggle.hidden,false);
+ toggle.fire('click');
+ assert.equal(env.view().start,start,'Unlocking must not pan the viewport');
+ assert.equal(env.view().windowEnd,end,'Unlocking must not zoom out');
+ assert.equal(toggle.getAttribute('aria-expanded'),'true');
+ assert.equal(env.get('crosshair').getAttribute('x1'),cursor);
+ for(let i=0;i<30;i++)hit.fire('wheel',{clientX:300,deltaX:0,deltaY:-250,
+  deltaMode:0,shiftKey:true,preventDefault(){}});
+ assert.ok(env.view().start<first,'Unlocked timeline can scroll into previously hidden history');
+ assert.equal(env.view().windowEnd-env.view().start,600000,'Panning preserves the zoom');
+ toggle.fire('click');
+ assert.equal(env.view().start,start,'Closing restores the previous custom range');
+ assert.equal(env.view().windowEnd,end);
+});
+
+test('unlocking from a later preset preserves the preset viewport',async()=>{
+ const env=navigationFixture();await settle();
+ const before=env.view();
+ env.get('reveal-lifespan').fire('click');
+ assert.equal(env.view().start,before.start);
+ assert.equal(env.view().windowEnd,before.windowEnd);
+ assert.equal(env.get('range-label').textContent,'1D');
 });
