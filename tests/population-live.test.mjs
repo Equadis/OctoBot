@@ -508,7 +508,7 @@ test('all three realm graphs retain yellow NO DATA shading behind historical est
    realm+' must retain yellow dashed estimated history');
   const backgrounds=env.get('outages').children.filter(
    child=>child.tagName==='rect'&&child.getAttribute('fill')==='#e3bd57'&&
-    child.getAttribute('fill-opacity')==='.10'
+    Number(child.getAttribute('fill-opacity'))>=0.2
   );
   assert.ok(backgrounds.length>0,
    realm+' must retain the yellow NO DATA backdrop under estimated values');
