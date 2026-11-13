@@ -31,6 +31,12 @@ function mockElement(tag='div'){
   };
   return node;
 }
+function navigationFixture(){
+ const now=Date.parse('2026-11-08T01:00:00Z');
+ return fixture({archival:Array.from({length:2*24*60},(_,i)=>({
+  timestamp:new Date(now-(2*24*60-i)*60000).toISOString(),online:95+i%50
+ }))});
+}
 function fixture(options={}){
   let timestamp=Date.parse('2026-11-08T01:00:00Z');
   class FakeDate extends Date {
@@ -168,7 +174,7 @@ test('a temporary Worker outage leaves recorded history in place and reports sta
 });
 
 test('custom time ranges are not reset as new observations arrive',async()=>{
-  const env=fixture();await settle();
+  const env=navigationFixture();await settle();
   const range=env.get('ranges').children.find(b=>b.textContent==='1H');
   assert.ok(range);
   range.fire('click');
@@ -191,7 +197,7 @@ test('custom time ranges are not reset as new observations arrive',async()=>{
 
 
 test('Shift+scroll up pans population left and down pans right, including browser deltaX',async()=>{
-  const env=fixture();await settle();
+  const env=navigationFixture();await settle();
   const hit=env.get('plot-hit');
   function turn(deltaY,deltaX=0,shiftKey=true){
     hit.fire('wheel',{clientX:450,deltaX,deltaY,deltaMode:0,shiftKey,
@@ -286,7 +292,7 @@ test('zoom retains cursor selection and NO DATA still has an anchored crosshair 
 });
 
 test('Jump to present preserves the population time scale and disables at the right edge',async()=>{
-  const env=fixture();await settle();
+  const env=navigationFixture();await settle();
   const jump=env.get('jump-to-present');
   assert.equal(jump.disabled,true,'A present-anchored preset cannot jump any further');
   const hit=env.get('plot-hit');
@@ -478,7 +484,7 @@ test('realm graph renders current real counts and yellow proportional backfill',
   'Earlier All Realms history must render as a connected yellow dashed estimate');
  assert.equal(env.get('raw-population').getAttribute('d'),'',
   'Estimated data must not be drawn as recorded green data');
- env.get('plot-hit').fire('pointermove',{clientX:189,pointerId:1});
+ env.get('plot-hit').fire('pointermove',{clientX:45,pointerId:1});
  assert.match(env.get('readout').textContent,/ESTIMATED/);
  assert.match(env.get('readout').textContent,/1,6/);
 });
@@ -512,5 +518,75 @@ test('all three realm graphs retain yellow NO DATA shading behind historical est
   );
   assert.ok(backgrounds.length>0,
    realm+' must retain the yellow NO DATA backdrop under estimated values');
+ }
+});
+
+
+test('empty left lifespan is collapsed, revealed accessibly, and reset by presets',async()=>{
+ const env=fixture();await settle();
+ const first=Date.parse('2026-11-08T00:57:00Z');
+ const launch=Date.parse('2026-04-28T17:00:00Z');
+ assert.equal(env.view().start,first,'Start at first actual point instead of empty history');
+ const bar=env.get('reveal-lifespan');
+ assert.equal(bar.hidden,false);
+ const tooltip='Show full server lifespan (There is no data for this area).';
+ assert.ok(html.includes('title="'+tooltip+'"'));
+ assert.ok(html.includes('aria-label="'+tooltip+'"'));
+ assert.match(html,/<button id="reveal-lifespan"[^>]*type="button"/,
+  'Native button provides Enter/Space keyboard activation');
+ bar.fire('click');
+ assert.equal(env.view().start,launch);
+ assert.equal(env.view().windowEnd,Date.parse('2026-11-08T01:00:00Z'));
+ assert.equal(bar.hidden,true);
+ assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&n.getAttribute('fill')==='#e3bd57'));
+ assert.match(env.get('raw-population').getAttribute('d'),/L/);
+ await env.intervals.get(30000)[0]();await settle();
+ assert.equal(env.view().start,launch,'Refresh preserves the expanded lifespan');
+ env.get('ranges').children.find(b=>b.textContent==='1D').fire('click');
+ assert.equal(env.view().start,first);
+ assert.equal(bar.hidden,false);
+});
+
+test('reveal bar is hidden away from left edge and when no hidden content exists',async()=>{
+ const env=navigationFixture();await settle();
+ assert.equal(env.get('reveal-lifespan').hidden,true,'Preset begins after earliest content');
+ const first=Date.parse('2026-11-06T01:00:00Z');
+ env.navigate({start:first,end:first+3600000});
+ assert.equal(env.get('reveal-lifespan').hidden,false);
+ env.get('plot-hit').fire('wheel',{clientX:450,deltaX:0,deltaY:-250,deltaMode:0,
+  shiftKey:true,preventDefault(){}});
+ assert.equal(env.view().start,first,'Panning cannot expose the collapsed blank area');
+ env.navigate({start:first+3600000,end:first+7200000});
+ assert.equal(env.get('reveal-lifespan').hidden,true);
+ const empty=fixture({archival:[],worker:[],snapshots:{}});await settle();
+ assert.equal(empty.get('reveal-lifespan').hidden,true,'No plotted content provides no reveal affordance');
+ const launch='2026-04-28T17:00:00Z';
+ const complete=fixture({archival:[{timestamp:launch,online:0}]});await settle();
+ complete.get('ranges').children.find(b=>b.textContent==='1Y').fire('click');
+ assert.equal(complete.get('reveal-lifespan').hidden,true,'Zero at launch is valid content');
+});
+
+test('all realms collapse to estimates before actual readings and keep shading after reveal',async()=>{
+ const now=Date.parse('2026-11-08T01:00:00Z'),week=now-7*86400000;
+ const stamp=t=>new Date(t).toISOString();
+ const snapshots={},realmWorker={};
+ for(const [realm,online]of [['nzoth',800],['cthun',100],['yshaarj',100]]){
+  const observed={source:'in-game .server info',timestamp:stamp(now-30000),online};
+  snapshots[realm]=observed;realmWorker[realm]=[observed];
+ }
+ const env=fixture({snapshots,realmWorker,
+  archival:[{timestamp:stamp(week),online:2000},{timestamp:stamp(week+60000),online:2100}],
+  allWorker:[{timestamp:stamp(now-60000),online:1000,source:'official census'}]
+ });await settle();
+ for(const realm of ['nzoth','cthun','yshaarj']){
+  env.get('server-select').fire('change',{target:{value:realm}});await settle();
+  env.get('ranges').children.find(b=>b.textContent==='1Y').fire('click');
+  assert.equal(env.view().start,week,realm+' must count estimated lines as content');
+  assert.equal(env.get('reveal-lifespan').hidden,false);
+  env.get('reveal-lifespan').fire('click');
+  assert.equal(env.view().start,Date.parse('2026-04-28T17:00:00Z'));
+  assert.match(env.get('estimate-path').getAttribute('d'),/L/);
+  assert.ok(env.get('outages').children.some(n=>n.tagName==='rect'&&
+   n.getAttribute('fill')==='#e3bd57'&&Number(n.getAttribute('fill-opacity'))>=.2));
  }
 });
