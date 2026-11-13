@@ -14,7 +14,12 @@ test('left equipment column positions icons before slot labels',()=>{
  assert.match(css,/\.planner-view #slots-left \.slot \.item-name\{grid-column:1\/-1;grid-row:2;text-align:center\}/);
  assert.match(css,/\.planner-view \.slot:not\(\.has-item\) \.item-name\{font-style:normal\}/);
 });
-test('cached module and stylesheet URLs are versioned for the left-slot fix',()=>{
- assert.match(html,/combat-layout\.css\?v=20261113-gear-position2/);
- assert.match(html,/planner\.mjs\?v=20261113-swaps1/);
+test('planner module and stylesheets carry cache versions across later releases',()=>{
+ const references=[...html.matchAll(/(?:src|href)="([^"\s]+)"/g)].map(match=>match[1]);
+ for(const asset of ['planner.mjs','planner.css','combat-layout.css']){
+  const reference=references.find(value=>value.split('?')[0]===asset);
+  assert.ok(reference,`${asset} must be loaded by the planner`);
+  const url=new URL(reference,'https://octobot.test/sim/');
+  assert.match(url.searchParams.get('v')||'',/^\d{8}-[a-z0-9-]+$/,`${asset} needs a release cache version`);
+ }
 });

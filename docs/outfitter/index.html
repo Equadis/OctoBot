@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Build, preview, save and share OctoWoW outfits in your browser.">
+<title>OctoBot · Outfitter</title><link rel="icon" href="../favicon.png"><link rel="stylesheet" href="outfitter.css">
+<script>window.WH={debug:function(){},defaultAnimation:'Stand',WebP:{getImageExtension:function(){return '.webp'}}};</script>
+<script defer src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script defer src="https://wow.zamimg.com/modelviewer/classic/viewer/viewer.min.js"></script>
+<script type="module" src="outfitter.mjs"></script>
+</head>
+<body><main>
+<header><div class="identity"><img src="../favicon.png" width="48" height="48" alt=""><div><div class="brand">OCTOBOT</div><h1>Outfitter</h1></div></div><div class="header-status"><span class="badge">Classic model preview</span><span class="viewers" id="viewer-status" role="status" title="Site-wide active dashboard viewers in the last 90 seconds"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
+<nav class="page-nav" aria-label="Dashboard pages"><a href="../#server=all">Population</a><a href="../status.html">Server Status</a><a href="../world-info.html">World Info (WIP)</a><a href="../sim/">Gear Planner &amp; DPS Sim (WIP)</a><a href="./" aria-current="page">Outfitter</a></nav>
+<div class="toolbar"><div class="controls"><label>Race<select id="race"></select></label><label>Body<select id="gender"><option value="0">Male</option><option value="1">Female</option></select></label></div><div class="actions"><button id="save">Save outfit</button><button id="share">Share</button><button id="import">Import / Export</button><button id="reset" class="reset">Reset</button></div></div>
+<p id="feedback" role="status" aria-live="polite">Loading equipment catalogue…</p>
+<noscript>Enable JavaScript to use the interactive outfitter.</noscript>
+<div class="workspace">
+<section class="preview-panel" aria-label="Outfit preview"><div class="preview-heading"><h2>Character</h2><div><label><input id="hide-head" type="checkbox"> Hide head</label><label><input id="hide-back" type="checkbox"> Hide back</label></div></div>
+<div class="paperdoll"><div id="left-slots" class="slots"></div><div class="model-wrap"><div id="model" aria-label="Interactive 3D character: drag to rotate and scroll to zoom"></div><div id="model-status" role="status">Loading 3D preview…</div></div><div id="right-slots" class="slots"></div></div>
+<div class="model-toolbar"><span>Drag to rotate · Scroll to zoom</span><button id="camera-reset">Reset camera</button><button id="retry">Reload preview</button><button id="fullscreen">Full screen</button></div>
+<div id="appearance-notice" class="notice" hidden></div>
+</section>
+<section class="browser" aria-labelledby="browser-title"><div class="section-heading"><h2 id="browser-title">Head</h2><button id="clear-slot" class="reset">Remove item</button></div>
+<label class="search-label" for="search">Search items</label><input id="search" type="search" placeholder="Item name or ID" autocomplete="off">
+<div class="filters"><label>Type<select id="type"><option value="">All types</option></select></label><label>Quality<select id="quality"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label></div>
+<div class="results-heading"><span id="result-count"></span><div><button id="previous" aria-label="Previous page">‹</button><span id="page-count"></span><button id="next" aria-label="Next page">›</button></div></div>
+<div id="results" class="results"></div></section></div>
+<section class="saved-panel"><h2>Saved outfits</h2><div id="saved-outfits"></div><p class="muted">Outfits are saved in this browser. Share a link or export a Tmog code to keep a copy.</p></section>
+<footer>Outfit workflow and T.O.L. compatibility based on <a href="https://github.com/Otari98/Tmog" target="_blank" rel="noopener">Otari98 / Tmog</a>. Equipment from the <a href="https://octowow.st/db/" target="_blank" rel="noopener">OctoWoW database</a>. 3D rendering by Wowhead / Zam. Custom server models may be unavailable; item selection is for appearance planning and does not verify in-game transmog eligibility.</footer>
+</main>
+<dialog id="exchange"><form method="dialog"><div class="section-heading"><h2>Import / Export</h2><button aria-label="Close">×</button></div><label for="outfit-code">Tmog code (T.O.L.) or OctoBot outfit link</label><textarea id="outfit-code" rows="6" spellcheck="false"></textarea><p id="exchange-status" role="status"></p><div class="actions"><button type="button" id="copy-code">Copy code</button><button type="button" id="apply-code">Import outfit</button></div></form></dialog>
+<dialog id="save-dialog"><form id="save-form"><h2>Save outfit</h2><label for="outfit-name">Outfit name</label><input id="outfit-name" maxlength="80" required><div class="actions"><button type="button" id="cancel-save">Cancel</button><button type="submit">Save outfit</button></div></form></dialog>
+<script src="../viewer-presence.js" defer></script>
+</body></html>
