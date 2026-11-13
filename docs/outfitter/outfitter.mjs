@@ -1,7 +1,7 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
-const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',PAGE_SIZE=10;
-let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,page=0,viewer=null,revision=0,endpoint='',saved=[];
+const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
+let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
 function feedback(message){$('feedback').textContent=message;}
 function icon(item){return item?.icon&&/^[a-z0-9_]+$/i.test(item.icon)?`https://wow.zamimg.com/images/wow/icons/large/${item.icon.toLowerCase()}.jpg`:null;}
@@ -16,22 +16,23 @@ function renderSlots(){
  $('left-slots').replaceChildren();$('right-slots').replaceChildren();
  SLOTS.forEach((slot,index)=>{
   const item=byId.get(outfit.gear[slot.id]),button=document.createElement('button');button.className='slot';button.type='button';button.setAttribute('aria-pressed',String(selectedSlot===slot.id));button.title=`${slot.name}: ${item?.name||'Empty'}`;
-  button.append(image(item));const text=document.createElement('span'),name=document.createElement('small'),value=document.createElement('span');name.textContent=slot.name;value.className=`item-name quality-${item?.quality??1}`;value.textContent=item?.name||'Empty';text.append(name,value);button.append(text);button.onclick=()=>{selectedSlot=slot.id;page=0;$('type').value='';renderTypes();renderSlots();renderItems();};$(index<7?'left-slots':'right-slots').append(button);
+  button.append(image(item));const text=document.createElement('span'),name=document.createElement('small'),value=document.createElement('span');name.textContent=slot.name;value.className=`item-name quality-${item?.quality??1}`;value.textContent=item?.name||'Empty';text.append(name,value);button.append(text);button.onclick=()=>{selectedSlot=slot.id;$('results').scrollTop=0;$('type').value='';renderTypes();renderSlots();renderItems();};$(index<7?'left-slots':'right-slots').append(button);
  });
  $('browser-title').textContent=SLOTS.find(s=>s.id===selectedSlot).name;$('clear-slot').disabled=!outfit.gear[selectedSlot];
 }
 const ARMOUR={0:'Miscellaneous',1:'Cloth',2:'Leather',3:'Mail',4:'Plate',6:'Shields'},WEAPONS={0:'Axes',1:'Two-handed axes',2:'Bows',3:'Guns',4:'Maces',5:'Two-handed maces',6:'Polearms',7:'Swords',8:'Two-handed swords',10:'Staves',13:'Fist weapons',14:'Miscellaneous',15:'Daggers',16:'Thrown',18:'Crossbows',19:'Wands',20:'Fishing poles'};
 function renderTypes(){const select=$('type');select.replaceChildren(new Option('All types',''));const choices=new Map();for(const item of filterItems(items,{slot:selectedSlot})){const key=`${item.classs}:${item.subclass}`;choices.set(key,(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other');}for(const [key,name] of [...choices].sort((a,b)=>a[1].localeCompare(b[1])))select.append(new Option(name,key));}
 function renderItems(){
- const rows=filterItems(items,{slot:selectedSlot,query:$('search').value,subclass:$('type').value,quality:$('quality').value}),pages=Math.max(1,Math.ceil(rows.length/PAGE_SIZE));page=Math.min(page,pages-1);$('result-count').textContent=`${rows.length.toLocaleString()} ${rows.length===1?'item':'items'}`;$('page-count').textContent=`${page+1} / ${pages}`;$('previous').disabled=page===0;$('next').disabled=page===pages-1;
- const results=$('results');results.replaceChildren();
- for(const item of rows.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE)){
-  const row=document.createElement('div');row.className='result'+(outfit.gear[selectedSlot]===item.id?' equipped':'');row.append(image(item));
-  const button=document.createElement('button');button.className='try-item';button.type='button';button.setAttribute('aria-label',`Try on ${item.name}`);const name=document.createElement('strong'),detail=document.createElement('small');name.className=`quality-${item.quality}`;name.textContent=item.name;detail.textContent=`Item ${item.id} · Level ${item.reqlevel||1}`;button.append(name,detail);button.onclick=()=>{
+ const rows=filterItems(items,{slot:selectedSlot,query:$('search').value,subclass:$('type').value,quality:$('quality').value});$('result-count').textContent=`${rows.length.toLocaleString()} ${rows.length===1?'item':'items'}`;
+ const results=$('results'),scrollTop=results.scrollTop,focusedId=results.contains(document.activeElement)?document.activeElement.dataset.itemId:null;results.replaceChildren();
+ for(const item of rows){
+  const row=document.createElement('div');row.className='result'+(outfit.gear[selectedSlot]===item.id?' equipped':'');const thumbnail=image(item);thumbnail.loading='lazy';row.append(thumbnail);
+  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);button.setAttribute('aria-label',`Try on ${item.name}`);const name=document.createElement('strong'),detail=document.createElement('small');name.className=`quality-${item.quality}`;name.textContent=item.name;detail.textContent=`Item ${item.id} · Level ${item.reqlevel||1}`;button.append(name,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
   const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);row.append(button,link);results.append(row);
  }
+ results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
 }
 function getJson(url){return requestJson(url);}
@@ -87,8 +88,7 @@ async function start(){
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
  $('race').onchange=()=>commit({...outfit,race:Number($('race').value)});$('gender').onchange=()=>commit({...outfit,gender:Number($('gender').value)});
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
- for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{page=0;renderItems();});
- $('previous').onclick=()=>{page--;renderItems();};$('next').onclick=()=>{page++;renderItems();};
+ for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
  $('reset').onclick=()=>commit(emptyOutfit(),'Outfit reset.');$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};

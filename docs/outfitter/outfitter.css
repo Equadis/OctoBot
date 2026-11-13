@@ -4,3 +4,5 @@
 
 /* Shared shell/palette comes from site-theme.css; keep only page layout here. */
 .workspace>.panel{margin:0}.saved-panel.panel{margin-top:18px}.model-toolbar,.results-heading{border-color:var(--line)}.result{border-color:var(--line)}.result.equipped{background:#3a3827}.result a{color:var(--gold)}dialog{background:var(--panel);border-color:var(--line)}
+
+.browser{display:flex;flex-direction:column;min-height:0}.browser .section-heading,.browser .search-label,.browser .filters,.browser .results-heading,.browser>input{flex-shrink:0}.browser .results{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}.result{flex-shrink:0}@media(max-width:1050px){.browser{height:740px;max-height:90vh}}
