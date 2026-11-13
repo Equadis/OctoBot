@@ -13,6 +13,7 @@
   let endpoint = '';
   let sessionId = null;
   let inFlight = false;
+  let lastHeartbeatAt = null;
 
   function viewerId() {
     if (sessionId) return sessionId;
@@ -33,19 +34,25 @@
     status.title = 'Site-wide viewer count temporarily unavailable';
   }
 
-  async function heartbeat() {
+  async function heartbeat(force = false) {
     if (!endpoint || document.visibilityState === 'hidden' || inFlight) return;
     inFlight = true;
     try {
-      const response = await fetch(endpoint + '/api/presence/heartbeat', {
-        method: 'POST',
+      // Poll the shared count frequently without adding a database write per poll.
+      const renew = force || lastHeartbeatAt === null || Date.now() - lastHeartbeatAt >= 30000;
+      const response = await fetch(endpoint + (renew ? '/api/presence/heartbeat' : '/api/presence/count'), {
+        method: renew ? 'POST' : 'GET',
         cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: viewerId() })
+        signal: AbortSignal.timeout(10000),
+        ...(renew ? {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: viewerId() })
+        } : {})
       });
       if (!response.ok) throw Error('Presence HTTP ' + response.status);
       const result = await response.json();
       if (!Number.isInteger(result.viewers) || result.viewers < 0) throw Error('Invalid presence count');
+      if (renew) lastHeartbeatAt = Date.now();
       count.textContent = result.viewers.toLocaleString('en-GB');
       status.classList.remove('is-offline');
       status.title = result.viewers + ' active dashboard viewers across Population, Server Status and DPS Sim (last 90 seconds)';
@@ -58,7 +65,7 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') heartbeat();
+    if (document.visibilityState === 'visible') heartbeat(true);
   });
 
   (async () => {
@@ -71,7 +78,7 @@
       if (url.protocol !== 'https:') throw Error('Invalid telemetry endpoint');
       endpoint = url.href.replace(/\/$/, '');
       await heartbeat();
-      setInterval(heartbeat, 30000);
+      setInterval(() => heartbeat(), 5000);
     } catch (error) {
       console.warn('Viewer telemetry unavailable', error);
       unavailable();
