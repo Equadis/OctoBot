@@ -8,7 +8,7 @@ import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 
 const root=join(import.meta.dirname,'..');
-const html=readFileSync(join(root,'docs/status.html'),'utf8');
+const html=readFileSync(join(root,'docs/status/index.html'),'utf8');
 const script=readFileSync(join(root,'docs/status-archive.js'),'utf8');
 const chartMath=readFileSync(join(root,'docs/chart-data.js'),'utf8');
 

@@ -4,7 +4,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 
 ## Public dashboards
 
-The [Population dashboard](https://equadis.github.io/OctoBot/#server=all) and [Server Status dashboard](https://equadis.github.io/OctoBot/status.html) share the same dark visual style and top navigation.
+The [Population dashboard](https://equadis.github.io/OctoBot/#server=all) and [Server Status dashboard](https://equadis.github.io/OctoBot/status/) share the same dark visual style and top navigation.
 
 The status dashboard uses independent checks of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its independent-probe chart, response-time graph and recent interruption history combine the one-minute Cloudflare Worker (after its D1 migration and redeployment) with GitHub-recorded observations from an independent status workflow (`.github/workflows/status.yml`). GitHub Actions is a fallback, not a guaranteed five-minute schedule.
 

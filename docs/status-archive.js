@@ -289,7 +289,7 @@
   async function initialise() {
     setup();
     try{
-      const result=await fetch('status/bot-history.json',{cache:'no-store'});
+      const result=await fetch('../status/bot-history.json',{cache:'no-store'});
       if(!result.ok)throw Error('Archive unavailable');
       const archive=await result.json();
       if(archive?.schema!==1||archive?.source!=='octobot_database')throw Error('Unknown archive schema');

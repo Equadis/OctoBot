@@ -99,7 +99,7 @@ A sensible structure would be:
 ```text
 docs/
 ├── index.html
-├── status.html
+├── status/index.html
 └── sim/
     ├── index.html
     ├── assets/

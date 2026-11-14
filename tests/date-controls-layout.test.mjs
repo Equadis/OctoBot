@@ -5,7 +5,7 @@ import {join} from 'node:path';
 
 const root=join(import.meta.dirname,'..');
 const population=readFileSync(join(root,'docs/index.html'),'utf8');
-const status=readFileSync(join(root,'docs/status.html'),'utf8');
+const status=readFileSync(join(root,'docs/status/index.html'),'utf8');
 const theme=readFileSync(join(root,'docs/site-theme.css'),'utf8');
 
 test('all date controls group From/To beside a separate compact Apply/Jump column',()=>{

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const script=readFileSync(new URL('../docs/viewer-presence.js',import.meta.url),'utf8');
 test('viewer presence resolves root configuration from the shared script on every tab',async()=>{
- for(const page of ['index.html','status.html','sim/index.html']){
+ for(const page of ['index.html','status/index.html','world-info/index.html','sim/index.html','outfitter/index.html']){
   const markup=readFileSync(new URL('../docs/'+page,import.meta.url),'utf8');
   const src=markup.match(/<script src="([^"]*viewer-presence\.js[^"]*)"/)[1];
   const pageUrl=new URL(page,'https://equadis.github.io/OctoBot/');

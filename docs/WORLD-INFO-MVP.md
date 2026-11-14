@@ -1,6 +1,6 @@
 # WIP — World Info MVP
 
-New static page: [docs/world-info.html](world-info.html), linked from Population, Server Status and the Gear Planner. Uses the shared OctoBot theme and viewer counter.
+New static page: [docs/world-info/index.html](world-info/index.html), linked from Population, Server Status and the Gear Planner. Uses the shared OctoBot theme and viewer counter.
 
 ## Current behaviour
 

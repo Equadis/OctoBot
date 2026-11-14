@@ -496,7 +496,7 @@
     if(!workerConfigured){
       workerConfigured=true;
       try{
-        const response=await fetch('telemetry.json',{cache:'no-store'});
+        const response=await fetch('../telemetry.json',{cache:'no-store'});
         if(response.ok){
           const configuration=await response.json();
           const candidate=String(configuration?.endpoint||'').replace(new RegExp('/+$'),'');
@@ -540,8 +540,8 @@
     try{
       const [results,worker]=await Promise.all([
         Promise.all([
-          fetch('status/history.json',{cache:'no-store'}),
-          fetch('status/latest.json',{cache:'no-store'})
+          fetch('../status/history.json',{cache:'no-store'}),
+          fetch('../status/latest.json',{cache:'no-store'})
         ]),loadWorkerReadings()
       ]);
       let all=[],latest=null;

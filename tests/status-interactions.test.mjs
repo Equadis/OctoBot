@@ -7,7 +7,7 @@ import {join} from 'node:path';
 const root=join(import.meta.dirname,'..');
 const js=readFileSync(join(root,'docs/chart-interactions.js'),'utf8');
 const chartMath=readFileSync(join(root,'docs/chart-data.js'),'utf8');
-const page=readFileSync(join(root,'docs/status.html'),'utf8');
+const page=readFileSync(join(root,'docs/status/index.html'),'utf8');
 const archive=readFileSync(join(root,'docs/status-archive.js'),'utf8');
 const status=readFileSync(join(root,'docs/status-dashboard.js'),'utf8');
 

@@ -652,7 +652,7 @@ test('triangle tooltip appears immediately on hover or focus and updates with it
 
 
 test('graph frame has button-style border, requested fill and space for the internal arrow',()=>{
- assert.match(html,/\.graph\{border:1px solid #384658;border-radius:4px;background:#202E40;padding:8px 8px 0 26px/);
+ assert.match(html,/\.graph\{border:1px solid #384658;border-radius:4px;background:#182333;padding:8px 8px 0 26px/);
  assert.doesNotMatch(html,/<button id="reveal-lifespan"[^>]* hidden/);
 });
 

@@ -276,7 +276,7 @@
     $('dmf-location').textContent = name;
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
-    if (sw || tb) icon.src = sw ? 'img/alliance-crest.png' : 'img/horde-crest.png';
+    if (sw || tb) icon.src = sw ? '../img/alliance-crest.png' : '../img/horde-crest.png';
     $('dmf-description').textContent = sw ? 'Near Goldshire' : tb ? 'Below Thunder Bluff' : 'Faire is moving and in neither location';
     $('dmf-observed').textContent = fresh && (sw || tb)
       ? 'Last observed ' + span(Date.now() - dmf.observedAt) + ' ago · ' + dmf.source
