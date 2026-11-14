@@ -95,3 +95,13 @@ test('Darkmoon Faire is set manually to Mulgore until the bots report, and a fre
   assert.equal(bot('dmf-state'),'CONFIRMED');
   assert.match(bot('dmf-observed'),/Last observed/);
 });
+
+test('the Edge of Madness calendar sits inside its panel, closed by default, behind a down-arrow button',()=>{
+  const panel=html.match(/<section class="world-panel" aria-labelledby="eom-heading">[\s\S]*?<\/section>/)[0];
+  assert.match(panel,/id="calendar-toggle"[^>]*aria-expanded="false"[^>]*aria-controls="calendar-body"/);
+  assert.match(panel,/id="calendar-body" hidden/);
+  for(const id of ['madness-calendar','calendar-prev','calendar-next','calendar-today','rotation-key'])assert.ok(panel.includes(`id="${id}"`),id);
+  assert.ok(!html.includes('calendar-panel'),'no separate full-width calendar section');
+  const script=readFileSync(new URL('../docs/world-info.js',import.meta.url),'utf8');
+  assert.ok(script.includes("$('calendar-toggle').addEventListener('click'"));
+});

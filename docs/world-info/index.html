@@ -7,8 +7,8 @@
 <title>OctoBot · World Info (WIP)</title>
 <link rel="icon" href="../favicon.png" type="image/png">
 <link rel="stylesheet" href="../site-theme.css?v=20261114-size2">
-<link rel="stylesheet" href="../world-info.css?v=20261114-size1">
-<script src="../world-info.js?v=20261114-manual1" defer></script>
+<link rel="stylesheet" href="../world-info.css?v=20261114-cal2">
+<script src="../world-info.js?v=20261114-cal1" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -83,21 +83,21 @@
     <div class="dmf-detail"><span id="dmf-description">Faire is moving and in neither location</span><small id="dmf-observed">NPC / addon sighting integration pending</small></div>
   </section>
   <section class="world-panel" aria-labelledby="eom-heading">
-    <div class="panel-heading"><div><span class="eyebrow">ZUL'GURUB</span><h2 id="eom-heading">Edge of Madness</h2></div><span class="state-tag" id="eom-source">CLASSIC ERA</span></div>
+    <div class="panel-heading"><div><span class="eyebrow">ZUL'GURUB</span><h2 id="eom-heading">Edge of Madness</h2></div><div class="heading-actions"><span class="state-tag" id="eom-source">CLASSIC ERA</span><button type="button" class="panel-arrow" id="calendar-toggle" aria-expanded="false" aria-controls="calendar-body" aria-label="Show the Edge of Madness calendar" title="Show calendar"><span aria-hidden="true"></span></button></div></div>
     <div class="boss-grid">
       <div><span class="field-label">Current boss</span><strong class="boss-name" id="eom-current">LOADING</strong><small id="eom-current-until">Checking rotation…</small></div>
       <div><span class="field-label">Next boss</span><strong class="boss-name" id="eom-next">—</strong><small id="eom-next-at">—</small></div>
     </div>
     <div class="bottom-line"><span>Next rotation in</span><strong class="mono" id="eom-countdown">—</strong></div>
-  </section>
-</div>
-
-<section class="world-panel calendar-panel" aria-labelledby="calendar-heading">
-  <div class="calendar-title"><div><h2 id="calendar-heading">Edge of Madness Calendar</h2><p class="muted">Classic Era / Pacific rotation · Not yet verified for OctoWoW</p></div><div class="calendar-controls"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="calendar-next" aria-label="Next month">›</button><button type="button" id="calendar-today">Today</button></div></div>
+    <div class="calendar-body" id="calendar-body" hidden>
+  <div class="calendar-title"><p class="muted">Classic Era / Pacific rotation · Not yet verified for OctoWoW</p><div class="calendar-controls"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="calendar-next" aria-label="Next month">›</button><button type="button" id="calendar-today">Today</button></div></div>
   <div class="madness-calendar" id="madness-calendar" aria-label="Edge of Madness boss rotation calendar"></div>
   <div class="rotation-key" id="rotation-key" aria-label="Boss colour key"></div>
   <p class="source-note">Source: <a href="https://edgeofmadnesscalendar.com/era/calendar" target="_blank" rel="noopener noreferrer">Edge of Madness Calendar</a> · <a href="https://edgeofmadnesscalendar.com/api/era" target="_blank" rel="noopener noreferrer">Classic Era API</a>. The retail/Classic Era schedule may not match OctoWoW. Verify against the tablets in Zul'Gurub.</p>
-</section>
+    </div>
+  </section>
+</div>
+
 
 <footer><span>Timers are shown in UTC · Data is not guaranteed complete</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community world tracker</span></footer>
 <noscript><p class="disclaimer">Enable JavaScript to display live world information and the calendar.</p></noscript>

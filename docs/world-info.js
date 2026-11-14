@@ -486,6 +486,15 @@
     const pacificToday = pacificDate(Date.now());
     state.calendarYear = pacificToday.year;
     state.calendarMonth = pacificToday.month;
+    // The calendar lives inside the Edge of Madness panel and opens with the arrow in its heading.
+    $('calendar-toggle').addEventListener('click', () => {
+      const body = $('calendar-body'), toggle = $('calendar-toggle');
+      body.hidden = !body.hidden;
+      toggle.setAttribute('aria-expanded', String(!body.hidden));
+      const label = body.hidden ? 'Show the Edge of Madness calendar' : 'Hide the Edge of Madness calendar';
+      toggle.setAttribute('aria-label', label);
+      toggle.title = body.hidden ? 'Show calendar' : 'Hide calendar';
+    });
     $('calendar-prev').addEventListener('click', () => changeMonth(-1));
     $('calendar-next').addEventListener('click', () => changeMonth(1));
     $('calendar-today').addEventListener('click', () => {
