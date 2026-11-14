@@ -55,10 +55,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Titles use Friz Quadrata (the WoW interface typeface). It is a commercial font, so it is not bundled: it shows for
    visitors who have it installed, and everyone else gets the serif fallback below. Section sub-headings, labels and body
    text keep the normal font. */
-@font-face{font-family:"OctoBot Title";src:local("Friz Quadrata TT"),local("FrizQuadrataTT"),local("Friz Quadrata Std"),local("Friz Quadrata"),local("FRIZQT__");font-display:swap}
+@font-face{font-family:"OctoBot Title";font-weight:400;src:local("Friz Quadrata TT"),local("FrizQuadrataTT"),local("Friz Quadrata Std"),local("Friz Quadrata"),local("FRIZQT__");font-display:swap}
 :root{--title-font:"OctoBot Title","Friz Quadrata TT","Friz Quadrata","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
-h1,h2,
-.panel-head h3,.world-panel h3,.look-heading h3{font-family:var(--title-font)}
+@font-face{font-family:"OctoBot Title";font-weight:700;src:local("Friz Quadrata TT Bold"),local("FrizQuadrataTT-Bold"),local("Friz Quadrata Bold"),local("FrizQuadrata-Bold"),local("Friz Quadrata TT"),local("FrizQuadrataTT");font-display:swap}
+/* Titles are bold. The selector is prefixed so page-level heading rules do not win. */
+body h1,body h2,body .site-header h1,body.planner-view .site-header h1,
+body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-panel h3,body .look-heading h3{font-family:var(--title-font);font-weight:700}
 
 /* Date range controls: "Jump to present" on top, From/To directly against Apply, all against the right edge,
    and every control on the same 30px height. */
