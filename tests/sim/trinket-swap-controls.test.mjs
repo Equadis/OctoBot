@@ -11,7 +11,7 @@ function element(tag){
   addEventListener(k,v){events.set(k,v)},fire(k){return events.get(k)?.({type:k})}};
 }
 const options=element('div'),body=element('body');
-globalThis.document={body,createElement:element,getElementById:()=>options,querySelector:()=>options,addEventListener(){}};
+globalThis.document={body,createElement:element,createTextNode:text=>({textContent:text,children:[]}),getElementById:()=>options,querySelector:()=>options,addEventListener(){}};
 globalThis.window={addEventListener(){}};
 const {trinketSwapControls}=await import('../../docs/sim/trinket-swaps.mjs');
 const descendants=n=>[n,...n.children.flatMap(descendants)];
@@ -20,8 +20,9 @@ test('Hunter control sets Pet None, routes replacement picker separately, and re
  let build=newBuild('hunter'),selection;build.classOptions.pet='Cat';build.gear.trinket1={id:19953,label:'Opening'};
  trinketSwapControls({getBuild:()=>build,onChange:next=>{build=validateBuild(next,data)},openPicker:(slot,context)=>{selection={slot,context}},inspect:async()=>null});
  const nodes=descendants(options.sibling),find=id=>nodes.find(n=>n.id===id);
- assert.ok(nodes.some(n=>n.textContent==='Feign Death Trinket Swap'));
- const enabled=find('trinket-swap-enabled');enabled.checked=true;enabled.fire('change');
+ assert.ok(nodes.some(n=>n.textContent==='Feign Death')&&nodes.some(n=>n.textContent==='Trinket Swap'));
+ const slotsPanel=nodes.find(n=>n.className==='swap-slots');assert.equal(slotsPanel.hidden,true);
+ const enabled=find('trinket-swap-enabled');enabled.checked=true;enabled.fire('change');assert.equal(slotsPanel.hidden,false);
  assert.equal(build.classOptions.pet,'None');assert.equal(build.trinketSwap.enabled,true);
  const time=find('trinket-swap-time');time.value='25.5';time.fire('change');assert.equal(build.trinketSwap.atSeconds,25.5);
  const choose=nodes.find(n=>n.tagName==='button'&&n.getAttribute('aria-label')==='Edit Feign Death Trinket Swap: Trinket 1');choose.fire('click');
@@ -29,8 +30,7 @@ test('Hunter control sets Pet None, routes replacement picker separately, and re
  assert.equal(build.gear.trinket1.id,19953);assert.equal(build.trinketSwap.gear.trinket1.id,11815);
  assert.equal(selection.context.getBuild().gear.trinket1.id,11815);
  selection.context.onClear();assert.deepEqual(build.trinketSwap.gear,{});
- nodes.find(n=>n.textContent==='Reset').fire('click');assert.equal(build.trinketSwap.enabled,false);
- assert.equal(build.gear.trinket1.id,19953);assert.equal(build.trinketSwap.atSeconds,20);
+ assert.equal(build.gear.trinket1.id,19953);
 });
 test('other classes do not receive swap controls',()=>{
  const before=options.sibling;

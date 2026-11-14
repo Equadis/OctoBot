@@ -1,4 +1,4 @@
-import {TRINKET_SWAP_MODES,defaultTrinketSwap,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
+import {TRINKET_SWAP_MODES,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
 import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261113-swaps1';
 import {SLOT_ICONS,iconUrl} from './core/interface.mjs?v=20261112-navigation1';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -9,11 +9,14 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
  const anchor=document.querySelector('#slots-right [data-slot="trinket2"]');if(!anchor)return {render(){}};
  const panel=node('div',undefined,'trinket-swap');
  const enabled=node('input');enabled.type='checkbox';enabled.id='trinket-swap-enabled';
- const enableLabel=node('label',mode.label,'swap-toggle');enableLabel.prepend(enabled);
- const timing=node('input');timing.type='number';timing.min='0';timing.max='3600';timing.step='0.1';timing.id='trinket-swap-time';
- const timingLabel=node('label','Swap at (seconds)','swap-timing');timingLabel.append(timing);
- const reset=node('button','Reset','panel-reset');reset.type='button';reset.setAttribute('aria-label','Reset trinket swap');
- const options=node('div',undefined,'swap-options');options.append(enableLabel,timingLabel,reset);panel.append(options);
+ // "Vanish" / "Feign Death" on the first line, "Trinket Swap" on the second.
+ const enableLabel=node('label',undefined,'swap-toggle'),title=node('span',undefined,'swap-title');
+ const split=mode.label.match(/^(.*?)\s*(Trinket Swap)$/)||[null,mode.label,''];
+ title.append(node('span',split[1]),document.createTextNode(' '),node('span',split[2]));enableLabel.append(enabled,title);
+ const timing=node('input');timing.type='number';timing.min='0';timing.max='3600';timing.step='0.1';timing.id='trinket-swap-time';timing.setAttribute('aria-label','Swap time in seconds');
+ const timingLabel=node('label',undefined,'swap-timing');timingLabel.append(node('span','Swap at'),timing,node('span','s'));
+ const options=node('div',undefined,'swap-options');options.append(enableLabel,timingLabel);panel.append(options);
+ const slotsWrap=node('div',undefined,'swap-slots');panel.append(slotsWrap);
  const slots=new Map();
  const save=patch=>{try{onChange({...getBuild(),trinketSwap:{...getBuild().trinketSwap,...patch}});}finally{render();}};
  for(const [slot,number] of [['trinket1',1],['trinket2',2]]){
@@ -21,7 +24,7 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
   const name=`${SHORT[getBuild().classId]} ${number}`;button.setAttribute('aria-label',`Edit ${mode.label}: Trinket ${number}`);
   const icon=node('img','','slot-icon');icon.src=iconUrl(SLOT_ICONS[slot]);icon.alt='';icon.decoding='async';icon.referrerPolicy='no-referrer';
   const itemName=node('span','Empty','item-name'),copy=node('span',undefined,'slot-copy');copy.append(node('span',name,'slot-name'),itemName);
-  button.append(icon,copy);container.append(button);panel.append(container);
+  button.append(icon,copy);container.append(button);slotsWrap.append(container);
   slots.set(slot,{container,itemName,icon});
   button.addEventListener('click',()=>openPicker(slot,{
    getBuild:()=>postSwapBuild(getBuild()),
@@ -36,9 +39,10 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
   const build=getBuild();try{onChange({...build,classOptions:enabled.checked&&build.classId==='hunter'?{...build.classOptions,pet:'None'}:build.classOptions,trinketSwap:{...build.trinketSwap,enabled:enabled.checked}});}finally{render();}
  });
  timing.addEventListener('change',()=>save({atSeconds:Number(timing.value)}));
- reset.addEventListener('click',()=>{try{onChange({...getBuild(),trinketSwap:defaultTrinketSwap()});}finally{render();}});
  function render(){
   const swap=getBuild().trinketSwap;enabled.checked=swap.enabled;timing.value=swap.atSeconds;
+  // The two replacement slots only appear while the swap is switched on.
+  slotsWrap.hidden=!swap.enabled;
   for(const [slot,view] of slots){
    const ref=swap.gear[slot];
    view.itemName.textContent=ref?.label||'Empty';view.container.classList.toggle('has-item',Boolean(ref));
