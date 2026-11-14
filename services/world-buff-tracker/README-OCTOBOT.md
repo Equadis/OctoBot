@@ -10,11 +10,14 @@ This service is an authorised copy of [GeneralA6/octo-wow-world-buff-status](htt
 - **Site output:** OctoBot's future World Buffs dashboard is the main destination. Keep confirmed buff drops distinct from raid-based predictions and stale observations.
 - **No automated in-game broadcasting** from the OctoBot integration.
 
-## Important implementation gap before deployment
+## Integration boundaries
 
-The upstream program currently accepts one primary watcher (`WOW_ACCOUNT`, `WOW_PASSWORD`, `WOW_CHARACTER`) and optional secondary characters via `WOW_LISTENERS`. Its `DARKMOON_WATCH_LOCATION` **only performs on-site NPC detection on the primary watcher**, not the secondary listener. The N'Zoth integration must also wire nearby NPC detection for the second character before claiming both Faire sites are actively covered.
-
-Likewise, the upstream app primarily delivers Discord/in-game updates; it has **not yet been wired into** the existing Cloudflare OctoMetrics D1 receiver or the OctoBot website. Do not mistake a running Railway process for a completed tracker integration.
+The full advanced World Buff Tracker supports a primary and secondary Faire watcher with
+NPC-name detection at both sites, but its original Discord/in-game notification workflows
+are not the OctoMetrics feed. Use the separate DMF-only start command described below
+for the new authenticated Cloudflare telemetry. The Worker API and the website display
+are independent deployment steps; a running Railway process does not mean the site UI
+has been updated.
 
 ## Deployment design
 
