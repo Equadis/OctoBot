@@ -1,9 +1,36 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
+import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
+const BACKDROP_KEY='octobot-outfitter-backdrop';
+let backdropRequest=0;
+// A background is a personal view setting. It is not part of an outfit, so shared links and saved outfits are unchanged.
+function applyBackdrop(id,{persistChoice=true}={}){
+ const wrap=document.querySelector('.model-wrap'),choice=findBackground(id),token=++backdropRequest;
+ const clear=()=>{wrap.classList.remove('has-backdrop');wrap.style.removeProperty('--backdrop-image');};
+ if(persistChoice){try{if(choice)localStorage.setItem(BACKDROP_KEY,choice.id);else localStorage.removeItem(BACKDROP_KEY);}catch{}}
+ $('backdrop').value=choice?choice.id:'';
+ if(!choice){clear();return;}
+ // Load first so a failed image never leaves a blank frame.
+ const probe=new Image();probe.referrerPolicy='no-referrer';
+ probe.onload=()=>{if(token!==backdropRequest)return;wrap.style.setProperty('--backdrop-image',`url("${choice.url}")`);wrap.classList.add('has-backdrop');};
+ probe.onerror=()=>{if(token!==backdropRequest)return;clear();$('backdrop').value='';feedback(`The ${choice.label} background could not be loaded, so the default is shown.`);};
+ probe.src=choice.url;
+}
+function setupBackdrops(){
+ const select=$('backdrop');select.replaceChildren(new Option('Default (glow)',''));
+ for(const group of ['Classes','Races']){
+  const optgroup=document.createElement('optgroup');optgroup.label=group;
+  for(const background of BACKGROUNDS.filter(b=>b.group===group))optgroup.append(new Option(background.label,background.id));
+  select.append(optgroup);
+ }
+ select.onchange=()=>applyBackdrop(select.value);
+ let saved='';try{saved=localStorage.getItem(BACKDROP_KEY)||'';}catch{}
+ if(findBackground(saved))applyBackdrop(saved,{persistChoice:false});
+}
 function feedback(message){$('feedback').textContent=message;}
 const SLOT_KEYS={1:'head',3:'shoulder',15:'back',5:'chest',4:'shirt',19:'tabard',9:'wrist',10:'hands',6:'waist',7:'legs',8:'feet',16:'mainhand',17:'offhand',18:'ranged'};
 const RACE_KEYS={1:'human',2:'orc',3:'dwarf',4:'nightelf',5:'undead',6:'tauren',7:'gnome',8:'troll'};
@@ -141,6 +168,7 @@ function shareUrl(){const url=new URL(location.href);url.search='';url.hash='out
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
+ setupBackdrops();
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));
   let message='Select an equipment slot, then choose an item to try on.';

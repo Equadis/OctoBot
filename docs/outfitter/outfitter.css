@@ -64,3 +64,8 @@
 .paperdoll{column-gap:12px}
 .model-wrap{align-self:stretch;height:auto;min-height:560px}
 .paperdoll .slots{align-self:start}
+
+/* Optional model background. The default glow is replaced while a background image is active. */
+.backdrop-field{display:flex;align-items:center;gap:8px}.backdrop-field select{min-width:130px;padding:5px 8px;font-size:12px}
+.model-wrap.has-backdrop{background:var(--backdrop-image) center bottom/cover no-repeat,#182333}
+@media(max-width:580px){.backdrop-field{width:100%;justify-content:space-between}}
