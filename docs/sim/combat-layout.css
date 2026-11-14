@@ -193,3 +193,5 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view .left-column,.planner-view .right-column{min-width:0}
 .planner-view .left-column>section.card+section.card{margin-top:18px}
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:minmax(0,1fr)}}
+
+.planner-view .talent-card{border:1px solid #344253}
