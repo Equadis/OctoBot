@@ -20,7 +20,7 @@ from .population import (UTC, HISTORY, RELEASES, GAP_SECONDS, PopulationStore, R
                          fetch_reading, load_history, missing_intervals, observed_average, parse_time, HISTORIES, REALMS)
 
 RANGES = ('1H', '1D', '1W', '1M', '1Y', 'YTD')
-DEFAULT_GRAPH_URL = 'https://equadis.github.io/OctoBot/'
+DEFAULT_GRAPH_URL = 'https://equadis.github.io/OctoBot/population/'
 _RENDER_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
 

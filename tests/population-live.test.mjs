@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import vm from 'node:vm';
 
 const root=join(import.meta.dirname,'../docs');
-const html=readFileSync(join(root,'index.html'),'utf8');
+const html=readFileSync(join(root,'population/index.html'),'utf8');
 const inline=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
 assert.ok(inline,'Population page must include its controller');
 const math=readFileSync(join(root,'chart-data.js'),'utf8');
@@ -101,14 +101,14 @@ function fixture(options={}){
     if(url.includes('live.json'))return {ok:true,json:async()=>({
       nzoth:{...archival.at(-1),source:'official census'}
     })};
-    if(url==='realms.json')return {ok:true,json:async()=>realms};
-    if(url==='releases.json')return {ok:true,json:async()=>([])};
-    if(url==='uptime-reference.json')return {ok:true,json:async()=>({
+    if(url==='../realms.json')return {ok:true,json:async()=>realms};
+    if(url==='../releases.json')return {ok:true,json:async()=>([])};
+    if(url==='../uptime-reference.json')return {ok:true,json:async()=>({
       nzoth:{observed_at:'2026-11-07T00:00:00Z',elapsed_seconds:7200}
     })};
-    if(url==='status/history.json')return {ok:true,json:async()=>([])};
-    if(url==='status/latest.json')return {ok:true,json:async()=>({sample:null})};
-    if(url==='telemetry.json')return {ok:true,json:async()=>({
+    if(url==='../status/history.json')return {ok:true,json:async()=>([])};
+    if(url==='../status/latest.json')return {ok:true,json:async()=>({sample:null})};
+    if(url==='../telemetry.json')return {ok:true,json:async()=>({
       endpoint:'https://test.worker.dev'
     })};
     throw Error('Unexpected request '+url);

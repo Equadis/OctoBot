@@ -4,7 +4,7 @@ OctoBot combines the existing **OctoTracker** and **OctoCop** projects into one 
 
 ## Public dashboards
 
-The [Population dashboard](https://equadis.github.io/OctoBot/#server=all) and [Server Status dashboard](https://equadis.github.io/OctoBot/status/) share the same dark visual style and top navigation.
+The [Population dashboard](https://equadis.github.io/OctoBot/population/#server=all) and [Server Status dashboard](https://equadis.github.io/OctoBot/status/) share the same dark visual style and top navigation.
 
 The status dashboard uses independent checks of the three official realm statuses, login TCP reachability, and a credential-free authentication challenge. Its independent-probe chart, response-time graph and recent interruption history combine the one-minute Cloudflare Worker (after its D1 migration and redeployment) with GitHub-recorded observations from an independent status workflow (`.github/workflows/status.yml`). GitHub Actions is a fallback, not a guaranteed five-minute schedule.
 
@@ -91,7 +91,7 @@ timestamps are preserved.
 
 ## Dashboard chart design and navigation
 
-The [Population dashboard's **Players online** graph](https://equadis.github.io/OctoBot/#server=all)
+The [Population dashboard's **Players online** graph](https://equadis.github.io/OctoBot/population/#server=all)
 is the canonical interaction and visual design for all OctoBot time-series charts.
 
 - Cursor-anchored mouse-wheel zoom with a ten-minute minimum and dataset-aware boundaries.
@@ -435,8 +435,8 @@ memory limit); this change reduces demand but does not guarantee a particular RA
 
 ### v1.0.34 interactive graph
 
-The public graph is hosted at https://equadis.github.io/OctoBot/.
-Its small HTML/CSS/JavaScript/SVG source is in `docs/index.html`, with no chart
+The public graph is hosted at https://equadis.github.io/OctoBot/population/ (the site root is the OctoBot home page).
+Its small HTML/CSS/JavaScript/SVG source is in `docs/population/index.html`, with no chart
 framework, CDN, web server on the bot host or extra Python dependency. The button
 passes only the demo snapshot timestamp in a URL fragment so it matches the message.
 The default view is 1W; each visitor changes only their own view. The arrow opens a
@@ -450,8 +450,8 @@ admin-only to post; its public graph link is accessible to everyone.
 
 ### v1.0.35 GitHub Pages hosting
 
-The default graph URL is `https://equadis.github.io/OctoBot/`. The static page is
-`docs/index.html`; GitHub Pages publishes it from **main → /docs**. There is no
+The default graph URL is `https://equadis.github.io/OctoBot/population/`. The static page is
+`docs/population/index.html`; GitHub Pages publishes it from **main → /docs**. There is no
 build step, server or new dependency. If Pages has not been enabled yet, a repository
 administrator must enable **Settings → Pages → Deploy from a branch → main → /docs**.
 Future changes to the page publish automatically when pushed to main.

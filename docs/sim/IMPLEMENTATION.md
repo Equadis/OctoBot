@@ -27,7 +27,7 @@ or a reduced-feature interface. No proprietary code or artwork has been copied.
 ## Existing repository
 
 Initial checkout: `498b795` on `main`. The published site is static `docs/`.
-`docs/index.html` is Population; `docs/status/index.html` is Server Status. Both have
+`docs/population/index.html` is Population; `docs/index.html` is the home page; `docs/status/index.html` is Server Status. Both have
 inline dark styling and a `.page-nav` with relative links. Population collection,
 Cloudflare D1, GitHub scheduled collectors and Discord systems are separate
 subsystems. There was no simulator or frontend package to extend.

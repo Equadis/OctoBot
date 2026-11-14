@@ -71,3 +71,8 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .controls .dates .date-actions>button:not(.jump-to-present){grid-row:2;grid-column:2}
 .controls .dates .date-actions button,.controls .dates .date-actions .jump-to-present{height:30px;padding:0 12px;font-size:12px;line-height:1}
 .controls .dates input[type="date"],.controls .ranges button{height:30px;box-sizing:border-box}
+
+/* The logo links home */
+.site-home{display:inline-flex;flex:none;border-radius:6px;line-height:0}
+.site-home:hover .site-logo,.site-home:focus-visible .site-logo{filter:brightness(1.18) drop-shadow(0 0 6px #e8c67c66)}
+.site-home:focus-visible{outline:2px solid #e8c67c;outline-offset:3px}

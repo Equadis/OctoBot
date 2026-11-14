@@ -5,7 +5,7 @@ import {join} from 'node:path';
 
 const docs=join(import.meta.dirname,'../docs');
 const read=path=>readFileSync(join(docs,path),'utf8');
-const population=read('index.html'),status=read('status/index.html');
+const population=read('population/index.html'),status=read('status/index.html');
 const popScript=population.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 const probeScript=read('status-dashboard.js'),archiveScript=read('status-archive.js');
 

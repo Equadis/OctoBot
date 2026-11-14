@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 
 const root=join(import.meta.dirname,'..');
-const population=readFileSync(join(root,'docs/index.html'),'utf8');
+const population=readFileSync(join(root,'docs/population/index.html'),'utf8');
 const status=readFileSync(join(root,'docs/status/index.html'),'utf8');
 const theme=readFileSync(join(root,'docs/site-theme.css'),'utf8');
 

@@ -4,12 +4,12 @@ import {readFileSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 
 const BASE='https://equadis.github.io/OctoBot/';
-const PAGES=['','status/','world-info/','sim/','outfitter/'];
+const PAGES=['population/','status/','world-info/','sim/','outfitter/'];
 const docs=new URL('../docs/',import.meta.url);
 const markup=route=>readFileSync(new URL(route+'index.html',docs),'utf8');
 
 test('every page links to the five canonical directory URLs',()=>{
- const expected=['','status/','world-info/','sim/','outfitter/'].map(p=>new URL(p,BASE).href);
+ const expected=['population/','status/','world-info/','sim/','outfitter/'].map(p=>new URL(p,BASE).href);
  for(const route of PAGES){
   const nav=markup(route).match(/<nav class="page-nav"[\s\S]*?<\/nav>/)[0];
   const links=[...nav.matchAll(/href="([^"]*)"/g)].map(m=>new URL(m[1],new URL(route,BASE)));
@@ -67,5 +67,29 @@ test('titles use the Friz Quadrata stack on every page, with sub-headings left a
  assert.ok(!/url\([^)]*\.(?:ttf|otf|woff2?)/i.test(css.slice(css.indexOf('@font-face'))),'the commercial font file is not bundled');
  assert.match(css,/body h1,body h2,body \.site-header h1,body\.planner-view \.site-header h1,\r?\nbody \.section-title h2,body \.panel-head h3,body \.world-panel h2,body \.world-panel h3,body \.look-heading h3\{font-family:var\(--title-font\);font-weight:700\}/);
  assert.match(css,/font-weight:700;src:local\("Friz Quadrata TT Bold"\)/); // bold face
- for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261114-bold2/,`/${route}`);
+ for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261114-home1/,`/${route}`);
+});
+
+test('the home page links to every tool with a large button and sends old Population links to /population/',()=>{
+ const home=readFileSync(new URL('index.html',docs),'utf8');
+ assert.match(home,/Welcome to OctoBot/);
+ const cards=[...home.matchAll(/<a class="home-card" href="([^"]*)"/g)].map(m=>new URL(m[1],BASE).href);
+ assert.deepEqual(cards,['population/#server=all','status/','world-info/','sim/','outfitter/'].map(p=>new URL(p,BASE).href));
+ assert.match(home,/not the official OctoWoW website/);
+ // links that predate the home page (the Discord bot posts /#server=...) are forwarded with their query and fragment
+ assert.ok(home.includes("if(/^#server=/.test(location.hash))location.replace('population/'+location.search+location.hash);"));
+ for(const [,value] of home.matchAll(/\b(?:href|src)="([^"#]+)"/g)){
+  if(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(value))continue;
+  const path=new URL(value,BASE).pathname.replace('/OctoBot/','');
+  assert.ok(existsSync(fileURLToPath(new URL(path.endsWith('/')?path+'index.html':path,docs))),`home references missing ${value}`);
+ }
+});
+
+test('the OctoBot logo links home from every tool page',()=>{
+ for(const route of PAGES){
+  const html=markup(route);
+  const link=html.match(/<a class="site-home" href="([^"]*)"[^>]*><img class="site-logo"/);
+  assert.ok(link,`logo link on /${route}`);
+  assert.equal(new URL(link[1],new URL(route,BASE)).href,BASE);
+ }
 });
