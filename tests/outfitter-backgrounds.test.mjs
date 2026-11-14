@@ -35,3 +35,27 @@ test('the page offers a background selector, credits the source, and does not st
   assert.match(html,/Wowpedia/);
   assert.ok(!/backdrop|background/i.test(state)); // outfit codes and links are unchanged
 });
+
+// ---- Model fallback helpers (approximate previews for items missing from the Classic library)
+import {buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from '../docs/outfitter/state.mjs';
+const catalogue=[
+  {id:47282,name:'Felheart Leggings',slot:7,classs:4,subclass:1,icon:'inv_pants_09'},
+  {id:70752,name:'Felheart Leggings',slot:7,classs:4,subclass:1,icon:'inv_pants_09'},
+  {id:16810,name:'Felheart Pants',slot:7,classs:4,subclass:1,icon:'inv_pants_09'},
+  {id:9000,name:'Felheart Leggings',slot:7,classs:4,subclass:2,icon:'inv_pants_09'}, // different armour type
+  {id:9001,name:'felheart leggings',slot:8,classs:4,subclass:1,icon:'inv_pants_09'}, // different slot
+  {id:100,name:'Plain Pants',slot:7,classs:4,subclass:1,icon:'inv_pants_01'},
+];
+test('same-name matches need the same slot and armour type, ignore case, and exclude the item itself',()=>{
+  const index=buildNameIndex(catalogue);
+  assert.deepEqual(sameNameItems(index,catalogue[0]).map(i=>i.id),[70752]);
+  assert.deepEqual(sameNameItems(index,catalogue[5]),[]);
+  assert.equal(sameNameItems(index,{...catalogue[0],id:1,name:'FELHEART leggings'}).length,2);
+});
+test('same-icon matches come lowest item ID first, within the same slot and armour type, and are capped',()=>{
+  const index=buildIconIndex(catalogue);
+  assert.deepEqual(sameIconItems(index,catalogue[0]).map(i=>i.id),[16810,70752]);
+  assert.deepEqual(sameIconItems(index,catalogue[5]),[]);
+  assert.deepEqual(sameIconItems(index,{id:5,slot:7,classs:4,subclass:1,icon:'inv_pants_09'},1).map(i=>i.id),[16810]);
+  assert.deepEqual(sameIconItems(index,{id:5,slot:7,classs:4,subclass:1}),[]); // no icon, no match
+});

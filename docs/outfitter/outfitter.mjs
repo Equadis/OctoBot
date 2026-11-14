@@ -1,9 +1,9 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
+import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261114-siblings2';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
 const BACKDROP_KEY='octobot-outfitter-backdrop';
 let backdropRequest=0;
@@ -127,22 +127,39 @@ async function renderModel(){
   // Detect an undeployed service before constructing a viewer that would stay blank.
   const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
   await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
-  const unavailable=[];let outdatedService=false;
+  const unavailable=[],approximated=[],approximatedByIcon=[];let outdatedService=false;
+  // First display ID in the list whose model files exist in the Classic library, or null.
+  const usableDisplay=async(data,slot)=>{
+   for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
+    const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
+    try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return displayId;}catch{}
+   }
+   return null;
+  };
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
    let legacyReply=false;
+   const slot=viewerSlot(id,item);
    try{
-    const data=await displayFor(item.id),slot=viewerSlot(id,item);
+    const data=await displayFor(item.id);
     // OctoWoW display IDs often differ from the Classic library; the service lists the Classic ID first.
     // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
     if(!Array.isArray(data.candidates))legacyReply=true;
-    for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
-     const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
-     try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return [slot,displayId];}catch{}
-    }
-    throw Error('No usable appearance');
+    const own=await usableDisplay(data,slot);
+    if(own!==null)return [slot,own];
+   }catch{}
+   // No model for this exact item: borrow the model of an original item with the same name, then with the same icon.
+   for(const sibling of sameNameItems(nameIndex,item)){
+    try{
+     const displayId=await usableDisplay(await displayFor(sibling.id),slot);
+     if(displayId!==null){approximated.push(item.name);return [slot,displayId];}
+    }catch{}
    }
-   catch{unavailable.push(item.name);if(legacyReply)outdatedService=true;return null;}
+   // Same-icon candidates are checked together; the lowest item ID (the original) wins.
+   const byIcon=await Promise.all(sameIconItems(iconIndex,item).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
+   const iconMatch=byIcon.find(displayId=>displayId!==null);
+   if(iconMatch!==undefined){approximatedByIcon.push(item.name);return [slot,iconMatch];}
+   unavailable.push(item.name);if(legacyReply)outdatedService=true;return null;
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
@@ -160,7 +177,11 @@ async function renderModel(){
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
    setTimeout(check,250);
   };check();
-  if(unavailable.length){$('appearance-notice').hidden=false;$('appearance-notice').textContent=outdatedService?`Preview unavailable for: ${unavailable.join(', ')}. The appearance service has not been updated to find Classic models yet, so some original items cannot be previewed. They remain in your outfit.`:`No Classic 3D model exists for: ${unavailable.join(', ')}. These are custom OctoWoW appearances. They remain in your outfit and in saved and shared outfits.`;}
+  const notes=[];
+  if(approximated.length)notes.push(`Shown with the Classic model of the same-named original item (an approximation that may differ from the in-game look): ${approximated.join(', ')}.`);
+  if(approximatedByIcon.length)notes.push(`Shown with a Classic model that uses the same icon (a closer guess than nothing, but it may differ from the in-game look): ${approximatedByIcon.join(', ')}.`);
+  if(unavailable.length)notes.push(outdatedService?`Preview unavailable for: ${unavailable.join(', ')}. The appearance service has not been updated to find Classic models yet, so some original items cannot be previewed. They remain in your outfit.`:`No Classic 3D model exists for: ${unavailable.join(', ')}. These are custom OctoWoW appearances. They remain in your outfit and in saved and shared outfits.`);
+  if(notes.length){$('appearance-notice').hidden=false;$('appearance-notice').textContent=notes.join(' ');}
  } catch(error){if(token===revision){$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
 function renderSaved(){const target=$('saved-outfits');target.replaceChildren();if(!saved.length){const p=document.createElement('span');p.className='muted';p.textContent='No saved outfits yet.';target.append(p);}saved.forEach((entry,index)=>{const row=document.createElement('div');row.className='saved-card';const load=document.createElement('button');load.textContent=entry.name;load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};const remove=document.createElement('button');remove.className='reset';remove.textContent='×';remove.setAttribute('aria-label',`Delete ${entry.name}`);remove.onclick=()=>{saved.splice(index,1);saveLibrary();renderSaved();};row.append(load,remove);target.append(row);});}
@@ -170,7 +191,7 @@ function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.'
 async function start(){
  setupBackdrops();
  try{
-  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));
+  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
   let message='Select an equipment slot, then choose an item to try on.';
   try{outfit=sanitiseGear(safeRead(STORAGE,emptyOutfit()));}catch{outfit=emptyOutfit();message='The previous outfit could not be restored. Import a saved code to recover it.';}
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}

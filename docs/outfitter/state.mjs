@@ -55,3 +55,40 @@ export function filterItems(items,{slot,query='',subclass='',quality=''}) {
   (subclass===''||`${i.classs}:${i.subclass}`===subclass)&&
   (quality===''||i.quality===Number(quality))).sort((a,b)=>a.name.localeCompare(b.name)||a.id-b.id);
 }
+
+// Items the Classic model library does not contain (custom OctoWoW copies of tier items, for example) often share a
+// name with an original item that it does contain. These helpers find those same-name items so the preview can borrow
+// their model. The result is an approximation and is always labelled as one.
+const nameKey = item => `${item.slot}|${item.classs}|${item.subclass}|${String(item.name).trim().toLowerCase()}`;
+export function buildNameIndex(items) {
+ const index = new Map();
+ for (const item of items) {
+  const key = nameKey(item);
+  if (!index.has(key)) index.set(key, []);
+  index.get(key).push(item);
+ }
+ for (const list of index.values()) list.sort((a, b) => a.id - b.id); // original (lower id) items first
+ return index;
+}
+export function sameNameItems(index, item, limit = 3) {
+ return (index.get(nameKey(item)) || []).filter(other => other.id !== item.id).slice(0, limit);
+}
+
+// Second approximation, used only when no same-name item has a model: items that share an inventory icon, slot and
+// type are very often the same underlying display, so an original item with the same icon is a close stand-in.
+const iconKey = item => `${item.slot}|${item.classs}|${item.subclass}|${String(item.icon || '').toLowerCase()}`;
+export function buildIconIndex(items) {
+ const index = new Map();
+ for (const item of items) {
+  if (!item.icon) continue;
+  const key = iconKey(item);
+  if (!index.has(key)) index.set(key, []);
+  index.get(key).push(item);
+ }
+ for (const list of index.values()) list.sort((a, b) => a.id - b.id);
+ return index;
+}
+export function sameIconItems(index, item, limit = 5) {
+ if (!item.icon) return [];
+ return (index.get(iconKey(item)) || []).filter(other => other.id !== item.id).slice(0, limit);
+}
