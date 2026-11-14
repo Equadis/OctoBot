@@ -152,10 +152,3 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .calendar-body .day-boss{font-size:9px;margin-top:3px}
 .calendar-body .rotation-key{margin-top:12px;gap:6px 14px}.calendar-body .rotation-key span{font-size:10px}
 .calendar-body .source-note{font-size:10px;margin-top:12px;padding-top:10px}
-
-/* Darkmoon Faire: a banner straddles the top edge; the panel is a little taller than its content */
-.world-grid.two.bottom-grid{margin-top:44px}
-#dmf-panel{position:relative;padding-top:38px;min-height:176px}
-.dmf-banner{position:absolute;left:50%;top:-24px;transform:translateX(-50%);width:min(82%,330px);pointer-events:none}
-.dmf-banner img{display:block;width:100%;height:auto}
-.dmf-banner span{position:absolute;left:0;right:0;top:50%;transform:translateY(-34%);text-align:center;font-family:var(--title-font);font-weight:700;font-size:12px;letter-spacing:.14em;color:#fbeeb4;text-shadow:0 1px 2px #0a2a0acc,0 0 6px #0a2a0a99}
