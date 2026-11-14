@@ -49,7 +49,7 @@ button:hover{color:#fff;border-color:#709ab5}button:focus-visible,a:focus-visibl
 .dates input{background:#171c24;color:#bdc8d5;border:1px solid #384658;padding:6px;font:inherit;max-width:140px}
 .controls{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:15px 0;border-bottom:1px solid #343c49}
 .readout{color:#79dfa7;min-height:24px;font-size:12px;margin:16px 0 4px;font-variant-numeric:tabular-nums}
-.graph{position:relative}svg{width:100%;height:auto;display:block}
+.graph{position:relative}.graph:not(.archive-graph){border:1px solid #384658;border-radius:4px;background:#182333;padding:8px 8px 0 26px}svg{width:100%;height:auto;display:block}
 svg text{fill:#91a0b0;font-size:12px;font-family:Arial,Helvetica,sans-serif}
 #timeline-hit,#latency-hit,#archive-hit{touch-action:pan-y;cursor:grab}#timeline-hit.is-panning,#latency-hit.is-panning,#archive-hit.is-panning{cursor:grabbing}
 .tip{position:absolute;top:22px;left:0;padding:9px 12px;background:#10151cef;border:1px solid #50627a;pointer-events:none;color:#f0f5fa;font-size:12px;line-height:1.7;box-shadow:0 3px 14px #0005;z-index:2;white-space:nowrap}

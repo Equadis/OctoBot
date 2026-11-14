@@ -12,7 +12,7 @@ import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacy
 import { itemPicker } from './item-picker.mjs?v=20261114-ammo2';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261113-swaps1';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261112-rotations1';
+import { configuration } from './configuration.mjs?v=20261114-groups1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
@@ -443,6 +443,8 @@ function createDisclosures() {
     toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-controls',body.id);
     toggle.addEventListener('click',()=>{body.hidden=!body.hidden;toggle.setAttribute('aria-expanded',String(!body.hidden));});
     title.replaceChildren(toggle);
+    // Buffs & Debuffs starts minimised, like each of its categories.
+    if(card.id==='buffs'){body.hidden=true;toggle.setAttribute('aria-expanded','false');}
   }
 }
 

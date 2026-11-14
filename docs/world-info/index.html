@@ -7,8 +7,8 @@
 <title>OctoBot · World Info (WIP)</title>
 <link rel="icon" href="../favicon.png" type="image/png">
 <link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
-<link rel="stylesheet" href="../world-info.css?v=20261114-icons2">
-<script src="../world-info.js?v=20261114-feed2" defer></script>
+<link rel="stylesheet" href="../world-info.css?v=20261114-icons3">
+<script src="../world-info.js?v=20261114-feed3" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -60,7 +60,6 @@
       <div class="buff-grid">
         <div><span class="field-label">Buff drop estimated in</span><strong class="clock mono" id="alliance-estimate">NO DATA</strong><small id="alliance-estimate-note">No reliable prediction available</small></div>
         <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="alliance-last">NO DATA</strong><small id="alliance-last-note">No confirmed announcement received</small></div>
-        <div><span class="field-label">Buff time remaining</span><strong class="clock mono" id="alliance-remaining">NO DATA</strong><small id="alliance-remaining-note">2 hour duration from the last confirmed drop</small></div>
       </div>
     </article>
     <article class="world-panel faction-horde" aria-labelledby="horde-heading">
@@ -68,7 +67,6 @@
       <div class="buff-grid">
         <div><span class="field-label">Buff drop estimated in</span><strong class="clock mono" id="horde-estimate">NO DATA</strong><small id="horde-estimate-note">No reliable prediction available</small></div>
         <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="horde-last">NO DATA</strong><small id="horde-last-note">No confirmed announcement received</small></div>
-        <div><span class="field-label">Buff time remaining</span><strong class="clock mono" id="horde-remaining">NO DATA</strong><small id="horde-remaining-note">2 hour duration from the last confirmed drop</small></div>
       </div>
     </article>
   </div>
@@ -76,7 +74,7 @@
 </section>
 
 <div class="world-grid two bottom-grid">
-  <section class="world-panel" aria-labelledby="dmf-heading">
+  <section class="world-panel" id="dmf-panel" aria-labelledby="dmf-heading">
     <div class="panel-heading"><div><span class="eyebrow">DARKMOON FAIRE</span><h2 id="dmf-heading">DMF Location</h2></div><span class="state-tag" id="dmf-state">AWAITING DATA</span></div>
     <div class="dmf-location"><img class="faction-icon dmf-icon" id="dmf-icon" src="../img/alliance-crest.png" width="48" height="48" alt="" hidden><strong id="dmf-location">Moving</strong><div><span id="dmf-description">Faire is moving and in neither location</span><small id="dmf-observed">NPC / addon sighting integration pending</small></div></div>
   </section>

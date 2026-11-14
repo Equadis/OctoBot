@@ -7,9 +7,9 @@
   <title>OctoBot · Gear Planner &amp; DPS Sim (WIP)</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css?v=20261114-under-trinkets1">
-  <link rel="stylesheet" href="combat-layout.css?v=20261113-gear-position2">
-  <script type="module" src="planner.mjs?v=20261114-cleanurl1"></script>
-<link rel="stylesheet" href="../site-theme.css?v=20261111-theme1">
+  <link rel="stylesheet" href="combat-layout.css?v=20261114-layout2">
+  <script type="module" src="planner.mjs?v=20261114-layout1"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261114-width1">
 </head>
 <body>
 <main>
@@ -47,6 +47,10 @@
         <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div><details class="appearance-slots"><summary>Appearance</summary><div id="slots-appearance" class="weapons extra-slots"></div></details>
       </section>
 
+        <section class="card" id="buffs" aria-labelledby="buffs-heading">
+          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
+          <div id="buff-list"></div>
+        </section>
       </div>
       <div class="planner-column right-column">
     <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
@@ -87,12 +91,6 @@
           <button disabled class="run-button" title="Combat engines are not implemented yet.">Run Simulation</button><div id="simulation-output"></div>
         </section>
         <section class="card" id="combat-log" aria-labelledby="log-heading"><div class="card-heading"><h2 id="log-heading">Combat Log</h2><button id="reset-combat-log" class="panel-reset" type="button" aria-label="Reset combat log">Reset</button></div><div id="combat-log-output"><p class="small muted">Run a simulation to see the combat log.</p></div></section>
-      </div>
-      <div class="planner-column buffs-column">
-        <section class="card" id="buffs" aria-labelledby="buffs-heading">
-          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
-          <div id="buff-list"></div>
-        </section>
       </div>
     </div>
   </div>

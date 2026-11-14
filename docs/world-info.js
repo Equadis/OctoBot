@@ -8,7 +8,6 @@
   const FRESH_METRICS_MS = 5 * MINUTE;
   // Raid /who scans land roughly every 15-25 minutes in the live feed; older readings are shown as stale.
   const FRESH_RAID_MS = 30 * MINUTE;
-  const BUFF_DURATION_MS = 2 * 60 * MINUTE; // OctoWoW DB spell 22888: 7200 second duration.
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
   const DAY = 86_400_000;
   const BOSSES = [
@@ -249,15 +248,6 @@
       estimate.textContent = 'NO DATA';
       estimateNote.textContent = 'No reliable prediction available';
     }
-    const remaining = $(faction + '-remaining');
-    if (buff && validPast(buff.last)) {
-      const left = buff.last + BUFF_DURATION_MS - Date.now();
-      remaining.textContent = left > 0 ? span(left) : 'EXPIRED';
-      $(faction + '-remaining-note').textContent = left > 0 ? 'Expires ' + when(buff.last + BUFF_DURATION_MS) : 'Expired ' + span(-left) + ' ago';
-    } else {
-      remaining.textContent = 'NO DATA';
-      $(faction + '-remaining-note').textContent = '2 hour duration from the last confirmed drop';
-    }
     labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : buff && validPast(buff.estimate, Date.now() + 365 * DAY) ? 'ESTIMATED' : 'AWAITING DATA', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'estimated' : 'unknown');
   }
 
@@ -283,6 +273,9 @@
       : dmf && validPast(dmf.observedAt)
         ? 'Last sighting is stale: ' + when(dmf.observedAt)
         : 'No Faire sighting at Elwynn Forest or Mulgore';
+    const panel = $('dmf-panel');
+    panel.classList.toggle('faction-alliance', Boolean(sw));
+    panel.classList.toggle('faction-horde', Boolean(tb));
     labelState('dmf-state', sw || tb ? 'CONFIRMED' : 'NOT FOUND', sw || tb ? 'online' : 'unknown');
   }
 

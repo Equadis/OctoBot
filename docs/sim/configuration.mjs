@@ -4,7 +4,7 @@ import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rot
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
 import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261112-consumes1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
-import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261112-rotations1';
+import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261114-groups1';
 import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -18,9 +18,17 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
  const validateRows=rows=>validateRotationRows(rows,classId);
  const checkboxes=new Map();
  const update=patch=>onChange(resolveConsumableSelection({...getBuild().controls,...patch},Object.hasOwn(patch,'consumableIds')?'consumables':'buffs'));
+  // Every group is minimisable with the same heading toggle used by the main panels.
+ const collapsible=(id,name,{open=true,actions=null}={})=>{
+  const section=node('section',undefined,'buff-group'),heading=node('div',undefined,'buff-group-heading'),title=node('h3');
+  const body=node('div',undefined,'buff-group-body');body.id=`buff-group-${id}`;
+  const toggle=node('button',name,'panel-toggle group-toggle');toggle.type='button';toggle.setAttribute('aria-controls',body.id);
+  const setOpen=value=>{body.hidden=!value;toggle.setAttribute('aria-expanded',String(value));};
+  toggle.addEventListener('click',()=>setOpen(body.hidden));setOpen(open);
+  title.append(toggle);heading.append(title);if(actions)heading.append(actions);section.append(heading,body);
+  return {section,body};
+ };
  for(const group of BUFF_GROUPS){
-  const section=node(group.collapsed?'details':'section',undefined,'buff-group');if(group.collapsed)section.open=false;
-  const heading=node(group.collapsed?'summary':'div',undefined,'buff-group-heading');heading.append(node('h3',group.name));
   const actions=node('div',undefined,'buff-actions');
   const setGroup=enabled=>{
    const ids=group.options.filter(option=>!enabled||!buffRestriction(option,getBuild())).map(option=>option.id);
@@ -29,8 +37,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
   };
   if(group.all)actions.append(button('Select All',()=>setGroup(true),`Select all ${group.name}`));
   actions.append(button('Clear All',()=>setGroup(false),`Clear all ${group.name}`));
-  if(!group.collapsed)heading.append(actions);
-  section.append(heading);if(group.collapsed)section.append(actions);
+  const {section,body}=collapsible(group.id,group.name,{open:false,actions});
   for(const option of group.options){
    if(option.classes&&!option.classes.includes(classId)||option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(classId))continue;
    const label=node('label',undefined,'buff-row');const input=node('input');input.type='checkbox';input.value=option.id;
@@ -40,21 +47,22 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
     let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
    attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?[buffRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']}));
-   checkboxes.set(option.id,input);section.append(label);
+   checkboxes.set(option.id,input);body.append(label);
    if(option.id==='tea'){
     const threshold=node('label',undefined,'tea-threshold');threshold.append(node('span','Use at <'));
     const field=node('input');field.type='number';field.min=0;field.max=100;field.id='tea-threshold';field.setAttribute('aria-label','Thistle Tea energy threshold');field.disabled=input.disabled;field.addEventListener('change',()=>{try{update({teaThreshold:Number(field.value)});}catch{field.value=getBuild().controls.teaThreshold;}});
-    threshold.append(field,node('span','energy'));section.append(threshold);
+    threshold.append(field,node('span','energy'));body.append(threshold);
    }
   }
   $('buff-list').append(section);
  }
  function renderChecks(){for(const [id,input] of checkboxes){input.checked=getBuild().controls.buffIds.includes(id);input.disabled=Boolean(buffRestriction(BUFF_OPTIONS.find(o=>o.id===id),getBuild()));}if($('tea-threshold'))$('tea-threshold').value=getBuild().controls.teaThreshold;renderAdditional();}
- const extra=node('details',undefined,'additional-consumables'),summary=node('summary','Class Consumables'),extraActions=node('div',undefined,'buff-actions');
- extraActions.append(button('Clear All',()=>{update({consumableIds:[]});renderChecks();},'Clear all class consumables'));extra.append(summary,extraActions);
+ const extraActions=node('div',undefined,'buff-actions');
+ extraActions.append(button('Clear All',()=>{update({consumableIds:[]});renderChecks();},'Clear all class consumables'));
+ const {section:extra,body:extraBody}=collapsible('class-consumables','Class Consumables',{open:false,actions:extraActions});extra.classList.add('additional-consumables');
  const search=node('input');search.type='search';search.placeholder='Search consumables…';search.setAttribute('aria-label','Search class consumables');
  const kind=select(['All','Potion','Flask','Elixir','Rune','Bandage','Food & Utility'].map(v=>[v,v]),'All','Consumable type');
- const count=node('div',undefined,'small muted'),list=node('div',undefined,'additional-consumable-list');extra.append(search,kind,count,list);$('buff-list').append(extra);
+ const count=node('div',undefined,'small muted'),list=node('div',undefined,'additional-consumable-list');extraBody.append(search,kind,count,list);$('buff-list').append(extra);
  function renderAdditional(){
   const build=getBuild(),query=search.value.trim().toLowerCase(),selected=build.controls.consumableIds||[];
   const candidates=orderConsumables(CONSUMABLES.filter(item=>!item.buffId&&item.verified&&!consumableRestriction(item,build)&&(kind.value==='All'||item.category===kind.value)&&(!query||item.name.toLowerCase().includes(query)||String(item.id)===query)));

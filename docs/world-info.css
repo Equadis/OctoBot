@@ -111,7 +111,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 
 .heading-with-icon{display:flex;align-items:center;gap:12px}.heading-with-icon .eyebrow{margin-bottom:5px}
 .boss-icon{width:44px;height:44px;flex:none;border:1px solid #3a4a60;border-radius:4px;background:#0d1420}
-.buff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:24px}
+.buff-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:24px}
 .buff-grid>div{min-width:0;padding-right:18px}.buff-grid>div+div{border-left:1px solid var(--line);padding-left:20px}.buff-grid>div:last-child{padding-right:0}
 .faction-alliance{background:linear-gradient(135deg,#162c57 0%,var(--panel) 62%);border-color:#2a4a86;border-left:4px solid #2f5cb3}
 .faction-horde{background:linear-gradient(135deg,#8C1616 0%,var(--panel) 62%);border-color:#a82a2a;border-left:4px solid #c23030}
