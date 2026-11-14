@@ -59,3 +59,12 @@ test('every page has Discord and donate buttons with tooltips beside the viewer 
  }
  for(const icon of ['img/discord.png','img/coffee.png'])assert.ok(existsSync(fileURLToPath(new URL(icon,docs))),icon);
 });
+
+test('titles use the Friz Quadrata stack on every page, with sub-headings left alone',()=>{
+ const css=readFileSync(new URL('site-theme.css',docs),'utf8');
+ assert.match(css,/--title-font:"OctoBot Title","Friz Quadrata TT","Friz Quadrata"/);
+ assert.match(css,/local\("Friz Quadrata TT"\)/);
+ assert.ok(!/url\([^)]*\.(?:ttf|otf|woff2?)/i.test(css.slice(css.indexOf('@font-face'))),'the commercial font file is not bundled');
+ assert.match(css,/h1,h2,\n\.panel-head h3,\.world-panel h3,\.look-heading h3\{font-family:var\(--title-font\)\}/);
+ for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261114-titles1/,`/${route}`);
+});
