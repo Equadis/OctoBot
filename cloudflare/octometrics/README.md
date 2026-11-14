@@ -6,7 +6,7 @@ Source for `https://octometrics.eqvoice.workers.dev`, now kept in this repositor
 
 ## What changed in the Worker
 
-`worker.mjs` is the v0.2.1 Worker from `OctoBot-Metrics-Tracker-v0.2.1-Whisper-Replies/cloudflare/worker.mjs` with one function changed (`summary`). Ingest authentication, event validation, the four allowed accounts, CORS and the 30-day retention job are untouched, and there is **no schema change and no D1 migration**.
+`worker.mjs` started from the v0.2.1 Worker in `OctoBot-Metrics-Tracker-v0.2.1-Whisper-Replies/cloudflare/worker.mjs`. Its original raid-intelligence extension preserved the ingest contract. The DMF addition in this PR now adds two account/role pairs and two event types, while preserving the original four-account allowlist, authentication, CORS and the 30-day retention. There is still **no D1 schema change or migration**.
 
 `/api/summary` keeps every existing field and adds, per realm:
 
@@ -50,7 +50,7 @@ Past sessions come from the `activity_started` and `activity_ended` transitions 
 | Kill confirmation from Chronicle raid logs | Yes | No | **Not ported** |
 | Roster-based clear detection | Yes | No | **Not ported** (see below) |
 | Head-drop cooldown | Configurable, default 0 for OctoWoW | None | None. Not modelled |
-| Darkmoon Faire detection | Yes | No | Out of scope |
+| Darkmoon Faire detection | Yes | No | New DMF-only collector + Worker API; website UI remains separate |
 | Discord and whisper alerts | Yes | Fixed whisper replies only | Out of scope |
 
 ### What is not ported, and why
