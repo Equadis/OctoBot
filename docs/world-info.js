@@ -293,20 +293,23 @@
     const fresh = dmf && freshAt(dmf.observedAt, FRESH_DMF_MS);
     const sw = fresh && /^(sw|elwynn|stormwind|elwynn forest)$/.test(dmf.location);
     const tb = fresh && /^(tb|mulgore|thunder bluff)$/.test(dmf.location);
-    const name = sw ? 'Elwynn Forest' : tb ? 'Mulgore' : 'Moving';
-    $('dmf-location').textContent = name;
+    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Moving';
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
     if (sw || tb) icon.src = sw ? '../img/alliance-crest.png' : '../img/horde-crest.png';
-    $('dmf-description').textContent = sw ? 'Near Goldshire' : tb ? 'Below Thunder Bluff' : 'Faire is moving and in neither location';
+    const description = $('dmf-description');
+    description.hidden = Boolean(sw || tb);
+    description.textContent = 'Faire is moving and in neither location';
     $('dmf-observed').textContent = fresh && (sw || tb)
       ? 'Last observed ' + span(Date.now() - dmf.observedAt) + ' ago · ' + dmf.source
       : dmf && validPast(dmf.observedAt)
         ? 'Last sighting is stale: ' + when(dmf.observedAt)
         : 'No Faire sighting at Elwynn Forest or Mulgore';
+    // Horde and Alliance use the same panel colouring as Rallying Cry; a moving Faire is grey.
     const panel = $('dmf-panel');
     panel.classList.toggle('faction-alliance', Boolean(sw));
     panel.classList.toggle('faction-horde', Boolean(tb));
+    panel.classList.toggle('faction-moving', !(sw || tb));
     labelState('dmf-state', sw || tb ? 'CONFIRMED' : 'NOT FOUND', sw || tb ? 'online' : 'unknown');
   }
 

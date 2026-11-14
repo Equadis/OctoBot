@@ -125,3 +125,6 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .clear-tag{align-self:flex-start;font-size:9px;letter-spacing:.08em;font-weight:700;color:#a8d8f2;background:#29394b;border:1px solid #52758e;border-radius:3px;padding:3px 6px}
 .clear-tag[hidden]{display:none}
 .drops-line{align-items:flex-start}.drop-pair{display:flex;flex-direction:column;gap:3px;text-align:right;font-size:11px;color:#bcc8d8}
+
+.faction-moving{background:linear-gradient(135deg,#4a525e 0%,var(--panel) 62%);border-color:#5b6573;border-left:4px solid #7a8494}
+.dmf-detail{margin-top:18px;display:flex;flex-direction:column;gap:7px}.dmf-detail span{font-size:13px;color:#d7dfeb}.dmf-detail span[hidden]{display:none}.dmf-detail small{font-size:11px;color:#a5b0bf;line-height:1.55}
