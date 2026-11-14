@@ -45,3 +45,17 @@
 
 /* Icons fill their buttons right up to the border */
 .race-button{padding:0;overflow:hidden}.race-button img,.body-picker .race-button img{width:100%;height:100%;object-fit:cover;border-radius:0;display:block}
+
+/* Slot buttons match the Gear Planner exactly: 114px wide, 30px icon, 33px label box */
+.paperdoll{grid-template-columns:114px minmax(0,1fr) 114px}
+.slots .slot>button{grid-template-columns:minmax(0,1fr) 30px;min-height:49px}
+#left-slots .slot>button{grid-template-columns:30px minmax(0,1fr)}
+.slots .slot-icon{width:30px;height:30px}
+.slots .slot-name{font-size:8px;letter-spacing:.05em}
+.slots .slot .item-name{font-size:10px}
+@media(max-width:1050px){.paperdoll{grid-template-columns:114px minmax(0,1fr) 114px}}
+@media(max-width:580px){.paperdoll{grid-template-columns:104px minmax(0,1fr) 104px}}
+
+/* Model area: bordered frame on the graph backdrop, keeping the glow at the bottom */
+.model-wrap{border:1px solid #384658;border-radius:4px;background:radial-gradient(ellipse at 50% 75%,#31495a 0%,#202e40 45%,#182333 75%)}
+.slots .slot>button{column-gap:9px}
