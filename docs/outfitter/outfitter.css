@@ -104,3 +104,11 @@
 .preview-heading>div>label{display:inline-flex;align-items:center;gap:6px;height:30px;margin:0}
 .preview-heading>div>label input[type=checkbox]{margin:0}
 .backdrop-field select{margin:0;height:30px;padding-top:0;padding-bottom:0}
+
+/* Resets: Reset all matches the Gear Planner's red button; panel resets are small red text */
+.reset-all{flex:none;color:#ff746c;border:1px solid #88413b;background:#352326;border-radius:4px;padding:9px 12px;white-space:nowrap}
+.reset-all:hover{background:#4a292b;border-color:#c35c51;color:#ff746c}
+.reset-all:focus-visible{outline:2px solid #ff998f;outline-offset:3px}
+.panel-reset{background:transparent;border:0;border-radius:0;padding:0;color:#ff6b6b;font-size:11px;font-weight:400;line-height:1.5;white-space:nowrap}
+.panel-reset:hover{color:#ff9a93;text-decoration:underline;border:0}.panel-reset:disabled{opacity:.35;text-decoration:none}
+.preview-heading>div>.panel-reset{height:30px;margin-left:6px}

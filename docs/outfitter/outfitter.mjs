@@ -285,7 +285,8 @@ async function start(){
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
- $('reset').onclick=()=>commit(emptyOutfit(),'Outfit reset.');$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
+ $('reset').onclick=()=>commit(emptyOutfit(),'Outfit reset.');
+ $('reset-items').onclick=()=>{if(!Object.keys(outfit.gear).length){feedback('No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}animationPaused=false;$('anim-pause').setAttribute('aria-pressed','false');$('anim-pause').textContent='Pause';}catch{}try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
