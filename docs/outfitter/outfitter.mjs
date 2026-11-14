@@ -100,19 +100,22 @@ async function renderModel(){
   // Detect an undeployed service before constructing a viewer that would stay blank.
   const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
   await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
-  const unavailable=[];
+  const unavailable=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
+   let legacyReply=false;
    try{
     const data=await displayFor(item.id),slot=viewerSlot(id,item);
     // OctoWoW display IDs often differ from the Classic library; the service lists the Classic ID first.
+    // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
+    if(!Array.isArray(data.candidates))legacyReply=true;
     for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
      const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
      try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return [slot,displayId];}catch{}
     }
     throw Error('No usable appearance');
    }
-   catch{unavailable.push(item.name);return null;}
+   catch{unavailable.push(item.name);if(legacyReply)outdatedService=true;return null;}
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
@@ -130,7 +133,7 @@ async function renderModel(){
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
    setTimeout(check,250);
   };check();
-  if(unavailable.length){$('appearance-notice').hidden=false;$('appearance-notice').textContent=`Preview unavailable for: ${unavailable.join(', ')}. These items remain in your outfit; custom server appearances may not exist in the Classic model library.`;}
+  if(unavailable.length){$('appearance-notice').hidden=false;$('appearance-notice').textContent=outdatedService?`Preview unavailable for: ${unavailable.join(', ')}. The appearance service has not been updated to find Classic models yet, so some original items cannot be previewed. They remain in your outfit.`:`No Classic 3D model exists for: ${unavailable.join(', ')}. These are custom OctoWoW appearances. They remain in your outfit and in saved and shared outfits.`;}
  } catch(error){if(token===revision){$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
 function renderSaved(){const target=$('saved-outfits');target.replaceChildren();if(!saved.length){const p=document.createElement('span');p.className='muted';p.textContent='No saved outfits yet.';target.append(p);}saved.forEach((entry,index)=>{const row=document.createElement('div');row.className='saved-card';const load=document.createElement('button');load.textContent=entry.name;load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};const remove=document.createElement('button');remove.className='reset';remove.textContent='×';remove.setAttribute('aria-label',`Delete ${entry.name}`);remove.onclick=()=>{saved.splice(index,1);saveLibrary();renderSaved();};row.append(load,remove);target.append(row);});}
