@@ -69,3 +69,13 @@
 .backdrop-field{display:flex;align-items:center;gap:8px}.backdrop-field select{min-width:130px;padding:5px 8px;font-size:12px}
 .model-wrap.has-backdrop{background:var(--backdrop-image) center bottom/cover no-repeat,#182333}
 @media(max-width:580px){.backdrop-field{width:100%;justify-content:space-between}}
+
+/* Appearance and animation */
+.look-panel{border-top:1px solid #343c49;margin-top:14px;padding-top:14px}
+.look-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.look-heading h3{font-size:14px;font-weight:500;margin:0;color:var(--gold,#e8c67c)}
+.look-heading .reset{background:transparent;border:0;padding:0;font-size:11px}.look-heading .reset:disabled{opacity:.35}
+.look-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px}
+.look-option{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px}.look-name{color:#a6b5c6}
+.look-stepper{display:flex;align-items:center;gap:6px}.look-stepper button{width:26px;height:26px;padding:0;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
+.look-value{min-width:74px;text-align:center;color:#d4dfed;font-size:12px}
+.anim-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}.anim-row label{display:flex;align-items:center;gap:8px;font-size:12px}.anim-row select{min-width:150px;max-width:240px;padding:5px 8px;font-size:12px}

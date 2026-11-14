@@ -1,3 +1,4 @@
+import {sanitiseLook} from './customization.mjs';
 // Browser implementation of Tmog's slot/outfit workflow and T.O.L. interchange.
 // Inventory-slot IDs differ from the inventory-type IDs used by the 3D viewer.
 export const SLOTS = [
@@ -7,13 +8,14 @@ export const SLOTS = [
  [16,'Main hand',[13,17,21]],[17,'Off hand',[13,14,22,23]],[18,'Ranged',[15,25,26]]
 ].map(([id,name,types])=>({id,name,types}));
 export const RACES = [[1,'Human'],[2,'Orc'],[3,'Dwarf'],[4,'Night Elf'],[5,'Undead'],[6,'Tauren'],[7,'Gnome'],[8,'Troll']];
-export const emptyOutfit = () => ({version:1,race:1,gender:0,gear:{},hideHead:false,hideBack:false});
+export const emptyOutfit = () => ({version:1,race:1,gender:0,gear:{},hideHead:false,hideBack:false,look:{}});
 export function normalise(value) {
  if(!value || typeof value!=='object') throw Error('Invalid outfit.');
  const next=emptyOutfit();
  if(RACES.some(([id])=>id===value.race)) next.race=value.race;
  if(value.gender===1) next.gender=1;
  next.hideHead=value.hideHead===true;next.hideBack=value.hideBack===true;
+ next.look=sanitiseLook(value.look);
  for(const {id} of SLOTS) {const item=Number(value.gear?.[id]);if(Number.isSafeInteger(item)&&item>0&&item<=1000000)next.gear[id]=item;}
  return next;
 }

@@ -1,7 +1,8 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261114-siblings2';
+import {visibleOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs';
+import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261114-look1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
@@ -49,7 +50,7 @@ function renderRaces(){
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.race===id));
   img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png?v=20261114`;button.append(img);
-  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id});};box.append(button);
+  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id,look:{}});};box.append(button);
  }
  $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
 }
@@ -59,7 +60,7 @@ function renderBodies(){
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.gender===value));
   img.alt='';img.width=36;img.height=36;img.src=`body/${file}.png?v=20261114`;button.append(img);
-  button.onclick=()=>{if(outfit.gender!==value)commit({...outfit,gender:value});};box.append(button);
+  button.onclick=()=>{if(outfit.gender!==value)commit({...outfit,gender:value,look:{}});};box.append(button);
  }
  $('body-name').textContent=outfit.gender?'Female':'Male';
 }
@@ -100,6 +101,50 @@ function renderItems(){
 }
 function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
+
+// ---- Appearance (skin, face, hair, facial hair / markings / piercings ...) and animation
+const ANIMATION_KEY='octobot-outfitter-animation';
+const customizationCache=new Map();let lookOptions=[],animationPaused=false;
+async function loadLookOptions(chrModelId){
+ if(!Number.isInteger(chrModelId))return [];
+ try{
+  if(!customizationCache.has(chrModelId))customizationCache.set(chrModelId,getJson(`${endpoint}/api/outfitter/assets/meta/charactercustomization/${chrModelId}.json`));
+  return visibleOptions(await customizationCache.get(chrModelId));
+ }catch{customizationCache.delete(chrModelId);return [];}
+}
+function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
+function renderLook(){
+ const box=$('look-options');box.replaceChildren();
+ if(!lookOptions.length){const p=document.createElement('p');p.className='muted';p.textContent='Appearance options are unavailable for this character.';box.append(p);$('look-reset').disabled=true;return;}
+ $('look-reset').disabled=!Object.keys(outfit.look||{}).length;
+ for(const option of lookOptions){
+  const row=document.createElement('div'),name=document.createElement('span'),stepper=document.createElement('div'),value=document.createElement('span');
+  row.className='look-option';name.className='look-name';name.textContent=option.name;stepper.className='look-stepper';value.className='look-value';value.textContent=choiceLabel(option,outfit.look);
+  const make=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.textContent=text;button.setAttribute('aria-label',`${label} ${option.name}`);button.onclick=()=>changeLook(stepLook(lookOptions,outfit.look,option.id,delta));return button;};
+  stepper.append(make('Previous',-1,'‹'),value,make('Next',1,'›'));row.append(name,stepper);box.append(row);
+ }
+}
+// Appearance is part of the saved and shared outfit. The live model is updated in place so there is no reload.
+function changeLook(look){
+ outfit={...outfit,look};persist();renderLook();
+ const actor=characterActor();
+ if(actor){
+  try{actor.setAppearance({options:lookPairs(lookOptions,look),sheathMain:actor.k,sheathOff:actor.x});return;}catch{}
+ }
+ renderModel();
+}
+function setupAnimation(){
+ const actor=characterActor(),select=$('animation'),pause=$('anim-pause');
+ if(!actor||!actor.isLoaded?.()){return;}
+ const names=new Set();for(let i=0;i<actor.getNumAnimations();i++){const name=actor.getAnimation(i);if(name)names.add(name);}
+ const list=[...names].sort((a,b)=>a==='Stand'?-1:b==='Stand'?1:a.localeCompare(b));
+ select.replaceChildren(...list.map(name=>new Option(name,name)));
+ select.disabled=!list.length;pause.disabled=!list.length;animationPaused=false;pause.setAttribute('aria-pressed','false');pause.textContent='Pause';
+ let saved='';try{saved=localStorage.getItem(ANIMATION_KEY)||'';}catch{}
+ const choice=list.includes(saved)?saved:list.includes('Stand')?'Stand':list[0];
+ if(!choice)return;
+ select.value=choice;try{actor.setAnimation(choice,true);}catch{}
+}
 function tuneCamera(r){
  const jq=window.jQuery;if(!r||!jq)return;
  // Replaces the viewer's document-level pointer handler. The viewer re-registers its own each time it starts.
@@ -127,6 +172,9 @@ async function renderModel(){
   // Detect an undeployed service before constructing a viewer that would stay blank.
   const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
   await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
+  lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
+  if(token!==revision)return;
+  renderLook();
   const unavailable=[],approximated=[],approximatedByIcon=[];let outdatedService=false;
   // First display ID in the list whose model files exist in the Classic library, or null.
   const usableDisplay=async(data,slot)=>{
@@ -163,7 +211,7 @@ async function renderModel(){
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
-  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
   tuneCamera(viewer.renderer);
@@ -173,7 +221,7 @@ async function renderModel(){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){$('model-status').hidden=true;return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){$('model-status').hidden=true;setupAnimation();return;}
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
    setTimeout(check,250);
   };check();
@@ -206,6 +254,9 @@ async function start(){
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
  $('reset').onclick=()=>commit(emptyOutfit(),'Outfit reset.');$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
+ $('look-reset').onclick=()=>changeLook({});
+ $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}animationPaused=false;$('anim-pause').setAttribute('aria-pressed','false');$('anim-pause').textContent='Pause';}catch{}try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
+ $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;animationPaused=!animationPaused;try{actor.setAnimPaused(animationPaused);}catch{}$('anim-pause').setAttribute('aria-pressed',String(animationPaused));$('anim-pause').textContent=animationPaused?'Play':'Pause';};
  $('save').onclick=()=>{$('outfit-name').value='';$('save-dialog').showModal();$('outfit-name').focus();};$('cancel-save').onclick=()=>$('save-dialog').close();
  $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const entry={name,outfit:structuredClone(outfit)},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
  $('share').onclick=()=>copy(shareUrl(),'Outfit link copied.');
