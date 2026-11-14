@@ -78,6 +78,8 @@ function fakeDb(rows){
   const state={inserts:[]};
   return {state,prepare:sql=>({bind:(...args)=>({
     all:async()=>{
+      if(sql.includes("type='dmf_status'"))return {results:rows.dmfStatus||[]};
+      if(sql.includes("type='dmf_sighting'"))return {results:rows.dmfSightings||[]};
       if(sql.includes("json_extract"))return {results:rows.sessions.filter(r=>r.role===args[1]).map(r=>({observed_at:r.observed_at,payload_json:JSON.stringify(r.payload)})).reverse()};
       if(sql.includes("type='world_buff_drop'"))return {results:rows.drops.map(r=>({type:'world_buff_drop',account:r.account,role:r.role,observed_at:r.observed_at,payload_json:JSON.stringify(r.payload)}))};
       if(sql.includes("session_online"))return {results:[]};
@@ -139,3 +141,58 @@ test('ingest validation, authentication and CORS are unchanged',async()=>{
 });
 
 test('MIN_SAMPLES gate is the documented five',()=>assert.equal(MIN_SAMPLES,5));
+
+test('DMF ingress validates role, account, realm, site and direct sightings',async()=>{
+  const env={DB:fakeDb({sessions:[],who:[],drops:[]}),METRICS_PUSH_TOKEN:'secret'};
+  const base={type:'dmf_sighting',time:new Date().toISOString(),realm:"N'Zoth",
+    account:'OBPVEDMFA',role:'dmfa',site:'elwynn',npc:'Sayge',source:'onsite',confirmed:true};
+  const post=async body=>worker.fetch(new Request('https://m.test/api/ingest',{
+    method:'POST',headers:{authorization:'Bearer secret','content-type':'application/json'},
+    body:JSON.stringify(body),
+  }),env);
+  assert.equal((await post(base)).status,202);
+  assert.equal((await post({...base,account:'OBPVESW'})).status,400);
+  assert.equal((await post({...base,role:'dmfh'})).status,400);
+  assert.equal((await post({...base,site:'mulgore'})).status,400);
+  assert.equal((await post({...base,realm:"Y'Shaarj"})).status,400);
+  assert.equal((await post({...base,source:'player_claim'})).status,400);
+  assert.equal((await post({...base,confirmed:false})).status,400);
+  assert.equal((await post({...base,type:'dmf_status',connected:true})).status,202);
+  assert.equal((await post({...base,type:'dmf_status',connected:'yes'})).status,400);
+  assert.equal(env.DB.state.inserts.length,2);
+  assert.equal(JSON.parse(env.DB.state.inserts[0][5]).npc,'Sayge');
+});
+
+test('DMF summary distinguishes sightings, silent accounts and stale connections',async()=>{
+  const now=Date.now();
+  const row=(account,role,when,payload)=>({
+    account,role,observed_at:iso(when),payload_json:JSON.stringify(payload),
+  });
+  const rows={
+    sessions:[],who:[],drops:[],
+    dmfStatus:[
+      row('OBPVEDMFA','dmfa',now-30_000,{site:'elwynn',connected:true,queries:10}),
+      row('OBPVEDMFH','dmfh',now-30_000,{site:'mulgore',connected:true,queries:12}),
+    ],
+    dmfSightings:[
+      row('OBPVEDMFA','dmfa',now-120_000,{site:'elwynn',confirmed:true,npc:'Sayge',source:'onsite'}),
+    ],
+  };
+  const res=await worker.fetch(new Request("https://m.test/api/summary?realm=N'Zoth"),{DB:fakeDb(rows)});
+  assert.equal(res.status,200);
+  const realm=(await res.json()).realms[0];
+  assert.equal(realm.darkmoon.sites.elwynn.collectorStatus,'online');
+  assert.equal(realm.darkmoon.sites.elwynn.npc,'Sayge');
+  assert.equal(realm.darkmoon.sites.elwynn.fresh,true);
+  assert.equal(realm.darkmoon.sites.mulgore.collectorStatus,'online');
+  assert.equal(realm.darkmoon.sites.mulgore.lastConfirmedAt,null);
+  assert.equal(realm.darkmoon.latestConfirmed.site,'elwynn');
+  assert.equal(JSON.stringify(realm.darkmoon).includes('"absent"'),false);
+  rows.dmfStatus=[row('OBPVEDMFA','dmfa',now-10*MIN,{site:'elwynn',connected:false})];
+  rows.dmfSightings=[row('OBPVEDMFA','dmfa',now-7*60*MIN,{site:'elwynn',confirmed:true,npc:'Sayge'})];
+  const stale=await worker.fetch(new Request("https://m.test/api/summary?realm=N'Zoth"),{DB:fakeDb(rows)});
+  const older=(await stale.json()).realms[0].darkmoon.sites.elwynn;
+  assert.equal(older.collectorStatus,'stale');
+  assert.equal(older.fresh,false);
+  assert.ok(older.lastConfirmedAt);
+});

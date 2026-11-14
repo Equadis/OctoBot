@@ -1,0 +1,39 @@
+name: Validate Darkmoon Faire monitoring pipeline
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/world-buff-tracker/**'
+      - 'cloudflare/octometrics/**'
+      - '.github/workflows/dmf-monitor-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/world-buff-tracker/package-lock.json
+      - name: Install tracker packages
+        working-directory: services/world-buff-tracker
+        run: npm ci
+      - name: Check TypeScript
+        working-directory: services/world-buff-tracker
+        run: npm run typecheck
+      - name: Compile DMF-only entrypoint
+        working-directory: services/world-buff-tracker
+        run: npm run build
+      - name: Tracker unit tests
+        working-directory: services/world-buff-tracker
+        run: npm test
+      - name: Cloudflare worker regression tests
+        run: node --test cloudflare/octometrics/tests/*.test.mjs

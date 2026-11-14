@@ -3,24 +3,33 @@
  *  existing field and adds per-head (Onyxia / Nefarian) raid intelligence: see raid-intel.mjs. */
 import {RAIDS,headFromYell,pairSessions,learnDurations,summariseDrops,buildHead} from "./raid-intel.mjs";
 const ALLOWED_REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
-const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate"]);
+const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate","dmf_status","dmf_sighting"]);
 const ALLOWED_ACCOUNTS={
   "N'Zoth":{sw:"OBPVESW",org:"OBPVEORG",bb:"OBPVEBB"},
   "Y'Shaarj":{sw:"OBPVPSW",org:"OBPVPORG",bb:"OBPVPBB"},
   "C'Thun":{sw:"OBHCSW",org:"OBHCORG",bb:"OBHCBB"},
 };
+const DMF_ROLES={dmfa:{account:"OBPVEDMFA",site:"elwynn"},dmfh:{account:"OBPVEDMFH",site:"mulgore"}};
 const ALLOWED_ORIGIN="https://equadis.github.io";
 function cors(req){return {"Access-Control-Allow-Origin":ALLOWED_ORIGIN,"Access-Control-Allow-Methods":"GET,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type","Vary":"Origin"};}
 function json(body,status=200,req=null){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...(req?cors(req):{})}});}
 function validRecord(x){
-  return x&&typeof x==="object"&&ALLOWED_TYPES.has(x.type)&&ALLOWED_REALMS.has(x.realm)&&["sw","org","bb"].includes(x.role)
-    &&x.account===ALLOWED_ACCOUNTS[x.realm][x.role]
-    &&typeof x.time==="string"&&Number.isFinite(Date.parse(x.time))
-    &&Math.abs(Date.now()-Date.parse(x.time))<30*60*1000;
+  if(!x||typeof x!=="object"||!ALLOWED_TYPES.has(x.type)||!ALLOWED_REALMS.has(x.realm)
+    ||typeof x.time!=="string"||!Number.isFinite(Date.parse(x.time))
+    ||Math.abs(Date.now()-Date.parse(x.time))>=30*60*1000)return false;
+  if(x.type==="dmf_status"||x.type==="dmf_sighting"){
+    const expected=DMF_ROLES[x.role];
+    if(!expected||x.realm!=="N'Zoth"||x.account!==expected.account||x.site!==expected.site)return false;
+    if(x.type==="dmf_status")return typeof x.connected==="boolean"&&
+      (x.queries===undefined||(Number.isInteger(x.queries)&&x.queries>=0&&x.queries<=500));
+    return x.confirmed===true&&x.source==="onsite"&&typeof x.npc==="string"&&
+      x.npc.trim().length>0&&x.npc.length<=100;
+  }
+  return ["sw","org","bb"].includes(x.role)&&x.account===ALLOWED_ACCOUNTS[x.realm][x.role];
 }
 /** Never store entire arbitrary client JSON: project only non-secret telemetry fields. */
 function sanitise(e){
-  const keep=["zone","zoneName","playersListed","serverWhoOnline","listCapped","activity","activityStart","activityEnd","activityChange","observationOnly","clearConfirmed","population","source","valid","buff","faction","sender","text","confirmed","reason","fatal"];
+  const keep=["zone","zoneName","playersListed","serverWhoOnline","listCapped","activity","activityStart","activityEnd","activityChange","observationOnly","clearConfirmed","population","source","valid","buff","faction","sender","text","confirmed","reason","fatal","site","npc","connected","queries"];
   const p={};
   for(const k of keep){
     const v=e[k];
@@ -43,6 +52,45 @@ async function learnedFor(env,realm,raid){
   const value=learnDurations(pairSessions(rows.results.map(decode).reverse()),raid);
   learnedCache.set(key,{at:Date.now(),value});
   return value;
+}
+/** Direct NPC observations plus collector health. Silence never implies Faire absence. */
+async function darkmoonSummary(env,realm){
+  const sites={
+    elwynn:{account:"OBPVEDMFA",collectorStatus:"unknown",lastHeartbeatAt:null,lastConfirmedAt:null,npc:null,fresh:false},
+    mulgore:{account:"OBPVEDMFH",collectorStatus:"unknown",lastHeartbeatAt:null,lastConfirmedAt:null,npc:null,fresh:false},
+  };
+  if(realm!=="N'Zoth")return {sites,latestConfirmed:null};
+  const [statusRows,sightingRows]=await Promise.all([
+    env.DB.prepare("SELECT account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='dmf_status' ORDER BY id DESC LIMIT 30").bind(realm).all(),
+    env.DB.prepare("SELECT account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='dmf_sighting' ORDER BY id DESC LIMIT 30").bind(realm).all(),
+  ]);
+  const statuses=new Set(),sightings=new Set();
+  for(const e of statusRows.results.map(decode)){
+    if(statuses.has(e.role))continue;
+    const known=DMF_ROLES[e.role];
+    if(!known||e.account!==known.account)continue;
+    statuses.add(e.role);
+    const site=sites[known.site];
+    site.lastHeartbeatAt=e.observed_at;
+    site.collectorStatus=!isFresh(e.observed_at,180)?"stale":e.payload.connected===true?"online":"offline";
+  }
+  for(const e of sightingRows.results.map(decode)){
+    if(sightings.has(e.role))continue;
+    const known=DMF_ROLES[e.role];
+    if(!known||e.account!==known.account||e.payload.site!==known.site||e.payload.confirmed!==true)continue;
+    sightings.add(e.role);
+    const site=sites[known.site];
+    site.lastConfirmedAt=e.observed_at;
+    site.npc=e.payload.npc;
+    site.fresh=isFresh(e.observed_at,6*60*60);
+  }
+  const latest=Object.entries(sites)
+    .filter(([,site])=>site.lastConfirmedAt)
+    .sort((a,b)=>Date.parse(b[1].lastConfirmedAt)-Date.parse(a[1].lastConfirmedAt))[0];
+  return {sites,latestConfirmed:latest?{
+    site:latest[0],at:latest[1].lastConfirmedAt,npc:latest[1].npc,
+    account:latest[1].account,fresh:latest[1].fresh,
+  }:null};
 }
 async function summary(env,realm){
   // Restrict scans by (realm,type,id) index. A successful who can supply population even if
@@ -82,7 +130,8 @@ async function summary(env,realm){
     const learned=who?await learnedFor(env,realm,raid):null;
     heads[raid.head]=buildHead({raid,latestWho:who,learned,drops:drops[raid.head],now});
   }
-  return {realm,population,raids,buffs,sessions,heads,unattributedDrops:drops.unknown};
+  const darkmoon=await darkmoonSummary(env,realm);
+  return {realm,population,raids,buffs,sessions,heads,unattributedDrops:drops.unknown,darkmoon};
 }
 export default {
   async fetch(request,env){
