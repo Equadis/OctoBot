@@ -85,3 +85,32 @@ The website tolerates a Worker without these fields (it shows NO DATA), so the W
 ```bash
 node --test cloudflare/octometrics/tests/*.test.mjs
 ```
+
+
+## Darkmoon Faire ingestion extension
+
+This repository also defines a **separately deployed** DMF-only Railway process
+(`services/world-buff-tracker`, start command `npm run start:dmf`).
+The receiver accepts authenticated `dmf_status` and `dmf_sighting`
+events only from the exact N'Zoth combinations:
+
+| Role | Account | Site |
+|---|---|---|
+| `dmfa` | `OBPVEDMFA` | `elwynn` |
+| `dmfh` | `OBPVEDMFH` | `mulgore` |
+
+Status reports an actively connected character separately from the last
+confirmed NPC sighting. A sighting requires `confirmed: true` and
+`source: onsite`; no NPC match is **not** sent as a negative sighting.
+The summary gains `darkmoon.sites.elwynn`, `darkmoon.sites.mulgore`,
+and `darkmoon.latestConfirmed`. Site properties include
+`collectorStatus` (`online`/`offline`/`stale`/`unknown`),
+`lastHeartbeatAt`, `lastConfirmedAt`, `npc` and `fresh`
+(direct sighting no older than six hours).
+
+The existing `metric_events` D1 table works unchanged; no migration or
+new Worker is necessary. Deploy the updated Worker before starting the
+new Railway accounts (otherwise they receive HTTP 400).
+Run `node --test cloudflare/octometrics/tests/*.test.mjs` before deploying.
+This extension adds API data; it does **not** automatically implement a
+visual DMF panel on the OctoBot website.
