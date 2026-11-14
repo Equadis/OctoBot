@@ -67,7 +67,7 @@ test('titles use the Friz Quadrata stack on every page, with sub-headings left a
  assert.ok(!/url\([^)]*\.(?:ttf|otf|woff2?)/i.test(css.slice(css.indexOf('@font-face'))),'the commercial font file is not bundled');
  assert.match(css,/body h1,body h2,body \.site-header h1,body\.planner-view \.site-header h1,\r?\nbody \.section-title h2,body \.panel-head h3,body \.world-panel h2,body \.world-panel h3,body \.look-heading h3\{font-family:var\(--title-font\);font-weight:700\}/);
  assert.match(css,/font-weight:700;src:local\("Friz Quadrata TT Bold"\)/); // bold face
- for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261114-home1/,`/${route}`);
+ for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261114-icons1/,`/${route}`);
 });
 
 test('the home page links to every tool with a large button and sends old Population links to /population/',()=>{
@@ -91,5 +91,21 @@ test('the OctoBot logo links home from every tool page',()=>{
   const link=html.match(/<a class="site-home" href="([^"]*)"[^>]*><img class="site-logo"/);
   assert.ok(link,`logo link on /${route}`);
   assert.equal(new URL(link[1],new URL(route,BASE)).href,BASE);
+ }
+});
+
+test('header icon URLs are resolved against the page, so they also work under /OctoBot/ on GitHub Pages',()=>{
+ // A url() stored in a CSS custom property resolves against the stylesheet, which pointed at the wrong folder.
+ const css=readFileSync(new URL('site-theme.css',docs),'utf8');
+ assert.ok(!css.includes('var(--icon)'));
+ for(const route of ['',...PAGES]){
+  const html=markup(route);
+  assert.ok(!html.includes('--icon:url('),`/${route}`);
+  const masks=[...html.matchAll(/style="-webkit-mask:url\(([^)]*)\) center\/contain no-repeat;mask:url\(\1\) center\/contain no-repeat"/g)].map(m=>m[1]);
+  assert.equal(masks.length,2,`/${route}`);
+  for(const mask of masks){
+   const path=new URL(mask,new URL(route,BASE)).pathname.replace('/OctoBot/','');
+   assert.ok(existsSync(fileURLToPath(new URL(path.split('?')[0],docs))),`${mask} exists`);
+  }
  }
 });
