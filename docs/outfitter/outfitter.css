@@ -79,3 +79,17 @@
 .look-stepper{display:flex;align-items:center;gap:6px}.look-stepper button{width:26px;height:26px;padding:0;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
 .look-value{min-width:74px;text-align:center;color:#d4dfed;font-size:12px}
 .anim-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}.anim-row label{display:flex;align-items:center;gap:8px;font-size:12px}.anim-row select{min-width:150px;max-width:240px;padding:5px 8px;font-size:12px}
+
+/* Appearance: one button per option, [‹] Name ... number [›] */
+.look-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 14px}
+.look-option{position:relative;display:block}
+.look-pill{display:flex;align-items:stretch;height:32px;background:#182333;border:1px solid #39465a;border-radius:4px}
+.look-pill.open,.look-pill:hover{border-color:#9d8a35}
+.look-pill button{background:transparent;border:0;border-radius:0;color:#c0ccda;padding:0;margin:0}
+.look-arrow{width:26px;flex:none;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;color:#a6b5c6}.look-arrow:hover{color:#f4d65c;background:#223044}
+.look-main{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px;text-align:left;font-size:12px}
+.look-main:hover{background:#1f2e43}
+.look-name{color:#d4dfed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.look-value{color:#f4d65c;min-width:0;text-align:right;font-weight:600}
+.look-menu{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;padding:8px;max-height:230px;overflow-y:auto;background:#182333;border:1px solid #52667c;border-radius:4px;box-shadow:0 6px 18px #0008}
+.look-choice{height:28px;padding:0;font-size:12px;background:#223044;border:1px solid #39465a;color:#d4dfed}.look-choice:hover,.look-choice:focus-visible{border-color:#f4d65c;color:#fff}
+.look-choice.selected{background:#3a3827;border-color:#9d8a35;color:#f4d65c}

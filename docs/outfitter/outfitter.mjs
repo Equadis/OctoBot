@@ -113,25 +113,58 @@ async function loadLookOptions(chrModelId){
  }catch{customizationCache.delete(chrModelId);return [];}
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
+// Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
+function pushAppearance(look){
+ const actor=characterActor();if(!actor)return false;
+ try{actor.setAppearance({options:lookPairs(lookOptions,look),sheathMain:actor.k,sheathOff:actor.x});return true;}catch{return false;}
+}
+let openLookMenu=null;
+function closeLookMenu({revert=true}={}){
+ if(!openLookMenu)return;
+ const {menu,pill}=openLookMenu;openLookMenu=null;
+ menu.remove();pill.classList.remove('open');
+ if(revert)pushAppearance(outfit.look); // hovering only previews; leaving without choosing restores the saved look
+}
+document.addEventListener('pointerdown',event=>{if(openLookMenu&&!openLookMenu.row.contains(event.target))closeLookMenu();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&openLookMenu){const {pill}=openLookMenu;closeLookMenu();pill.querySelector('.look-main')?.focus();}});
+function openChoiceMenu(option,row,pill){
+ closeLookMenu();
+ const menu=document.createElement('div');menu.className='look-menu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label',option.name);
+ const current=selectedChoice(option,outfit.look);
+ option.choices.forEach((choice,index)=>{
+  const item=document.createElement('button');item.type='button';item.className='look-choice'+(choice.id===current.id?' selected':'');item.setAttribute('role','option');item.setAttribute('aria-selected',String(choice.id===current.id));
+  item.textContent=String(index+1);if(choice.name)item.title=choice.name;
+  const preview=()=>pushAppearance({...outfit.look,[option.id]:choice.id}); // only while hovered or focused
+  item.addEventListener('pointerenter',preview);item.addEventListener('focus',preview);
+  item.onclick=()=>{closeLookMenu({revert:false});changeLook({...outfit.look,[option.id]:choice.id});};
+  menu.append(item);
+ });
+ menu.addEventListener('pointerleave',()=>pushAppearance(outfit.look));
+ row.append(menu);pill.classList.add('open');openLookMenu={menu,pill,row};
+ menu.querySelector('.selected')?.scrollIntoView({block:'nearest'});
+}
 function renderLook(){
+ closeLookMenu({revert:false});
  const box=$('look-options');box.replaceChildren();
  if(!lookOptions.length){const p=document.createElement('p');p.className='muted';p.textContent='Appearance options are unavailable for this character.';box.append(p);$('look-reset').disabled=true;return;}
  $('look-reset').disabled=!Object.keys(outfit.look||{}).length;
  for(const option of lookOptions){
-  const row=document.createElement('div'),name=document.createElement('span'),stepper=document.createElement('div'),value=document.createElement('span');
-  row.className='look-option';name.className='look-name';name.textContent=option.name;stepper.className='look-stepper';value.className='look-value';value.textContent=choiceLabel(option,outfit.look);
-  const make=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.textContent=text;button.setAttribute('aria-label',`${label} ${option.name}`);button.onclick=()=>changeLook(stepLook(lookOptions,outfit.look,option.id,delta));return button;};
-  stepper.append(make('Previous',-1,'‹'),value,make('Next',1,'›'));row.append(name,stepper);box.append(row);
+  // One button per option: [‹] Name ........ number [›]. The arrows cycle; the middle opens the full list.
+  const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
+  row.className='look-option';pill.className='look-pill';
+  name.className='look-name';name.textContent=option.name;
+  const index=option.choices.indexOf(selectedChoice(option,outfit.look));
+  value.className='look-value';value.textContent=String(index+1);
+  main.type='button';main.className='look-main';main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`${option.name}, option ${index+1}. Open the list`);main.append(name,value);
+  main.onclick=()=>{if(openLookMenu&&openLookMenu.pill===pill)closeLookMenu();else openChoiceMenu(option,row,pill);};
+  const arrow=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.className='look-arrow';button.textContent=text;button.setAttribute('aria-label',`${label} ${option.name}`);button.onclick=()=>{closeLookMenu({revert:false});changeLook(stepLook(lookOptions,outfit.look,option.id,delta));};return button;};
+  pill.append(arrow('Previous',-1,'‹'),main,arrow('Next',1,'›'));row.append(pill);box.append(row);
  }
 }
 // Appearance is part of the saved and shared outfit. The live model is updated in place so there is no reload.
 function changeLook(look){
  outfit={...outfit,look};persist();renderLook();
- const actor=characterActor();
- if(actor){
-  try{actor.setAppearance({options:lookPairs(lookOptions,look),sheathMain:actor.k,sheathOff:actor.x});return;}catch{}
- }
- renderModel();
+ if(!pushAppearance(look))renderModel();
 }
 function setupAnimation(){
  const actor=characterActor(),select=$('animation'),pause=$('anim-pause');
