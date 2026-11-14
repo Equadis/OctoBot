@@ -48,3 +48,49 @@ A separate metrics-only OctoMetrics Railway worker handles only `OBPVPSW` and `O
 ## Relationship to the deployed collector (14 November 2026)
 
 The live Railway service `octobot-metrics-tracker` runs the separate OctoMetrics collector (`start.mjs`), not this program. The learned-clear-duration method from this tracker has been ported into the OctoMetrics Worker (`cloudflare/octometrics`), working from events the collector already stores. Roster-cohort clear detection and Chronicle kill confirmation are **not** ported. See `cloudflare/octometrics/README.md` for the audit.
+
+
+## Dedicated DMF-only Railway service (OBPVEDMFA / OBPVEDMFH)
+
+Deploy a **separate** service in the existing Railway project using this repository,
+root directory `services/world-buff-tracker`, one replica, build command
+`npm ci && npm run build`, start command `npm run start:dmf`.
+
+The DMF start command runs **only** the existing game-client object-update
+and NPC-name detection. It does not run the raid /who pollers, guild,
+chat, whispers, public yells, Discord alerts or the main tracker scheduler.
+The existing four-account `octobot-metrics-tracker` service remains unchanged.
+
+Add the following private Railway variables (replace passwords and character names;
+do not commit them to GitHub):
+
+```dotenv
+WOW_REALM=N'Zoth
+WOW_ACCOUNT=OBPVEDMFA
+WOW_PASSWORD=<private-alliance-password>
+WOW_CHARACTER=<alliance-character-name>
+DARKMOON_WATCH_LOCATION=elwynn
+WOW_LISTENERS=[{"account":"OBPVEDMFH","password":"<private-horde-password>","character":"<horde-character-name>","darkmoonWatchLocation":"mulgore","onLogin":"none","yeller":false}]
+METRICS_PUSH_TOKEN=<same-private-token-as-Cloudflare-OctoMetrics-Worker>
+METRICS_PUSH_URL=https://octometrics.eqvoice.workers.dev/api/ingest
+```
+
+The DMF-only process refuses any account/realm/site combination other than
+OBPVEDMFA in Elwynn Forest and OBPVEDMFH in Mulgore on N'Zoth. Characters
+must be parked at their respective Faire grounds within NPC visibility.
+
+The observer issues creature-name queries **once per newly encountered NPC entry
+per connection**, using the existing `NpcWatch` guard and `isFaireNpc` roster.
+It emits direct positive `dmf_sighting` events and `dmf_status` connection
+heartbeats approximately every minute. No named NPC means **unknown**,
+not confirmation of absence. A short network outage means **stale**, not absence.
+
+**Deployment order:** deploy the changed OctoMetrics Cloudflare Worker **first**,
+then start the new Railway DMF-only service. Check the logs for two successful
+world logins and the Cloudflare `/api/summary` response for
+`darkmoon.sites.elwynn` / `darkmoon.sites.mulgore`. Confirm
+`lastConfirmedAt` only after an actual NPC match. No new D1 migration is
+required. The website UI must be connected to these fields separately.
+
+Use `WOW_LOGIN_ENABLED=false` if you need both DMF characters freed for
+manual login; do not run them simultaneously in another Railway service.
