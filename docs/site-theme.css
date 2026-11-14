@@ -76,3 +76,8 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .site-home{display:inline-flex;flex:none;border-radius:6px;line-height:0}
 .site-home:hover .site-logo,.site-home:focus-visible .site-logo{filter:brightness(1.18) drop-shadow(0 0 6px #e8c67c66)}
 .site-home:focus-visible{outline:2px solid #e8c67c;outline-offset:3px}
+
+/* Discord and donate: icons only, no box */
+.site-header .header-link{width:auto;height:auto;padding:4px;border:0;background:transparent;border-radius:4px}
+.site-header .header-link:hover,.site-header .header-link:focus-visible{border:0;background:transparent;color:#f4d65c}
+.header-icon{width:24px;height:24px}

@@ -9,6 +9,9 @@
   // Raid /who scans land roughly every 15-25 minutes in the live feed; older readings are shown as stale.
   const FRESH_RAID_MS = 30 * MINUTE;
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
+  // Set by hand until the bots can detect the Darkmoon Faire. A fresh sighting from the bots always takes priority.
+  // Set to null to go back to "Moving" when no sighting is available.
+  const MANUAL_DMF = Object.freeze({ location: 'mulgore' });
   const DAY = 86_400_000;
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
@@ -291,8 +294,12 @@
   function renderDmf() {
     const dmf = state.dmf;
     const fresh = dmf && freshAt(dmf.observedAt, FRESH_DMF_MS);
-    const sw = fresh && /^(sw|elwynn|stormwind|elwynn forest)$/.test(dmf.location);
-    const tb = fresh && /^(tb|mulgore|thunder bluff)$/.test(dmf.location);
+    const botSw = fresh && /^(sw|elwynn|stormwind|elwynn forest)$/.test(dmf.location);
+    const botTb = fresh && /^(tb|mulgore|thunder bluff)$/.test(dmf.location);
+    // No fresh bot sighting: fall back to the manual setting, and say so on the panel.
+    const manual = !(botSw || botTb) && MANUAL_DMF;
+    const sw = botSw || Boolean(manual && /^(sw|elwynn|stormwind|elwynn forest)$/.test(manual.location));
+    const tb = botTb || Boolean(manual && /^(tb|mulgore|thunder bluff)$/.test(manual.location));
     $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Moving';
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
@@ -300,8 +307,10 @@
     const description = $('dmf-description');
     description.hidden = Boolean(sw || tb);
     description.textContent = 'Faire is moving and in neither location';
-    $('dmf-observed').textContent = fresh && (sw || tb)
+    $('dmf-observed').textContent = botSw || botTb
       ? 'Last observed ' + span(Date.now() - dmf.observedAt) + ' ago · ' + dmf.source
+      : manual && (sw || tb)
+        ? 'Set manually until the bots can detect the Faire. Not a bot observation.'
       : dmf && validPast(dmf.observedAt)
         ? 'Last sighting is stale: ' + when(dmf.observedAt)
         : 'No Faire sighting at Elwynn Forest or Mulgore';
@@ -310,7 +319,7 @@
     panel.classList.toggle('faction-alliance', Boolean(sw));
     panel.classList.toggle('faction-horde', Boolean(tb));
     panel.classList.toggle('faction-moving', !(sw || tb));
-    labelState('dmf-state', sw || tb ? 'CONFIRMED' : 'NOT FOUND', sw || tb ? 'online' : 'unknown');
+    labelState('dmf-state', botSw || botTb ? 'CONFIRMED' : manual && (sw || tb) ? 'MANUAL' : 'NOT FOUND', botSw || botTb ? 'online' : manual && (sw || tb) ? 'estimated' : 'unknown');
   }
 
   async function loadMetrics() {

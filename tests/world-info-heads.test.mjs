@@ -83,3 +83,15 @@ test('missing head data shows NO DATA rather than an invented estimate',async()=
   assert.equal(text('ony-clear'),'NO DATA');
   assert.equal(text('bwl-clear'),'NO DATA');
 });
+
+test('Darkmoon Faire is set manually to Mulgore until the bots report, and a fresh bot sighting always wins',async()=>{
+  const now=Date.now();
+  const manual=await run(feed(now,{}));
+  assert.equal(manual('dmf-heading'),'Mulgore · Thunder Bluff');
+  assert.equal(manual('dmf-state'),'MANUAL');                       // never shown as a bot confirmation
+  assert.match(manual('dmf-observed'),/Set manually .* Not a bot observation/);
+  const bot=await run({generated_at:iso(now),dmf:{location:'elwynn',observedAt:iso(now-2*MIN),source:'bot'},realms:[]});
+  assert.equal(bot('dmf-heading'),'Elwynn Forest · Goldshire');
+  assert.equal(bot('dmf-state'),'CONFIRMED');
+  assert.match(bot('dmf-observed'),/Last observed/);
+});
