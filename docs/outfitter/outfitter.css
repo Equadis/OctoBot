@@ -98,3 +98,9 @@
 .look-grid{grid-template-columns:repeat(auto-fill,164px);gap:10px 12px}
 .look-menu{right:auto;min-width:100%;width:max-content;max-width:228px;grid-template-columns:repeat(5,34px)}
 @media(max-width:580px){.look-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+
+/* Character panel header: Background, Hide head and Hide back share one vertical centre line */
+.preview-heading>div{align-items:center}
+.preview-heading>div>label{display:inline-flex;align-items:center;gap:6px;height:30px;margin:0}
+.preview-heading>div>label input[type=checkbox]{margin:0}
+.backdrop-field select{margin:0;height:30px;padding-top:0;padding-bottom:0}
