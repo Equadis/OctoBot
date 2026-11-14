@@ -158,8 +158,8 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 #reset-all:hover{background:#4a292b;border-color:#c35c51}
 #reset-all:focus-visible{outline:2px solid #ff998f;outline-offset:3px}
 .additional-consumables>.buff-actions{display:flex;justify-content:flex-end;margin:8px 0}
-@media(min-width:1500px){.planner-view .planner-actions-status{position:absolute;right:calc((100% - min(1740px,100vw - 210px))/2 - 65px)}}
-@media(min-width:1280px) and (max-width:1499px){.planner-view .planner-actions-status{position:absolute;right:calc((100% - (100vw - 64px))/2)}}
+@media(min-width:1280px){.planner-view .planner-actions-status{position:absolute;right:0}}
+
 @media(max-width:560px){.planner-topbar{flex-wrap:wrap;gap:4px}.planner-topbar .page-nav{flex-basis:100%}.planner-actions-status{margin-left:auto;margin-bottom:14px}}
 
 /* Status shares the reset row; empty talent focus does not add an icon border. */
