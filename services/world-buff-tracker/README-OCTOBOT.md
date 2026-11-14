@@ -44,3 +44,7 @@ The GitHub Actions workflow `.github/workflows/import-world-buff-tracker.yml` co
 ## Complementary PvP/HC collector
 
 A separate metrics-only OctoMetrics Railway worker handles only `OBPVPSW` and `OBHCSW`, with `/who` and NPC buff monitoring disabled and `.server info` collected once a minute for each realm. It uses the existing Cloudflare D1 receiver. Total target: **four accounts, two new monitoring services**. Do not mistake a code branch or successful build for a production deployment; the existing N'Zoth test is still running independently.
+
+## Relationship to the deployed collector (14 November 2026)
+
+The live Railway service `octobot-metrics-tracker` runs the separate OctoMetrics collector (`start.mjs`), not this program. The learned-clear-duration method from this tracker has been ported into the OctoMetrics Worker (`cloudflare/octometrics`), working from events the collector already stores. Roster-cohort clear detection and Chronicle kill confirmation are **not** ported. See `cloudflare/octometrics/README.md` for the audit.

@@ -22,6 +22,7 @@
   const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' });
   const state = {
     raids: { ony: null, bwl: null },
+    heads: { onyxia: null, nefarian: null },
     buffs: { alliance: null, horde: null },
     dmf: null,
     era: null,
@@ -111,9 +112,9 @@
       const faction = String(raw.faction || name.split(':').pop()).toLowerCase();
       if (faction !== 'alliance' && faction !== 'horde') continue;
       // Only an announced city yell confirms a drop.
-      if (raw.source === 'npc_yell') buffs[faction] = { confirmedLastDropAt: raw.at };
+      if (raw.source === 'npc_yell') buffs[faction] = { confirmedLastDropAt: raw.at, ...(raw.head ? { lastHead: raw.head } : {}) };
     }
-    return { raids, buffs, observedAt: root.generated_at };
+    return { raids, buffs, heads: object(realm.heads) || null, observedAt: root.generated_at };
   }
 
   function findRaid(root, key) {
@@ -213,6 +214,7 @@
     node.append(p);
   }
 
+  function headName(head) { return head === 'bwl' || head === 'nefarian' ? 'Nefarian' : head === 'onyxia' ? 'Onyxia' : String(head); }
   function findBuff(root, faction) {
     const world = object(root.worldInfo) || object(root.world_info) || root;
     const buffs = object(world.buffs) || object(world.worldBuffs) || object(root.buffs) || {};
@@ -229,27 +231,56 @@
   }
   function renderBuff(faction) {
     const buff = state.buffs[faction];
-    const estimate = $(faction + '-estimate');
     const last = $(faction + '-last');
-    const estimateNote = $(faction + '-estimate-note');
     const lastNote = $(faction + '-last-note');
     if (buff && validPast(buff.last)) {
       last.textContent = span(Date.now() - buff.last) + ' AGO';
-      lastNote.textContent = 'Recorded ' + when(buff.last) + (buff.head ? ' · ' + (buff.head === 'bwl' ? 'Nefarian' : buff.head === 'onyxia' ? 'Onyxia' : String(buff.head)) : '');
+      lastNote.textContent = 'Recorded ' + when(buff.last) + (buff.head ? ' · ' + headName(buff.head) + ' head' : '');
     } else {
       last.textContent = 'NO DATA';
       lastNote.textContent = 'No confirmed announcement received';
     }
-    if (buff && validPast(buff.estimate, Date.now() + 365 * DAY)) {
-      const until = buff.estimate - Date.now();
-      estimate.textContent = until > 0 ? span(until) : 'WINDOW PASSED';
-      estimateNote.textContent = 'Estimated for ' + when(buff.estimate) + ' · not a guarantee';
-    } else {
-      estimate.textContent = 'NO DATA';
-      estimateNote.textContent = 'No reliable prediction available';
-    }
-    labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : buff && validPast(buff.estimate, Date.now() + 365 * DAY) ? 'ESTIMATED' : 'AWAITING DATA', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'estimated' : 'unknown');
+    labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : 'AWAITING DATA', buff && validPast(buff.last) ? 'online' : 'unknown');
   }
+
+
+  // ---- Onyxia / Nefarian: estimated clears and confirmed drops, separately per head.
+  const MIN_SAMPLES_FALLBACK = 5;
+  function dropLine(label, drop) {
+    const at = drop && drop.confirmed === true ? time(drop.at) : null;
+    return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' AGO' : 'NO DATA');
+  }
+  function renderHead(prefix, headKey) {
+    const head = state.heads[headKey];
+    const stale = !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > FRESH_RAID_MS;
+    $(prefix + '-drop-alliance').textContent = dropLine('Alliance', head && head.drops && head.drops.alliance);
+    $(prefix + '-drop-horde').textContent = dropLine('Horde', head && head.drops && head.drops.horde);
+    const out = $(prefix + '-clear'), note = $(prefix + '-clear-note'), tag = $(prefix + '-clear-tag');
+    const clear = head && head.clear;
+    tag.hidden = true;
+    if (!clear || stale) {
+      out.textContent = 'NO DATA';
+      note.textContent = stale && clear ? 'The latest estimate is too old to show.' : 'No current estimate.';
+      return;
+    }
+    const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
+    if (clear.status === 'idle') { out.textContent = 'NO RAID'; note.textContent = 'No raid in progress, so there is nothing to estimate.'; return; }
+    if (clear.status === 'learning') {
+      out.textContent = 'LEARNING';
+      note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
+      return;
+    }
+    const estimatedAt = time(clear.estimatedAt), latestAt = time(clear.latestAt), earliestAt = time(clear.earliestAt);
+    if (!Number.isFinite(estimatedAt)) { out.textContent = 'NO DATA'; note.textContent = 'No current estimate.'; return; }
+    const now = Date.now();
+    const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
+    const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '. Not a confirmed drop.';
+    tag.hidden = false;
+    if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); tag.textContent = 'ESTIMATE'; note.textContent = 'Estimated clear · ' + basis; }
+    else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'ANY MOMENT'; tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
+    else { out.textContent = 'OVERDUE'; tag.textContent = 'ESTIMATE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+  }
+  function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
 
   function findDmf(root) {
     const world = object(root.worldInfo) || object(root.world_info) || root;
@@ -287,6 +318,9 @@
       if (!object(root)) throw new Error('Invalid summary');
       state.raids.ony = normaliseRaid(findRaid(root, 'ony'), root);
       state.raids.bwl = normaliseRaid(findRaid(root, 'bwl'), root);
+      const heads = object(root.heads) || {};
+      state.heads.onyxia = object(heads.onyxia);
+      state.heads.nefarian = object(heads.nefarian);
       state.buffs.alliance = findBuff(root, 'alliance');
       state.buffs.horde = findBuff(root, 'horde');
       state.dmf = findDmf(root);
@@ -305,6 +339,8 @@
   function renderLive() {
     renderRaid('ony');
     renderRaid('bwl');
+    renderHead('ony', 'onyxia');
+    renderHead('bwl', 'nefarian');
     renderBuff('alliance');
     renderBuff('horde');
     renderDmf();

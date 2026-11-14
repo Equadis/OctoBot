@@ -67,3 +67,7 @@ This is a **proposed API contract**, not a claim that the production Worker supp
 4. Detect buff drops from verified city announcement packets, not a raid leaving the instance. If our two N'Zoth characters are both parked at Faire locations, they may not hear city yells directly; document and implement a reliable confirmation source.
 5. Validate Edge of Madness's actual rotation against OctoWoW. Until then keep the Classic Era disclaimer.
 6. Check browser console/network for \`GET /api/summary\` and the third-party Era API, then test with fresh/stale/partial summary payloads. Never expose Railway variables or tokens to the browser.
+
+## Update: per-head raid intelligence (14 November 2026)
+
+`/api/summary` now includes `heads.onyxia` and `heads.nefarian` (estimated clear, confidence, last confirmed drop per faction) and a `head` on each buff drop. The World Info page shows a live estimated-clear countdown for each lair, clearly labelled as an estimate and never as a confirmed drop. OctoWoW has no head-drop cooldown, so none is modelled, and there is no buff-duration timer. The Worker source and deployment procedure are in [`cloudflare/octometrics/README.md`](../cloudflare/octometrics/README.md). The Worker must be deployed for the live page to show estimates; until then the page shows NO DATA for them.

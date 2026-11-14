@@ -1,0 +1,11 @@
+--- a/dist-metrics/metrics/index.js	2026-11-14 20:33:40.728060800 +0000
++++ b/dist-metrics/metrics/index.js	2026-11-14 20:33:40.808629800 +0000
+@@ -36,7 +36,7 @@
+     publisher.publish({ type, time: new Date().toISOString(), realm: account.realmName, account: account.account, role: account.role, ...details });
+ }
+ function emitBuff(account, buff, details) {
+-    const key = `${account.realmName}:${buff}`;
++    const key = `${account.realmName}:${buff}:${details.faction ?? ""}`;
+     if (Date.now() - (lastBuffAt.get(key) ?? 0) < 5 * 60_000)
+         return;
+     lastBuffAt.set(key, Date.now());

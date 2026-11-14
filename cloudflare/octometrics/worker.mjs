@@ -1,0 +1,119 @@
+/** Standalone Cloudflare Worker for OctoMetrics, not a replacement for the existing OctoBot Worker.
+ *  Ingest, validation, CORS and retention are unchanged from the deployed version. /api/summary keeps every
+ *  existing field and adds per-head (Onyxia / Nefarian) raid intelligence: see raid-intel.mjs. */
+import {RAIDS,headFromYell,pairSessions,learnDurations,summariseDrops,buildHead} from "./raid-intel.mjs";
+const ALLOWED_REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
+const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate"]);
+const ALLOWED_ACCOUNTS={
+  "N'Zoth":{sw:"OBPVESW",org:"OBPVEORG",bb:"OBPVEBB"},
+  "Y'Shaarj":{sw:"OBPVPSW",org:"OBPVPORG",bb:"OBPVPBB"},
+  "C'Thun":{sw:"OBHCSW",org:"OBHCORG",bb:"OBHCBB"},
+};
+const ALLOWED_ORIGIN="https://equadis.github.io";
+function cors(req){return {"Access-Control-Allow-Origin":ALLOWED_ORIGIN,"Access-Control-Allow-Methods":"GET,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type","Vary":"Origin"};}
+function json(body,status=200,req=null){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...(req?cors(req):{})}});}
+function validRecord(x){
+  return x&&typeof x==="object"&&ALLOWED_TYPES.has(x.type)&&ALLOWED_REALMS.has(x.realm)&&["sw","org","bb"].includes(x.role)
+    &&x.account===ALLOWED_ACCOUNTS[x.realm][x.role]
+    &&typeof x.time==="string"&&Number.isFinite(Date.parse(x.time))
+    &&Math.abs(Date.now()-Date.parse(x.time))<30*60*1000;
+}
+/** Never store entire arbitrary client JSON: project only non-secret telemetry fields. */
+function sanitise(e){
+  const keep=["zone","zoneName","playersListed","serverWhoOnline","listCapped","activity","activityStart","activityEnd","activityChange","observationOnly","clearConfirmed","population","source","valid","buff","faction","sender","text","confirmed","reason","fatal"];
+  const p={};
+  for(const k of keep){
+    const v=e[k];
+    if(v===undefined||v===null)continue;
+    if(typeof v==="string")p[k]=v.slice(0,500);
+    else if(typeof v==="number"&&Number.isFinite(v))p[k]=v;
+    else if(typeof v==="boolean")p[k]=v;
+  }
+  if(Array.isArray(e.lines))p.lines=e.lines.filter(x=>typeof x==="string").slice(0,30).map(x=>x.slice(0,250));
+  return p;
+}
+function isFresh(iso,seconds=180){return typeof iso==="string"&&Date.now()-Date.parse(iso)<=seconds*1000&&Date.now()-Date.parse(iso)>=-30000;}
+function decode(r){try{return {...r,payload:JSON.parse(r.payload_json)}}catch{return {...r,payload:{}};}}
+const LEARN_TTL_MS=5*60*1000,learnedCache=new Map();
+/** Completed raid sessions change slowly, so each realm/raid is recomputed at most every few minutes per isolate. */
+async function learnedFor(env,realm,raid){
+  const key=`${realm}:${raid.role}`,hit=learnedCache.get(key);
+  if(hit&&Date.now()-hit.at<LEARN_TTL_MS)return hit.value;
+  const rows=await env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND role=? AND type='raid_who' AND json_extract(payload_json,'$.activityChange') IS NOT NULL ORDER BY id DESC LIMIT 400").bind(realm,raid.role).all();
+  const value=learnDurations(pairSessions(rows.results.map(decode).reverse()),raid);
+  learnedCache.set(key,{at:Date.now(),value});
+  return value;
+}
+async function summary(env,realm){
+  // Restrict scans by (realm,type,id) index. A successful who can supply population even if
+  // the custom `.server info` format has not yet been confirmed by a live capture.
+  const [populationRows,raidRows,buffRows,sessionRows]=await Promise.all([
+    env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('server_info','raid_who') ORDER BY id DESC LIMIT 80").bind(realm).all(),
+    env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_who' ORDER BY id DESC LIMIT 50").bind(realm).all(),
+    env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 30").bind(realm).all(),
+    env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('session_online','session_offline','session_error') ORDER BY id DESC LIMIT 30").bind(realm).all(),
+  ]);
+  const populationEvent=populationRows.results.map(decode).find(x=>isFresh(x.observed_at,180) && Number.isInteger(x.type==="server_info"?x.payload.population:x.payload.serverWhoOnline));
+  const population=populationEvent?{
+    online:populationEvent.type==="server_info"?populationEvent.payload.population:populationEvent.payload.serverWhoOnline,
+    at:populationEvent.observed_at,source:populationEvent.type,account:populationEvent.account,
+  }:null;
+  const raids={},latestWho={};
+  for(const e of raidRows.results.map(decode)){
+    if(raids[e.role])continue;
+    latestWho[e.role]=e;
+    raids[e.role]={at:e.observed_at,zone:e.payload.zoneName,players:e.payload.playersListed,active:isFresh(e.observed_at,150)?e.payload.activity:null,activityStart:e.payload.activityStart,activityEnd:e.payload.activityEnd,clearConfirmed:false};
+  }
+  const buffs={},dropEvents=[];
+  for(const e of buffRows.results.map(decode)){
+    dropEvents.push(e);
+    const key=`${e.payload.buff}:${e.payload.faction}`;
+    if(!buffs[key])buffs[key]={at:e.observed_at,buff:e.payload.buff,faction:e.payload.faction,source:e.payload.source,head:headFromYell(e.payload.text)};
+  }
+  const sessions={};
+  for(const e of sessionRows.results.map(decode)){
+    if(sessions[e.account])continue;
+    sessions[e.account]={at:e.observed_at,status:!isFresh(e.observed_at,180)?"stale":e.type==="session_online"?"online":e.type==="session_offline"?"offline":"error"};
+  }
+  // Per-head intelligence. Onyxia and Nefarian are tracked separately; estimates are never confirmed drops.
+  const drops=summariseDrops(dropEvents),now=Date.now(),heads={};
+  for(const raid of Object.values(RAIDS)){
+    const who=latestWho[raid.role]||null;
+    const learned=who?await learnedFor(env,realm,raid):null;
+    heads[raid.head]=buildHead({raid,latestWho:who,learned,drops:drops[raid.head],now});
+  }
+  return {realm,population,raids,buffs,sessions,heads,unattributedDrops:drops.unknown};
+}
+export default {
+  async fetch(request,env){
+    const url=new URL(request.url);
+    if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(request)});
+    if(!env.DB)return json({error:"D1 not configured"},503,request);
+    if(url.pathname==="/health")return json({ok:true},200,request);
+    if(request.method==="POST" && url.pathname==="/api/ingest"){
+      if(!env.METRICS_PUSH_TOKEN)return json({error:"ingest secret not configured"},503,request);
+      const auth=request.headers.get("authorization")||"";
+      if(auth!==`Bearer ${env.METRICS_PUSH_TOKEN}`)return json({error:"unauthorised"},401,request);
+      if(Number(request.headers.get("content-length")||0)>16000)return json({error:"payload too large"},413,request);
+      let e;try{e=await request.json();}catch{return json({error:"invalid JSON"},400,request);}
+      if(!validRecord(e))return json({error:"invalid telemetry event"},400,request);
+      const payload=JSON.stringify(sanitise(e));
+      if(payload.length>16000)return json({error:"payload too large"},413,request);
+      await env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,payload).run();
+      return json({ok:true},202,request);
+    }
+    if(request.method==="GET"&&url.pathname==="/api/summary"){
+      const realm=url.searchParams.get("realm");
+      if(realm&&!ALLOWED_REALMS.has(realm))return json({error:"invalid realm"},400,request);
+      const requested=realm?[realm]:[...ALLOWED_REALMS];
+      const result=await Promise.all(requested.map(r=>summary(env,r)));
+      return json({generated_at:new Date().toISOString(),realms:result},200,request);
+    }
+    return json({error:"not found"},404,request);
+  },
+  async scheduled(_event,env){
+    // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
+    // on quiet realms, so archive separately if multi-month event history becomes necessary.
+    await env.DB.prepare("DELETE FROM metric_events WHERE observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
+  }
+};
