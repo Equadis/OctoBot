@@ -59,3 +59,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 :root{--title-font:"OctoBot Title","Friz Quadrata TT","Friz Quadrata","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
 h1,h2,
 .panel-head h3,.world-panel h3,.look-heading h3{font-family:var(--title-font)}
+
+/* Date range controls: "Jump to present" on top, From/To directly against Apply, all against the right edge,
+   and every control on the same 30px height. */
+.controls .dates{display:grid;grid-template-columns:auto auto;justify-content:end;align-items:center;gap:6px 8px;margin-top:0}
+.controls .dates .date-actions{display:contents}
+.controls .dates .jump-to-present{grid-row:1;grid-column:1/-1;justify-self:end}
+.controls .dates .date-fields{grid-row:2;grid-column:1;justify-content:flex-end}
+.controls .dates .date-actions>button:not(.jump-to-present){grid-row:2;grid-column:2}
+.controls .dates .date-actions button,.controls .dates .date-actions .jump-to-present{height:30px;padding:0 12px;font-size:12px;line-height:1}
+.controls .dates input[type="date"],.controls .ranges button{height:30px;box-sizing:border-box}
