@@ -93,3 +93,8 @@
 .look-menu{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;padding:8px;max-height:230px;overflow-y:auto;background:#182333;border:1px solid #52667c;border-radius:4px;box-shadow:0 6px 18px #0008}
 .look-choice{height:28px;padding:0;font-size:12px;background:#223044;border:1px solid #39465a;color:#d4dfed}.look-choice:hover,.look-choice:focus-visible{border-color:#f4d65c;color:#fff}
 .look-choice.selected{background:#3a3827;border-color:#9d8a35;color:#f4d65c}
+
+/* Narrower appearance buttons (fixed width, not stretched to fill the row) */
+.look-grid{grid-template-columns:repeat(auto-fill,164px);gap:10px 12px}
+.look-menu{right:auto;min-width:100%;width:max-content;max-width:228px;grid-template-columns:repeat(5,34px)}
+@media(max-width:580px){.look-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
