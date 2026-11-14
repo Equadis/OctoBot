@@ -7,6 +7,9 @@
 <title>OctoBot · Server Status</title>
 <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
 <style>
+.reveal-lifespan{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:20px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:3px;background:transparent;color:#71839a;z-index:2}.reveal-lifespan[hidden]{display:none}.reveal-lifespan:hover{color:#c3d4e6;background:transparent}.reveal-lifespan:focus-visible{outline:2px solid #74c6ef;outline-offset:1px}.reveal-lifespan span{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:7px solid currentColor}.reveal-lifespan[aria-expanded=true] span{transform:rotate(180deg)}
+#timeline-lifespan-tooltip,#latency-lifespan-tooltip{top:50%;left:8px;transform:translateY(-50%);max-width:calc(100% - 8px);white-space:normal;z-index:3}
+.dates .date-actions{align-items:flex-start}.dates .date-fields{gap:7px}
 :root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#171a21;color:#e5e9ef}
 *{box-sizing:border-box}body{margin:0;padding:38px 24px}main{max-width:1180px;margin:auto}
 header{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #343c49;padding-bottom:24px}
@@ -134,14 +137,14 @@ a{color:#a7b9cf}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin
 <g id="timeline-axis"></g><g id="timeline-gaps"></g><g id="timeline-bands"></g>
 <line id="timeline-crosshair" y1="23" y2="295" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><g id="timeline-hover-dots"></g>
 <rect id="timeline-hit" x="128" y="23" width="882" height="272" fill="transparent"></rect></svg>
-<div class="tip" id="tooltip" hidden></div>
+<button id="reveal-timeline" class="reveal-lifespan" type="button" aria-expanded="false" aria-describedby="timeline-lifespan-tooltip" aria-label="Show full timeline (There is no data for this area)." hidden><span aria-hidden="true"></span></button><div class="tip" id="timeline-lifespan-tooltip" role="tooltip" hidden></div><div class="tip" id="tooltip" hidden></div>
 </div>
 <div class="legend"><span><i class="key"></i>Online / responsive</span><span><i class="key down"></i>Offline / failed</span><span><i class="key missing"></i>Unknown / unobserved</span></div>
-<div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><div class="date-fields"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"></div><div class="date-actions"><button type="button" id="jump-to-present" class="jump-to-present" disabled>Jump to present →</button><button type="button" id="apply-dates">Apply</button></div></div></div>
-<p class="muted" id="date-error" role="status"></p>
 <div class="panel-head" style="margin-top:22px"><h3>Authentication Response Time</h3></div>
 <p class="readout" id="latency-readout" aria-live="polite"></p>
-<div class="graph latency-graph"><svg viewBox="0 0 1050 170" role="img" aria-label="Authentication latency observations"><g id="latency-gaps"></g><g id="latency-axes"></g><path id="latency-path" fill="none" stroke="#74c6ef" stroke-width="2.5" stroke-linejoin="round"></path><g id="latency-points"></g><line id="latency-crosshair" y1="28" y2="138" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><circle id="latency-hover-dot" r="4" stroke="#f4fff8" stroke-width="1.5" style="display:none"></circle><rect id="latency-hit" x="128" y="20" width="882" height="130" fill="transparent"></rect></svg><div class="tip" id="latency-tooltip" hidden></div></div>
+<div class="graph latency-graph"><svg viewBox="0 0 1050 170" role="img" aria-label="Authentication latency observations"><g id="latency-gaps"></g><g id="latency-axes"></g><path id="latency-path" fill="none" stroke="#74c6ef" stroke-width="2.5" stroke-linejoin="round"></path><g id="latency-points"></g><line id="latency-crosshair" y1="28" y2="138" stroke="#a0b2c8" stroke-dasharray="4 4" style="display:none"></line><circle id="latency-hover-dot" r="4" stroke="#f4fff8" stroke-width="1.5" style="display:none"></circle><rect id="latency-hit" x="128" y="20" width="882" height="130" fill="transparent"></rect></svg><button id="latency-reveal" class="reveal-lifespan" type="button" aria-expanded="false" aria-describedby="latency-lifespan-tooltip" aria-label="Show full timeline (There is no data for this area)." hidden><span aria-hidden="true"></span></button><div class="tip" id="latency-lifespan-tooltip" role="tooltip" hidden></div><div class="tip" id="latency-tooltip" hidden></div></div>
+<div class="controls"><div class="ranges" id="ranges" role="group" aria-label="Time range"></div><div class="dates"><div class="date-fields"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"></div><div class="date-actions"><button type="button" id="jump-to-present" class="jump-to-present" disabled>Jump to present →</button><button type="button" id="apply-dates">Apply</button></div></div></div>
+<p class="muted" id="date-error" role="status"></p>
 
 
 </section>

@@ -1,7 +1,7 @@
-import {trinketSwapControls} from './trinket-swaps.mjs?v=20261113-swap-label1';
+import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-under-trinkets1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
-import {equipmentErrors} from './core/items.mjs?v=20261113-swaps1';
+import {equipmentErrors} from './core/items.mjs?v=20261114-ammo2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {characterStats} from './core/character-stats.mjs?v=20261113-swaps1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
@@ -9,7 +9,7 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261112-audit1';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261113-swaps1';
-import { itemPicker } from './item-picker.mjs?v=20261113-swaps1';
+import { itemPicker } from './item-picker.mjs?v=20261114-ammo2';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261113-swaps1';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261112-rotations1';
@@ -17,6 +17,12 @@ import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
 const $ = id => document.getElementById(id);
+// Drop the obsolete cache-busting `v` parameter from the address bar without reloading;
+// other query parameters (e.g. ?classes) and the #build fragment are preserved verbatim.
+try{
+ const kept=location.search.replace(/^\?/,'').split('&').filter(part=>part&&!/^v(=|$)/.test(part));
+ if(kept.length!==location.search.replace(/^\?/,'').split('&').filter(Boolean).length)history.replaceState(history.state,'',location.pathname+(kept.length?'?'+kept.join('&'):'')+location.hash);
+}catch{}
 let savedView=null;try{savedView=rememberedPlannerView(localStorage);}catch{}
 const selectedView=plannerView(location.href,savedView);
 const classId=selectedView==='classes'?'warrior':selectedView;
@@ -56,7 +62,7 @@ function createClasses() {
   for (const cls of CLASSES) {
     const card = element(cls.available ? 'a' : 'div', `class-card${cls.available ? ' available' : ' planned'}`);
     card.style.setProperty('--class-colour', cls.colour);
-    if (cls.available) card.href = `?class=${cls.id}&v=20261111-classes1`;
+    if (cls.available) card.href = `?class=${cls.id}`;
     else card.setAttribute('aria-disabled', 'true');
     const title = element('div', 'class-card-title');
     title.append(element('strong', '', cls.name));
@@ -121,6 +127,7 @@ function createSlots() {
     });
     const enchantLabel=element('span','slot-enchant','No enchant');
     attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
+    container.dataset.slot = slot;
     container.append(button, enchantLabel);
     slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);

@@ -8,6 +8,30 @@ export function parseDisplayId(html) {
  if(!Number.isSafeInteger(id)||id<1||id>10000000)throw Error('Item appearance not found in the OctoWoW database.');
  return id;
 }
+// OctoWoW's database uses its own display IDs, which are mostly absent from the Classic model
+// library. Wowhead Classic's item XML names the Classic appearance for original items.
+export function parseClassicDisplayId(xml,itemId) {
+ if(!xml.includes(`<item id="${itemId}"`))return null;
+ const id=Number(xml.match(/<icon\s+displayId="(\d+)"/)?.[1]);
+ return Number.isSafeInteger(id)&&id>0&&id<=10000000?id:null;
+}
+async function classicDisplayId(id,fetcher) {
+ try {
+  let url=`https://www.wowhead.com/classic/item=${id}&xml`,response;
+  for(let hop=0;hop<2;hop++) {
+   response=await fetcher(url,{redirect:'manual',signal:AbortSignal.timeout(8000),headers:{Accept:'application/xml'},cf:{cacheTtl:604800,cacheEverything:true}});
+   const location=response.status>=300&&response.status<400?response.headers.get('location'):null;
+   if(!location)break;
+   const next=new URL(location,url);
+   // Follow only within Wowhead, never to an arbitrary destination.
+   if(next.protocol!=='https:'||!/^(?:www|classic)\.wowhead\.com$/.test(next.hostname))return null;
+   url=next.href;
+  }
+  if(!response?.ok)return null;
+  const text=await response.text();
+  return text.length>2000000?null:parseClassicDisplayId(text,id);
+ } catch {return null;}
+}
 export function assetPath(path) {
  const value=path.replace(/^\/api\/outfitter\/assets\//,'');
  // Only model data and textures; no scripts, HTML, redirects or arbitrary paths.
@@ -23,7 +47,10 @@ export async function outfitter(request,fetcher=fetch) {
    const response=await fetcher(`https://octowow.st/db/?item=${id}`,{redirect:'manual',signal:AbortSignal.timeout(15000),headers:{Accept:'text/html'},cf:{cacheTtl:86400,cacheEverything:true}});
    if(!response.ok)return json({error:'Item database unavailable.'},502);
    const html=await response.text();if(html.length>2000000)throw Error('Item page too large.');
-   return json({id,displayId:parseDisplayId(html),source:`https://octowow.st/db/?item=${id}`});
+   const octoDisplayId=parseDisplayId(html),classic=await classicDisplayId(id,fetcher);
+   // The client uses the first candidate whose model files exist in the Classic library.
+   const candidates=[...new Set([classic,octoDisplayId].filter(Boolean))];
+   return json({id,displayId:candidates[0],candidates,source:`https://octowow.st/db/?item=${id}`});
   }
   const path=assetPath(url.pathname);
   if(!path)return json({error:'not_found'},404);

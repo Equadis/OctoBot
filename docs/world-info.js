@@ -6,6 +6,9 @@
   const ERA_URL = 'https://edgeofmadnesscalendar.com/api/era';
   const MINUTE = 60_000;
   const FRESH_METRICS_MS = 5 * MINUTE;
+  // Raid /who scans land roughly every 15-25 minutes in the live feed; older readings are shown as stale.
+  const FRESH_RAID_MS = 30 * MINUTE;
+  const BUFF_DURATION_MS = 2 * 60 * MINUTE; // OctoWoW DB spell 22888: 7200 second duration.
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
   const DAY = 86_400_000;
   const BOSSES = [
@@ -78,6 +81,42 @@
     return timeOf(root, 'observedAt', 'lastUpdatedAt', 'updatedAt', 'timestamp', 'time');
   }
 
+
+  // The live OctoMetrics summary lists realms; raids are keyed by watcher site and buffs by "name:faction".
+  function realmView(root) {
+    if (!object(root) || !Array.isArray(root.realms)) return root;
+    const realm = root.realms.find(r => object(r) && /n.?zoth/i.test(String(r.realm || '')));
+    if (!realm) return root;
+    const raids = {};
+    for (const raw of Object.values(object(realm.raids) || {})) {
+      if (!object(raw)) continue;
+      const zone = String(raw.zone || '');
+      const key = /onyxia/i.test(zone) ? 'onyxia' : /blackwing/i.test(zone) ? 'bwl' : null;
+      if (!key) continue;
+      const at = time(raw.at), start = time(raw.activityStart), end = time(raw.activityEnd);
+      const players = Number(raw.players);
+      const present = Number.isFinite(players) && players > 0;
+      const currentSession = present && validPast(start) && !(validPast(end) && end >= start);
+      raids[key] = {
+        observedAt: at, players: Number.isFinite(players) ? players : null,
+        active: raw.active === true || raw.active === false ? raw.active : (Number.isFinite(players) ? present : null),
+        sessions: currentSession ? [{ id: '1', startedAt: start, confidence: 'inferred' }] : [],
+        // An activityEnd older than the current activityStart belongs to the previous raid; it is not a confirmed clear.
+        lastFinishedAt: validPast(end) && (!validPast(start) || end < start || !present) ? end : null,
+        clearConfirmed: raw.clearConfirmed === true
+      };
+    }
+    const buffs = {};
+    for (const [name, raw] of Object.entries(object(realm.buffs) || {})) {
+      if (!object(raw) || !/rallying cry/i.test(String(raw.buff || name))) continue;
+      const faction = String(raw.faction || name.split(':').pop()).toLowerCase();
+      if (faction !== 'alliance' && faction !== 'horde') continue;
+      // Only an announced city yell confirms a drop.
+      if (raw.source === 'npc_yell') buffs[faction] = { confirmedLastDropAt: raw.at };
+    }
+    return { raids, buffs, observedAt: root.generated_at };
+  }
+
   function findRaid(root, key) {
     const world = object(root.worldInfo) || object(root.world_info) || root;
     const raids = first(world.raids, root.raids) || {};
@@ -121,8 +160,9 @@
     activeNode.replaceChildren();
     finished.textContent = raid && validPast(raid.lastFinishedAt)
       ? span(Date.now() - raid.lastFinishedAt) + ' AGO' : 'NO DATA';
-    count.classList.toggle('no-data', !raid || !freshAt(raid.stamp));
-    if (!raid || !freshAt(raid.stamp)) {
+    finished.title = raid && validPast(raid.lastFinishedAt) && raid.clearConfirmed !== true ? 'Roster left the zone; a boss clear is not confirmed.' : '';
+    count.classList.toggle('no-data', !raid || !freshAt(raid.stamp, FRESH_RAID_MS));
+    if (!raid || !freshAt(raid.stamp, FRESH_RAID_MS)) {
       count.textContent = 'NO DATA';
       labelState(key + '-state', raid ? 'STALE' : 'AWAITING DATA');
       evidence.textContent = raid ? 'Last /who reading is too old for a live raid status.' : 'Waiting for an in-game raid observation.';
@@ -209,6 +249,15 @@
       estimate.textContent = 'NO DATA';
       estimateNote.textContent = 'No reliable prediction available';
     }
+    const remaining = $(faction + '-remaining');
+    if (buff && validPast(buff.last)) {
+      const left = buff.last + BUFF_DURATION_MS - Date.now();
+      remaining.textContent = left > 0 ? span(left) : 'EXPIRED';
+      $(faction + '-remaining-note').textContent = left > 0 ? 'Expires ' + when(buff.last + BUFF_DURATION_MS) : 'Expired ' + span(-left) + ' ago';
+    } else {
+      remaining.textContent = 'NO DATA';
+      $(faction + '-remaining-note').textContent = '2 hour duration from the last confirmed drop';
+    }
     labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : buff && validPast(buff.estimate, Date.now() + 365 * DAY) ? 'ESTIMATED' : 'AWAITING DATA', buff && (validPast(buff.last) || validPast(buff.estimate, Date.now() + 365 * DAY)) ? 'estimated' : 'unknown');
   }
 
@@ -223,22 +272,25 @@
     const fresh = dmf && freshAt(dmf.observedAt, FRESH_DMF_MS);
     const sw = fresh && /^(sw|elwynn|stormwind|elwynn forest)$/.test(dmf.location);
     const tb = fresh && /^(tb|mulgore|thunder bluff)$/.test(dmf.location);
-    const location = sw ? 'SW' : tb ? 'TB' : 'MIA';
-    $('dmf-location').textContent = location;
-    $('dmf-description').textContent = sw ? 'Elwynn Forest · near Goldshire' : tb ? 'Mulgore · below Thunder Bluff' : 'No currently verified Faire location';
+    const name = sw ? 'Elwynn Forest' : tb ? 'Mulgore' : 'Moving';
+    $('dmf-location').textContent = name;
+    const icon = $('dmf-icon');
+    icon.hidden = !(sw || tb);
+    if (sw || tb) icon.src = sw ? 'img/alliance-crest.png' : 'img/horde-crest.png';
+    $('dmf-description').textContent = sw ? 'Near Goldshire' : tb ? 'Below Thunder Bluff' : 'Faire is moving and in neither location';
     $('dmf-observed').textContent = fresh && (sw || tb)
       ? 'Last observed ' + span(Date.now() - dmf.observedAt) + ' ago · ' + dmf.source
       : dmf && validPast(dmf.observedAt)
         ? 'Last sighting is stale: ' + when(dmf.observedAt)
-        : 'NPC / addon sighting integration pending';
-    labelState('dmf-state', sw || tb ? 'CONFIRMED' : 'UNCONFIRMED', sw || tb ? 'online' : 'unknown');
+        : 'No Faire sighting at Elwynn Forest or Mulgore';
+    labelState('dmf-state', sw || tb ? 'CONFIRMED' : 'NOT FOUND', sw || tb ? 'online' : 'unknown');
   }
 
   async function loadMetrics() {
     try {
       const response = await fetch(METRICS_URL, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
       if (!response.ok) throw new Error('HTTP ' + response.status);
-      const root = await response.json();
+      const root = realmView(await response.json());
       if (!object(root)) throw new Error('Invalid summary');
       state.raids.ony = normaliseRaid(findRaid(root, 'ony'), root);
       state.raids.bwl = normaliseRaid(findRaid(root, 'bwl'), root);

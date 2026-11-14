@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assetPath,parseDisplayId,outfitter} from '../src/outfitter.js';
+import {assetPath,parseDisplayId,parseClassicDisplayId,outfitter} from '../src/outfitter.js';
 import worker from '../src/index.js';
 test('appearance proxy accepts only model data and textures at the fixed origin',()=>{
  for(const path of ['meta/character/1.json','meta/charactercustomization/1.json','meta/armor/1/31260.json','meta/item/123.json','m2/119940.m2','skin/471055.skin','skel/123.skel','anim/123.anim','phys/123.phys','textures/123.webp','bone/123.bone'])assert.equal(assetPath('/api/outfitter/assets/'+path),path);
@@ -8,12 +8,26 @@ test('appearance proxy accepts only model data and textures at the fixed origin'
  assert.equal(parseDisplayId('<div>Display ID: 31260</div>'),31260);
  assert.throws(()=>parseDisplayId('<html>item not found</html>'));
 });
-test('item lookup fetches only the OctoWoW item page and returns its display ID',async()=>{
- let upstream;
- const response=await outfitter(new Request('https://api.test/api/outfitter/item/16866'),async(url,options)=>{upstream=url;assert.equal(options.redirect,'manual');return new Response('<div>Display ID: 31260</div>');});
- assert.equal(upstream,'https://octowow.st/db/?item=16866');
- assert.equal((await response.json()).displayId,31260);
+test('item lookup returns the Classic appearance first and keeps the OctoWoW ID as a fallback',async()=>{
+ const urls=[];
+ const response=await outfitter(new Request('https://api.test/api/outfitter/item/16907'),async(url,options)=>{
+  urls.push(url);assert.equal(options.redirect,'manual');
+  return new Response(url.startsWith('https://octowow.st/')?'<div>Display ID: 33651</div>':'<wowhead><item id="16907"><icon displayId="32815">x</icon></item></wowhead>');
+ });
+ assert.deepEqual(urls,['https://octowow.st/db/?item=16907','https://www.wowhead.com/classic/item=16907&xml']);
+ const body=await response.json();
+ assert.equal(body.displayId,32815);assert.deepEqual(body.candidates,[32815,33651]);
  assert.equal(response.headers.get('access-control-allow-origin'),'*');
+});
+test('items missing from Wowhead Classic fall back to the OctoWoW display ID',async()=>{
+ const response=await outfitter(new Request('https://api.test/api/outfitter/item/61286'),async(url)=>url.startsWith('https://octowow.st/')?new Response('<div>Display ID: 40001</div>'):new Response('',{status:404}));
+ const body=await response.json();assert.equal(body.displayId,40001);assert.deepEqual(body.candidates,[40001]);
+ assert.equal(parseClassicDisplayId('<item id="5"><icon displayId="9">',6),null);
+});
+test('Wowhead redirects are only followed within Wowhead',async()=>{
+ const urls=[];
+ await outfitter(new Request('https://api.test/api/outfitter/item/16907'),async(url)=>{urls.push(url);return url.startsWith('https://octowow.st/')?new Response('<div>Display ID: 1</div>'):new Response(null,{status:302,headers:{location:'https://evil.test/x'}});});
+ assert.equal(urls.length,2);
 });
 test('assets stream with correct types; missing custom appearances are explicit',async()=>{
  const request=new Request('https://api.test/api/outfitter/assets/meta/armor/1/31260.json');

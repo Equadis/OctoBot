@@ -1,9 +1,14 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
+import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems} from './state.mjs';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
 function feedback(message){$('feedback').textContent=message;}
+const SLOT_KEYS={1:'head',3:'shoulder',15:'back',5:'chest',4:'shirt',19:'tabard',9:'wrist',10:'hands',6:'waist',7:'legs',8:'feet',16:'mainhand',17:'offhand',18:'ranged'};
+const RACE_KEYS={1:'human',2:'orc',3:'dwarf',4:'nightelf',5:'undead',6:'tauren',7:'gnome',8:'troll'};
+// Rotation and panning are scaled from the viewer's defaults, which are far too fast for a small panel.
+const ROTATE_SENSITIVITY=0.3;
 function icon(item){return item?.icon&&/^[a-z0-9_]+$/i.test(item.icon)?`https://wow.zamimg.com/images/wow/icons/large/${item.icon.toLowerCase()}.jpg`:null;}
 function image(item){const img=document.createElement('img');img.alt='';const src=icon(item);if(src)img.src=src;img.addEventListener('error',()=>img.removeAttribute('src'),{once:true});return img;}
 function safeRead(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
@@ -11,12 +16,30 @@ function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(outfit));}cat
 function saveLibrary(){try{localStorage.setItem(SAVED,JSON.stringify(saved));return true;}catch{feedback('Could not save outfit. Export it to keep a copy.');return false;}}
 function sanitiseGear(value){const next=normalise(value);for(const {id,types} of SLOTS){const item=byId.get(next.gear[id]);if(next.gear[id]&&(!item||!types.includes(item.slot)))throw Error(`Unknown item or wrong slot: ${next.gear[id]}.`);}if(byId.get(next.gear[16])?.slot===17)delete next.gear[17];return next;}
 function commit(next,message){outfit=sanitiseGear(next);persist();renderSlots();renderItems();if(message)feedback(message);renderModel();}
+function renderRaces(){
+ const box=$('race-picker');box.replaceChildren();
+ for(const [id,name] of RACES){
+  const button=document.createElement('button'),img=document.createElement('img');
+  button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.race===id));
+  img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png`;button.append(img);
+  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id});};box.append(button);
+ }
+ $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
+}
 function renderSlots(){
- $('race').value=String(outfit.race);$('gender').value=String(outfit.gender);$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
+ renderRaces();$('gender').value=String(outfit.gender);$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
  $('left-slots').replaceChildren();$('right-slots').replaceChildren();
  SLOTS.forEach((slot,index)=>{
-  const item=byId.get(outfit.gear[slot.id]),button=document.createElement('button');button.className='slot';button.type='button';button.setAttribute('aria-pressed',String(selectedSlot===slot.id));button.title=`${slot.name}: ${item?.name||'Empty'}`;
-  button.append(image(item));const text=document.createElement('span'),name=document.createElement('small'),value=document.createElement('span');name.textContent=slot.name;value.className=`item-name quality-${item?.quality??1}`;value.textContent=item?.name||'Empty';text.append(name,value);button.append(text);button.onclick=()=>{selectedSlot=slot.id;$('results').scrollTop=0;$('type').value='';renderTypes();renderSlots();renderItems();};$(index<7?'left-slots':'right-slots').append(button);
+  const item=byId.get(outfit.gear[slot.id]),container=document.createElement('div'),button=document.createElement('button');
+  container.className='slot'+(item?' has-item':'');container.dataset.side=index<7?'left':'right';if(item)container.dataset.quality=String(item.quality??1);
+  button.type='button';button.setAttribute('aria-pressed',String(selectedSlot===slot.id));button.title=`${slot.name}: ${item?.name||'Empty'}`;
+  const picture=document.createElement('img');picture.className='slot-icon';picture.alt='';
+  const fallback=iconUrl(SLOT_ICONS[SLOT_KEYS[slot.id]]);picture.src=icon(item)||fallback;picture.addEventListener('error',()=>{if(picture.src!==fallback)picture.src=fallback;},{once:true});
+  const copy=document.createElement('span'),name=document.createElement('span'),value=document.createElement('span');
+  copy.className='slot-copy';name.className='slot-name';name.textContent=slot.name;value.className=`item-name quality-${item?.quality??1}`;value.textContent=item?.name||'Empty';
+  copy.append(name,value);button.append(picture,copy);
+  button.onclick=()=>{selectedSlot=slot.id;$('results').scrollTop=0;$('type').value='';renderTypes();renderSlots();renderItems();};
+  container.append(button);$(index<7?'left-slots':'right-slots').append(container);
  });
  $('browser-title').textContent=SLOTS.find(s=>s.id===selectedSlot).name;$('clear-slot').disabled=!outfit.gear[selectedSlot];
 }
@@ -27,7 +50,10 @@ function renderItems(){
  const results=$('results'),scrollTop=results.scrollTop,focusedId=results.contains(document.activeElement)?document.activeElement.dataset.itemId:null;results.replaceChildren();
  for(const item of rows){
   const row=document.createElement('div');row.className='result'+(outfit.gear[selectedSlot]===item.id?' equipped':'');const thumbnail=image(item);thumbnail.loading='lazy';row.append(thumbnail);
-  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);button.setAttribute('aria-label',`Try on ${item.name}`);const name=document.createElement('strong'),detail=document.createElement('small');name.className=`quality-${item.quality}`;name.textContent=item.name;detail.textContent=`Item ${item.id} · Level ${item.reqlevel||1}`;button.append(name,detail);button.onclick=()=>{
+  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);button.setAttribute('aria-label',`Try on ${item.name}`);
+  const title=document.createElement('span'),name=document.createElement('span'),level=document.createElement('span'),detail=document.createElement('span');
+  title.className='item-row-name';name.className=`quality-${item.quality}`;name.textContent=item.name;level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
+  detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
   const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);row.append(button,link);results.append(row);
@@ -37,6 +63,24 @@ function renderItems(){
 }
 function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
+function tuneCamera(r){
+ const jq=window.jQuery;if(!r||!jq)return;
+ // Replaces the viewer's document-level pointer handler. The viewer re-registers its own each time it starts.
+ jq(document).off('mousemove.webgl touchmove.webgl').on('mousemove.webgl touchmove.webgl',event=>{
+  if(!(r.mouseDown||r.rightMouseDown)||r.mouseX===undefined)return;
+  const point=event.type==='touchmove'?event.originalEvent.touches[0]:event,dx=point.clientX-r.mouseX,dy=point.clientY-r.mouseY;
+  if(r.mouseDown){
+   const turn=Math.PI*2,scale=turn*ROTATE_SENSITIVITY/r.width;
+   r.azimuth=(((r.up[2]===1?r.azimuth-dx*scale:r.azimuth+dx*scale)%turn)+turn)%turn;
+   r.zenith=Math.min(Math.PI-1e-4,Math.max(1e-4,r.zenith+dy*scale));
+  }else{
+   // Right-drag moves the model exactly as far as the pointer, measured at the model's depth.
+   const distance=r.distance*Math.pow(r.zoom.rateStep+1,-r.zoom.current),perPixel=2*distance*Math.tan(r.fov/2*Math.PI/180)/r.height;
+   r.translation[0]+=dx*perPixel;r.translation[1]+=dy*perPixel;
+  }
+  r.mouseX=point.clientX;r.mouseY=point.clientY;event.stopPropagation();
+ });
+}
 function clearViewer(){if(viewer){try{viewer.destroy();}catch{}viewer=null;}$('model').replaceChildren();}
 async function renderModel(){
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';$('appearance-notice').hidden=true;
@@ -49,7 +93,15 @@ async function renderModel(){
   const unavailable=[];
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
-   try{const data=await displayFor(item.id),slot=viewerSlot(id,item);const path=[21,22,26].includes(slot)?`item/${data.displayId}`:`armor/${slot}/${data.displayId}`;await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return [slot,data.displayId];}
+   try{
+    const data=await displayFor(item.id),slot=viewerSlot(id,item);
+    // OctoWoW display IDs often differ from the Classic library; the service lists the Classic ID first.
+    for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
+     const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
+     try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return [slot,displayId];}catch{}
+    }
+    throw Error('No usable appearance');
+   }
    catch{unavailable.push(item.name);return null;}
   }));
   if(token!==revision)return;
@@ -57,6 +109,7 @@ async function renderModel(){
   viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
+  tuneCamera(viewer.renderer);
   // actorPromises resolves after model metadata; isLoaded also waits for geometry.
   await Promise.race([Promise.all(viewer?.renderer?.actorPromises||[]),new Promise((_,reject)=>setTimeout(()=>reject(Error('The character model timed out. Try reloading the preview.')),25000))]);
   if(token!==revision)return;
@@ -75,7 +128,6 @@ function shareUrl(){const url=new URL(location.href);url.search='';url.hash='out
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
- for(const [id,name] of RACES)$('race').append(new Option(name,id));
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));
   let message='Select an equipment slot, then choose an item to try on.';
@@ -86,7 +138,7 @@ async function start(){
   try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
- $('race').onchange=()=>commit({...outfit,race:Number($('race').value)});$('gender').onchange=()=>commit({...outfit,gender:Number($('gender').value)});
+ $('gender').onchange=()=>commit({...outfit,gender:Number($('gender').value)});
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};

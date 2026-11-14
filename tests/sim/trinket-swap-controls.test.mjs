@@ -4,14 +4,14 @@ import {readFileSync} from 'node:fs';
 import {newBuild,validateBuild} from '../../docs/sim/core/builds.mjs';
 function element(tag){
  const attrs=new Map(),events=new Map();
- return {tagName:tag,children:[],style:{},hidden:false,textContent:'',
+ return {tagName:tag,children:[],style:{},dataset:{},classList:{toggle(){}},hidden:false,textContent:'',
   append(...items){this.children.push(...items)},prepend(...items){this.children.unshift(...items)},
   after(item){this.sibling=item},setAttribute(k,v){attrs.set(k,String(v))},
   removeAttribute(k){attrs.delete(k)},getAttribute(k){return attrs.get(k)},
   addEventListener(k,v){events.set(k,v)},fire(k){return events.get(k)?.({type:k})}};
 }
 const options=element('div'),body=element('body');
-globalThis.document={body,createElement:element,getElementById:()=>options,addEventListener(){}};
+globalThis.document={body,createElement:element,getElementById:()=>options,querySelector:()=>options,addEventListener(){}};
 globalThis.window={addEventListener(){}};
 const {trinketSwapControls}=await import('../../docs/sim/trinket-swaps.mjs');
 const descendants=n=>[n,...n.children.flatMap(descendants)];
@@ -24,7 +24,7 @@ test('Hunter control sets Pet None, routes replacement picker separately, and re
  const enabled=find('trinket-swap-enabled');enabled.checked=true;enabled.fire('change');
  assert.equal(build.classOptions.pet,'None');assert.equal(build.trinketSwap.enabled,true);
  const time=find('trinket-swap-time');time.value='25.5';time.fire('change');assert.equal(build.trinketSwap.atSeconds,25.5);
- const choose=nodes.find(n=>n.tagName==='button'&&n.textContent.startsWith('Trinket 1:'));choose.fire('click');
+ const choose=nodes.find(n=>n.tagName==='button'&&n.getAttribute('aria-label')==='Edit Feign Death Trinket Swap: Trinket 1');choose.fire('click');
  assert.equal(selection.slot,'trinket1');selection.context.onEquip('trinket1',{id:11815,label:'Replacement'});
  assert.equal(build.gear.trinket1.id,19953);assert.equal(build.trinketSwap.gear.trinket1.id,11815);
  assert.equal(selection.context.getBuild().gear.trinket1.id,11815);

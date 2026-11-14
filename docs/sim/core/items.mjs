@@ -56,11 +56,16 @@ export function detailRestriction(item, detail, build, slot) {
   return null;
 }
 
+// Quivers, pouches and ammunition are always listed for Hunters; a mismatch with the ranged
+// weapon is reported when the player selects the item rather than by hiding the whole list.
+export function listingBuild(build,item,slot){
+  return ['ammo','quiver'].includes(slot)?{...build,gear:{...build.gear,ranged:{subclass:item.subclass===3?3:2}}}:build;
+}
 export function filterItems(items, {build,slot,search='',quality=''}) {
   const query = search.trim().toLowerCase();
   const match = query.match(/^https:\/\/octowow\.st\/db\/\?item=(\d+)$/);
   const term = match ? match[1] : query;
-  return items.filter(item => !listingRestriction(item,build,slot) &&
+  return items.filter(item => !listingRestriction(item,listingBuild(build,item,slot),slot) &&
     (quality === '' || item.quality === Number(quality)) &&
     (!term || String(item.id) === term || item.name.toLowerCase().includes(term)))
     .sort((a,b) => (b.level || 0)-(a.level || 0) || a.name.localeCompare(b.name) || a.id-b.id);

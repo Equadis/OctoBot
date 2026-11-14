@@ -1,5 +1,5 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
-import {filterItems,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261113-swaps1';
+import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261114-ammo2';
 import {SLOTS} from './core/builds.mjs?v=20261113-swaps1';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261113-swaps1';
@@ -80,7 +80,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  function search(){
   if(!items)return;
   const build=selectionBuild();
-  candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],build,slot)) && (details[item.id] || !references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
+  candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],listingBuild(build,item,slot),slot)) && (details[item.id] || !references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
   $('item-count').textContent=`${candidates.length.toLocaleString()} ${candidates.length===1?'item':'items'}`;
   const fragment=document.createDocumentFragment();rowElements=new Map();
   for(const [index,item] of candidates.entries()){

@@ -1,31 +1,37 @@
 import {TRINKET_SWAP_MODES,defaultTrinketSwap,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
 import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261113-swaps1';
+import {SLOT_ICONS,iconUrl} from './core/interface.mjs?v=20261112-navigation1';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
+const SHORT={rogue:'VT',hunter:'FD'};
+// Swap controls sit directly under the trinket slots in the gear panel, as in Combat Gum.
 export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
  const mode=TRINKET_SWAP_MODES[getBuild().classId];if(!mode)return {render(){}};
- const panel=node('section',undefined,'trinket-swap'),heading=node('div',undefined,'card-heading'),reset=node('button','Reset','panel-reset');
- reset.type='button';reset.setAttribute('aria-label','Reset trinket swap');heading.append(node('h3',mode.label),reset);panel.append(heading);
+ const anchor=document.querySelector('#slots-right [data-slot="trinket2"]');if(!anchor)return {render(){}};
+ const panel=node('div',undefined,'trinket-swap');
  const enabled=node('input');enabled.type='checkbox';enabled.id='trinket-swap-enabled';
- const enableLabel=node('label','Enable swap');enableLabel.prepend(enabled);
+ const enableLabel=node('label',mode.label,'swap-toggle');enableLabel.prepend(enabled);
  const timing=node('input');timing.type='number';timing.min='0';timing.max='3600';timing.step='0.1';timing.id='trinket-swap-time';
- const timingLabel=node('label','Swap at (seconds)');timingLabel.append(timing);
- const settings=node('div',undefined,'class-options');settings.append(enableLabel,timingLabel);panel.append(settings);
- const buttons=new Map();
+ const timingLabel=node('label','Swap at (seconds)','swap-timing');timingLabel.append(timing);
+ const reset=node('button','Reset','panel-reset');reset.type='button';reset.setAttribute('aria-label','Reset trinket swap');
+ const options=node('div',undefined,'swap-options');options.append(enableLabel,timingLabel,reset);panel.append(options);
+ const slots=new Map();
  const save=patch=>{try{onChange({...getBuild(),trinketSwap:{...getBuild().trinketSwap,...patch}});}finally{render();}};
- for(const slot of ['trinket1','trinket2']){
-  const button=node('button');button.type='button';buttons.set(slot,button);panel.append(button);
+ for(const [slot,number] of [['trinket1',1],['trinket2',2]]){
+  const container=node('div',undefined,'slot swap-slot'),button=node('button');button.type='button';
+  const name=`${SHORT[getBuild().classId]} ${number}`;button.setAttribute('aria-label',`Edit ${mode.label}: Trinket ${number}`);
+  const icon=node('img','','slot-icon');icon.src=iconUrl(SLOT_ICONS[slot]);icon.alt='';icon.decoding='async';icon.referrerPolicy='no-referrer';
+  const itemName=node('span','Empty','item-name'),copy=node('span',undefined,'slot-copy');copy.append(node('span',name,'slot-name'),itemName);
+  button.append(icon,copy);container.append(button);panel.append(container);
+  slots.set(slot,{container,itemName,icon});
   button.addEventListener('click',()=>openPicker(slot,{
    getBuild:()=>postSwapBuild(getBuild()),
    onEquip:(_slot,item)=>save({gear:{...getBuild().trinketSwap.gear,[slot]:{id:item.id,label:item.label}}}),
    onClear:()=>{const gear={...getBuild().trinketSwap.gear};delete gear[slot];save({gear});},
    heading:`${mode.label}: ${slot==='trinket1'?'Trinket 1':'Trinket 2'}`,
   }));
-  attachTooltip(button,async()=>{const ref=getBuild().trinketSwap.gear[slot];return ref?equipmentTooltip(await inspect(ref.id),ref):{title:'Keep starting trinket',lines:['Choose a replacement, or leave this slot unchanged.']};});
+  attachTooltip(button,async()=>{const ref=getBuild().trinketSwap.gear[slot];return ref?equipmentTooltip(await inspect(ref.id),ref):{title:'Keep starting trinket',lines:['Empty']};});
  }
- panel.append(node('p','Starting trinkets are equipped in the gear panel. These replacements are equipped after the combat drop; unselected slots stay unchanged.','small muted'));
- if(getBuild().classId==='hunter')panel.append(node('p','Requires Pet: None. Enabling this option sets the pet to None.','small muted'));
- panel.append(node('p','Swap setup only. Combat simulation, combat-drop timing and trinket cooldown effects are not yet implemented.','small muted'));
- document.getElementById('class-options').after(panel);
+ anchor.after(panel);
  enabled.addEventListener('change',()=>{
   const build=getBuild();try{onChange({...build,classOptions:enabled.checked&&build.classId==='hunter'?{...build.classOptions,pet:'None'}:build.classOptions,trinketSwap:{...build.trinketSwap,enabled:enabled.checked}});}finally{render();}
  });
@@ -33,7 +39,19 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
  reset.addEventListener('click',()=>{try{onChange({...getBuild(),trinketSwap:defaultTrinketSwap()});}finally{render();}});
  function render(){
   const swap=getBuild().trinketSwap;enabled.checked=swap.enabled;timing.value=swap.atSeconds;
-  for(const [slot,button]of buttons){const ref=swap.gear[slot];button.textContent=`${slot==='trinket1'?'Trinket 1':'Trinket 2'}: ${ref?.label||'Keep starting trinket'}`;}
+  for(const [slot,view] of slots){
+   const ref=swap.gear[slot];
+   view.itemName.textContent=ref?.label||'Empty';view.container.classList.toggle('has-item',Boolean(ref));
+   if(!ref){view.icon.src=iconUrl(SLOT_ICONS[slot]);view.itemName.className='item-name';delete view.container.dataset.quality;continue;}
+   view.container.dataset.quality='1';
+   Promise.resolve(inspect(ref.id)).then(meta=>{
+    if(swap.gear[slot]?.id!==ref.id||!meta)return;
+    if(meta.icon)view.icon.src=iconUrl(meta.icon);
+    view.container.dataset.quality=String(meta.quality??1);
+    view.itemName.className=`item-name q${meta.quality??1}`;
+    if(meta.name)view.itemName.textContent=meta.name;
+   }).catch(()=>{});
+  }
  }
  render();return {render};
 }

@@ -134,13 +134,22 @@
     }
     $('streak').textContent=streak||'NO DATA';
   }
+  let fullTimeline=false;
+  const earliest=()=>history.length?history[0].t:null;
   function boundaries() {
-    const now=Date.now(),floor=now-90*DAY;
+    const now=Date.now(),limit=now-90*DAY,first=earliest();
+    // Empty history before the first real probe is hidden until the reveal arrow is used.
+    const floor=fullTimeline||first===null?limit:Math.min(Math.max(limit,first),now-600000);
     return {floor,now};
   }
+  function presetStart(p,now) {
+    const {floor}=boundaries();
+    return Math.max(now-PERIODS[p],floor);
+  }
   function preset(p) {
+    fullTimeline=false;
     period=p;
-    const {now}=boundaries();viewEnd=now;viewStart=now-PERIODS[p];
+    const {now}=boundaries();viewEnd=now;viewStart=presetStart(p,now);
     draw();syncDates();
   }
   function syncDates() {
@@ -412,7 +421,32 @@
   function updateJumpToPresent() {
     $('jump-to-present').disabled=period!=='CUSTOM'||viewEnd>=Date.now()-30000;
   }
-  function draw() {timeline();updateJumpToPresent();}
+  function updateReveal() {
+    const now=Date.now(),first=earliest(),limit=now-90*DAY;
+    const hidden=first===null||first<=limit+60000;
+    const text=fullTimeline?'Hide empty timeline.':'Show full timeline (There is no data for this area).';
+    for(const [button,tip] of [['reveal-timeline','timeline-lifespan-tooltip'],['latency-reveal','latency-lifespan-tooltip']]){
+      $(button).hidden=hidden;
+      $(button).setAttribute('aria-expanded',String(fullTimeline));
+      $(button).setAttribute('aria-label',text);
+      $(tip).textContent=text;
+      if(hidden)$(tip).hidden=true;
+    }
+  }
+  function toggleTimeline() {
+    // A clamped preset shows less than its nominal span; freeze the visible window first.
+    if(period!=='CUSTOM'&&viewStart>Date.now()-PERIODS[period]+60000)period='CUSTOM';
+    fullTimeline=!fullTimeline;
+    syncDates();
+    if(!fullTimeline){
+      // Keep zoom; only translate if the viewport sits inside history now hidden.
+      const {floor,now}=boundaries();
+      const bounded=D.panRange(viewStart,viewEnd,0,floor,now);
+      if(bounded&&(Math.abs(bounded.start-viewStart)>=1||Math.abs(bounded.end-viewEnd)>=1)){changeRange(bounded);return;}
+    }
+    draw();
+  }
+  function draw() {timeline();updateJumpToPresent();updateReveal();}
   function changeRange(next) {
     if(!next||Math.abs(viewStart-next.start)<1&&Math.abs(viewEnd-next.end)<1)return;
     viewStart=next.start;viewEnd=next.end;period='CUSTOM';draw();syncDates();
@@ -451,6 +485,11 @@
       }
       $('date-error').textContent='';viewStart=Math.max(a,floor);viewEnd=b;period='CUSTOM';draw();
     });
+    for(const [button,tip] of [['reveal-timeline','timeline-lifespan-tooltip'],['latency-reveal','latency-lifespan-tooltip']]){
+      $(button).addEventListener('click',toggleTimeline);
+      for(const ev of ['pointerenter','focus'])$(button).addEventListener(ev,()=>{if(!$(button).hidden){$('tooltip').hidden=true;$('latency-tooltip').hidden=true;$(tip).hidden=false;}});
+      for(const ev of ['pointerleave','blur'])$(button).addEventListener(ev,()=>{$(tip).hidden=true;});
+    }
     preset('1D');
   }
   async function loadWorkerReadings(){
@@ -517,6 +556,7 @@
       const sample=candidates.sort((a,b)=>at(b)-at(a))[0];
       current=sample?{...sample,t:at(sample)}:null;
       if(current&&!history.some(r=>r.t===current.t))history=sanitise([...history,current]);
+      if(period!=='CUSTOM'){const {now}=boundaries();viewEnd=now;viewStart=presetStart(period,now);syncDates();}
       updateStats();draw();calendar();showIncidents();
     }catch(e){
       console.warn('Status feed unavailable',e);
