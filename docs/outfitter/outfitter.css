@@ -59,3 +59,8 @@
 /* Model area: bordered frame on the graph backdrop, keeping the glow at the bottom */
 .model-wrap{border:1px solid #384658;border-radius:4px;background:radial-gradient(ellipse at 50% 75%,#31495a 0%,#202e40 45%,#182333 75%)}
 .slots .slot>button{column-gap:9px}
+
+/* Model frame: clear of the slot buttons, and as tall as the slot columns (top level with Head and Hands) */
+.paperdoll{column-gap:12px}
+.model-wrap{align-self:stretch;height:auto;min-height:560px}
+.paperdoll .slots{align-self:start}
