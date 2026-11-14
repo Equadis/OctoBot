@@ -195,3 +195,6 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:minmax(0,1fr)}}
 
 .planner-view .talent-card{border:1px solid #344253}
+
+/* Left rail: just outside the content column on wide screens (16px clear of the page edge of the content), 10px from the window edge otherwise */
+.planner-view .actions{left:max(10px,calc((100vw - 1180px)/2 - 148px))}

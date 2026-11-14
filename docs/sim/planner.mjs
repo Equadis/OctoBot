@@ -369,7 +369,6 @@ function wireControls() {
   let levelTimer;
   $('character-level').addEventListener('input', () => { clearTimeout(levelTimer); levelTimer = setTimeout(() => $('character-level').dispatchEvent(new Event('change')), 300); });
   const resetAll=()=>applyBuild(newBuild(classId),'Build reset. Named saved builds are still available.');
-  $('new-build').addEventListener('click',resetAll);
   $('reset-all').hidden=false;
   $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
