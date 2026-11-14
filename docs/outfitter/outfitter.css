@@ -38,3 +38,7 @@
 .result .item-description{display:block;margin-top:3px;font-size:10px;color:#8c9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:1050px){.paperdoll{grid-template-columns:150px minmax(0,1fr) 150px}}
 @media(max-width:580px){.paperdoll{grid-template-columns:104px minmax(0,1fr) 104px}.slots .slot-name{font-size:8px}.slots .slot-icon{width:26px;height:26px}.slots .slot>button{grid-template-columns:minmax(0,1fr) 26px}#left-slots .slot>button{grid-template-columns:26px minmax(0,1fr)}.slots .slot .item-name{font-size:9px}}
+
+/* Race and body pickers sit apart from each other */
+.toolbar .controls{gap:32px;align-items:flex-start}
+.body-picker .race-button img{width:36px;height:36px}

@@ -26,8 +26,18 @@ function renderRaces(){
  }
  $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
 }
+function renderBodies(){
+ const box=$('gender-picker');box.replaceChildren();
+ for(const [value,name,file] of [[0,'Male','male'],[1,'Female','female']]){
+  const button=document.createElement('button'),img=document.createElement('img');
+  button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.gender===value));
+  img.alt='';img.width=36;img.height=36;img.src=`body/${file}.png`;button.append(img);
+  button.onclick=()=>{if(outfit.gender!==value)commit({...outfit,gender:value});};box.append(button);
+ }
+ $('body-name').textContent=outfit.gender?'Female':'Male';
+}
 function renderSlots(){
- renderRaces();$('gender').value=String(outfit.gender);$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
+ renderRaces();renderBodies();$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
  $('left-slots').replaceChildren();$('right-slots').replaceChildren();
  SLOTS.forEach((slot,index)=>{
   const item=byId.get(outfit.gear[slot.id]),container=document.createElement('div'),button=document.createElement('button');
@@ -138,7 +148,7 @@ async function start(){
   try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
- $('gender').onchange=()=>commit({...outfit,gender:Number($('gender').value)});
+
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
