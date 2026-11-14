@@ -45,3 +45,17 @@ test('data requests made by moved pages resolve from the new directory',()=>{
  for(const path of ['../telemetry.json','../status/history.json','../status/latest.json','../status/bot-history.json'])assert.ok(dashboard.includes(`fetch('${path}'`),path);
  assert.ok(!/fetch\('status\//.test(dashboard));
 });
+
+test('every page has Discord and donate buttons with tooltips beside the viewer count, and no status badge',()=>{
+ for(const route of PAGES){
+  const html=markup(route);
+  const header=html.match(/<div class="header-status">[\s\S]*?<\/header>/)[0];
+  assert.ok(!/class="badge"/.test(html),`badge removed on /${route}`);
+  assert.match(header,/href="https:\/\/discord\.gg\/QtdNpKnU72"[^>]*data-tip="Join the Discord"/);
+  assert.match(header,/href="https:\/\/ko-fi\.com\/equadis"[^>]*data-tip="Buy me a coffee"/);
+  assert.ok(header.indexOf('discord.gg')<header.indexOf('id="viewer-status"'),'buttons sit left of the viewer count');
+  assert.ok(header.indexOf('ko-fi.com')<header.indexOf('id="viewer-status"'));
+  assert.equal((header.match(/rel="noopener noreferrer"/g)||[]).length,2);
+ }
+ for(const icon of ['img/discord.png','img/coffee.png'])assert.ok(existsSync(fileURLToPath(new URL(icon,docs))),icon);
+});

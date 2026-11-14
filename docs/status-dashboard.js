@@ -110,8 +110,6 @@
         $('coverage-'+suffix).textContent=Math.round(result.coverage*100)+'% covered';
       }
     }
-    $('freshness-badge').textContent=!current?'AWAITING TELEMETRY':!fresh?'CHECKS STALE':
-      s==='up'?'MONITORING · ONLINE':s==='down'?'MONITORING · ISSUES':'MONITORING · INCOMPLETE';
     const stale=!fresh;
     for(const id of ['nzoth','yshaarj','cthun'])
       $('realm-'+id).innerHTML=pill(current?.realms?.[id],stale);
