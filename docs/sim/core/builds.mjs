@@ -17,7 +17,7 @@ export const SLOTS = Object.freeze({
 export function newBuild(classId='warrior') {
   const cls=classDefinition(classId);
   return { schemaVersion: 1, classId, name: `My ${cls.name} Build`, level: 60,
-    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, ...(TRINKET_SWAP_MODES[classId]?{trinketSwap:defaultTrinketSwap()}:{}), controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'custom', targetEnergyPerSecond: 0 } };
+    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, ...(TRINKET_SWAP_MODES[classId]?{trinketSwap:defaultTrinketSwap()}:{}), controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'heroic-dummy', targetEnergyPerSecond: 0 } };
 }
 
 export function parseItemReference(input) {

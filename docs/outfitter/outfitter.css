@@ -41,4 +41,7 @@
 
 /* Race and body pickers sit apart from each other */
 .toolbar .controls{gap:32px;align-items:flex-start}
-.body-picker .race-button img{width:36px;height:36px}
+
+
+/* Icons fill their buttons right up to the border */
+.race-button{padding:0;overflow:hidden}.race-button img,.body-picker .race-button img{width:100%;height:100%;object-fit:cover;border-radius:0;display:block}

@@ -35,7 +35,9 @@ test('planning settings round trip and legacy builds gain safe defaults',async()
  const configured={...build,planning:{...build.planning,buffs:'Raid notes',rotation:'Priority',iterations:2000}};
  assert.deepEqual(decodeBuild(encodeBuild(configured),data),configured);
  const legacy={...build};delete legacy.planning;
- assert.deepEqual(validateBuild(legacy,data).planning,build.planning);
+ // Saved builds that predate target presets stay 'custom' (same numbers as the heroic dummy); only new builds default to it.
+ assert.deepEqual(validateBuild(legacy,data).planning,{...build.planning,targetPreset:'custom'});
+ assert.equal(build.planning.targetPreset,'heroic-dummy');
  for(const setting of [{iterations:0},{duration:Infinity},{targetLevel:71},{buffs:'x'.repeat(2001)}])assert.throws(()=>validateBuild({...build,planning:{...build.planning,...setting}},data));
 });
 

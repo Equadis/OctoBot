@@ -21,7 +21,7 @@ function renderRaces(){
  for(const [id,name] of RACES){
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.race===id));
-  img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png`;button.append(img);
+  img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png?v=20261114`;button.append(img);
   button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id});};box.append(button);
  }
  $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
@@ -31,7 +31,7 @@ function renderBodies(){
  for(const [value,name,file] of [[0,'Male','male'],[1,'Female','female']]){
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.gender===value));
-  img.alt='';img.width=36;img.height=36;img.src=`body/${file}.png`;button.append(img);
+  img.alt='';img.width=36;img.height=36;img.src=`body/${file}.png?v=20261114`;button.append(img);
   button.onclick=()=>{if(outfit.gender!==value)commit({...outfit,gender:value});};box.append(button);
  }
  $('body-name').textContent=outfit.gender?'Female':'Male';
