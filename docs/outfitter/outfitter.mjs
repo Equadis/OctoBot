@@ -623,10 +623,10 @@ async function renderModel(resetCamera=false,forceRebuild=false){
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
-  if(current.race===10)throw Error('The Classic model library has no High Elf (Blood Elf) model, so there is no 3D preview for this race. Gear choices are still saved and shared.');
   if(!window.ZamModelViewer||!window.jQuery)throw Error('The 3D viewer could not load. Check your connection and reload the preview.');
   // Detect an undeployed service before constructing a viewer that would stay blank.
-  const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
+  // High Elf has no model in Zam's library; it has a preview only when the appearance service also serves OctoWoW's own models.
+  const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`).catch(error=>{if(current.race===10)throw Error('The Classic model library has no High Elf (Blood Elf) model, so there is no 3D preview for this race. Gear choices are still saved and shared.');throw error;});
   await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
