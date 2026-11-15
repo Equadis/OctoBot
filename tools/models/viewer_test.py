@@ -1,7 +1,8 @@
 """Local viewer test for the model conversion project (README step 5).
     python tools/models/viewer_test.py <v256 model> [port]
 Converts the model, writes it to tools/models/out/srv (git-ignored), and serves http://127.0.0.1:<port>/ with the Zam viewer pointed at it.
-Anything the viewer asks for that is not local is fetched from Zam's asset host. Customisation data comes from the client tables
+Anything the viewer asks for that is not local is fetched from Zam's asset host. Gear: add ?items=[[slot,displayId],...] to the URL (viewer slots as the site uses them: 1 head, 3 shoulder, 5 chest, 6 waist,
+7 legs, 8 feet, 9 wrist, 10 hands, 16 back, 21 main hand, 22 off hand). Customisation data comes from the client tables
 (customisation.py); set RACE and SEX (9 Goblin or 10 Blood Elf, 0 or 1) in the environment. Everything stays local; nothing is published."""
 import json, os, struct, sys, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +58,7 @@ PAGE_T = '''<!doctype html><meta charset=utf-8><body style="margin:0;background:
 window.log=[];window.addEventListener('error',e=>{if(window.log.length<3)window.log.push(String(e.message)+' '+(e.error&&e.error.stack||''))});
 // Console helper: pose('Walk', 0.3) freezes that animation at 30 percent of its length and redraws (wait a moment before a screenshot).
 window.pose=function(name,f){return new Promise(function(res){var a=viewer.renderer.actors[0];a.setAnimPaused(false);a.setAnimation(name,true);var t=0;(function go(){var s=a.d.B&&a.d.B.c;if(s&&s.e&&s.e.i===name&&s.e.h>0){a.setAnimPaused(true);s.c=f*s.e.h;var was=a.d.ao;try{a.d.ao=false;viewer.renderer.draw(viewer.renderer.time)}catch(e){}a.d.ao=was;setTimeout(function(){res(name+' length '+s.e.h)},600)}else if(++t<40)setTimeout(go,100);else res('timeout '+name)})()})};
-function go(){try{window.viewer=new ZamModelViewer({type:2,container:jQuery('#v'),aspect:900/700,contentPath:location.origin+'/assets/',dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,charCustomization:{options:LOOKJSON},models:{id:17,type:16},items:[]});}catch(e){window.log.push('init '+e)}}
+function go(){try{window.viewer=new ZamModelViewer({type:2,container:jQuery('#v'),aspect:900/700,contentPath:location.origin+'/assets/',dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,charCustomization:{options:LOOKJSON},models:{id:17,type:16},items:JSON.parse(new URLSearchParams(location.search).get('items')||'[]')});}catch(e){window.log.push('init '+e)}}
 window.addEventListener('load',()=>setTimeout(go,300));
 </script>'''
 
