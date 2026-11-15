@@ -629,6 +629,7 @@ async function start(){
   show(hidden);
   toggle.onclick=()=>{hidden=!hidden;show(hidden);try{localStorage.setItem('octobot-outfitter-tools-hidden',hidden?'1':'0');}catch{}};
  }
+ $('retry').onclick=()=>renderModel();
  $('screenshot').onclick=takePhoto;
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});

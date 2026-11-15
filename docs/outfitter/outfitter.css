@@ -202,3 +202,6 @@
 .saved-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .saved-heading h2{margin:0}
 .saved-heading .outfit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+
+/* Reset-position glyph: arrow gap on the right */
+.tool-btn .flip{display:block;font-size:17px;line-height:1;transform:rotate(90deg)}
