@@ -194,3 +194,5 @@ small:empty,.evidence:empty{display:none}
 
 .clock.na{color:#ff6b5e}
 .hero-stat span[hidden]{display:none}
+
+.clock .tm{font-size:.38em;font-weight:400;margin-left:2px;vertical-align:super;line-height:0;opacity:.85}
