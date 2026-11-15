@@ -16,12 +16,66 @@ function applyBackdrop(id,{persistChoice=true}={}){
  const clear=()=>{wrap.classList.remove('has-backdrop');wrap.style.removeProperty('--backdrop-image');};
  if(persistChoice){try{if(choice)localStorage.setItem(BACKDROP_KEY,choice.id);else localStorage.removeItem(BACKDROP_KEY);}catch{}}
  $('backdrop').value=choice?choice.id:'';
+ updateBackdropButton();
  if(!choice){clear();return;}
  // Load first so a failed image never leaves a blank frame.
  const probe=new Image();probe.referrerPolicy='no-referrer';
  probe.onload=()=>{if(token!==backdropRequest)return;wrap.style.setProperty('--backdrop-image',`url("${choice.url}")`);wrap.classList.add('has-backdrop');};
  probe.onerror=()=>{if(token!==backdropRequest)return;clear();$('backdrop').value='';feedback(`The ${choice.label} background could not be loaded, so the default is shown.`);};
  probe.src=choice.url;
+}
+// The background list shows a small class or race icon beside each name. Race icons follow the character's body (male / female).
+// A native <select> cannot show images, so a custom list sits on top of it; the select stays as the single source of truth.
+function backdropIcon(background){
+ if(background.group==='Classes')return `https://wow.zamimg.com/images/wow/icons/small/classicon_${background.id.slice(6)}.jpg`;
+ const key=background.id.slice(5);
+ return Object.values(RACE_KEYS).includes(key)?`races/${key}_${outfit.gender?'female':'male'}.png?v=20261114`:null;
+}
+function backdropRow(label,icon){
+ const frag=document.createDocumentFragment();
+ if(icon){const img=document.createElement('img');img.alt='';img.width=20;img.height=20;img.src=icon;frag.append(img);}
+ else{const blank=document.createElement('span');blank.className='bd-blank';frag.append(blank);}
+ const text=document.createElement('span');text.className='bd-label';text.textContent=label;frag.append(text);return frag;
+}
+function updateBackdropButton(){
+ const button=document.querySelector('.bd-button');if(!button)return;
+ const choice=findBackground($('backdrop').value);
+ button.replaceChildren(backdropRow(choice?choice.label:'Default (glow)',choice?backdropIcon(choice):null));
+ const caret=document.createElement('span');caret.className='bd-caret';caret.textContent='▾';caret.setAttribute('aria-hidden','true');button.append(caret);
+}
+function setupBackdropPicker(){
+ const select=$('backdrop');select.classList.add('bd-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+ const wrap=document.createElement('div');wrap.className='bd-picker';
+ const button=document.createElement('button');button.type='button';button.className='bd-button';button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Model background');
+ const list=document.createElement('div');list.className='bd-list';list.setAttribute('role','listbox');list.hidden=true;
+ wrap.append(button,list);select.after(wrap);
+ const close=()=>{list.hidden=true;button.setAttribute('aria-expanded','false');};
+ const choose=id=>{select.value=id;select.dispatchEvent(new Event('change'));close();button.focus();};
+ const build=()=>{
+  list.replaceChildren();
+  const option=(id,label,icon)=>{const row=document.createElement('button');row.type='button';row.className='bd-option';row.setAttribute('role','option');row.setAttribute('aria-selected',String(select.value===id));row.append(backdropRow(label,icon));row.onclick=()=>choose(id);return row;};
+  list.append(option('','Default (glow)',null));
+  for(const group of ['Classes','Races']){
+   const heading=document.createElement('div');heading.className='bd-group';heading.textContent=group;list.append(heading);
+   for(const background of BACKGROUNDS.filter(b=>b.group===group))list.append(option(background.id,background.label,backdropIcon(background)));
+  }
+ };
+ button.onclick=()=>{
+  if(!list.hidden){close();return;}
+  build();list.hidden=false;button.setAttribute('aria-expanded','true');
+  // Open upwards when there is no room below the control.
+  const room=innerHeight-button.getBoundingClientRect().bottom;wrap.classList.toggle('up',room<360);
+  list.querySelector('[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
+ };
+ document.addEventListener('click',event=>{if(!wrap.contains(event.target))close();});
+ wrap.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){close();button.focus();return;}
+  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+  event.preventDefault();if(list.hidden)button.click();
+  const rows=[...list.querySelectorAll('.bd-option')],at=rows.indexOf(document.activeElement);
+  rows[Math.max(0,Math.min(rows.length-1,at+(event.key==='ArrowDown'?1:-1)))]?.focus();
+ });
+ updateBackdropButton();
 }
 function setupBackdrops(){
  const select=$('backdrop');select.replaceChildren(new Option('Default (glow)',''));
@@ -33,6 +87,7 @@ function setupBackdrops(){
  select.onchange=()=>applyBackdrop(select.value);
  let saved='';try{saved=localStorage.getItem(BACKDROP_KEY)||'';}catch{}
  if(findBackground(saved))applyBackdrop(saved,{persistChoice:false});
+ setupBackdropPicker();
 }
 function feedback(message){$('feedback').textContent=message;}
 const SLOT_KEYS={1:'head',3:'shoulder',15:'back',5:'chest',4:'shirt',19:'tabard',9:'wrist',10:'hands',6:'waist',7:'legs',8:'feet',16:'mainhand',17:'offhand',18:'ranged'};
@@ -67,7 +122,7 @@ function renderBodies(){
  $('body-name').textContent=outfit.gender?'Female':'Male';
 }
 function renderSlots(){
- renderRaces();renderBodies();$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
+ renderRaces();renderBodies();updateBackdropButton();$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
  $('left-slots').replaceChildren();$('right-slots').replaceChildren();
  SLOTS.forEach((slot,index)=>{
   const item=byId.get(outfit.gear[slot.id]),container=document.createElement('div'),button=document.createElement('button');
@@ -269,6 +324,8 @@ function changeLook(look){
  outfit={...outfit,look};persist();renderLook();
  if(!pushAppearance(look))renderModel();
 }
+// A paused animation stays frozen on the same frame when the model is rebuilt (choosing an item, changing race and so on).
+let keptAnim=null;
 function setupAnimation(){
  const actor=characterActor(),select=$('animation'),pause=$('anim-pause');
  if(!actor||!actor.isLoaded?.()){return;}
@@ -280,6 +337,12 @@ function setupAnimation(){
  const choice=list.includes(saved)?saved:list.includes('Stand')?'Stand':list[0];
  if(!choice)return;
  select.value=choice;try{actor.setAnimation(choice,true);}catch{}
+ const frozen=keptAnim;keptAnim=null;
+ if(frozen?.paused){
+  try{actor.setAnimPaused(true);}catch{}showPlayState(true);
+  // The animation clock exists a moment after the animation is set; restore the frame once it does.
+  let tries=0;const restore=()=>{const state=actor.d?.B?.c;if(state?.e?.i===choice&&state.e.h>0){state.c=Math.min(frozen.time,state.e.h-1);return;}if(++tries<40)setTimeout(restore,100);};restore();
+ }
 }
 // The viewer's own default is two notches too close, so every fresh or reset camera starts one scroll further out.
 const DEFAULT_ZOOM=-1;
@@ -335,7 +398,8 @@ let keptView=null;
 function readView(r){return {azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],zoom:r.zoom.target};}
 function applyView(r,view){r.azimuth=view.azimuth;r.zenith=view.zenith;r.translation[0]=view.translation[0];r.translation[1]=view.translation[1];r.translation[2]=view.translation[2];r.zoom.current=view.zoom;r.zoom.target=view.zoom;r.zoom.rateCurrent=0;}
 async function renderModel(resetCamera=false){
- keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
+ keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
+ keptAnim=animationPaused&&characterActor()?.d?.B?.c?{paused:true,time:characterActor().d.B.c.c}:null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
