@@ -48,7 +48,8 @@ class HelmConverter:
         self.client = client
         self.info = DisplayInfo(client)
         self.next_id = FIRST_HELM_ID
-        self.done = {}              # model path -> ids dict
+        self.done = {}              # model path -> (files, ids), or None when the client has no usable model
+        self.failed = {}            # model path -> reason it could not be converted
 
     def convert(self, display_id):
         """Returns ({"race:gender": model file id}, {relative path: bytes}) for one helm display id; races without a client model are left out."""
@@ -65,8 +66,13 @@ class HelmConverter:
                 else:
                     first = self.next_id
                     self.next_id += STRIDE
-                    out, ids = m2v274.convert(data, first)
-                    self.done[path] = (out, ids)
+                    try:
+                        out, ids = m2v274.convert(data, first)
+                        self.done[path] = (out, ids)
+                    except (ValueError, KeyError, struct.error, NotImplementedError) as error:
+                        # An empty or unreadable model (some helm files hold no geometry): leave that race out, keep the reason.
+                        self.failed[path] = f'{type(error).__name__}: {error}'
+                        self.done[path] = None
             entry = self.done[path]
             if entry:
                 found[f'{race}:{gender}'] = entry[1]['model']
