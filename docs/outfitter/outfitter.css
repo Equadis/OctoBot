@@ -197,3 +197,8 @@
 .tools-toggle:hover,.tools-toggle:focus-visible{color:#f4d65c;outline:0}
 .viewer-tools.collapsed .tool-btn{display:none}
 .viewer-tools.collapsed .tools-toggle .stem{display:inline}
+
+/* Save, Share and Import / Export sit at the top right of the Saved outfits panel */
+.saved-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.saved-heading h2{margin:0}
+.saved-heading .outfit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
