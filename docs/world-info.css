@@ -174,3 +174,9 @@ small:empty,.evidence:empty{display:none}
 .boss-name[data-boss="hazzarah"]{color:#98a4e6}
 .boss-name[data-boss="renataki"]{color:#dca17b}
 .boss-name[data-boss="wushoolay"]{color:#72c9dd}
+
+/* Estimate confidence: low red, medium yellow, high green */
+.conf{font-weight:700}
+.conf-low{color:#ff6b5e}
+.conf-medium{color:#f2d54a}
+.conf-high{color:#6fe08f}

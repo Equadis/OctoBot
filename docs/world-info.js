@@ -258,6 +258,15 @@
     const at = drop && drop.confirmed === true ? time(drop.at) : null;
     return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' ago' : 'NO DATA');
   }
+  // Low confidence is red, medium yellow, high green.
+  function colourConfidence(note, level) {
+    const text = note.textContent, word = level + ' confidence', at = text.indexOf(word);
+    if (at < 0 || !['low', 'medium', 'high'].includes(level) || typeof note.replaceChildren !== 'function') return;
+    const mark = document.createElement('span');
+    mark.className = 'conf conf-' + level;
+    mark.textContent = word;
+    note.replaceChildren(document.createTextNode(text.slice(0, at)), mark, document.createTextNode(text.slice(at + word.length)));
+  }
   function renderHead(prefix, headKey) {
     const head = state.heads[headKey];
     const stale = !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > FRESH_RAID_MS;
@@ -284,9 +293,11 @@
     const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
     const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '.';
     tag.hidden = false;
+    const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); tag.textContent = 'ESTIMATE'; note.textContent = 'Estimated clear · ' + basis; }
     else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'ANY MOMENT'; tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
     else { out.textContent = 'OVERDUE'; tag.textContent = 'ESTIMATE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+    colourConfidence(note, level);
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
 
