@@ -193,6 +193,21 @@ function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint
 // ---- Appearance (skin, face, hair, facial hair / markings / piercings ...) and animation
 const ANIMATION_KEY='octobot-outfitter-animation';
 const customizationCache=new Map();let lookOptions=[],animationPaused=false;
+const ICON_PAUSE='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="6" y="4" width="4.2" height="16" rx="1" fill="currentColor"/><rect x="13.8" y="4" width="4.2" height="16" rx="1" fill="currentColor"/></svg>';
+const ICON_PLAY='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+// Shows Pause while playing and Play while paused, each with its own tooltip.
+function showPlayState(paused){
+ const button=$('anim-pause');animationPaused=paused;
+ button.setAttribute('aria-pressed',String(paused));button.innerHTML=paused?ICON_PLAY:ICON_PAUSE;
+ const label=paused?'Play animation':'Pause animation';button.title=label;button.setAttribute('aria-label',label);
+}
+// Frame stepping: pauses, then moves the animation clock by whole frames (WoW animations run at 30 frames per second).
+const FRAME_MS=1000/30;
+function stepAnimation(frames){
+ const actor=characterActor(),state=actor?.d?.B?.c;if(!state?.e||!(state.e.h>0))return;
+ try{actor.setAnimPaused(true);}catch{}showPlayState(true);
+ const length=state.e.h;state.c=(((Math.round(state.c/FRAME_MS)+frames)*FRAME_MS)%length+length)%length;
+}
 async function loadLookOptions(chrModelId){
  if(!Number.isInteger(chrModelId))return [];
  try{
@@ -260,7 +275,7 @@ function setupAnimation(){
  const names=new Set();for(let i=0;i<actor.getNumAnimations();i++){const name=actor.getAnimation(i);if(name)names.add(name);}
  const list=[...names].sort((a,b)=>a==='Stand'?-1:b==='Stand'?1:a.localeCompare(b));
  select.replaceChildren(...list.map(name=>new Option(name,name)));
- select.disabled=!list.length;pause.disabled=!list.length;animationPaused=false;pause.setAttribute('aria-pressed','false');pause.textContent='Pause';
+ select.disabled=!list.length;pause.disabled=!list.length;$('anim-prev').disabled=!list.length;$('anim-next').disabled=!list.length;showPlayState(false);
  let saved='';try{saved=localStorage.getItem(ANIMATION_KEY)||'';}catch{}
  const choice=list.includes(saved)?saved:list.includes('Stand')?'Stand':list[0];
  if(!choice)return;
@@ -407,8 +422,10 @@ async function start(){
  $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel(true);
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
- $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}animationPaused=false;$('anim-pause').setAttribute('aria-pressed','false');$('anim-pause').textContent='Pause';}catch{}try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
- $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;animationPaused=!animationPaused;try{actor.setAnimPaused(animationPaused);}catch{}$('anim-pause').setAttribute('aria-pressed',String(animationPaused));$('anim-pause').textContent=animationPaused?'Play':'Pause';};
+ $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
+ $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;const next=!animationPaused;try{actor.setAnimPaused(next);}catch{}showPlayState(next);};
+ $('anim-prev').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?-5:-1);
+ $('anim-next').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?5:1);
  $('save').onclick=()=>{$('outfit-name').value='';$('save-dialog').showModal();$('outfit-name').focus();};$('cancel-save').onclick=()=>$('save-dialog').close();
  $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const snapshot=captureSnapshot(),entry={name,outfit:structuredClone(outfit),...(snapshot?{snapshot}:{})},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
  $('share').onclick=()=>copy(shareUrl(),'Outfit link copied.');

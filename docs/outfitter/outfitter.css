@@ -143,3 +143,11 @@
 .camera-reset-icon::first-line{line-height:1}
 .camera-reset-icon:hover,.camera-reset-icon:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
 .camera-reset-icon .flip{display:block;transform:rotate(90deg)}
+
+/* Player-style transport: acute chevrons either side of play / pause */
+.transport{display:inline-flex;align-items:center;gap:4px}
+.tp-btn{width:36px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:#c0ccda}
+.tp-btn svg{display:block}
+.tp-btn:disabled{opacity:.45;cursor:default}
+.tp-btn:not(:disabled):hover{color:#f4d65c;border-color:#9d8a35}
+.tp-main{width:42px}
