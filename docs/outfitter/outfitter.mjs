@@ -380,6 +380,7 @@ function animationClock(){const actor=characterActor(),state=actor?.d?.B?.c;retu
 function syncScrub(){
  const bar=$('anim-scrub'),clock=animationClock();if(!bar||scrubbing||!clock)return;
  bar.value=String(Math.round(Math.min(1,clock.state.c/clock.length)*1000));
+ bar.style.setProperty('--p',String(Number(bar.value)/1000));
 }
 function scrubTo(fraction){
  const clock=animationClock();if(!clock)return;
@@ -389,7 +390,7 @@ function scrubTo(fraction){
 function setupScrub(){
  const bar=$('anim-scrub');
  bar.addEventListener('pointerdown',()=>{scrubbing=true;scrubTo(Number(bar.value)/1000);});
- bar.addEventListener('input',()=>{scrubbing=true;scrubTo(Number(bar.value)/1000);});
+ bar.addEventListener('input',()=>{scrubbing=true;bar.style.setProperty('--p',String(Number(bar.value)/1000));scrubTo(Number(bar.value)/1000);});
  const end=()=>{scrubbing=false;};
  bar.addEventListener('pointerup',end);bar.addEventListener('change',end);bar.addEventListener('blur',end);
  setInterval(syncScrub,100);

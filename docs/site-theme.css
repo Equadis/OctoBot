@@ -85,3 +85,7 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 /* Discord and donate sit close to the viewer count, further to the right */
 .site-header .header-status{gap:6px}
 .site-header .viewers{min-width:24px}
+
+/* Site-wide tooltip: the same look as the Gear Planner talent tooltip */
+.site-tooltip{position:fixed;z-index:2000;width:max-content;max-width:min(370px,calc(100vw - 16px));padding:7px 10px;background:#0d1420f7;border:1px solid #827547;border-radius:4px;box-shadow:0 8px 25px #0009;color:#e1e7ef;font:400 12px/1.45 Arial,Helvetica,sans-serif;white-space:pre-line;pointer-events:none}
+.site-tooltip[hidden]{display:none}

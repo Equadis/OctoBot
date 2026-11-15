@@ -67,7 +67,7 @@ test('titles use the Friz Quadrata stack on every page, with sub-headings left a
  assert.ok(!/url\([^)]*\.(?:ttf|otf|woff2?)/i.test(css.slice(css.indexOf('@font-face'))),'the commercial font file is not bundled');
  assert.match(css,/body h1,body h2,body \.site-header h1,body\.planner-view \.site-header h1,\r?\nbody \.section-title h2,body \.panel-head h3,body \.world-panel h2,body \.world-panel h3,body \.look-heading h3\{font-family:var\(--title-font\);font-weight:700\}/);
  assert.match(css,/font-weight:700;src:local\("Friz Quadrata TT Bold"\)/); // bold face
- for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261115-size3/,`/${route}`);
+ for(const route of PAGES)assert.match(markup(route),/site-theme\.css\?v=20261116-tips1/,`/${route}`);
 });
 
 test('the home page links to every tool with a large button and sends old Population links to /population/',()=>{
@@ -108,4 +108,10 @@ test('header icon URLs are resolved against the page, so they also work under /O
    assert.ok(existsSync(fileURLToPath(new URL(path.split('?')[0],docs))),`${mask} exists`);
   }
  }
+});
+
+test('every page loads the shared tooltip script, and no page styles its own native title tooltips',()=>{
+ for(const route of PAGES)assert.match(markup(route),/<script src="(?:\.\.\/)?site-tooltips\.js\?v=[0-9a-z-]+" defer><\/script>/,`/${route}`);
+ const script=readFileSync(new URL('../docs/site-tooltips.js',import.meta.url),'utf8');
+ assert.match(script,/closest\('\.info-i, \[data-native-title\]'\)/);   // information circles keep their own hover
 });

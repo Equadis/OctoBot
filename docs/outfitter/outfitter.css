@@ -212,3 +212,12 @@
 
 /* The hide / show toggle sits on the same line whether the buttons are shown or hidden */
 .viewer-tools .tools-toggle{align-self:flex-start}
+
+/* Scrub bar: the track runs the full width, the thumb is a thin marker, and the gold fill follows the clock exactly */
+.scrub{-webkit-appearance:none;appearance:none;--p:0;height:16px;background:transparent;accent-color:auto}
+.scrub::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,#e4bd39 calc(1.5px + var(--p) * (100% - 3px)),#2c3b4f calc(1.5px + var(--p) * (100% - 3px)))}
+.scrub::-webkit-slider-thumb{-webkit-appearance:none;width:3px;height:16px;margin-top:-5px;border:0;border-radius:2px;background:#f4d65c}
+.scrub::-moz-range-track{height:6px;border-radius:3px;background:#2c3b4f}
+.scrub::-moz-range-progress{height:6px;border-radius:3px;background:#e4bd39}
+.scrub::-moz-range-thumb{width:3px;height:16px;border:0;border-radius:2px;background:#f4d65c}
+.scrub{border:0;padding:0;margin:0;background:transparent;box-shadow:none}
