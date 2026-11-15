@@ -209,3 +209,6 @@
 /* One tidy row: Animation dropdown, player buttons and a scrub bar that fills the rest of the width */
 .transport-wrap{display:flex;flex-direction:row;align-items:center;gap:12px;flex:1 1 220px;min-width:220px}
 .transport-wrap .scrub{flex:1 1 auto;width:auto;min-width:100px}
+
+/* The hide / show toggle sits on the same line whether the buttons are shown or hidden */
+.viewer-tools .tools-toggle{align-self:flex-start}

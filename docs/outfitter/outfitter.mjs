@@ -684,6 +684,15 @@ async function start(){
  }
  $('retry').onclick=()=>renderModel(false,true);
  $('screenshot').onclick=takePhoto;
+
+ // Outward arrows enter full screen; inward arrows leave it.
+ {
+  const OUT='M15 4h5v5M20 4l-6 6M9 4H4v5M4 4l6 6M15 20h5v-5M20 20l-6-6M9 20H4v-5M4 20l6-6';
+  const IN='M20 9h-5V4M15 9l5-5M4 9h5V4M9 9L4 4M20 15h-5v5M15 15l5 5M4 15h5v5M9 15l-5 5';
+  const sync=()=>{const on=Boolean(document.fullscreenElement),button=$('fullscreen'),path=button.querySelector('path');
+   if(path)path.setAttribute('d',on?IN:OUT);const label=on?'Exit full screen':'Full screen';button.title=label;button.setAttribute('aria-label',label);};
+  document.addEventListener('fullscreenchange',sync);sync();
+ }
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);chosenAnimation=name;};
