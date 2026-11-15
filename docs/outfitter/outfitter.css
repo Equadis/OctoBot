@@ -131,3 +131,7 @@
 /* Save, Share and Import / Export sit at the bottom right of the Appearance panel */
 .anim-row{flex-wrap:wrap}
 .anim-row .outfit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+
+/* Background picker sits under the model toolbar, above Appearance */
+.backdrop-row{display:flex;justify-content:flex-start;margin-top:14px}
+.backdrop-row .backdrop-field{margin:0}
