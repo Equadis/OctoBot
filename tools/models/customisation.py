@@ -129,16 +129,16 @@ class Builder:
         hair_rows = [r for r in self.rows(race, sex, 3) if r[4] == 0]
         hair_color = []
         for order, r in enumerate(sorted(hair_rows, key=lambda r: r[5])):
-            elements = [self._element(m) for m in (self._material(T_HAIR, self.string(r[6])),
-                                                    self._material(T_SCALP_LOWER, self.string(r[7])) if r[7] else None,
-                                                    self._material(T_SCALP_UPPER, self.string(r[8])) if r[8] else None) if m]
+            # The scalp textures (second and third file of a hair row) are not used: drawn over the face region they cover the face with
+            # an ornate pattern on the Blood Elf female. The client only applies them under certain hair styles; that rule is not understood yet.
+            elements = [self._element(m) for m in (self._material(T_HAIR, self.string(r[6])),) if m]
             hair_color.append(self._choice(order, elements))
         # Facial hair styles pick the geosets 100 + a, 200 + b and 300 + c (a, b, c from the table; 0xCCCCCCCC means unused). On the Goblin the
         # head itself is one of the 1xx geosets, so a style must always be selected or no head is drawn.
         facial = []
         for order, r in enumerate(sorted((r for r in self.facial_hair if r[0] == race and r[1] == sex), key=lambda r: r[2])):
-            geosets = [self._element(geoset={'GeosetType': kind, 'GeosetID': value, 'Modifier': -1})
-                       for kind, value in ((1, r[6]), (2, r[7]), (3, r[8])) if value < 100 and (value > 0 or kind == 1)]
+            geosets = [self._element(geoset={'GeosetType': kind, 'GeosetID': value or 1, 'Modifier': -1})
+                       for kind, value in ((1, r[6]), (2, r[7]), (3, r[8])) if value < 100]
             facial.append(self._choice(order, geosets))
         options = []
         for name, choices in (('Skin Color', skin_choices), ('Face', face_choices), ('Hair Style', hair_style), ('Hair Color', hair_color), ('Facial Hair', facial)):

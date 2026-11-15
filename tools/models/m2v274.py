@@ -107,7 +107,7 @@ def write_skin(m):
         # old fields: flags, shading, submesh, submesh2, colour, render flags, unit, mode, texture, unit2, transparency, uv animation
         # new fields: flags, priority, shader, submesh, geoset, colour, material, layer, texture count, texture, coord, weight, transform
         batches.append((t['flags'] & 0xFF, 0, 0, t['submesh'], t['submesh2'], 65535, t['render_flags'], t['texture_unit'], max(1, t['mode']),
-                        t['texture'], t['texture_unit2'], 0, 65535))
+                        t['texture'], t['texture_unit2'], 0, 0))
     bat_n, bat_o = pair(blob, batches, '<BbHHHHHHHHHHH')
     header = struct.pack('<4s13I', b'SKIN', verts_n, verts_o, idx_n, idx_o, bone_n, bone_o, sub_n, sub_o, bat_n, bat_o, 256, 0, 0)
     blob.buf[:len(header)] = header
@@ -180,7 +180,7 @@ def write_m2(m, skel_id, skin_id, texture_ids):
     tex_combo = pair(blob, u16s('texture_lookup'), '<H')
     coord_combo = pair(blob, u16s('texture_unit_lookup'), '<H')
     weight_combo = pair(blob, [0], '<H')
-    xform_combo = (0, 0)
+    xform_combo = pair(blob, [65535], '<H')      # one entry meaning "no transform"; every batch points at entry 0 (as in Zam's own files)
     xs, ys, zs = ([v[0][a] for v in verts] for a in range(3))
     bbox = (min(xs), min(ys), min(zs), max(xs), max(ys), max(zs))
     radius = max(math.sqrt(x * x + y * y + z * z) for x, y, z in zip(xs, ys, zs))
