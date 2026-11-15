@@ -36,7 +36,7 @@ function removeCustomPhoto(){
 }
 // A background is a personal view setting. It is not part of an outfit, so shared links and saved outfits are unchanged.
 function applyBackdrop(id,{persistChoice=true}={}){
- const wrap=document.querySelector('.model-wrap'),choice=lookupBackground(id),token=++backdropRequest;
+ const wrap=document.querySelector('.model-wrap'),choice=lookupBackground(id),token=++backdropRequest;backdropUrl=choice?choice.url:'';
  const clear=()=>{wrap.classList.remove('has-backdrop');wrap.style.removeProperty('--backdrop-image');};
  if(persistChoice){try{if(choice)localStorage.setItem(BACKDROP_KEY,choice.id);else localStorage.removeItem(BACKDROP_KEY);}catch{}}
  $('backdrop').value=choice?choice.id:'';
@@ -176,6 +176,45 @@ function setupWeaponControls(){
  $('wp-sheathed').onclick=()=>{weaponView.sheathed=true;save();applySheath();};
  $('wt-melee').onclick=()=>{if(!weaponView.ranged)return;weaponView.ranged=false;save();renderModel();};
  $('wt-ranged').onclick=()=>{if(weaponView.ranged)return;weaponView.ranged=true;save();renderModel();};
+}
+// Photo of the character panel: the background and the model, without any buttons. Copied to the clipboard, or saved when copying is not allowed.
+let backdropUrl='';
+function paintDefaultGlow(g,W,H){
+ const cx=W/2,cy=H*0.75,rx=W/2*Math.SQRT2,ry=H*0.75*Math.SQRT2;
+ g.save();g.translate(cx,cy);g.scale(rx,ry);
+ const glow=g.createRadialGradient(0,0,0,0,0,1);glow.addColorStop(0,'#31495a');glow.addColorStop(0.45,'#202e40');glow.addColorStop(0.75,'#182333');glow.addColorStop(1,'#182333');
+ g.fillStyle=glow;g.fillRect(-cx/rx,-cy/ry,W/rx,H/ry);g.restore();
+}
+async function composePhoto(){
+ const r=viewer?.renderer,canvas=r?.context?.canvas;
+ if(!r||!canvas||!r.actors?.some(actor=>actor.isLoaded?.()))throw Error('The 3D preview is not ready yet.');
+ const W=canvas.width,H=canvas.height,out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d');
+ g.fillStyle='#182333';g.fillRect(0,0,W,H);
+ let painted=false;
+ if(backdropUrl&&document.querySelector('.model-wrap').classList.contains('has-backdrop')){
+  try{
+   const img=await new Promise((resolve,reject)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>resolve(i);i.onerror=reject;i.src=backdropUrl;});
+   const scale=Math.max(W/img.naturalWidth,H/img.naturalHeight);   // cover, anchored to the bottom centre like the page
+   g.drawImage(img,(W-img.naturalWidth*scale)/2,H-img.naturalHeight*scale,img.naturalWidth*scale,img.naturalHeight*scale);painted=true;
+  }catch{}
+ }
+ if(!painted)paintDefaultGlow(g,W,H);
+ r.draw(performance.now());g.drawImage(canvas,0,0);
+ return new Promise((resolve,reject)=>out.toBlob(blob=>blob?resolve(blob):reject(Error('The photo could not be created.')),'image/png'));
+}
+let shotTimer=0;
+function showShotStatus(message){const el=$('shot-status');el.textContent=message;el.classList.add('show');clearTimeout(shotTimer);shotTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+async function takePhoto(){
+ try{
+  const blob=await composePhoto();
+  try{
+   await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+   showShotStatus('Photo copied to clipboard');
+  }catch{
+   const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='octobot-dressing-room.png';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),2000);
+   showShotStatus('Photo saved to your downloads');
+  }
+ }catch(error){feedback(error.message||'The photo could not be taken.');}
 }
 function renderSlots(){
  renderRaces();renderBodies();updateBackdropButton();$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
@@ -580,7 +619,8 @@ async function start(){
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
  $('reset').onclick=()=>{applyBackdrop('');commit(emptyOutfit(),'Outfit and background reset.');};
- $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel(true);
+ $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('camera-reset').onclick=()=>renderModel(true);
+ $('screenshot').onclick=takePhoto;
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};

@@ -139,10 +139,6 @@
 /* Background sits on the same row as the other viewer controls; Reset camera is a refresh icon at the viewer's top right */
 .model-toolbar{justify-content:flex-end}
 .model-toolbar .backdrop-field{width:auto;margin-right:auto}
-.camera-reset-icon{position:absolute;top:8px;right:8px;z-index:3;width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;font-size:17px;line-height:1;cursor:pointer}
-.camera-reset-icon::first-line{line-height:1}
-.camera-reset-icon:hover,.camera-reset-icon:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
-.camera-reset-icon .flip{display:block;transform:rotate(90deg)}
 
 /* Player-style transport: acute chevrons either side of play / pause */
 .transport{display:inline-flex;align-items:center;gap:4px}
@@ -185,3 +181,10 @@
 .transport-wrap .transport{justify-content:center}
 .scrub{width:100%;min-width:118px;height:14px;margin:0;accent-color:#e4bd39;cursor:pointer}
 .scrub:disabled{opacity:.45;cursor:default}
+
+/* Viewer tools: photo, full screen and reset position, top right of the model */
+.viewer-tools{position:absolute;top:8px;right:8px;z-index:3;display:flex;gap:6px}
+.tool-btn{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;cursor:pointer}
+.tool-btn:hover,.tool-btn:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
+.shot-status{color:#6fe08f;font-size:12px;opacity:0;transition:opacity .25s}
+.shot-status.show{opacity:1}
