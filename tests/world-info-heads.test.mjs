@@ -51,15 +51,15 @@ test('a live estimate counts down from the Worker timestamps and is labelled an 
     onyxia:{clear:{status:'estimated',confirmed:false,samples:7,minSamples:5,confidence:'low',estimatedAt:iso(now+12*MIN+4000),earliestAt:iso(now+8*MIN),latestAt:iso(now+20*MIN)},drops:{alliance:{at:iso(now-65*MIN),confirmed:true},horde:null}},
     nefarian:{clear:{status:'learning',confirmed:false,samples:2,minSamples:5,confidence:'none'},drops:{alliance:null,horde:{at:iso(now-5*MIN),confirmed:true}}},
   }));
-  assert.match(text('ony-clear'),/^00h 1[12]m \d\ds$/);
+  assert.match(text('ony-clear'),/^1[12]m \d\ds$/);
   assert.match(text('ony-clear-tag'),/ESTIMATE/);
   assert.match(text('ony-clear-note'),/low confidence from 7 past raids/);
   assert.match(text('ony-clear-note'),/Not a confirmed drop/);
-  assert.match(text('ony-drop-alliance'),/^Alliance · 01h 0[45]m \d\ds AGO$/);
+  assert.match(text('ony-drop-alliance'),/^Alliance · 1h 0[45]m \d\ds AGO$/);
   assert.equal(text('ony-drop-horde'),'Horde · NO DATA');
   assert.equal(text('bwl-clear'),'LEARNING');
   assert.match(text('bwl-clear-note'),/Needs 5 past raids .* 2 observed/);
-  assert.match(text('bwl-drop-horde'),/^Horde · 00h 05m \d\ds AGO$/);
+  assert.match(text('bwl-drop-horde'),/^Horde · 5m \d\ds AGO$/);
 });
 
 test('estimates degrade to any moment / overdue and never to a confirmed drop',async()=>{

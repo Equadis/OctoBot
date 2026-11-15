@@ -54,22 +54,21 @@
   function freshAt(value, windowMs = FRESH_METRICS_MS) {
     return validPast(value) && Date.now() - value <= windowMs;
   }
+  // Largest non-zero unit leads unpadded ("1h 05m 03s", "59m 03s", "12s"); later units stay two digits.
+  function units(parts) {
+    const names = ['d', 'h', 'm', 's'];
+    const first = parts.findIndex((v, i) => v > 0 || i === parts.length - 1);
+    return parts.slice(first).map((v, i) => (i ? String(v).padStart(2, '0') : String(v)) + names[names.length - parts.length + first + i]).join(' ');
+  }
   function span(ms) {
     if (!Number.isFinite(ms)) return 'NO DATA';
     const seconds = Math.floor(Math.max(0, ms) / 1000);
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor(seconds % 3600 / 60);
-    const secs = seconds % 60;
-    return String(hours).padStart(2, '0') + 'h ' + String(minutes).padStart(2, '0') + 'm ' + String(secs).padStart(2, '0') + 's';
+    return units([Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60), seconds % 60]);
   }
   function spanWithDays(ms) {
     if (!Number.isFinite(ms)) return 'NO DATA';
     const seconds = Math.floor(Math.max(0, ms) / 1000);
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor(seconds % 86400 / 3600);
-    const minutes = Math.floor(seconds % 3600 / 60);
-    const secs = seconds % 60;
-    return days + 'd ' + String(hours).padStart(2, '0') + 'h ' + String(minutes).padStart(2, '0') + 'm ' + String(secs).padStart(2, '0') + 's';
+    return units([Math.floor(seconds / 86400), Math.floor(seconds % 86400 / 3600), Math.floor(seconds % 3600 / 60), seconds % 60]);
   }
   function when(ms) {
     if (!validPast(ms, Date.now() + 365 * DAY)) return 'Unknown';
