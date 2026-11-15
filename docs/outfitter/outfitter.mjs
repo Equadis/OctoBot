@@ -157,10 +157,17 @@ let weaponView=(()=>{try{const v=JSON.parse(localStorage.getItem(WEAPON_KEY)||'{
 function showWeaponState(){
  for(const [id,on] of [['wp-wielded',!weaponView.sheathed],['wp-sheathed',weaponView.sheathed],['wt-melee',!weaponView.ranged],['wt-ranged',weaponView.ranged]])$(id)?.setAttribute('aria-pressed',String(on));
 }
+// Sheath positions in the viewer: -1 is held in hand, 1 is on the back, 3 is at the hip.
+// Like the game, one-handed weapons hang at the hip while two-handed weapons and shields go on the back.
+function sheathPositions(){
+ if(!weaponView.sheathed)return [-1,-1];
+ const place=item=>!item?1:(item.classs===2&&item.slot===17)||item.classs===4?1:3;
+ return [place(byId.get(outfit.gear[16])),place(byId.get(outfit.gear[17]))];
+}
 function applySheath(){
  const actor=characterActor();if(!actor)return;
- const state=weaponView.sheathed?1:-1;
- try{actor.setSheath(state,state);viewer?.renderer?.draw?.(performance.now());}catch{}
+ const [main,off]=sheathPositions();
+ try{actor.setSheath(main,off);viewer?.renderer?.draw?.(performance.now());}catch{}
 }
 function setupWeaponControls(){
  showWeaponState();
@@ -413,8 +420,8 @@ function setupAnimation(){
  if(!choice)return;
  select.value=choice;try{actor.setAnimation(choice,true);}catch{}
  const frozen=keptAnim;keptAnim=null;
- if(frozen?.paused){
-  try{actor.setAnimPaused(true);}catch{}showPlayState(true);
+ if(frozen&&(!frozen.name||frozen.name===choice)){
+  if(frozen.paused){try{actor.setAnimPaused(true);}catch{}showPlayState(true);}
   // The animation clock exists a moment after the animation is set; restore the frame once it does.
   let tries=0;const restore=()=>{const state=actor.d?.B?.c;if(state?.e?.i===choice&&state.e.h>0){state.c=Math.min(frozen.time,state.e.h-1);return;}if(++tries<40)setTimeout(restore,100);};restore();
  }
@@ -468,13 +475,26 @@ function tuneCamera(r){
  });
 }
 function clearViewer(){if(viewer){try{viewer.destroy();}catch{}viewer=null;}$('model').replaceChildren();}
+// The viewer re-fits the camera to the model's bounds, so a long sheathed weapon (or none at all) would change the apparent zoom.
+// The fit is measured once per race and body, then reused, so melee, ranged and every outfit are framed identically.
+const frameCache=new Map();
+function lockFraming(r){
+ const key=`${outfit.race}-${outfit.gender}`,saved=frameCache.get(key);
+ const freeze=()=>Object.defineProperty(r,'doUpdateBounds',{configurable:true,get:()=>false,set:()=>{}});
+ if(saved){r.distance=saved.distance;for(let i=0;i<3;i++)r.translationFromModel[i]=saved.offset[i];freeze();return;}
+ // First time for this body: let the viewer fit once, remember it, then hold it.
+ let tries=0;const wait=()=>{
+  if(r.doUpdateBounds===false){frameCache.set(key,{distance:r.distance,offset:[...r.translationFromModel]});freeze();return;}
+  if(++tries<40)setTimeout(wait,100);
+ };wait();
+}
 // The user's camera survives re-renders (hiding the head or back, changing gear); only "Reset camera" returns to the default view.
 let keptView=null;
 function readView(r){return {azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],zoom:r.zoom.target};}
 function applyView(r,view){r.azimuth=view.azimuth;r.zenith=view.zenith;r.translation[0]=view.translation[0];r.translation[1]=view.translation[1];r.translation[2]=view.translation[2];r.zoom.current=view.zoom;r.zoom.target=view.zoom;r.zoom.rateCurrent=0;}
 async function renderModel(resetCamera=false){
  keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
- keptAnim=animationPaused&&characterActor()?.d?.B?.c?{paused:true,time:characterActor().d.B.c.c}:null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
+ keptAnim=characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
@@ -512,7 +532,7 @@ async function renderModel(resetCamera=false){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;modelBusy=false;setupAnimation();applySheath();queueScan();return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;lockFraming(r);if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;modelBusy=false;setupAnimation();applySheath();queueScan();return;}
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';modelBusy=false;return;}
    setTimeout(check,250);
   };check();
