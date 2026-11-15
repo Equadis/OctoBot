@@ -11,6 +11,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 import m2v274, blp, octo_mpq  # noqa
 
 model_path = sys.argv[1]
+RACE, SEX = int(os.environ.get('RACE', 9)), int(os.environ.get('SEX', 0))
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 8765
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRV = os.path.join(HERE, 'out', 'srv')
@@ -31,11 +32,11 @@ for name, fid in ids['textures'].items():
 ZAM = 'https://wow.zamimg.com/modelviewer/classic/meta/'
 meta = json.load(urllib.request.urlopen(urllib.request.Request(ZAM + 'character/17.json', headers={'User-Agent': 'local-test'})))
 meta['Model'] = ids['model']
+meta['Character']['Race'], meta['Character']['Gender'] = RACE, SEX
 os.makedirs(os.path.join(SRV, 'meta', 'character'), exist_ok=True)
 json.dump(meta, open(os.path.join(SRV, 'meta', 'character', '17.json'), 'w'))
 os.makedirs(os.path.join(SRV, 'meta', 'charactercustomization'), exist_ok=True)
 import customisation  # noqa: E402
-RACE, SEX = int(os.environ.get('RACE', 9)), int(os.environ.get('SEX', 0))
 builder = customisation.Builder(client)
 cust = builder.build(RACE, SEX)
 json.dump(cust, open(os.path.join(SRV, 'meta', 'charactercustomization', '17.json'), 'w'))
@@ -65,6 +66,31 @@ window.addEventListener('load',()=>setTimeout(go,300));
 PAGE = PAGE_T.replace('LOOKJSON', LOOK)
 
 
+import helms  # noqa: E402
+HELMS = helms.HelmConverter(client)
+
+
+def patched_helm(display_id):
+    """Zam's helm item data with Goblin and Blood Elf model files (converted from the client) added, and hair-hiding entries for race 10."""
+    item = json.load(urllib.request.urlopen(urllib.request.Request(ZAM.replace('meta/', 'meta/armor/1/') + f'{display_id}.json', headers={'User-Agent': 'local-test'}), timeout=20))
+    found, files = HELMS.convert(display_id)
+    for rel, blob in files.items():
+        path = os.path.join(SRV, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'wb') as handle:
+            handle.write(blob)
+    for key, entries in (item.get('ModelFiles') or {}).items():
+        entries[:] = [e for e in entries if f"{e['Race']}:{e['Gender']}" not in found]
+        entries += [{'FileDataId': fid, 'Gender': int(k.split(':')[1]), 'Class': 0, 'Race': int(k.split(':')[0]), 'ExtraData': -1} for k, fid in found.items()]
+    for field in ('HideGeosetMale', 'HideGeosetFemale'):
+        rows = item['Item'].get(field) or []
+        for race in (9, 10):
+            if not any(r['RaceId'] == race for r in rows):
+                rows += [dict(r, RaceId=race) for r in rows if r['RaceId'] == 8]
+        item['Item'][field] = rows
+    return json.dumps(item).encode()
+
+
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write('%s %s\n' % (self.command, self.path))
@@ -85,6 +111,15 @@ class Handler(SimpleHTTPRequestHandler):
         rel = self.path.split('?')[0][len('/assets/'):] if self.path.startswith('/assets/') else None
         if rel is None:
             self.send_error(404); return
+        import re
+        helm = re.match(r'meta/armor/1/(\d+)\.json$', rel)
+        if helm:
+            try:
+                body = patched_helm(int(helm.group(1)))
+            except Exception as e:
+                self.send_error(404, str(e)); return
+            self.send_response(200); self.send_header('Content-Type', 'application/json'); self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)
+            return
         local = os.path.join(SRV, rel)
         if os.path.isfile(local):
             body = open(local, 'rb').read(); status = 200
