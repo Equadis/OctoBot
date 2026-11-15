@@ -46,11 +46,19 @@ class UnsafeOutput(Exception):
     pass
 
 
+def is_within(path, folder):
+    """True when path is the folder or inside it. A path on another drive (Windows) is never inside."""
+    try:
+        return os.path.commonpath([os.path.abspath(path), os.path.abspath(folder)]) == os.path.abspath(folder)
+    except ValueError:
+        return False
+
+
 def check_output_folder(path):
     """Refuses a folder inside the repository unless it is the git-ignored tools/models/out."""
     out = os.path.abspath(path)
-    inside = os.path.commonpath([out, REPO]) == REPO
-    ignored = os.path.commonpath([out, os.path.join(REPO, 'tools', 'models', 'out')]) == os.path.join(REPO, 'tools', 'models', 'out')
+    inside = is_within(out, REPO)
+    ignored = is_within(out, os.path.join(REPO, 'tools', 'models', 'out'))
     if inside and not ignored:
         raise UnsafeOutput(f'{out} is inside the repository; converted game files must not be committed. Use a folder outside it or tools/models/out.')
     return out

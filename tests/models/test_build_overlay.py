@@ -18,6 +18,16 @@ class OutputFolderRule(unittest.TestCase):
             with self.assertRaises(build_overlay.UnsafeOutput):
                 build_overlay.check_output_folder(path)
 
+    def test_a_folder_on_another_drive_is_outside_not_an_error(self):
+        # os.path.commonpath raises ValueError for paths on different Windows drives; that must read as "not inside the repository".
+        real = os.path.commonpath
+        os.path.commonpath = lambda paths: (_ for _ in ()).throw(ValueError("Paths don't have the same drive"))
+        try:
+            self.assertFalse(build_overlay.is_within('D:/octo-overlay', REPO))
+            build_overlay.check_output_folder('D:/octo-overlay')
+        finally:
+            os.path.commonpath = real
+
     def test_allows_the_ignored_out_folder_and_outside_folders(self):
         build_overlay.check_output_folder(os.path.join(REPO, 'tools', 'models', 'out', 'overlay'))
         build_overlay.check_output_folder(tempfile.gettempdir())
