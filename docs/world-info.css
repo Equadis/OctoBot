@@ -191,3 +191,6 @@ small:empty,.evidence:empty{display:none}
 /* Zul'Gurub / Edge of Madness glows in the same way as the faction and raid panels */
 .zg-panel{background:linear-gradient(135deg,#314115 0%,var(--panel) 62%);border-color:#455a22;border-left:4px solid #62823a}
 
+
+.clock.na{color:#ff6b5e}
+.hero-stat span[hidden]{display:none}

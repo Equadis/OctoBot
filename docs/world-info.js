@@ -165,7 +165,6 @@
     const raidTotal = raid ? (raid.sessions.length || raid.count || 0) : 0;
     const raidLabel = raidTotal >= 2 ? 'Raids in progress' : 'Raid in progress';
     $(key + '-count-label').textContent = raidLabel;
-    $(key + '-active-label').textContent = raidLabel;
     finished.textContent = raid && validPast(raid.lastFinishedAt)
       ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'NO DATA';
     finished.title = raid && validPast(raid.lastFinishedAt) && raid.clearConfirmed !== true ? 'Roster left the zone; a boss clear is not confirmed.' : '';
@@ -275,13 +274,16 @@
     const out = $(prefix + '-clear'), note = $(prefix + '-clear-note'), tag = $(prefix + '-clear-tag');
     const clear = head && head.clear;
     tag.hidden = true;
+    // With no raid there is nothing to estimate: N/A in red.
+    const idle = $(prefix + '-count').textContent === 'No raid' || (clear && clear.status === 'idle');
+    out.classList.toggle('na', Boolean(idle));
+    if (idle) { out.textContent = 'N/A'; note.textContent = ''; return; }
     if (!clear || stale) {
       out.textContent = 'NO DATA';
       note.textContent = stale && clear ? 'The latest estimate is too old to show.' : '';
       return;
     }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
-    if (clear.status === 'idle') { out.textContent = 'No raid'; note.textContent = ''; return; }
     if (clear.status === 'learning') {
       out.textContent = 'LEARNING';
       note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
@@ -367,6 +369,8 @@
   function renderLive() {
     renderRaid('ony');
     renderRaid('bwl');
+    // "No raid" already says it, so the "Raid in progress" label only shows beside a count.
+    for (const key of ['ony', 'bwl']) $(key + '-count-label').hidden = !/^\d/.test($(key + '-count').textContent || '');
     renderHead('ony', 'onyxia');
     renderHead('bwl', 'nefarian');
     renderBuff('alliance');

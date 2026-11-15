@@ -33,7 +33,7 @@ async function run(payload){
   };
   vm.runInNewContext(script,context);
   await new Promise(resolve=>setTimeout(resolve,50));
-  return id=>elements.get(id)?.textContent;
+  const text=id=>elements.get(id)?.textContent;text.el=id=>elements.get(id);return text;
 }
 
 const feed=(now,heads,buffs={})=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs,sessions:{},heads}]});
@@ -106,4 +106,24 @@ test('the Edge of Madness calendar sits inside its panel, closed by default, beh
   assert.ok(!html.includes('calendar-panel'),'no separate full-width calendar section');
   const script=readFileSync(new URL('../docs/world-info.js',import.meta.url),'utf8');
   assert.ok(script.includes("$('calendar-toggle').addEventListener('click'"));
+});
+
+test('no raid: the count says "No raid" once, the label is hidden, and the estimated clear is N/A in red',async()=>{
+  const now=Date.now();
+  const quiet={generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:0,at:iso(now-MIN),active:false}},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'idle',confirmed:false,samples:0,minSamples:5,confidence:'none'},drops:{}}}}]};
+  const text=await run(quiet);
+  assert.equal(text('ony-count'),'No raid');
+  assert.equal(text.el('ony-count-label').hidden,true);
+  assert.equal(text('ony-clear'),'N/A');
+  assert.match(readFileSync(new URL('../docs/world-info.css',import.meta.url),'utf8'),/\.clock\.na\{color:#ff6b5e\}/);   // the N/A class is red
+});
+
+test('a raid in progress shows its count with the label, and the clear estimate is not N/A',async()=>{
+  const now=Date.now();
+  const live={generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:20,at:iso(now-MIN),active:true,activityStart:iso(now-30*MIN)}},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'learning',confirmed:false,samples:2,minSamples:5,confidence:'none'},drops:{}}}}]};
+  const text=await run(live);
+  assert.equal(text('ony-count'),'1');
+  assert.equal(text.el('ony-count-label').hidden,false);
+  assert.equal(text('ony-count-label'),'Raid in progress');
+  assert.equal(text('ony-clear'),'LEARNING');
 });
