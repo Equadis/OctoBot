@@ -234,18 +234,22 @@ function infoIcon(note){const info=document.createElement('span');info.className
 // Item rows are checked as they scroll into view, so the (i) appears for every item with an estimated or missing preview.
 // These checks are background work: they run two at a time, only for rows still on screen, and never while the 3D model
 // is loading, so they cannot slow down the model the user just chose.
-let scanTimer=0,modelBusy=false,scanActive=0;const scanQueue=[];const MAX_SCAN=2;
+let scanTimer=0,modelBusy=false,scanActive=0;const scanQueue=[];const MAX_SCAN=4,MAX_SCAN_BUSY=1;
 function watchRowPreview(row,item,links,link){row._preview={item,slotId:selectedSlot,links,link,row};}
-function rowNearView(row){const box=$('results');if(!box||!row.isConnected)return false;const a=box.getBoundingClientRect(),r=row.getBoundingClientRect();return r.bottom>=a.top-160&&r.top<=a.bottom+160;}
+function rowNearView(row){const box=$('results');if(!box||!row.isConnected)return false;const a=box.getBoundingClientRect(),r=row.getBoundingClientRect();return r.bottom>=a.top-320&&r.top<=a.bottom+320;}
 function pumpScan(){
- while(!modelBusy&&scanActive<MAX_SCAN&&scanQueue.length){
+ while(scanActive<(modelBusy?MAX_SCAN_BUSY:MAX_SCAN)&&scanQueue.length){
   const job=scanQueue.shift();
   if(!rowNearView(job.row)){job.queued=false;continue;}
   scanActive++;
-  resolvePreview(job.item,job.slotId).then(result=>{
+  // The icon is added whenever the answer arrives; a slow answer only holds its scan slot for a few seconds.
+  const answer=resolvePreview(job.item,job.slotId);
+  answer.then(result=>{
+   job.done=true;
    if(!result.note||!job.row.isConnected||job.links.querySelector('.info-i'))return;
    job.links.insertBefore(infoIcon(result.note),job.link);
-  }).catch(()=>{}).finally(()=>{scanActive--;job.queued=false;job.done=true;pumpScan();});
+  }).catch(()=>{job.done=true;});
+  Promise.race([answer,new Promise(resolve=>setTimeout(resolve,6000))]).catch(()=>{}).finally(()=>{scanActive--;scanVisibleRows();});
  }
 }
 function scanVisibleRows(){
@@ -254,13 +258,15 @@ function scanVisibleRows(){
  for(const row of box.querySelectorAll('.result')){
   const job=row._preview;if(!job||job.queued||job.done)continue;
   const r=row.getBoundingClientRect();
-  if(r.bottom<area.top-160)continue;
-  if(r.top>area.bottom+160)break;
+  if(r.bottom<area.top-320)continue;
+  if(r.top>area.bottom+320)break;
   job.queued=true;scanQueue.push(job);
  }
  pumpScan();
 }
-function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRows,250);}
+function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRows,150);}
+// A light safety net: rows that scrolled into range, or that were skipped while the model was loading, are picked up within a second.
+setInterval(()=>{if(!document.hidden)scanVisibleRows();},800);
 function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 
