@@ -191,7 +191,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 /* Single two-column layout matching the width of the page header line on the other tabs */
 .planner-view .planner-grid{grid-template-columns:minmax(340px,.9fr) minmax(0,1.5fr);width:100%;margin-left:0;margin-right:0;gap:18px;align-items:start}
 .planner-view .left-column,.planner-view .right-column{min-width:0}
-.planner-view .left-column>section.card+section.card{margin-top:18px}
+.planner-view .left-column>section.card+section.card{margin-top:0}
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:minmax(0,1fr)}}
 
 .planner-view .talent-card{border:1px solid #344253}
