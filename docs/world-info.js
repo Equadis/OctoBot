@@ -153,6 +153,7 @@
     const count = sessions.length ? sessions.length : (Number.isInteger(Number(explicitCount)) && Number(explicitCount) >= 0 ? Number(explicitCount) : null);
     return { stamp, sessions, lastFinishedAt, players: Number.isFinite(players) && players >= 0 ? players : null, active, count };
   }
+  function playerCount(n) { return n + (n === 1 ? ' player' : ' players'); }
   function renderRaid(key) {
     const raid = state.raids[key];
     const count = $(key + '-count');
@@ -191,27 +192,27 @@
         line.append(title, timer);
         activeNode.append(line);
       }
-      evidence.textContent = 'Separate groups ' + (raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence)) ? 'verified' : 'inferred') + ' from rosters · ' + (raid.players === null ? 'Roster observed' : raid.players + ' players observed in /who') + '. /who alone cannot prove instance IDs.';
+      evidence.textContent = 'Separate groups ' + (raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence)) ? 'verified' : 'inferred') + ' from rosters · ' + (raid.players === null ? 'Roster observed' : playerCount(raid.players) + ' observed in /who') + '. /who alone cannot prove instance IDs.';
     } else if (raid.count !== null) {
       count.textContent = raid.count === 0 ? 'No raid' : String(raid.count);
       labelState(key + '-state', raid.count ? 'ESTIMATED' : 'NO RAID', raid.count ? 'estimated' : 'unknown');
       appendEmpty(activeNode, raid.count ? 'Start timestamps not yet available.' : 'No raid currently detected.');
-      evidence.textContent = raid.players !== null ? raid.players + ' players listed in the latest /who response.' : 'Latest roster observation received.';
+      evidence.textContent = raid.players !== null ? playerCount(raid.players) + ' listed in the latest /who response.' : 'Latest roster observation received.';
     } else if (raid.active === true) {
       count.textContent = '1+';
       labelState(key + '-state', 'ESTIMATED', 'estimated');
       appendEmpty(activeNode, 'Raid activity detected; separate groups and start time not verified.');
-      evidence.textContent = (raid.players === null ? 'Raid activity signal received.' : raid.players + ' players in the observed zone.') + ' Multiple raids cannot be counted from the current collector.';
+      evidence.textContent = (raid.players === null ? 'Raid activity signal received.' : playerCount(raid.players) + ' in the observed zone.') + ' Multiple raids cannot be counted from the current collector.';
     } else if (raid.active === false) {
       count.textContent = 'No raid';
       labelState(key + '-state', 'NO RAID', 'unknown');
       appendEmpty(activeNode, 'No raid detected in the latest scan.');
-      evidence.textContent = (raid.players === null ? '' : raid.players + ' players listed. ') + 'No confirmed completed raid can be inferred from an empty zone.';
+      evidence.textContent = (raid.players === null ? '' : playerCount(raid.players) + ' listed. ') + 'No confirmed completed raid can be inferred from an empty zone.';
     } else {
       count.textContent = 'NO DATA';
       labelState(key + '-state', 'UNVERIFIED');
       appendEmpty(activeNode, 'Insufficient raid lifecycle information.');
-      evidence.textContent = raid.players === null ? 'No usable observations available.' : raid.players + ' players listed; the raid state is unknown.';
+      evidence.textContent = raid.players === null ? 'No usable observations available.' : playerCount(raid.players) + ' listed; the raid state is unknown.';
     }
   }
   function appendEmpty(node, message) {
