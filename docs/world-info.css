@@ -164,3 +164,7 @@ small:empty,.evidence:empty{display:none}
 
 /* Darkmoon Faire location stays on one line; the panel grows to fit it */
 #dmf-heading{white-space:nowrap}
+
+/* Raid panels glow in the colour of the flame in each head's icon: Onyxia's fire (#DD500A) and Nefarian's violet (#8050B0) */
+.raid-onyxia{background:linear-gradient(135deg,#6E2808 0%,var(--panel) 62%);border-color:#93390c;border-left:4px solid #bd4510}
+.raid-nefarian{background:linear-gradient(135deg,#3C2760 0%,var(--panel) 62%);border-color:#58398a;border-left:4px solid #7049a6}
