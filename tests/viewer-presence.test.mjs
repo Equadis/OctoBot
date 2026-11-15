@@ -24,7 +24,7 @@ test('viewer presence resolves root configuration from the shared script on ever
   assert.equal(requests[1].url,'https://presence.example/api/presence/heartbeat');
   assert.equal(JSON.parse(requests[1].options.body).session_id,savedId);
   assert.equal(count.textContent,'7');
-  assert.match(status.title,/DPS Sim/);
+  assert.equal(status.title,undefined);   // the viewer count has no hover tooltip
   for(const id of ['viewer-status','viewer-count'])assert.ok(markup.includes(`id="${id}"`));
  }
 });

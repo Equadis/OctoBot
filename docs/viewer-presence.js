@@ -31,7 +31,6 @@
   function unavailable() {
     count.textContent = '—';
     status.classList.add('is-offline');
-    status.title = 'Site-wide viewer count temporarily unavailable';
   }
 
   async function heartbeat(force = false) {
@@ -55,7 +54,6 @@
       if (renew) lastHeartbeatAt = Date.now();
       count.textContent = result.viewers.toLocaleString('en-GB');
       status.classList.remove('is-offline');
-      status.title = result.viewers + ' active dashboard viewers across Population, Server Status and DPS Sim (last 90 seconds)';
     } catch (error) {
       console.warn('Site-wide viewer count unavailable', error);
       unavailable();
