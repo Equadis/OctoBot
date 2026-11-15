@@ -12,7 +12,8 @@ database_name = "octobot-population"
 database_id = "43515153-c667-4599-8a73-24824fa5f399"
 migrations_dir = "migrations"
 
-# Optional model overlay (see README.md). Uncomment only after the bucket exists and OctoWoW has agreed to hosting:
-# [[r2_buckets]]
-# binding = "MODELS"
-# bucket_name = "octobot-models"
+# Private bucket for the converted Goblin and High Elf models (see README.md). Create it first, or the deploy fails:
+#   npx wrangler r2 bucket create octobot-models
+[[r2_buckets]]
+binding = "MODELS"
+bucket_name = "octobot-models"

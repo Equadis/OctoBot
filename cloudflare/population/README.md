@@ -179,6 +179,6 @@ To enable it (manual, needs OctoWoW's agreement first; the converted files must 
 
 1. `python tools/models/build_overlay.py <client Data folder> <folder outside the repo>`
 2. Create a private bucket and upload the folder's contents under the same keys it uses (`m2/...`, `skin/...`, `skel/...`, `textures/...`, `meta/...`, `helms.json`).
-3. Add to `wrangler.toml` and deploy: `[[r2_buckets]]`, `binding = "MODELS"`, `bucket_name = "<your bucket>"`.
+3. The `MODELS` binding is now in `wrangler.toml`; deploy with `npx wrangler deploy` from this folder. Uploading can be done with `node tools/models/upload_overlay.mjs <overlay folder> octobot-models` (resumable, uses your own wrangler login).
 
-Nothing here has been deployed. The tests (`tests/overlay.test.mjs`) use a fake bucket.
+The binding is in `wrangler.toml` but the deploy has to be run by you; it fails until the bucket exists. The tests (`tests/overlay.test.mjs`) use a fake bucket.
