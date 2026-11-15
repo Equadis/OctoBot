@@ -41,8 +41,10 @@ const feed=(now,heads,buffs={})=>({generated_at:iso(now),realms:[{realm:"N'Zoth"
 test('the page lays out an estimated clear and a confirmed-drop line for each head, and no predicted-drop or buff-duration timer',()=>{
   for(const id of ['ony-clear','ony-clear-note','ony-clear-tag','ony-drop-alliance','ony-drop-horde','bwl-clear','bwl-clear-note','bwl-clear-tag','bwl-drop-alliance','bwl-drop-horde'])assert.ok(html.includes(`id="${id}"`),id);
   assert.ok(!/Buff time remaining|Buff drop estimated in|id="alliance-remaining"|id="horde-remaining"/.test(html));
-  assert.match(html,/not a confirmed drop/i);
-  assert.ok(!/cooldown/i.test(html.replace(/no head-drop cooldown/i,'')));
+  assert.ok(!/not a confirmed drop/i.test(html.replace(/data-tip="[^"]*"|aria-label="[^"]*"/g,'')),'no visible disclaimer');
+  assert.equal((html.match(/class="info-i"/g)||[]).length,4);
+  assert.match(html,/never a guaranteed drop/);
+  assert.ok(!/cooldown/i.test(html.replace(/(data-tip|aria-label)="[^"]*"/g,'')));
 });
 
 test('a live estimate counts down from the Worker timestamps and is labelled an estimate',async()=>{
@@ -54,12 +56,12 @@ test('a live estimate counts down from the Worker timestamps and is labelled an 
   assert.match(text('ony-clear'),/^1[12]m \d\ds$/);
   assert.match(text('ony-clear-tag'),/ESTIMATE/);
   assert.match(text('ony-clear-note'),/low confidence from 7 past raids/);
-  assert.match(text('ony-clear-note'),/Not a confirmed drop/);
-  assert.match(text('ony-drop-alliance'),/^Alliance · 1h 0[45]m \d\ds AGO$/);
+  assert.ok(!/confirmed drop/i.test(text('ony-clear-note')));
+  assert.match(text('ony-drop-alliance'),/^Alliance · 1h 0[45]m \d\ds ago$/);
   assert.equal(text('ony-drop-horde'),'Horde · NO DATA');
   assert.equal(text('bwl-clear'),'LEARNING');
   assert.match(text('bwl-clear-note'),/Needs 5 past raids .* 2 observed/);
-  assert.match(text('bwl-drop-horde'),/^Horde · 5m \d\ds AGO$/);
+  assert.match(text('bwl-drop-horde'),/^Horde · 5m \d\ds ago$/);
 });
 
 test('estimates degrade to any moment / overdue and never to a confirmed drop',async()=>{
@@ -74,7 +76,7 @@ test('estimates degrade to any moment / overdue and never to a confirmed drop',a
 test('a head drop names the head on the faction panel',async()=>{
   const now=Date.now();
   const text=await run(feed(now,{},{'Rallying Cry of the Dragonslayer:horde':{at:iso(now-3*MIN),buff:'Rallying Cry of the Dragonslayer',faction:'horde',source:'npc_yell',head:'nefarian'}}));
-  assert.match(text('horde-last'),/AGO/);
+  assert.match(text('horde-last'),/ago/);
   assert.match(text('horde-last-note'),/Nefarian head/);
 });
 

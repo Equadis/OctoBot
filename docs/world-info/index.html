@@ -6,9 +6,9 @@
 <meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
 <title>OctoBot · World Info (WIP)</title>
 <link rel="icon" href="../favicon.png" type="image/png">
-<link rel="stylesheet" href="../site-theme.css?v=20261114-size2">
-<link rel="stylesheet" href="../world-info.css?v=20261115-units1">
-<script src="../world-info.js?v=20261115-units1" defer></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261115-size3">
+<link rel="stylesheet" href="../world-info.css?v=20261115-info1">
+<script src="../world-info.js?v=20261115-info1" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -36,11 +36,12 @@
       <div class="mini-divider"></div>
       <div class="field-header"><span>Raid(s) in progress</span><span class="field-hint">Elapsed time</span></div>
       <div class="timer-list" id="ony-active"><p class="empty">No confirmed raid sessions yet.</p></div>
-      <div class="field-header"><span>Estimated clear</span><span class="field-hint">Estimate · not a confirmed drop</span></div>
-      <div class="clear-block"><strong class="clock mono" id="ony-clear">NO DATA</strong><span class="clear-tag" id="ony-clear-tag" hidden></span><small id="ony-clear-note">No current estimate</small></div>
+      <div class="field-header"><span>Estimated clear</span></div>
+      <div class="clear-block"><strong class="clock mono" id="ony-clear">NO DATA</strong><span class="clear-tag" id="ony-clear-tag" hidden></span><small id="ony-clear-note"></small></div>
       <div class="bottom-line"><span>Last raid finished</span><strong class="mono" id="ony-finished">NO DATA</strong></div>
       <div class="bottom-line drops-line"><span>Last confirmed head drop</span><div class="drop-pair"><span id="ony-drop-alliance">Alliance · NO DATA</span><span id="ony-drop-horde">Horde · NO DATA</span></div></div>
-      <p class="evidence" id="ony-evidence">Waiting for an in-game raid observation.</p>
+      <p class="evidence" id="ony-evidence"></p>
+      <span class="info-i" tabindex="0" role="note" aria-label="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown." data-tip="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.">i</span>
     </article>
 
     <article class="world-panel" aria-labelledby="bwl-heading">
@@ -49,11 +50,12 @@
       <div class="mini-divider"></div>
       <div class="field-header"><span>Raid(s) in progress</span><span class="field-hint">Elapsed time</span></div>
       <div class="timer-list" id="bwl-active"><p class="empty">No confirmed raid sessions yet.</p></div>
-      <div class="field-header"><span>Estimated clear</span><span class="field-hint">Estimate · not a confirmed drop</span></div>
-      <div class="clear-block"><strong class="clock mono" id="bwl-clear">NO DATA</strong><span class="clear-tag" id="bwl-clear-tag" hidden></span><small id="bwl-clear-note">No current estimate</small></div>
+      <div class="field-header"><span>Estimated clear</span></div>
+      <div class="clear-block"><strong class="clock mono" id="bwl-clear">NO DATA</strong><span class="clear-tag" id="bwl-clear-tag" hidden></span><small id="bwl-clear-note"></small></div>
       <div class="bottom-line"><span>Last raid finished</span><strong class="mono" id="bwl-finished">NO DATA</strong></div>
       <div class="bottom-line drops-line"><span>Last confirmed head drop</span><div class="drop-pair"><span id="bwl-drop-alliance">Alliance · NO DATA</span><span id="bwl-drop-horde">Horde · NO DATA</span></div></div>
-      <p class="evidence" id="bwl-evidence">Waiting for an in-game raid observation.</p>
+      <p class="evidence" id="bwl-evidence"></p>
+      <span class="info-i" tabindex="0" role="note" aria-label="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown." data-tip="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.">i</span>
     </article>
   </div>
 </section>
@@ -64,17 +66,18 @@
     <article class="world-panel faction-alliance" aria-labelledby="alliance-heading">
       <div class="panel-heading"><div class="heading-with-icon"><img class="faction-icon" src="../img/alliance-crest.png" width="36" height="36" alt=""><h3 id="alliance-heading">Alliance · Stormwind</h3></div><span class="state-tag" id="alliance-state">AWAITING DATA</span></div>
       <div class="buff-grid">
-        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="alliance-last">NO DATA</strong><small id="alliance-last-note">No confirmed announcement received</small></div>
+        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="alliance-last">NO DATA</strong><small id="alliance-last-note"></small></div>
       </div>
+      <span class="info-i" tabindex="0" role="note" aria-label="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown." data-tip="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.">i</span>
     </article>
     <article class="world-panel faction-horde" aria-labelledby="horde-heading">
       <div class="panel-heading"><div class="heading-with-icon"><img class="faction-icon" src="../img/horde-crest.png" width="36" height="36" alt=""><h3 id="horde-heading">Horde · Orgrimmar</h3></div><span class="state-tag" id="horde-state">AWAITING DATA</span></div>
       <div class="buff-grid">
-        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="horde-last">NO DATA</strong><small id="horde-last-note">No confirmed announcement received</small></div>
+        <div><span class="field-label">Last confirmed drop</span><strong class="clock mono" id="horde-last">NO DATA</strong><small id="horde-last-note"></small></div>
       </div>
+      <span class="info-i" tabindex="0" role="note" aria-label="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown." data-tip="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.">i</span>
     </article>
   </div>
-  <p class="disclaimer">Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.</p>
 </section>
 
 <div class="world-grid two bottom-grid">

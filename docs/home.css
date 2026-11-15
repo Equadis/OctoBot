@@ -1,6 +1,6 @@
 /* Home page: welcome text and one large button per tool. */
 .home-welcome{margin:26px 0 22px;max-width:760px}
-.home-welcome h2{font-size:22px;margin:0 0 10px;color:var(--gold,#e8c67c)}
+.home-welcome h2{font-size:25px;margin:0 0 10px;color:var(--gold,#e8c67c)}
 .home-welcome p{margin:0;color:#b8c4d4;font-size:15px;line-height:1.7}
 .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .home-card{display:flex;flex-direction:column;gap:10px;min-height:168px;padding:24px 26px;background:var(--panel,#1f2b3b);border:1px solid var(--line,#39465a);border-radius:6px;color:#d4dfed;text-decoration:none;transition:border-color .12s,background .12s,transform .12s}

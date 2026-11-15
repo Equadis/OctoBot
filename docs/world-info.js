@@ -161,13 +161,13 @@
     const finished = $(key + '-finished');
     activeNode.replaceChildren();
     finished.textContent = raid && validPast(raid.lastFinishedAt)
-      ? span(Date.now() - raid.lastFinishedAt) + ' AGO' : 'NO DATA';
+      ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'NO DATA';
     finished.title = raid && validPast(raid.lastFinishedAt) && raid.clearConfirmed !== true ? 'Roster left the zone; a boss clear is not confirmed.' : '';
     count.classList.toggle('no-data', !raid || !freshAt(raid.stamp, FRESH_RAID_MS));
     if (!raid || !freshAt(raid.stamp, FRESH_RAID_MS)) {
       count.textContent = 'NO DATA';
       labelState(key + '-state', raid ? 'STALE' : 'AWAITING DATA');
-      evidence.textContent = raid ? 'Last /who reading is too old for a live raid status.' : 'Waiting for an in-game raid observation.';
+      evidence.textContent = raid ? 'Last /who reading is too old for a live raid status.' : '';
       appendEmpty(activeNode, 'No current verified raid sessions.');
       return;
     }
@@ -236,11 +236,11 @@
     const last = $(faction + '-last');
     const lastNote = $(faction + '-last-note');
     if (buff && validPast(buff.last)) {
-      last.textContent = span(Date.now() - buff.last) + ' AGO';
+      last.textContent = span(Date.now() - buff.last) + ' ago';
       lastNote.textContent = 'Recorded ' + when(buff.last) + (buff.head ? ' · ' + headName(buff.head) + ' head' : '');
     } else {
       last.textContent = 'NO DATA';
-      lastNote.textContent = 'No confirmed announcement received';
+      lastNote.textContent = '';
     }
     labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : 'AWAITING DATA', buff && validPast(buff.last) ? 'online' : 'unknown');
   }
@@ -250,7 +250,7 @@
   const MIN_SAMPLES_FALLBACK = 5;
   function dropLine(label, drop) {
     const at = drop && drop.confirmed === true ? time(drop.at) : null;
-    return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' AGO' : 'NO DATA');
+    return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' ago' : 'NO DATA');
   }
   function renderHead(prefix, headKey) {
     const head = state.heads[headKey];
@@ -262,21 +262,21 @@
     tag.hidden = true;
     if (!clear || stale) {
       out.textContent = 'NO DATA';
-      note.textContent = stale && clear ? 'The latest estimate is too old to show.' : 'No current estimate.';
+      note.textContent = stale && clear ? 'The latest estimate is too old to show.' : '';
       return;
     }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
-    if (clear.status === 'idle') { out.textContent = 'NO RAID'; note.textContent = 'No raid in progress, so there is nothing to estimate.'; return; }
+    if (clear.status === 'idle') { out.textContent = 'NO RAID'; note.textContent = ''; return; }
     if (clear.status === 'learning') {
       out.textContent = 'LEARNING';
       note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
       return;
     }
     const estimatedAt = time(clear.estimatedAt), latestAt = time(clear.latestAt), earliestAt = time(clear.earliestAt);
-    if (!Number.isFinite(estimatedAt)) { out.textContent = 'NO DATA'; note.textContent = 'No current estimate.'; return; }
+    if (!Number.isFinite(estimatedAt)) { out.textContent = 'NO DATA'; note.textContent = ''; return; }
     const now = Date.now();
     const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
-    const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '. Not a confirmed drop.';
+    const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '.';
     tag.hidden = false;
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); tag.textContent = 'ESTIMATE'; note.textContent = 'Estimated clear · ' + basis; }
     else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'ANY MOMENT'; tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
