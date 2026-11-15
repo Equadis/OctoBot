@@ -173,7 +173,7 @@ def write_m2(m, skel_id, skin_id, texture_ids):
     def u16s(name_):
         a = m.array(name_)
         return list(struct.unpack_from(f"<{a['count']}H", m.data, a['offset'])) if a['count'] else []
-    rep = pair(blob, u16s('texture_replace'), '<H')
+    rep = pair(blob, u16s('replaceable_lookup'), '<H')
     mats = m.array('render_flags')
     mat = pair(blob, [struct.unpack_from('<HH', m.data, mats['offset'] + 4 * k) for k in range(mats['count'])], '<HH')
     bone_combo = pair(blob, u16s('bone_lookup'), '<H')

@@ -33,7 +33,7 @@ The client's models are the old single-file form: version 256 with embedded view
    * Still to do: colours, transparency, UV animations, events, lights, cameras, emitters and the external `.anim` files (if any are used).
 3. **Writer (`m2v274.py`, geometry and animation done, not yet tried in the viewer).** Emits `m2/<id>.m2` (MD21 v274 plus SKID, SFID, TXID), `skin/<id>.skin` and `skel/<id>.skel` (SKL1, SKS1, SKB1, SKA1) with invented file ids from 9,000,000 up. Rotations are re-compressed to int16 and key times made relative to each sequence. Verified by reading the output back and comparing with the v256 reader (19 rules, all four Goblin and Blood Elf bodies). Written empty or with a stand-in: colours, transparency (one opaque weight), UV animations, events, lights, cameras, particles, collision. Batch shader ids are a guess (0) until the viewer test.
 4. **Textures (`blp.py`, done).** Decodes BLP (palette and DXT) to lossless WebP via Pillow; `octo_mpq.Client` searches every archive newest first. Checked by eye on the Goblin and Blood Elf skins, faces, pelvis and eye glow. The client's file names come from `CharSections.dbc` (race 9 Goblin, race 10 Blood Elf; fields: id, race, sex, section, variation, colour, three texture names); section 0 skin, 1 face, 3 hair, 4 underwear. Base hair textures such as `Hair00_00.blp` are fully transparent placeholders; real hair uses other colour rows.
-5. **Proof of concept.** Goblin male, default skin, rendered in the Zam viewer from a local asset folder.
+5. **Proof of concept (`viewer_test.py`, geometry rendering works).** The converted Goblin male loads in Zam's viewer from a local server and stands in the Stand pose with the correct body. Not yet working: the head and face (geoset choice and face compositing need the customisation data from step 6), the viewer's texture compositing step (it needs the `Materials`, `TextureLayers` and `TextureSections` blocks of the customisation JSON, which Zam's Goblin file shows the standard 512 by 512 layout for), and animation playback and gear are unchecked. Fixing the reader's header map (a missed array) was needed first.
 6. **Customisation.** Build `charactercustomization` JSON (skin colour, face, hair, markings) from the client's `CharSections` tables.
 7. **Equipment.** Armour needs the model's attachment points and texture regions to match what the viewer expects.
 8. **Both bodies and High Elf.** Repeat for female and Blood Elf.
@@ -54,6 +54,8 @@ python tools/models/octo_mpq.py probe "D:/Octowow/Data" "Character\Goblin\Male\G
 python tools/models/m2v256.py tools/models/out/Character__Goblin__Male__GoblinMale.m2
 # Convert to the modern format (output stays local)
 python tools/models/m2v274.py tools/models/out/Character__Goblin__Male__GoblinMale.m2 tools/models/out/goblin_male
+# Try a converted model in the Zam viewer (opens a local server)
+python tools/models/viewer_test.py tools/models/out/Character__Goblin__Male__GoblinMale.m2 "Character\Goblin\Male\GoblinMaleSkin00_100.blp"
 # Convert textures (BLP to WebP)
 python tools/models/blp.py "D:/Octowow/Data" tools/models/out/tex "Character\Goblin\Male\GoblinMaleSkin00_100.blp"
 # Extract to the ignored output folder

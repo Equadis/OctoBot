@@ -15,7 +15,7 @@ HEADER_ARRAYS = [
     ('global_sequences', 4, True), ('sequences', 68, True), ('animation_lookup', 2, True), ('playable_animation_lookup', 4, True),
     ('bones', 108, True), ('key_bone_lookup', 2, True), ('vertices', 48, True), ('views', 44, True),
     ('colors', 0, False), ('textures', 16, True), ('transparency', 0, False), ('uv_animations', 0, False), ('texture_replace', 2, False),
-    ('render_flags', 4, False), ('bone_lookup', 2, False), ('texture_lookup', 2, False), ('texture_unit_lookup', 2, False),
+    ('replaceable_lookup', 2, False), ('render_flags', 4, False), ('bone_lookup', 2, False), ('texture_lookup', 2, False), ('texture_unit_lookup', 2, False),
     ('transparency_lookup', 2, False), ('uv_anim_lookup', 2, False),
 ]
 # After the arrays above come the bounding box (6 floats + radius) and the collision box (6 floats + radius), then these pairs.
@@ -47,7 +47,7 @@ class M2:
             self.arrays[name] = {'count': self._u32(pos), 'offset': self._u32(pos + 4), 'size': size, 'verified': verified}
             pos += 8
         self.header_end = pos
-        self.bounds = struct.unpack_from('<7f', data, 0xAC)      # min xyz, max xyz, radius
+        self.bounds = struct.unpack_from('<7f', data, self.header_end)    # min xyz, max xyz, radius
         self.trailing = {}
         for k, (name, size) in enumerate(TRAILING_ARRAYS):
             self.trailing[name] = {'count': self._u32(TRAILING_START + k * 8), 'offset': self._u32(TRAILING_START + k * 8 + 4), 'size': size}
