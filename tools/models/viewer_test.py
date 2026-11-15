@@ -55,6 +55,8 @@ PAGE_T = '''<!doctype html><meta charset=utf-8><body style="margin:0;background:
 <script src="/viewer.js"></script>
 <script>
 window.log=[];window.addEventListener('error',e=>{if(window.log.length<3)window.log.push(String(e.message)+' '+(e.error&&e.error.stack||''))});
+// Console helper: pose('Walk', 0.3) freezes that animation at 30 percent of its length and redraws (wait a moment before a screenshot).
+window.pose=function(name,f){return new Promise(function(res){var a=viewer.renderer.actors[0];a.setAnimPaused(false);a.setAnimation(name,true);var t=0;(function go(){var s=a.d.B&&a.d.B.c;if(s&&s.e&&s.e.i===name&&s.e.h>0){a.setAnimPaused(true);s.c=f*s.e.h;var was=a.d.ao;try{a.d.ao=false;viewer.renderer.draw(viewer.renderer.time)}catch(e){}a.d.ao=was;setTimeout(function(){res(name+' length '+s.e.h)},600)}else if(++t<40)setTimeout(go,100);else res('timeout '+name)})()})};
 function go(){try{window.viewer=new ZamModelViewer({type:2,container:jQuery('#v'),aspect:900/700,contentPath:location.origin+'/assets/',dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,charCustomization:{options:LOOKJSON},models:{id:17,type:16},items:[]});}catch(e){window.log.push('init '+e)}}
 window.addEventListener('load',()=>setTimeout(go,300));
 </script>'''
