@@ -67,7 +67,7 @@ class Builder:
     def __init__(self, client):
         self.sections, self.string = read_dbc(client.read('DBFilesClient\\CharSections.dbc'))
         self.hair_geosets, _ = read_dbc(client.read('DBFilesClient\\CharHairGeosets.dbc'))
-        self.facial_hair, _ = read_dbc(client.read('DBFilesClient\CharacterFacialHairStyles.dbc'))
+        self.facial_hair, _ = read_dbc(client.read('DBFilesClient/CharacterFacialHairStyles.dbc'))
         self.textures = {}
         self.texture_files = {}
         self._next = {'choice': 9300000, 'element': 9400000, 'resource': 9200000}

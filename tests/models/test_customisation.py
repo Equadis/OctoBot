@@ -19,7 +19,7 @@ class FromClientTables(unittest.TestCase):
     def test_goblin_male_options_and_ids(self):
         builder, data = self.build(9, 0)
         names = [o['Name'] for o in data['Options']]
-        self.assertEqual(names, ['Skin Color', 'Face', 'Hair Style', 'Hair Color'])
+        self.assertEqual(names, ['Skin Color', 'Face', 'Hair Style', 'Hair Color', 'Facial Hair'])
         ids = [e['Id'] for o in data['Options'] for c in o['Choices'] for e in c['Elements']]
         self.assertEqual(len(ids), len(set(ids)))
         for key in ('Materials', 'TextureLayers', 'TextureSections'):
