@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import octo_mpq  # noqa: E402
 
 FIRST_TEXTURE_ID = 9100000
-OPTION_IDS = {'Skin Color': 100, 'Face': 101, 'Hair Style': 102, 'Hair Color': 103}
+OPTION_IDS = {'Skin Color': 100, 'Face': 101, 'Hair Style': 102, 'Hair Color': 103, 'Facial Hair': 104}
 
 # Texture targets (ChrModelTextureTarget ids used by Zam's layer table)
 T_SKIN, T_SKIN_EXTRA, T_FACE_LOWER, T_FACE_UPPER, T_HAIR, T_SCALP_LOWER, T_SCALP_UPPER, T_PELVIS, T_TORSO = 1, 2, 4, 5, 10, 11, 12, 13, 14
@@ -67,6 +67,7 @@ class Builder:
     def __init__(self, client):
         self.sections, self.string = read_dbc(client.read('DBFilesClient\\CharSections.dbc'))
         self.hair_geosets, _ = read_dbc(client.read('DBFilesClient\\CharHairGeosets.dbc'))
+        self.facial_hair, _ = read_dbc(client.read('DBFilesClient\CharacterFacialHairStyles.dbc'))
         self.textures = {}
         self.texture_files = {}
         self._next = {'choice': 9300000, 'element': 9400000, 'resource': 9200000}
@@ -132,8 +133,15 @@ class Builder:
                                                     self._material(T_SCALP_LOWER, self.string(r[7])) if r[7] else None,
                                                     self._material(T_SCALP_UPPER, self.string(r[8])) if r[8] else None) if m]
             hair_color.append(self._choice(order, elements))
+        # Facial hair styles pick the geosets 100 + a, 200 + b and 300 + c (a, b, c from the table; 0xCCCCCCCC means unused). On the Goblin the
+        # head itself is one of the 1xx geosets, so a style must always be selected or no head is drawn.
+        facial = []
+        for order, r in enumerate(sorted((r for r in self.facial_hair if r[0] == race and r[1] == sex), key=lambda r: r[2])):
+            geosets = [self._element(geoset={'GeosetType': kind, 'GeosetID': value, 'Modifier': -1})
+                       for kind, value in ((1, r[6]), (2, r[7]), (3, r[8])) if value < 100 and (value > 0 or kind == 1)]
+            facial.append(self._choice(order, geosets))
         options = []
-        for name, choices in (('Skin Color', skin_choices), ('Face', face_choices), ('Hair Style', hair_style), ('Hair Color', hair_color)):
+        for name, choices in (('Skin Color', skin_choices), ('Face', face_choices), ('Hair Style', hair_style), ('Hair Color', hair_color), ('Facial Hair', facial)):
             if choices:
                 options.append({'Id': OPTION_IDS[name], 'Name': name, 'OrderIndex': len(options) + 1, 'Choices': choices})
         return {'Options': options, 'TextureFiles': self.texture_files, **json.loads(json.dumps(LAYOUT)), 'HairStyleOptionId': 0}
