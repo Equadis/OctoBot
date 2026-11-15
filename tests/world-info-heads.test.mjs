@@ -68,7 +68,7 @@ test('estimates degrade to any moment / overdue and never to a confirmed drop',a
   const now=Date.now();
   const clear=(est,latest)=>({status:'estimated',samples:9,minSamples:5,confidence:'low',estimatedAt:iso(est),earliestAt:iso(est-5*MIN),latestAt:iso(latest)});
   const text=await run(feed(now,{onyxia:{clear:clear(now-2*MIN,now+3*MIN),drops:{}},nefarian:{clear:clear(now-30*MIN,now-10*MIN),drops:{}}}));
-  assert.equal(text('ony-clear'),'ANY MOMENT');
+  assert.equal(text('ony-clear'),'Soon');
   assert.equal(text('bwl-clear'),'OVERDUE');
   assert.match(text('bwl-clear-note'),/no clear has been confirmed/);
 });

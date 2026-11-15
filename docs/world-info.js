@@ -297,7 +297,7 @@
     tag.hidden = false;
     const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); tag.textContent = 'ESTIMATE'; note.textContent = 'Estimated clear · ' + basis; }
-    else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'ANY MOMENT'; tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
+    else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
     else { out.textContent = 'OVERDUE'; tag.textContent = 'ESTIMATE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
     colourConfidence(note, level);
   }
