@@ -11,3 +11,6 @@ data/*.db-wal
 .consumable-cache/
 
 .rotation-source-cache/
+
+# Local extraction output from the OctoWoW client: never commit game files
+tools/models/out/
