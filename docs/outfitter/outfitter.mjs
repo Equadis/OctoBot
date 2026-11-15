@@ -121,6 +121,25 @@ function renderBodies(){
  }
  $('body-name').textContent=outfit.gender?'Female':'Male';
 }
+// Weapon display is a view setting like the background: it is not part of an outfit and is remembered in this browser.
+const WEAPON_KEY='octobot-outfitter-weapons';
+let weaponView=(()=>{try{const v=JSON.parse(localStorage.getItem(WEAPON_KEY)||'{}');return {sheathed:v.sheathed===true,ranged:v.ranged===true};}catch{return {sheathed:false,ranged:false};}})();
+function showWeaponState(){
+ for(const [id,on] of [['wp-wielded',!weaponView.sheathed],['wp-sheathed',weaponView.sheathed],['wt-melee',!weaponView.ranged],['wt-ranged',weaponView.ranged]])$(id)?.setAttribute('aria-pressed',String(on));
+}
+function applySheath(){
+ const actor=characterActor();if(!actor)return;
+ const state=weaponView.sheathed?1:-1;
+ try{actor.setSheath(state,state);viewer?.renderer?.draw?.(performance.now());}catch{}
+}
+function setupWeaponControls(){
+ showWeaponState();
+ const save=()=>{try{localStorage.setItem(WEAPON_KEY,JSON.stringify(weaponView));}catch{}showWeaponState();};
+ $('wp-wielded').onclick=()=>{weaponView.sheathed=false;save();applySheath();};
+ $('wp-sheathed').onclick=()=>{weaponView.sheathed=true;save();applySheath();};
+ $('wt-melee').onclick=()=>{if(!weaponView.ranged)return;weaponView.ranged=false;save();renderModel();};
+ $('wt-ranged').onclick=()=>{if(weaponView.ranged)return;weaponView.ranged=true;save();renderModel();};
+}
 function renderSlots(){
  renderRaces();renderBodies();updateBackdropButton();$('hide-head').checked=outfit.hideHead;$('hide-back').checked=outfit.hideBack;
  $('left-slots').replaceChildren();$('right-slots').replaceChildren();
@@ -413,6 +432,8 @@ async function renderModel(resetCamera=false){
   const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
+   // Melee or ranged: only one weapon set is drawn at a time.
+   if(weaponView.ranged?(id===16||id===17):id===18)return null;
    // A lookup the appearance service is slow to answer must not hold up the whole model: show what is ready and add the
    // slow item as soon as it resolves.
    const result=await Promise.race([resolvePreview(item,id),new Promise(resolve=>setTimeout(()=>resolve({kind:'slow',displayId:null,slot:viewerSlot(id,item)}),SLOW_LOOKUP_MS))]);
@@ -435,7 +456,7 @@ async function renderModel(resetCamera=false){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;modelBusy=false;setupAnimation();queueScan();return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;modelBusy=false;setupAnimation();applySheath();queueScan();return;}
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';modelBusy=false;return;}
    setTimeout(check,250);
   };check();
@@ -467,7 +488,7 @@ function shareUrl(){const url=new URL(location.href);url.search='';url.hash='out
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
- setupBackdrops();setupInfoTips();
+ setupBackdrops();setupInfoTips();setupWeaponControls();
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
   let message='Select an equipment slot, then choose an item to try on.';

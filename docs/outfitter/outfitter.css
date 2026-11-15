@@ -167,3 +167,12 @@
 .bd-option[aria-selected="true"]{background:#3a3827;color:#f4d65c}
 .bd-option img,.bd-button img{width:20px;height:20px;border-radius:3px;object-fit:cover;flex:none}
 .bd-blank{width:20px;height:20px;flex:none}
+
+/* Weapon display: wielded or sheathed, melee or ranged */
+.weapon-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 11px;font-size:11px;border-radius:0}
+.seg button:first-child{border-radius:4px 0 0 4px}
+.seg button:last-child{border-radius:0 4px 4px 0;margin-left:-1px}
+.seg button[aria-pressed="true"]{background:#3a3827;border-color:#9d8a35;color:#f4d65c;position:relative;z-index:1}
+.model-toolbar .weapon-controls{margin-right:0}
