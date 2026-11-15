@@ -66,10 +66,20 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (error) { /* ignore */ } }
 
   var blockedNote = null;
+  // Only one sound plays at a time: a new sound cuts the one that is still playing short.
+  var playing = null;
+  function stopCurrent() {
+    if (!playing) return;
+    try { playing.pause(); playing.currentTime = 0; } catch (error) { /* already finished */ }
+    playing = null;
+  }
   function play(soundId, options) {
     var sound = soundById(soundId);
     if (!sound) return;
+    stopCurrent();
     var audio = new Audio(CDN + sound.file);
+    playing = audio;
+    audio.addEventListener('ended', function () { if (playing === audio) playing = null; });
     audio.volume = Math.min(1, Math.max(0, settings.volume / 100));
     var promise = audio.play();
     if (promise && promise.catch) promise.catch(function () {
@@ -157,5 +167,5 @@
     });
   }
 
-  window.RaidSounds = { setAvailability: setAvailability, SOUNDS: SOUNDS, EVENTS: EVENTS, settings: function () { return settings; }, notify: notify, play: play, mount: mount, KEY: KEY };
+  window.RaidSounds = { stop: stopCurrent, setAvailability: setAvailability, SOUNDS: SOUNDS, EVENTS: EVENTS, settings: function () { return settings; }, notify: notify, play: play, mount: mount, KEY: KEY };
 })();
