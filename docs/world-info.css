@@ -189,4 +189,9 @@ small:empty,.evidence:empty{display:none}
 #dmf-panel{padding-bottom:20px}
 
 /* Zul'Gurub / Edge of Madness glows in the same way as the faction and raid panels */
-.zg-panel{background:linear-gradient(135deg,#425723 0%,var(--panel) 62%);border-color:#587431;border-left:4px solid #6f9440}
+.zg-panel{background:linear-gradient(135deg,#212C12 0%,var(--panel) 62%);border-color:#34461c;border-left:4px solid #4d6b2a}
+
+/* Jungle vines frame the top of the Zul'Gurub panel */
+.zg-panel{overflow:hidden}
+.zg-vines{position:absolute;left:0;top:0;width:100%;height:auto;pointer-events:none;z-index:0}
+.zg-panel>*:not(.zg-vines){position:relative;z-index:1}
