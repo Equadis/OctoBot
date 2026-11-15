@@ -28,7 +28,9 @@ The client's models are the old single-file form: version 256 with embedded view
 ## Plan
 
 1. **Tools (done).** `octo_mpq.py` finds and extracts named files from the client archives.
-2. **M2 reader.** Parse version 256 fully: vertices, bones and their tracks, sequences, textures, materials, texture units, attachments, and the external `.anim` files.
+2. **M2 reader (`m2v256.py`, in progress).**
+   * Done and checked: the header map, vertices (7,419 for the Goblin), the embedded skin view (indices, triangles, 45 submeshes, texture units), and texture definitions. 29 consistency rules pass for Goblin, Blood Elf and Human; a vertex plot of the Goblin and Blood Elf shows recognisable bodies.
+   * Still to do: bones and their animation tracks, sequences (161 for the Goblin, with keyframe data after them), colours, transparency, UV animations, attachments, events, and the external `.anim` files.
 3. **Writer.** Emit the modern form: an `MD21` M2 (version 274) with `SFID`, `TXID` and `SKID` chunks, a `.skin`, and a `.skel` with bones, sequences and attachments.
 4. **Textures.** Decode BLP and write WebP (with the skin, hair and face variants).
 5. **Proof of concept.** Goblin male, default skin, rendered in the Zam viewer from a local asset folder.
@@ -48,6 +50,8 @@ Zam's TBC library already has Blood Elf (`tbc/meta/character/19.json` and `20.js
 ```sh
 # Which archives hold a file?
 python tools/models/octo_mpq.py probe "D:/Octowow/Data" "Character\Goblin\Male\GoblinMale.m2"
+# Summarise and check an extracted model
+python tools/models/m2v256.py tools/models/out/Character__Goblin__Male__GoblinMale.m2
 # Extract to the ignored output folder
 python tools/models/octo_mpq.py extract "D:/Octowow/Data/patch-5.mpq" tools/models/out "Character\Goblin\Male\GoblinMale.m2"
 ```
