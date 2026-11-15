@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {BACKGROUNDS,findBackground} from '../docs/outfitter/backgrounds.mjs';
 
 test('backgrounds cover exactly the nine classes and ten races',()=>{
@@ -58,4 +58,19 @@ test('same-icon matches come lowest item ID first, within the same slot and armo
   assert.deepEqual(sameIconItems(index,catalogue[5]),[]);
   assert.deepEqual(sameIconItems(index,{id:5,slot:7,classs:4,subclass:1,icon:'inv_pants_09'},1).map(i=>i.id),[16810]);
   assert.deepEqual(sameIconItems(index,{id:5,slot:7,classs:4,subclass:1}),[]); // no icon, no match
+});
+
+test('the race picker lists all ten races, including Goblin and High Elf, each with an icon for both bodies',()=>{
+  const state=readFileSync(new URL('../docs/outfitter/state.mjs',import.meta.url),'utf8');
+  for(const name of ['Goblin','High Elf'])assert.ok(state.includes(`'${name}'`),name);
+  for(const key of ['goblin','highelf'])for(const body of ['male','female'])assert.ok(existsSync(new URL(`../docs/outfitter/races/${key}_${body}.png`,import.meta.url)),`${key}_${body}`);
+});
+
+test('uploading a background photo opens a crop with the viewer shape before it is used',()=>{
+  const html=readFileSync(new URL('../docs/outfitter/index.html',import.meta.url),'utf8');
+  const script=readFileSync(new URL('../docs/outfitter/outfitter.mjs',import.meta.url),'utf8');
+  assert.match(html,/<dialog id="crop-dialog"/);
+  assert.match(html,/id="crop-zoom"/);
+  assert.match(script,/openPhotoCrop\(bitmap\)/);
+  assert.match(script,/Photo not changed/);   // cancelling leaves the background alone
 });

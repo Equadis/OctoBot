@@ -7,7 +7,7 @@ export const SLOTS = [
  [6,'Waist',[6]],[7,'Legs',[7]],[8,'Feet',[8]],
  [16,'Main hand',[13,17,21]],[17,'Off hand',[13,14,22,23]],[18,'Ranged',[15,25,26]]
 ].map(([id,name,types])=>({id,name,types}));
-export const RACES = [[1,'Human'],[2,'Orc'],[3,'Dwarf'],[4,'Night Elf'],[5,'Undead'],[6,'Tauren'],[7,'Gnome'],[8,'Troll']];
+export const RACES = [[1,'Human'],[2,'Orc'],[3,'Dwarf'],[4,'Night Elf'],[5,'Undead'],[6,'Tauren'],[7,'Gnome'],[8,'Troll'],[9,'Goblin'],[10,'High Elf']];
 export const emptyOutfit = () => ({version:1,race:1,gender:0,gear:{},hideHead:false,hideBack:false,look:{}});
 export function normalise(value) {
  if(!value || typeof value!=='object') throw Error('Invalid outfit.');

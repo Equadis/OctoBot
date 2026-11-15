@@ -2,7 +2,7 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
 import {visibleOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs';
-import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261114-look1';
+import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
@@ -15,15 +15,46 @@ const CUSTOM_KEY='octobot-outfitter-custom-background';
 let customPhoto=null;
 try{const stored=localStorage.getItem(CUSTOM_KEY);if(typeof stored==='string'&&/^data:image\/jpeg;base64,/.test(stored))customPhoto=stored;}catch{}
 const lookupBackground=id=>id==='custom'?(customPhoto?{group:'Custom',id:'custom',label:'My photo',url:customPhoto}:null):findBackground(id);
+// Uploading a photo opens a crop first. The frame has the viewer's shape, so what you frame is what the background shows.
+function openPhotoCrop(bitmap){
+ return new Promise(resolve=>{
+  const dialog=$('crop-dialog'),canvas=$('crop-canvas'),zoom=$('crop-zoom'),g=canvas.getContext('2d');
+  const wrap=document.querySelector('.model-wrap'),aspect=(wrap.clientWidth&&wrap.clientHeight)?wrap.clientWidth/wrap.clientHeight:518/568;
+  const W=420,H=Math.round(W/aspect);canvas.width=W;canvas.height=H;
+  const iw=bitmap.width,ih=bitmap.height,cover=Math.max(W/iw,H/ih);
+  let z=1,cx=iw/2,cy=ih/2;
+  const clamp=()=>{const s=cover*z;cx=Math.min(iw-W/(2*s),Math.max(W/(2*s),cx));cy=Math.min(ih-H/(2*s),Math.max(H/(2*s),cy));};
+  const draw=()=>{clamp();const s=cover*z;g.fillStyle='#101727';g.fillRect(0,0,W,H);g.drawImage(bitmap,cx-W/(2*s),cy-H/(2*s),W/s,H/s,0,0,W,H);};
+  zoom.value='100';draw();
+  let drag=null;
+  const down=event=>{drag={x:event.clientX,y:event.clientY};canvas.classList.add('dragging');canvas.setPointerCapture?.(event.pointerId);};
+  const move=event=>{if(!drag)return;const s=cover*z,k=W/canvas.getBoundingClientRect().width;cx-=(event.clientX-drag.x)*k/s;cy-=(event.clientY-drag.y)*k/s;drag={x:event.clientX,y:event.clientY};draw();};
+  const up=()=>{drag=null;canvas.classList.remove('dragging');};
+  const wheel=event=>{event.preventDefault();z=Math.min(4,Math.max(1,z*(event.deltaY<0?1.08:1/1.08)));zoom.value=String(Math.round(z*100));draw();};
+  const slide=()=>{z=Number(zoom.value)/100;draw();};
+  const cleanup=()=>{canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('wheel',wheel);zoom.removeEventListener('input',slide);};
+  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('wheel',wheel,{passive:false});zoom.addEventListener('input',slide);
+  let result=null,finished=false;
+  const finish=value=>{if(finished)return;finished=true;cleanup();resolve(value);};
+  $('crop-form').onsubmit=event=>{
+   event.preventDefault();clamp();
+   const s=cover*z,outW=1000,outH=Math.round(outW/aspect),out=document.createElement('canvas');out.width=outW;out.height=outH;
+   const o=out.getContext('2d');o.fillStyle='#182333';o.fillRect(0,0,outW,outH);o.drawImage(bitmap,cx-W/(2*s),cy-H/(2*s),W/s,H/s,0,0,outW,outH);
+   result=out.toDataURL('image/jpeg',0.86);dialog.close();finish(result);
+  };
+  $('crop-cancel').onclick=()=>{dialog.close();finish(null);};
+  dialog.addEventListener('close',()=>finish(result),{once:true});   // Esc closes the dialog too
+  dialog.showModal();
+ });
+}
 async function useCustomPhoto(file){
  if(!file)return;
  if(!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)){feedback('Choose a PNG, JPEG, WebP or GIF image.');return;}
  if(file.size>15*1024*1024){feedback('That image is over 15 MB. Choose a smaller one.');return;}
  try{
-  const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
-  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
-  const g=canvas.getContext('2d');g.fillStyle='#182333';g.fillRect(0,0,canvas.width,canvas.height);g.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
-  customPhoto=canvas.toDataURL('image/jpeg',0.86);
+  const bitmap=await createImageBitmap(file),cropped=await openPhotoCrop(bitmap);bitmap.close?.();
+  if(!cropped){feedback('Photo not changed.');return;}
+  customPhoto=cropped;
   let kept=true;try{localStorage.setItem(CUSTOM_KEY,customPhoto);}catch{kept=false;}
   applyBackdrop('custom');
   feedback(kept?'Your photo is now the background. It stays in this browser and is not uploaded.':'Your photo is the background for this visit only: browser storage is full.');
@@ -121,7 +152,7 @@ function setupBackdrops(){
 }
 function feedback(message){$('feedback').textContent=message;}
 const SLOT_KEYS={1:'head',3:'shoulder',15:'back',5:'chest',4:'shirt',19:'tabard',9:'wrist',10:'hands',6:'waist',7:'legs',8:'feet',16:'mainhand',17:'offhand',18:'ranged'};
-const RACE_KEYS={1:'human',2:'orc',3:'dwarf',4:'nightelf',5:'undead',6:'tauren',7:'gnome',8:'troll'};
+const RACE_KEYS={1:'human',2:'orc',3:'dwarf',4:'nightelf',5:'undead',6:'tauren',7:'gnome',8:'troll',9:'goblin',10:'highelf'};
 // Rotation and panning are scaled from the viewer's defaults, which are far too fast for a small panel.
 const ROTATE_SENSITIVITY=0.3;
 function icon(item){return item?.icon&&/^[a-z0-9_]+$/i.test(item.icon)?`https://wow.zamimg.com/images/wow/icons/large/${item.icon.toLowerCase()}.jpg`:null;}
@@ -592,6 +623,7 @@ async function renderModel(resetCamera=false,forceRebuild=false){
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
+  if(current.race===10)throw Error('The Classic model library has no High Elf (Blood Elf) model, so there is no 3D preview for this race. Gear choices are still saved and shared.');
   if(!window.ZamModelViewer||!window.jQuery)throw Error('The 3D viewer could not load. Check your connection and reload the preview.');
   // Detect an undeployed service before constructing a viewer that would stay blank.
   const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`);
