@@ -409,6 +409,11 @@
     const rotation = currentRotation();
     $('eom-current').textContent = rotation.current;
     $('eom-next').textContent = rotation.next;
+    // Colour each boss name to match its calendar colour.
+    for (const [id, name] of [['eom-current', rotation.current], ['eom-next', rotation.next]]) {
+      const boss = BOSSES.find(entry => entry.name === name);
+      if (boss) $(id).dataset.boss = boss.id; else delete $(id).dataset.boss;
+    }
     $('eom-current-until').textContent = 'Until ' + (rotation.end ? when(rotation.end) : 'unknown');
     $('eom-next-at').textContent = rotation.end ? 'From ' + when(rotation.end) : 'Start unknown';
     $('eom-countdown').textContent = rotation.end ? spanWithDays(rotation.end - Date.now()) : 'NO DATA';

@@ -168,3 +168,9 @@ small:empty,.evidence:empty{display:none}
 /* Raid panels glow in the colour of the flame in each head's icon: Onyxia's fire (#DD500A) and Nefarian's violet (#8050B0) */
 .raid-onyxia{background:linear-gradient(135deg,#6E2808 0%,var(--panel) 62%);border-color:#93390c;border-left:4px solid #bd4510}
 .raid-nefarian{background:linear-gradient(135deg,#3C2760 0%,var(--panel) 62%);border-color:#58398a;border-left:4px solid #7049a6}
+
+/* Current and next boss take the hue of their calendar colour, lightened to read on the panel */
+.boss-name[data-boss="grilek"]{color:#a3bd86}
+.boss-name[data-boss="hazzarah"]{color:#98a4e6}
+.boss-name[data-boss="renataki"]{color:#dca17b}
+.boss-name[data-boss="wushoolay"]{color:#72c9dd}
