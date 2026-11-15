@@ -9,13 +9,13 @@
 .source-label.stale{color:#e3bd57}
 section{min-width:0}
 .section-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:22px 0 12px}
-.section-title h2{font-size:24px;font-weight:500;margin:0;color:var(--gold)}
+.section-title h2{font-size:23px;font-weight:500;margin:0;color:var(--gold)}
 .world-grid{display:grid;gap:16px}
 .world-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .world-panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
 .panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .eyebrow{display:block;color:#96a7ba;font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:7px}
-.world-panel h2,.world-panel h3{color:var(--gold);font-size:24px;font-weight:500;margin:0}
+.world-panel h2,.world-panel h3{color:var(--gold);font-size:22px;font-weight:500;margin:0}
 .state-tag{flex:none;font-size:10px;font-weight:600;letter-spacing:.055em;border:1px solid #6a5930;background:#302e22;color:#dabc6d;border-radius:3px;padding:5px 7px;white-space:nowrap}
 .state-tag.online{background:#1e3b33;border-color:#3d7961;color:#88e2ad}
 .state-tag.estimated{background:#29394b;border-color:#52758e;color:#a8d8f2}
@@ -161,3 +161,6 @@ small:empty,.evidence:empty{display:none}
 .info-i::after{content:attr(data-tip);position:absolute;right:-6px;bottom:24px;width:min(300px,70vw);padding:9px 11px;background:#0e1623;border:1px solid #39465a;border-radius:6px;color:#c6d0dc;font:400 11px/1.55 system-ui,sans-serif;text-align:left;box-shadow:0 8px 22px rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;z-index:5}
 .info-i:hover::after,.info-i:focus::after{opacity:1;visibility:visible}
 .world-panel{padding-bottom:30px}
+
+/* Darkmoon Faire location stays on one line; the panel grows to fit it */
+#dmf-heading{white-space:nowrap}
