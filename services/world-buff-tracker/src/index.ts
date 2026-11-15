@@ -1467,6 +1467,13 @@ async function main(): Promise<void> {
       lane.watch.restoreRaidState(state);
       logger.info(`resumed raid #${state.number ?? "?"} on lane ${lane.label} (${state.roster.length} members, from before restart)`);
     }
+    for (let slot = 1; slot <= 3; slot += 1) {
+      const extra = await raidStateStore.load(`${lane.label}#${slot}`);
+      if (extra) {
+        lane.watch.restoreRaidState(extra, slot);
+        logger.info(`resumed concurrent raid #${extra.number ?? "?"} (slot ${slot}) on lane ${lane.label}`);
+      }
+    }
     const locks = await lockoutStore.load(lane.label);
     if (locks) {
       lane.watch.restoreLockout(locks);

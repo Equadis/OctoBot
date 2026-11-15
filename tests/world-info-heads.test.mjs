@@ -122,24 +122,24 @@ test('no raid: the count says "No raid" once, the label is hidden, and the estim
   assert.match(readFileSync(new URL('../docs/world-info.css',import.meta.url),'utf8'),/\.clock\.na\{color:#ff6b5e\}/);   // the N/A class is red
 });
 
-test('a raid in progress shows its count with the label, and the clear estimate is not N/A',async()=>{
+test('aggregate activity shows a lower bound with the label, and the clear estimate is not N/A',async()=>{
   const now=Date.now();
   const live={generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:20,at:iso(now-MIN),active:true,activityStart:iso(now-30*MIN)}},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'learning',confirmed:false,samples:2,minSamples:5,confidence:'none'},drops:{}}}}]};
   const text=await run(live);
-  assert.equal(text('ony-count'),'1');
+  assert.equal(text('ony-count'),'1+');           // a lower bound: headcount cannot count raids
   assert.equal(text.el('ony-count-label').hidden,false);
   assert.equal(text('ony-count-label'),'Raid in progress:');
   assert.equal(text('ony-clear'),'LEARNING');
 });
 
-test('a guild is named when at least half of the raid belongs to it, otherwise the raid is marked PUG, and nothing is guessed without guild data',async()=>{
+test('headcount activity never invents a numbered raid, even when guild counts are attached',async()=>{
   const now=Date.now();
   const make=guilds=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:20,at:iso(now-MIN),active:true,activityStart:iso(now-30*MIN),...(guilds?{guilds}:{})}},buffs:{},sessions:{},heads:{}}]});
-  const title=async guilds=>(await run(make(guilds))).created.map(e=>e.textContent).find(value=>typeof value==='string'&&/^Raid 1/.test(value));
-  assert.equal(await title([{name:'Octo Raiders',count:12},{name:'Other',count:3}]),'Raid 1 \u2013 Octo Raiders');   // 12 of 20 is at least half
-  assert.equal(await title([{name:'Octo Raiders',count:10},{name:'Other',count:10}]),'Raid 1 \u2013 Octo Raiders');  // exactly half counts
-  assert.equal(await title({A:6,B:5,C:5,D:4}),'Raid 1 \u2013 PUG');                                                  // no guild reaches half
-  assert.equal(await title(undefined),'Raid 1');                                                                       // no data: no guess
+  for(const guilds of [[{name:'Octo Raiders',count:12},{name:'Other',count:3}],{A:6,B:5,C:5,D:4},undefined]){
+    const page=await run(make(guilds));
+    assert.ok(!page.created.some(e=>/^Raid/.test(String(e.textContent))),'no placeholder raid row');
+    assert.equal(page('ony-count'),'1+');
+  }
 });
 
 test('sound alerts fire only on something new, never on first load, and only for the events that changed',async()=>{

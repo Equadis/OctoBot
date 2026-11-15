@@ -1,0 +1,3270 @@
+{
+ "onyxia-two-raids": {
+  "zone": "onyxia",
+  "t0": "2026-11-15T12:00:00.000Z",
+  "at": "2026-11-15T12:24:00.000Z",
+  "events": [
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:01:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744060000",
+    "seq": 1794744060000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:01:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "unknown",
+       "label": "Unknown",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:03:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744180000",
+    "seq": 1794744180000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:03:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:05:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744300000",
+    "seq": 1794744300000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:05:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:07:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744420000",
+    "seq": 1794744420000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:07:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:09:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744540000",
+    "seq": 1794744540000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:09:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:11:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744660000",
+    "seq": 1794744660000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:11:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:12:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744720000",
+    "seq": 1794744720000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:12:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "tentative",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:12:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "unknown",
+       "label": "Unknown",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:14:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744840000",
+    "seq": 1794744840000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:14:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:14:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:16:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744960000",
+    "seq": 1794744960000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:16:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:16:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:18:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745080000",
+    "seq": 1794745080000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:18:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:18:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:20:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745200000",
+    "seq": 1794745200000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:20:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:20:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:22:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745320000",
+    "seq": 1794745320000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:22:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:22:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:24:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745440000",
+    "seq": 1794745440000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 45,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:24:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Nightfall",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Nightfall",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 703,
+      "key": "n703",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:12:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:24:00.000Z",
+      "players": 20,
+      "peak": 20,
+      "rosterSize": 20,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Stormguard",
+       "rosterSize": 20,
+       "known": 20,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Stormguard",
+         "count": 20
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   }
+  ],
+  "expected": {
+   "live": [
+    {
+     "id": 702,
+     "label": "Nightfall",
+     "confidence": "high",
+     "elapsedMs": 1380000
+    },
+    {
+     "id": 703,
+     "label": "Stormguard",
+     "confidence": "high",
+     "elapsedMs": 720000
+    }
+   ],
+   "endedIds": [],
+   "oldestElapsedMs": 1380000
+  }
+ },
+ "bwl-single": {
+  "zone": "bwl",
+  "t0": "2026-11-15T12:00:00.000Z",
+  "at": "2026-11-15T12:50:00.000Z",
+  "events": [
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:01:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744060000",
+    "seq": 1794744060000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:01:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "unknown",
+       "label": "Unknown",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:03:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744180000",
+    "seq": 1794744180000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:03:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:05:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744300000",
+    "seq": 1794744300000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:05:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:07:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744420000",
+    "seq": 1794744420000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:07:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:09:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744540000",
+    "seq": 1794744540000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:09:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:11:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744660000",
+    "seq": 1794744660000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:11:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:13:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744780000",
+    "seq": 1794744780000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:13:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:15:00.000Z",
+    "eventId": "N'Zoth|bwl|1794744900000",
+    "seq": 1794744900000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:15:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:17:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745020000",
+    "seq": 1794745020000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:17:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:19:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745140000",
+    "seq": 1794745140000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:19:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:21:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745260000",
+    "seq": 1794745260000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:21:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:23:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745380000",
+    "seq": 1794745380000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:23:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:25:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745500000",
+    "seq": 1794745500000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:25:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:27:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745620000",
+    "seq": 1794745620000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:27:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:29:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745740000",
+    "seq": 1794745740000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:29:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:31:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745860000",
+    "seq": 1794745860000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:31:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:33:00.000Z",
+    "eventId": "N'Zoth|bwl|1794745980000",
+    "seq": 1794745980000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:33:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:35:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746100000",
+    "seq": 1794746100000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:35:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:37:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746220000",
+    "seq": 1794746220000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:37:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:39:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746340000",
+    "seq": 1794746340000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:39:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:41:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746460000",
+    "seq": 1794746460000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:41:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:43:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746580000",
+    "seq": 1794746580000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:43:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:45:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746700000",
+    "seq": 1794746700000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:45:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:47:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746820000",
+    "seq": 1794746820000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:47:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:49:00.000Z",
+    "eventId": "N'Zoth|bwl|1794746940000",
+    "seq": 1794746940000,
+    "zone": "bwl",
+    "thresholds": {
+     "formAt": 20,
+     "floor": 20
+    },
+    "lair": {
+     "present": 38,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 33,
+      "key": "n33",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:49:00.000Z",
+      "players": 38,
+      "peak": 38,
+      "rosterSize": 38,
+      "continuity": 1,
+      "guild": {
+       "kind": "pug",
+       "label": "PUG",
+       "rosterSize": 38,
+       "known": 38,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Solo-w0",
+         "count": 1
+        },
+        {
+         "name": "Solo-w1",
+         "count": 1
+        },
+        {
+         "name": "Solo-w10",
+         "count": 1
+        },
+        {
+         "name": "Solo-w11",
+         "count": 1
+        },
+        {
+         "name": "Solo-w12",
+         "count": 1
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   }
+  ],
+  "expected": {
+   "live": [
+    {
+     "id": 33,
+     "label": "PUG",
+     "confidence": "high",
+     "elapsedMs": 2940000
+    }
+   ],
+   "endedIds": [],
+   "oldestElapsedMs": 2940000
+  }
+ },
+ "onyxia-back-to-back": {
+  "zone": "onyxia",
+  "t0": "2026-11-15T12:00:00.000Z",
+  "at": "2026-11-15T12:20:00.000Z",
+  "events": [
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:01:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744060000",
+    "seq": 1794744060000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:01:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "unknown",
+       "label": "Unknown",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:03:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744180000",
+    "seq": 1794744180000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:03:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:05:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744300000",
+    "seq": 1794744300000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:05:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:07:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744420000",
+    "seq": 1794744420000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "leaving",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:09:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744540000",
+    "seq": 1794744540000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "leaving",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:11:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744660000",
+    "seq": 1794744660000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "leaving",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_session_ended",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:12:00.000Z",
+    "eventId": "N'Zoth|onyxia|n701|1794744420000",
+    "zone": "onyxia",
+    "durationMs": 360000,
+    "session": {
+     "id": 701,
+     "key": "n701",
+     "status": "ended",
+     "confidence": "high",
+     "formedAt": "2026-11-15T12:01:00.000Z",
+     "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+     "players": 0,
+     "peak": 25,
+     "rosterSize": 25,
+     "continuity": 0,
+     "guild": {
+      "kind": "guild",
+      "label": "Alpha",
+      "rosterSize": 25,
+      "known": 25,
+      "unguilded": 0,
+      "guilds": [
+       {
+        "name": "Alpha",
+        "count": 25
+       }
+      ]
+     },
+     "endedAt": "2026-11-15T12:07:00.000Z",
+     "endReason": "departed",
+     "clearSource": "roster_departure",
+     "trusted": true,
+     "resumed": false
+    }
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:12:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744720000",
+    "seq": 1794744720000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 25,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "ended",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "endedAt": "2026-11-15T12:07:00.000Z",
+      "endReason": "departed",
+      "clearSource": "roster_departure",
+      "trusted": true,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:13:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744780000",
+    "seq": 1794744780000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:13:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:13:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "ended",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "endedAt": "2026-11-15T12:07:00.000Z",
+      "endReason": "departed",
+      "clearSource": "roster_departure",
+      "trusted": true,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:15:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794744900000",
+    "seq": 1794744900000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:13:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:15:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Beta",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Beta",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "ended",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "endedAt": "2026-11-15T12:07:00.000Z",
+      "endReason": "departed",
+      "clearSource": "roster_departure",
+      "trusted": true,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:17:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745020000",
+    "seq": 1794745020000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:13:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:17:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Beta",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Beta",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "ended",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "endedAt": "2026-11-15T12:07:00.000Z",
+      "endReason": "departed",
+      "clearSource": "roster_departure",
+      "trusted": true,
+      "resumed": false
+     }
+    ]
+   },
+   {
+    "type": "raid_sessions",
+    "schema": 1,
+    "realm": "N'Zoth",
+    "account": "bufftracker",
+    "role": "rt",
+    "time": "2026-11-15T12:19:00.000Z",
+    "eventId": "N'Zoth|onyxia|1794745140000",
+    "seq": 1794745140000,
+    "zone": "onyxia",
+    "thresholds": {
+     "formAt": 15,
+     "floor": 15
+    },
+    "lair": {
+     "present": 25,
+     "complete": true,
+     "unassigned": 0,
+     "ambiguity": null
+    },
+    "sessions": [
+     {
+      "id": 702,
+      "key": "n702",
+      "status": "in_progress",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:13:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:19:00.000Z",
+      "players": 25,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 1,
+      "guild": {
+       "kind": "guild",
+       "label": "Beta",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Beta",
+         "count": 25
+        }
+       ]
+      },
+      "trusted": false,
+      "resumed": false
+     },
+     {
+      "id": 701,
+      "key": "n701",
+      "status": "ended",
+      "confidence": "high",
+      "formedAt": "2026-11-15T12:01:00.000Z",
+      "lastConfirmedAt": "2026-11-15T12:06:00.000Z",
+      "players": 0,
+      "peak": 25,
+      "rosterSize": 25,
+      "continuity": 0,
+      "guild": {
+       "kind": "guild",
+       "label": "Alpha",
+       "rosterSize": 25,
+       "known": 25,
+       "unguilded": 0,
+       "guilds": [
+        {
+         "name": "Alpha",
+         "count": 25
+        }
+       ]
+      },
+      "endedAt": "2026-11-15T12:07:00.000Z",
+      "endReason": "departed",
+      "clearSource": "roster_departure",
+      "trusted": true,
+      "resumed": false
+     }
+    ]
+   }
+  ],
+  "expected": {
+   "live": [
+    {
+     "id": 702,
+     "label": "Beta",
+     "confidence": "high",
+     "elapsedMs": 420000
+    }
+   ],
+   "endedIds": [
+    701
+   ],
+   "oldestElapsedMs": 420000
+  }
+ }
+}

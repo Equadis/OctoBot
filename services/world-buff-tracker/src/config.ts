@@ -40,6 +40,8 @@ export interface RaidWatchConfig {
   readonly raidClearSustainedMs: number;
   readonly raidLockoutMs: number;
   readonly raidFormConfirmMs: number;
+  /** How many raids may be tracked at once in this lair (default 2). 1 = original single-roster behaviour. */
+  readonly raidMaxConcurrent?: number;
   /** A clear longer than this is not one raid — a merge or a bug — and is ignored. */
   readonly raidMaxClearMs: number;
 }
@@ -68,6 +70,7 @@ export function onyxiaWatch(config: BotConfig): RaidWatchConfig {
     raidClearSustainedMs: config.raidClearSustainedMs,
     raidLockoutMs: config.raidLockoutMs,
     raidFormConfirmMs: config.raidFormConfirmMs,
+    raidMaxConcurrent: config.raidMaxConcurrent,
     raidMaxClearMs: ONYXIA_MAX_CLEAR_MS,
   };
 }
@@ -195,6 +198,7 @@ export interface BotConfig {
    *  forming" alert fires — filters a group that assembles and leaves without committing. A
    *  disconnect or a drop below the floor and back resets the count. Default 0 = fire immediately. */
   readonly raidFormConfirmMs: number;
+  readonly raidMaxConcurrent?: number;
   /** Blackwing Lair's watch — its raids alerted like Onyxia's, and what a Nefarian-head drop is read
    *  against. Null when WOW_BWL_ENABLED turns it off: no BWL polls, alerts or status. */
   readonly blackwingLair: RaidWatchConfig | null;
@@ -511,6 +515,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
   const raidClearSustainedMs = intWithDefault("WOW_RAID_CLEAR_SUSTAINED_MINUTES", 3, 1) * 60_000;
   const raidLockoutMs = intWithDefault("WOW_RAID_LOCKOUT_HOURS", 2, 1) * 60 * 60_000;
   const raidFormConfirmMs = intWithDefault("WOW_RAID_FORM_CONFIRM_MINUTES", 0, 0) * 60_000;
+  const raidMaxConcurrent = intWithDefault("WOW_RAID_MAX_CONCURRENT", 2, 1);
 
   // Blackwing Lair, watched on its own: a 40-man raid that takes hours, so every size and time has
   // its own WOW_BWL_* knob and default. On unless WOW_BWL_ENABLED turns it off.
@@ -550,6 +555,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
       raidClearSustainedMs: minutes("WOW_BWL_RAID_CLEAR_SUSTAINED_MINUTES", 5, 1),
       raidLockoutMs: intWithDefault("WOW_BWL_RAID_LOCKOUT_HOURS", 4, 1) * 60 * 60_000,
       raidFormConfirmMs: minutes("WOW_BWL_RAID_FORM_CONFIRM_MINUTES", 0, 0),
+      raidMaxConcurrent: intWithDefault("WOW_BWL_RAID_MAX_CONCURRENT", raidMaxConcurrent, 1),
       raidMaxClearMs: bwlMaxClearMs,
     };
   })();
@@ -748,6 +754,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
     raidClearSustainedMs,
     raidLockoutMs,
     raidFormConfirmMs,
+    raidMaxConcurrent,
     blackwingLair,
     statusYellMs,
     whisperMaxAgeMs,

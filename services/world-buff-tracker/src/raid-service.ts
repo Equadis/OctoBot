@@ -24,6 +24,7 @@ import type { WhisperPool } from "./chat/whisper-pool.js";
 import type { NotifyMessage } from "./notify/notifier.js";
 import { capitalStatusFaire } from "./darkmoon/format.js";
 import { RAID_ZONES, type RaidZoneId } from "./watcher/raid-zone.js";
+import { createRaidTelemetryFromEnv } from "./raid-telemetry.js";
 import { createRaidZonePipeline, type RaidZonePipeline } from "./raid-zone-pipeline.js";
 
 /**
@@ -79,13 +80,14 @@ export function createRaidService(
   const { raidZones, buffTracker, store, userLedger, inviteLedger, guildieStore, whisperPool, yellSink, faireAnswer, push } = services;
   let lastHeartbeatAt = 0;
 
+  const raidTelemetry = createRaidTelemetryFromEnv(process.env, config.realm, logger);
   const pipelines = new Map<RaidZoneId, RaidZonePipeline>();
   for (const zone of raidZones) {
     pipelines.set(
       zone.zone.id,
       createRaidZonePipeline(
         zone,
-        { ...services, broadcastWhisper, getWhisperQueue },
+        { ...services, broadcastWhisper, getWhisperQueue, raidTelemetry },
         config,
         logger,
       ),

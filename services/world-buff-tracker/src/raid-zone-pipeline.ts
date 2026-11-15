@@ -28,6 +28,7 @@ import { cleanOnyxiaKills } from "./chronicle/parse.js";
 import type { AlertWhisper, WhisperQueue } from "./chat/whisper-queue.js";
 import type { LairView } from "./watcher/roster-source.js";
 import type { RaidLifecycleEvent } from "./watcher/raid-tracker.js";
+import type { RaidTelemetry } from "./raid-telemetry.js";
 import type { ConfirmedClear, PendingDeparture } from "./watcher/clear-tracker.js";
 import type { DetectionLane, RaidZoneServices, YellSink } from "./lanes.js";
 import type { BuffTracker } from "./watcher/buff-tracker.js";
@@ -62,6 +63,8 @@ export interface RaidPipelineShared {
   readonly yellSink: YellSink;
   readonly broadcastWhisper: (names: readonly string[], message: string, faction: Faction | null, alert?: AlertWhisper) => void;
   readonly getWhisperQueue: () => WhisperQueue | null;
+  /** Pushes authoritative raid sessions to OctoMetrics; absent when telemetry is not configured. */
+  readonly raidTelemetry?: RaidTelemetry | null;
 }
 
 /** A raid in progress, as the capital status yell tells of it. */
@@ -98,7 +101,7 @@ export function createRaidZonePipeline(
   logger: Logger,
 ): RaidZonePipeline {
   const { zone, watch, lanes, chronicle, broadcasts, durationStore, snapshots, lairActivity, push } = services;
-  const { buffTracker, raidStateStore, lockoutStore, store, whisperPool, yellSink, broadcastWhisper, getWhisperQueue } = shared;
+  const { buffTracker, raidStateStore, lockoutStore, store, whisperPool, yellSink, broadcastWhisper, getWhisperQueue, raidTelemetry } = shared;
   const lastChronicleCheck = new Map<string, number>();
 
   // The single fan-out: this lair's Discord post + per-capital yell + per-side subscriber whisper.
@@ -173,6 +176,14 @@ export function createRaidZonePipeline(
     void raidStateStore
       .save(lane.label, lane.watch.raidStateSnapshot())
       .catch((error) => logger.debug(`raid state save: ${describeError(error)}`));
+    // Concurrent (non-primary) raids persist under their own keys, cleared when they end.
+    const extras = lane.watch.extraRaidStates();
+    for (let slot = 1; slot <= 3; slot += 1) {
+      const extra = extras.find((e) => e.slot === slot);
+      void raidStateStore
+        .save(`${lane.label}#${slot}`, extra ? extra.state : null)
+        .catch((error) => logger.debug(`raid state save: ${describeError(error)}`));
+    }
     void lockoutStore
       .save(lane.label, lane.watch.lockoutSnapshot())
       .catch((error) => logger.debug(`lockout save: ${describeError(error)}`));
@@ -263,6 +274,7 @@ export function createRaidZonePipeline(
     // boss, is a DISBAND — no park-now, no duration sample, and a stand-down for the cities told to
     // park this cycle. Purges the queued park whispers so nobody waits for a buff that isn't coming.
     const handleDisband = async (clear: ConfirmedClear): Promise<void> => {
+      lane.watch.annotateEnd(clear.number, "disbanded");
       logger.info(
         `${lane.label}: ${zone.raidName} raid #${clear.number ?? "?"} disbanded: left after ~${mins(clear.durationMs)}m ` +
           `(< ${mins(watch.raidDisbandMs)}m) — not a real clear, not recorded`,
@@ -310,12 +322,14 @@ export function createRaidZonePipeline(
     const handleConfirmedClear = async (clear: ConfirmedClear, killConfirmed: boolean): Promise<void> => {
       const ms = clear.durationMs;
       if (!isPlausibleClear(ms, watch.raidMinClearMs)) {
+        lane.watch.annotateEnd(clear.number, "interrupted"); // churn, not a session worth learning from
         logger.info(
           `${lane.label}: raid clear ignored: ~${mins(ms)}m is below the ${mins(watch.raidMinClearMs)}m floor — churn, not a real clear`,
         );
         return;
       }
       if (ms > watch.raidMaxClearMs) {
+        lane.watch.annotateEnd(clear.number, "interrupted"); // likely a merge: excluded from training
         logger.info(`${lane.label}: raid clear ignored: ~${mins(ms)}m exceeds the ${mins(watch.raidMaxClearMs)}m ceiling — likely a merge`);
         return;
       }
@@ -429,6 +443,11 @@ export function createRaidZonePipeline(
     for (const lane of lanes) {
       await processLane(lane, split, complete, now);
     }
+    raidTelemetry?.report(
+      zone.id,
+      lanes.map((lane) => ({ label: lane.label, sessions: lane.watch.sessions() })),
+      { formAt: watch.raidStrengthSize ?? watch.minRaidSize, floor: watch.raidLeftFloor ?? watch.minRaidSize },
+    );
   };
 
   const timerStats = async (): Promise<NamedHeartbeatTimer> => {

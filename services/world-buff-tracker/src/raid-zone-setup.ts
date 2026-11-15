@@ -3,6 +3,7 @@ import type { RaidWatchConfig, RealmType } from "./config.js";
 import type { DetectionLane } from "./lanes.js";
 import type { GroupingMode } from "./watcher/raid-events.js";
 import { RaidTracker, type RaidTrackerOptions } from "./watcher/raid-tracker.js";
+import { guildRulesFromEnv } from "./watcher/guild-label.js";
 import type { RaidZone, RaidZoneId } from "./watcher/raid-zone.js";
 
 /**
@@ -50,6 +51,8 @@ export function trackerOptions(
     leftFloor: watch.raidLeftFloor,
     clearSustainedMs: watch.raidClearSustainedMs,
     formConfirmMs: watch.raidFormConfirmMs,
+    maxConcurrentRaids: watch.raidMaxConcurrent,
+    guildRules: guildRulesFromEnv(process.env),
     fillWindowMs: watch.raidFillWindowMs,
     rosterCap: watch.raidRosterCap,
     lockoutMs: watch.raidLockoutMs,

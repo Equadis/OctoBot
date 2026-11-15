@@ -55,6 +55,8 @@ describe("trackerOptions", () => {
       rosterCap: 45,
       lockoutMs: 4 * 3_600_000,
       nextRaidNumber: next,
+      maxConcurrentRaids: 2,
+      guildRules: expect.objectContaining({ guildShare: 0.6, ledShare: 0.5, collabEachShare: 0.25, collabCombinedShare: 0.65 }),
     });
     expect(trackerOptions(onyxiaWatch(config), "auto", next).minRaidSize).toBe(config.minRaidSize);
   });

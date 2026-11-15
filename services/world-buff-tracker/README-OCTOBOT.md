@@ -97,3 +97,8 @@ required. The website UI must be connected to these fields separately.
 
 Use `WOW_LOGIN_ENABLED=false` if you need both DMF characters freed for
 manual login; do not run them simultaneously in another Railway service.
+
+
+## Raid session telemetry (authoritative raid ids and timers)
+
+Set `METRICS_PUSH_TOKEN` (and optionally `METRICS_PUSH_URL`) on the main tracker service to push per-raid sessions (id, formation time, aggregate guild composition, concurrent raids) to OctoMetrics. Off without the token. Deploy the Worker first. Full design, env variables, staleness rules and limitations: [docs/RAID-SESSIONS.md](../../docs/RAID-SESSIONS.md).

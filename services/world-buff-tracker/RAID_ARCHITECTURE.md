@@ -233,3 +233,8 @@ existing seam, needing no change to the tracker, policy, delivery or service.
   become table-driven unit tests.
 - Ports (stores, sinks) are faked in tests and real in `index.ts`. The only thing that needs the live
   server is the `RosterSource` implementation — the one seam where reality is unavoidable.
+
+
+## Update: sessions, concurrency and telemetry
+
+`RaidTracker` now hosts up to `maxConcurrentRaids` ClearTracker slots (default 1 inside the class; the service passes 2 via `WOW_RAID_MAX_CONCURRENT`). Slot 0 is the original whole-roster tracker, byte-for-byte the same behaviour when only one raid exists. Extra slots form only from unassigned players who arrived together after the first raid's fill window; anything else is reported as `LairAmbiguity`, never a session. `sessions()` exposes the per-raid record (id, formedAt, status, guild composition, confidence, end reason) that `RaidTelemetry` pushes to OctoMetrics. See [docs/RAID-SESSIONS.md](../../docs/RAID-SESSIONS.md).

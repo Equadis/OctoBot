@@ -199,6 +199,32 @@ export class ClearTracker {
     return this.#roster;
   }
 
+  /** When the tracked raid reached strength (its authoritative clock start), or null. */
+  get formedAt(): number | null {
+    return this.#formedAt;
+  }
+
+  /** True once the raid has been announced (held strength through the confirm window). */
+  get confirmed(): boolean {
+    return this.#formedAt !== null && this.#confirmed;
+  }
+
+  /** When the roster's presence first fell below the floor (a departure or wipe in progress), or null. */
+  get belowSince(): number | null {
+    return this.#belowSince;
+  }
+
+  /** Is this player locked to a recent raid tracked here (so barred from founding another)? */
+  isLockedAt(name: string, now: number): boolean {
+    return this.#isLocked(name, now);
+  }
+
+  /** Lock names to a raid tracked ELSEWHERE (another concurrent slot) so they cannot found a phantom
+   *  raid here after that raid ends. */
+  lockExternal(names: Iterable<string>, now: number): void {
+    for (const name of names) this.#locked.set(name, now);
+  }
+
   /** The current raid's reference number, or null if none is tracked / numbering is off. */
   get number(): number | null {
     return this.#number;

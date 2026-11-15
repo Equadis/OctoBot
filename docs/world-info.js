@@ -8,6 +8,8 @@
   const FRESH_METRICS_MS = 5 * MINUTE;
   // Raid /who scans land roughly every 15-25 minutes in the live feed; older readings are shown as stale.
   const FRESH_RAID_MS = 30 * MINUTE;
+  // The Bufftracker reports every ~2 minutes; older than this its raids are shown as last known, flagged stale.
+  const TRACKER_FRESH_MS = 3 * MINUTE;
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
   // Set by hand until the bots can detect the Darkmoon Faire. A fresh sighting from the bots always takes priority.
   // Set to null to go back to "Moving" when no sighting is available.
@@ -25,6 +27,8 @@
   const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset' });
   const state = {
     raids: { ony: null, bwl: null },
+    // The Bufftracker raid sessions per lair (authoritative), when it has reported.
+    auth: { ony: null, bwl: null },
     heads: { onyxia: null, nefarian: null },
     buffs: { alliance: null, horde: null },
     dmf: null,
@@ -98,11 +102,11 @@
       const at = time(raw.at), start = time(raw.activityStart), end = time(raw.activityEnd);
       const players = Number(raw.players);
       const present = Number.isFinite(players) && players > 0;
-      const currentSession = present && validPast(start) && !(validPast(end) && end >= start);
       raids[key] = {
         observedAt: at, players: Number.isFinite(players) ? players : null,
         active: raw.active === true || raw.active === false ? raw.active : (Number.isFinite(players) ? present : null),
-        sessions: currentSession ? [{ id: '1', startedAt: start, confidence: 'inferred', guild: guildLabel(raw, players) }] : [],
+        // Headcount activity cannot identify a raid or its start (back-to-back raids merge), so it never becomes a numbered session.
+        sessions: [],
         // An activityEnd older than the current activityStart belongs to the previous raid; it is not a confirmed clear.
         lastFinishedAt: validPast(end) && (!validPast(start) || end < start || !present) ? end : null,
         clearConfirmed: raw.clearConfirmed === true
@@ -152,7 +156,8 @@
     const stateText = String(first(row.status, row.state, '')).toLowerCase();
     if (['ended', 'finished', 'cleared', 'cancelled'].includes(stateText) || row.active === false) return null;
     if (!validPast(startedAt)) return null;
-    return { id: String(first(row.id, row.number, row.raidNumber, 'Raid')), startedAt, confidence: String(first(row.confidence, 'inferred')).toLowerCase(), guild: object(row.guild) && row.guild.name ? row.guild : guildLabel(row, Number(first(row.players, row.playerCount))) };
+    const rawId = Number(first(row.id, row.number, row.raidNumber));
+    return { id: Number.isInteger(rawId) && rawId > 0 ? rawId : null, startedAt, confidence: String(first(row.confidence, 'inferred')).toLowerCase(), guild: object(row.guild) && row.guild.name ? row.guild : guildLabel(row, Number(first(row.players, row.playerCount))) };
   }
   function normaliseRaid(raw, root) {
     if (!object(raw)) return null;
@@ -163,11 +168,90 @@
     const players = Number(first(raw.players, raw.playersListed, raw.online));
     const active = typeof raw.active === 'boolean' ? raw.active : null;
     const explicitCount = first(raw.activeRaidCount, raw.raidCount, raw.active_count);
-    const count = sessions.length ? sessions.length : (Number.isInteger(Number(explicitCount)) && Number(explicitCount) >= 0 ? Number(explicitCount) : null);
+    const count = sessions.length ? sessions.length : (explicitCount !== null && Number.isInteger(Number(explicitCount)) && Number(explicitCount) >= 0 ? Number(explicitCount) : null);
     return { stamp, sessions, lastFinishedAt, players: Number.isFinite(players) && players >= 0 ? players : null, active, count };
+  }
+  // The Bufftracker lifecycle for one lair, as the Worker publishes it (heads.<head>.authoritative). Rendered, never re-derived.
+  function authView(head) {
+    const a = head && object(head.authoritative);
+    if (!a) return null;
+    const sessions = (Array.isArray(a.sessions) ? a.sessions : []).map(row => {
+      if (!object(row)) return null;
+      const startedAt = time(row.startedAt), id = Number(row.id);
+      if (!validPast(startedAt)) return null;
+      return {
+        id: Number.isInteger(id) && id > 0 ? id : null, key: String(row.key || ''), startedAt,
+        confidence: String(row.confidence || 'tentative'), status: String(row.status || 'in_progress'),
+        guild: object(row.guild) ? row.guild : null, players: Number(row.players), resumed: row.resumed === true,
+        estimate: object(row.estimate) || null
+      };
+    }).filter(Boolean);
+    const last = object(a.lastFinished);
+    return {
+      observedAt: time(a.observedAt), stale: a.stale === true, expired: a.expired === true, sessions,
+      lair: object(a.lair) || {},
+      lastFinished: last && validPast(time(last.at)) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
+    };
+  }
+  function renderAuthRaid(key, auth) {
+    const count = $(key + '-count'), activeNode = $(key + '-active'), evidence = $(key + '-evidence'), finished = $(key + '-finished');
+    const now = Date.now();
+    const age = validPast(auth.observedAt) ? now - auth.observedAt : Infinity;
+    const stale = auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || now - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
+    const n = auth.sessions.length, ambiguity = object(auth.lair.ambiguity);
+    activeNode.replaceChildren();
+    $(key + '-count-label').textContent = (n >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
+    // With activity hidden by ambiguity the number is a lower bound ("2+"), never an exact count.
+    count.textContent = n === 0 ? (stale ? 'NO DATA' : 'No raid') : String(n) + (ambiguity ? '+' : '');
+    count.classList.toggle('no-data', stale && n === 0);
+    const allHigh = auth.sessions.every(session => ['high', 'confirmed'].includes(session.confidence));
+    if (stale) labelState(key + '-state', 'STALE');
+    else if (n === 0) labelState(key + '-state', 'NO RAID', 'unknown');
+    else if (allHigh && !ambiguity) labelState(key + '-state', 'TRACKED', 'online');
+    else labelState(key + '-state', 'ESTIMATED', 'estimated');
+    if (n === 0) appendEmpty(activeNode, stale ? 'Tracker is not reporting; the current raid state is unknown.' : 'No raid currently detected.');
+    for (const session of auth.sessions) {
+      const line = document.createElement('div');
+      line.className = 'timer-row';
+      const title = document.createElement('span');
+      const guild = session.guild && session.guild.label ? session.guild.label : null;
+      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2014 ' + guild : '');
+      title.title = session.confidence === 'tentative'
+        ? 'Separated from another raid by arrival timing only. /who has no instance IDs, so this grouping is an estimate.'
+        : guild === 'Unknown' ? 'Not enough roster information to name a guild or PUG.' : 'Grouped from the roster by the Bufftracker; not verified instance membership.';
+      const timer = document.createElement('strong');
+      timer.className = 'mono';
+      // One stable start time per raid: elapsed is always now minus the tracker formation time.
+      timer.textContent = span(now - session.startedAt);
+      line.append(title, timer);
+      const notes = [];
+      if (session.confidence === 'tentative') notes.push('Estimated group');
+      if (session.status === 'leaving') notes.push('Roster leaving');
+      if (session.resumed) notes.push('Resumed after a wipe');
+      if (n >= 2 && !stale && session.estimate && session.estimate.status === 'estimated' && Number.isFinite(time(session.estimate.estimatedAt))) notes.push('Est. clear in ' + span(time(session.estimate.estimatedAt) - now));
+      if (notes.length) {
+        const small = document.createElement('small');
+        small.textContent = notes.join(' \u00b7 ');
+        line.append(small);
+      }
+      activeNode.append(line);
+    }
+    if (auth.lastFinished) {
+      finished.textContent = span(now - auth.lastFinished.at) + ' ago';
+      finished.title = (auth.lastFinished.id !== null ? 'Raid #' + auth.lastFinished.id + ' \u00b7 ' : '') + (auth.lastFinished.killConfirmed ? 'Boss kill confirmed by Chronicle.' : auth.lastFinished.endReason === 'disbanded' ? 'Group disbanded early; no kill.' : 'Roster left the zone; a boss kill is not confirmed.');
+    } else {
+      finished.textContent = 'NO DATA';
+      finished.title = '';
+    }
+    const present = Number(auth.lair.present);
+    const roster = Number.isFinite(present) ? playerCount(present) + ' in the lair. ' : '';
+    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2014 showing the last known raids; they may have changed.';
+    else evidence.textContent = roster + 'Raids come from Bufftracker roster tracking; /who has no instance IDs, so groups are inferred.' + (ambiguity ? ' ' + ambiguity.players + ' more players could not be separated into a raid.' : '');
   }
   function playerCount(n) { return n + (n === 1 ? ' player' : ' players'); }
   function renderRaid(key) {
+    const authRaid = state.auth[key];
+    if (authRaid && !authRaid.expired) { renderAuthRaid(key, authRaid); return; }
     const raid = state.raids[key];
     const count = $(key + '-count');
     const activeNode = $(key + '-active');
@@ -197,7 +281,7 @@
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = 'Raid ' + session.id + (session.guild ? ' \u2013 ' + session.guild.name : '');
+        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2014 ' + session.guild.name : '');
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
@@ -296,6 +380,8 @@
       note.textContent = stale && clear ? 'The latest estimate is too old to show.' : '';
       return;
     }
+    if (clear.status === 'stale') { out.textContent = 'STALE'; note.textContent = 'Bufftracker data is out of date; no estimate is shown and no clear is assumed.'; return; }
+    if (clear.status === 'leaving') { out.textContent = 'LEAVING'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
     if (clear.status === 'learning') {
       out.textContent = 'LEARNING';
@@ -306,7 +392,7 @@
     if (!Number.isFinite(estimatedAt)) { out.textContent = 'NO DATA'; note.textContent = ''; return; }
     const now = Date.now();
     const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
-    const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '.';
+    const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + (clear.source === 'legacy_headcount' ? ' \u00b7 headcount-based, unverified' : '') + '.';
     tag.hidden = true;
     const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); note.textContent = 'Estimated clear · ' + basis; }
@@ -362,6 +448,8 @@
       state.raids.ony = normaliseRaid(findRaid(root, 'ony'), root);
       state.raids.bwl = normaliseRaid(findRaid(root, 'bwl'), root);
       const heads = object(root.heads) || {};
+      state.auth.ony = authView(object(heads.onyxia));
+      state.auth.bwl = authView(object(heads.nefarian));
       state.heads.onyxia = object(heads.onyxia);
       state.heads.nefarian = object(heads.nefarian);
       state.buffs.alliance = findBuff(root, 'alliance');
@@ -370,7 +458,7 @@
       state.metricsFetchedAt = Date.now();
       watchSounds(true);
       const source = $('source-status');
-      source.textContent = 'OctoMetrics API connected · Raid lifecycle data is in development';
+      source.textContent = (state.auth.ony || state.auth.bwl) ? 'OctoMetrics API connected \u00b7 Raid sessions from the Bufftracker' : 'OctoMetrics API connected \u00b7 Aggregate raid activity only; raid sessions unavailable';
       source.className = 'source-label fresh';
     } catch (error) {
       const source = $('source-status');
@@ -391,7 +479,8 @@
     for (const [raidKey, headKey] of keys) {
       const raid = state.raids[raidKey], head = state.heads[headKey], clear = head && head.clear;
       if (fromData) {
-        const finishedAt = raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
+        const authFinished = state.auth[raidKey] && state.auth[raidKey].lastFinished ? state.auth[raidKey].lastFinished.at : null;
+        const finishedAt = validPast(authFinished) ? authFinished : raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
         if (sound.baselined && finishedAt && finishedAt > (sound.finished[raidKey] || 0)) player.notify('finished');
         if (finishedAt) sound.finished[raidKey] = finishedAt;
         const confirmed = Boolean(clear && clear.confirmed === true);
