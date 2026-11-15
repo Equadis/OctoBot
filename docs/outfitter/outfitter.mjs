@@ -620,6 +620,13 @@ async function start(){
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
  $('reset').onclick=()=>{applyBackdrop('');commit(emptyOutfit(),'Outfit and background reset.');};
  $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('camera-reset').onclick=()=>renderModel(true);
+ {
+  const tools=document.querySelector('.viewer-tools'),toggle=$('tools-toggle');
+  const show=collapsed=>{tools.classList.toggle('collapsed',collapsed);toggle.setAttribute('aria-expanded',String(!collapsed));const label=collapsed?'Show viewer buttons':'Hide viewer buttons';toggle.setAttribute('aria-label',label);toggle.title=collapsed?'Show buttons':'Hide buttons';};
+  let hidden=false;try{hidden=localStorage.getItem('octobot-outfitter-tools-hidden')==='1';}catch{}
+  show(hidden);
+  toggle.onclick=()=>{hidden=!hidden;show(hidden);try{localStorage.setItem('octobot-outfitter-tools-hidden',hidden?'1':'0');}catch{}};
+ }
  $('screenshot').onclick=takePhoto;
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});

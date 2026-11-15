@@ -188,3 +188,12 @@
 .tool-btn:hover,.tool-btn:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
 .shot-status{color:#6fe08f;font-size:12px;opacity:0;transition:opacity .25s}
 .shot-status.show{opacity:1}
+
+/* Minus / plus: hides the viewer buttons, leaving a small plus to bring them back */
+.viewer-tools{align-items:center}
+.tools-toggle{width:16px;height:16px;padding:0;display:flex;align-items:center;justify-content:center;border:0;background:none;color:#aab7c7;cursor:pointer}
+.tools-toggle svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.tools-toggle .stem{display:none}
+.tools-toggle:hover,.tools-toggle:focus-visible{color:#f4d65c;outline:0}
+.viewer-tools.collapsed .tool-btn{display:none}
+.viewer-tools.collapsed .tools-toggle .stem{display:inline}
