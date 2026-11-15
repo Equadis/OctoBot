@@ -135,3 +135,9 @@
 /* Background picker sits under the model toolbar, above Appearance */
 .backdrop-row{display:flex;justify-content:flex-start;margin-top:14px}
 .backdrop-row .backdrop-field{margin:0}
+
+/* Background sits on the same row as the other viewer controls; Reset camera is a refresh icon at the viewer's top right */
+.model-toolbar{justify-content:flex-end}
+.model-toolbar .backdrop-field{width:auto;margin-right:auto}
+.camera-reset-icon{position:absolute;top:8px;right:8px;z-index:3;width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;font-size:17px;line-height:1;cursor:pointer}
+.camera-reset-icon:hover,.camera-reset-icon:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
