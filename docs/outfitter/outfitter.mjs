@@ -115,9 +115,11 @@ function renderItems(){
 }
 // Works out which Classic model (if any) previews an item, and whether that is an exact match or an estimate.
 const previewCache=new Map();
+const SLOW_LOOKUP_MS=4000;
 const NOTE_NAME='Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.';
 const NOTE_ICON='Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.';
 const NOTE_NONE='No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.';
+const NOTE_FAIL='The appearance service did not answer for this item, so it has no preview right now. It stays in your outfit. Selecting it again will retry.';
 const NOTE_LEGACY='No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.';
 // First display ID in the list whose model files exist in the Classic library, or null.
 async function usableDisplay(data,slot){
@@ -138,13 +140,16 @@ function resolvePreview(item,slotId){
    if(!Array.isArray(data.candidates))legacy=true;
    const own=await usableDisplay(data,slot);
    if(own!==null)return {slot,displayId:own,kind:'own',note:''};
-  }catch{}
+  }catch{
+   // The service itself failed (timeout or 502). Do not chain more slow lookups; report it and let the next render retry.
+   queueMicrotask(()=>previewCache.delete(key));return {slot,displayId:null,kind:'error',note:NOTE_FAIL};
+  }
   // No model for this exact item: borrow the model of an original item with the same name, then with the same icon.
   for(const sibling of sameNameItems(nameIndex,item)){
    try{const displayId=await usableDisplay(await displayFor(sibling.id),slot);if(displayId!==null)return {slot,displayId,kind:'name',note:NOTE_NAME};}catch{}
   }
   // Same-icon candidates are checked together; the lowest item ID (the original) wins.
-  const byIcon=await Promise.all(sameIconItems(iconIndex,item).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
+  const byIcon=await Promise.all(sameIconItems(iconIndex,item).slice(0,8).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
   const iconMatch=byIcon.find(displayId=>displayId!==null);
   if(iconMatch!==undefined)return {slot,displayId:iconMatch,kind:'icon',note:NOTE_ICON};
   return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:NOTE_NONE};
@@ -153,24 +158,35 @@ function resolvePreview(item,slotId){
 }
 function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';return info;}
 // Item rows are checked as they scroll into view, so the (i) appears for every item with an estimated or missing preview.
-let scanTimer=0;
-function watchRowPreview(row,item,links,link){row._preview={item,slotId:selectedSlot,links,link};}
+// These checks are background work: they run two at a time, only for rows still on screen, and never while the 3D model
+// is loading, so they cannot slow down the model the user just chose.
+let scanTimer=0,modelBusy=false,scanActive=0;const scanQueue=[];const MAX_SCAN=2;
+function watchRowPreview(row,item,links,link){row._preview={item,slotId:selectedSlot,links,link,row};}
+function rowNearView(row){const box=$('results');if(!box||!row.isConnected)return false;const a=box.getBoundingClientRect(),r=row.getBoundingClientRect();return r.bottom>=a.top-160&&r.top<=a.bottom+160;}
+function pumpScan(){
+ while(!modelBusy&&scanActive<MAX_SCAN&&scanQueue.length){
+  const job=scanQueue.shift();
+  if(!rowNearView(job.row)){job.queued=false;continue;}
+  scanActive++;
+  resolvePreview(job.item,job.slotId).then(result=>{
+   if(!result.note||!job.row.isConnected||job.links.querySelector('.info-i'))return;
+   job.links.insertBefore(infoIcon(result.note),job.link);
+  }).catch(()=>{}).finally(()=>{scanActive--;job.queued=false;job.done=true;pumpScan();});
+ }
+}
 function scanVisibleRows(){
  const box=$('results');if(!endpoint||!box)return;
  const area=box.getBoundingClientRect();
  for(const row of box.querySelectorAll('.result')){
-  const job=row._preview;if(!job||job.started)continue;
+  const job=row._preview;if(!job||job.queued||job.done)continue;
   const r=row.getBoundingClientRect();
   if(r.bottom<area.top-160)continue;
   if(r.top>area.bottom+160)break;
-  job.started=true;
-  resolvePreview(job.item,job.slotId).then(result=>{
-   if(!result.note||!row.isConnected||job.links.querySelector('.info-i'))return;
-   job.links.insertBefore(infoIcon(result.note),job.link);
-  }).catch(()=>{});
+  job.queued=true;scanQueue.push(job);
  }
+ pumpScan();
 }
-function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRows,120);}
+function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRows,250);}
 function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 
@@ -304,7 +320,7 @@ let keptView=null;
 function readView(r){return {azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],zoom:r.zoom.target};}
 function applyView(r,view){r.azimuth=view.azimuth;r.zenith=view.zenith;r.translation[0]=view.translation[0];r.translation[1]=view.translation[1];r.translation[2]=view.translation[2];r.zoom.current=view.zoom;r.zoom.target=view.zoom;r.zoom.rateCurrent=0;}
 async function renderModel(resetCamera=false){
- keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
+ keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
@@ -315,10 +331,13 @@ async function renderModel(resetCamera=false){
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
   renderLook();
-  const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[];let outdatedService=false;
+  const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
-   const result=await resolvePreview(item,id);
+   // A lookup the appearance service is slow to answer must not hold up the whole model: show what is ready and add the
+   // slow item as soon as it resolves.
+   const result=await Promise.race([resolvePreview(item,id),new Promise(resolve=>setTimeout(()=>resolve({kind:'slow',displayId:null,slot:viewerSlot(id,item)}),SLOW_LOOKUP_MS))]);
+   if(result.kind==='slow'){slowItems.push({item,id});return null;}
    if(result.kind==='name')approximated.push(item.name);
    else if(result.kind==='icon')approximatedByIcon.push(item.name);
    else if(result.kind==='none'){unavailable.push(item.name);unavailableIds.push(item.id);if(result.legacy)outdatedService=true;}
@@ -337,13 +356,17 @@ async function renderModel(resetCamera=false){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;setupAnimation();return;}
-   if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;modelBusy=false;setupAnimation();queueScan();return;}
+   if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';modelBusy=false;return;}
    setTimeout(check,250);
   };check();
   for(const id of unavailableIds)nextNotes.set(id,outdatedService?'No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.':'No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.');
   approxNotes=nextNotes;renderItems();
- } catch(error){if(token===revision){$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
+  if(slowItems.length){
+   feedback(`Still fetching the model for ${slowItems.map(entry=>entry.item.name).join(', ')}. The preview will update when it arrives.`);
+   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();feedback(`No preview for ${item.name} right now: ${result.kind==='error'?'the appearance service did not answer. Select it again to retry.':'it has no Classic model.'}`);}}).catch(()=>{});
+  }
+ } catch(error){if(token===revision){modelBusy=false;$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
 function renderSaved(){
  const target=$('saved-outfits');target.replaceChildren();
