@@ -23,8 +23,8 @@ try{
  const kept=location.search.replace(/^\?/,'').split('&').filter(part=>part&&!/^v(=|$)/.test(part));
  if(kept.length!==location.search.replace(/^\?/,'').split('&').filter(Boolean).length)history.replaceState(history.state,'',location.pathname+(kept.length?'?'+kept.join('&'):'')+location.hash);
 }catch{}
-let savedView=null;try{savedView=rememberedPlannerView(localStorage);}catch{}
-const selectedView=plannerView(location.href,savedView);
+// Opening the planner without ?class= always shows the class selection; each class's saved gear (per-class drafts) is untouched.
+const selectedView=plannerView(location.href,null);
 const classId=selectedView==='classes'?'warrior':selectedView;
 try{rememberPlannerView(selectedView,localStorage);}catch{}
 if(selectedView!=='classes'){
