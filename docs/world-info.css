@@ -196,3 +196,7 @@ small:empty,.evidence:empty{display:none}
 .hero-stat span[hidden]{display:none}
 
 .clock .tm{font-size:.38em;font-weight:400;margin-left:2px;vertical-align:super;line-height:0;opacity:.85}
+
+/* Raid panels: "Last raid finished" and "Last confirmed head drop" are pinned to the bottom, so both panels line up whatever is above them */
+.world-panel.raid-onyxia,.world-panel.raid-nefarian{display:flex;flex-direction:column}
+.raid-onyxia>.bottom-line:not(.drops-line),.raid-nefarian>.bottom-line:not(.drops-line){margin-top:auto}
