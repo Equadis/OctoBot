@@ -32,7 +32,7 @@ The client's models are the old single-file form: version 256 with embedded view
    * Done and checked: the header map, vertices, the embedded skin view, texture definitions, sequences (161 for the Goblin), bones with translation, rotation and scale tracks (rotations are plain float quaternions), and attachments. 38 consistency rules pass for Goblin male and female, Blood Elf male and female, and Human male. Skinning the vertices with the Stand animation gives a recognisable standing body for both Goblin and Blood Elf, so the animation decode is validated.
    * Still to do: colours, transparency, UV animations, events, lights, cameras, emitters and the external `.anim` files (if any are used).
 3. **Writer (`m2v274.py`, geometry and animation done, not yet tried in the viewer).** Emits `m2/<id>.m2` (MD21 v274 plus SKID, SFID, TXID), `skin/<id>.skin` and `skel/<id>.skel` (SKL1, SKS1, SKB1, SKA1) with invented file ids from 9,000,000 up. Rotations are re-compressed to int16 and key times made relative to each sequence. Verified by reading the output back and comparing with the v256 reader (19 rules, all four Goblin and Blood Elf bodies). Written empty or with a stand-in: colours, transparency (one opaque weight), UV animations, events, lights, cameras, particles, collision. Batch shader ids are a guess (0) until the viewer test.
-4. **Textures.** Decode BLP and write WebP (with the skin, hair and face variants).
+4. **Textures (`blp.py`, done).** Decodes BLP (palette and DXT) to lossless WebP via Pillow; `octo_mpq.Client` searches every archive newest first. Checked by eye on the Goblin and Blood Elf skins, faces, pelvis and eye glow. The client's file names come from `CharSections.dbc` (race 9 Goblin, race 10 Blood Elf; fields: id, race, sex, section, variation, colour, three texture names); section 0 skin, 1 face, 3 hair, 4 underwear. Base hair textures such as `Hair00_00.blp` are fully transparent placeholders; real hair uses other colour rows.
 5. **Proof of concept.** Goblin male, default skin, rendered in the Zam viewer from a local asset folder.
 6. **Customisation.** Build `charactercustomization` JSON (skin colour, face, hair, markings) from the client's `CharSections` tables.
 7. **Equipment.** Armour needs the model's attachment points and texture regions to match what the viewer expects.
@@ -54,6 +54,8 @@ python tools/models/octo_mpq.py probe "D:/Octowow/Data" "Character\Goblin\Male\G
 python tools/models/m2v256.py tools/models/out/Character__Goblin__Male__GoblinMale.m2
 # Convert to the modern format (output stays local)
 python tools/models/m2v274.py tools/models/out/Character__Goblin__Male__GoblinMale.m2 tools/models/out/goblin_male
+# Convert textures (BLP to WebP)
+python tools/models/blp.py "D:/Octowow/Data" tools/models/out/tex "Character\Goblin\Male\GoblinMaleSkin00_100.blp"
 # Extract to the ignored output folder
 python tools/models/octo_mpq.py extract "D:/Octowow/Data/patch-5.mpq" tools/models/out "Character\Goblin\Male\GoblinMale.m2"
 ```

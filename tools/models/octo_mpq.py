@@ -116,6 +116,31 @@ class Archive:
                 out += unpack(f.read(offsets[k + 1] - offsets[k]), min(self.sector, size - k * self.sector))
             return bytes(out)
 
+class Client:
+    """Every archive in a Data folder, searched newest first (patch-N.mpq, then patch.mpq, then the base archives)."""
+
+    def __init__(self, folder):
+        import re
+
+        def rank(path):
+            name = os.path.basename(path).lower()
+            m = re.match(r'patch-(\d+)\.mpq$', name)
+            return (3, int(m.group(1))) if m else (2, 0) if name == 'patch.mpq' else (1, 0)
+        paths = sorted(glob.glob(os.path.join(folder, '*.[mM][pP][qQ]')), key=rank, reverse=True)
+        self.archives = []
+        for path in paths:
+            try:
+                self.archives.append(Archive(path))
+            except Exception:
+                pass
+
+    def read(self, name):
+        for archive in self.archives:
+            data = archive.read(name)
+            if data is not None:
+                return data
+        return None
+
 
 def main(argv):
     if len(argv) < 3 or argv[0] not in ('probe', 'extract'):
