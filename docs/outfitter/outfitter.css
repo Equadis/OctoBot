@@ -176,3 +176,6 @@
 .seg button:last-child{border-radius:0 4px 4px 0;margin-left:-1px}
 .seg button[aria-pressed="true"]{background:#3a3827;border-color:#9d8a35;color:#f4d65c;position:relative;z-index:1}
 .model-toolbar .weapon-controls{margin-right:0}
+
+.bd-action{color:#c0ccda}
+.bd-option.bd-action:hover{color:#f4d65c}

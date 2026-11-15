@@ -10,9 +10,33 @@ const metadata=new Map();
 let approxNotes=new Map();
 const BACKDROP_KEY='octobot-outfitter-backdrop';
 let backdropRequest=0;
+// A visitor's own photo is stored only in this browser (never uploaded) and is shrunk first so it fits in browser storage.
+const CUSTOM_KEY='octobot-outfitter-custom-background';
+let customPhoto=null;
+try{const stored=localStorage.getItem(CUSTOM_KEY);if(typeof stored==='string'&&/^data:image\/jpeg;base64,/.test(stored))customPhoto=stored;}catch{}
+const lookupBackground=id=>id==='custom'?(customPhoto?{group:'Custom',id:'custom',label:'My photo',url:customPhoto}:null):findBackground(id);
+async function useCustomPhoto(file){
+ if(!file)return;
+ if(!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)){feedback('Choose a PNG, JPEG, WebP or GIF image.');return;}
+ if(file.size>15*1024*1024){feedback('That image is over 15 MB. Choose a smaller one.');return;}
+ try{
+  const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+  const g=canvas.getContext('2d');g.fillStyle='#182333';g.fillRect(0,0,canvas.width,canvas.height);g.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
+  customPhoto=canvas.toDataURL('image/jpeg',0.86);
+  let kept=true;try{localStorage.setItem(CUSTOM_KEY,customPhoto);}catch{kept=false;}
+  applyBackdrop('custom');
+  feedback(kept?'Your photo is now the background. It stays in this browser and is not uploaded.':'Your photo is the background for this visit only: browser storage is full.');
+ }catch{feedback('That image could not be read. Try a different file.');}
+}
+function removeCustomPhoto(){
+ customPhoto=null;try{localStorage.removeItem(CUSTOM_KEY);}catch{}
+ if($('backdrop').value==='custom')applyBackdrop('');else updateBackdropButton();
+ feedback('Your photo was removed.');
+}
 // A background is a personal view setting. It is not part of an outfit, so shared links and saved outfits are unchanged.
 function applyBackdrop(id,{persistChoice=true}={}){
- const wrap=document.querySelector('.model-wrap'),choice=findBackground(id),token=++backdropRequest;
+ const wrap=document.querySelector('.model-wrap'),choice=lookupBackground(id),token=++backdropRequest;
  const clear=()=>{wrap.classList.remove('has-backdrop');wrap.style.removeProperty('--backdrop-image');};
  if(persistChoice){try{if(choice)localStorage.setItem(BACKDROP_KEY,choice.id);else localStorage.removeItem(BACKDROP_KEY);}catch{}}
  $('backdrop').value=choice?choice.id:'';
@@ -27,19 +51,19 @@ function applyBackdrop(id,{persistChoice=true}={}){
 // The background list shows a small class or race icon beside each name. Race icons follow the character's body (male / female).
 // A native <select> cannot show images, so a custom list sits on top of it; the select stays as the single source of truth.
 function backdropIcon(background){
+ if(background.id==='custom')return customPhoto;
  if(background.group==='Classes')return `https://wow.zamimg.com/images/wow/icons/small/classicon_${background.id.slice(6)}.jpg`;
  const key=background.id.slice(5);
- return Object.values(RACE_KEYS).includes(key)?`races/${key}_${outfit.gender?'female':'male'}.png?v=20261114`:null;
+ return [...Object.values(RACE_KEYS),'highelf','goblin'].includes(key)?`races/${key}_${outfit.gender?'female':'male'}.png?v=20261114`:null;
 }
 function backdropRow(label,icon){
  const frag=document.createDocumentFragment();
  if(icon){const img=document.createElement('img');img.alt='';img.width=20;img.height=20;img.src=icon;frag.append(img);}
- else{const blank=document.createElement('span');blank.className='bd-blank';frag.append(blank);}
  const text=document.createElement('span');text.className='bd-label';text.textContent=label;frag.append(text);return frag;
 }
 function updateBackdropButton(){
  const button=document.querySelector('.bd-button');if(!button)return;
- const choice=findBackground($('backdrop').value);
+ const choice=lookupBackground($('backdrop').value);
  button.replaceChildren(backdropRow(choice?choice.label:'Default (glow)',choice?backdropIcon(choice):null));
  const caret=document.createElement('span');caret.className='bd-caret';caret.textContent='▾';caret.setAttribute('aria-hidden','true');button.append(caret);
 }
@@ -48,13 +72,19 @@ function setupBackdropPicker(){
  const wrap=document.createElement('div');wrap.className='bd-picker';
  const button=document.createElement('button');button.type='button';button.className='bd-button';button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Model background');
  const list=document.createElement('div');list.className='bd-list';list.setAttribute('role','listbox');list.hidden=true;
- wrap.append(button,list);select.after(wrap);
+ const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/png,image/jpeg,image/webp,image/gif';fileInput.hidden=true;
+ fileInput.onchange=()=>{const file=fileInput.files?.[0];fileInput.value='';useCustomPhoto(file);};
+ wrap.append(button,list,fileInput);select.after(wrap);
  const close=()=>{list.hidden=true;button.setAttribute('aria-expanded','false');};
  const choose=id=>{select.value=id;select.dispatchEvent(new Event('change'));close();button.focus();};
  const build=()=>{
   list.replaceChildren();
   const option=(id,label,icon)=>{const row=document.createElement('button');row.type='button';row.className='bd-option';row.setAttribute('role','option');row.setAttribute('aria-selected',String(select.value===id));row.append(backdropRow(label,icon));row.onclick=()=>choose(id);return row;};
   list.append(option('','Default (glow)',null));
+  const heading0=document.createElement('div');heading0.className='bd-group';heading0.textContent='Your photo';list.append(heading0);
+  if(customPhoto)list.append(option('custom','My photo',customPhoto));
+  const upload=document.createElement('button');upload.type='button';upload.className='bd-option bd-action';upload.setAttribute('role','option');upload.textContent=customPhoto?'Replace my photo…':'Upload your own photo…';upload.onclick=()=>{close();fileInput.click();};list.append(upload);
+  if(customPhoto){const remove=document.createElement('button');remove.type='button';remove.className='bd-option bd-action';remove.setAttribute('role','option');remove.textContent='Remove my photo';remove.onclick=()=>{close();removeCustomPhoto();};list.append(remove);}
   for(const group of ['Classes','Races']){
    const heading=document.createElement('div');heading.className='bd-group';heading.textContent=group;list.append(heading);
    for(const background of BACKGROUNDS.filter(b=>b.group===group))list.append(option(background.id,background.label,backdropIcon(background)));
@@ -78,7 +108,7 @@ function setupBackdropPicker(){
  updateBackdropButton();
 }
 function setupBackdrops(){
- const select=$('backdrop');select.replaceChildren(new Option('Default (glow)',''));
+ const select=$('backdrop');select.replaceChildren(new Option('Default (glow)',''),new Option('My photo','custom'));
  for(const group of ['Classes','Races']){
   const optgroup=document.createElement('optgroup');optgroup.label=group;
   for(const background of BACKGROUNDS.filter(b=>b.group===group))optgroup.append(new Option(background.label,background.id));
@@ -86,7 +116,7 @@ function setupBackdrops(){
  }
  select.onchange=()=>applyBackdrop(select.value);
  let saved='';try{saved=localStorage.getItem(BACKDROP_KEY)||'';}catch{}
- if(findBackground(saved))applyBackdrop(saved,{persistChoice:false});
+ if(lookupBackground(saved))applyBackdrop(saved,{persistChoice:false});
  setupBackdropPicker();
 }
 function feedback(message){$('feedback').textContent=message;}
