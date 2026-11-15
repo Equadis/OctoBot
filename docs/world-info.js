@@ -160,6 +160,11 @@
     const evidence = $(key + '-evidence');
     const finished = $(key + '-finished');
     activeNode.replaceChildren();
+    // "Raid in progress" for none or one, "Raids in progress" for two or more.
+    const raidTotal = raid ? (raid.sessions.length || raid.count || 0) : 0;
+    const raidLabel = raidTotal >= 2 ? 'Raids in progress' : 'Raid in progress';
+    $(key + '-count-label').textContent = raidLabel;
+    $(key + '-active-label').textContent = raidLabel;
     finished.textContent = raid && validPast(raid.lastFinishedAt)
       ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'NO DATA';
     finished.title = raid && validPast(raid.lastFinishedAt) && raid.clearConfirmed !== true ? 'Roster left the zone; a boss clear is not confirmed.' : '';
