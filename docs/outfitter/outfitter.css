@@ -112,3 +112,18 @@
 .panel-reset{background:transparent;border:0;border-radius:0;padding:0;color:#ff6b6b;font-size:11px;font-weight:400;line-height:1.5;white-space:nowrap}
 .panel-reset:hover{color:#ff9a93;text-decoration:underline;border:0}.panel-reset:disabled{opacity:.35;text-decoration:none}
 .preview-heading>div>.panel-reset{height:30px;margin-left:6px}
+
+.result-links{display:flex;align-items:center;gap:8px}
+.info-i{width:16px;height:16px;border:1px solid #5b6b82;border-radius:50%;color:#8fa0b6;font:italic 700 11px/14px Georgia,serif;text-align:center;cursor:help;user-select:none;flex:none}
+.info-i:hover,.info-i:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
+.info-tip{position:fixed;z-index:50;width:min(280px,80vw);padding:9px 11px;background:#0e1623;border:1px solid #39465a;border-radius:6px;color:#c6d0dc;font:400 11px/1.55 Arial,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.45);pointer-events:none}
+.info-tip[hidden]{display:none}
+
+/* Saved outfits: name, a close button at the top right, and a snapshot taken from the default (reset) camera */
+.saved-card{position:relative;display:block;width:148px}
+.saved-card .saved-load{display:flex;flex-direction:column;align-items:stretch;gap:0;width:100%;padding:0;overflow:hidden;background:#1f2b3b;border:1px solid #39465a;border-radius:6px;text-align:left;cursor:pointer}
+.saved-card .saved-load:hover,.saved-card .saved-load:focus-visible{border-color:#9d8a35}
+.saved-preview{display:block;width:100%;aspect-ratio:132/144;background:#182333}
+.saved-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.saved-name{display:block;padding:7px 9px 8px;font-size:12px;color:#efce47;line-height:1.25;overflow-wrap:anywhere;border-top:1px solid #39465a}
+.saved-card .saved-remove{position:absolute;top:6px;right:6px;width:20px;height:20px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #6a3a3a;border-radius:4px;background:#3a1f22;color:#ff8f86;font-size:14px;line-height:1;cursor:pointer}

@@ -6,6 +6,8 @@ import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,dec
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
 const metadata=new Map();
+// Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
+let approxNotes=new Map();
 const BACKDROP_KEY='octobot-outfitter-backdrop';
 let backdropRequest=0;
 // A background is a personal view setting. It is not part of an outfit, so shared links and saved outfits are unchanged.
@@ -83,6 +85,17 @@ function renderSlots(){
 }
 const ARMOUR={0:'Miscellaneous',1:'Cloth',2:'Leather',3:'Mail',4:'Plate',6:'Shields'},WEAPONS={0:'Axes',1:'Two-handed axes',2:'Bows',3:'Guns',4:'Maces',5:'Two-handed maces',6:'Polearms',7:'Swords',8:'Two-handed swords',10:'Staves',13:'Fist weapons',14:'Miscellaneous',15:'Daggers',16:'Thrown',18:'Crossbows',19:'Wands',20:'Fishing poles'};
 function renderTypes(){const select=$('type');select.replaceChildren(new Option('All types',''));const choices=new Map();for(const item of filterItems(items,{slot:selectedSlot})){const key=`${item.classs}:${item.subclass}`;choices.set(key,(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other');}for(const [key,name] of [...choices].sort((a,b)=>a[1].localeCompare(b[1])))select.append(new Option(name,key));}
+// One floating tooltip for the (i) icons, so the scrolling item list cannot clip it.
+function setupInfoTips(){
+ const tip=document.createElement('div');tip.className='info-tip';tip.hidden=true;document.body.append(tip);
+ const show=icon=>{tip.textContent=icon.dataset.tip;tip.hidden=false;const r=icon.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';tip.style.top=(r.top-h-8<8?r.bottom+8:r.top-h-8)+'px';};
+ const hide=()=>{tip.hidden=true;};
+ $('results').addEventListener('mouseover',event=>{const icon=event.target.closest?.('.info-i');if(icon)show(icon);});
+ $('results').addEventListener('mouseout',event=>{if(event.target.closest?.('.info-i'))hide();});
+ $('results').addEventListener('focusin',event=>{const icon=event.target.closest?.('.info-i');if(icon)show(icon);});
+ $('results').addEventListener('focusout',hide);
+ $('results').addEventListener('scroll',hide);
+}
 function renderItems(){
  const rows=filterItems(items,{slot:selectedSlot,query:$('search').value,subclass:$('type').value,quality:$('quality').value});$('result-count').textContent=`${rows.length.toLocaleString()} ${rows.length===1?'item':'items'}`;
  const results=$('results'),scrollTop=results.scrollTop,focusedId=results.contains(document.activeElement)?document.activeElement.dataset.itemId:null;results.replaceChildren();
@@ -94,7 +107,7 @@ function renderItems(){
   detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
-  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);row.append(button,link);results.append(row);
+  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const note=approxNotes.get(item.id);if(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';links.append(info);}links.append(link);row.append(button,links);results.append(row);
  }
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
@@ -178,8 +191,37 @@ function setupAnimation(){
  if(!choice)return;
  select.value=choice;try{actor.setAnimation(choice,true);}catch{}
 }
+// The viewer's own default is two notches too close, so every fresh or reset camera starts one scroll further out.
+const DEFAULT_ZOOM=-1;
+function applyDefaultCamera(r){if(!r)return;r.zoom.current=DEFAULT_ZOOM;r.zoom.target=DEFAULT_ZOOM;r.zoom.rateCurrent=0;}
+// Renders the model from the default (reset) camera and returns a small preview image, then restores the user's view.
+function captureSnapshot(){
+ const r=viewer?.renderer,canvas=r?.context?.canvas;
+ if(!r||!canvas||!r.actors?.some(actor=>actor.isLoaded?.()))return null;
+ const keep={azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],current:r.zoom.current,target:r.zoom.target,rate:r.zoom.rateCurrent};
+ try{
+  r.azimuth=defaultView.azimuth;r.zenith=defaultView.zenith;r.translation[0]=defaultView.translation[0];r.translation[1]=defaultView.translation[1];r.translation[2]=defaultView.translation[2];
+  r.zoom.current=r.zoom.target=DEFAULT_ZOOM;r.zoom.rateCurrent=0;
+  const out=document.createElement('canvas');out.width=132;out.height=144;const g=out.getContext('2d',{willReadFrequently:true});
+  // The model is centred in a taller-than-wide panel; scale it to cover the thumbnail without distortion.
+  const scale=Math.max(out.width/canvas.width,out.height/canvas.height);
+  for(let attempt=0;attempt<3;attempt++){
+   r.draw(performance.now()+attempt*16);
+   g.fillStyle='#182333';g.fillRect(0,0,out.width,out.height);
+   g.drawImage(canvas,(out.width-canvas.width*scale)/2,(out.height-canvas.height*scale)/2,canvas.width*scale,canvas.height*scale);
+   // Only keep a snapshot that actually shows the character; a blank frame falls back to the placeholder.
+   const px=g.getImageData(0,0,out.width,out.height).data;let drawn=0;
+   for(let i=0;i<px.length;i+=4)if(px[i]!==0x18||px[i+1]!==0x23||px[i+2]!==0x33)drawn++;
+   if(drawn>200)return out.toDataURL('image/jpeg',0.82);
+  }
+  return null;
+ }catch{return null;}
+ finally{r.azimuth=keep.azimuth;r.zenith=keep.zenith;r.translation[0]=keep.translation[0];r.translation[1]=keep.translation[1];r.translation[2]=keep.translation[2];r.zoom.current=keep.current;r.zoom.target=keep.target;r.zoom.rateCurrent=keep.rate;try{r.draw(performance.now());}catch{}}
+}
+let defaultView={azimuth:Math.PI*1.5,zenith:Math.PI/2,translation:[0,0,0]};
 function tuneCamera(r){
  const jq=window.jQuery;if(!r||!jq)return;
+ applyDefaultCamera(r);
  // Replaces the viewer's document-level pointer handler. The viewer re-registers its own each time it starts.
  jq(document).off('mousemove.webgl touchmove.webgl').on('mousemove.webgl touchmove.webgl',event=>{
   if(!(r.mouseDown||r.rightMouseDown)||r.mouseX===undefined)return;
@@ -198,7 +240,7 @@ function tuneCamera(r){
 }
 function clearViewer(){if(viewer){try{viewer.destroy();}catch{}viewer=null;}$('model').replaceChildren();}
 async function renderModel(){
- const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';$('appearance-notice').hidden=true;
+ const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
   if(!window.ZamModelViewer||!window.jQuery)throw Error('The 3D viewer could not load. Check your connection and reload the preview.');
@@ -208,7 +250,7 @@ async function renderModel(){
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
   renderLook();
-  const unavailable=[],approximated=[],approximatedByIcon=[];let outdatedService=false;
+  const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[];let outdatedService=false;
   // First display ID in the list whose model files exist in the Classic library, or null.
   const usableDisplay=async(data,slot)=>{
    for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
@@ -233,14 +275,14 @@ async function renderModel(){
    for(const sibling of sameNameItems(nameIndex,item)){
     try{
      const displayId=await usableDisplay(await displayFor(sibling.id),slot);
-     if(displayId!==null){approximated.push(item.name);return [slot,displayId];}
+     if(displayId!==null){approximated.push(item.name);nextNotes.set(item.id,'Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.');return [slot,displayId];}
     }catch{}
    }
    // Same-icon candidates are checked together; the lowest item ID (the original) wins.
    const byIcon=await Promise.all(sameIconItems(iconIndex,item).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
    const iconMatch=byIcon.find(displayId=>displayId!==null);
-   if(iconMatch!==undefined){approximatedByIcon.push(item.name);return [slot,iconMatch];}
-   unavailable.push(item.name);if(legacyReply)outdatedService=true;return null;
+   if(iconMatch!==undefined){approximatedByIcon.push(item.name);nextNotes.set(item.id,'Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.');return [slot,iconMatch];}
+   unavailable.push(item.name);unavailableIds.push(item.id);if(legacyReply)outdatedService=true;return null;
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
@@ -254,23 +296,35 @@ async function renderModel(){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){$('model-status').hidden=true;setupAnimation();return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;applyDefaultCamera(r);defaultView={azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation]};$('model-status').hidden=true;setupAnimation();return;}
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
    setTimeout(check,250);
   };check();
-  const notes=[];
-  if(approximated.length)notes.push(`Shown with the Classic model of the same-named original item (an approximation that may differ from the in-game look): ${approximated.join(', ')}.`);
-  if(approximatedByIcon.length)notes.push(`Shown with a Classic model that uses the same icon (a closer guess than nothing, but it may differ from the in-game look): ${approximatedByIcon.join(', ')}.`);
-  if(unavailable.length)notes.push(outdatedService?`Preview unavailable for: ${unavailable.join(', ')}. The appearance service has not been updated to find Classic models yet, so some original items cannot be previewed. They remain in your outfit.`:`No Classic 3D model exists for: ${unavailable.join(', ')}. These are custom OctoWoW appearances. They remain in your outfit and in saved and shared outfits.`);
-  if(notes.length){$('appearance-notice').hidden=false;$('appearance-notice').textContent=notes.join(' ');}
+  for(const id of unavailableIds)nextNotes.set(id,outdatedService?'No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.':'No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.');
+  approxNotes=nextNotes;renderItems();
  } catch(error){if(token===revision){$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
-function renderSaved(){const target=$('saved-outfits');target.replaceChildren();if(!saved.length){const p=document.createElement('span');p.className='muted';p.textContent='No saved outfits yet.';target.append(p);}saved.forEach((entry,index)=>{const row=document.createElement('div');row.className='saved-card';const load=document.createElement('button');load.textContent=entry.name;load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};const remove=document.createElement('button');remove.className='reset';remove.textContent='×';remove.setAttribute('aria-label',`Delete ${entry.name}`);remove.onclick=()=>{saved.splice(index,1);saveLibrary();renderSaved();};row.append(load,remove);target.append(row);});}
+function renderSaved(){
+ const target=$('saved-outfits');target.replaceChildren();
+ if(!saved.length){const p=document.createElement('span');p.className='muted';p.textContent='No saved outfits yet.';target.append(p);}
+ saved.forEach((entry,index)=>{
+  const card=document.createElement('div');card.className='saved-card';
+  const load=document.createElement('button');load.type='button';load.className='saved-load';load.setAttribute('aria-label',`Load ${entry.name}`);
+  const preview=document.createElement('span');preview.className='saved-preview';
+  if(typeof entry.snapshot==='string'&&entry.snapshot.startsWith('data:image/')){const img=document.createElement('img');img.alt='';img.src=entry.snapshot;preview.append(img);}
+  else preview.classList.add('empty');
+  const label=document.createElement('span');label.className='saved-name';label.textContent=entry.name;
+  load.append(preview,label);load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};
+  const remove=document.createElement('button');remove.type='button';remove.className='saved-remove';remove.textContent='×';remove.setAttribute('aria-label',`Delete ${entry.name}`);
+  remove.onclick=()=>{saved.splice(index,1);saveLibrary();renderSaved();};
+  card.append(load,remove);target.append(card);
+ });
+}
 function shareUrl(){const url=new URL(location.href);url.search='';url.hash='outfit='+encode(outfit);return url.href;}
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
- setupBackdrops();
+ setupBackdrops();setupInfoTips();
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
   let message='Select an equipment slot, then choose an item to try on.';
@@ -285,14 +339,14 @@ async function start(){
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
- $('reset').onclick=()=>commit(emptyOutfit(),'Outfit reset.');
- $('reset-items').onclick=()=>{if(!Object.keys(outfit.gear).length){feedback('No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
+ $('reset').onclick=()=>{applyBackdrop('');commit(emptyOutfit(),'Outfit and background reset.');};
+ $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}animationPaused=false;$('anim-pause').setAttribute('aria-pressed','false');$('anim-pause').textContent='Pause';}catch{}try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
  $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;animationPaused=!animationPaused;try{actor.setAnimPaused(animationPaused);}catch{}$('anim-pause').setAttribute('aria-pressed',String(animationPaused));$('anim-pause').textContent=animationPaused?'Play':'Pause';};
  $('save').onclick=()=>{$('outfit-name').value='';$('save-dialog').showModal();$('outfit-name').focus();};$('cancel-save').onclick=()=>$('save-dialog').close();
- $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const entry={name,outfit:structuredClone(outfit)},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
+ $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const snapshot=captureSnapshot(),entry={name,outfit:structuredClone(outfit),...(snapshot?{snapshot}:{})},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
  $('share').onclick=()=>copy(shareUrl(),'Outfit link copied.');
  $('import').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
  $('copy-code').onclick=()=>copy($('outfit-code').value,'Code copied.');$('apply-code').onclick=()=>{try{commit(fromText($('outfit-code').value),'Outfit imported.');$('exchange').close();}catch(error){$('exchange-status').textContent=error.message;}};
