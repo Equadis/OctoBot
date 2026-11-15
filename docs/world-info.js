@@ -188,7 +188,7 @@
       }
       evidence.textContent = 'Separate groups ' + (raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence)) ? 'verified' : 'inferred') + ' from rosters · ' + (raid.players === null ? 'Roster observed' : raid.players + ' players observed in /who') + '. /who alone cannot prove instance IDs.';
     } else if (raid.count !== null) {
-      count.textContent = raid.count === 0 ? 'NO RAID' : String(raid.count);
+      count.textContent = raid.count === 0 ? 'No raid' : String(raid.count);
       labelState(key + '-state', raid.count ? 'ESTIMATED' : 'NO RAID', raid.count ? 'estimated' : 'unknown');
       appendEmpty(activeNode, raid.count ? 'Start timestamps not yet available.' : 'No raid currently detected.');
       evidence.textContent = raid.players !== null ? raid.players + ' players listed in the latest /who response.' : 'Latest roster observation received.';
@@ -198,7 +198,7 @@
       appendEmpty(activeNode, 'Raid activity detected; separate groups and start time not verified.');
       evidence.textContent = (raid.players === null ? 'Raid activity signal received.' : raid.players + ' players in the observed zone.') + ' Multiple raids cannot be counted from the current collector.';
     } else if (raid.active === false) {
-      count.textContent = 'NO RAID';
+      count.textContent = 'No raid';
       labelState(key + '-state', 'NO RAID', 'unknown');
       appendEmpty(activeNode, 'No raid detected in the latest scan.');
       evidence.textContent = (raid.players === null ? '' : raid.players + ' players listed. ') + 'No confirmed completed raid can be inferred from an empty zone.';
@@ -266,7 +266,7 @@
       return;
     }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
-    if (clear.status === 'idle') { out.textContent = 'NO RAID'; note.textContent = ''; return; }
+    if (clear.status === 'idle') { out.textContent = 'No raid'; note.textContent = ''; return; }
     if (clear.status === 'learning') {
       out.textContent = 'LEARNING';
       note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
