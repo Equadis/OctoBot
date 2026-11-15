@@ -13,5 +13,5 @@ test('High Elf is not refused before the appearance service is asked',()=>{
 
 test('the page loads a cache-busted script so the change reaches returning visitors',()=>{
  const html=fs.readFileSync(new URL('../docs/outfitter/index.html',import.meta.url),'utf8');
- assert.match(html,/outfitter\.mjs\?v=20261117-models1/);
+ assert.match(html,/outfitter\.mjs\?v=20261117-models2/);
 });

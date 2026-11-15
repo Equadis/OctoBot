@@ -52,6 +52,16 @@ export function stepLook(options, look, optionId, delta) {
   return { ...sanitiseLook(look), [optionId]: next.id };
 }
 
+/**
+ * What the library calls "Facial Hair" means something else on some bodies: the Goblins' head features and the High Elf woman's earrings.
+ * Character model ids are race * 2 - 1 + gender (Goblin 17 male and 18 female, High Elf 19 male and 20 female).
+ */
+const FACIAL_HAIR_LABELS = { 17: 'Features', 18: 'Features', 20: 'Earrings' };
+export function relabelOptions(options, chrModelId) {
+  const label = FACIAL_HAIR_LABELS[chrModelId];
+  return label ? options.map(option => (option.name === 'Facial Hair' ? { ...option, name: label } : option)) : options;
+}
+
 /** Position text such as "3 / 12", or the choice name when the library provides one. */
 export function choiceLabel(option, look) {
   const index = option.choices.indexOf(selectedChoice(option, look));

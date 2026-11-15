@@ -1,7 +1,7 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261117-names1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
@@ -435,7 +435,7 @@ async function loadLookOptions(chrModelId){
  if(!Number.isInteger(chrModelId))return [];
  try{
   if(!customizationCache.has(chrModelId))customizationCache.set(chrModelId,getJson(`${endpoint}/api/outfitter/assets/meta/charactercustomization/${chrModelId}.json`));
-  return visibleOptions(await customizationCache.get(chrModelId));
+  return relabelOptions(visibleOptions(await customizationCache.get(chrModelId)),chrModelId);
  }catch{customizationCache.delete(chrModelId);return [];}
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
