@@ -485,7 +485,7 @@ test('realm graph renders current real counts and yellow proportional backfill',
  assert.equal(env.get('raw-population').getAttribute('d'),'',
   'Estimated data must not be drawn as recorded green data');
  env.get('plot-hit').fire('pointermove',{clientX:45,pointerId:1});
- assert.match(env.get('readout').textContent,/ESTIMATED/);
+ assert.match(env.get('readout').textContent,/^.* · [\d,]+ players estimated$/);
  assert.match(env.get('readout').textContent,/1,6/);
 });
 
