@@ -115,7 +115,7 @@ const worker={
   const url=new URL(request.url);
   if(url.pathname==='/api/presence/heartbeat'&&request.method!=='POST')return json({error:'method_not_allowed'},405);
   if(url.pathname!=='/api/presence/heartbeat'&&request.method!=='GET')return json({error:'method_not_allowed'},405);
-  if(url.pathname.startsWith('/api/outfitter/'))return outfitter(request);
+  if(url.pathname.startsWith('/api/outfitter/'))return outfitter(request,undefined,env);
   try{
    if(url.pathname==='/api/presence/heartbeat'){
     if(Number(request.headers.get('content-length')||0)>1024)return json({error:'request_too_large'},413);

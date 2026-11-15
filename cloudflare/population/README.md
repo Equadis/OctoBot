@@ -159,3 +159,26 @@ their exact timestamps and player counts, then removes the wrongly labelled
 N'Zoth census rows. Separately verified N'Zoth data, if any, is preserved.
 The website works with the older Worker until this migration is deployed,
 but the Worker will keep writing its old classification until redeployment.
+
+## OctoWoW model overlay (optional, not deployed)
+
+The appearance route (`/api/outfitter/assets/...`) normally proxies Zam's Classic model library. Zam has no Blood Elf, a Goblin unlike the client's, and no helm models for either race. `tools/models/` converts the client's own models (see its README); this Worker can serve those files from a **private R2 bucket** bound as `MODELS`. With no binding nothing changes.
+
+What the bucket is used for (exact keys only, built from validated paths; the bucket is never listed, never public, and this Worker never writes to it):
+
+| Request path | Source |
+|---|---|
+| `m2/N.m2`, `skin/N.skin`, `skel/N.skel`, `textures/N.webp` with N from 9,000,000 | bucket only; a missing object is a 404 and Zam is not asked |
+| `meta/character/17..20.json`, `meta/charactercustomization/17..20.json` (Goblin 17, 18; Blood Elf 19, 20) | bucket first, Zam if the bucket has no such object |
+| `meta/armor/1/<display id>.json` (helms) | Zam's data, with the Goblin and Blood Elf models from `helms.json` in the bucket merged in (cached for 10 minutes). A missing or unreadable table leaves Zam's data unchanged |
+| everything else | Zam, as before |
+
+Cache lifetime for bucket responses is one hour (Zam proxy responses keep a week), so a re-upload shows up quickly.
+
+To enable it (manual, needs OctoWoW's agreement first; the converted files must not be published without it):
+
+1. `python tools/models/build_overlay.py <client Data folder> <folder outside the repo>`
+2. Create a private bucket and upload the folder's contents under the same keys it uses (`m2/...`, `skin/...`, `skel/...`, `textures/...`, `meta/...`, `helms.json`).
+3. Add to `wrangler.toml` and deploy: `[[r2_buckets]]`, `binding = "MODELS"`, `bucket_name = "<your bucket>"`.
+
+Nothing here has been deployed. The tests (`tests/overlay.test.mjs`) use a fake bucket.
