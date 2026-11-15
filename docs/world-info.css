@@ -23,7 +23,7 @@ section{min-width:0}
 .hero-stat{display:flex;align-items:baseline;gap:13px;margin:22px 0 17px;flex-wrap:wrap}
 .hero-stat strong{font-size:24px;line-height:1.05;font-weight:400;color:var(--gold);font-variant-numeric:tabular-nums}
 .hero-stat strong.no-data{font-size:18px;color:#a4b0be}
-.hero-stat span{font-size:12px;color:#9eacbd}
+.hero-stat span{font-size:16px;color:#9eacbd}
 .mini-divider{border-top:1px solid var(--line)}
 .field-header{display:flex;justify-content:space-between;gap:10px;margin:15px 0 9px;font-size:12px;color:#d5dce7}
 .field-hint{font-size:11px;color:#8f9cab}
