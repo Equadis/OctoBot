@@ -189,5 +189,5 @@ small:empty,.evidence:empty{display:none}
 #dmf-panel{padding-bottom:20px}
 
 /* Zul'Gurub / Edge of Madness glows in the same way as the faction and raid panels */
-.zg-panel{background:linear-gradient(135deg,#212C12 0%,var(--panel) 62%);border-color:#34461c;border-left:4px solid #4d6b2a}
+.zg-panel{background:linear-gradient(135deg,#314115 0%,var(--panel) 62%);border-color:#455a22;border-left:4px solid #62823a}
 
