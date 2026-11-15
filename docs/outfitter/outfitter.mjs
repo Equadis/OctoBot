@@ -94,7 +94,7 @@ function setupInfoTips(){
  $('results').addEventListener('mouseout',event=>{if(event.target.closest?.('.info-i'))hide();});
  $('results').addEventListener('focusin',event=>{const icon=event.target.closest?.('.info-i');if(icon)show(icon);});
  $('results').addEventListener('focusout',hide);
- $('results').addEventListener('scroll',hide);
+ $('results').addEventListener('scroll',()=>{hide();queueScan();});
 }
 function renderItems(){
  const rows=filterItems(items,{slot:selectedSlot,query:$('search').value,subclass:$('type').value,quality:$('quality').value});$('result-count').textContent=`${rows.length.toLocaleString()} ${rows.length===1?'item':'items'}`;
@@ -107,11 +107,70 @@ function renderItems(){
   detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
-  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const note=approxNotes.get(item.id);if(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';links.append(info);}links.append(link);row.append(button,links);results.append(row);
+  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const note=approxNotes.get(item.id);if(note)links.append(infoIcon(note));links.append(link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
  }
+ queueScan();
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
 }
+// Works out which Classic model (if any) previews an item, and whether that is an exact match or an estimate.
+const previewCache=new Map();
+const NOTE_NAME='Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.';
+const NOTE_ICON='Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.';
+const NOTE_NONE='No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.';
+const NOTE_LEGACY='No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.';
+// First display ID in the list whose model files exist in the Classic library, or null.
+async function usableDisplay(data,slot){
+ for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
+  const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
+  try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return displayId;}catch{}
+ }
+ return null;
+}
+function resolvePreview(item,slotId){
+ const slot=viewerSlot(slotId,item),key=`${item.id}:${slot}`;
+ if(previewCache.has(key))return previewCache.get(key);
+ const job=(async()=>{
+  let legacy=false;
+  try{
+   const data=await displayFor(item.id);
+   // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
+   if(!Array.isArray(data.candidates))legacy=true;
+   const own=await usableDisplay(data,slot);
+   if(own!==null)return {slot,displayId:own,kind:'own',note:''};
+  }catch{}
+  // No model for this exact item: borrow the model of an original item with the same name, then with the same icon.
+  for(const sibling of sameNameItems(nameIndex,item)){
+   try{const displayId=await usableDisplay(await displayFor(sibling.id),slot);if(displayId!==null)return {slot,displayId,kind:'name',note:NOTE_NAME};}catch{}
+  }
+  // Same-icon candidates are checked together; the lowest item ID (the original) wins.
+  const byIcon=await Promise.all(sameIconItems(iconIndex,item).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
+  const iconMatch=byIcon.find(displayId=>displayId!==null);
+  if(iconMatch!==undefined)return {slot,displayId:iconMatch,kind:'icon',note:NOTE_ICON};
+  return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:NOTE_NONE};
+ })();
+ previewCache.set(key,job);return job;
+}
+function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';return info;}
+// Item rows are checked as they scroll into view, so the (i) appears for every item with an estimated or missing preview.
+let scanTimer=0;
+function watchRowPreview(row,item,links,link){row._preview={item,slotId:selectedSlot,links,link};}
+function scanVisibleRows(){
+ const box=$('results');if(!endpoint||!box)return;
+ const area=box.getBoundingClientRect();
+ for(const row of box.querySelectorAll('.result')){
+  const job=row._preview;if(!job||job.started)continue;
+  const r=row.getBoundingClientRect();
+  if(r.bottom<area.top-160)continue;
+  if(r.top>area.bottom+160)break;
+  job.started=true;
+  resolvePreview(job.item,job.slotId).then(result=>{
+   if(!result.note||!row.isConnected||job.links.querySelector('.info-i'))return;
+   job.links.insertBefore(infoIcon(result.note),job.link);
+  }).catch(()=>{});
+ }
+}
+function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRows,120);}
 function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 
@@ -221,7 +280,8 @@ function captureSnapshot(){
 let defaultView={azimuth:Math.PI*1.5,zenith:Math.PI/2,translation:[0,0,0]};
 function tuneCamera(r){
  const jq=window.jQuery;if(!r||!jq)return;
- applyDefaultCamera(r);
+ defaultView={azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation]};
+ if(keptView)applyView(r,keptView);else applyDefaultCamera(r);
  // Replaces the viewer's document-level pointer handler. The viewer re-registers its own each time it starts.
  jq(document).off('mousemove.webgl touchmove.webgl').on('mousemove.webgl touchmove.webgl',event=>{
   if(!(r.mouseDown||r.rightMouseDown)||r.mouseX===undefined)return;
@@ -239,7 +299,12 @@ function tuneCamera(r){
  });
 }
 function clearViewer(){if(viewer){try{viewer.destroy();}catch{}viewer=null;}$('model').replaceChildren();}
-async function renderModel(){
+// The user's camera survives re-renders (hiding the head or back, changing gear); only "Reset camera" returns to the default view.
+let keptView=null;
+function readView(r){return {azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],zoom:r.zoom.target};}
+function applyView(r,view){r.azimuth=view.azimuth;r.zenith=view.zenith;r.translation[0]=view.translation[0];r.translation[1]=view.translation[1];r.translation[2]=view.translation[2];r.zoom.current=view.zoom;r.zoom.target=view.zoom;r.zoom.rateCurrent=0;}
+async function renderModel(resetCamera=false){
+ keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
@@ -251,38 +316,14 @@ async function renderModel(){
   if(token!==revision)return;
   renderLook();
   const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[];let outdatedService=false;
-  // First display ID in the list whose model files exist in the Classic library, or null.
-  const usableDisplay=async(data,slot)=>{
-   for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
-    const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
-    try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return displayId;}catch{}
-   }
-   return null;
-  };
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
    const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
-   let legacyReply=false;
-   const slot=viewerSlot(id,item);
-   try{
-    const data=await displayFor(item.id);
-    // OctoWoW display IDs often differ from the Classic library; the service lists the Classic ID first.
-    // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
-    if(!Array.isArray(data.candidates))legacyReply=true;
-    const own=await usableDisplay(data,slot);
-    if(own!==null)return [slot,own];
-   }catch{}
-   // No model for this exact item: borrow the model of an original item with the same name, then with the same icon.
-   for(const sibling of sameNameItems(nameIndex,item)){
-    try{
-     const displayId=await usableDisplay(await displayFor(sibling.id),slot);
-     if(displayId!==null){approximated.push(item.name);nextNotes.set(item.id,'Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.');return [slot,displayId];}
-    }catch{}
-   }
-   // Same-icon candidates are checked together; the lowest item ID (the original) wins.
-   const byIcon=await Promise.all(sameIconItems(iconIndex,item).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
-   const iconMatch=byIcon.find(displayId=>displayId!==null);
-   if(iconMatch!==undefined){approximatedByIcon.push(item.name);nextNotes.set(item.id,'Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.');return [slot,iconMatch];}
-   unavailable.push(item.name);unavailableIds.push(item.id);if(legacyReply)outdatedService=true;return null;
+   const result=await resolvePreview(item,id);
+   if(result.kind==='name')approximated.push(item.name);
+   else if(result.kind==='icon')approximatedByIcon.push(item.name);
+   else if(result.kind==='none'){unavailable.push(item.name);unavailableIds.push(item.id);if(result.legacy)outdatedService=true;}
+   if(result.note)nextNotes.set(item.id,result.note);
+   return result.displayId===null?null:[result.slot,result.displayId];
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
@@ -296,7 +337,7 @@ async function renderModel(){
   const started=Date.now();
   const check=()=>{
    if(token!==revision)return;
-   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;applyDefaultCamera(r);defaultView={azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation]};$('model-status').hidden=true;setupAnimation();return;}
+   if(viewer?.renderer?.actors?.some(actor=>actor.isLoaded?.())){const r=viewer.renderer;if(keptView)applyView(r,keptView);else applyDefaultCamera(r);$('model-status').hidden=true;setupAnimation();return;}
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';return;}
    setTimeout(check,250);
   };check();
@@ -332,7 +373,7 @@ async function start(){
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
   saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
   renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
-  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}
+  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}renderItems();
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
 
@@ -340,7 +381,7 @@ async function start(){
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
  $('reset').onclick=()=>{applyBackdrop('');commit(emptyOutfit(),'Outfit and background reset.');};
- $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel();
+ $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('retry').onclick=()=>renderModel();$('camera-reset').onclick=()=>renderModel(true);
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}animationPaused=false;$('anim-pause').setAttribute('aria-pressed','false');$('anim-pause').textContent='Pause';}catch{}try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
