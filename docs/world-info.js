@@ -387,6 +387,7 @@
     const player = sounds();
     if (!player) return;
     const keys = [['ony', 'onyxia'], ['bwl', 'nefarian']];
+    player.setAvailability('soon', keys.some(([, headKey]) => { const c = state.heads[headKey] && state.heads[headKey].clear; return Boolean(c && ['medium', 'high'].includes(String(c.confidence))); }));
     for (const [raidKey, headKey] of keys) {
       const raid = state.raids[raidKey], head = state.heads[headKey], clear = head && head.clear;
       if (fromData) {
@@ -397,9 +398,11 @@
         if (sound.baselined && confirmed && !sound.confirmed[raidKey]) player.notify('confirmed');
         sound.confirmed[raidKey] = confirmed;
       }
-      const estimatedAt = clear && clear.status === 'estimated' ? time(clear.estimatedAt) : null;
+      // The ending-soon alert waits for a medium or high confidence estimate; a low-confidence estimate stays silent.
+      const trusted = Boolean(clear && ['medium', 'high'].includes(String(clear.confidence)));
+      const estimatedAt = clear && clear.status === 'estimated' && trusted ? time(clear.estimatedAt) : null;
       if (!Number.isFinite(estimatedAt)) { sound.soon[raidKey] = null; continue; }
-      const lead = player.settings().soonMinutes * MINUTE;
+      const lead = 5 * MINUTE;   // fixed: the alert fires when about five minutes remain
       if (estimatedAt - Date.now() <= lead && sound.soon[raidKey] !== estimatedAt) {
         // An estimate that is already close when the page opens is recorded, not announced.
         if (sound.baselined) player.notify('soon');

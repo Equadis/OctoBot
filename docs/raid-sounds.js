@@ -30,6 +30,9 @@
     { key: 'hordeDrop', label: 'Head dropped: Horde', note: 'A confirmed Rallying Cry announcement in Orgrimmar.' }
   ];
   var KEY = 'octobot-raid-sounds';
+  // Events that can be switched off by the page. "soon" stays unavailable until the clear estimate has medium or high confidence.
+  var availability = { soon: false };
+  var rowRefs = {};
   var DEFAULTS = {
     enabled: false, volume: 60, soonMinutes: 5,
     events: {
@@ -76,6 +79,7 @@
   // Called by the World Info page when something happens. Nothing plays unless alerts are on and that event is on.
   function notify(eventKey) {
     if (!settings.enabled) return false;
+    if (availability[eventKey] === false) return false;
     var event = settings.events[eventKey];
     if (!event || !event.on) return false;
     play(event.sound);
@@ -87,6 +91,21 @@
     Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') node.textContent = attrs[k]; else if (k === 'class') node.className = attrs[k]; else node.setAttribute(k, attrs[k]); });
     (children || []).forEach(function (c) { node.append(c); });
     return node;
+  }
+
+  // Greys out an event's row while it is unavailable, with a note saying why.
+  function applyAvailability() {
+    Object.keys(rowRefs).forEach(function (key) {
+      var ref = rowRefs[key], ok = availability[key] !== false;
+      ref.row.classList.toggle('disabled', !ok);
+      ref.inputs.forEach(function (input) { input.disabled = !ok; });
+      if (ref.note) ref.note.hidden = ok;
+    });
+  }
+  function setAvailability(key, ok) {
+    if (availability[key] === ok) return;
+    availability[key] = ok;
+    applyAvailability();
   }
 
   function mount(button, panel, stateLabel) {
@@ -105,10 +124,6 @@
     var volumeText = el('span', { class: 'sound-volume-text', text: settings.volume + '%' });
     volume.addEventListener('input', function () { settings.volume = Number(volume.value); volumeText.textContent = settings.volume + '%'; save(); });
 
-    var minutes = el('select', { id: 'sound-soon-minutes', 'aria-label': 'Minutes before the estimated clear' });
-    [2, 5, 10].forEach(function (m) { var o = el('option', { value: String(m), text: m + ' minutes before' }); if (m === settings.soonMinutes) o.selected = true; minutes.append(o); });
-    minutes.addEventListener('change', function () { settings.soonMinutes = Number(minutes.value); save(); });
-
     var rows = EVENTS.map(function (event) {
       var on = el('input', { type: 'checkbox', 'aria-label': event.label });
       on.checked = settings.events[event.key].on;
@@ -120,8 +135,10 @@
       test.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg>';
       test.addEventListener('click', function () { play(settings.events[event.key].sound); });
       var label = el('label', { class: 'sound-event-label' }, [on, el('span', { text: event.label })]);
-      var row = el('div', { class: 'sound-row', title: event.note }, [label, select, test]);
-      if (event.key === 'soon') row.append(minutes);
+      var controls = el('div', { class: 'sound-controls' }, [select, test]);
+      var row = el('div', { class: 'sound-row', title: event.note }, [label, controls]);
+      rowRefs[event.key] = { row: row, inputs: [on, select, test], note: event.key === 'soon' ? el('p', { class: 'sound-disabled-note', text: 'This option is disabled until estimated clear confidence is higher.' }) : null };
+      if (rowRefs[event.key].note) row.append(rowRefs[event.key].note);
       return row;
     });
 
@@ -132,6 +149,7 @@
       el('p', { class: 'sound-fine', text: 'Off by default. Alerts play only while this page is open. Sound effects are streamed from Wowhead; they are Blizzard Entertainment content.' })
     );
     refreshButton();
+    applyAvailability();
     button.addEventListener('click', function () {
       var open = panel.hidden;
       panel.hidden = !open;
@@ -139,5 +157,5 @@
     });
   }
 
-  window.RaidSounds = { SOUNDS: SOUNDS, EVENTS: EVENTS, settings: function () { return settings; }, notify: notify, play: play, mount: mount, KEY: KEY };
+  window.RaidSounds = { setAvailability: setAvailability, SOUNDS: SOUNDS, EVENTS: EVENTS, settings: function () { return settings; }, notify: notify, play: play, mount: mount, KEY: KEY };
 })();

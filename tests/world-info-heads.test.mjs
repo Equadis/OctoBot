@@ -144,7 +144,7 @@ test('a guild is named when at least half of the raid belongs to it, otherwise t
 
 test('sound alerts fire only on something new, never on first load, and only for the events that changed',async()=>{
   const now=Date.now(),heard=[];
-  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),mount(){}};
+  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),setAvailability(){},mount(){}};
   const feed=(finishedAt,allianceAt,estimatedInMinutes)=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:0,at:iso(now-MIN),active:false,activityEnd:iso(finishedAt)}},
     buffs:allianceAt?{'Rallying Cry of the Dragonslayer:alliance':{at:iso(allianceAt),buff:'Rallying Cry of the Dragonslayer',faction:'alliance',source:'npc_yell',head:'onyxia'}}:{},sessions:{},
     heads:{onyxia:{clear:estimatedInMinutes===null?{status:'idle'}:{status:'estimated',confirmed:false,samples:9,minSamples:5,confidence:'low',estimatedAt:iso(now+estimatedInMinutes*MIN),earliestAt:iso(now+(estimatedInMinutes-5)*MIN),latestAt:iso(now+(estimatedInMinutes+5)*MIN)},drops:{}}}}]});
@@ -161,12 +161,24 @@ test('sound alerts fire only on something new, never on first load, and only for
 
 test('the estimate alert fires when the estimated clear comes within the chosen window, once per estimate',async()=>{
   const now=Date.now(),heard=[];
-  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),mount(){}};
-  const feed=minutes=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'estimated',confirmed:false,samples:9,minSamples:5,confidence:'low',estimatedAt:iso(now+minutes*MIN),earliestAt:iso(now+(minutes-5)*MIN),latestAt:iso(now+(minutes+5)*MIN)},drops:{}}}}]});
+  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),setAvailability(){},mount(){}};
+  const feed=minutes=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'estimated',confirmed:false,samples:9,minSamples:5,confidence:'medium',estimatedAt:iso(now+minutes*MIN),earliestAt:iso(now+(minutes-5)*MIN),latestAt:iso(now+(minutes+5)*MIN)},drops:{}}}}]});
   const page=await run(feed(40),{window:{RaidSounds:player}});
   assert.deepEqual(heard,[]);                 // 40 minutes away: too early
   await page.next(feed(3));                   // a different estimate, now 3 minutes away
   assert.deepEqual(heard,['soon']);
   await page.next(feed(3));                   // the same estimate again: not announced twice
   assert.deepEqual(heard,['soon']);
+});
+
+test('a low-confidence estimate never triggers the ending-soon alert, and the option reports itself unavailable',async()=>{
+  const now=Date.now(),heard=[],availability=[];
+  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),setAvailability:(key,ok)=>availability.push([key,ok]),mount(){}};
+  const feed=confidence=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'estimated',confirmed:false,samples:11,minSamples:5,confidence,estimatedAt:iso(now+3*MIN),earliestAt:iso(now-2*MIN),latestAt:iso(now+8*MIN)},drops:{}}}}]});
+  const page=await run(feed('low'),{window:{RaidSounds:player}});
+  await page.next(feed('low'));
+  assert.deepEqual(heard,[]);
+  assert.equal(availability.at(-1)[1],false);
+  await page.next(feed('medium'));
+  assert.equal(availability.at(-1)[1],true);
 });
