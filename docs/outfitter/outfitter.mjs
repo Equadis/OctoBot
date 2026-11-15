@@ -361,6 +361,19 @@ function showPlayState(paused){
 }
 // Frame stepping: pauses, then moves the animation clock by whole frames (WoW animations run at 30 frames per second).
 const FRAME_MS=1000/30;
+// While paused the viewer reuses the last pose it computed, so moving the animation clock alone changes nothing on screen.
+// To show another frame, unpause for one zero-length draw (the clock does not advance) so the pose is recomputed, then pause again.
+function refreshPose(){
+ const d=characterActor()?.d,r=viewer?.renderer;if(!d||!r)return;
+ const was=d.ao;
+ try{d.ao=false;r.draw(r.time);}catch{}finally{d.ao=was;}
+}
+// Reset all interrupts whatever is playing or paused and returns the character to Stand.
+let skipKeptAnim=false;
+function resetAnimationToStand(){
+ try{characterActor()?.setAnimPaused(false);}catch{}
+ showPlayState(false);chosenAnimation='';skipKeptAnim=true;
+}
 // Scrub bar: dragging freezes the animation and moves its clock; while playing, the thumb follows the clock.
 let scrubbing=false;
 function animationClock(){const actor=characterActor(),state=actor?.d?.B?.c;return state?.e?.h>0?{actor,state,length:state.e.h}:null;}
@@ -371,7 +384,7 @@ function syncScrub(){
 function scrubTo(fraction){
  const clock=animationClock();if(!clock)return;
  try{clock.actor.setAnimPaused(true);}catch{}showPlayState(true);
- clock.state.c=Math.min(clock.length-1,Math.max(0,fraction*clock.length));
+ clock.state.c=Math.min(clock.length-1,Math.max(0,fraction*clock.length));refreshPose();
 }
 function setupScrub(){
  const bar=$('anim-scrub');
@@ -384,7 +397,7 @@ function setupScrub(){
 function stepAnimation(frames){
  const actor=characterActor(),state=actor?.d?.B?.c;if(!state?.e||!(state.e.h>0))return;
  try{actor.setAnimPaused(true);}catch{}showPlayState(true);
- const length=state.e.h;state.c=(((Math.round(state.c/FRAME_MS)+frames)*FRAME_MS)%length+length)%length;syncScrub();
+ const length=state.e.h;state.c=(((Math.round(state.c/FRAME_MS)+frames)*FRAME_MS)%length+length)%length;refreshPose();syncScrub();
 }
 async function loadLookOptions(chrModelId){
  if(!Number.isInteger(chrModelId))return [];
@@ -464,7 +477,7 @@ function setupAnimation(){
  if(frozen&&(!frozen.name||frozen.name===choice)){
   if(frozen.paused){try{actor.setAnimPaused(true);}catch{}showPlayState(true);}
   // The animation clock exists a moment after the animation is set; restore the frame once it does.
-  let tries=0;const restore=()=>{const state=actor.d?.B?.c;if(state?.e?.i===choice&&state.e.h>0){state.c=Math.min(frozen.time,state.e.h-1);return;}if(++tries<40)setTimeout(restore,100);};restore();
+  let tries=0;const restore=()=>{const state=actor.d?.B?.c;if(state?.e?.i===choice&&state.e.h>0){state.c=Math.min(frozen.time,state.e.h-1);if(frozen.paused)refreshPose();return;}if(++tries<40)setTimeout(restore,100);};restore();
  }
 }
 // The viewer's own default is two notches too close, so every fresh or reset camera starts one scroll further out.
@@ -533,9 +546,48 @@ function lockFraming(r){
 let keptView=null;
 function readView(r){return {azimuth:r.azimuth,zenith:r.zenith,translation:[...r.translation],zoom:r.zoom.target};}
 function applyView(r,view){r.azimuth=view.azimuth;r.zenith=view.zenith;r.translation[0]=view.translation[0];r.translation[1]=view.translation[1];r.translation[2]=view.translation[2];r.zoom.current=view.zoom;r.zoom.target=view.zoom;r.zoom.rateCurrent=0;}
-async function renderModel(resetCamera=false){
+// Resolves which model each equipped item uses, for the current outfit. Returns the slot/display pairs plus the notes to show.
+async function resolveGear(current,token){
+ const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
+ const appearances=await Promise.all(SLOTS.map(async ({id})=>{
+  const item=byId.get(current.gear[id]);if(!item||(id===1&&current.hideHead)||(id===15&&current.hideBack))return null;
+  if(weaponView.ranged?(id===16||id===17):id===18)return null;
+  const result=await Promise.race([resolvePreview(item,id),new Promise(resolve=>setTimeout(()=>resolve({kind:'slow',displayId:null,slot:viewerSlot(id,item)}),SLOW_LOOKUP_MS))]);
+  if(result.kind==='slow'){slowItems.push({item,id});return null;}
+  if(result.kind==='none'){unavailableIds.push(item.id);if(result.legacy)outdatedService=true;}
+  if(result.note)nextNotes.set(item.id,result.note);
+  return result.displayId===null?null:[result.slot,result.displayId];
+ }));
+ return {appearances,nextNotes,slowItems};
+}
+async function applyGearInPlace(){
+ const token=++revision,current=structuredClone(outfit);modelBusy=true;
+ try{
+  const {appearances,nextNotes,slowItems}=await resolveGear(current,token);
+  if(token!==revision)return;
+  const actor=characterActor(),next=new Map(appearances.filter(Boolean));
+  if(!actor||!actor.isLoaded?.()){renderModel(false,true);return;}
+  // Remove what changed or went away, then add what is new.
+  for(const [slot,display] of appliedGear)if(next.get(slot)!==display){try{actor.wv(slot);}catch{}}
+  const added=[...next].filter(([slot,display])=>appliedGear.get(slot)!==display);
+  if(added.length)actor.setItems(added.map(([slot,display])=>({slot,display,visual:0})));
+  appliedGear=next;applySheath();
+  approxNotes=nextNotes;renderItems();
+  if(slowItems.length){
+   feedback(`Still fetching the model for ${slowItems.map(entry=>entry.item.name).join(', ')}. The preview will update when it arrives.`);
+   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();}}).catch(()=>{});
+  }
+ }catch{renderModel(false,true);}
+ finally{modelBusy=false;queueScan();}
+}
+// Changing gear updates the live character in place: the model, camera and animation are left alone, so nothing reloads or restarts.
+// A full rebuild is only needed for a new race or body, a camera reset, or Reload preview.
+let builtFor='',appliedGear=new Map();
+async function renderModel(resetCamera=false,forceRebuild=false){
+ const inPlace=!resetCamera&&!forceRebuild&&Boolean(viewer?.renderer?.actors?.[0]?.isLoaded?.())&&builtFor===`${outfit.race}-${outfit.gender}`;
+ if(inPlace){await applyGearInPlace();return;}
  keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
- keptAnim=characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
+ keptAnim=!skipKeptAnim&&characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;skipKeptAnim=false;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
  try {
   if(!endpoint)throw Error('The appearance service is not configured.');
@@ -564,6 +616,7 @@ async function renderModel(resetCamera=false){
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
   viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  builtFor=`${current.race}-${current.gender}`;appliedGear=new Map(appearances.filter(Boolean));
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
   tuneCamera(viewer.renderer);
@@ -620,7 +673,7 @@ async function start(){
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
  $('clear-slot').onclick=()=>{const next=structuredClone(outfit);delete next.gear[selectedSlot];commit(next,'Item removed.');};
- $('reset').onclick=()=>{applyBackdrop('');commit(emptyOutfit(),'Outfit and background reset.');};
+ $('reset').onclick=()=>{applyBackdrop('');resetAnimationToStand();commit(emptyOutfit(),'Outfit and background reset.');};
  $('reset-items').onclick=()=>{const hadBackdrop=Boolean($('backdrop').value);applyBackdrop('');if(!Object.keys(outfit.gear).length){feedback(hadBackdrop?'Background reset.':'No items are equipped.');return;}commit({...outfit,gear:{}},'All items removed. Race, body and appearance are unchanged.');};$('camera-reset').onclick=()=>renderModel(true);
  {
   const tools=document.querySelector('.viewer-tools'),toggle=$('tools-toggle');
@@ -629,7 +682,7 @@ async function start(){
   show(hidden);
   toggle.onclick=()=>{hidden=!hidden;show(hidden);try{localStorage.setItem('octobot-outfitter-tools-hidden',hidden?'1':'0');}catch{}};
  }
- $('retry').onclick=()=>renderModel();
+ $('retry').onclick=()=>renderModel(false,true);
  $('screenshot').onclick=takePhoto;
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
