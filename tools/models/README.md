@@ -50,6 +50,14 @@ The client's models are the old single-file form: version 256 with embedded view
    * **Order:** (1) agreement, (2) build script, (3) Worker overlay and tests, (4) upload and manual deploy, (5) a review on a staging copy of the site, (6) release.
 Steps 2, 3 and 6 are the hard ones. Expect weeks, not hours, to reach step 7.
 
+## Fixes after first user review (2026-11-17)
+
+* **Goblin eyes had an extra texture in front.** The model carries colour-tint and transparency (fade) tracks per part; two of the four eye parts fade to nothing by default. The converter had ignored them, so both eye layers drew at once. `m2v256` now decodes colours (56 bytes: RGB track plus alpha track) and transparency tracks (28 bytes), `m2v274` writes them, and batches point at them. Constant single-key tracks are written for every animation.
+* **High Elf skin blotches.** The table's NPC-only skins (flag 1: Dark Ranger and similar) were offered as colours but have no matching underwear. They are now left out (11 colours remain).
+* **Missing textures.** The table names five Blood Elf male torso files that the client does not have, which showed as a red placeholder top. The builder skips textures the client lacks and the manifest lists them.
+* **Option names.** The facial-hair table means head features on the Goblin ("Features"), earrings on the Blood Elf female ("Earrings") and facial hair on the Blood Elf male. Its columns are the geosets for groups 100, 300 and 200 in that order.
+* **High Elf eye glow.** The glow is geoset 1702; the viewer leaves group 17 off unless a choice names it, so every Blood Elf skin choice now enables it. The glow texture follows the skin row (blue, red, green or purple); with the geoset on, the eyes glow whitish blue.
+
 ## Cheaper alternative for High Elf
 
 Zam's TBC library already has Blood Elf (`tbc/meta/character/19.json` and `20.json` exist). Supporting it needs only a small change to the appearance Worker so it can serve the TBC library, plus a deploy. It is the TBC Blood Elf model, which may not match OctoWoW's updated model exactly.

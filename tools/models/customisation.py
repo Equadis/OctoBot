@@ -63,11 +63,18 @@ def read_dbc(data):
     return rows, string_at
 
 
+def facial_option_name(race, sex):
+    """What the facial hair table means for each body: Goblins pick head features, Blood Elf women pick earrings, everyone else facial hair."""
+    return 'Features' if race == 9 else 'Earrings' if race == 10 and sex == 1 else 'Facial Hair'
+
+
 class Builder:
     def __init__(self, client, textures=None):
         self.sections, self.string = read_dbc(client.read('DBFilesClient\\CharSections.dbc'))
         self.hair_geosets, _ = read_dbc(client.read('DBFilesClient\\CharHairGeosets.dbc'))
         self.facial_hair, _ = read_dbc(client.read('DBFilesClient/CharacterFacialHairStyles.dbc'))
+        self.client = client
+        self.missing = []            # texture paths the tables name but the client does not contain (no element is made for them)
         self.textures = textures if textures is not None else {}      # client path -> file id; pass one dict to several builders to share ids
         self.texture_files = {}
         self._next = {'choice': 9300000, 'element': 9400000, 'resource': 9200000}
@@ -79,6 +86,10 @@ class Builder:
     def _material(self, target, path):
         """A material element for one texture file; returns None when the row has no texture."""
         if not path:
+            return None
+        if not self.client.has(path):
+            if path.upper() not in self.missing:
+                self.missing.append(path.upper())
             return None
         key = path.upper()
         self.textures.setdefault(key, FIRST_TEXTURE_ID + len(self.textures))
@@ -98,7 +109,8 @@ class Builder:
 
     def build(self, race, sex):
         skin_rows = sorted(self.rows(race, sex, 0), key=lambda r: (r[4], r[5]))
-        skin_rows = [r for r in skin_rows if r[4] == 0]
+        # Rows flagged 1 are NPC-only skins (Dark Ranger and the like). They come with no matching underwear, which left blotches on the body.
+        skin_rows = [r for r in skin_rows if r[4] == 0 and not r[9] & 1]
         under = {r[5]: r for r in self.rows(race, sex, 4) if r[4] == 0}
         skin_choices = []
         for order, r in enumerate(skin_rows):
@@ -108,6 +120,10 @@ class Builder:
             if u:
                 elements += [e for e in (self._element(self._material(T_PELVIS, self.string(u[6]))),
                                          self._element(self._material(T_TORSO, self.string(u[7]))) if u[7] else None) if e and e['Material']]
+            if race == 10:
+                # The Blood Elf eye glow is geoset 1702 (group 17, id 2). The viewer leaves group 17 off unless a choice names it, so without this
+                # the eyes show only the flat iris. The glow colour comes from the skin row's second texture (blue, red, green or purple).
+                elements.append(self._element(geoset={'GeosetType': 17, 'GeosetID': 2, 'Modifier': -1}))
             skin_choices.append(self._choice(order, elements))
         colour_index = {}
         for i, r in enumerate(skin_rows):
@@ -137,13 +153,16 @@ class Builder:
         # head itself is one of the 1xx geosets, so a style must always be selected or no head is drawn.
         facial = []
         for order, r in enumerate(sorted((r for r in self.facial_hair if r[0] == race and r[1] == sex), key=lambda r: r[2])):
+            # The table's columns are the geosets for groups 100, 300 and 200, in that order (checked against the models' submesh ids).
             geosets = [self._element(geoset={'GeosetType': kind, 'GeosetID': value or 1, 'Modifier': -1})
-                       for kind, value in ((1, r[6]), (2, r[7]), (3, r[8])) if value < 100]
+                       for kind, value in ((1, r[6]), (3, r[7]), (2, r[8])) if value < 100]
             facial.append(self._choice(order, geosets))
         options = []
-        for name, choices in (('Skin Color', skin_choices), ('Face', face_choices), ('Hair Style', hair_style), ('Hair Color', hair_color), ('Facial Hair', facial)):
+        for name, choices in (('Skin Color', skin_choices), ('Face', face_choices), ('Hair Style', hair_style), ('Hair Color', hair_color),
+                              (facial_option_name(race, sex), facial)):
             if choices:
-                options.append({'Id': OPTION_IDS[name], 'Name': name, 'OrderIndex': len(options) + 1, 'Choices': choices})
+                options.append({'Id': OPTION_IDS['Skin Color' if name == 'Skin Color' else name if name in OPTION_IDS else 'Facial Hair'],
+                                'Name': name, 'OrderIndex': len(options) + 1, 'Choices': choices})
         return {'Options': options, 'TextureFiles': self.texture_files, **json.loads(json.dumps(LAYOUT)), 'HairStyleOptionId': 0}
 
 

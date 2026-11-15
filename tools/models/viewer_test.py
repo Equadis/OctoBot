@@ -48,7 +48,7 @@ for path, fid in builder.textures.items():
 def pick(name, index):
     o = next(o for o in cust['Options'] if o['Name'] == name)
     return {'optionId': o['Id'], 'choiceId': o['Choices'][min(index, len(o['Choices']) - 1)]['Id']}
-LOOK = json.dumps([pick(n, i) for n, i in (('Skin Color', 0), ('Face', 0), ('Hair Style', 1), ('Hair Color', 1), ('Facial Hair', 0)) if any(o['Name'] == n for o in cust['Options'])])
+LOOK = json.dumps([pick(n, i) for n, i in (('Skin Color', int(os.environ.get('SKIN', 0))), ('Face', 0), ('Hair Style', 1), ('Hair Color', 1), (customisation.facial_option_name(RACE, SEX), 0)) if any(o['Name'] == n for o in cust['Options'])])
 
 VIEWER = 'https://wow.zamimg.com/modelviewer/classic/deployment/viewer/35ee72d/viewer.min.js'  # the same build the site pins
 PAGE_T = '''<!doctype html><meta charset=utf-8><body style="margin:0;background:#101727"><div id=v style="width:900px;height:700px"></div>

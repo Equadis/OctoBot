@@ -134,6 +134,9 @@ class Client:
             except Exception:
                 pass
 
+    def has(self, name):
+        return any(archive.find(name) for archive in self.archives)
+
     def read(self, name):
         for archive in self.archives:
             data = archive.read(name)

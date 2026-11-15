@@ -19,7 +19,7 @@ class FromClientTables(unittest.TestCase):
     def test_goblin_male_options_and_ids(self):
         builder, data = self.build(9, 0)
         names = [o['Name'] for o in data['Options']]
-        self.assertEqual(names, ['Skin Color', 'Face', 'Hair Style', 'Hair Color', 'Facial Hair'])
+        self.assertEqual(names, ['Skin Color', 'Face', 'Hair Style', 'Hair Color', 'Features'])
         ids = [e['Id'] for o in data['Options'] for c in o['Choices'] for e in c['Elements']]
         self.assertEqual(len(ids), len(set(ids)))
         for key in ('Materials', 'TextureLayers', 'TextureSections'):
@@ -34,6 +34,28 @@ class FromClientTables(unittest.TestCase):
                 for e in c['Elements']:
                     if e['Material']:
                         self.assertIn(str(e['Material']['MaterialResourcesID']), data['TextureFiles'])
+
+
+    def test_option_names_follow_the_body(self):
+        import octo_mpq
+        client = octo_mpq.Client(DATA)
+        names = {(r, g): [o['Name'] for o in customisation.Builder(client).build(r, g)['Options']][-1] for r, g in ((9, 0), (9, 1), (10, 0), (10, 1))}
+        self.assertEqual(names, {(9, 0): 'Features', (9, 1): 'Features', (10, 0): 'Facial Hair', (10, 1): 'Earrings'})
+
+    def test_npc_only_skins_and_missing_textures_are_left_out(self):
+        import octo_mpq
+        client = octo_mpq.Client(DATA)
+        builder = customisation.Builder(client)
+        data = builder.build(10, 0)
+        self.assertEqual(len(data['Options'][0]['Choices']), 11)
+        self.assertEqual(len(builder.missing), 5)
+        for path in builder.missing:
+            self.assertFalse(client.has(path))
+
+    def test_blood_elf_skins_switch_the_eye_glow_geoset_on(self):
+        _, data = self.build(10, 1)
+        for choice in data['Options'][0]['Choices']:
+            self.assertTrue(any(e['Geoset'] == {'GeosetType': 17, 'GeosetID': 2, 'Modifier': -1} for e in choice['Elements']))
 
 
 if __name__ == '__main__':

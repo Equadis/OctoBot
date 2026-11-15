@@ -14,7 +14,7 @@ import sys
 HEADER_ARRAYS = [
     ('global_sequences', 4, True), ('sequences', 68, True), ('animation_lookup', 2, True), ('playable_animation_lookup', 4, True),
     ('bones', 108, True), ('key_bone_lookup', 2, True), ('vertices', 48, True), ('views', 44, True),
-    ('colors', 0, False), ('textures', 16, True), ('transparency', 0, False), ('uv_animations', 0, False), ('texture_replace', 2, False),
+    ('colors', 56, True), ('textures', 16, True), ('transparency', 28, True), ('uv_animations', 0, False), ('texture_replace', 2, False),
     ('replaceable_lookup', 2, False), ('render_flags', 4, False), ('bone_lookup', 2, False), ('texture_lookup', 2, False), ('texture_unit_lookup', 2, False),
     ('transparency_lookup', 2, False), ('uv_anim_lookup', 2, False),
 ]
@@ -123,14 +123,16 @@ class M2:
         interp, gseq, n_ranges, o_ranges, n_ts, o_ts, n_vals, o_vals = struct.unpack_from('<HhIIIIII', self.data, offset)
         ranges = [struct.unpack_from('<2I', self.data, o_ranges + 8 * k) for k in range(n_ranges)]
         times = list(struct.unpack_from(f'<{n_ts}I', self.data, o_ts)) if n_ts else []
-        if kind == 'quat':       # four float32 per key (x, y, z, w); this version does not compress them
+        if kind == 'int16':      # one signed 16-bit value per key (transparency and colour alpha: 0 to 32767)
+            values = list(struct.unpack_from(f'<{n_vals}h', self.data, o_vals)) if n_vals else []
+        elif kind == 'quat':     # four float32 per key (x, y, z, w); this version does not compress them
             raw = struct.unpack_from(f'<{n_vals * 4}f', self.data, o_vals) if n_vals else ()
             values = [tuple(raw[k * 4:k * 4 + 4]) for k in range(n_vals)]
         else:                    # vec3 of floats
             raw = struct.unpack_from(f'<{n_vals * 3}f', self.data, o_vals) if n_vals else ()
             values = [raw[k * 3:k * 3 + 3] for k in range(n_vals)]
         return {'interpolation': interp, 'global_sequence': gseq, 'ranges': ranges, 'times': times, 'values': values,
-                'offsets': {'ranges': (o_ranges, n_ranges * 8), 'times': (o_ts, n_ts * 4), 'values': (o_vals, n_vals * (16 if kind == 'quat' else 12))}}
+                'offsets': {'ranges': (o_ranges, n_ranges * 8), 'times': (o_ts, n_ts * 4), 'values': (o_vals, n_vals * (16 if kind == 'quat' else 2 if kind == 'int16' else 12))}}
 
     def bones(self):
         a = self.array('bones')
@@ -142,6 +144,17 @@ class M2:
                         'translation': self._track(base + 12, 'vec3'), 'rotation': self._track(base + 40, 'quat'),
                         'scale': self._track(base + 68, 'vec3'), 'pivot': struct.unpack_from('<3f', self.data, base + 96)})
         return out
+
+    def colors(self):
+        """Colour tints (56 bytes each: an RGB track then an alpha track). Batches name one by index; -1 means none."""
+        a = self.array('colors')
+        return [{'index': k, 'color': self._track(a['offset'] + 56 * k, 'vec3'), 'alpha': self._track(a['offset'] + 56 * k + 28, 'int16')}
+                for k in range(a['count'])]
+
+    def transparency(self):
+        """Transparency (fade) tracks, 28 bytes each; batches reach them through the transparency lookup."""
+        a = self.array('transparency')
+        return [self._track(a['offset'] + 28 * k, 'int16') for k in range(a['count'])]
 
     def attachments(self):
         """Points on the skeleton where items attach: id, bone, position (48 bytes each; the visibility track is not decoded)."""
@@ -201,6 +214,17 @@ class M2:
              all(t['times'][i] <= t['times'][i + 1] for b in bone_list for t in (b['translation'], b['rotation']) if t['times']
                  for lo, hi in t['ranges'] for i in range(lo, hi - 1)))
         rule('attachments: bones exist', all(a['bone'] < len(bone_list) for a in self.attachments()))
+        extra = [c[k] for c in self.colors() for k in ('color', 'alpha')] + self.transparency()
+        rule('colour and transparency tracks: one value per timestamp, key ranges inside the key list',
+             all(len(t['times']) == len(t['values']) and all(0 <= lo <= hi <= len(t['times']) for lo, hi in t['ranges']) for t in extra))
+        rule('colour and transparency tracks: ranges then timestamps then values (the old layout)',
+             all((0 <= t['offsets']['times'][0] - sum(t['offsets']['ranges']) < 16 if t['ranges'] else t['global_sequence'] >= 0 or len(t['times']) == 1)
+                 and 0 <= t['offsets']['values'][0] - sum(t['offsets']['times']) < 16 for t in extra if t['times']))
+        lookup = self.array('transparency_lookup')
+        lookup_values = struct.unpack_from(f"<{lookup['count']}H", self.data, lookup['offset']) if lookup['count'] else ()
+        rule('texture units: colour index is -1 or a colour, transparency index is inside the transparency lookup',
+             all((t['color'] == -1 or 0 <= t['color'] < len(self.colors())) and t['transparency'] < len(lookup_values) for t in view['texture_units']))
+        rule('transparency lookup: every entry names a transparency track', all(v < len(self.transparency()) for v in lookup_values))
         return ok, bad
 
 

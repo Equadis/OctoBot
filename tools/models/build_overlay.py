@@ -100,6 +100,9 @@ def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=pri
             textures[tex_path] = tex_id          # file textures the model itself names
         builder = customisation.Builder(client, textures)
         cust = builder.build(race, gender)
+        for path_ in builder.missing:
+            if path_ not in manifest['missing_textures']:
+                manifest['missing_textures'].append(path_)
         write(out, f'meta/charactercustomization/{chr_id}.json', json.dumps(cust).encode(), manifest)
         write(out, f'meta/character/{chr_id}.json', json.dumps(character_record(ids['model'], race, gender, chr_id)).encode(), manifest)
         manifest['bodies'][f'{race}:{gender}'] = {'character_id': chr_id, 'model_file_id': ids['model'], 'skin_file_id': ids['skin'], 'skel_file_id': ids['skel'],

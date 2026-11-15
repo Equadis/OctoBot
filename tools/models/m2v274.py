@@ -8,8 +8,8 @@ Writes three files into the out folder (plus ids.json listing the file ids it in
     skel/<id>.skel  SKL1 + SKS1 (sequences) + SKB1 (bones with animation tracks) + SKA1 (attachments)
 
 Status (see README.md, step 3): geometry, bones, animation tracks, sequences and attachments are converted and verified by reading the
-written bytes back (`verify`). NOT converted yet, written empty or with a stand-in: colours, transparency (one opaque weight is used),
-UV animations, events, lights, cameras, particles, collision data. Not yet tried in the viewer (that is step 5).
+written bytes back (`verify`). NOT converted yet, written empty: UV animations, events, lights, cameras, particles, collision data. Colour tints and transparency (fade)
+tracks are converted (they switch the Goblin's eye layers on and off and set the Blood Elf eye glow). Not yet tried in the viewer (that is step 5).
 Output stays on your machine: nothing derived from client files is published (see the rules in README.md).
 """
 import json
@@ -67,6 +67,10 @@ def write_track(blob, track, seqs, kind):
     if track['global_sequence'] >= 0:
         groups = [list(range(len(track['values'])))]
         starts = [0]
+    elif not track['ranges']:
+        # A constant (one key, no per-animation ranges): the modern form wants it written for every animation, at time 0.
+        groups = [[0]] * len(seqs)
+        starts = [track['times'][0]] * len(seqs)
     else:
         groups, starts = [], []
         for s, (lo, hi) in zip(seqs, track['ranges']):
@@ -77,6 +81,8 @@ def write_track(blob, track, seqs, kind):
         t_entries.append(pair(blob, [track['times'][k] - start for k in idx], '<I'))
         if kind == 'quat':
             v_entries.append((len(idx), blob.add(b''.join(encode_quat(track['values'][k]) for k in idx), 4) if idx else 0))
+        elif kind == 'int16':
+            v_entries.append(pair(blob, [track['values'][k] for k in idx], '<h', 2))
         else:
             v_entries.append(pair(blob, [tuple(track['values'][k]) for k in idx], '<3f', 4))
     t_off = blob.add(b''.join(struct.pack('<II', *e) for e in t_entries))
@@ -106,8 +112,8 @@ def write_skin(m):
     for t in view['texture_units']:
         # old fields: flags, shading, submesh, submesh2, colour, render flags, unit, mode, texture, unit2, transparency, uv animation
         # new fields: flags, priority, shader, submesh, geoset, colour, material, layer, texture count, texture, coord, weight, transform
-        batches.append((t['flags'] & 0xFF, 0, 0, t['submesh'], t['submesh2'], 65535, t['render_flags'], t['texture_unit'], max(1, t['mode']),
-                        t['texture'], t['texture_unit2'], 0, 0))
+        batches.append((t['flags'] & 0xFF, 0, 0, t['submesh'], t['submesh2'], 65535 if t['color'] < 0 else t['color'], t['render_flags'], t['texture_unit'],
+                        max(1, t['mode']), t['texture'], t['texture_unit2'], t['transparency'], 0))
     bat_n, bat_o = pair(blob, batches, '<BbHHHHHHHHHHH')
     header = struct.pack('<4s13I', b'SKIN', verts_n, verts_o, idx_n, idx_o, bone_n, bone_o, sub_n, sub_o, bat_n, bat_o, 256, 0, 0)
     blob.buf[:len(header)] = header
@@ -168,8 +174,12 @@ def write_m2(m, skel_id, skin_id, texture_ids):
     for t, tid in zip(tex, texture_ids):
         entries.append(struct.pack('<IIII', t['type'], t['flags'], 0, 0))
     t_n, t_o = len(entries), (blob.add(b''.join(entries)) if entries else 0)
-    weight = struct.pack('<HhIIII', 0, -1, 0, 0, 0, 0)      # stand-in: one weight track with no keys (viewer treats it as opaque)
-    w_n, w_o = 1, blob.add(weight)
+    seqs = m.sequences()
+    # Colour tints (RGB track + alpha track) and transparency (fade) tracks, converted per animation like the bone tracks.
+    colour_records = [write_track(blob, c['color'], seqs, 'vec3') + write_track(blob, c['alpha'], seqs, 'int16') for c in m.colors()]
+    c_n, c_o = len(colour_records), (blob.add(b''.join(colour_records)) if colour_records else 0)
+    weight_records = [write_track(blob, t, seqs, 'int16') for t in m.transparency()]
+    w_n, w_o = len(weight_records), (blob.add(b''.join(weight_records)) if weight_records else 0)
     def u16s(name_):
         a = m.array(name_)
         return list(struct.unpack_from(f"<{a['count']}H", m.data, a['offset'])) if a['count'] else []
@@ -179,7 +189,7 @@ def write_m2(m, skel_id, skin_id, texture_ids):
     bone_combo = pair(blob, u16s('bone_lookup'), '<H')
     tex_combo = pair(blob, u16s('texture_lookup'), '<H')
     coord_combo = pair(blob, u16s('texture_unit_lookup'), '<H')
-    weight_combo = pair(blob, [0], '<H')
+    weight_combo = pair(blob, u16s('transparency_lookup'), '<H')
     xform_combo = pair(blob, [65535], '<H')      # one entry meaning "no transform"; every batch points at entry 0 (as in Zam's own files)
     xs, ys, zs = ([v[0][a] for v in verts] for a in range(3))
     bbox = (min(xs), min(ys), min(zs), max(xs), max(ys), max(zs))
@@ -190,6 +200,7 @@ def write_m2(m, skel_id, skin_id, texture_ids):
     struct.pack_into('<I', h, 0x10, m.global_flags)
     struct.pack_into('<II', h, 0x3C, v_n, v_o)
     struct.pack_into('<I', h, 0x44, 1)                                   # one skin profile
+    struct.pack_into('<II', h, 0x48, c_n, c_o)
     struct.pack_into('<II', h, 0x50, t_n, t_o)
     struct.pack_into('<II', h, 0x58, w_n, w_o)
     for off, val in ((0x68, rep), (0x70, mat), (0x78, bone_combo), (0x80, tex_combo), (0x88, coord_combo), (0x90, weight_combo), (0x98, xform_combo)):
@@ -283,7 +294,7 @@ def verify(data, files):
     for bi, b in enumerate(bones):
         for which, name in enumerate(('translation', 'rotation', 'scale')):
             t = b[name]
-            if not t['values'] or t['global_sequence'] >= 0:
+            if not t['values'] or t['global_sequence'] >= 0 or not t['ranges']:
                 continue
             for si in range(0, len(seqs), 7):
                 lo, hi = t['ranges'][si]
