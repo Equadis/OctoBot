@@ -179,3 +179,9 @@
 
 .bd-action{color:#c0ccda}
 .bd-option.bd-action:hover{color:#f4d65c}
+
+/* Scrub bar under the player controls */
+.transport-wrap{display:inline-flex;flex-direction:column;align-items:stretch;gap:6px}
+.transport-wrap .transport{justify-content:center}
+.scrub{width:100%;min-width:118px;height:14px;margin:0;accent-color:#e4bd39;cursor:pointer}
+.scrub:disabled{opacity:.45;cursor:default}

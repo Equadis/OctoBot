@@ -313,10 +313,30 @@ function showPlayState(paused){
 }
 // Frame stepping: pauses, then moves the animation clock by whole frames (WoW animations run at 30 frames per second).
 const FRAME_MS=1000/30;
+// Scrub bar: dragging freezes the animation and moves its clock; while playing, the thumb follows the clock.
+let scrubbing=false;
+function animationClock(){const actor=characterActor(),state=actor?.d?.B?.c;return state?.e?.h>0?{actor,state,length:state.e.h}:null;}
+function syncScrub(){
+ const bar=$('anim-scrub'),clock=animationClock();if(!bar||scrubbing||!clock)return;
+ bar.value=String(Math.round(Math.min(1,clock.state.c/clock.length)*1000));
+}
+function scrubTo(fraction){
+ const clock=animationClock();if(!clock)return;
+ try{clock.actor.setAnimPaused(true);}catch{}showPlayState(true);
+ clock.state.c=Math.min(clock.length-1,Math.max(0,fraction*clock.length));
+}
+function setupScrub(){
+ const bar=$('anim-scrub');
+ bar.addEventListener('pointerdown',()=>{scrubbing=true;scrubTo(Number(bar.value)/1000);});
+ bar.addEventListener('input',()=>{scrubbing=true;scrubTo(Number(bar.value)/1000);});
+ const end=()=>{scrubbing=false;};
+ bar.addEventListener('pointerup',end);bar.addEventListener('change',end);bar.addEventListener('blur',end);
+ setInterval(syncScrub,100);
+}
 function stepAnimation(frames){
  const actor=characterActor(),state=actor?.d?.B?.c;if(!state?.e||!(state.e.h>0))return;
  try{actor.setAnimPaused(true);}catch{}showPlayState(true);
- const length=state.e.h;state.c=(((Math.round(state.c/FRAME_MS)+frames)*FRAME_MS)%length+length)%length;
+ const length=state.e.h;state.c=(((Math.round(state.c/FRAME_MS)+frames)*FRAME_MS)%length+length)%length;syncScrub();
 }
 async function loadLookOptions(chrModelId){
  if(!Number.isInteger(chrModelId))return [];
@@ -387,7 +407,7 @@ function setupAnimation(){
  const names=new Set();for(let i=0;i<actor.getNumAnimations();i++){const name=actor.getAnimation(i);if(name)names.add(name);}
  const list=[...names].sort((a,b)=>a==='Stand'?-1:b==='Stand'?1:a.localeCompare(b));
  select.replaceChildren(...list.map(name=>new Option(name,name)));
- select.disabled=!list.length;pause.disabled=!list.length;$('anim-prev').disabled=!list.length;$('anim-next').disabled=!list.length;showPlayState(false);
+ select.disabled=!list.length;pause.disabled=!list.length;$('anim-prev').disabled=!list.length;$('anim-next').disabled=!list.length;$('anim-scrub').disabled=!list.length;showPlayState(false);
  let saved='';try{saved=localStorage.getItem(ANIMATION_KEY)||'';}catch{}
  const choice=list.includes(saved)?saved:list.includes('Stand')?'Stand':list[0];
  if(!choice)return;
@@ -524,7 +544,7 @@ function shareUrl(){const url=new URL(location.href);url.search='';url.hash='out
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
- setupBackdrops();setupInfoTips();setupWeaponControls();
+ setupBackdrops();setupInfoTips();setupWeaponControls();setupScrub();
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
   let message='Select an equipment slot, then choose an item to try on.';
