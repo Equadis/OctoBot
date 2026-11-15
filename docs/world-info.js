@@ -102,7 +102,7 @@
       raids[key] = {
         observedAt: at, players: Number.isFinite(players) ? players : null,
         active: raw.active === true || raw.active === false ? raw.active : (Number.isFinite(players) ? present : null),
-        sessions: currentSession ? [{ id: '1', startedAt: start, confidence: 'inferred' }] : [],
+        sessions: currentSession ? [{ id: '1', startedAt: start, confidence: 'inferred', guild: guildLabel(raw, players) }] : [],
         // An activityEnd older than the current activityStart belongs to the previous raid; it is not a confirmed clear.
         lastFinishedAt: validPast(end) && (!validPast(start) || end < start || !present) ? end : null,
         clearConfirmed: raw.clearConfirmed === true
@@ -133,13 +133,26 @@
     }
     return null;
   }
+  // Who is in the raid: a guild when at least half of the players belong to it, otherwise PUG. Needs per-guild counts from the tracker
+  // (raid.guilds as [{name, count}] or {name: count}); without them nothing is shown, because the guild is never guessed.
+  function guildLabel(raw, players) {
+    const list = raw && first(raw.guilds, raw.guildCounts, raw.guild_counts);
+    if (!list || typeof list !== 'object') return null;
+    const entries = (Array.isArray(list) ? list.map(entry => [first(entry.name, entry.guild, ''), Number(first(entry.count, entry.players, entry.members))]) : Object.entries(list).map(([name, count]) => [name, Number(count)]))
+      .filter(([, count]) => Number.isFinite(count) && count > 0);
+    const listed = entries.reduce((sum, [, count]) => sum + count, 0);
+    const total = Number.isFinite(players) && players > 0 ? players : listed;
+    if (!entries.length || !total) return null;
+    const top = entries.filter(([name]) => String(name).trim()).sort((a, b) => b[1] - a[1])[0];
+    return top && top[1] * 2 >= total ? { name: String(top[0]).trim(), pug: false } : { name: 'PUG', pug: true };
+  }
   function raidSession(row) {
     if (!object(row)) return null;
     const startedAt = timeOf(row, 'startedAt', 'startAt', 'formedAt', 'start_time', 'started_at');
     const stateText = String(first(row.status, row.state, '')).toLowerCase();
     if (['ended', 'finished', 'cleared', 'cancelled'].includes(stateText) || row.active === false) return null;
     if (!validPast(startedAt)) return null;
-    return { id: String(first(row.id, row.number, row.raidNumber, 'Raid')), startedAt, confidence: String(first(row.confidence, 'inferred')).toLowerCase() };
+    return { id: String(first(row.id, row.number, row.raidNumber, 'Raid')), startedAt, confidence: String(first(row.confidence, 'inferred')).toLowerCase(), guild: object(row.guild) && row.guild.name ? row.guild : guildLabel(row, Number(first(row.players, row.playerCount))) };
   }
   function normaliseRaid(raw, root) {
     if (!object(raw)) return null;
@@ -163,7 +176,7 @@
     activeNode.replaceChildren();
     // "Raid in progress" for none or one, "Raids in progress" for two or more.
     const raidTotal = raid ? (raid.sessions.length || raid.count || 0) : 0;
-    const raidLabel = raidTotal >= 2 ? 'Raids in progress' : 'Raid in progress';
+    const raidLabel = (raidTotal >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
     $(key + '-count-label').textContent = raidLabel;
     finished.textContent = raid && validPast(raid.lastFinishedAt)
       ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'NO DATA';
@@ -184,7 +197,7 @@
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = 'Raid ' + session.id;
+        title.textContent = 'Raid ' + session.id + (session.guild ? ' \u2013 ' + session.guild.name : '');
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
@@ -294,11 +307,11 @@
     const now = Date.now();
     const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
     const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + '.';
-    tag.hidden = false;
+    tag.hidden = true;
     const level = clear.confidence || 'low';
-    if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); tag.textContent = 'ESTIMATE'; note.textContent = 'Estimated clear · ' + basis; }
-    else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; { const tm = document.createElement('sup'); tm.className = 'tm'; tm.textContent = '™'; if (out.append) out.append(tm); } tag.textContent = 'ESTIMATE'; note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
-    else { out.textContent = 'OVERDUE'; tag.textContent = 'ESTIMATE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+    if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); note.textContent = 'Estimated clear · ' + basis; }
+    else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; { const tm = document.createElement('sup'); tm.className = 'tm'; tm.textContent = '™'; if (out.append) out.append(tm); } note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
+    else { out.textContent = 'OVERDUE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
     colourConfidence(note, level);
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
@@ -355,6 +368,7 @@
       state.buffs.horde = findBuff(root, 'horde');
       state.dmf = findDmf(root);
       state.metricsFetchedAt = Date.now();
+      watchSounds(true);
       const source = $('source-status');
       source.textContent = 'OctoMetrics API connected · Raid lifecycle data is in development';
       source.className = 'source-label fresh';
@@ -365,6 +379,41 @@
       // Retain the last successful response, subject to its original observation timestamps.
     }
     renderLive();
+  }
+  // ---- Sound alerts: edges only (something new since the last look), never on first load. Nothing plays unless the visitor turned alerts on.
+  const sound = { baselined: false, finished: {}, drop: {}, soon: {}, confirmed: {} };
+  const sounds = () => (typeof window !== 'undefined' && window.RaidSounds) || null;
+  function watchSounds(fromData) {
+    const player = sounds();
+    if (!player) return;
+    const keys = [['ony', 'onyxia'], ['bwl', 'nefarian']];
+    for (const [raidKey, headKey] of keys) {
+      const raid = state.raids[raidKey], head = state.heads[headKey], clear = head && head.clear;
+      if (fromData) {
+        const finishedAt = raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
+        if (sound.baselined && finishedAt && finishedAt > (sound.finished[raidKey] || 0)) player.notify('finished');
+        if (finishedAt) sound.finished[raidKey] = finishedAt;
+        const confirmed = Boolean(clear && clear.confirmed === true);
+        if (sound.baselined && confirmed && !sound.confirmed[raidKey]) player.notify('confirmed');
+        sound.confirmed[raidKey] = confirmed;
+      }
+      const estimatedAt = clear && clear.status === 'estimated' ? time(clear.estimatedAt) : null;
+      if (!Number.isFinite(estimatedAt)) { sound.soon[raidKey] = null; continue; }
+      const lead = player.settings().soonMinutes * MINUTE;
+      if (estimatedAt - Date.now() <= lead && sound.soon[raidKey] !== estimatedAt) {
+        // An estimate that is already close when the page opens is recorded, not announced.
+        if (sound.baselined) player.notify('soon');
+        sound.soon[raidKey] = estimatedAt;
+      }
+    }
+    if (fromData) {
+      for (const faction of ['alliance', 'horde']) {
+        const buff = state.buffs[faction], at = buff && validPast(buff.last) ? buff.last : null;
+        if (sound.baselined && at && at > (sound.drop[faction] || 0)) player.notify(faction + 'Drop');
+        if (at) sound.drop[faction] = at;
+      }
+      sound.baselined = true;
+    }
   }
   function renderLive() {
     renderRaid('ony');
@@ -377,6 +426,7 @@
     renderBuff('horde');
     renderDmf();
     renderMadnessCountdown();
+    watchSounds(false);
   }
 
   function pacificDate(ms) {
@@ -528,6 +578,7 @@
       renderCalendar();
     });
     renderCalendar();
+    if (sounds() && $('sound-toggle')) sounds().mount($('sound-toggle'), $('sound-panel'), $('sound-state'));
     renderLive();
     void loadMetrics();
     void loadEra();

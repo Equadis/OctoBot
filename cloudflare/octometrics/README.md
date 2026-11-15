@@ -114,3 +114,9 @@ new Railway accounts (otherwise they receive HTTP 400).
 Run `node --test cloudflare/octometrics/tests/*.test.mjs` before deploying.
 This extension adds API data; it does **not** automatically implement a
 visual DMF panel on the OctoBot website.
+
+## Planned: guild per raid (website side is ready)
+
+The World Info page shows `Raid 1 – <Guild>` when a raid carries per-guild player counts, and `Raid 1 – PUG` when no guild has at least half of the players. It never guesses: with no guild data it shows just `Raid 1`.
+
+The collector currently publishes only a player count, so nothing is shown yet. To enable it, each raid object in `/api/summary` needs `guilds`, either `[{ "name": "Guild", "count": 12 }]` or `{ "Guild": 12 }`, built from the guild column of the `/who` rows. That needs a collector change (its source is not in this repository) and, if the Worker should store it, an optional field passed through ingest and summary. No D1 migration is needed if the counts travel inside the existing event payload.

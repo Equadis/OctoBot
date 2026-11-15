@@ -200,3 +200,25 @@ small:empty,.evidence:empty{display:none}
 /* Raid panels: "Last raid finished" and "Last confirmed head drop" are pinned to the bottom, so both panels line up whatever is above them */
 .world-panel.raid-onyxia,.world-panel.raid-nefarian{display:flex;flex-direction:column}
 .raid-onyxia>.bottom-line:not(.drops-line),.raid-nefarian>.bottom-line:not(.drops-line){margin-top:auto}
+
+/* "Raid in progress: 2": the label leads and the count follows */
+.hero-stat span{order:-1}
+/* Sound alerts */
+.section-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sound-button{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;font-size:12px;color:#c0ccda}
+.sound-button strong{font-weight:700;color:#8fa0b6}
+.sound-button.on strong{color:#6fe08f}
+.sound-button:hover,.sound-button:focus-visible{border-color:#9d8a35;color:#f4d65c}
+.sound-panel{margin:0 0 14px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.sound-panel[hidden]{display:none}
+.sound-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #2c384a}
+.sound-row:last-child{border-bottom:0}
+.sound-master{padding-top:0}
+.sound-event-label{display:flex;align-items:center;gap:8px;flex:1 1 230px;font-size:13px;color:#d7dfeb}
+.sound-row select{min-width:150px;max-width:210px;height:30px;font-size:12px}
+.sound-volume{display:flex;align-items:center;gap:8px;font-size:12px;color:#aab7c7}
+.sound-volume input{width:140px}
+.sound-test{width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.sound-note{margin:10px 0 0;font-size:12px;color:#6fe08f}
+.sound-note:empty{display:none}
+.sound-fine{margin:10px 0 0;font-size:11px;color:#8898ac;line-height:1.5}

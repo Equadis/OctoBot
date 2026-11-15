@@ -22,18 +22,22 @@ function element(){
   });
 }
 
-async function run(payload){
+async function run(payload,extra={}){
+  const intervals=[],created=[];let current=payload;
   const elements=new Map();
   const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
-  const document={getElementById:get,createElement:()=>element(),createTextNode:text=>({textContent:text}),addEventListener(){}};
+  const document={getElementById:get,createElement:()=>{const e=element();created.push(e);return e;},createTextNode:text=>({textContent:text}),addEventListener(){}};
   const context={
     document,console,URL,Intl,Date,Math,Number,Object,Array,String,Boolean,JSON,Promise,Error,
-    setInterval(){return 0;},clearInterval(){},setTimeout,
-    fetch:async url=>String(url).includes('octometrics')?{ok:true,json:async()=>payload}:Promise.reject(new Error('offline')),
+    setInterval(fn,ms){intervals.push([fn,ms]);return 0;},clearInterval(){},setTimeout,
+    fetch:async url=>String(url).includes('octometrics')?{ok:true,json:async()=>current}:Promise.reject(new Error('offline')),
+    ...extra,
   };
   vm.runInNewContext(script,context);
   await new Promise(resolve=>setTimeout(resolve,50));
-  const text=id=>elements.get(id)?.textContent;text.el=id=>elements.get(id);return text;
+  const text=id=>elements.get(id)?.textContent;text.el=id=>elements.get(id);text.created=created;
+  text.next=async next=>{current=next;for(const [fn,ms] of intervals)if(ms===60000)await fn();await new Promise(resolve=>setTimeout(resolve,50));};
+  return text;
 }
 
 const feed=(now,heads,buffs={})=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs,sessions:{},heads}]});
@@ -54,7 +58,7 @@ test('a live estimate counts down from the Worker timestamps and is labelled an 
     nefarian:{clear:{status:'learning',confirmed:false,samples:2,minSamples:5,confidence:'none'},drops:{alliance:null,horde:{at:iso(now-5*MIN),confirmed:true}}},
   }));
   assert.match(text('ony-clear'),/^1[12]m \d\ds$/);
-  assert.match(text('ony-clear-tag'),/ESTIMATE/);
+  assert.equal(text.el('ony-clear-tag').hidden,true);   // no tag under the estimate
   assert.match(text('ony-clear-note'),/low confidence from 7 past raids/);
   assert.ok(!/confirmed drop/i.test(text('ony-clear-note')));
   assert.match(text('ony-drop-alliance'),/^Alliance · 1h 0[45]m \d\ds ago$/);
@@ -124,6 +128,45 @@ test('a raid in progress shows its count with the label, and the clear estimate 
   const text=await run(live);
   assert.equal(text('ony-count'),'1');
   assert.equal(text.el('ony-count-label').hidden,false);
-  assert.equal(text('ony-count-label'),'Raid in progress');
+  assert.equal(text('ony-count-label'),'Raid in progress:');
   assert.equal(text('ony-clear'),'LEARNING');
+});
+
+test('a guild is named when at least half of the raid belongs to it, otherwise the raid is marked PUG, and nothing is guessed without guild data',async()=>{
+  const now=Date.now();
+  const make=guilds=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:20,at:iso(now-MIN),active:true,activityStart:iso(now-30*MIN),...(guilds?{guilds}:{})}},buffs:{},sessions:{},heads:{}}]});
+  const title=async guilds=>(await run(make(guilds))).created.map(e=>e.textContent).find(value=>typeof value==='string'&&/^Raid 1/.test(value));
+  assert.equal(await title([{name:'Octo Raiders',count:12},{name:'Other',count:3}]),'Raid 1 \u2013 Octo Raiders');   // 12 of 20 is at least half
+  assert.equal(await title([{name:'Octo Raiders',count:10},{name:'Other',count:10}]),'Raid 1 \u2013 Octo Raiders');  // exactly half counts
+  assert.equal(await title({A:6,B:5,C:5,D:4}),'Raid 1 \u2013 PUG');                                                  // no guild reaches half
+  assert.equal(await title(undefined),'Raid 1');                                                                       // no data: no guess
+});
+
+test('sound alerts fire only on something new, never on first load, and only for the events that changed',async()=>{
+  const now=Date.now(),heard=[];
+  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),mount(){}};
+  const feed=(finishedAt,allianceAt,estimatedInMinutes)=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:0,at:iso(now-MIN),active:false,activityEnd:iso(finishedAt)}},
+    buffs:allianceAt?{'Rallying Cry of the Dragonslayer:alliance':{at:iso(allianceAt),buff:'Rallying Cry of the Dragonslayer',faction:'alliance',source:'npc_yell',head:'onyxia'}}:{},sessions:{},
+    heads:{onyxia:{clear:estimatedInMinutes===null?{status:'idle'}:{status:'estimated',confirmed:false,samples:9,minSamples:5,confidence:'low',estimatedAt:iso(now+estimatedInMinutes*MIN),earliestAt:iso(now+(estimatedInMinutes-5)*MIN),latestAt:iso(now+(estimatedInMinutes+5)*MIN)},drops:{}}}}]});
+  // First load: an old finished raid, an old drop and an estimate already inside the window are recorded silently.
+  const page=await run(feed(now-60*MIN,now-50*MIN,3),{window:{RaidSounds:player}});
+  assert.deepEqual(heard,[]);
+  // The same data again: still nothing.
+  await page.next(feed(now-60*MIN,now-50*MIN,3));
+  assert.deepEqual(heard,[]);
+  // A newer finish and a newer drop are announced once each; Horde and a confirmed clear did not happen.
+  await page.next(feed(now-2*MIN,now-1*MIN,3));
+  assert.deepEqual([...heard].sort(),['allianceDrop','finished']);
+});
+
+test('the estimate alert fires when the estimated clear comes within the chosen window, once per estimate',async()=>{
+  const now=Date.now(),heard=[];
+  const player={notify:key=>{heard.push(key);return true;},settings:()=>({soonMinutes:5}),mount(){}};
+  const feed=minutes=>({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'estimated',confirmed:false,samples:9,minSamples:5,confidence:'low',estimatedAt:iso(now+minutes*MIN),earliestAt:iso(now+(minutes-5)*MIN),latestAt:iso(now+(minutes+5)*MIN)},drops:{}}}}]});
+  const page=await run(feed(40),{window:{RaidSounds:player}});
+  assert.deepEqual(heard,[]);                 // 40 minutes away: too early
+  await page.next(feed(3));                   // a different estimate, now 3 minutes away
+  assert.deepEqual(heard,['soon']);
+  await page.next(feed(3));                   // the same estimate again: not announced twice
+  assert.deepEqual(heard,['soon']);
 });
