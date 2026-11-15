@@ -24,7 +24,7 @@ export const ABILITIES=rotationProfileData('warrior').abilities;
 export const METRICS=Object.freeze(Object.fromEntries(Object.entries(CONDITION_DEFINITIONS).map(([id,def])=>[id,def.label])));
 export const OPERATORS=Object.freeze(['>=','<=','>','<','=']);
 export const ROTATION_PRESETS=rotationProfileData('warrior').presets;
-export const defaultControls=()=>({buffIds:[],consumableIds:[],teaThreshold:20,rotationRole:'dps',rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
+export const defaultControls=()=>({buffIds:['skill-book'],consumableIds:[],teaThreshold:20,rotationRole:'dps',rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
 export function rotationProfile(classId='warrior'){return {...rotationProfileData(classId),metrics:metricsForClass(classId)};}
 export function validateRotationRows(rows,classId='warrior'){return validateRows(rows,classId);}
 export function validateControls(input,classId='warrior',context={}){

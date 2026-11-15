@@ -17,7 +17,7 @@ test('every class panel resets only its own persisted fields',()=>{
    assert.equal(next.classId,cls.id);assert.equal(next.name,initial.name);assert.equal(next.race,initial.race);
    assert.deepEqual(next.gear,section==='equipment'?{}:initial.gear);
    assert.deepEqual(next.talents,section==='talents'?{}:initial.talents);
-   assert.deepEqual(next.controls.buffIds,section==='buffs'?[]:initial.controls.buffIds);
+   assert.deepEqual(next.controls.buffIds,section==='buffs'?['skill-book']:initial.controls.buffIds);
    assert.equal(next.controls.keyInterval,section==='rotation'?100:222);
    assert.equal(next.controls.teaThreshold,section==='buffs'?20:12);
    assert.equal(next.planning.duration,section==='build-settings'?60:90);

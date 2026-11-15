@@ -25,6 +25,9 @@ export function passiveItemStats(item){
   else if((m=text.match(/(?:chance to hit|chance to get a critical strike) with spells by (\d+(?:\.\d+)?)%/i)))add(/critical/i.test(text)?'spellCrit':'spellHit',+m[1]);
   else if((m=text.match(/(?:chance to hit|chance to get a critical strike|chance to dodge|chance to parry) by (\d+(?:\.\d+)?)%/i)))add(/dodge/i.test(text)?'dodge':/parry/i.test(text)?'parry':/critical/i.test(text)?'crit':'hit',+m[1]);
   else if((m=text.match(/Increased Defense \+(\d+)/i)))add('defense',+m[1]);
+  else if((m=text.match(/^Increases your chance to (dodge|parry) an attack by (\d+(?:\.\d+)?)%\.?$/i)))add(m[1].toLowerCase()==='dodge'?'dodge':'parry',+m[2]);
+  else if((m=text.match(/^Restores (\d+) mana per 5 sec\.?$/i)))add('mp5',+m[1]);
+  else if((m=text.match(/^\+(\d+) All Resistances\.?$/i)))for(const key of ['arcaneRes','fireRes','natureRes','frostRes','shadowRes'])add(key,+m[1]);
   else if((m=text.match(/damage and healing done by magical spells and effects by up to (\d+)/i)))add('sp',+m[1]);
   else if((m=text.match(/damage done by (Fire|Frost|Nature|Shadow|Arcane) spells and effects by up to (\d+)/i)))add(m[1].toLowerCase()+'Sp',+m[2]);
   else if((m=text.match(/(?:attack speed|haste) by (\d+(?:\.\d+)?)%/i)))add('haste',+m[1]);

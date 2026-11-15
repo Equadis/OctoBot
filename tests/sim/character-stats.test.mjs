@@ -33,7 +33,7 @@ test('base tables cover all nine defaults at every supported level, without inve
 test('gear, flat enchants, talent ranks, weapon types and target settings change the sheet',()=>{
  const b=newBuild('rogue');b.gear.mainhand={id:25,label:'Test weapon',enchantId:'enchant_mh_agi'};
  const gear={mainhand:{id:25,name:'Test weapon',classs:2,subclass:7,speed:2,attributes:{Agility:10},effects:['Equip: +40 Attack Power.'],tooltipText:'10 - 20 Damage\nSpeed 2.00'}};
- const base=rows(b),equipped=rows(b,gear);assert.equal(equipped['Base Stats'].Agility,'155');assert.notEqual(equipped.Melee.Power,base.Melee.Power);assert.equal(equipped.Melee['Wep Skill'],'305 | 300');assert.notEqual(equipped.Melee.Damage,'0-0 | 0-0');
+ const base=rows(b),equipped=rows(b,gear);assert.equal(equipped['Base Stats'].Agility,'155');assert.notEqual(equipped.Melee.Power,base.Melee.Power);assert.equal(equipped.Melee['Wep Skill'],'310 | 305');assert.notEqual(equipped.Melee.Damage,'0-0 | 0-0');
  const t=data('rogue').talents.find(t=>t.name==='Malice');b.talents[t.id]=5;assert.match(rows(b,gear).Melee['Crit Chance'],/10\.54%/);
  b.controls.buffIds=['sunder'];assert.equal(rows(b,gear)['Melee vs Target'].Armour,'1961');
  b.planning.targetArmour=100;assert.equal(rows(b,gear)['Melee vs Target'].Armour,'0');
@@ -65,3 +65,16 @@ test('ranged scopes cannot raise melee hit, crit or damage',()=>{
   assert.deepEqual(rows(b,gear).Melee,before.Melee);
  }
 });
+
+test('item lines the OctoWoW database publishes for dodge, parry, mana per 5 seconds and all resistances reach the sheet',()=>{
+ assert.deepEqual(passiveItemStats({effects:['Equip: Increases your chance to dodge an attack by 1%.']}),{dodge:1});
+ assert.deepEqual(passiveItemStats({effects:['Equip: Increases your chance to parry an attack by 2%.']}),{parry:2});
+ assert.deepEqual(passiveItemStats({effects:['Equip: Restores 6 mana per 5 sec.']}),{mp5:6});
+ assert.deepEqual(passiveItemStats({effects:['Equip: +10 All Resistances.']}),{arcaneRes:10,fireRes:10,natureRes:10,frostRes:10,shadowRes:10});
+ assert.deepEqual(passiveItemStats({effects:['Equip: Restores 12 mana per 5 sec when in combat.']}),{});   // conditional lines stay out of the permanent sheet
+ const b=newBuild('paladin');const gear={chest:{id:9,name:'Test',classs:4,subclass:4,attributes:{},effects:['Equip: Increases your chance to dodge an attack by 2%.','Equip: Restores 8 mana per 5 sec.']}};
+ const before=rows(b),after=rows(b,gear);
+ near(parseFloat(after.Defence['Dodge %'])-parseFloat(before.Defence['Dodge %']),2,0.06);
+ assert.equal(after.Defence['Mana / 5s'],'8');
+});
+function near(a,b,eps){assert.ok(Math.abs(a-b)<=eps,`expected ${b}, got ${a}`);}

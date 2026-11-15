@@ -72,7 +72,7 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
   const dodgeAgi = { warrior: .05, paladin: .0506, hunter: .0378, rogue: .069, priest: .05, shaman: .0508, mage: .0514, warlock: .05 };
   const baseCrit = { warrior: 0, paladin: .7, hunter: 0, rogue: 0, priest: 3, shaman: 1.7, mage: 3.2, warlock: 2 };
   for (const cls of Object.keys(apFlat)) {
-    const b = newBuild(cls); const r = rows(b); const str = +r['Base Stats'].Strength, agi = +r['Base Stats'].Agility;
+    const b = newBuild(cls); b.controls.buffIds = []; const r = rows(b); const str = +r['Base Stats'].Strength, agi = +r['Base Stats'].Agility;
     assert.equal(+r.Melee.Power, Math.round(apFlat[cls] + str * apPerStr[cls] + agi * apPerAgi[cls]), `${cls} attack power`);
     const stance = cls === 'warrior' && b.classOptions.stance === 'Berserker' ? 3 : 0;
     near(pct(r.Melee['Crit Chance'].split('|')[0]), baseCrit[cls] + agi * critAgi[cls] + stance, 0.011, `${cls} crit`);
@@ -82,9 +82,31 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
 
 // ---- Known differences. Each needs OctoWoW evidence before either side is changed. ----
 
-test('Night Elf racial: Combat Gum shows +1% haste and no dodge bonus; the planner shows +1% dodge and no haste', { todo: 'unresolved: needs the OctoWoW Night Elf racial text' }, () => {
+test('racial passives match the OctoWoW database (read 2026-11-15): Night Elf Quickness is +1% dodge (spell 20582), not haste', () => {
   const b = newBuild('rogue'); b.race = 'Night Elf'; b.controls.buffIds = ['skill-book']; const r = rows(b);
-  assert.equal(r.Melee.Haste, '1.0%'); assert.equal(r.Defence['Dodge %'], '9.3%');
+  assert.equal(r.Defence['Dodge %'], '10.3%');   // 135 agility / 14.5 = 9.3, plus the 1% racial
+  assert.equal(r.Melee.Haste, '0.0%');           // Combat Gum shows +1% haste here instead; the database spell says dodge
+});
+
+test('every racial passive the planner applies is stated by an OctoWoW database spell or race page', () => {
+  // [race, spell or page, expected racialPassives content]
+  const facts = {
+    Human: { 'Sword Specialization 20597 and Mace Specialization 20864: +5 skill': { meleeSkills: { 4: 5, 5: 5, 7: 5, 8: 5 } } },
+    Orc: { 'Axe Specialization 20574: +5 Axes and Two-Handed Axes': { meleeSkills: { 0: 5, 1: 5 } } },
+    Dwarf: { 'Gun Specialization 20595 (+5), Frost Resistance 20596 (+10)': { frostResistance: 10, rangedSkills: { 3: 5 } } },
+    'Night Elf': { 'Quickness 20582 (+1% dodge), Nature Resistance 20583 (+10)': { natureResistance: 10, dodge: 1 } },
+    Undead: { 'Shadow Resistance 20579: +10': { shadowResistance: 10 } },
+    Tauren: { 'Endurance 20550 (+5% health), Nature Resistance 20551 (+10), Cultivation 20552 (Herbalism +15)': { natureResistance: 10, healthMultiplier: 1.05, skillBonuses: { Herbalism: 15 } } },
+    Gnome: { 'Expansive Mind 20591 (+5% Intellect), Arcane Resistance 20592 (+10), Engineering Specialization 20593 (+15)': { intellectMultiplier: 1.05, arcaneResistance: 10, skillBonuses: { Engineering: 15 } } },
+    Troll: { 'Bow Specialization 26290 (+5), Throwing Specialization 20558 (+5)': { rangedSkills: { 2: 5, 16: 5 } } },
+    Goblin: { 'Goblin page: +3 Dagger, One-Handed Maces, Two-Handed Maces; +10 Mining and Jewelcrafting': { meleeSkills: { 4: 3, 5: 3, 15: 3 }, skillBonuses: { Mining: 10, Jewelcrafting: 10 } } },
+    'High Elf': { 'High Elf page: +2% Agility, +3 Bow skill, +10 Enchanting': { agilityMultiplier: 1.02, rangedSkills: { 2: 3 }, skillBonuses: { Enchanting: 10 } } },
+  };
+  for (const [race, entries] of Object.entries(facts)) for (const [source, expected] of Object.entries(entries)) {
+    const got = racialPassives(race);
+    // Human also has The Human Spirit (+5% Spirit, spell 20598); the Vanilla base table already includes it (see the todo below).
+    for (const [key, value] of Object.entries(expected)) assert.deepEqual(got[key], value, `${race}: ${source}`);
+  }
 });
 
 test('Goblin and High Elf base stats: Combat Gum shows numbers, the planner shows NO DATA until verified', { todo: 'Combat Gum: Goblin Rogue 77/132/75, High Elf Rogue 77/135/73; no verified OctoWoW table' }, () => {
@@ -93,4 +115,8 @@ test('Goblin and High Elf base stats: Combat Gum shows numbers, the planner show
 
 test('class base stats: the Vanilla (cmangos) table differs from WoWSims Turtle for Mage and Priest health and mana', { todo: 'Mage health 1360 vs 1370, mana 1273 vs 1213; Priest health 1387 vs 1397, mana 1436 vs 1376; several spirit and intellect values differ by 2 to 6' }, () => {
   const b = newBuild('mage'); b.race = 'Human'; assert.equal(rows(b).Defence.Health, '1370');
+});
+
+test('Gnome Intellect: the Vanilla base table appears to include Expansive Mind already, so the planner may apply the +5% twice', { todo: 'Gnome Mage sheet shows 139; WoWSims Turtle raw 128 x 1.05 = 134. The cmangos table values equal raw x 1.05 for Human Spirit (all six classes) and most Gnome Intellect values. Needs one in-game or Combat Gum caster sheet to settle.' }, () => {
+  const b = newBuild('mage'); b.race = 'Gnome'; assert.equal(rows(b)['Base Stats'].Intellect, '134');
 });
