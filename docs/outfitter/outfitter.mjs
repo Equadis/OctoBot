@@ -347,7 +347,9 @@ function getJson(url){return requestJson(url);}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 
 // ---- Appearance (skin, face, hair, facial hair / markings / piercings ...) and animation
-const ANIMATION_KEY='octobot-outfitter-animation';
+// The chosen animation lasts for this visit only (it survives rebuilding the model, not a page reload). Older versions saved it; clear that.
+let chosenAnimation='';
+try{localStorage.removeItem('octobot-outfitter-animation');}catch{}
 const customizationCache=new Map();let lookOptions=[],animationPaused=false;
 const ICON_PAUSE='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="6" y="4" width="4.2" height="16" rx="1" fill="currentColor"/><rect x="13.8" y="4" width="4.2" height="16" rx="1" fill="currentColor"/></svg>';
 const ICON_PLAY='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
@@ -454,7 +456,7 @@ function setupAnimation(){
  const list=[...names].sort((a,b)=>a==='Stand'?-1:b==='Stand'?1:a.localeCompare(b));
  select.replaceChildren(...list.map(name=>new Option(name,name)));
  select.disabled=!list.length;pause.disabled=!list.length;$('anim-prev').disabled=!list.length;$('anim-next').disabled=!list.length;$('anim-scrub').disabled=!list.length;showPlayState(false);
- let saved='';try{saved=localStorage.getItem(ANIMATION_KEY)||'';}catch{}
+ const saved=chosenAnimation;
  const choice=list.includes(saved)?saved:list.includes('Stand')?'Stand':list[0];
  if(!choice)return;
  select.value=choice;try{actor.setAnimation(choice,true);}catch{}
@@ -630,7 +632,7 @@ async function start(){
  $('screenshot').onclick=takePhoto;
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
  $('look-reset').onclick=()=>changeLook({});
- $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);try{localStorage.setItem(ANIMATION_KEY,name);}catch{}};
+ $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);chosenAnimation=name;};
  $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;const next=!animationPaused;try{actor.setAnimPaused(next);}catch{}showPlayState(next);};
  $('anim-prev').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?-5:-1);
  $('anim-next').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?5:1);
