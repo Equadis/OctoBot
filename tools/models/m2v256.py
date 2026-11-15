@@ -1,22 +1,27 @@
 """Reader for the old single-file character model format (M2, magic MD20, version 256) used by the OctoWoW client.
 
-Status (see README.md, step 2): geometry, the skin view, submeshes, texture units and texture definitions are read and checked
-against internal consistency rules (every index in range, every array inside the file, arrays that should tile do tile).
-Bones, animation sequences and their tracks are located but NOT yet decoded. `check()` lists what is verified.
+Status (see README.md, step 2): geometry, the skin view, submeshes, texture units, texture definitions, animation sequences, bones with
+their animation tracks, and attachments are read and checked against internal consistency rules (every index in range, every array inside
+the file, arrays that should tile do tile). Colours, transparency, UV animations, events, lights, cameras, particle and ribbon emitters,
+and the external .anim files are located but NOT yet decoded. `check()` lists what is verified.
 
     python tools/models/m2v256.py <model.m2>      # prints a summary and runs the consistency checks
 """
 import struct
 import sys
 
-# (name, element size in bytes, verified). Order follows the header. Sizes marked unverified are best guesses from the format notes.
+# (name, element size in bytes, verified). Order follows the header. A size of 0 means "not decoded yet".
 HEADER_ARRAYS = [
-    ('global_sequences', 4, True), ('sequences', 0, False), ('animation_lookup', 2, True), ('playable_animation_lookup', 4, True),
-    ('bones', 0, False), ('key_bone_lookup', 2, True), ('vertices', 48, True), ('views', 44, True),
+    ('global_sequences', 4, True), ('sequences', 68, True), ('animation_lookup', 2, True), ('playable_animation_lookup', 4, True),
+    ('bones', 108, True), ('key_bone_lookup', 2, True), ('vertices', 48, True), ('views', 44, True),
     ('colors', 0, False), ('textures', 16, True), ('transparency', 0, False), ('uv_animations', 0, False), ('texture_replace', 2, False),
     ('render_flags', 4, False), ('bone_lookup', 2, False), ('texture_lookup', 2, False), ('texture_unit_lookup', 2, False),
     ('transparency_lookup', 2, False), ('uv_anim_lookup', 2, False),
 ]
+# After the arrays above come the bounding box (6 floats + radius) and the collision box (6 floats + radius), then these pairs.
+TRAILING_ARRAYS = [('bounding_triangles', 2), ('bounding_vertices', 12), ('bounding_normals', 12), ('attachments', 48), ('attachment_lookup', 2),
+                   ('events', 0), ('lights', 0), ('cameras', 0), ('camera_lookup', 2), ('ribbon_emitters', 0), ('particle_emitters', 0)]
+TRAILING_START = 0xEC
 FIRST_ARRAY_FIELD = 0x14          # 0x08 name (count, offset), 0x10 global flags, then (count, offset) pairs
 TEXTURE_TYPES = {0: 'file', 1: 'body skin', 2: 'object skin (cape)', 6: 'hair', 8: 'fur', 11: 'creature skin 1', 12: 'creature skin 2', 13: 'creature skin 3'}
 
@@ -42,6 +47,10 @@ class M2:
             self.arrays[name] = {'count': self._u32(pos), 'offset': self._u32(pos + 4), 'size': size, 'verified': verified}
             pos += 8
         self.header_end = pos
+        self.bounds = struct.unpack_from('<7f', data, 0xAC)      # min xyz, max xyz, radius
+        self.trailing = {}
+        for k, (name, size) in enumerate(TRAILING_ARRAYS):
+            self.trailing[name] = {'count': self._u32(TRAILING_START + k * 8), 'offset': self._u32(TRAILING_START + k * 8 + 4), 'size': size}
 
     def _u32(self, o):
         return struct.unpack_from('<I', self.data, o)[0]
@@ -94,6 +103,55 @@ class M2:
                         'file': self.data[o:o + n].rstrip(b'\0').decode('latin1') if n > 1 else ''})
         return out
 
+    # ---- animation ----
+    def global_sequences(self):
+        a = self.array('global_sequences')
+        return list(struct.unpack_from(f"<{a['count']}I", self.data, a['offset']))
+
+    def sequences(self):
+        """Animations. start and end are positions on one shared timeline in milliseconds; length = end - start."""
+        a = self.array('sequences')
+        out = []
+        for k in range(a['count']):
+            w = struct.unpack_from('<HHIIfIhHIII3f3ffhH', self.data, a['offset'] + k * 68)
+            out.append({'index': k, 'id': w[0], 'sub_id': w[1], 'start': w[2], 'end': w[3], 'length': w[3] - w[2], 'move_speed': w[4], 'flags': w[5],
+                        'probability': w[6], 'bounds_min': w[11:14], 'bounds_max': w[14:17], 'radius': w[17], 'next': w[18], 'alias': w[19]})
+        return out
+
+    def _track(self, offset, kind):
+        """One animation track in the old layout: a single flat list of keyframes plus per-sequence (first, last + 1) key ranges."""
+        interp, gseq, n_ranges, o_ranges, n_ts, o_ts, n_vals, o_vals = struct.unpack_from('<HhIIIIII', self.data, offset)
+        ranges = [struct.unpack_from('<2I', self.data, o_ranges + 8 * k) for k in range(n_ranges)]
+        times = list(struct.unpack_from(f'<{n_ts}I', self.data, o_ts)) if n_ts else []
+        if kind == 'quat':       # four float32 per key (x, y, z, w); this version does not compress them
+            raw = struct.unpack_from(f'<{n_vals * 4}f', self.data, o_vals) if n_vals else ()
+            values = [tuple(raw[k * 4:k * 4 + 4]) for k in range(n_vals)]
+        else:                    # vec3 of floats
+            raw = struct.unpack_from(f'<{n_vals * 3}f', self.data, o_vals) if n_vals else ()
+            values = [raw[k * 3:k * 3 + 3] for k in range(n_vals)]
+        return {'interpolation': interp, 'global_sequence': gseq, 'ranges': ranges, 'times': times, 'values': values,
+                'offsets': {'ranges': (o_ranges, n_ranges * 8), 'times': (o_ts, n_ts * 4), 'values': (o_vals, n_vals * (16 if kind == 'quat' else 12))}}
+
+    def bones(self):
+        a = self.array('bones')
+        out = []
+        for k in range(a['count']):
+            base = a['offset'] + k * 108
+            key, flags, parent, submesh = struct.unpack_from('<iIhH', self.data, base)
+            out.append({'index': k, 'key_bone': key, 'flags': flags, 'parent': parent, 'submesh': submesh,
+                        'translation': self._track(base + 12, 'vec3'), 'rotation': self._track(base + 40, 'quat'),
+                        'scale': self._track(base + 68, 'vec3'), 'pivot': struct.unpack_from('<3f', self.data, base + 96)})
+        return out
+
+    def attachments(self):
+        """Points on the skeleton where items attach: id, bone, position (48 bytes each; the visibility track is not decoded)."""
+        a = self.trailing['attachments']
+        out = []
+        for k in range(a['count']):
+            ident, bone, _, x, y, z = struct.unpack_from('<IHH3f', self.data, a['offset'] + k * 48)
+            out.append({'id': ident, 'bone': bone, 'position': (x, y, z)})
+        return out
+
     # ---- consistency checks ----
     def check(self):
         """Returns (passed, failed) lists of human-readable rule names."""
@@ -118,10 +176,31 @@ class M2:
         rule('submeshes: triangle ranges inside the triangle list', all(s['index_start'] + s['index_count'] <= len(view['triangles']) for s in subs))
         rule('submeshes: triangle ranges tile the triangle list in order',
              sum(s['index_count'] for s in subs) == len(view['triangles']) and all(a['index_start'] + a['index_count'] == b['index_start'] for a, b in zip(subs, subs[1:])))
-        textures = self.textures()
-        lookup = self.array('texture_lookup')
         rule('texture units: submesh index valid', all(t['submesh'] < len(subs) for t in view['texture_units']))
-        rule('textures: file names are .blp paths', all((not t['file']) or t['file'].lower().endswith('.blp') for t in textures))
+        rule('textures: file names are .blp paths', all((not t['file']) or t['file'].lower().endswith('.blp') for t in self.textures()))
+        seqs = self.sequences()
+        rule('sequences: end not before start', all(s['end'] >= s['start'] for s in seqs))
+        rule('sequences: the shared timeline never goes backwards', all(a['start'] <= b['start'] for a, b in zip(seqs, seqs[1:])))
+        bone_list = self.bones()
+        rule('bones: parents exist and come earlier', all(-1 <= b['parent'] < b['index'] for b in bone_list))
+        rule('bones: key bone ids are -1 or small', all(-1 <= b['key_bone'] < 200 for b in bone_list))
+        values_match = ranges_inside = tiling = True
+        for b in bone_list:
+            for name in ('translation', 'rotation', 'scale'):
+                t = b[name]
+                values_match &= len(t['times']) == len(t['values'])
+                ranges_inside &= all(0 <= lo <= hi <= len(t['times']) for lo, hi in t['ranges'])
+                if t['times']:
+                    (ro, rn), (to, tn), (vo, vn) = t['offsets']['ranges'], t['offsets']['times'], t['offsets']['values']
+                    # Tracks driven by a global sequence (looping effects such as breathing) have no per-animation ranges.
+                    tiling &= (0 <= to - (ro + rn) < 16 if t['ranges'] else t['global_sequence'] >= 0) and 0 <= vo - (to + tn) < 16     # each array starts on a 16-byte boundary
+        rule('tracks: one value per timestamp', values_match)
+        rule('tracks: every key range lies inside the key list', ranges_inside)
+        rule('tracks: ranges then timestamps then values, in that order, with only alignment padding between (the old layout)', tiling)
+        rule('tracks: timestamps never go backwards inside a range',
+             all(t['times'][i] <= t['times'][i + 1] for b in bone_list for t in (b['translation'], b['rotation']) if t['times']
+                 for lo, hi in t['ranges'] for i in range(lo, hi - 1)))
+        rule('attachments: bones exist', all(a['bone'] < len(bone_list) for a in self.attachments()))
         return ok, bad
 
 
@@ -134,6 +213,9 @@ def main(path):
     print(f"  view: {len(view['indices'])} indices, {len(view['triangles']) // 3} triangles, {len(view['submeshes'])} submeshes, {len(view['texture_units'])} texture units")
     for t in model.textures():
         print(f"  texture {t['type_name']}: {t['file'] or '(set by the game from the character options)'}")
+    seqs, bone_list = model.sequences(), model.bones()
+    keys = sum(len(b[n]['times']) for b in bone_list for n in ('translation', 'rotation', 'scale'))
+    print(f"  {len(seqs)} animations, {len(bone_list)} bones, {keys} keyframes, {len(model.attachments())} attachments, {len(model.global_sequences())} global sequences")
     ok, bad = model.check()
     print(f'  checks: {len(ok)} passed, {len(bad)} failed')
     for name in bad:

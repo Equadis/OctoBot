@@ -28,9 +28,9 @@ The client's models are the old single-file form: version 256 with embedded view
 ## Plan
 
 1. **Tools (done).** `octo_mpq.py` finds and extracts named files from the client archives.
-2. **M2 reader (`m2v256.py`, in progress).**
-   * Done and checked: the header map, vertices (7,419 for the Goblin), the embedded skin view (indices, triangles, 45 submeshes, texture units), and texture definitions. 29 consistency rules pass for Goblin, Blood Elf and Human; a vertex plot of the Goblin and Blood Elf shows recognisable bodies.
-   * Still to do: bones and their animation tracks, sequences (161 for the Goblin, with keyframe data after them), colours, transparency, UV animations, attachments, events, and the external `.anim` files.
+2. **M2 reader (`m2v256.py`, geometry and animation done).**
+   * Done and checked: the header map, vertices, the embedded skin view, texture definitions, sequences (161 for the Goblin), bones with translation, rotation and scale tracks (rotations are plain float quaternions), and attachments. 38 consistency rules pass for Goblin male and female, Blood Elf male and female, and Human male. Skinning the vertices with the Stand animation gives a recognisable standing body for both Goblin and Blood Elf, so the animation decode is validated.
+   * Still to do: colours, transparency, UV animations, events, lights, cameras, emitters and the external `.anim` files (if any are used).
 3. **Writer.** Emit the modern form: an `MD21` M2 (version 274) with `SFID`, `TXID` and `SKID` chunks, a `.skin`, and a `.skel` with bones, sequences and attachments.
 4. **Textures.** Decode BLP and write WebP (with the skin, hair and face variants).
 5. **Proof of concept.** Goblin male, default skin, rendered in the Zam viewer from a local asset folder.
