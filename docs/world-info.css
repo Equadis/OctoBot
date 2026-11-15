@@ -130,7 +130,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .dmf-detail{margin-top:18px;display:flex;flex-direction:column;gap:7px}.dmf-detail span{font-size:13px;color:#d7dfeb}.dmf-detail span[hidden]{display:none}.dmf-detail small{font-size:11px;color:#a5b0bf;line-height:1.55}
 
 /* Darkmoon Faire is only as big as what it shows; Edge of Madness takes the rest of the row */
-.world-grid.two.bottom-grid{grid-template-columns:fit-content(560px) minmax(0,1fr);align-items:start}
+.world-grid.two.bottom-grid{grid-template-columns:fit-content(480px) minmax(0,1fr);align-items:start}
 @media(max-width:780px){.world-grid.two.bottom-grid{grid-template-columns:minmax(0,1fr)}}
 .heading-actions{display:flex;align-items:center;gap:8px;flex:none}
 .panel-arrow{width:28px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:#182333;border:1px solid #39465a;border-radius:4px;color:#a0b1c8;cursor:pointer}
@@ -182,8 +182,8 @@ small:empty,.evidence:empty{display:none}
 .conf-high{color:#6fe08f}
 
 /* Darkmoon Faire banner hangs from the top-right of the panel; the state tag sits to its left */
-#dmf-panel{overflow:hidden;padding-right:130px;min-height:138px}
-.dmf-banner{position:absolute;top:0;right:16px;width:100px;height:auto;pointer-events:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));z-index:2}
+#dmf-panel{overflow:hidden;padding-right:88px}
+.dmf-banner{position:absolute;top:0;right:16px;width:60px;height:auto;pointer-events:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));z-index:2}
 #dmf-panel .state-tag{display:none}
 
 #dmf-panel{padding-bottom:20px}
