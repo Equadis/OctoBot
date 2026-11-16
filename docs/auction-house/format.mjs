@@ -70,24 +70,31 @@ export function bidAmount(current,start,stackBuyout,unitBuyout){
 }
 
 
-/** The collector pauses for this long after a scan completes before the next one starts. */
-export const IDLE_SECONDS=300;
-export const clock=seconds=>Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
-/** Text and colour for the scan-status card: In Progress with a running timer, Idle with the 5:00 countdown, or plain Idle. */
-export function scanStatus({completedAt=null,scanning=false,startedAt=null}={},now=Date.now()){
-  if(scanning){
-    const started=Date.parse(startedAt||'');
-    if(!Number.isFinite(started))return {text:'In Progress',className:'ah-time-green'};
-    const elapsed=Math.max(0,Math.floor((now-started)/1000));
-    return {text:'In Progress '+Math.floor(elapsed/60)+'m:'+String(elapsed%60).padStart(2,'0')+'s',className:'ah-time-green'};
-  }
+/** Duration since the most recent verified complete Auction House scan. */
+export function scanAge(completedAt,now=Date.now()){
   const done=Date.parse(completedAt||'');
-  if(Number.isFinite(done)){
-    const left=IDLE_SECONDS-Math.floor((now-done)/1000);
-    if(Math.max(0,now-done)>=24*3600000)return {text:'Idle',className:'ah-time-red'};
-   if(left>0&&left<=IDLE_SECONDS)return {text:'Idle - '+clock(left),className:'ah-time-yellow'};
+  if(!Number.isFinite(done))return null;
+  const elapsed=Math.max(0,Math.floor((now-done)/1000));
+  if(elapsed<60)return 'just now';
+  const minutes=Math.floor(elapsed/60);
+  if(minutes<60)return minutes+'m ago';
+  const hours=Math.floor(minutes/60),remainingMinutes=minutes%60;
+  if(hours<24)return hours+'h'+(remainingMinutes?' '+remainingMinutes+'m':'')+' ago';
+  const days=Math.floor(hours/24),remainingHours=hours%24;
+  return days+'d'+(remainingHours?' '+remainingHours+'h':'')+' ago';
+}
+/** Display an active upload or the time since the latest verified complete scan.
+ * A stale collector is not evidence of an actively progressing scan. */
+export function scanStatus({completedAt=null,scanning=false,startedAt=null,collectorStatus=null}={},now=Date.now()){
+  if(scanning&&collectorStatus!=='STALE'&&collectorStatus!=='OFFLINE'){
+    const started=Date.parse(startedAt||'');
+    if(!Number.isFinite(started))return {text:'Scanning',className:'ah-time-green'};
+    const elapsed=Math.max(0,Math.floor((now-started)/1000));
+    return {text:'Scanning · '+Math.floor(elapsed/60)+'m '+String(elapsed%60).padStart(2,'0')+'s',className:'ah-time-green'};
   }
-  return {text:'Idle',className:'ah-time-yellow'};
+  const age=scanAge(completedAt,now);
+  if(age===null)return {text:'No completed scan',className:'ah-time-yellow'};
+  return {text:'Last scan · '+age,className:lastScanClass(completedAt,now)==='ah-time-red'?'ah-time-red':'ah-time-yellow'};
 }
 /** Last complete scan: green under 1 hour, yellow from 1 to under 24 hours, red thereafter. */
 export function lastScanClass(completedAt,now=Date.now()){
