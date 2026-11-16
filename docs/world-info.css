@@ -228,7 +228,8 @@ small:empty,.evidence:empty{display:none}
 .sound-note:empty{display:none}
 .sound-fine{margin:10px 0 0;font-size:11px;color:#8898ac;line-height:1.5}
 
-/* Loading states: trailing dots appear one by one (. .. ...) without changing the element's text */
-.dots::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:loading-dots 1.2s steps(1,end) infinite}
-@keyframes loading-dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
-@media (prefers-reduced-motion:reduce){.dots::after{animation:none;content:"..."}}
+/* Loading states: trailing dots appear one by one (nothing, . .. ...) without changing the element's text.
+   The three dots are always there but clipped to a width that grows in four steps, which animates reliably everywhere. */
+.dots::after{content:"...";display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:0;animation:loading-dots 1.2s steps(4,end) infinite}
+@keyframes loading-dots{to{width:1.13em}}
+@media (prefers-reduced-motion:reduce){.dots::after{animation:none;width:auto}}
