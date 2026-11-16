@@ -2,7 +2,7 @@
   "schema": 1,
   "endpoint": "play.octowow.st:3724",
   "sample": {
-    "timestamp": "2026-11-15T21:27:37Z",
+    "timestamp": "2026-11-16T01:16:48Z",
     "website": "available",
     "realms": {
       "cthun": "online",
@@ -11,7 +11,7 @@
     },
     "tcp": "reachable",
     "auth": "responsive",
-    "latency_ms": 642,
+    "latency_ms": 560,
     "auth_result_code": 0,
     "source_error": null,
     "auth_reason": "Valid logon challenge response (result 0)"
