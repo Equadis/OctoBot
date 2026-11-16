@@ -62,6 +62,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  let pendingQuery:Pending<AuctionResult>|null=null;
  let pendingHello:Pending<bigint>|null=null;
  let readyTimer:ReturnType<typeof setTimeout>|null=null;
+ let auctioneerGuid:bigint|null=null;
  let succeeded=false,finished=false,started=false,scanId="";
  let lastQuery=0;
  let resolveSession!:()=>void,rejectSession!:(error:Error)=>void;
@@ -149,6 +150,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
     onCreatureName:(entry,name)=>{
      if(name!==target||pendingHello||finished)return;
      const guid=knownGuids.get(entry);if(!guid)return;
+     auctioneerGuid=guid;
      log.info("Verified Auctioneer Finch nearby (GUID from live object update); requesting AH service");
      const timer=setTimeout(()=>end(new Error("Auction hello timed out; NPC inaccessible or incompatible")),queryTimeoutMs);
      pendingHello={timer,resolve:()=>{},reject:()=>{}};
@@ -156,9 +158,10 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
     },
     onAuctionHello:hello=>{
      if(!pendingHello||finished)return;
-     const targetGuid=[...knownGuids.values()].find(g=>g===hello.guid);
-     if(!targetGuid||hello.houseId===0){end(new Error("Auction hello mismatch or unavailable service"));return;}
+     const targetGuid=auctioneerGuid;
+     if(!targetGuid||targetGuid!==hello.guid||hello.houseId===0){end(new Error("Auction hello mismatch or unavailable service"));return;}
      clearTimeout(pendingHello.timer);pendingHello=null;
+     if(readyTimer){clearTimeout(readyTimer);readyTimer=null;}
      void run(hello.guid).then(()=>end(),error=>end(error instanceof Error?error:new Error(String(error))));
     },
     onAuctionList:result=>{
