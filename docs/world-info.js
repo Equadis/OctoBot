@@ -45,6 +45,8 @@
   };
 
   function object(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : null; }
+  // The tracker names an unaffiliated group "PUG"; show it in proper case.
+  function groupLabel(name) { return String(name).trim().toUpperCase() === 'PUG' ? 'Pug' : name; }
   function first(...values) { return values.find(v => v !== undefined && v !== null) ?? null; }
   function time(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -235,7 +237,7 @@
       line.className = 'timer-row';
       const title = document.createElement('span');
       const guild = session.guild && session.guild.label ? session.guild.label : null;
-      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2013 ' + guild : '');
+      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2013 ' + groupLabel(guild) : '');
       title.title = session.confidence === 'tentative'
         ? 'Separated from another raid by arrival timing only. /who has no instance IDs, so this grouping is an estimate.'
         : guild === 'Unknown' ? 'Not enough roster information to name a guild or PUG.' : 'Grouped from the roster by the Bufftracker; not verified instance membership.';
@@ -303,7 +305,7 @@
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2013 ' + session.guild.name : '');
+        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2013 ' + groupLabel(session.guild.name) : '');
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
