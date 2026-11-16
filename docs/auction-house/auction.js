@@ -1,7 +1,7 @@
 /* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {itemTooltip} from './item-presentation.mjs?v=1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,dateTime,count} from './format.mjs';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -261,7 +261,11 @@ async function refreshSummary(first){
     $('last-scan').textContent=dateTime(s.completed_at);
     renderScan();
     $('auction-count').textContent=count(s.auction_count);
-    $('item-count').textContent=count(s.item_count);
+    const itemCount=$('item-count'),coverage=indexCoverage(s.items_with_metadata,s.item_count);
+    itemCount.textContent=count(s.item_count);
+    itemCount.className=indexedClass(s.items_with_metadata,s.item_count)||'';
+    itemCount.title=coverage===null?'Catalogue coverage unavailable':
+      'Catalogue metadata: '+count(s.items_with_metadata)+' of '+count(s.item_count)+' item variants ('+(coverage*100).toFixed(1)+'%)';
     // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
     note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
     if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';$('sort').value='name';}
