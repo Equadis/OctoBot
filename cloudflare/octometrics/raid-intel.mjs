@@ -114,14 +114,71 @@ export function estimateClear({ active, startedAt, now, learned }) {
  * Last confirmed drops by head and faction from stored world_buff_drop events (newest first).
  * Events whose yell is missing or unrecognised are reported with head null, never guessed.
  */
-export function summariseDrops(events) {
-  const byHead = { onyxia: { alliance: null, horde: null }, nefarian: { alliance: null, horde: null }, unknown: { alliance: null, horde: null } };
+/**
+ * ---- Drop confirmation: one contract for the Worker and the website ----------------------------------------------------------
+ * A stored world_buff_drop is a CONFIRMED drop only when all of this holds:
+ *   - source is exactly "npc_yell" (a capital announcement heard by a listener; anything else is a claim, not evidence),
+ *   - the faction is alliance or horde and the buff is one the collector knows (Rallying Cry of the Dragonslayer, Warchief's Blessing),
+ *   - the observed time is a real instant that is not in the future beyond a little clock skew.
+ * The website applies the same test (docs/world-info.js), so neither side silently discards valid events or accepts unverified ones.
+ */
+export const RALLY_BUFF = 'Rallying Cry of the Dragonslayer';
+export const WARCHIEF_BUFF = "Warchief's Blessing";
+export const KNOWN_BUFFS = Object.freeze([RALLY_BUFF, WARCHIEF_BUFF]);
+export const MAX_CLOCK_SKEW_MS = 5 * 60_000;
+export const DUPLICATE_WINDOW_MS = 60_000;
+
+/** Why a stored drop is not confirmed, or null when it is. */
+export function unconfirmedReason(event, now = Date.now()) {
+  const payload = (event && event.payload) || {};
+  if (payload.source !== 'npc_yell') return 'source_not_npc_yell';
+  if (payload.faction !== 'alliance' && payload.faction !== 'horde') return 'unknown_faction';
+  if (!KNOWN_BUFFS.includes(payload.buff)) return 'unknown_buff';
+  const at = Date.parse(event.observed_at);
+  if (!Number.isFinite(at)) return 'invalid_time';
+  if (at > now + MAX_CLOCK_SKEW_MS) return 'time_in_future';
+  return null;
+}
+export const isConfirmedDrop = (event, now = Date.now()) => unconfirmedReason(event, now) === null;
+
+/** The head an announcement came from: the collector's own field when it has one, else the yell text. Never invented. */
+export function headOf(payload) {
+  if (payload && (payload.head === 'onyxia' || payload.head === 'nefarian')) return payload.head;
+  return headFromYell(payload && payload.text);
+}
+
+/** The newest CONFIRMED drop per key, chosen by observed time, so an older event that arrives late never replaces a newer one. */
+export function newestConfirmed(events, keyOf, now = Date.now()) {
+  const best = new Map();
   for (const event of events) {
-    const payload = event.payload || {};
-    const faction = payload.faction === 'alliance' || payload.faction === 'horde' ? payload.faction : null;
-    if (!faction) continue;
-    const head = headFromYell(payload.text) ?? 'unknown';
-    if (!byHead[head][faction]) byHead[head][faction] = { at: event.observed_at, source: payload.source || 'npc_yell', confirmed: true };
+    if (!isConfirmedDrop(event, now)) continue;
+    const key = keyOf(event);
+    const held = best.get(key);
+    if (!held || Date.parse(event.observed_at) > Date.parse(held.observed_at)) best.set(key, event);
+  }
+  return best;
+}
+
+/**
+ * Two stored or incoming events are the same announcement when they share an eventId (a collector retry re-sends the same event), or when
+ * realm, faction, buff, head and listener role match and they were observed within a minute (a second copy of one yell, for example from a
+ * restarted collector). A new turn-in later, by the other faction, or by the other head, never is.
+ */
+export function isSameAnnouncement(a, b) {
+  const pa = a.payload || {}, pb = b.payload || {};
+  if (pa.eventId && pb.eventId && pa.eventId === pb.eventId) return true;
+  if (pa.faction !== pb.faction || pa.buff !== pb.buff || a.role !== b.role) return false;
+  if ((headOf(pa) || null) !== (headOf(pb) || null)) return false;
+  return Math.abs(Date.parse(a.observed_at) - Date.parse(b.observed_at)) <= DUPLICATE_WINDOW_MS;
+}
+
+/** Last confirmed drop per head and faction. Unrecognised text stays under "unknown": a head is never guessed. */
+export function summariseDrops(events, now = Date.now()) {
+  const byHead = { onyxia: { alliance: null, horde: null }, nefarian: { alliance: null, horde: null }, unknown: { alliance: null, horde: null } };
+  const best = newestConfirmed(events, event => `${headOf(event.payload) ?? 'unknown'}:${event.payload.faction}`, now);
+  for (const [key, event] of best) {
+    const [head, faction] = key.split(':');
+    byHead[head][faction] = { at: event.observed_at, source: 'npc_yell', confirmed: true, buff: event.payload.buff };
   }
   return byHead;
 }

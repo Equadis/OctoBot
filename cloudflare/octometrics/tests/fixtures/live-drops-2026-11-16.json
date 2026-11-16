@@ -1,0 +1,397 @@
+{
+ "captured": "2026-11-16T05:35Z",
+ "source": "Production D1 (metric_events, realm N'Zoth, type world_buff_drop), newest 30 rows, read-only. Announcement texts are the real OctoWoW capital announcements.",
+ "note": "No Alliance row exists after 02:37:08Z although an Alliance drop was reported at about 05:07Z; the Horde Rallying Cry at 05:06:21Z is stored.",
+ "rows": [
+  {
+   "id": 28390,
+   "observed_at": "2026-11-16T05:06:21.051Z",
+   "received_at": "2026-11-16T05:06:21.106Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 28372,
+   "observed_at": "2026-11-16T05:03:37.069Z",
+   "received_at": "2026-11-16T05:03:37.084Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  },
+  {
+   "id": 27492,
+   "observed_at": "2026-11-16T02:37:08.054Z",
+   "received_at": "2026-11-16T02:37:08.043Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 27204,
+   "observed_at": "2026-11-16T01:49:15.250Z",
+   "received_at": "2026-11-16T01:49:15.392Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "NEFARIAN IS SLAIN! People of Orgrimmar, bow down before the might of $n and $g his:her; allies for they have laid a blow against the Black Dragonflight that is sure to stir the Aspects from their malaise! This defeat shall surely be felt by the father of the Black Flight: Deathwing reels in pain and anguish this day!"
+   }
+  },
+  {
+   "id": 26816,
+   "observed_at": "2026-11-16T00:44:44.037Z",
+   "received_at": "2026-11-16T00:44:44.078Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 26489,
+   "observed_at": "2026-11-15T23:50:22.071Z",
+   "received_at": "2026-11-15T23:50:22.094Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 26260,
+   "observed_at": "2026-11-15T23:12:13.097Z",
+   "received_at": "2026-11-15T23:12:13.131Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "NEFARIAN IS SLAIN! People of Orgrimmar, bow down before the might of $n and $g his:her; allies for they have laid a blow against the Black Dragonflight that is sure to stir the Aspects from their malaise! This defeat shall surely be felt by the father of the Black Flight: Deathwing reels in pain and anguish this day!"
+   }
+  },
+  {
+   "id": 26188,
+   "observed_at": "2026-11-15T23:00:26.083Z",
+   "received_at": "2026-11-15T23:00:26.111Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 25926,
+   "observed_at": "2026-11-15T22:16:53.097Z",
+   "received_at": "2026-11-15T22:16:53.128Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 25567,
+   "observed_at": "2026-11-15T21:17:14.087Z",
+   "received_at": "2026-11-15T21:17:14.147Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 25533,
+   "observed_at": "2026-11-15T21:11:47.083Z",
+   "received_at": "2026-11-15T21:11:47.157Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "NEFARIAN IS SLAIN! People of Orgrimmar, bow down before the might of $n and $g his:her; allies for they have laid a blow against the Black Dragonflight that is sure to stir the Aspects from their malaise! This defeat shall surely be felt by the father of the Black Flight: Deathwing reels in pain and anguish this day!"
+   }
+  },
+  {
+   "id": 25275,
+   "observed_at": "2026-11-15T20:29:05.061Z",
+   "received_at": "2026-11-15T20:29:05.106Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 25248,
+   "observed_at": "2026-11-15T20:24:37.058Z",
+   "received_at": "2026-11-15T20:24:37.118Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  },
+  {
+   "id": 24991,
+   "observed_at": "2026-11-15T19:41:57.082Z",
+   "received_at": "2026-11-15T19:41:57.135Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 24812,
+   "observed_at": "2026-11-15T19:12:08.067Z",
+   "received_at": "2026-11-15T19:12:08.216Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 24557,
+   "observed_at": "2026-11-15T18:30:02.056Z",
+   "received_at": "2026-11-15T18:30:02.186Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "NEFARIAN IS SLAIN! People of Orgrimmar, bow down before the might of $n and $g his:her; allies for they have laid a blow against the Black Dragonflight that is sure to stir the Aspects from their malaise! This defeat shall surely be felt by the father of the Black Flight: Deathwing reels in pain and anguish this day!"
+   }
+  },
+  {
+   "id": 24377,
+   "observed_at": "2026-11-15T18:00:07.118Z",
+   "received_at": "2026-11-15T18:00:07.263Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 23766,
+   "observed_at": "2026-11-15T16:18:27.088Z",
+   "received_at": "2026-11-15T16:18:27.143Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  },
+  {
+   "id": 23657,
+   "observed_at": "2026-11-15T16:00:34.105Z",
+   "received_at": "2026-11-15T16:00:34.188Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 23542,
+   "observed_at": "2026-11-15T15:41:34.117Z",
+   "received_at": "2026-11-15T15:41:34.200Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 22611,
+   "observed_at": "2026-11-15T13:06:25.040Z",
+   "received_at": "2026-11-15T13:06:25.094Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 22487,
+   "observed_at": "2026-11-15T12:45:55.062Z",
+   "received_at": "2026-11-15T12:45:55.098Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  },
+  {
+   "id": 22381,
+   "observed_at": "2026-11-15T12:28:30.048Z",
+   "received_at": "2026-11-15T12:28:30.080Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 22305,
+   "observed_at": "2026-11-15T12:16:02.046Z",
+   "received_at": "2026-11-15T12:16:02.110Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 20459,
+   "observed_at": "2026-11-15T07:05:23.094Z",
+   "received_at": "2026-11-15T07:05:23.115Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 20364,
+   "observed_at": "2026-11-15T06:49:50.060Z",
+   "received_at": "2026-11-15T06:49:50.107Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Behold the might of the Alliance! The dread lady, Onyxia, hangs from the arches! Let the rallying cry of the dragon slayer lift your spirits!"
+   }
+  },
+  {
+   "id": 20172,
+   "observed_at": "2026-11-15T06:17:55.049Z",
+   "received_at": "2026-11-15T06:17:55.070Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  },
+  {
+   "id": 20147,
+   "observed_at": "2026-11-15T06:14:05.070Z",
+   "received_at": "2026-11-15T06:14:05.099Z",
+   "account": "OBPVESW",
+   "role": "sw",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "alliance",
+    "source": "npc_yell",
+    "text": "Citizens of the Alliance, the Lord of Blackrock is slain! Nefarian has been subdued by the combined might of $n and $g his:her; allies!"
+   }
+  },
+  {
+   "id": 19618,
+   "observed_at": "2026-11-15T04:45:53.052Z",
+   "received_at": "2026-11-15T04:45:53.062Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Rallying Cry of the Dragonslayer",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "People of the Horde, citizens of Orgrimmar, come, gather round and celebrate a hero of the Horde. On this day, $n, under the auspices of our glorious Warchief, laid a mortal blow against the Black Dragonflight. The brood mother, Onyxia, has been slain!"
+   }
+  },
+  {
+   "id": 19014,
+   "observed_at": "2026-11-15T03:05:34.054Z",
+   "received_at": "2026-11-15T03:05:34.093Z",
+   "account": "OBPVEORG",
+   "role": "org",
+   "payload": {
+    "buff": "Warchief's Blessing",
+    "faction": "horde",
+    "source": "npc_yell",
+    "text": "Honor your heroes! On this day, they have dealt a great blow against one of our most hated enemies! The false Warchief, Rend Blackhand, has fallen!"
+   }
+  }
+ ]
+}

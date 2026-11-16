@@ -60,10 +60,10 @@ test('estimated clears are never confirmed and degrade honestly',()=>{
 
 test('drops are attributed per head and faction; unrecognised yells stay unattributed',()=>{
   const drops=summariseDrops([
-    {observed_at:'2026-11-14T20:25:18Z',payload:{faction:'horde',text:'NEFARIAN IS SLAIN! People of Orgrimmar',source:'npc_yell'}},
-    {observed_at:'2026-11-14T17:28:50Z',payload:{faction:'alliance',text:'Onyxia, hangs from the arches',source:'npc_yell'}},
-    {observed_at:'2026-11-14T10:00:00Z',payload:{faction:'horde',text:'The brood mother, Onyxia, has been slain',source:'npc_yell'}},
-    {observed_at:'2026-11-14T09:00:00Z',payload:{faction:'alliance',source:'npc_yell'}},
+    {observed_at:'2026-11-14T20:25:18Z',payload:{faction:'horde',text:'NEFARIAN IS SLAIN! People of Orgrimmar',source:'npc_yell',buff:'Rallying Cry of the Dragonslayer'}},
+    {observed_at:'2026-11-14T17:28:50Z',payload:{faction:'alliance',text:'Onyxia, hangs from the arches',source:'npc_yell',buff:'Rallying Cry of the Dragonslayer'}},
+    {observed_at:'2026-11-14T10:00:00Z',payload:{faction:'horde',text:'The brood mother, Onyxia, has been slain',source:'npc_yell',buff:'Rallying Cry of the Dragonslayer'}},
+    {observed_at:'2026-11-14T09:00:00Z',payload:{faction:'alliance',source:'npc_yell',buff:'Rallying Cry of the Dragonslayer'}},
   ]);
   assert.equal(drops.nefarian.horde.at,'2026-11-14T20:25:18Z');
   assert.equal(drops.onyxia.alliance.at,'2026-11-14T17:28:50Z');

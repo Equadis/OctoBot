@@ -32,6 +32,12 @@
     heads: { onyxia: null, nefarian: null },
     buffs: { alliance: null, horde: null },
     dmf: null,
+    // What the monitoring itself is doing: the last fetch worked or not, whether the collector is reporting, and each capital's listener.
+    apiOk: null,
+    monitoring: null,
+    listeners: null,
+    // The Worker's clock minus this browser's at the last fetch, so elapsed times and "in the future" checks use the server's time.
+    clockOffsetMs: 0,
     era: null,
     calendarYear: 0,
     calendarMonth: 0,
@@ -113,14 +119,26 @@
       };
     }
     const buffs = {};
+    // Candidates: the per-faction last drop (both heads count) and any Rallying Cry entry. Only an announced city yell confirms a drop (the Worker
+    // applies the same rule), and the NEWEST candidate wins by its own timestamp, never by position in the response.
+    const candidates = [];
+    for (const faction of ['alliance', 'horde']) {
+      const drop = object(realm.lastDrops) && object(realm.lastDrops[faction]);
+      if (drop) candidates.push({ faction, raw: drop });
+    }
     for (const [name, raw] of Object.entries(object(realm.buffs) || {})) {
       if (!object(raw) || !/rallying cry/i.test(String(raw.buff || name))) continue;
       const faction = String(raw.faction || name.split(':').pop()).toLowerCase();
-      if (faction !== 'alliance' && faction !== 'horde') continue;
-      // Only an announced city yell confirms a drop.
-      if (raw.source === 'npc_yell') buffs[faction] = { confirmedLastDropAt: raw.at, ...(raw.head ? { lastHead: raw.head } : {}) };
+      if (faction === 'alliance' || faction === 'horde') candidates.push({ faction, raw });
     }
-    return { raids, buffs, heads: object(realm.heads) || null, observedAt: root.generated_at };
+    for (const { faction, raw } of candidates) {
+      if (raw.source !== 'npc_yell' || raw.confirmed === false) continue;
+      const at = time(raw.at);
+      if (!Number.isFinite(at) || at <= 0) continue;
+      const held = buffs[faction];
+      if (!held || at > held.atMs) buffs[faction] = { confirmedLastDropAt: raw.at, atMs: at, ...(raw.head ? { lastHead: raw.head } : {}) };
+    }
+    return { raids, buffs, heads: object(realm.heads) || null, listeners: object(realm.listeners) || null, monitoring: object(realm.monitoring) || null, observedAt: root.generated_at };
   }
 
   function findRaid(root, key) {
@@ -333,18 +351,36 @@
       head: first(factionData.lastHead, lastDrop && lastDrop.head)
     };
   }
+  // The Worker's time, so a small difference between this browser's clock and the server's never hides or invents a drop.
+  function serverNow() { return Date.now() + (Number.isFinite(state.clockOffsetMs) ? state.clockOffsetMs : 0); }
+  // Why the live feed cannot be trusted right now, or null. A last known drop is still shown, but labelled as last known.
+  function monitoringConcern(faction) {
+    if (state.apiOk === false) return { stale: true, note: 'OctoMetrics is unavailable \u2014 showing the last known drop, not live monitoring.' };
+    const m = object(state.monitoring);
+    if (m && m.collectorFresh === false) return { stale: true, note: 'The collector has stopped reporting \u2014 showing the last known drop; a newer one may be missing.' };
+    const l = object(state.listeners) && object(state.listeners[faction === 'alliance' ? 'sw' : 'org']);
+    const city = faction === 'alliance' ? 'Stormwind' : 'Orgrimmar';
+    if (l && l.status === 'offline') return { stale: true, note: 'The ' + city + ' listener is offline \u2014 a newer drop may be missing.' };
+    if (l && l.status === 'silent') return { stale: false, note: 'The ' + city + ' listener has heard nothing for a long time (possibly out of range) \u2014 a newer drop may be missing.' };
+    if (l && l.status === 'degraded') return { stale: false, note: 'Drops from ' + city + ' are not being delivered reliably right now \u2014 a newer drop may be missing.' };
+    return null;
+  }
   function renderBuff(faction) {
     const buff = state.buffs[faction];
     const last = $(faction + '-last');
     const lastNote = $(faction + '-last-note');
-    if (buff && validPast(buff.last)) {
-      last.textContent = span(Date.now() - buff.last) + ' ago';
-      lastNote.textContent = 'Recorded ' + when(buff.last) + (buff.head ? ' · ' + headName(buff.head) + ' head' : '');
+    const now = serverNow();
+    const known = buff && validPast(buff.last, now);
+    const concern = monitoringConcern(faction);
+    if (known) {
+      last.textContent = span(now - buff.last) + ' ago';
+      lastNote.textContent = (concern && concern.stale ? 'Last known: ' : 'Recorded ') + when(buff.last) + (buff.head ? ' \u00b7 ' + headName(buff.head) + ' head' : '') + (concern ? ' \u00b7 ' + concern.note : '');
     } else {
       last.textContent = 'NO DATA';
-      lastNote.textContent = '';
+      lastNote.textContent = buff && Number.isFinite(buff.last) ? 'The recorded drop time is not valid.' : concern ? concern.note : '';
     }
-    labelState(faction + '-state', buff && validPast(buff.last) ? 'DROP RECORDED' : 'AWAITING DATA', buff && validPast(buff.last) ? 'online' : 'unknown');
+    if (known && concern && concern.stale) labelState(faction + '-state', 'LAST KNOWN', 'estimated');
+    else labelState(faction + '-state', known ? 'DROP RECORDED' : 'AWAITING DATA', known ? 'online' : 'unknown');
   }
 
 
@@ -452,8 +488,16 @@
       state.auth.bwl = authView(object(heads.nefarian));
       state.heads.onyxia = object(heads.onyxia);
       state.heads.nefarian = object(heads.nefarian);
-      state.buffs.alliance = findBuff(root, 'alliance');
-      state.buffs.horde = findBuff(root, 'horde');
+      // A response must never replace a newer drop with an older one (a stale edge copy, a late response), so the newer timestamp wins.
+      for (const faction of ['alliance', 'horde']) {
+        const next = findBuff(root, faction), held = state.buffs[faction];
+        state.buffs[faction] = held && Number.isFinite(held.last) && (!next || !Number.isFinite(next.last) || held.last > next.last) ? held : next;
+      }
+      state.monitoring = object(root.monitoring);
+      state.listeners = object(root.listeners);
+      const generated = time(root.observedAt);
+      state.clockOffsetMs = Number.isFinite(generated) && Math.abs(generated - Date.now()) < 6 * 3_600_000 ? generated - Date.now() : 0;
+      state.apiOk = true;
       state.dmf = findDmf(root);
       state.metricsFetchedAt = Date.now();
       watchSounds(true);
@@ -461,6 +505,7 @@
       source.textContent = (state.auth.ony || state.auth.bwl) ? 'OctoMetrics API connected \u00b7 Raid sessions from the Bufftracker' : 'OctoMetrics API connected \u00b7 Aggregate raid activity only; raid sessions unavailable';
       source.className = 'source-label fresh';
     } catch (error) {
+      state.apiOk = false;
       const source = $('source-status');
       source.textContent = 'OctoMetrics API unavailable · Previously received data may be stale';
       source.className = 'source-label stale';

@@ -76,7 +76,11 @@ Run these yourself from your existing OctoMetrics Worker project (the folder tha
 
 The website tolerates a Worker without these fields (it shows NO DATA), so the Worker and the site can be deployed in either order. The Railway service needs no change.
 
-## Optional collector patch (not required)
+## Collector and drop-pipeline fix
+
+The missing-world-buff-drop fix (per-faction duplicate key, safe retries, listener health, one confirmation contract) is in `collector/`. Follow `collector/README.md`; it supersedes the one-line patch below. Deploy steps there replace steps 3 to 5 above because the Worker now also needs `listener-status.mjs` and `raid-sessions.mjs`.
+
+## Superseded: optional collector patch
 
 `collector-patches/0001-dedupe-buff-yells-per-faction.patch` changes one line in `dist-metrics/metrics/index.js`. If you choose to apply it: run it in the collector folder, run `npm.cmd test`, then deploy with your usual `railway up` command. Do this only when you are ready for the four accounts to reconnect.
 

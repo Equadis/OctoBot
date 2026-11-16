@@ -1,10 +1,11 @@
 /** Standalone Cloudflare Worker for OctoMetrics, not a replacement for the existing OctoBot Worker.
  *  Ingest, validation, CORS and retention are unchanged from the deployed version. /api/summary keeps every
  *  existing field and adds per-head (Onyxia / Nefarian) raid intelligence: see raid-intel.mjs. */
-import {RAIDS,headFromYell,pairSessions,learnDurations,summariseDrops,buildHead} from "./raid-intel.mjs";
+import {RAIDS,headFromYell,pairSessions,learnDurations,summariseDrops,buildHead,newestConfirmed,isConfirmedDrop,unconfirmedReason,headOf,isSameAnnouncement,RALLY_BUFF,WARCHIEF_BUFF,KNOWN_BUFFS} from "./raid-intel.mjs";
+import {listenerStatus} from "./listener-status.mjs";
 import {ZONE_HEAD,RT_ROLE,RT_ACCOUNT,validateRaidSessions,validateRaidSessionEnded,latestSnapshots,endedEvents,learnAuthoritative,buildAuthoritative,authoritativeClear} from "./raid-sessions.mjs";
 const ALLOWED_REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
-const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate","dmf_status","dmf_sighting","raid_sessions","raid_session_ended"]);
+const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate","dmf_status","dmf_sighting","listener_health","raid_sessions","raid_session_ended"]);
 const ALLOWED_ACCOUNTS={
   "N'Zoth":{sw:"OBPVESW",org:"OBPVEORG",bb:"OBPVEBB"},
   "Y'Shaarj":{sw:"OBPVPSW",org:"OBPVPORG",bb:"OBPVPBB"},
@@ -14,24 +15,45 @@ const DMF_ROLES={dmfa:{account:"OBPVEDMFA",site:"elwynn"},dmfh:{account:"OBPVEDM
 const ALLOWED_ORIGIN="https://equadis.github.io";
 function cors(req){return {"Access-Control-Allow-Origin":ALLOWED_ORIGIN,"Access-Control-Allow-Methods":"GET,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type","Vary":"Origin"};}
 function json(body,status=200,req=null){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...(req?cors(req):{})}});}
-function validRecord(x){
-  if(!x||typeof x!=="object"||!ALLOWED_TYPES.has(x.type)||!ALLOWED_REALMS.has(x.realm)
-    ||typeof x.time!=="string"||!Number.isFinite(Date.parse(x.time))
-    ||Math.abs(Date.now()-Date.parse(x.time))>=30*60*1000)return false;
-  if(x.type==="raid_sessions"||x.type==="raid_session_ended")return x.role===RT_ROLE&&x.account===RT_ACCOUNT;
+// The listener for each role stands in one capital and can only hear that faction's announcements.
+const ROLE_FACTION={sw:"alliance",org:"horde"};
+/** Validates one telemetry event and says WHY when it is refused, so a rejected drop can be diagnosed from the response and the log. */
+function validateRecord(x){
+  const no=(reason,detail={})=>({ok:false,reason,...detail});
+  if(!x||typeof x!=="object")return no("not_an_object");
+  if(!ALLOWED_TYPES.has(x.type))return no("unknown_type");
+  if(!ALLOWED_REALMS.has(x.realm))return no("unknown_realm");
+  if(typeof x.time!=="string"||!Number.isFinite(Date.parse(x.time)))return no("invalid_time");
+  const skew=Date.now()-Date.parse(x.time);
+  if(Math.abs(skew)>=30*60*1000)return no(skew>0?"event_too_old":"event_in_future",{skewMs:skew});
+  if(x.type==="raid_sessions"||x.type==="raid_session_ended")return x.role===RT_ROLE&&x.account===RT_ACCOUNT?{ok:true}:no("account_role_mismatch");
   if(x.type==="dmf_status"||x.type==="dmf_sighting"){
     const expected=DMF_ROLES[x.role];
-    if(!expected||x.realm!=="N'Zoth"||x.account!==expected.account||x.site!==expected.site)return false;
+    if(!expected||x.realm!=="N'Zoth"||x.account!==expected.account||x.site!==expected.site)return no("account_role_mismatch");
     if(x.type==="dmf_status")return typeof x.connected==="boolean"&&
-      (x.queries===undefined||(Number.isInteger(x.queries)&&x.queries>=0&&x.queries<=500));
+      (x.queries===undefined||(Number.isInteger(x.queries)&&x.queries>=0&&x.queries<=500))?{ok:true}:no("invalid_status");
     return x.confirmed===true&&x.source==="onsite"&&typeof x.npc==="string"&&
-      x.npc.trim().length>0&&x.npc.length<=100;
+      x.npc.trim().length>0&&x.npc.length<=100?{ok:true}:no("invalid_sighting");
   }
-  return ["sw","org","bb"].includes(x.role)&&x.account===ALLOWED_ACCOUNTS[x.realm][x.role];
+  if(!["sw","org","bb"].includes(x.role)||x.account!==ALLOWED_ACCOUNTS[x.realm][x.role])return no("account_role_mismatch");
+  if(x.type==="listener_health")return typeof x.connected==="boolean"?{ok:true}:no("invalid_health");
+  if(x.type==="world_buff_drop"){
+    // A confirmed drop needs evidence: an announcement heard by the listener of the faction it names, for a buff the collector knows.
+    if(x.source!=="npc_yell")return no("source_not_npc_yell");
+    if(x.faction!=="alliance"&&x.faction!=="horde")return no("unknown_faction");
+    if(!KNOWN_BUFFS.includes(x.buff))return no("unknown_buff");
+    if(ROLE_FACTION[x.role]!==x.faction)return no("faction_does_not_match_listener");
+    if(typeof x.text!=="string"||!x.text.trim()||x.text.length>1200)return no("invalid_text");
+    if(x.head!==undefined&&x.head!==null&&x.head!=="onyxia"&&x.head!=="nefarian")return no("invalid_head");
+    if(x.eventId!==undefined&&!/^[0-9a-f]{8,64}$/i.test(String(x.eventId)))return no("invalid_event_id");
+  }
+  return {ok:true};
 }
+/** One bounded structured line per drop-pipeline decision (Workers logs). Never includes the bearer token or any credential. */
+function trace(stage,fields){console.log(JSON.stringify({scope:"octometrics",stage,at:new Date().toISOString(),...fields}));}
 /** Never store entire arbitrary client JSON: project only non-secret telemetry fields. */
 function sanitise(e){
-  const keep=["zone","zoneName","playersListed","serverWhoOnline","listCapped","activity","activityStart","activityEnd","activityChange","observationOnly","clearConfirmed","population","source","valid","buff","faction","sender","text","confirmed","reason","fatal","site","npc","connected","queries"];
+  const keep=["zone","zoneName","playersListed","serverWhoOnline","listCapped","activity","activityStart","activityEnd","activityChange","observationOnly","clearConfirmed","population","source","valid","buff","faction","sender","text","confirmed","reason","fatal","site","npc","connected","queries","head","eventId","connectedSince","disconnectedAt","lastYellAt","yellsHeard","lastMatchedAt","lastMatchedFaction","lastMatchedHead","lastDropQueuedAt","dropsSuppressed","lastIngestOkAt","lastIngestError","lastIngestErrorAt","ingestQueued","ingestRejected","heartbeatAt"];
   const p={};
   for(const k of keep){
     const v=e[k];
@@ -106,13 +128,14 @@ async function darkmoonSummary(env,realm){
 async function summary(env,realm){
   // Restrict scans by (realm,type,id) index. A successful who can supply population even if
   // the custom `.server info` format has not yet been confirmed by a live capture.
-  const [populationRows,raidRows,buffRows,sessionRows,snapshotRows,endedRows]=await Promise.all([
+  const [populationRows,raidRows,buffRows,sessionRows,snapshotRows,endedRows,healthRows]=await Promise.all([
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('server_info','raid_who') ORDER BY id DESC LIMIT 80").bind(realm).all(),
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_who' ORDER BY id DESC LIMIT 50").bind(realm).all(),
-    env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 30").bind(realm).all(),
+    env.DB.prepare("SELECT id,type,account,role,observed_at,received_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 200").bind(realm).all(),
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('session_online','session_offline','session_error') ORDER BY id DESC LIMIT 30").bind(realm).all(),
     env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_sessions' ORDER BY id DESC LIMIT 12").bind(realm).all(),
     env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_session_ended' ORDER BY id DESC LIMIT 20").bind(realm).all(),
+    env.DB.prepare("SELECT account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='listener_health' ORDER BY id DESC LIMIT 12").bind(realm).all(),
   ]);
   const populationEvent=populationRows.results.map(decode).find(x=>isFresh(x.observed_at,180) && Number.isInteger(x.type==="server_info"?x.payload.population:x.payload.serverWhoOnline));
   const population=populationEvent?{
@@ -125,19 +148,23 @@ async function summary(env,realm){
     latestWho[e.role]=e;
     raids[e.role]={at:e.observed_at,zone:e.payload.zoneName,players:e.payload.playersListed,active:isFresh(e.observed_at,150)?e.payload.activity:null,activityStart:e.payload.activityStart,activityEnd:e.payload.activityEnd,clearConfirmed:false};
   }
-  const buffs={},dropEvents=[];
-  for(const e of buffRows.results.map(decode)){
-    dropEvents.push(e);
-    const key=`${e.payload.buff}:${e.payload.faction}`;
-    if(!buffs[key])buffs[key]={at:e.observed_at,buff:e.payload.buff,faction:e.payload.faction,source:e.payload.source,head:headFromYell(e.payload.text)};
-  }
+  const now0=Date.now(),buffs={},dropEvents=buffRows.results.map(decode);
+  // The newest CONFIRMED drop per buff and faction, chosen by observed time (never by insert order), under one contract with the website.
+  for(const [key,e] of newestConfirmed(dropEvents,x=>`${x.payload.buff}:${x.payload.faction}`,now0))
+    buffs[key]={at:e.observed_at,buff:e.payload.buff,faction:e.payload.faction,source:e.payload.source,confirmed:true,head:headOf(e.payload),eventId:e.payload.eventId??null,receivedAt:e.received_at??null};
+  // Rallying Cry is what BOTH heads give a faction, so the last drop per faction counts Onyxia and Nefarian alike; the head stays separate.
+  const lastDrops={alliance:null,horde:null};
+  for(const [faction,e] of newestConfirmed(dropEvents.filter(x=>x.payload.buff===RALLY_BUFF),x=>x.payload.faction,now0))
+    lastDrops[faction]={at:e.observed_at,buff:RALLY_BUFF,head:headOf(e.payload),source:e.payload.source,confirmed:true,receivedAt:e.received_at??null};
+  const unconfirmed=dropEvents.map(x=>({at:x.observed_at,reason:unconfirmedReason(x,now0)})).filter(x=>x.reason);
+  const dropDiagnostics={stored:dropEvents.length,confirmed:dropEvents.length-unconfirmed.length,unconfirmed:unconfirmed.slice(0,5),lastReceivedAt:dropEvents.reduce((m,x)=>!m||Date.parse(x.received_at)>Date.parse(m)?x.received_at:m,null)};
   const sessions={};
   for(const e of sessionRows.results.map(decode)){
     if(sessions[e.account])continue;
     sessions[e.account]={at:e.observed_at,status:!isFresh(e.observed_at,180)?"stale":e.type==="session_online"?"online":e.type==="session_offline"?"offline":"error"};
   }
   // Per-head intelligence. Onyxia and Nefarian are tracked separately; estimates are never confirmed drops.
-  const drops=summariseDrops(dropEvents),now=Date.now(),heads={};
+  const drops=summariseDrops(dropEvents,now0),now=now0,heads={};
   for(const raid of Object.values(RAIDS)){
     const who=latestWho[raid.role]||null;
     const learned=who?await learnedFor(env,realm,raid):null;
@@ -159,7 +186,15 @@ async function summary(env,realm){
     heads[raid.head]=head;
   }
   const darkmoon=await darkmoonSummary(env,realm);
-  return {realm,population,raids,buffs,sessions,heads,unattributedDrops:drops.unknown,darkmoon};
+  // Listener health per capital: separate facts (heartbeat, last yell heard, last publication) instead of "logged in means working".
+  const healthByRole={},sessionByAccount=sessions,storedByRole={};
+  for(const e of healthRows.results.map(decode))if(!healthByRole[e.role])healthByRole[e.role]=e;
+  for(const e of dropEvents)if(isConfirmedDrop(e,now0)&&(!storedByRole[e.role]||Date.parse(e.observed_at)>Date.parse(storedByRole[e.role])))storedByRole[e.role]=e.observed_at;
+  const listeners={};
+  for(const role of ["sw","org"])listeners[role]=listenerStatus({role,account:ALLOWED_ACCOUNTS[realm][role],health:healthByRole[role]||null,session:sessionByAccount[ALLOWED_ACCOUNTS[realm][role]]||null,lastStoredDropAt:storedByRole[role]||null,now:now0});
+  const latestAny=[populationRows.results[0],raidRows.results[0]].filter(Boolean).map(x=>Date.parse(x.observed_at)).filter(Number.isFinite).sort((p,q)=>q-p)[0];
+  const monitoring={lastEventAt:Number.isFinite(latestAny)?new Date(latestAny).toISOString():null,collectorFresh:Number.isFinite(latestAny)&&now0-latestAny<=180000};
+  return {realm,population,raids,buffs,lastDrops,dropDiagnostics,listeners,monitoring,sessions,heads,unattributedDrops:drops.unknown,darkmoon};
 }
 export default {
   async fetch(request,env){
@@ -173,7 +208,11 @@ export default {
       if(auth!==`Bearer ${env.METRICS_PUSH_TOKEN}`)return json({error:"unauthorised"},401,request);
       if(Number(request.headers.get("content-length")||0)>16000)return json({error:"payload too large"},413,request);
       let e;try{e=await request.json();}catch{return json({error:"invalid JSON"},400,request);}
-      if(!validRecord(e))return json({error:"invalid telemetry event"},400,request);
+      const check=validateRecord(e);
+      if(!check.ok){
+        if(e&&(e.type==="world_buff_drop"||e.type==="listener_health"))trace("ingest_rejected",{reason:check.reason,type:e.type,realm:e.realm,account:e.account,role:e.role,faction:e.faction,buff:e.buff,observedAt:e.time,eventId:e.eventId});
+        return json({error:"invalid telemetry event",reason:check.reason},400,request);
+      }
       if(e.type==="raid_sessions"||e.type==="raid_session_ended"){
         const clean=e.type==="raid_sessions"?validateRaidSessions(e):validateRaidSessionEnded(e);
         if(!clean)return json({error:"invalid raid telemetry"},400,request);
@@ -187,10 +226,23 @@ export default {
         await env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,JSON.stringify(clean)).run();
         return json({ok:true},202,request);
       }
-      const payload=JSON.stringify(sanitise(e));
+      const clean=sanitise(e);
+      const payload=JSON.stringify(clean);
       if(payload.length>16000)return json({error:"payload too large"},413,request);
-      await env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,payload).run();
-      return json({ok:true},202,request);
+      if(e.type==="world_buff_drop"){
+        // Retry safety: a collector re-sends an event whose response it never saw. The same announcement is stored once, and the caller is told so.
+        const recent=await env.DB.prepare("SELECT id,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 40").bind(e.realm).all();
+        const incoming={observed_at:e.time,role:e.role,payload:clean};
+        const same=recent.results.map(decode).find(row=>isSameAnnouncement(row,incoming));
+        if(same){
+          trace("ingest_duplicate",{realm:e.realm,faction:e.faction,buff:e.buff,head:headOf(clean),role:e.role,eventId:e.eventId,storedId:same.id,observedAt:e.time});
+          return json({ok:true,duplicate:true,id:same.id,eventId:e.eventId??null},200,request);
+        }
+      }
+      const result=await env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,payload).run();
+      const id=result&&result.meta&&result.meta.last_row_id;
+      if(e.type==="world_buff_drop")trace("ingest_stored",{realm:e.realm,faction:e.faction,buff:e.buff,head:headOf(clean),role:e.role,eventId:e.eventId,id,observedAt:e.time});
+      return json({ok:true,...(e.eventId?{eventId:e.eventId}:{}),...(id?{id}:{})},202,request);
     }
     if(request.method==="GET"&&url.pathname==="/api/summary"){
       const realm=url.searchParams.get("realm");
@@ -206,6 +258,8 @@ export default {
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
     // Raid snapshots are superseded every couple of minutes: keep 3 days. Ended sessions (the training data) keep the full 30.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days')").run();
+    // Listener health is one row per listener per minute and only the latest matters: keep two days.
+    await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
   }
 };
