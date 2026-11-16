@@ -1,30 +1,63 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en-GB"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="N'Zoth Auction House prices, listings and history from verified OctoBot scans.">
 <title>OctoBot · Auction House – N'Zoth</title>
 <link rel="icon" href="../favicon.png" type="image/png">
-<link rel="stylesheet" href="../site-theme.css?v=20261116-hdr1">
-<link rel="stylesheet" href="auction.css?v=2">
+<link rel="stylesheet" href="../site-theme.css?v=20261116-nav1">
+<link rel="stylesheet" href="auction.css?v=3">
 <script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<script src="auction.js?v=2" type="module"></script>
+<script src="auction.js?v=3" type="module"></script>
 <script src="../viewer-presence.js?v=20261113-live" defer></script>
 </head><body><main>
 <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>Auction House – N'Zoth</h1></div></div>
-<div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
-<nav class="page-nav" aria-label="Dashboard pages"><a href="../population/#server=all">Population</a><a href="../status/">Server Status</a><a href="../world-info/">World Info – N&#39;Zoth</a><a href="../sim/">Gear Planner &amp; DPS Sim (WIP)</a><a href="./" aria-current="page">Auction House (WIP)</a><a href="../outfitter/">Dressing Room (WIP)</a></nav>
+<div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">–</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
+<nav class="page-nav" aria-label="Dashboard pages" data-current="auction-house"></nav><script src="../site-nav.js?v=20261116-nav1"></script>
 <p class="ah-note">Read-only N'Zoth market observations. Prices reflect the <strong>latest completed full scan</strong>, not the current in-game order book. No simulated listings are displayed.</p>
 <div id="ah-status" role="status" aria-live="polite" class="ah-status">Checking for verified Auction House data…</div>
-<div class="ah-kpis"><div class="ah-kpi"><span>Collector</span><strong id="collector">NO DATA</strong></div><div class="ah-kpi"><span>Last complete scan</span><strong id="last-scan">NO DATA</strong></div><div class="ah-kpi"><span>Auctions indexed</span><strong id="auction-count">—</strong></div><div class="ah-kpi"><span>Items indexed</span><strong id="item-count">—</strong></div><div class="ah-kpi"><span>Scan progress</span><strong id="scan-progress">—</strong></div></div>
-<section class="ah-panel" aria-label="Auction House item search">
-<div class="ah-controls">
-<label>Item name<input id="search" type="search" placeholder="Search item names or IDs" autocomplete="off"></label>
-<label>Rarity<select id="quality"><option value="">All rarities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
-<label>Sort by<select id="sort"><option value="market_pct">Most underpriced</option><option value="name">Item name</option><option value="unit_buyout">Lowest unit price</option><option value="historical_avg">Historical average</option><option value="quantity">Available quantity</option><option value="trend_pct">Price movement</option></select></label>
-<button id="refresh" type="button">Refresh</button>
-</div>
-<div class="ah-scroll"><table><thead><tr><th>Item</th><th>Available</th><th>Listings</th><th>Unit price</th><th>Stack price</th><th>Current bid</th><th>Historical avg.</th><th>Market %</th><th>Trend</th><th>Time left</th></tr></thead><tbody id="items"><tr><td colspan="10" class="ah-empty">NO DATA — awaiting a verified complete scan.</td></tr></tbody></table></div>
-<div class="ah-footer"><span id="result-count">0 items</span><div><button id="previous" type="button" disabled>Previous</button> <span id="page-label">Page 1</span> <button id="next" type="button" disabled>Next</button></div></div>
+<div class="ah-kpis"><div class="ah-kpi"><span>Collector</span><strong id="collector">No data</strong></div><div class="ah-kpi"><span>Last complete scan</span><strong id="last-scan">No data</strong></div><div class="ah-kpi"><span>Auctions indexed</span><strong id="auction-count">–</strong></div><div class="ah-kpi"><span>Items indexed</span><strong id="item-count">–</strong></div><div class="ah-kpi"><span>Scan progress</span><strong id="scan-progress">–</strong></div></div>
+
+<section class="ah-panel ah-favourites" id="favourites" aria-labelledby="fav-title">
+<div class="ah-section-head"><h2 id="fav-title">Favourite items <span id="fav-count" class="ah-badge">0</span></h2><button id="fav-collapse" type="button" class="ah-btn ah-btn-quiet" aria-expanded="true" aria-controls="fav-body">Hide</button></div>
+<div id="fav-body"></div>
 </section>
-<p class="ah-caveat">Historical values require at least four distinct completed daily observations. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive.</p>
+
+<section class="ah-panel" aria-label="Auction House search and filters">
+<form id="filters" class="ah-filters" autocomplete="off" novalidate>
+<div class="ah-row">
+<label class="ah-field ah-grow">Item name<input id="search" type="search" placeholder="Search item names or IDs" maxlength="80"></label>
+<div class="ah-field">Sort by<div class="ah-inline"><select id="sort" aria-label="Sort by"></select><button id="dir" type="button" class="ah-btn ah-btn-icon" aria-label="Sort direction: default" title="Sort direction: default (click to change)">⇅</button></div></div>
+<div class="ah-field ah-field-end"><button id="fav-only" type="button" class="ah-btn" aria-pressed="false" title="Show only your favourite items"><span class="ah-star-glyph" aria-hidden="true">☆</span> Favourites only</button></div>
+<div class="ah-field ah-field-end"><button id="refresh" type="button" class="tool-btn" aria-label="Refresh Auction House data" title="Refresh Auction House data"><span class="flip" aria-hidden="true">↻</span></button></div>
+</div>
+<div class="ah-row">
+<label class="ah-field">Rarity<select id="quality"></select></label>
+<label class="ah-field">Category<select id="item_class"></select></label>
+<label class="ah-field">Subcategory<select id="item_subclass" disabled></select></label>
+<div class="ah-field ah-field-end ah-actions"><button id="adv-toggle" type="button" class="ah-btn" aria-expanded="false" aria-controls="advanced">Advanced filters <span id="adv-badge" class="ah-badge" hidden>0</span></button><button id="reset" type="button" class="ah-btn ah-btn-quiet">Clear filters</button></div>
+</div>
+<div id="advanced" class="ah-advanced" hidden>
+<div class="ah-grid">
+<label class="ah-field">Required level (min)<input id="min_level" inputmode="numeric" placeholder="0"></label>
+<label class="ah-field">Required level (max)<input id="max_level" inputmode="numeric" placeholder="60"></label>
+<label class="ah-field">Equipment slot<select id="slot"></select></label>
+<label class="ah-field">Minimum quantity<input id="min_quantity" inputmode="numeric" placeholder="Any"></label>
+<label class="ah-field">Exact stack size<input id="stack" inputmode="numeric" placeholder="Any"></label>
+<label class="ah-field">Max unit buyout<input id="max_unit_buyout" placeholder="e.g. 2g 50s"></label>
+<label class="ah-field">Max unit bid<input id="max_unit_bid" placeholder="e.g. 75s"></label>
+<label class="ah-field">Time left (estimated)<select id="time_left"></select></label>
+<label class="ah-field">Market % (min)<input id="min_market_pct" inputmode="numeric" placeholder="Any"></label>
+<label class="ah-field">Market % (max)<input id="max_market_pct" inputmode="numeric" placeholder="e.g. 80"></label>
+<label class="ah-field">Seller owner GUID<input id="owner" inputmode="numeric" placeholder="Numeric GUID"></label>
+</div>
+<div class="ah-checks"><label><input id="gear" type="checkbox"> Equipment only</label><label><input id="exact" type="checkbox"> Exact item name</label><label><input id="has_buyout" type="checkbox"> Only auctions with a buyout</label></div>
+<p class="ah-hint">Price, bid, stack, buyout, time-left and seller filters apply to individual auctions: the quantity, listing count and prices shown are recalculated from the matching auctions only, and price movement is hidden. Level, category and slot use catalogue data and never match an item the catalogue does not describe. Market % needs four days of history.</p>
+<div class="ah-saved"><label class="ah-field">Save this search<div class="ah-inline"><input id="save-name" placeholder="Name" maxlength="40"><button id="save-search" type="button" class="ah-btn">Save</button></div></label><div id="saved-list" class="ah-chips" aria-label="Saved searches"></div></div>
+</div>
+<div id="filter-errors" class="ah-errors" role="alert"></div>
+</form>
+<div class="ah-scroll"><table><thead><tr><th class="ah-col-star"><span class="sr-only">Favourite</span></th><th>Item</th><th>Available</th><th>Listings</th><th>Unit price</th><th>Stack price</th><th>Current bid</th><th>Historical avg.</th><th>Market %</th><th>Trend</th><th>Time left</th></tr></thead><tbody id="items"><tr><td colspan="11" class="ah-empty">No data – awaiting a verified complete scan.</td></tr></tbody></table></div>
+<div class="ah-footer"><span id="result-count">0 items</span><div class="ah-pager"><button id="previous" type="button" class="ah-btn" disabled>Previous</button> <span id="page-label">Page 1</span> <button id="next" type="button" class="ah-btn" disabled>Next</button></div></div>
+</section>
+<p class="ah-caveat">Historical values require at least four distinct completed daily observations. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive. Seller names are not available from the auction data, so listings show the owner GUID.</p>
 </main></body></html>

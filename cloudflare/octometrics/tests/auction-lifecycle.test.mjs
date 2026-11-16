@@ -3,44 +3,9 @@
 // through a minimal D1-compatible adapter. Proves SQL/logic, NOT real-server protocol compatibility.
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
 import {auctionRoute,auctionCleanup} from "../auction.mjs";
 
-let DatabaseSync=null;
-try{({DatabaseSync}=await import("node:sqlite"));}catch{/* Node < 22.5 */}
-const skip=DatabaseSync?false:"node:sqlite unavailable (needs Node >= 22.5)";
-const token="lifecycle-test-only-token";
-
-function d1(){
- const sqlite=new DatabaseSync(":memory:");
- sqlite.exec(readFileSync(new URL("../migrations/0002_auction.sql",import.meta.url),"utf8"));
- const stmt=sql=>{
-  let args=[];
-  const s={
-   bind(...a){args=a;return s;},
-   async first(){return sqlite.prepare(sql).get(...args)??null;},
-   async all(){return {results:sqlite.prepare(sql).all(...args)};},
-   async run(){sqlite.prepare(sql).run(...args);return {success:true};},
-   _run(){return sqlite.prepare(sql).run(...args);}
-  };
-  return s;
- };
- return {sqlite,prepare:stmt,async batch(ops){
-  sqlite.exec("BEGIN");
-  try{for(const o of ops)o._run();sqlite.exec("COMMIT");}
-  catch(e){sqlite.exec("ROLLBACK");throw e;}
-  return ops.map(()=>({success:true}));
- }};
-}
-const call=async(env,method,path,body)=>{
- const res=await auctionRoute(new Request("https://octometrics.example"+path,{method,
-  headers:{authorization:"Bearer "+token,"content-type":"application/json"},
-  body:body===undefined?undefined:JSON.stringify(body)}),env);
- return {status:res.status,json:await res.json()};
-};
-const post=(env,action,body)=>call(env,"POST","/api/auction/scan/"+action,body);
-const get=(env,path)=>call(env,"GET","/api/auction/"+path);
-
+import {skip,post,get,env} from "./auction-sqlite.mjs";
 /** listing(n): auction n, items 100..104 cycling; buyout in copper, per-unit = buyout/quantity. */
 function listing(n,over={}){
  return {auction_id:n,item_id:100+(n%5),variant:"0:0:0",quantity:1,item_name:null,quality:null,icon_url:null,
@@ -58,7 +23,6 @@ async function runScan(env,{id,day,listings,failBefore=false,started=day+"T10:00
  if(failBefore)return null;
  return post(env,"complete",{scan_id:id,completed_at:done,expected_pages:pages,reported_total:listings.length});
 }
-const env=()=>({DB:d1(),AUCTION_PUSH_TOKEN:token});
 
 test("empty database serves NO DATA, never fabricated rows",{skip},async()=>{
  const e=env();

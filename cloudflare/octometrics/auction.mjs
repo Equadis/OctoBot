@@ -1,3 +1,4 @@
+import {buildItemsQuery} from "./auction-query.mjs";
 /* Auction House ingestion and read API.
  * Always publish from the latest COMPLETE scan; never expose partial pages.
  * Shares the existing OctoMetrics Worker/D1 but does not touch metric_events. */
@@ -23,12 +24,15 @@ function normalise(raw){
  if(!text(variant,90)||!text(raw.item_name??'',160)||!text(raw.owner_guid??'',25))return null;
  if(raw.quality!==null&&raw.quality!==undefined&&!integer(raw.quality,0,8))return null;
  if(raw.icon_url!==null&&raw.icon_url!==undefined&&(!text(raw.icon_url,400)||!/^https:\/\//.test(raw.icon_url)))return null;
+ for(const [k,max] of [['item_level',200],['req_level',70],['class_id',20],['subclass_id',30],['slot_id',40]])
+   if(raw[k]!==null&&raw[k]!==undefined&&!integer(raw[k],0,max))return null;
  if(raw.time_left_ms!==null&&raw.time_left_ms!==undefined&&!integer(raw.time_left_ms,0,4294967295))return null;
  return {auction_id:raw.auction_id,item_id:raw.item_id,variant,item_name:raw.item_name||null,
    quality:raw.quality??null,icon_url:raw.icon_url??null,quantity:raw.quantity,
    start_bid:raw.start_bid,current_bid:raw.current_bid,min_next_bid:raw.min_next_bid,
    buyout:raw.buyout,
-   owner_guid:raw.owner_guid||null,time_left_ms:raw.time_left_ms??null,captured_at:raw.captured_at};
+   owner_guid:raw.owner_guid||null,time_left_ms:raw.time_left_ms??null,captured_at:raw.captured_at,
+   item_level:raw.item_level??null,req_level:raw.req_level??null,class_id:raw.class_id??null,subclass_id:raw.subclass_id??null,slot_id:raw.slot_id??null};
 }
 const all=async(db,sql,...args)=>(await db.prepare(sql).bind(...args).all()).results||[];
 const first=async(db,sql,...args)=>db.prepare(sql).bind(...args).first();
@@ -84,8 +88,8 @@ async function upload(req,env,action){
    // A retry replaces exactly one page. D1 batch is atomic, so transient failures cannot partially replace a page.
    const ops=[db.prepare('DELETE FROM ah_listings WHERE scan_id=? AND page=?').bind(body.scan_id,body.page)];
    for(const r of rows)ops.push(db.prepare(
-     'INSERT INTO ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-   ).bind(body.scan_id,r.auction_id,body.page,r.item_id,r.variant,r.item_name,r.quality,r.icon_url,r.quantity,r.start_bid,r.current_bid,r.min_next_bid,r.buyout,r.owner_guid,r.time_left_ms,r.captured_at));
+     'INSERT INTO ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+   ).bind(body.scan_id,r.auction_id,body.page,r.item_id,r.variant,r.item_name,r.quality,r.icon_url,r.quantity,r.start_bid,r.current_bid,r.min_next_bid,r.buyout,r.owner_guid,r.time_left_ms,r.captured_at,r.item_level,r.req_level,r.class_id,r.subclass_id,r.slot_id));
    ops.push(db.prepare('INSERT INTO ah_pages(scan_id,page,count,response_ms) VALUES (?,?,?,?) ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')').bind(body.scan_id,body.page,rows.length,body.response_ms));
    try{await db.batch(ops)}catch{return bad('page write failed (retry safely)',503)}
    return respond({ok:true,page:body.page,items:rows.length},202);
@@ -121,31 +125,29 @@ async function readApi(url,env){
  if(url.pathname==='/api/auction/summary'){
    const item=scan?await first(db,'SELECT COUNT(*) n FROM ah_item_points WHERE scan_id=?',scan.scan_id):null;
    const hist=await first(db,'SELECT COUNT(DISTINCT day) n FROM ah_daily');
+   const meta=scan?await first(db,'SELECT COUNT(DISTINCT item_id||\':\'||variant) n FROM ah_listings WHERE scan_id=? AND class_id IS NOT NULL',scan.scan_id):null;
    return respond({collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',scanning:!!current,
      pages_done:current?.pages_done??0,pages_expected:current?.expected_pages??null,
      completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,
-     item_count:item?.n??null,scan_duration_ms:scan?.duration_ms??null,historical_days:hist?.n??0});
+     item_count:item?.n??null,items_with_metadata:meta?.n??null,scan_duration_ms:scan?.duration_ms??null,historical_days:hist?.n??0});
  }
  if(!scan){
    if(url.pathname==='/api/auction/items')return respond({items:[],total:0,has_more:false});
    return respond({listings:[],history:[],error:'no complete scan'});
  }
  if(url.pathname==='/api/auction/items'){
-   const limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit'))||50));
-   const offset=Math.min(100000,Math.max(0,Number(url.searchParams.get('offset'))||0));
-   const q=(url.searchParams.get('q')||'').trim().slice(0,80).replace(/[!%_]/g,m=>'!'+m);
-   const quality=url.searchParams.get('quality');
-   const qualityNum=quality===null?null:Number(quality);
-   if(quality!==null&&!integer(qualityNum,0,8))return bad('invalid quality');
-   const sort=url.searchParams.get('sort')||'market_pct';
-   const ordering={name:"COALESCE(item_name,'Item #'||item_id) COLLATE NOCASE ASC",unit_buyout:"unit_buyout IS NULL,unit_buyout ASC",historical_avg:"(CASE WHEN days>=4 THEN avg_unit END) IS NULL,(CASE WHEN days>=4 THEN avg_unit END) ASC",quantity:"quantity DESC",trend_pct:"trend_pct IS NULL,trend_pct ASC",market_pct:"market_pct IS NULL,market_pct ASC"}[sort];
-   if(!ordering)return bad('invalid sort');
    const prev=await previous(db,scan);
-   const sql="WITH history AS (SELECT item_id,variant,AVG(representative_unit) avg_unit,COUNT(*) days FROM ah_daily WHERE day < substr(?,1,10) AND day >= date(?,'-14 days') GROUP BY item_id,variant),data AS (SELECT p.*,l.item_name,l.quality,l.icon_url,l.start_bid,l.current_bid,l.buyout AS stack_buyout,l.time_left_ms,l.captured_at,h.avg_unit,h.days,(CASE WHEN h.days>=4 AND h.avg_unit>0 THEN 100*p.unit_buyout/h.avg_unit END) market_pct,prev.unit_buyout previous_unit,(CASE WHEN prev.unit_buyout>0 AND p.unit_buyout IS NOT NULL THEN 100*(p.unit_buyout-prev.unit_buyout)/prev.unit_buyout END) trend_pct FROM ah_item_points p LEFT JOIN ah_listings l ON l.scan_id=p.scan_id AND l.auction_id=p.cheapest_auction_id LEFT JOIN history h ON h.item_id=p.item_id AND h.variant=p.variant LEFT JOIN ah_item_points prev ON prev.scan_id=? AND prev.item_id=p.item_id AND prev.variant=p.variant WHERE p.scan_id=?) SELECT * FROM data WHERE (?='' OR COALESCE(item_name,'Item #'||item_id) LIKE '%'||?||'%' ESCAPE '!' OR CAST(item_id AS TEXT) LIKE '%'||?||'%' ESCAPE '!') AND (? IS NULL OR quality=?)";
-   const binds=[scan.completed_at,scan.completed_at,prev?.scan_id||'',scan.scan_id,q,q,q,qualityNum,qualityNum];
-   const totalRow=await first(db,'SELECT COUNT(*) n FROM ('+sql+')',...binds);
-   const rows=await all(db,sql+' ORDER BY '+ordering+',item_id ASC LIMIT ? OFFSET ?',...binds,limit,offset);
-   return respond({items:rows.map(r=>({item_id:r.item_id,variant:r.variant,item_name:r.item_name,quality:r.quality,icon_url:r.icon_url,quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,historical_avg:r.days>=4?r.avg_unit:null,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit,time_left_ms:r.time_left_ms,captured_at:r.captured_at})),total:totalRow.n,has_more:offset+rows.length<totalRow.n,scan_id:scan.scan_id,completed_at:scan.completed_at});
+   const query=buildItemsQuery(url.searchParams,scan,prev?.scan_id);
+   if(query.error)return bad(query.error);
+   const totalRow=await first(db,query.countSql,...query.binds);
+   const rows=await all(db,query.sql,...query.binds,query.limit,query.offset);
+   return respond({items:rows.map(r=>({item_id:r.item_id,variant:r.variant,item_name:r.item_name,quality:r.quality,icon_url:r.icon_url,
+     item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
+     quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
+     historical_avg:r.days>=4?r.avg_unit:null,historical_days:r.days??0,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
+     time_left_ms:r.time_left_ms,captured_at:r.captured_at})),
+     total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
+     listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
  }
  const detail=url.pathname.match(/^\/api\/auction\/(item|history)\/(\d+)$/);
  if(detail){
