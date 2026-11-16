@@ -15,7 +15,8 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "start:dmf": "node --max-old-space-size=96 --max-semi-space-size=2 dist/dmf-monitor.js"
+    "start:dmf": "node --max-old-space-size=96 --max-semi-space-size=2 dist/dmf-monitor.js",
+    "start:auction": "node --max-old-space-size=96 --max-semi-space-size=2 dist/auction-collector.js"
   },
   "//dependencies": "Both pinned EXACT (no caret) at proven releases. mongodb 6.21.0 (~9 months) backs the subscriber store; its optional peers (kerberos, snappy, aws-sdk, zstd, client-encryption) are not installed. ws 8.21.1 (~6 weeks, past the <8.17.1 DoS fix) is the Discord gateway transport; it has zero runtime deps and its optional native peers (bufferutil, utf-8-validate) are not installed.",
   "dependencies": {

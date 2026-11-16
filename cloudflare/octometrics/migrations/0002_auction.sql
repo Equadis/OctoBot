@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS ah_scans (
  error TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE INDEX IF NOT EXISTS idx_ah_complete ON ah_scans(status,completed_at DESC);
+-- Concurrent start requests cannot both create an uploading scan.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ah_single_upload ON ah_scans(status) WHERE status='uploading';
 CREATE TABLE IF NOT EXISTS ah_pages (
  scan_id TEXT NOT NULL, page INTEGER NOT NULL, count INTEGER NOT NULL,
  response_ms INTEGER NOT NULL DEFAULT 0, received_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
