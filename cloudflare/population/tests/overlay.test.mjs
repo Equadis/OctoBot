@@ -113,6 +113,38 @@ test('a broken or missing helm table never breaks Zam helms',async()=>{
  resetOverlayCache();
 });
 
+test('an item record with no Zam record is served from the bucket; Zam helms, other asset kinds and a missing record behave as before',async()=>{
+ const record=JSON.stringify({Model:0,Textures:{'2':9900002},ModelFiles:{'67102':[{FileDataId:9700000,Gender:0,Class:0,Race:1,ExtraData:-1}]},Item:{InventoryType:1},ComponentModels:{'0':67102}});
+ const bucket=fakeBucket(new Map([['meta/armor/1/67102.json',record]]));
+ const zamMissing=async()=>new Response('nope',{status:404});
+ // Zam has no record: the bucket's complete record answers, unmerged and with the overlay cache lifetime
+ let r=await outfitter(asset('meta/armor/1/67102.json'),zamMissing,{MODELS:bucket});
+ assert.equal(r.status,200);assert.equal(await r.text(),record);
+ assert.match(r.headers.get('cache-control'),/max-age/);
+ // Zam failing for another reason is a 502, never papered over with the bucket
+ r=await outfitter(asset('meta/armor/1/67102.json'),async()=>new Response('x',{status:500}),{MODELS:bucket});
+ assert.equal(r.status,502);
+ // No bucket record: the usual "not available" 404
+ r=await outfitter(asset('meta/armor/1/99999.json'),zamMissing,{MODELS:fakeBucket(new Map())});
+ assert.equal(r.status,404);
+ // No bucket at all: unchanged
+ r=await outfitter(asset('meta/armor/1/67102.json'),zamMissing,{});
+ assert.equal(r.status,404);
+ // Body armour and weapon records fall back the same way; the path is validated, so nothing else ever reads the bucket on a Zam miss
+ const gear=fakeBucket(new Map([['meta/armor/5/900.json','{"chest":1}'],['meta/item/901.json','{"weapon":1}'],['m2/9700000.m2','M2'],['textures/1.webp','W']]));
+ r=await outfitter(asset('meta/armor/5/900.json'),zamMissing,{MODELS:gear});assert.equal(r.status,200);assert.equal(await r.text(),'{"chest":1}');
+ r=await outfitter(asset('meta/item/901.json'),zamMissing,{MODELS:gear});assert.equal(r.status,200);assert.equal(await r.text(),'{"weapon":1}');
+ r=await outfitter(asset('meta/armor/5/777.json'),zamMissing,{MODELS:gear});assert.equal(r.status,404,'no record in either place');
+ const before=gear.calls.length;
+ r=await outfitter(asset('meta/itemvisual/5.json'),zamMissing,{MODELS:gear});assert.equal(r.status,404);
+ r=await outfitter(asset('textures/12345.webp'),zamMissing,{MODELS:fakeBucket(new Map())});assert.equal(r.status,404);
+ assert.equal(gear.calls.length,before,'other asset kinds never trigger a bucket record lookup');
+ // A Zam helm that exists is still merged exactly as before (no bucket read for its record)
+ const merged=fakeBucket(new Map([['helms.json',JSON.stringify({'31260':{'9:0':9500000}})]]));
+ r=await outfitter(asset('meta/armor/1/31260.json'),async()=>new Response(JSON.stringify(zamHelm())),{MODELS:merged});
+ assert.equal(r.status,200);
+ assert.ok(!merged.calls.includes('meta/armor/1/31260.json'));
+});
 test('the worker passes its bindings to the appearance route',async()=>{
  const bucket=fakeBucket(new Map([['m2/9000000.m2','MODEL']]));
  const r=await worker.fetch(new Request('https://api.test/api/outfitter/assets/m2/9000000.m2'),{MODELS:bucket});
