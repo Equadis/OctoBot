@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {moneyParts,timeClass,bidAmount,money} from '../docs/auction-house/format.mjs';
+import {moneyParts,timeClass,bidAmount,money,scanStatus,lastScanClass,IDLE_SECONDS,clock} from '../docs/auction-house/format.mjs';
 import {validateBuild,newBuild,encodeBuild,decodeBuild} from '../docs/sim/core/builds.mjs';
 const docs=new URL('../docs/',import.meta.url);
 const read=p=>readFileSync(new URL(p,docs),'utf8');
@@ -16,18 +16,28 @@ test('the explanatory text is gone from the Auction House, and a healthy snapsho
   assert.match(js,/note\(s\.completed_at\?'':'No data/,'only a problem produces a line');
 });
 
-test('gold, silver and copper are split so each can be coloured',()=>{
-  assert.deepEqual(moneyParts(123456),[{unit:'g',text:'12g'},{unit:'s',text:'34s'},{unit:'c',text:'56c'}]);
-  assert.deepEqual(moneyParts(250),[{unit:'s',text:'2s'},{unit:'c',text:'50c'}]);
-  assert.deepEqual(moneyParts(7),[{unit:'c',text:'7c'}]);
-  assert.deepEqual(moneyParts(0.5),[{unit:'c',text:'<1c'}]);
+test('prices are white numbers with a coin after each, and a zero amount is not shown',()=>{
+  assert.deepEqual(moneyParts(123456).map(p=>[p.unit,p.number]),[['g','12'],['s','34'],['c','56']]);
+  assert.deepEqual(moneyParts(250).map(p=>[p.unit,p.number]),[['s','2'],['c','50']]);
+  assert.deepEqual(moneyParts(10000).map(p=>[p.unit,p.number]),[['g','1']],'1g exactly shows only gold, not 0s 0c');
+  assert.deepEqual(moneyParts(10005).map(p=>[p.unit,p.number]),[['g','1'],['c','5']],'a zero silver is skipped');
+  assert.deepEqual(moneyParts(100).map(p=>[p.unit,p.number]),[['s','1']]);
+  assert.deepEqual(moneyParts(7).map(p=>[p.unit,p.number]),[['c','7']]);
+  assert.deepEqual(moneyParts(0.5).map(p=>[p.unit,p.number]),[['c','<1']]);
+  assert.deepEqual(moneyParts(0).map(p=>[p.unit,p.number]),[['c','0']],'a price of exactly nothing still shows something');
   assert.equal(moneyParts(null),null);
+  assert.equal(money(10000),'1g');assert.equal(money(10005),'1g 5c');assert.equal(money(0),'0c');
   assert.equal(moneyParts(123456).map(p=>p.text).join(' '),money(123456),'same text as the plain formatter');
-  const css=read('auction-house/auction.css');
-  for(const unit of ['g','s','c'])assert.match(css,new RegExp(`\\.ah-m-${unit}\\{color:#`));
+  const css=read('auction-house/auction.css'),js=read('auction-house/auction.js');
+  assert.match(css,/\.ah-num\{color:#fff\}/);
+  assert.match(css,/\.ah-coin\{width:16px;height:16px/);
+  assert.doesNotMatch(css,/\.ah-m-[gsc]\{/,'the coloured letters are gone');
+  for(const coin of ['gold','silver','copper'])assert.ok(readFileSync(new URL('img/coin-'+coin+'.png',docs)).subarray(1,4).toString()==='PNG','coin-'+coin+'.png is a PNG');
+  assert.match(js,/'\.\.\/img\/coin-'\+COIN\[p\.unit\]\+'\.png'/);
+  assert.match(js,/wrap\.append\(el\('span',p\.number,'ah-num'\)\);/,'the number comes first, the coin after it');
 });
 
-test('time left is coloured red under 2h, orange under 8h, yellow under 24h, green under 72h, plain after that',()=>{
+test('time left is coloured red under 2h, orange under 8h, the site yellow under 24h, green under 72h, plain after that',()=>{
   const seen='2026-11-01T00:00:00.000Z',t0=Date.parse(seen),H=3600000;
   const at=hours=>timeClass(hours*H,seen,t0);
   assert.equal(at(0.5),'ah-time-red');assert.equal(at(1.99),'ah-time-red');
@@ -37,10 +47,10 @@ test('time left is coloured red under 2h, orange under 8h, yellow under 24h, gre
   assert.equal(at(72),null);assert.equal(at(200),null);
   assert.equal(timeClass(null,seen,t0),null,'unknown stays uncoloured');
   assert.equal(timeClass(H,seen,t0+2*H),null,'an expired estimate is not coloured as if it were live');
-  // the estimate counts down from the scan: 3h left at scan time is red 1h later
   assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-red');
   const css=read('auction-house/auction.css');
-  for(const c of ['red','orange','yellow','green'])assert.match(css,new RegExp(`\\.ah-time-${c}\\{color:#`));
+  for(const c of ['red','orange','green'])assert.match(css,new RegExp(`\\.ah-time-${c}\\{color:#`));
+  assert.match(css,/\.ah-time-yellow\{color:var\(--gold\)\}/);
 });
 
 test('a bid that just repeats the stack or unit price shows a hyphen; the "(start)" label is gone',()=>{
@@ -114,4 +124,50 @@ test('character names are optional, trimmed, cleaned and limited to 24 character
   // it survives a share link
   const round=decodeBuild(encodeBuild(validateBuild({...base,characterName:'Thrall'},data)),data);
   assert.equal(round.characterName,'Thrall');
+});
+
+/* ---------- scan status, last scan, collector ---------- */
+test('the scan status counts down from 5:00 after a scan finishes, then shows a running In Progress timer',()=>{
+  const done='2026-11-01T10:00:00.000Z',t=Date.parse(done),sec=n=>t+n*1000;
+  assert.equal(IDLE_SECONDS,300);
+  assert.deepEqual(scanStatus({completedAt:done},sec(0)),{text:'Idle - 5:00',className:'ah-time-yellow'});
+  assert.equal(scanStatus({completedAt:done},sec(28)).text,'Idle - 4:32','28s after a scan the display reads 4:32');
+  assert.equal(scanStatus({completedAt:done},sec(299)).text,'Idle - 0:01');
+  assert.equal(scanStatus({completedAt:done},sec(300)).text,'Idle','after 5:00 with no scan running it just says Idle');
+  assert.equal(scanStatus({completedAt:done},sec(4000)).className,'ah-time-yellow');
+  const start='2026-11-01T10:05:00.000Z',s0=Date.parse(start);
+  assert.deepEqual(scanStatus({completedAt:done,scanning:true,startedAt:start},s0+192000),{text:'In Progress 3m:12s',className:'ah-time-green'});
+  assert.equal(scanStatus({scanning:true,startedAt:start},s0+5000).text,'In Progress 0m:05s');
+  assert.equal(scanStatus({scanning:true,startedAt:null},s0).text,'In Progress','an unknown start time is not invented');
+  assert.equal(scanStatus({scanning:true,startedAt:start,completedAt:done},s0-9000).text,'In Progress 0m:00s','a clock slightly behind never shows a negative time');
+  assert.equal(scanStatus({},Date.now()).text,'Idle','no scan data at all');
+  assert.equal(clock(272),'4:32');assert.equal(clock(5),'0:05');
+});
+
+test('the last complete scan is green under 2 hours, yellow under 24 hours, red after that, and uncoloured with no data',()=>{
+  const done='2026-11-01T00:00:00.000Z',t=Date.parse(done),H=3600000;
+  assert.equal(lastScanClass(done,t+H),'ah-time-green');assert.equal(lastScanClass(done,t+2*H-1),'ah-time-green');
+  assert.equal(lastScanClass(done,t+2*H),'ah-time-yellow');assert.equal(lastScanClass(done,t+24*H-1),'ah-time-yellow');
+  assert.equal(lastScanClass(done,t+24*H),'ah-time-red');assert.equal(lastScanClass(done,t+500*H),'ah-time-red');
+  assert.equal(lastScanClass(null),null);assert.equal(lastScanClass('garbage'),null);
+  assert.equal(lastScanClass(done,t-5000),'ah-time-green','a slightly early client clock stays green');
+});
+
+test('the Collector card is gone and the scan card is wired to the timers',()=>{
+  const html=read('auction-house/index.html'),js=read('auction-house/auction.js'),css=read('auction-house/auction.css');
+  assert.doesNotMatch(html,/Collector/);assert.doesNotMatch(html+js,/id="collector"|\$\('collector'\)/);
+  assert.equal((html.match(/class="ah-kpi"/g)||[]).length,4,'four cards remain');
+  assert.match(html,/<span>Scan status<\/span><strong id="scan-progress">/);
+  assert.match(css,/repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(js,/setInterval\(renderScan,1000\)/,'the display updates every second');
+  assert.match(js,/request\('\/api\/auction\/scan-status'\)/,'the start time of a running scan comes from the scan-status endpoint');
+  assert.match(js,/last\.className=lastScanClass\(sc\.completedAt,now\)/);
+});
+
+test('Auction House yellow text is the site yellow (--gold), not its own shade',()=>{
+  const css=read('auction-house/auction.css'),theme=read('site-theme.css');
+  assert.match(theme,/--gold:#efce47/);
+  for(const rule of [/\.ah-kpi strong\{[^}]*color:var\(--gold\)/,/\.ah-stats dd\{[^}]*color:var\(--gold\)/,/\.ah-status\{color:var\(--gold\)/,/\.ah-expand\{color:var\(--gold\)/])
+    assert.match(css,rule);
+  for(const old of ['#e9d175','#d4c485'])assert.ok(!css.includes(old),'retired one-off yellow '+old);
 });

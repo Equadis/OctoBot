@@ -4,7 +4,7 @@ export function money(n){
   const v=Number(n);
   if(v>0&&v<1)return '<1c';
   const c=Math.round(Math.max(0,v)),g=Math.floor(c/10000),s=Math.floor(c%10000/100),b=c%100;
-  return [g?g+'g':null,(g||s)?s+'s':null,b+'c'].filter(Boolean).join(' ');
+  return [g?g+'g':null,s?s+'s':null,(b||(!g&&!s))?b+'c':null].filter(Boolean).join(' ');
 }
 /** "2g 50s", "50s", "1g20s5c" or a bare number of copper. Copper when valid, null when invalid, undefined when empty. */
 export function parseMoney(text){
@@ -46,11 +46,12 @@ export const count=n=>n==null?'–':Number(n).toLocaleString('en-GB');
 export function moneyParts(n){
   if(n==null||!Number.isFinite(Number(n)))return null;
   const v=Number(n);
-  if(v>0&&v<1)return [{unit:'c',text:'<1c'}];
+  if(v>0&&v<1)return [{unit:'c',amount:v,number:'<1',text:'<1c'}];
   const c=Math.round(Math.max(0,v)),g=Math.floor(c/10000),s=Math.floor(c%10000/100),b=c%100,out=[];
-  if(g)out.push({unit:'g',text:g+'g'});
-  if(g||s)out.push({unit:'s',text:s+'s'});
-  out.push({unit:'c',text:b+'c'});
+  // A denomination that is zero is not shown at all; a price of exactly nothing still shows 0 copper.
+  if(g)out.push({unit:'g',amount:g,number:String(g),text:g+'g'});
+  if(s)out.push({unit:'s',amount:s,number:String(s),text:s+'s'});
+  if(b||(!g&&!s))out.push({unit:'c',amount:b,number:String(b),text:b+'c'});
   return out;
 }
 /** Colour class for the estimated time left: under 2h red, under 8h orange, under 24h yellow, under 72h green, otherwise none. */
@@ -66,4 +67,31 @@ export function bidAmount(current,start,stackBuyout,unitBuyout){
   if(!Number.isFinite(value))return null;
   const same=x=>x!=null&&Number.isFinite(Number(x))&&Number(x)>0&&Math.abs(Number(x)-value)<1e-9;
   return same(stackBuyout)||same(unitBuyout)?null:value;
+}
+
+
+/** The collector pauses for this long after a scan completes before the next one starts. */
+export const IDLE_SECONDS=300;
+export const clock=seconds=>Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+/** Text and colour for the scan-status card: In Progress with a running timer, Idle with the 5:00 countdown, or plain Idle. */
+export function scanStatus({completedAt=null,scanning=false,startedAt=null}={},now=Date.now()){
+  if(scanning){
+    const started=Date.parse(startedAt||'');
+    if(!Number.isFinite(started))return {text:'In Progress',className:'ah-time-green'};
+    const elapsed=Math.max(0,Math.floor((now-started)/1000));
+    return {text:'In Progress '+Math.floor(elapsed/60)+'m:'+String(elapsed%60).padStart(2,'0')+'s',className:'ah-time-green'};
+  }
+  const done=Date.parse(completedAt||'');
+  if(Number.isFinite(done)){
+    const left=IDLE_SECONDS-Math.floor((now-done)/1000);
+    if(left>0&&left<=IDLE_SECONDS)return {text:'Idle - '+clock(left),className:'ah-time-yellow'};
+  }
+  return {text:'Idle',className:'ah-time-yellow'};
+}
+/** Colour of the last-complete-scan date: green under 2 hours old, yellow under 24 hours, red after that. */
+export function lastScanClass(completedAt,now=Date.now()){
+  const done=Date.parse(completedAt||'');
+  if(!Number.isFinite(done))return null;
+  const hours=Math.max(0,now-done)/3600000;
+  return hours<2?'ah-time-green':hours<24?'ah-time-yellow':'ah-time-red';
 }

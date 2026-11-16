@@ -1,12 +1,12 @@
 /* Auction House: uses the shared navy/gold shell. Controls reuse the navigation's palette so buttons, selects and toggles match every other tab:
    resting #1f2b3b with the shared line colour, gold hover border, pressed/active #3a3827 with gold text. */
 .ah-caveat{font-size:13px;color:#aab7c9;line-height:1.65;margin:16px 0}
-.ah-status{color:#d4c485;font-size:12px;margin:14px 0}.ah-status:empty{display:none}
-.ah-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.ah-status{color:var(--gold);font-size:12px;margin:14px 0}.ah-status:empty{display:none}
+.ah-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
 .ah-kpi,.ah-panel{background:var(--panel);border:1px solid var(--line);border-radius:5px}
 .ah-panel{margin-bottom:18px}
 .ah-kpi{padding:14px;display:flex;flex-direction:column;gap:8px}
-.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:#e9d175}
+.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:var(--gold)}
 
 .ah-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .ah-section-head h2{font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px}
@@ -69,18 +69,19 @@
 .ah-variant{font-size:11px;color:#98a6b8}
 /* Rarity colours match the Dressing Room item names and the quality dropdowns (docs/quality-select.css). */
 .ah-q0 a,.ah-q1 a,.ah-q2 a,.ah-q3 a,.ah-q4 a,.ah-q5 a,.ah-q6 a{color:var(--item-quality)}
-.ah-m-g{color:#ffd100}.ah-m-s{color:#c8ccd6}.ah-m-c{color:#e8894a}
-.ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:#f4d65c}.ah-time-green{color:#4fdc7a}
+/* Prices: white numbers, each followed by its coin. Zero amounts are not shown. */
+.ah-money{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.ah-num{color:#fff}.ah-coin{width:16px;height:16px;margin-right:4px;flex:none}.ah-money .ah-coin:last-child{margin-right:0}
+.ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:var(--gold)}.ah-time-green{color:#4fdc7a}
 .ah-change-up{color:#f27c7e}.ah-change-down{color:#5bdb9d}.ah-change-neutral{color:#a8b7c7}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}
 .ah-star:hover,.ah-star[aria-pressed=true]{color:#f4d65c}
-.ah-expand{color:#e8c67c;font-size:13px}
+.ah-expand{color:var(--gold);font-size:13px}
 
 .ah-detail>td{white-space:normal;background:#162132;padding:14px 16px}
 .ah-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 12px}
 .ah-stats div{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
-.ah-stats dt{font-size:11px;color:#9fadbf;margin:0 0 4px}.ah-stats dd{margin:0;font-size:13px;font-weight:600;color:#e9d175}
+.ah-stats dt{font-size:11px;color:#9fadbf;margin:0 0 4px}.ah-stats dd{margin:0;font-size:13px;font-weight:600;color:var(--gold)}
 .ah-stats dd small{font-weight:400;color:#98a6b8;display:block;margin-top:2px}
 .ah-detail details{border:1px solid var(--line);border-radius:4px;margin:8px 0;background:#182333}
 .ah-detail summary{cursor:pointer;padding:9px 12px;font-size:12px;font-weight:600;color:#dce3ed}
@@ -101,7 +102,7 @@
 .ah-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;color:#a9b8c8;font-size:12px}
 .ah-pager{display:flex;align-items:center;gap:8px}
 
-@media(max-width:900px){.ah-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ah-kpi:last-child{grid-column:1/-1}.ah-actions{margin-left:0}}
+@media(max-width:900px){.ah-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ah-actions{margin-left:0}}
 @media(max-width:560px){
  .ah-kpis{grid-template-columns:1fr 1fr}.ah-kpi{padding:10px}.ah-kpi strong{font-size:12px}
  .ah-filters{padding:12px}
