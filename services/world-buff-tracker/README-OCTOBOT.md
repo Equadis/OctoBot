@@ -69,20 +69,16 @@ do not commit them to GitHub):
 
 ```dotenv
 WOW_REALM=N'Zoth
-WOW_ACCOUNT=PVEOBDMFA
+WOW_ACCOUNT=<actual-alliance-login-account>
 WOW_PASSWORD=<private-alliance-password>
 WOW_CHARACTER=OBPVEDMFA
 DARKMOON_WATCH_LOCATION=elwynn
-WOW_LISTENERS=[{"account":"PVEOBDMFH","password":"<private-horde-password>","character":"OBPVEDMFH","darkmoonWatchLocation":"mulgore","onLogin":"none","yeller":false}]
+WOW_LISTENERS=[{"account":"<actual-horde-login-account>","password":"<private-horde-password>","character":"OBPVEDMFH","darkmoonWatchLocation":"mulgore","onLogin":"none","yeller":false}]
 METRICS_PUSH_TOKEN=<same-private-token-as-Cloudflare-OctoMetrics-Worker>
 METRICS_PUSH_URL=https://octometrics.eqvoice.workers.dev/api/ingest
 ```
 
-The login accounts are `PVEOBDMFA` and `PVEOBDMFH`, with in-game characters
-`OBPVEDMFA` and `OBPVEDMFH`. Old Railway settings that mistakenly used character
-names as account names are remapped at login, without changing passwords; the
-existing Worker telemetry identifiers remain the character names for compatibility.
-Characters must be parked at their respective Faire grounds within NPC visibility.
+Set `WOW_ACCOUNT` and the secondary `WOW_LISTENERS[].account` to the **actual game login accounts**, not automatically to the character names. The in-game characters are `OBPVEDMFA` and `OBPVEDMFH` and the Worker telemetry identifiers remain stable. Railway OAuth hides credential values, so verify both configured login account names in Railway if the logs report `auth: unknown account`. Characters must be parked at their respective Faire grounds within NPC visibility.
 
 The observer issues creature-name queries **once per newly encountered NPC entry
 per connection**, using the existing `NpcWatch` guard and `isFaireNpc` roster.
