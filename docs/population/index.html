@@ -13,6 +13,9 @@
 .graph{border:1px solid #384658;border-radius:4px;background:#182333;padding:8px 8px 0 26px}
 .reveal-lifespan{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:20px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:3px;background:transparent;color:#71839a;z-index:2}.reveal-lifespan[hidden]{display:none}.reveal-lifespan:hover{color:#c3d4e6;background:transparent}.reveal-lifespan:focus-visible{outline:2px solid #74c6ef;outline-offset:1px}.reveal-lifespan span{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:7px solid currentColor}.reveal-lifespan[aria-expanded=true] span{transform:rotate(180deg)}
 #lifespan-tooltip{top:50%;left:8px;transform:translateY(-50%);max-width:calc(100% - 8px);white-space:normal;z-index:3}
+.stats .stat strong.signal-green{color:#4fdc7a}
+.stats .stat strong.signal-yellow{color:#e3bd57}
+.stats .stat strong.signal-red{color:#f27c7e}
 </style>
 <link rel="stylesheet" href="../site-theme.css?v=20261116-q2">
 <script src="../site-tooltips.js?v=20261116-tips1" defer></script>
@@ -29,10 +32,10 @@
 <section class="chart-card" aria-label="Interactive population chart">
 <div class="chart-head"><div class="chart-title"><h2>Players online</h2><label class="server-label" for="server-select">Server: <select id="server-select" aria-label="Server"></select></label></div><span class="range-label" id="range-label"></span></div>
 <p class="readout" id="readout" aria-live="polite"></p>
-<div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><line id="average-line" x1="56" x2="964" stroke="#74b6ff" stroke-width="1.5"></line><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><g id="recorded-points"></g><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><button id="reveal-lifespan" class="reveal-lifespan" type="button" aria-expanded="false" aria-describedby="lifespan-tooltip" aria-label="Show full server lifespan (There is no data for this area)."><span aria-hidden="true"></span></button><div class="tip" id="lifespan-tooltip" role="tooltip" hidden></div><div class="tip" id="tooltip" hidden></div></div>
+<div class="graph"><svg viewBox="0 0 1000 355" role="img" aria-label="Population history with missing-data regions"><g id="axes"></g><g id="outages"></g><path id="average-line" fill="none" stroke="#74b6ff" stroke-width="1.9" stroke-linejoin="round"></path><g id="average-dots"></g><line id="peak-line" x1="56" x2="964" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="7 5"></line><path id="raw-population" fill="none" stroke="#82efb3" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="5 4"></path><path id="population" fill="none" stroke="#63df9a" stroke-width="2.5" stroke-linejoin="round"></path><path id="estimate-path" fill="none" stroke="#e3bd57" stroke-width="2.4" stroke-dasharray="6 5"></path><g id="recorded-points"></g><line id="crosshair" y1="28" y2="290" stroke="#738978" stroke-dasharray="4 4"></line><circle id="dot" r="5" stroke="#f4fff8" stroke-width="2"></circle><rect id="plot-hit" x="56" y="28" width="908" height="262" fill="transparent"></rect><g id="release-markers"></g></svg><button id="reveal-lifespan" class="reveal-lifespan" type="button" aria-expanded="false" aria-describedby="lifespan-tooltip" aria-label="Show full server lifespan (There is no data for this area)."><span aria-hidden="true"></span></button><div class="tip" id="lifespan-tooltip" role="tooltip" hidden></div><div class="tip" id="tooltip" hidden></div></div>
 <div class="controls"><div class="ranges" role="group" aria-label="Time range"></div><div class="dates"><div class="date-fields"><label for="date-from">From</label><input type="date" id="date-from"><label for="date-to">To</label><input type="date" id="date-to"></div><div class="date-actions"><button id="jump-to-present" class="jump-to-present" type="button" disabled>Jump to present →</button><button id="apply-dates" type="button">Apply</button></div></div></div>
 <div id="date-error" role="status"></div>
-<div class="legend-row"><span title="Solid green: players online, smoothed over the selected period."><i class="key" style="border-color:#63df9a"></i>Players</span><span title="Dashed green: raw recorded observations, before smoothing."><i class="key" style="border-color:#82efb3;border-bottom-style:dashed;opacity:.5"></i>Actual</span><span title="Yellow dash: estimated players where no data was recorded. Not an observation."><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated</span></div>
+<div class="legend-row"><span title="Solid green: players online, smoothed over the selected period."><i class="key" style="border-color:#63df9a"></i>Players</span><span title="Dashed green: raw recorded observations, before smoothing."><i class="key" style="border-color:#82efb3;border-bottom-style:dashed;opacity:.5"></i>Actual</span><span title="Yellow dash: estimated players where no data was recorded. Not an observation."><i class="key" style="border-color:#e3bd57;border-bottom-style:dashed"></i>Estimated</span><span title="Blue: average of all confirmed observations up to each point in time, excluding estimates."><i class="key" style="border-color:#74b6ff"></i>Average to date</span></div>
 
 
 </section>
@@ -50,7 +53,15 @@ const D=window.PopulationData,E=window.RealmEstimates,U=window.OctoBotUptime,$=i
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
 let period='1D',rows=[],estimatedRows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=null,uptimeStatusBusy=false,uptimeIncident=null;
-let fullLifespan=false,earliestPlotted=null;
+let fullLifespan=false,earliestPlotted=null,runningAverages=[];
+// Above the historical mean: green. More than 25% below: red. Otherwise: yellow.
+// A missing reading or baseline has no comparison colour.
+function comparisonTone(value,average){
+ if(value===null||average===null||!Number.isFinite(value)||!Number.isFinite(average))return '';
+ if(value>average)return 'signal-green';
+ if(average>0&&value<average*0.75)return 'signal-red';
+ return 'signal-yellow';
+}
 function timelineMinimum(){return fullLifespan||earliestPlotted===null?LAUNCH:Math.max(LAUNCH,earliestPlotted);}
 const fmt=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(t));
 const num=v=>v===null?'NO DATA':Math.round(v).toLocaleString('en-GB');
@@ -77,6 +88,7 @@ function newestReading(){
 function updateHeadline(){
  const latest=newestReading(),current=Date.now();
  $('online-now').textContent=latest?num(latest.value):'NO DATA';
+ $('online-now').className=comparisonTone(latest?.value??null,runningAverages.at(-1)?.value??null);
  const age=latest?Math.max(0,current-latest.t):Infinity;
  $('online-label').textContent=age<=2*60000?'Online now':'Latest recorded';
  $('online-freshness').textContent=latest?(age<=2*60000?'Updated '+elapsedLabel(age):'Last observation: '+fmt(latest.t)+' UTC'):'No verified population observation';
@@ -92,18 +104,21 @@ function updateUptime(){
   if(monitor.kind==='unknown'||monitor.kind==='uncertain'){
    // Hide an unverifiable reading, but never reset its underlying uptime anchor.
    $('uptime').textContent='NO DATA';
-   $('uptime').style.color='#e3bd57';
+   $('uptime').className='signal-yellow';
+   $('uptime').style.color='';
    $('uptime-freshness').textContent=monitor.kind==='uncertain'
      ?'Unconfirmed offline report · clock preserved'
      :'Monitoring unavailable · clock preserved';
   }else{
    $('uptime').textContent=U.format(state.seconds);
+   $('uptime').className=state.seconds>7*86400?'signal-green':'signal-yellow';
    $('uptime').style.color='';
    $('uptime-freshness').textContent='Estimated';
   }
  }else{
   $('uptime').textContent='NO DATA';
-  $('uptime').style.color='#e3bd57';
+  $('uptime').className=state.kind==='interrupted'?'signal-red':'signal-yellow';
+  $('uptime').style.color='';
   $('uptime-freshness').textContent=state.kind==='interrupted'
     ?'Confirmed DOWN · new uptime reading needed':'No in-game uptime reference';
  }
@@ -284,7 +299,9 @@ async function refreshLive(){
 function svg(name,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function show(time,value,tooltip=false,custom=null,estimated=false){
  const label=custom|| (value===null?'NO DATA':num(value)+' players'+(estimated?' estimated':'')),colour=value===null||estimated?'#e3bd57':'#79dfa7';
- $('readout').textContent=(time===null?'':fmt(time)+' UTC · ')+label;$('readout').style.color=colour;
+ const historicalAverage=!estimated&&value!==null&&time!==null?D.runningAverageAt(runningAverages,time):null;
+ $('readout').textContent=(time===null?'':fmt(time)+' UTC · ')+label+(historicalAverage!==null?' · Average to date: '+num(historicalAverage):'');
+ $('readout').style.color=colour;
  const inWindow=time!==null&&start<=time&&time<=windowEnd;
  $('dot').style.display=inWindow&&value!==null?'':'none';
  $('crosshair').style.display=inWindow&&(tooltip||value!==null)?'':'none';
@@ -296,7 +313,12 @@ function show(time,value,tooltip=false,custom=null,estimated=false){
   heading.textContent=label;heading.style.color=colour;
   timestamp.textContent=time===null?'Exact date unconfirmed':fmt(time)+' UTC';timestamp.style.color='#8ee5e5';
   dayline.textContent=time===null?'':weekday(time);dayline.style.color='#e5e9ef';
-  tip.replaceChildren(heading,timestamp,dayline);
+  if(historicalAverage!==null){
+   const averageLine=document.createElement('div');
+   averageLine.textContent='Average to date: '+num(historicalAverage);
+   averageLine.style.color='#74b6ff';
+   tip.replaceChildren(heading,timestamp,dayline,averageLine);
+  }else tip.replaceChildren(heading,timestamp,dayline);
   const width=tip.parentElement.clientWidth;
   tip.style.left=Math.max(0,Math.min(width-tip.offsetWidth,(time===null?56:x(time))/1000*width+12))+'px';
 }
@@ -353,14 +375,18 @@ function draw(){
  $('lifespan-tooltip').textContent=revealLabel;
  if(reveal.hidden)$('lifespan-tooltip').hidden=true;
  reveal.setAttribute('aria-label',revealLabel);
+ runningAverages=D.runningAverage(rows);
  const latest=rows.at(-1),peak=rows.length?rows.reduce((a,b)=>a.value>=b.value?a:b):null;
  const recent=rows.filter(r=>now-day<=r.t&&r.t<=now),peak24=recent.length?Math.max(...recent.map(r=>r.value)):null;
- $('peak24').textContent=num(peak24);$('all-peak').textContent=num(peak?.value??null);updateHeadline();updateUptime();
+ $('peak24').textContent=num(peak24);$('all-peak').textContent=num(peak?.value??null);
+ $('peak24').className=comparisonTone(peak24,runningAverages.at(-1)?.value??null);
+ $('all-peak').className=peak?'signal-green':'';
+ updateHeadline();updateUptime();
  $('all-peak').title=rows.length?'Recorded since '+fmt(rows[0].t)+' UTC':'No recorded observations';
  const info=D.intervals(rows,start,windowEnd);missing=info.unknown;
  const estimatedPeak=estimatedRows.reduce((max,row)=>Math.max(max,row.value),0);
  ceiling=Math.max(500,Math.ceil(Math.max(peak?.value||0,estimatedPeak)*1.15/500)*500);
- $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();$('recorded-points').replaceChildren();
+ $('axes').replaceChildren();$('outages').replaceChildren();$('release-markers').replaceChildren();$('recorded-points').replaceChildren();$('average-dots').replaceChildren();
  const step=Math.max(100,Math.ceil(ceiling/6/100)*100);
  for(let v=0;v<=ceiling;v+=step)$('axes').append(svg('line',{x1:56,x2:964,y1:y(v),y2:y(v),stroke:'#343a43'}),svg('text',{x:46,y:y(v)+4,'text-anchor':'end'},num(v)));
  for(let i=0;i<6;i++){
@@ -406,7 +432,20 @@ function draw(){
  for(const segment of projected.recorded)estimatePath+=pathFor(segment);
  $('estimate-path').setAttribute('d',estimatePath);
  $('raw-population').setAttribute('d',rawPath);$('population').setAttribute('d',path);
- for(const [id,val]of [['average-line',info.average],['peak-line',peak?.value??null]]){const line=$(id);line.style.display=val===null?'none':'';line.setAttribute('y1',y(val??0));line.setAttribute('y2',y(val??0));}
+ // Use every observation from the start of the realm's history, not just this view.
+ // The blue path is segmented across gaps and never includes estimated samples.
+ let averagePath='';
+ for(const segment of D.visibleSeries(runningAverages,start,windowEnd,0).recorded){
+  averagePath+=pathFor(segment);
+  if(segment.length===1)$('average-dots').append(svg('circle',{
+   cx:x(segment[0].t),cy:y(segment[0].value),r:2.5,fill:'#74b6ff'
+  }));
+ }
+ $('average-line').setAttribute('d',averagePath);
+ $('average-line').style.display=averagePath?'':'none';
+ const peakLine=$('peak-line'),peakValue=peak?.value??null;
+ peakLine.style.display=peakValue===null?'none':'';
+ peakLine.setAttribute('y1',y(peakValue??0));peakLine.setAttribute('y2',y(peakValue??0));
  
  if(peak&&start<=peak.t&&peak.t<=windowEnd)$('release-markers').append(svg('circle',{cx:x(peak.t),cy:y(peak.value),r:4,fill:'#63df9a',stroke:'#fff'}));
  let undated=0,upcoming=0;
