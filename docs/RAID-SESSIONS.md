@@ -119,6 +119,26 @@ Per head (`heads.onyxia`, `heads.nefarian`): `sessions[]` (id, key, status, conf
 
 Existing raid numbers, the Mongo counter and records are untouched. The Chronicle early-confirm path still acts on the first lane with a pending departure.
 
+## Deployment status (2026-11-16)
+
+| Component | State |
+|---|---|
+| Cloudflare Worker `octometrics` | **Deployed** (version `e4448703`; rollback `bf2f2a63`). Accepts `raid_sessions` / `raid_session_ended`, serves `heads.*.sessions` / `authoritative`. Until the Bufftracker reports, `authoritative` is `null`, estimates are `LEARNING` with 0 samples, and the legacy headcount start time is withheld. |
+| Website (GitHub Pages) | **Deployed** (`world-info.js?v=20261118-raids1`). |
+| Railway `octobot-metrics-tracker` (legacy collector) | Running, unchanged. Aggregate `/who` counts only. Never supplies raid timers or estimates. |
+| Railway `octobot-dmf-tracker` | Running the DMF-only command. It does **not** run the raid tracker. |
+| Main World Buff Tracker (`node dist/index.js`) | **Not deployed.** The only Railway project (`octometrics-test`) has the two services above. No authoritative raid session can exist until this service runs, so individual raid numbers, per-raid clocks and guild labels are not live yet. |
+
+### Bringing the main tracker online (needs the owner)
+
+It needs credentials and a database only the owner holds, and a game account that no other service uses (two logins on one account kick each other off).
+
+1. New Railway service in the same project, repo `Equadis/OctoBot`, root directory `services/world-buff-tracker`, default start command (`node --max-old-space-size=96 --max-semi-space-size=2 dist/index.js`, from `railway.json`). Not `start:dmf`.
+2. Variables (values entered privately in Railway): `WOW_REALM=N'Zoth`, `WOW_ACCOUNT`, `WOW_PASSWORD`, `WOW_CHARACTER` (a dedicated account, not OBPVESW / OBPVEORG / OBPVEBB / the DMF accounts), `MONGODB_URI`, `MONGODB_DB`, `WOW_BWL_ENABLED=true`, `WOW_RAID_MAX_CONCURRENT=2`, `WOW_BWL_RAID_MAX_CONCURRENT=2`, `WOW_WHO_MIN_GAP_SECONDS=31`, `METRICS_PUSH_TOKEN` (same value as the Worker secret; Railway reference variables can share it), optional `METRICS_PUSH_URL`. Leave `WOW_RAID_TELEMETRY` unset (on) or `true`.
+3. Deploy. Expected log line: `raid telemetry enabled: pushing authoritative raid sessions to OctoMetrics`.
+4. Verify: `curl -s "https://octometrics.eqvoice.workers.dev/api/summary?realm=N%27Zoth"`. `heads.onyxia.authoritative.fresh` must be `true` (a snapshot at most 3 minutes old is sent every 2 minutes). When a raid is in the lair, `sessions[]` holds its id and `startedAt`; compare both with the in-game Bufftracker whisper. Then open the World Info page and check the same ids and elapsed times.
+5. Rollback: stop or delete the new service. The Worker and site tolerate its absence.
+
 ## Limitations (honest list)
 
 * `/who` has no instance id and no party info: sessions are roster-cohort **inferences**; identity is never `confirmed` from `/who`.
