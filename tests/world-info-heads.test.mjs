@@ -63,7 +63,7 @@ test('a live estimate counts down from the Worker timestamps and is labelled an 
   assert.ok(!/confirmed drop/i.test(text('ony-clear-note')));
   assert.match(text('ony-drop-alliance'),/^Alliance · 1h 0[45]m \d\ds ago$/);
   assert.equal(text('ony-drop-horde'),'Horde · NO DATA');
-  assert.equal(text('bwl-clear'),'LEARNING');
+  assert.equal(text('bwl-clear'),'Learning');
   assert.match(text('bwl-clear-note'),/Needs 5 past raids .* 2 observed/);
   assert.match(text('bwl-drop-horde'),/^Horde · 5m \d\ds ago$/);
 });
@@ -129,7 +129,7 @@ test('aggregate activity shows a lower bound with the label, and the clear estim
   assert.equal(text('ony-count'),'1+');           // a lower bound: headcount cannot count raids
   assert.equal(text.el('ony-count-label').hidden,false);
   assert.equal(text('ony-count-label'),'Raid in progress:');
-  assert.equal(text('ony-clear'),'LEARNING');
+  assert.equal(text('ony-clear'),'Learning');
 });
 
 test('headcount activity never invents a numbered raid, even when guild counts are attached',async()=>{

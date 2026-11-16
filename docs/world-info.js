@@ -166,7 +166,7 @@
     const total = Number.isFinite(players) && players > 0 ? players : listed;
     if (!entries.length || !total) return null;
     const top = entries.filter(([name]) => String(name).trim()).sort((a, b) => b[1] - a[1])[0];
-    return top && top[1] * 2 >= total ? { name: String(top[0]).trim(), pug: false } : { name: 'PUG', pug: true };
+    return top && top[1] * 2 >= total ? { name: String(top[0]).trim(), pug: false } : { name: 'Pug', pug: true };
   }
   function raidSession(row) {
     if (!object(row)) return null;
@@ -235,7 +235,7 @@
       line.className = 'timer-row';
       const title = document.createElement('span');
       const guild = session.guild && session.guild.label ? session.guild.label : null;
-      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2014 ' + guild : '');
+      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2013 ' + guild : '');
       title.title = session.confidence === 'tentative'
         ? 'Separated from another raid by arrival timing only. /who has no instance IDs, so this grouping is an estimate.'
         : guild === 'Unknown' ? 'Not enough roster information to name a guild or PUG.' : 'Grouped from the roster by the Bufftracker; not verified instance membership.';
@@ -267,7 +267,7 @@
     }
     const present = Number(auth.lair.present);
     const roster = Number.isFinite(present) ? playerCount(present) + ' in the lair. ' : '';
-    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2014 showing the last known raids; they may have changed.';
+    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2013 showing the last known raids; they may have changed.';
     else evidence.textContent = roster + 'Raids come from Bufftracker roster tracking; /who has no instance IDs, so groups are inferred.' + (ambiguity ? ' ' + ambiguity.players + ' more players could not be separated into a raid.' : '');
   }
   function playerCount(n) { return n + (n === 1 ? ' player' : ' players'); }
@@ -303,7 +303,7 @@
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2014 ' + session.guild.name : '');
+        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2013 ' + session.guild.name : '');
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
@@ -359,14 +359,14 @@
   function serverNow() { return Date.now() + (Number.isFinite(state.clockOffsetMs) ? state.clockOffsetMs : 0); }
   // Why the live feed cannot be trusted right now, or null. A last known drop is still shown, but labelled as last known.
   function monitoringConcern(faction) {
-    if (state.apiOk === false) return { stale: true, note: 'OctoMetrics is unavailable \u2014 showing the last known drop, not live monitoring.' };
+    if (state.apiOk === false) return { stale: true, note: 'OctoMetrics is unavailable \u2013 showing the last known drop, not live monitoring.' };
     const m = object(state.monitoring);
-    if (m && m.collectorFresh === false) return { stale: true, note: 'The collector has stopped reporting \u2014 showing the last known drop; a newer one may be missing.' };
+    if (m && m.collectorFresh === false) return { stale: true, note: 'The collector has stopped reporting \u2013 showing the last known drop; a newer one may be missing.' };
     const l = object(state.listeners) && object(state.listeners[faction === 'alliance' ? 'sw' : 'org']);
     const city = faction === 'alliance' ? 'Stormwind' : 'Orgrimmar';
-    if (l && l.status === 'offline') return { stale: true, note: 'The ' + city + ' listener is offline \u2014 a newer drop may be missing.' };
-    if (l && l.status === 'silent') return { stale: false, note: 'The ' + city + ' listener has heard nothing for a long time (possibly out of range) \u2014 a newer drop may be missing.' };
-    if (l && l.status === 'degraded') return { stale: false, note: 'Drops from ' + city + ' are not being delivered reliably right now \u2014 a newer drop may be missing.' };
+    if (l && l.status === 'offline') return { stale: true, note: 'The ' + city + ' listener is offline \u2013 a newer drop may be missing.' };
+    if (l && l.status === 'silent') return { stale: false, note: 'The ' + city + ' listener has heard nothing for a long time (possibly out of range) \u2013 a newer drop may be missing.' };
+    if (l && l.status === 'degraded') return { stale: false, note: 'Drops from ' + city + ' are not being delivered reliably right now \u2013 a newer drop may be missing.' };
     return null;
   }
   function renderBuff(faction) {
@@ -414,6 +414,7 @@
     // With no raid there is nothing to estimate: N/A in red.
     const idle = $(prefix + '-count').textContent === 'No raid' || (clear && clear.status === 'idle');
     out.classList.toggle('na', Boolean(idle));
+    out.classList.remove('dots');
     if (idle) { out.textContent = 'N/A'; note.textContent = ''; return; }
     if (!clear || stale) {
       out.textContent = 'NO DATA';
@@ -424,7 +425,7 @@
     if (clear.status === 'leaving') { out.textContent = 'LEAVING'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
     if (clear.status === 'learning') {
-      out.textContent = 'LEARNING';
+      out.textContent = 'Learning'; out.classList.add('dots');
       note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
       return;
     }
@@ -613,6 +614,7 @@
   }
   function renderMadnessCountdown() {
     const rotation = currentRotation();
+    $('eom-current').classList.remove('dots');
     $('eom-current').textContent = rotation.current;
     $('eom-next').textContent = rotation.next;
     // Colour each boss name to match its calendar colour.

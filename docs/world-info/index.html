@@ -16,12 +16,12 @@
 <body><main>
 <header class="site-header">
   <div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home" title="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>World Info – N&#39;Zoth</h1></div></div>
-  <div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div>
+  <div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">–</span><span class="sr-only"> active viewers across the dashboard</span></span></div>
 </header>
 <nav class="page-nav" aria-label="Dashboard pages" data-current="world-info"></nav><script src="../site-nav.js?v=20261116-nav1"></script>
 <div class="world-intro">
   <p class="muted">N'Zoth world events · Live observations where available, estimates clearly labelled.</p>
-  <span class="source-label" id="source-status" role="status" aria-live="polite">Connecting to OctoMetrics…</span>
+  <span class="source-label" id="source-status" class="source-label dots" role="status" aria-live="polite">Connecting to OctoMetrics</span>
 </div>
 
 <section aria-labelledby="raids-heading">
@@ -87,10 +87,10 @@
   <section class="world-panel zg-panel" aria-labelledby="eom-heading">
     <div class="panel-heading"><div><span class="eyebrow">ZUL'GURUB</span><h2 id="eom-heading">Edge of Madness</h2></div><div class="heading-actions"><span class="state-tag" id="eom-source">CLASSIC ERA</span><button type="button" class="panel-arrow" id="calendar-toggle" aria-expanded="false" aria-controls="calendar-body" aria-label="Show the Edge of Madness calendar" title="Show calendar"><span aria-hidden="true"></span></button></div></div>
     <div class="boss-grid">
-      <div><span class="field-label">Current boss</span><strong class="boss-name" id="eom-current">LOADING</strong><small id="eom-current-until">Checking rotation…</small></div>
-      <div><span class="field-label">Next boss</span><strong class="boss-name" id="eom-next">—</strong><small id="eom-next-at">—</small></div>
+      <div><span class="field-label">Current boss</span><strong class="boss-name" id="eom-current" class="dots">Loading</strong><small id="eom-current-until" class="dots">Checking rotation</small></div>
+      <div><span class="field-label">Next boss</span><strong class="boss-name" id="eom-next">–</strong><small id="eom-next-at">–</small></div>
     </div>
-    <div class="bottom-line"><span>Next rotation in</span><strong class="mono" id="eom-countdown">—</strong></div>
+    <div class="bottom-line"><span>Next rotation in</span><strong class="mono" id="eom-countdown">–</strong></div>
     <div class="calendar-body" id="calendar-body" hidden>
   <div class="calendar-title"><p class="muted">Classic Era / Pacific rotation · Not yet verified for OctoWoW</p><div class="calendar-controls"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="calendar-next" aria-label="Next month">›</button><button type="button" id="calendar-today">Today</button></div></div>
   <div class="madness-calendar" id="madness-calendar" aria-label="Edge of Madness boss rotation calendar"></div>
