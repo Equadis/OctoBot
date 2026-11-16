@@ -30,6 +30,21 @@ test('navigation has exactly three groups in the required order',()=>{
   assert.equal(GROUPS.length,3);
 });
 
+test('beta badges appear on four specified tabs with the shared hover explanation',()=>{
+  const nav=el('nav');nav.attrs['data-current']='sim';render(nav,'../');
+  const links=nav.children.flatMap(group=>group.children);
+  const tagged=links.filter(link=>link.children.some(child=>child.textContent==='BETA'));
+  assert.deepEqual(tagged.map(link=>link.textContent),['Gear Planner','Dressing Room','World Info','Auction House']);
+  for(const link of tagged){
+    const beta=link.children.find(child=>child.textContent==='BETA');
+    assert.equal(beta.attrs['data-site-tip'],'This section is currently in beta, results may not be 100% accurate.');
+  }
+  const home=readFileSync(new URL('index.html',docs),'utf8');
+  assert.equal((home.match(/>BETA<\/em>/g)||[]).length,4);
+  assert.doesNotMatch(home,/World Info – N(?:'|&#39;)Zoth/);
+  assert.match(home,/Browse auction listings/);
+});
+
 test('every page uses the shared script, names itself, and highlights only its own link',()=>{
   for(const route of ROUTES){
     const html=page(route);
