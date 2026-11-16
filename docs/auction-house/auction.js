@@ -3,7 +3,7 @@ const API='https://octometrics.eqvoice.workers.dev';
 const $=id=>document.getElementById(id);
 const state={page:0,limit:50,loading:false,last:null,queryId:0};
 const money=n=>{
-  if(!Number.isFinite(Number(n)))return '—';
+  if(n==null||!Number.isFinite(Number(n)))return '—';
   let c=Math.max(0,Math.round(Number(n)));
   const g=Math.floor(c/10000),s=Math.floor(c%10000/100),b=c%100;
   return [g?g+'g':null,(g||s)?s+'s':null,b+'c'].filter(Boolean).join(' ');
