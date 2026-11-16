@@ -207,8 +207,8 @@ test('the refresh control is the Dressing Room reset icon with an accessible lab
   assert.match(read('auction-house/auction.js'),/button\.disabled=on;button\.classList\.toggle\('loading',on\)/,'disabled and spinning while loading');
 });
 test('item icons missing from the Wowhead CDN fall back to the OctoWoW database',()=>{
-  assert.match(read('auction-house/index.html'),/<script src="../icon-fallback.js?v=1"></script>/);
-  assert.match(read('icon-fallback.js'),/octowow.st/db/images/icons/);
+  assert.ok(read('auction-house/index.html').includes('<script src="../icon-fallback.js?v=1"></script>'));
+  assert.ok(read('icon-fallback.js').includes('https://octowow.st/db/images/icons/'));
 });
 test('the rarity dropdown and item names use the shared rarity colours',()=>{
   const html=read('auction-house/index.html'),css=read('auction-house/auction.css');
