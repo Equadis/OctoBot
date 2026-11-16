@@ -66,7 +66,7 @@ async function upload(req,env,action){
  }
  const scan=await first(db,"SELECT * FROM ah_scans WHERE scan_id=?",body.scan_id);
  if(!scan)return bad('unknown scan',404);
- const liveSnapshot=scan.scan_id.startsWith('ahl_');
+ const liveSnapshot=body.scan_id.startsWith('ahl_');
  if(action==='complete'&&scan.status==='complete'){
    if(integer(body.expected_pages,1,30001)&&integer(body.reported_total,0,1000000)&&validIso(body.completed_at)&&
       scan.expected_pages===body.expected_pages&&scan.reported_total===body.reported_total&&scan.completed_at===body.completed_at)
