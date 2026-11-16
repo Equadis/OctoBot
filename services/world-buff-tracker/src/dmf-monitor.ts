@@ -16,7 +16,7 @@ import {createLogger, prefixed, type Logger} from "./logger.js";
 import type {FaireLocation} from "./darkmoon/location.js";
 
 type DmfRole = "dmfa" | "dmfh";
-type Watcher = {account:string; password:string; character:string; role:DmfRole; site:FaireLocation};
+type Watcher = {account:string; loginAccount:string; password:string; character:string; role:DmfRole; site:FaireLocation};
 type EventData =
   | {type:"dmf_status"; connected:boolean; queries:number}
   | {type:"dmf_sighting"; npc:string; source:"onsite"; confirmed:true};
@@ -27,14 +27,19 @@ const HEARTBEAT_MS = 60_000;
 
 export function watchersFromConfig(config:BotConfig): readonly Watcher[] {
   const h = config.listeners[0];
-  if(config.realm !== "N'Zoth" || config.account !== "OBPVEDMFA" ||
+  // OBPVEDMFA / OBPVEDMFH are in-game CHARACTER names, not authentication accounts.
+  // Legacy Railway variables used those character names as WOW_ACCOUNT; correct the
+  // login here without exposing or changing the existing stored passwords.
+  const allianceLogin=config.account==="OBPVEDMFA"?"PVEOBDMFA":config.account;
+  const hordeLogin=h?.account==="OBPVEDMFH"?"PVEOBDMFH":h?.account;
+  if(config.realm !== "N'Zoth" || allianceLogin !== "PVEOBDMFA" ||
     config.darkmoonWatchLocation !== "elwynn" || config.listeners.length !== 1 ||
-    !h || h.account !== "OBPVEDMFH" || h.darkmoonWatchLocation !== "mulgore") {
-    throw new Error("DMF-only mode requires OBPVEDMFA at Elwynn and one OBPVEDMFH listener at Mulgore on N'Zoth");
+    !h || hordeLogin !== "PVEOBDMFH" || h.darkmoonWatchLocation !== "mulgore") {
+    throw new Error("DMF-only mode needs login accounts PVEOBDMFA (Elwynn) and PVEOBDMFH (Mulgore) on N'Zoth");
   }
   return [
-    {account:config.account,password:config.password,character:config.characterName,role:"dmfa",site:"elwynn"},
-    {account:h.account,password:h.password,character:h.characterName,role:"dmfh",site:"mulgore"},
+    {account:"OBPVEDMFA",loginAccount:allianceLogin,password:config.password,character:config.characterName,role:"dmfa",site:"elwynn"},
+    {account:"OBPVEDMFH",loginAccount:hordeLogin,password:h.password,character:h.characterName,role:"dmfh",site:"mulgore"},
   ];
 }
 
@@ -72,7 +77,7 @@ function tcp(host:string,port:number):Promise<Socket> {
 async function session(config:BotConfig, watcher:Watcher, build:number,
   push:(w:Watcher,e:EventData)=>Promise<void>, log:Logger):Promise<void> {
   const auth=await new AuthClient(log).login({
-    host:config.authHost,port:config.authPort,username:watcher.account,password:watcher.password,
+    host:config.authHost,port:config.authPort,username:watcher.loginAccount,password:watcher.password,
     integrityChecksum:config.integrityChecksum,build,
   });
   const realm=auth.realms.find(r=>r.name.toLowerCase()===config.realm.toLowerCase());
@@ -82,12 +87,26 @@ async function session(config:BotConfig, watcher:Watcher, build:number,
   sockets.add(socket);
   await new Promise<void>((resolve,reject)=>{
     const watch=new NpcWatch();
-    const reported=new Set<string>();
+    const nearby=new Map<bigint,number>(); // only units still in range
+    const names=new Map<number,string>(); // creature entry -> verified name
+    let lastConfirmedAt=0;
     let ready=false,finished=false;
     let timeout:ReturnType<typeof setTimeout>|null=null;
     let heartbeat:ReturnType<typeof setInterval>|null=null;
     const reportStatus=(connected:boolean):void=>{
       void push(watcher,{type:"dmf_status",connected,queries:watch.asked});
+    };
+    const reportPresence=():void=>{
+      if(!ready || Date.now()-lastConfirmedAt<HEARTBEAT_MS)return;
+      for(const entry of nearby.values()){
+        const name=names.get(entry);
+        if(name && isFaireNpc(name)){
+          lastConfirmedAt=Date.now();
+          log.info("DMF confirmed at "+watcher.site+" by nearby NPC "+name);
+          void push(watcher,{type:"dmf_sighting",npc:name,source:"onsite",confirmed:true});
+          return;
+        }
+      }
     };
     const finish=(error?:Error):void=>{
       if(finished)return;
@@ -101,7 +120,7 @@ async function session(config:BotConfig, watcher:Watcher, build:number,
       else resolve();
     };
     const world=new WorldClient({
-      socket,account:watcher.account,sessionKey:auth.sessionKey,
+      socket,account:watcher.loginAccount,sessionKey:auth.sessionKey,
       characterName:watcher.character,build:config.worldBuild,logger:log,
       handlers:{
         onReady:()=>{
@@ -109,24 +128,32 @@ async function session(config:BotConfig, watcher:Watcher, build:number,
           if(timeout)clearTimeout(timeout);
           log.info("DMF in-world at "+watcher.site+"; NPC detector active (no /who, whispers or chat)");
           reportStatus(true);
-          heartbeat=setInterval(()=>reportStatus(true),HEARTBEAT_MS);
+          heartbeat=setInterval(()=>{reportStatus(true);reportPresence();},HEARTBEAT_MS);
         },
         onWorldObjects:(raw)=>{
           if(!world.isReady)return;
           const update=parseUpdateObject(raw,world.selfGuid??undefined);
           if(update.incomplete)log.debug("Partial nearby-object update");
-          const entries=new Map(update.units.map(u=>[u.entry,u.guid]));
+          for(const change of update.ownerChanges){
+            if(change.kind==="out-of-range")nearby.delete(change.guid);
+          }
+          const entries=new Map<number,bigint>();
+          for(const unit of update.units){
+            nearby.set(unit.guid,unit.entry);
+            entries.set(unit.entry,unit.guid);
+          }
           for(const entry of watch.take(entries.keys())){
             const guid=entries.get(entry);
             if(guid!==undefined)world.queryCreature(entry,guid);
           }
+          reportPresence();
         },
-        onCreatureName:(_entry,name)=>{
-          if(name===null || !isFaireNpc(name) || reported.has(name))return;
-          reported.add(name);
-          log.info("DMF confirmed at "+watcher.site+" by NPC "+name);
-          void push(watcher,{type:"dmf_sighting",npc:name,source:"onsite",confirmed:true});
+        onCreatureName:(entry,name)=>{
+          if(name===null)return;
+          names.set(entry,name);
+          reportPresence();
         },
+        onObjectDestroyed:(guid)=>{nearby.delete(guid);},
         onError:(error)=>finish(error),
         onClose:()=>finish(new Error("World connection closed")),
       },
