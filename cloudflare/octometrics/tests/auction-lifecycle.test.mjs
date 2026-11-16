@@ -196,3 +196,18 @@ test("a full-size scan uploads, publishes and queries within sane limits",{skip}
   `rows written ≈ ${n} listings + ${6000} points + ${6000} daily`);
  assert.ok(t2-t1<5000);
 });
+
+test("live snapshots (ahl_ scan IDs) accept a traversal whose pages shift, strict scans still do not",{skip},async()=>{
+ const e=env();
+ const items=Array.from({length:70},(_,i)=>listing(i+1));
+ // Live: the server reported 70, but only 60 distinct auctions were seen (50 + 10): published, labelled as an estimate.
+ assert.equal((await post(e,"start",{scan_id:"ahl_live_00001",started_at:new Date().toISOString(),reported_total:70})).status,201);
+ assert.equal((await post(e,"page",{scan_id:"ahl_live_00001",page:0,response_ms:1,items:items.slice(0,50)})).status,202);
+ assert.equal((await post(e,"page",{scan_id:"ahl_live_00001",page:1,response_ms:1,items:items.slice(50,60)})).status,202,"a short last page is accepted in live mode");
+ const done=await post(e,"complete",{scan_id:"ahl_live_00001",completed_at:new Date().toISOString(),expected_pages:2,reported_total:70});
+ assert.equal(done.status,201);assert.equal(done.json.snapshot_quality,"live_estimate");assert.equal(done.json.auction_count,60);
+ // Strict (any other ID): the same short page is refused and the count must equal the server total.
+ assert.equal((await post(e,"start",{scan_id:"ah_strict_0001",started_at:new Date().toISOString(),reported_total:70})).status,201);
+ assert.equal((await post(e,"page",{scan_id:"ah_strict_0001",page:0,response_ms:1,items:items.slice(0,50)})).status,202);
+ assert.equal((await post(e,"page",{scan_id:"ah_strict_0001",page:1,response_ms:1,items:items.slice(50,60)})).status,409,"strict mode needs the exact page length");
+});
