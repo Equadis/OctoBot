@@ -65,7 +65,7 @@ function renderRows(data){
     expand.type='button';expand.title='Show individual auction listings';expand.setAttribute('aria-expanded','false');
     wrap.append(expand,itemCell(item));cell.append(wrap);tr.append(cell);
     td(tr,item.quantity??'—');td(tr,item.listings??'—');td(tr,money(item.unit_buyout));
-    td(tr,money(item.stack_buyout));td(tr,money(item.current_bid??item.start_bid));
+    td(tr,money(item.stack_buyout));td(tr,item.current_bid>0?money(item.current_bid):money(item.start_bid)+' (start)');
     td(tr,money(item.historical_avg));td(tr,pct(item.market_pct));
     const t=trend(item.trend_pct),trendCell=td(tr,t.label);trendCell.className=t.className;
     trendCell.title=item.trend_pct==null?'No previous completed scan for this item':('Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct));
@@ -77,7 +77,7 @@ function renderRows(data){
       expand.disabled=true;
       const detail=el('tr',null,'ah-detail'),detailCell=el('td','Loading listings…');detailCell.colSpan=10;detail.append(detailCell);tr.after(detail);
       try{
-        const result=await request('/api/auction/item/'+encodeURIComponent(item.item_id)+'?variant='+encodeURIComponent(item.variant||''));
+        const [result,history]=await Promise.all([request('/api/auction/item/'+encodeURIComponent(item.item_id)+'?variant='+encodeURIComponent(item.variant||'')),request('/api/auction/history/'+encodeURIComponent(item.item_id)+'?variant='+encodeURIComponent(item.variant||''))]);
         const detailTable=el('table');const thead=el('thead');const headings=el('tr');
         ['Seller / owner GUID','Quantity','Starting bid','Current bid','Minimum next bid','Buyout','Unit buyout','Time left'].forEach(v=>headings.append(el('th',v)));
         thead.append(headings);detailTable.append(thead);const tbody=el('tbody');
@@ -87,6 +87,9 @@ function renderRows(data){
           tbody.append(line);
         }
         detailTable.append(tbody);detailCell.replaceChildren(detailTable);
+        const prices=(history.history||[]).slice(0,14);
+        const heading=el('p','Daily lowest unit buyout (most recent first): '+(prices.length?prices.map(p=>p.day+' '+money(p.representative_unit)).join(' · '):'NO DATA'),'ah-history');
+        detailCell.prepend(heading);
       }catch{detailCell.textContent='Listings are unavailable; the prior snapshot remains unchanged.';}
       expand.disabled=false;expand.textContent='▾';expand.setAttribute('aria-expanded','true');
     });
