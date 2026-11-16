@@ -103,3 +103,8 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
  .page-nav .nav-group a{flex:1;min-width:0}
  .page-nav .nav-group+.nav-group{margin-left:0;padding-left:0;padding-top:8px;border-left:0;border-top:1px solid var(--line)}
 }
+
+/* Small square icon button shared with the Dressing Room's viewer tools (identical to its reset-camera control). */
+.tool-btn{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;cursor:pointer}
+.tool-btn:hover,.tool-btn:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
+.tool-btn .flip{display:block;font-size:17px;line-height:1;transform:rotate(90deg)}
