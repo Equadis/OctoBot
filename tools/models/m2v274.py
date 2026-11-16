@@ -76,9 +76,10 @@ def write_track(blob, track, seqs, kind):
         for s, (lo, hi) in zip(seqs, track['ranges']):
             groups.append(list(range(lo, hi + 1)) if hi >= lo and lo < len(track['values']) else [])
             starts.append(s['start'])
+    # Some client models (Helm_Robe_D_04) key a track a few ticks before the sequence that owns it starts; the field is unsigned, so clamp at 0.
     t_entries, v_entries = [], []
     for idx, start in zip(groups, starts):
-        t_entries.append(pair(blob, [track['times'][k] - start for k in idx], '<I'))
+        t_entries.append(pair(blob, [max(0, track['times'][k] - start) for k in idx], '<I'))
         if kind == 'quat':
             v_entries.append((len(idx), blob.add(b''.join(encode_quat(track['values'][k]) for k in idx), 4) if idx else 0))
         elif kind == 'int16':
@@ -212,15 +213,16 @@ def write_m2(m, skel_id, skin_id, texture_ids):
             + chunk(b'TXID', b''.join(struct.pack('<I', i) for i in texture_ids)))
 
 
-def convert(data, first_id=9000000):
-    """Returns ({relative path: bytes}, ids). File ids are invented here, high enough to stay clear of Zam's own."""
+def convert(data, first_id=9000000, texture_id_for=None):
+    """Returns ({relative path: bytes}, ids). File ids are invented here, high enough to stay clear of Zam's own.
+    texture_id_for(path) may supply the id for a texture the model names, so many models can share one converted texture."""
     m = m2v256.M2(data)
     model_id, skin_id, skel_id = first_id, first_id + 1, first_id + 2
     texture_ids, ids_by_path = [], {}
     for t in m.textures():
         if t['type'] == 0 and t['file']:
             key = t['file'].upper()
-            ids_by_path.setdefault(key, first_id + 10 + len(ids_by_path))
+            ids_by_path.setdefault(key, texture_id_for(key) if texture_id_for else first_id + 10 + len(ids_by_path))
             texture_ids.append(ids_by_path[key])
         else:
             texture_ids.append(0)               # skin, hair and cape textures are chosen by the customisation data

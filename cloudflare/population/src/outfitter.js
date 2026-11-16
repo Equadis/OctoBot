@@ -150,7 +150,11 @@ export async function outfitter(request,fetcher=fetch,env={}) {
    return kind==='file'?json({error:'model_file_missing',message:'This file is not in the OctoWoW model set.'},404):json({error:'models_unavailable',message:UNAVAILABLE},503);
   }
   const response=await fetcher(ASSET_BASE+path,{redirect:'manual',signal:AbortSignal.timeout(20000),cf:{cacheTtl:604800,cacheEverything:true}});
-  if(!response.ok)return json({error:'This appearance is not available in the Classic model library.'},response.status===404||response.status===403?404:502);
+  if(!response.ok) {
+   // OctoWoW's own helm looks have no record in Zam's library. A complete record built from the client may sit in the bucket under the same path.
+   if(kind==='helm'&&bucket&&(response.status===404||response.status===403)) {const own=await fromBucket(bucket,path,cache);if(own)return own;}
+   return json({error:'This appearance is not available in the Classic model library.'},response.status===404||response.status===403?404:502);
+  }
   if(kind==='helm'&&bucket) {
    const models=(await helmTable(bucket))?.[path.match(/(\d+)\.json$/)[1]];
    if(models) {

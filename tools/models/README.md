@@ -75,6 +75,19 @@ Note for testing: the viewer only applies the pending recompute when it draws a 
 
 Zam's TBC library already has Blood Elf (`tbc/meta/character/19.json` and `20.json` exist). Supporting it needs only a small change to the appearance Worker so it can serve the TBC library, plus a deploy. It is the TBC Blood Elf model, which may not match OctoWoW's updated model exactly.
 
+## Custom helm looks for every race (2026-11-16)
+
+Zam's Classic library has no record for many OctoWoW helm display ids, so the Dressing Room showed "No preview" (for example Crown of Ten Storms, display 67102, the Outland look of `Helm_Mail_RaidShaman_B_01`). The client has them: one model per race and sex (`Item\ObjectComponents\Head\<model>_<race><sex>.m2`) and the item's texture named in `ItemDisplayInfo.dbc`.
+
+* `custom_helms.py` converts them (all ten races, both sexes) and writes a complete Zam-shaped item record to `meta/armor/1/<display id>.json`, plus models from file id 9,700,000 and textures from 9,900,000. Textures the models share (spell glows) are converted once.
+* `build_overlay.py ... --custom-helms ids.json [--custom-only]` adds them to the overlay build (so `version.json` covers them). `--custom-only` skips the bodies and the Goblin and Blood Elf helms; use it for a quick local build.
+* The Worker (`cloudflare/population/src/outfitter.js`) serves the bucket's record when Zam answers 404 for a helm record. Zam helms that exist are merged exactly as before.
+* Which ids: head-slot catalogue items whose display id has no `meta/armor/1/<id>.json` in the Classic library (checked 2026-11-16: 412 of 901 resolvable head items, 277 display ids, all 277 converted; 405 of the 412 had a client model). Other slots (shoulders, chests, weapons) are not done.
+* Fixed along the way: a model whose transparency track has a key before its sequence starts (`Helm_Robe_D_04`) made the writer fail on a negative time; times are now clamped at 0.
+* Local check: `node tools/models/e2e_server.mjs tools/models/out/custom 8090` and open `/outfitter/`; Crown of Ten Storms shows on Human and Orc. Goblin and Blood Elf need the full overlay (bodies) to be checked.
+* **Unchanged rules:** nothing here is committed or uploaded. Publishing the output (R2) and deploying the Worker change both need OctoWoW's agreement and explicit approval.
+
+
 ## Commands
 
 ```sh
