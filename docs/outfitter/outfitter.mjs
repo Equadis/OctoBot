@@ -1,10 +1,10 @@
-import {requestJson,preloadGeometry} from './service.mjs?v=20261113-model-assets2';
+import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
 import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261117-names1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',saved=[];
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[];
 const metadata=new Map();
 // Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
 let approxNotes=new Map();
@@ -306,7 +306,7 @@ const NOTE_LEGACY='No preview: the appearance service has not been updated to fi
 async function usableDisplay(data,slot){
  for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
   const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
-  try{await getJson(`${endpoint}/api/outfitter/assets/meta/${path}.json`);return displayId;}catch{}
+  try{await getJson(`${assetBase}meta/${path}.json`);return displayId;}catch{}
  }
  return null;
 }
@@ -375,6 +375,13 @@ function queueScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scanVisibleRow
 // A light safety net: rows that scrolled into range, or that were skipped while the model was loading, are picked up within a second.
 setInterval(()=>{if(!document.hidden)scanVisibleRows();},800);
 function getJson(url){return requestJson(url);}
+// Every model asset URL carries the current build of the converted models (/assets/v<version>/...), so a rebuilt model set has new URLs and no
+// browser can keep serving an old Goblin from its cache. An older service without the version route gives plain URLs, as before.
+async function loadAssetBase(){
+ const plain=`${endpoint}/api/outfitter/assets/`;assetBase=plain;
+ if(!endpoint)return;
+ try{const {version}=await getJson(`${endpoint}/api/outfitter/models-version`);if(typeof version==='string'&&/^[0-9a-f]{8,32}$/.test(version))assetBase=`${plain}v${version}/`;}catch{}
+}
 function displayFor(id){if(!metadata.has(id))metadata.set(id,getJson(`${endpoint}/api/outfitter/item/${id}`).catch(error=>{metadata.delete(id);throw error;}));return metadata.get(id);}
 
 // ---- Appearance (skin, face, hair, facial hair / markings / piercings ...) and animation
@@ -434,7 +441,7 @@ function stepAnimation(frames){
 async function loadLookOptions(chrModelId){
  if(!Number.isInteger(chrModelId))return [];
  try{
-  if(!customizationCache.has(chrModelId))customizationCache.set(chrModelId,getJson(`${endpoint}/api/outfitter/assets/meta/charactercustomization/${chrModelId}.json`));
+  if(!customizationCache.has(chrModelId))customizationCache.set(chrModelId,getJson(`${assetBase}meta/charactercustomization/${chrModelId}.json`));
   return relabelOptions(visibleOptions(await customizationCache.get(chrModelId)),chrModelId);
  }catch{customizationCache.delete(chrModelId);return [];}
 }
@@ -625,9 +632,9 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   if(!endpoint)throw Error('The appearance service is not configured.');
   if(!window.ZamModelViewer||!window.jQuery)throw Error('The 3D viewer could not load. Check your connection and reload the preview.');
   // Detect an undeployed service before constructing a viewer that would stay blank.
-  // High Elf has no model in Zam's library; it has a preview only when the appearance service also serves OctoWoW's own models.
-  const character=await getJson(`${endpoint}/api/outfitter/assets/meta/character/${current.race*2-1+current.gender}.json`).catch(error=>{if(current.race===10)throw Error('The Classic model library has no High Elf (Blood Elf) model, so there is no 3D preview for this race. Gear choices are still saved and shared.');throw error;});
-  await preloadGeometry(`${endpoint}/api/outfitter/assets/`,character.Model);
+  // Goblin (ids 17, 18) and High Elf (19, 20) come only from OctoWoW's converted models; the service reports an error rather than another model.
+  const character=await getJson(`${assetBase}meta/character/${current.race*2-1+current.gender}.json`);
+  await preloadGeometry(assetBase,character.Model);
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
   renderLook();
@@ -648,7 +655,7 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
-  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:`${endpoint}/api/outfitter/assets/`,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:assetBase,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   builtFor=`${current.race}-${current.gender}`;appliedGear=new Map(appearances.filter(Boolean));
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
@@ -699,7 +706,7 @@ async function start(){
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
   saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
   renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
-  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}renderItems();
+  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();renderItems();
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
 

@@ -14,3 +14,6 @@ data/*.db-wal
 
 # Local extraction output from the OctoWoW client: never commit game files
 tools/models/out/
+
+# Wrangler local state (may hold local copies of converted files; never commit)
+.wrangler/

@@ -20,3 +20,10 @@ test('content types match what the Worker serves',()=>{
  assert.equal(contentType('textures/1.webp'),'image/webp');
  assert.equal(contentType('skel/1.skel'),'application/octet-stream');
 });
+
+test('version.json is always uploaded last, so a build goes live only when all of its files are in place',()=>{
+ const withVersion={files:{'version.json':{bytes:1,sha256:'v'},'m2/9000000.m2':{bytes:10,sha256:'a'},'meta/character/17.json':{bytes:5,sha256:'c'}}};
+ const keys=plan(withVersion).map(f=>f.key);
+ assert.equal(keys.at(-1),'version.json');assert.equal(keys.length,3);
+ assert.deepEqual(plan(withVersion,{'m2/9000000.m2':'a','meta/character/17.json':'c'}).map(f=>f.key),['version.json']);
+});

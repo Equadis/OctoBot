@@ -50,13 +50,36 @@ export function overlayKind(path) {
  return /^meta\/armor\/1\/\d+\.json$/.test(path)?'helm':null;
 }
 function typeFor(path) {return path.endsWith('.json')?'application/json':path.endsWith('.webp')?'image/webp':path.endsWith('.png')?'image/png':'application/octet-stream';}
-async function fromBucket(bucket,path) {
+async function fromBucket(bucket,path,cache) {
  const object=await bucket.get(path);
- return object?new Response(object.body,{headers:{...HEADERS,'content-type':typeFor(path),'cache-control':'public, max-age=3600'}}):null;
+ return object?new Response(object.body,{headers:{...HEADERS,'content-type':typeFor(path),'cache-control':cache}}):null;
+}
+// ---- Versioned URLs and cache lifetimes ------------------------------------------------------------------------------
+// The converted files change when the model set is rebuilt, but their URLs (and the character ids 17 to 20, which used to be Zam's Goblin) do
+// not, so a browser that cached an old answer would keep it for as long as the old lifetime said. The bucket therefore holds version.json,
+// the site asks /api/outfitter/models-version for it and puts it in every asset URL (/assets/v<version>/meta/...). A URL that names the build
+// being served may be cached for good; one that names any other build is answered but never cached; unversioned URLs (old pages) get a short
+// lifetime for everything the overlay can change.
+const IMMUTABLE='public, max-age=31536000, immutable',SHORT='public, max-age=60',ZAM_LONG='public, max-age=604800';
+const UNAVAILABLE='The OctoWoW Goblin and High Elf models are not available right now.';
+export function assetRequest(pathname) {
+ let value=pathname.replace(/^\/api\/outfitter\/assets\//,''),version=null;
+ const match=value.match(/^v([0-9a-f]{8,32})\//);
+ if(match){version=match[1];value=value.slice(match[0].length);}
+ const asset=assetPath(value);
+ return asset?{path:asset,version}:null;
+}
+let versionCache={bucket:null,value:null,at:0};
+async function currentVersion(bucket) {
+ if(versionCache.bucket===bucket&&Date.now()-versionCache.at<30000)return versionCache.value;
+ let value=null;
+ try {const object=await bucket.get('version.json');if(object){const data=await new Response(object.body).json();if(typeof data?.version==='string'&&/^[0-9a-f]{8,32}$/.test(data.version))value=data.version;}} catch {value=null;}
+ versionCache={bucket,value,at:Date.now()};
+ return value;
 }
 // helms.json maps a Classic helm display id to {"race:gender": model file id} for the races Zam has no helm models for.
 let helmCache={table:null,at:0};
-export function resetOverlayCache() {helmCache={table:null,at:0};}
+export function resetOverlayCache() {helmCache={table:null,at:0};versionCache={bucket:null,value:null,at:0};}
 async function helmTable(bucket) {
  if(Date.now()-helmCache.at<600000)return helmCache.table;
  let table=null;
@@ -99,26 +122,35 @@ export async function outfitter(request,fetcher=fetch,env={}) {
    const candidates=[...new Set([classic,octoDisplayId].filter(Boolean))];
    return json({id,displayId:candidates[0],candidates,source:`https://octowow.st/db/?item=${id}`});
   }
-  const path=assetPath(url.pathname);
-  if(!path)return json({error:'not_found'},404);
-  const bucket=env&&env.MODELS,kind=bucket?overlayKind(path):null;
+  if(url.pathname==='/api/outfitter/models-version') {
+   const version=env&&env.MODELS?await currentVersion(env.MODELS):null;
+   return new Response(JSON.stringify({version}),{headers:{...HEADERS,'content-type':'application/json','cache-control':SHORT}});
+  }
+  const asset=assetRequest(url.pathname);
+  if(!asset)return json({error:'not_found'},404);
+  const {path,version}=asset,bucket=env&&env.MODELS,kind=overlayKind(path);
+  const current=bucket?await currentVersion(bucket):null;
+  // Only a versioned URL naming the build being served is cached for good; any other version is served but not cached.
+  const cache=version?(current&&version===current?IMMUTABLE:'no-store'):kind?SHORT:ZAM_LONG;
   if(kind==='file'||kind==='meta') {
-   const own=await fromBucket(bucket,path);
+   // The Goblin and High Elf come only from the converted set. They never fall back to Zam's models, which would show the wrong character.
+   if(!bucket)return json({error:'models_unavailable',message:UNAVAILABLE},503);
+   const own=await fromBucket(bucket,path,cache);
    if(own)return own;
-   // Converted files exist only in the bucket; the character records fall back to Zam's until they are uploaded.
-   if(kind==='file')return json({error:'This appearance is not available in the OctoWoW model set.'},404);
+   return kind==='file'?json({error:'model_file_missing',message:'This file is not in the OctoWoW model set.'},404):json({error:'models_unavailable',message:UNAVAILABLE},503);
   }
   const response=await fetcher(ASSET_BASE+path,{redirect:'manual',signal:AbortSignal.timeout(20000),cf:{cacheTtl:604800,cacheEverything:true}});
   if(!response.ok)return json({error:'This appearance is not available in the Classic model library.'},response.status===404||response.status===403?404:502);
-  if(kind==='helm') {
+  if(kind==='helm'&&bucket) {
    const models=(await helmTable(bucket))?.[path.match(/(\d+)\.json$/)[1]];
    if(models) {
     const text=await response.text();
+    const headers={...HEADERS,'content-type':'application/json','cache-control':cache};
     if(text.length<=2000000) {
-     try {return new Response(JSON.stringify(mergeHelm(JSON.parse(text),models)),{headers:{...HEADERS,'content-type':'application/json','cache-control':'public, max-age=3600'}});} catch {return new Response(text,{headers:{...HEADERS,'content-type':'application/json','cache-control':'public, max-age=3600'}});}
+     try {return new Response(JSON.stringify(mergeHelm(JSON.parse(text),models)),{headers});} catch {return new Response(text,{headers});}
     }
    }
   }
-  return new Response(response.body,{headers:{...HEADERS,'content-type':typeFor(path),'cache-control':'public, max-age=604800'}});
+  return new Response(response.body,{headers:{...HEADERS,'content-type':typeFor(path),'cache-control':cache}});
  } catch(error) {return json({error:error.message||'Appearance service unavailable.'},502);}
 }

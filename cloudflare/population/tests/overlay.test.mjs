@@ -22,16 +22,20 @@ test('overlay paths are classified by validated id, never by guesswork',()=>{
  for(const p of ['m2/119940.m2','m2/8999999.m2','textures/9100001.png','meta/character/5.json','meta/character/21.json','meta/armor/3/31024.json','skin/9000001.m2','m2/9000000.skin'])assert.equal(overlayKind(p),null,p);
 });
 
-test('without a bucket every request behaves exactly as before',async()=>{
+test('without a bucket the original races behave exactly as before, and the converted ones report an error instead of using Zam',async()=>{
  const urls=[];
- for(const path of ['m2/9000000.m2','meta/character/17.json','meta/armor/1/31260.json']) {
+ for(const path of ['meta/character/1.json','m2/119940.m2','meta/armor/1/31260.json']) {
   const r=await outfitter(asset(path),async url=>{urls.push(url);return new Response('{"x":1}');},{});
   assert.equal(r.status,200);
  }
- assert.deepEqual(urls,['m2/9000000.m2','meta/character/17.json','meta/armor/1/31260.json'].map(p=>'https://wow.zamimg.com/modelviewer/classic/'+p));
+ assert.deepEqual(urls,['meta/character/1.json','m2/119940.m2','meta/armor/1/31260.json'].map(p=>'https://wow.zamimg.com/modelviewer/classic/'+p));
+ for(const path of ['meta/character/17.json','m2/9000000.m2']) {
+  const r=await outfitter(asset(path),noNetwork,{});
+  assert.equal(r.status,503,path);assert.equal((await r.json()).error,'models_unavailable');
+ }
 });
 
-test('converted files come from the bucket only: found is served, missing is a 404 with no upstream request',async()=>{
+test('converted files come from the bucket only: found is served, missing is an explicit 404 with no upstream request',async()=>{
  const bucket=fakeBucket(new Map([['skin/9000001.skin','SKINBYTES'],['textures/9100001.webp','WEBP']]));
  const get=path=>outfitter(asset(path),noNetwork,{MODELS:bucket});
  const skin=await get('skin/9000001.skin');
@@ -39,20 +43,20 @@ test('converted files come from the bucket only: found is served, missing is a 4
  assert.equal(skin.headers.get('content-type'),'application/octet-stream');assert.equal(skin.headers.get('access-control-allow-origin'),'*');
  assert.equal((await get('textures/9100001.webp')).headers.get('content-type'),'image/webp');
  const missing=await get('m2/9000999.m2');
- assert.equal(missing.status,404);
- assert.deepEqual(bucket.calls,['skin/9000001.skin','textures/9100001.webp','m2/9000999.m2']);
+ assert.equal(missing.status,404);assert.equal((await missing.json()).error,'model_file_missing');
 });
 
-test('character records use the bucket when present and fall back to Zam until uploaded; other races never touch the bucket',async()=>{
+test('character records come from the bucket; a missing record is a 503 and never Zam; other races never touch the bucket',async()=>{
  const bucket=fakeBucket(new Map([['meta/character/19.json','{"Model":9000100}']]));
  const upstream=[];
  const get=path=>outfitter(asset(path),async url=>{upstream.push(url);return new Response('{"Model":1}');},{MODELS:bucket});
  assert.equal(await (await get('meta/character/19.json')).text(),'{"Model":9000100}');
- assert.equal(upstream.length,0);
- assert.equal(await (await get('meta/character/17.json')).text(),'{"Model":1}');
- assert.equal(upstream.length,1);
+ const missing=await get('meta/character/17.json');
+ assert.equal(missing.status,503);assert.equal((await missing.json()).error,'models_unavailable');
+ assert.equal(upstream.length,0,'no request to Zam was made for a converted race');
  await get('meta/character/5.json');
- assert.deepEqual(bucket.calls,['meta/character/19.json','meta/character/17.json']);
+ assert.equal(upstream.length,1);
+ assert.ok(!bucket.calls.includes('meta/character/5.json'));
 });
 
 test('helm item data gains Goblin and Blood Elf models and hair-hiding rows, replacing nothing else',()=>{

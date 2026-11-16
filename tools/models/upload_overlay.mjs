@@ -13,8 +13,9 @@ export function contentType(key) {
  return key.endsWith('.json')?'application/json':key.endsWith('.webp')?'image/webp':'application/octet-stream';
 }
 // Which manifest entries still need uploading, given what a previous run recorded.
+// version.json goes last: the site and Worker switch to a new build only once every file of it is in the bucket.
 export function plan(manifest,uploaded={}) {
- return Object.entries(manifest.files||{}).filter(([key,info])=>/^[A-Za-z0-9_./-]+$/.test(key)&&!key.includes('..')&&uploaded[key]!==info.sha256).map(([key,info])=>({key,sha256:info.sha256,bytes:info.bytes}));
+ return Object.entries(manifest.files||{}).filter(([key,info])=>/^[A-Za-z0-9_./-]+$/.test(key)&&!key.includes('..')&&uploaded[key]!==info.sha256).map(([key,info])=>({key,sha256:info.sha256,bytes:info.bytes})).sort((a,b)=>(a.key==='version.json')-(b.key==='version.json'));
 }
 function run(command) {
  return new Promise((resolve,reject)=>exec(command,{cwd:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..','..','cloudflare','population'),maxBuffer:1<<24},(error,stdout,stderr)=>error?reject(new Error((stderr||stdout||error.message).trim().split('\n').slice(-3).join(' '))):resolve(stdout)));
@@ -35,9 +36,10 @@ async function main(argv) {
  console.log(`${todo.length} of ${Object.keys(manifest.files).length} files to upload (${(total/1e6).toFixed(1)} MB) to bucket "${bucket}"${dry?' (dry run: nothing sent)':''}`);
  if(dry||!todo.length)return 0;
  let next=0,done=0,failed=[];
- async function worker() {
-  while(next<todo.length) {
-   const file=todo[next++];
+ const last=todo.filter(f=>f.key==='version.json'),rest=todo.filter(f=>f.key!=='version.json');
+ async function worker(queue) {
+  while(next<queue.length) {
+   const file=queue[next++];
    const command=`npx --yes wrangler r2 object put "${bucket}/${file.key}" --file "${path.join(folder,file.key)}" --content-type "${contentType(file.key)}" --remote`;
    let error=null;
    for(let attempt=0;attempt<3;attempt++){try{await run(command);error=null;break;}catch(e){error=e;}}
@@ -46,9 +48,10 @@ async function main(argv) {
    if(done%50===0){await fs.writeFile(stateFile,JSON.stringify(uploaded));console.log(`  ${done} / ${todo.length}`);}
   }
  }
- await Promise.all(Array.from({length:workers},worker));
+ await Promise.all(Array.from({length:workers},()=>worker(rest)));
+ if(!failed.length){next=0;await worker(last);}else console.log('  version.json NOT uploaded because some files failed; rerun to finish.');
  await fs.writeFile(stateFile,JSON.stringify(uploaded));
- console.log(`uploaded ${done}, failed ${failed.length}`);
+ console.log(`uploaded ${done} of ${todo.length}, failed ${failed.length}`);
  failed.slice(0,5).forEach(line=>console.log('  FAILED',line));
  return failed.length?1:0;
 }

@@ -58,6 +58,10 @@ Steps 2, 3 and 6 are the hard ones. Expect weeks, not hours, to reach step 7.
 * **Option names.** The facial-hair table means head features on the Goblin ("Features"), earrings on the Blood Elf female ("Earrings") and facial hair on the Blood Elf male. Its columns are the geosets for groups 100, 300 and 200 in that order.
 * **High Elf eye glow.** The glow is geoset 1702; the viewer leaves group 17 off unless a choice names it, so every Blood Elf skin choice now enables it. The glow texture follows the skin row (blue, red, green or purple); with the geoset on, the eyes glow whitish blue.
 
+## Live Goblin still showed Zam's model after the deploy (2026-11-16)
+
+Root cause (checked against the live Worker and a browser): the Worker returned the converted record for `meta/character/17.json` (`Model: 9000000`) but a browser that had visited before got Zam's (`Model: 119376`) from its HTTP cache, with the old `Cache-Control: public, max-age=604800`. The URL for ids 17 and 18 is the same one Zam's Goblin was served from, with a seven-day lifetime, so every returning visitor kept it for up to a week. Fixed by versioned asset URLs, no fallback to Zam for ids 17 to 20, and short lifetimes for unversioned converted paths; see `cloudflare/population/README.md`. `build_overlay.py` writes `version.json`; `upload_overlay.mjs` uploads it last.
+
 ## Cheaper alternative for High Elf
 
 Zam's TBC library already has Blood Elf (`tbc/meta/character/19.json` and `20.json` exist). Supporting it needs only a small change to the appearance Worker so it can serve the TBC library, plus a deploy. It is the TBC Blood Elf model, which may not match OctoWoW's updated model exactly.

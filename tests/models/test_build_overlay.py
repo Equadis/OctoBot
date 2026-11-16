@@ -12,6 +12,18 @@ DATA = os.environ.get('OCTO_DATA_DIR')
 REPO = build_overlay.REPO
 
 
+class Version(unittest.TestCase):
+    FILES = {'m2/1.m2': {'sha256': 'aa', 'bytes': 1}, 'skin/2.skin': {'sha256': 'bb', 'bytes': 1}}
+
+    def test_version_changes_exactly_when_a_file_changes(self):
+        base = build_overlay.compute_version(self.FILES)
+        self.assertRegex(base, r'^[0-9a-f]{16}$')
+        self.assertEqual(base, build_overlay.compute_version(dict(reversed(list(self.FILES.items())))), 'order does not matter')
+        self.assertEqual(base, build_overlay.compute_version({**self.FILES, 'version.json': {'sha256': 'zz', 'bytes': 1}}), 'version.json is not part of its own version')
+        self.assertNotEqual(base, build_overlay.compute_version({**self.FILES, 'skin/2.skin': {'sha256': 'cc', 'bytes': 1}}))
+        self.assertNotEqual(base, build_overlay.compute_version({**self.FILES, 'extra.json': {'sha256': 'dd', 'bytes': 1}}))
+
+
 class OutputFolderRule(unittest.TestCase):
     def test_refuses_folders_inside_the_repository(self):
         for path in (os.path.join(REPO, 'docs', 'models'), REPO, os.path.join(REPO, 'tools', 'models')):
@@ -48,6 +60,15 @@ class Build(unittest.TestCase):
             body = manifest['bodies']['9:0']
             self.assertEqual(body['character_id'], 17)
             self.assertTrue(all(body[k] >= 9000000 for k in ('model_file_id', 'skin_file_id', 'skel_file_id')))
+
+    def test_build_writes_a_version_that_matches_its_files(self):
+        with tempfile.TemporaryDirectory() as out:
+            manifest = build_overlay.build(DATA, out, only={(10, 0)}, with_helms=False, log=lambda *x: None)
+            with open(os.path.join(out, 'version.json')) as handle:
+                written = json.load(handle)
+            self.assertEqual(written['version'], manifest['version'])
+            self.assertEqual(written['version'], build_overlay.compute_version(manifest['files']))
+            self.assertIn('version.json', manifest['files'])
 
     def test_ids_are_stable_between_runs(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:

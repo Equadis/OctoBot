@@ -35,9 +35,9 @@ http.createServer(async(req,res)=>{
   if(url.pathname.startsWith('/api/outfitter/')){
    const response=await outfitter(new Request(url,{method:req.method,headers:{}}),fetch,noOverlay?{}:{MODELS:bucket});
    log.push(`${response.status} ${url.pathname.replace('/api/outfitter/','')}`);
-   // The Worker lets browsers keep overlay files for an hour and the file names do not change between rebuilds, which would show stale models
-   // while testing a rebuilt overlay. This local server therefore never lets the browser cache them.
-   res.writeHead(response.status,{...Object.fromEntries(response.headers),'cache-control':'no-store'});
+   // The Worker's own cache headers are passed through, so the browser behaves as it does against the deployed Worker (versioned URLs are cached
+   // for good, and a rebuilt overlay has a new version and therefore new URLs).
+   res.writeHead(response.status,Object.fromEntries(response.headers));
    return res.end(Buffer.from(await response.arrayBuffer()));
   }
   if(url.pathname==='/__log'){res.writeHead(200,{'content-type':'text/plain'});return res.end(log.join('\n'));}

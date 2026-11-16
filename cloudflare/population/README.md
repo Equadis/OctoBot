@@ -175,6 +175,16 @@ What the bucket is used for (exact keys only, built from validated paths; the bu
 
 Cache lifetime for bucket responses is one hour (Zam proxy responses keep a week), so a re-upload shows up quickly.
 
+### Versioned URLs, cache lifetimes and no fallback
+
+The converted Goblin and High Elf use character ids 17 to 20, the same URLs Zam's Goblin used (served here with a seven-day lifetime). A browser that had cached the old answer therefore kept showing Zam's Goblin after the overlay was deployed. The fix is in three parts:
+
+* **Versioned URLs.** `build_overlay.py` writes `version.json` (a fingerprint of every file). `GET /api/outfitter/models-version` returns `{"version": "<16 hex>"}` (or `null` with no bucket), and the Dressing Room puts it in every asset URL: `/api/outfitter/assets/v<version>/meta/character/17.json`. A new build means new URLs, so no browser can serve an old model. A versioned URL naming the build in the bucket is cached for a year (`immutable`); one naming any other version is answered but sent `no-store`; unversioned URLs (old pages) get `max-age=60` for everything the overlay can change. Zam-only paths keep their seven days.
+* **No silent fallback.** Character and customisation records for ids 17 to 20 and files with ids from 9,000,000 are read only from the bucket. If the bucket is not bound or the object is missing, the Worker answers `503 {"error":"models_unavailable"}` (a missing individual file is `404 model_file_missing`) and the page shows that message. Zam's Goblin is never substituted. The eight original races are unchanged.
+* **Upload order.** `upload_overlay.mjs` uploads `version.json` last, so the site only switches to a build once every file of it is in the bucket.
+
+Deploy order for a model update: rebuild, upload (version.json goes last), done; the Worker needs redeploying only when its code changes.
+
 To enable it (manual, needs OctoWoW's agreement first; the converted files must not be published without it):
 
 1. `python tools/models/build_overlay.py <client Data folder> <folder outside the repo>`

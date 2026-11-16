@@ -9,6 +9,8 @@ Writes, under the out folder:
     meta/charactercustomization/<id>.json
     helms.json                           Classic helm display id -> {"race:gender": model file id}; for the Worker to merge into Zam's own
                                          helm item data (Zam has helm models for races 1 to 8 only)
+    version.json                         {"version": a fingerprint of every file}; the Worker reports it and the site puts it in asset URLs, so a
+                                         rebuilt model set can never be served from an old browser cache
     manifest.json                        every file with its size and sha256, plus counts, missing textures and verification results
 
 Ids are assigned in sorted order, so a rerun on the same client files gives the same ids. The out folder must be OUTSIDE the repository
@@ -72,6 +74,13 @@ def write(out, rel, data, manifest):
     manifest['files'][rel.replace('\\', '/')] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
 
 
+def compute_version(files):
+    """A short fingerprint of every file in the build (key and sha256, sorted), version.json itself excluded. The site puts it in asset URLs, so
+    it changes exactly when any file changes and never otherwise."""
+    lines = [f'{key}:{info["sha256"]}' for key, info in sorted(files.items()) if key != 'version.json']
+    return hashlib.sha256('\n'.join(lines).encode()).hexdigest()[:16]
+
+
 def character_record(model_id, race, gender, chr_model_id):
     return dict(CHARACTER_TEMPLATE, Model=model_id,
                 Character={'RaceFlags': 1, 'ChrModelFlags': 0, 'Race': race, 'Gender': gender, 'ChrModelId': chr_model_id})
@@ -131,10 +140,14 @@ def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=pri
         write(out, 'helms.json', json.dumps(table, sort_keys=True).encode(), manifest)
         manifest['helms'] = {'display_ids': len(table), 'models': sum(1 for v in converter.done.values() if v), 'failed': converter.failed}
         log(f'helms: {len(table)} display ids, {manifest["helms"]["models"]} models, {len(converter.failed)} unusable')
+    version = compute_version(manifest['files'])
+    write(out, 'version.json', json.dumps({'version': version, 'files': len(manifest['files'])}).encode(), manifest)
+    manifest['version'] = version
     manifest['seconds'] = round(time.time() - started, 1)
     manifest['totals'] = {'files': len(manifest['files']), 'bytes': sum(f['bytes'] for f in manifest['files'].values())}
     with open(os.path.join(out, 'manifest.json'), 'w') as handle:
         json.dump(manifest, handle, indent=1, sort_keys=True)
+    log(f'version {version}')
     log(f'done: {manifest["totals"]["files"]} files, {manifest["totals"]["bytes"] / 1e6:.1f} MB, {manifest["seconds"]} s -> {out}')
     return manifest
 

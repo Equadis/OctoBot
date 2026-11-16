@@ -4,6 +4,9 @@ export async function requestJson(url,fetcher=fetch){
  if(!response.ok){
   let detail;try{detail=await response.json();}catch{}
   if(response.status===404&&detail?.error==='not_found')throw Error('The 3D preview service is not available yet.');
+  // The converted Goblin and High Elf never fall back to another model: the service says so and the page shows it.
+  if(detail?.error==='models_unavailable')throw Error(detail.message||'The OctoWoW Goblin and High Elf models are not available right now.');
+  if(detail?.error==='model_file_missing')throw Error('A file of this character is missing from the OctoWoW model set.');
   if(response.status===404)throw Error('This character or appearance is not available in the Classic model library.');
   throw Error('The appearance service is temporarily unavailable. Try reloading the preview.');
  }
@@ -34,6 +37,7 @@ export async function preloadGeometry(base,modelId,fetcher=fetch){
   if(!response.ok){
    let detail;try{detail=await response.json();}catch{}
    if(detail?.error==='not_found')throw Error('The 3D preview service needs an update to load model geometry.');
+   if(detail?.error==='models_unavailable')throw Error(detail.message||'The OctoWoW Goblin and High Elf models are not available right now.');
    throw Error(`The character asset ${path} could not be loaded.`);
   }
   return response.arrayBuffer();
