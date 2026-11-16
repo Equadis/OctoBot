@@ -2,7 +2,7 @@
  * Dedicated, opt-in, read-only Auction House collector (N'Zoth / OBPVEAH).
  * Run as its OWN Railway service: npm run start:auction, not the raid / DMF entrypoint.
  * Real-server permission and 1.12 compatibility MUST be checked before enablement.
- * No movement or pathfinding: park OBPVEAH within visibility/interact range of Auctioneer Finch.
+ * No movement or pathfinding: park OBPVEAH within visibility/interact range of Auctioneer Fitch.
  */
 import {randomBytes} from "node:crypto";
 import {connect, type Socket} from "node:net";
@@ -92,7 +92,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  const completePromise=new Promise<void>((resolve,reject)=>{resolveSession=resolve;rejectSession=reject;});
  const watchers=new NpcWatch(120);
  const knownGuids=new Map<number,bigint>();
- const target="Auctioneer Finch";
+ const target="Auctioneer Fitch";
  const end=(error?:Error)=>{
   if(finished)return;
   finished=true;if(readyTimer)clearTimeout(readyTimer);
@@ -158,7 +158,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  const world=new WorldClient({
    socket,account:config.account,sessionKey:auth.sessionKey,characterName:config.characterName,
    build:config.worldBuild,logger:log,handlers:{
-    onReady:()=>{log.info("OBPVEAH in world; waiting to discover nearby Auctioneer Finch");},
+    onReady:()=>{log.info("OBPVEAH in world; waiting to discover nearby Auctioneer Fitch");},
     onWorldObjects:raw=>{
       if(!world.isReady||finished)return;
       const objects=parseUpdateObject(raw,world.selfGuid??undefined);
@@ -171,7 +171,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
      if(name!==target||pendingHello||finished)return;
      const guid=knownGuids.get(entry);if(!guid)return;
      auctioneerGuid=guid;
-     log.info("Verified Auctioneer Finch nearby (GUID from live object update); requesting AH service");
+     log.info("Verified Auctioneer Fitch nearby (GUID from live object update); requesting AH service");
      const timer=setTimeout(()=>end(new Error("Auction hello timed out; NPC inaccessible or incompatible")),queryTimeoutMs);
      pendingHello={timer,resolve:()=>{},reject:()=>{}};
      world.auctionHello(guid);
@@ -193,7 +193,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
    }
  });
  world.start();
- readyTimer=setTimeout(()=>end(new Error("Auctioneer Finch not discovered within 2 minutes; park character nearby")),120000);
+ readyTimer=setTimeout(()=>end(new Error("Auctioneer Fitch not discovered within 2 minutes; park character nearby")),120000);
  try{await completePromise;}
  finally{socket.destroy();sockets.delete(socket);}
  if(!succeeded)throw new Error("No complete scan published");
