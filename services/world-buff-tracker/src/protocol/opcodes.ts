@@ -90,6 +90,10 @@ export enum WorldOpcode {
   /** A direct spell hit. */
   SMSG_SPELLNONMELEEDAMAGELOG = 0x250,
   /** Use/interact with a GameObject (e.g. sit on a bench); body is the u64 guid. */
+  /** Read-only auction interactions: source of truth is the 1.12 packet mapping. */
+  MSG_AUCTION_HELLO = 0x255,
+  CMSG_AUCTION_LIST_ITEMS = 0x258,
+  SMSG_AUCTION_LIST_RESULT = 0x25c,
   CMSG_GAMEOBJ_USE = 0xb1,
   /** Change stand state (the /sit, /stand emotes); body is a u32 state. */
   CMSG_STANDSTATECHANGE = 0x101,
