@@ -9,11 +9,11 @@
       { id: 'population', href: 'population/#server=all', text: 'Population' },
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
     { label: 'Character tools', links: [
-      { id: 'sim', href: 'sim/', text: 'Gear Planner' },
-      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
+      { id: 'sim', beta: true, href: 'sim/', text: 'Gear Planner' },
+      { id: 'outfitter', beta: true, href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
-      { id: 'world-info', href: 'world-info/', text: 'World Info' },
-      { id: 'auction-house', href: 'auction-house/', text: 'Auction House' } ] }
+      { id: 'world-info', beta: true, href: 'world-info/', text: 'World Info' },
+      { id: 'auction-house', beta: true, href: 'auction-house/', text: 'Auction House' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
@@ -33,6 +33,16 @@
         // The current page links to itself without repeating the hash (matches the previous markup).
         a.setAttribute('href', base + link.href);
         a.textContent = link.text;
+        if (link.beta) {
+          var beta = doc.createElement('span');
+          beta.className = 'nav-beta';
+          beta.textContent = 'BETA';
+          beta.setAttribute('data-site-tip', 'This section is currently in beta, results may not be 100% accurate.');
+          beta.setAttribute('aria-label', 'BETA: This section is currently in beta, results may not be 100% accurate.');
+          a.appendChild(beta);
+          // Show the same explanation when the tab is reached by keyboard.
+          a.setAttribute('data-site-tip', 'This section is currently in beta, results may not be 100% accurate.');
+        }
         if (link.id === current) a.setAttribute('aria-current', 'page');
         box.appendChild(a);
       });
