@@ -57,6 +57,14 @@ class Build(unittest.TestCase):
             with open(os.path.join(out, 'meta/character/17.json')) as handle:
                 record = json.load(handle)
             self.assertEqual((record['Character']['Race'], record['Character']['Gender'], record['Character']['ChrModelId']), (9, 0, 17))
+            with open(os.path.join(out, 'helms.json')) as handle:
+                table = json.load(handle)
+            self.assertTrue(table)
+            for entry in table.values():
+                self.assertEqual(set(entry), {'models', 'hide'})
+                self.assertEqual(set(entry['hide']), set(entry['models']), 'a hide list for every body that has a model')
+                for groups in entry['hide'].values():
+                    self.assertTrue(all(isinstance(g, int) and 0 <= g < 52 for g in groups))
             body = manifest['bodies']['9:0']
             self.assertEqual(body['character_id'], 17)
             self.assertTrue(all(body[k] >= 9000000 for k in ('model_file_id', 'skin_file_id', 'skel_file_id')))

@@ -175,6 +175,10 @@ What the bucket is used for (exact keys only, built from validated paths; the bu
 
 Cache lifetime for bucket responses is one hour (Zam proxy responses keep a week), so a re-upload shows up quickly.
 
+### Helm hide rules
+
+`helms.json` maps a Classic helm display id to `{"models": {"race:gender": file id}, "hide": {"race:gender": [geoset groups]}}`. For the converted races the Worker replaces Zam's `HideGeosetMale/Female` rows with the client's (`hide`), because the viewer hides `100 x group` to `100 x group + 99` and on the converted Goblin group 1 is the head. A table in the older flat shape still works and hides nothing for the converted races. Races 1 to 8 are never touched.
+
 ### Versioned URLs, cache lifetimes and no fallback
 
 The converted Goblin and High Elf use character ids 17 to 20, the same URLs Zam's Goblin used (served here with a seven-day lifetime). A browser that had cached the old answer therefore kept showing Zam's Goblin after the overlay was deployed. The fix is in three parts:

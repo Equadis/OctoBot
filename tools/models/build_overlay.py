@@ -133,7 +133,9 @@ def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=pri
         for display_id in wanted:
             found, files = converter.convert(display_id)
             if found:
-                table[str(display_id)] = found
+                # models: which converted file each body wears; hide: the geoset groups the client says this helm hides on each body. The Worker
+                # replaces Zam's rows for races 9 and 10 with these, because for the Goblin group 1 is the head itself.
+                table[str(display_id)] = {'models': found, 'hide': {k: v for k, v in converter.hide(display_id).items() if k in found}}
             for rel, blob in files.items():
                 if rel not in manifest['files']:
                     write(out, rel, blob, manifest)

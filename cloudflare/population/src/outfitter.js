@@ -87,9 +87,14 @@ async function helmTable(bucket) {
  helmCache={table,at:Date.now()};
  return table;
 }
-// Adds the client's Goblin and Blood Elf helm models to Zam's item data, and the same hair-hiding rows Zam gives its last race.
-export function mergeHelm(item,models) {
- const entries=Object.entries(models||{}).filter(([key,id])=>/^\d+:[01]$/.test(key)&&Number.isSafeInteger(id)&&id>=OVERLAY_FIRST_ID);
+// Adds the client's Goblin and Blood Elf helm models to Zam's item data and replaces Zam's hide rules for those two races with the client's own.
+// entry is {models: {"race:gender": file id}, hide: {"race:gender": [geoset groups]}}; the older flat models map is still accepted (it hides nothing).
+// Zam's rows must be replaced, not kept or copied from another race: a row hides the geosets 100 x group to 100 x group + 99, and on the converted
+// Goblin group 1 is the head itself, so Zam's "hide facial hair" rule for a hood deleted the whole head and left the eyes floating.
+export function mergeHelm(item,entry) {
+ const modelMap=entry&&typeof entry==='object'&&entry.models&&typeof entry.models==='object'?entry.models:entry;
+ const hide=entry&&typeof entry==='object'&&entry.hide&&typeof entry.hide==='object'?entry.hide:{};
+ const entries=Object.entries(modelMap||{}).filter(([key,id])=>/^\d+:[01]$/.test(key)&&Number.isSafeInteger(id)&&id>=OVERLAY_FIRST_ID);
  if(!entries.length||!item||typeof item!=='object'||!item.ModelFiles||typeof item.ModelFiles!=='object')return item;
  const races=new Set(entries.map(([key])=>key));
  for(const list of Object.values(item.ModelFiles)) {
@@ -98,11 +103,16 @@ export function mergeHelm(item,models) {
   kept.push(...entries.map(([key,id])=>({FileDataId:id,Gender:Number(key.split(':')[1]),Class:0,Race:Number(key.split(':')[0]),ExtraData:-1})));
   list.splice(0,list.length,...kept);
  }
- for(const field of ['HideGeosetMale','HideGeosetFemale']) {
-  const rows=item.Item&&Array.isArray(item.Item[field])?item.Item[field]:null;
-  if(!rows)continue;
-  for(const race of new Set(entries.map(([key])=>Number(key.split(':')[0])))) {
-   if(!rows.some(row=>row.RaceId===race))rows.push(...rows.filter(row=>row.RaceId===8).map(row=>({...row,RaceId:race})));
+ const raceIds=new Set(entries.map(([key])=>Number(key.split(':')[0])));
+ if(item.Item&&typeof item.Item==='object') {
+  for(const [field,gender] of [['HideGeosetMale',0],['HideGeosetFemale',1]]) {
+   if(!Array.isArray(item.Item[field]))continue;
+   const rows=item.Item[field].filter(row=>!raceIds.has(row.RaceId));
+   for(const race of raceIds) {
+    const groups=hide[`${race}:${gender}`];
+    if(Array.isArray(groups))for(const group of groups)if(Number.isInteger(group)&&group>=0&&group<52)rows.push({RaceId:race,GeosetGroup:group,RaceBitSelection:0});
+   }
+   item.Item[field]=rows;
   }
  }
  return item;

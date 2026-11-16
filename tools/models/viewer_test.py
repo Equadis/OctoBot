@@ -82,11 +82,12 @@ def patched_helm(display_id):
     for key, entries in (item.get('ModelFiles') or {}).items():
         entries[:] = [e for e in entries if f"{e['Race']}:{e['Gender']}" not in found]
         entries += [{'FileDataId': fid, 'Gender': int(k.split(':')[1]), 'Class': 0, 'Race': int(k.split(':')[0]), 'ExtraData': -1} for k, fid in found.items()]
-    for field in ('HideGeosetMale', 'HideGeosetFemale'):
-        rows = item['Item'].get(field) or []
+    # Zam's hide rows for races 9 and 10 are replaced by the client's own (see helms.py), as the Worker does.
+    hide = HELMS.hide(display_id)
+    for field, gender in (('HideGeosetMale', 0), ('HideGeosetFemale', 1)):
+        rows = [r for r in (item['Item'].get(field) or []) if r['RaceId'] not in (9, 10)]
         for race in (9, 10):
-            if not any(r['RaceId'] == race for r in rows):
-                rows += [dict(r, RaceId=race) for r in rows if r['RaceId'] == 8]
+            rows += [{'RaceId': race, 'GeosetGroup': g, 'RaceBitSelection': 0} for g in hide.get(f'{race}:{gender}', []) if f'{race}:{gender}' in found]
         item['Item'][field] = rows
     return json.dumps(item).encode()
 

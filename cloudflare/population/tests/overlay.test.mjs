@@ -59,14 +59,19 @@ test('character records come from the bucket; a missing record is a 503 and neve
  assert.ok(!bucket.calls.includes('meta/character/5.json'));
 });
 
-test('helm item data gains Goblin and Blood Elf models and hair-hiding rows, replacing nothing else',()=>{
- const item=mergeHelm(zamHelm(),{'9:0':9500000,'9:1':9500020,'10:0':9500040,'10:1':9500060});
+test('helm item data gains Goblin and Blood Elf models; Zam hide rules for those races are replaced by the client rules and other races are untouched',()=>{
+ const item=mergeHelm(zamHelm(),{models:{'9:0':9500000,'9:1':9500020,'10:0':9500040,'10:1':9500060},hide:{'9:0':[3],'9:1':[],'10:0':[1,2,3],'10:1':[0,1]}});
  const files=item.ModelFiles['17269'];
  assert.equal(files.length,6);
  assert.deepEqual(files.filter(e=>e.Race===3).map(e=>e.FileDataId).sort(),[141043,141044]);
  assert.deepEqual(files.filter(e=>e.Race===10).map(e=>[e.Gender,e.FileDataId]).sort(),[[0,9500040],[1,9500060]]);
- assert.deepEqual(item.Item.HideGeosetMale.filter(r=>r.RaceId===9||r.RaceId===10).map(r=>r.RaceId).sort(),[10,9]);
- assert.equal(item.Item.HideGeosetFemale.filter(r=>r.RaceId===10).length,1);
+ const rows=(field,race)=>item.Item[field].filter(r=>r.RaceId===race).map(r=>r.GeosetGroup).sort();
+ assert.deepEqual(rows('HideGeosetMale',9),[3]);
+ assert.deepEqual(rows('HideGeosetFemale',9),[]);
+ assert.deepEqual(rows('HideGeosetMale',10),[1,2,3]);
+ assert.deepEqual(rows('HideGeosetFemale',10),[0,1]);
+ // Zam's rows for the original races are exactly as they were
+ assert.deepEqual(item.Item.HideGeosetMale.filter(r=>r.RaceId===7||r.RaceId===8),zamHelm().Item.HideGeosetMale.filter(r=>r.RaceId===7||r.RaceId===8));
  assert.equal(item.Textures[2],141061);
 });
 

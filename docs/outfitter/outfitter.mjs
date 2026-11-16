@@ -1,4 +1,5 @@
 import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
+import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
 import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261117-names1';
@@ -446,6 +447,8 @@ async function loadLookOptions(chrModelId){
  }catch{customizationCache.delete(chrModelId);return [];}
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
+// Diagnostics for testing, only with ?debug in the address: the live character actor and the current outfit.
+if(new URLSearchParams(location.search).has('debug'))window.__outfitter={actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
 // Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
 function pushAppearance(look){
  const actor=characterActor();if(!actor)return false;
@@ -606,10 +609,8 @@ async function applyGearInPlace(){
   if(token!==revision)return;
   const actor=characterActor(),next=new Map(appearances.filter(Boolean));
   if(!actor||!actor.isLoaded?.()){renderModel(false,true);return;}
-  // Remove what changed or went away, then add what is new.
-  for(const [slot,display] of appliedGear)if(next.get(slot)!==display){try{actor.wv(slot);}catch{}}
-  const added=[...next].filter(([slot,display])=>appliedGear.get(slot)!==display);
-  if(added.length)actor.setItems(added.map(([slot,display])=>({slot,display,visual:0})));
+  // Remove what changed or went away, then add what is new; a removal also makes the viewer recompute what is visible (see gear-diff.mjs).
+  applyGearChanges(actor,appliedGear,next);
   appliedGear=next;applySheath();
   approxNotes=nextNotes;renderItems();
   if(slowItems.length){

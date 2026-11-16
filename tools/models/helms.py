@@ -20,6 +20,11 @@ import octo_mpq  # noqa: E402
 FIRST_HELM_ID = 9500000
 STRIDE = 20          # file ids reserved per converted model (model, skin, skel, textures)
 RACES = {(9, 0): 'GoM', (9, 1): 'GoF', (10, 0): 'BeM', (10, 1): 'BeF'}
+# HelmetGeosetVisData.dbc has one row per helm look: a bit mask per kind of geometry, where a race's bit (1 << race id) means "this helm hides it".
+# The columns are hair, facial hair 1, 2 and 3, and ears, which the viewer's item data names geoset groups 0, 1, 2, 3 and 7 (it hides the geosets
+# 100 x group to 100 x group + 99; group 0 is 1 to 99). Reading checked against Zam's own rows for the eight Classic races: 89 percent of 968
+# race-and-helm combinations agree exactly, the rest being OctoWoW's own changes.
+VIS_GROUPS = (0, 1, 2, 3, 7)
 
 
 class DisplayInfo:
@@ -32,9 +37,24 @@ class DisplayInfo:
             row = struct.unpack_from(f'<{fields}I', data, 20 + i * size)
             self.rows[row[0]] = row
         self._data, self._base = data, base
+        vis = client.read('DBFilesClient/HelmetGeosetVisData.dbc')
+        self.vis = {}
+        if vis:
+            _, vn, vfields, vsize, _ = struct.unpack_from('<4s4I', vis, 0)
+            for i in range(vn):
+                row = struct.unpack_from(f'<{vfields}I', vis, 20 + i * vsize)
+                self.vis[row[0]] = row[1:6]
 
     def string(self, offset):
         return self._data[self._base + offset:self._data.index(b'\0', self._base + offset)].decode('latin1') if offset else ''
+
+    def hide_groups(self, display_id, race, gender):
+        """The geoset groups this helm hides for one race and sex, from the client's own table (an empty list when it hides nothing or has no entry)."""
+        row = self.rows.get(display_id)
+        masks = self.vis.get(row[12 + gender]) if row else None
+        if not masks:
+            return []
+        return [group for group, mask in zip(VIS_GROUPS, masks) if (mask >> race) & 1]
 
     def model(self, display_id):
         """The left model name of a display id, without extension (helms use the left slot), or None."""
@@ -44,6 +64,10 @@ class DisplayInfo:
 
 
 class HelmConverter:
+    def hide(self, display_id):
+        """{"race:gender": [geoset groups hidden]} for the four converted bodies."""
+        return {f'{race}:{gender}': self.info.hide_groups(display_id, race, gender) for race, gender in RACES}
+
     def __init__(self, client):
         self.client = client
         self.info = DisplayInfo(client)
