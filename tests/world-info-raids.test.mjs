@@ -56,18 +56,18 @@ async function pageFrom(name,ageMs=0){
 test('Onyxia with two raids shows the tracker ids, guilds and elapsed times — never "Raid 1"',async()=>{
   const {text,r}=await pageFrom('onyxia-two-raids');
   const rows=text.rows();
-  assert.deepEqual(rows.map(x=>x.title),['Raid #702 — Nightfall','Raid #703 — Stormguard']);
+  assert.deepEqual(rows.map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
   rows.forEach((row,i)=>assert.ok(Math.abs(seconds(row.timer)-r.expected.live[i].elapsedMs/1000)<=3,`${row.timer} vs ${r.expected.live[i].elapsedMs}`));
   assert.equal(text('ony-count'),'2');
   assert.equal(text('ony-count-label'),'Raids in progress:');
-  assert.equal(text('ony-state'),'TRACKED');
+  assert.equal(text('ony-state'),'Tracked');
   assert.ok(!text.created.some(e=>/^Raid 1\b/.test(String(e.textContent))));
 });
 
 test('BWL shows raid #33 with the tracker elapsed time, about 49 minutes',async()=>{
   const {text}=await pageFrom('bwl-single');
   const [row]=text.rows();
-  assert.equal(row.title,'Raid #33 — PUG');
+  assert.equal(row.title,'Raid #33 – Pug');
   assert.ok(Math.abs(seconds(row.timer)-49*60)<=8,row.timer);
   assert.equal(text('bwl-count'),'1');
   assert.equal(text('bwl-count-label'),'Raid in progress:');
@@ -77,7 +77,7 @@ test('back-to-back raids: the second raid has its own clock and the first is "la
   const {text,r}=await pageFrom('onyxia-back-to-back');
   const rows=text.rows();
   assert.equal(rows.length,1);
-  assert.equal(rows[0].title,'Raid #702 — Beta');
+  assert.equal(rows[0].title,'Raid #702 – Beta');
   assert.ok(seconds(rows[0].timer)<r.expected.live[0].elapsedMs/1000+5);
   assert.match(text('ony-finished'),/ago$/);
   assert.match(text.el('ony-finished').title,/Raid #701/);
@@ -98,11 +98,11 @@ test('website elapsed time equals tracker elapsed time for every fixture session
 
 test('stale tracker data is flagged, keeps the same raids and start times, and claims no clear',async()=>{
   const {text}=await pageFrom('onyxia-two-raids',10*MIN);
-  assert.equal(text('ony-state'),'STALE');
-  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 — Nightfall','Raid #703 — Stormguard']);
+  assert.equal(text('ony-state'),'Stale');
+  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
   assert.match(text('ony-evidence'),/old .* last known raids/);
-  assert.equal(text('ony-clear'),'STALE');
-  assert.equal(text('ony-finished'),'NO DATA');
+  assert.equal(text('ony-clear'),'Stale');
+  assert.equal(text('ony-finished'),'No data');
 });
 
 test('a refresh does not reset or jump timers',async()=>{
@@ -120,14 +120,14 @@ test('the tracker dropping out and returning restores the authoritative view wit
   const env=envFor(memoryDb());
   const r=await replay(env,'onyxia-two-raids',10*MIN);
   const stale=await run(await summaryJson(env));
-  assert.equal(stale('ony-state'),'STALE');
+  assert.equal(stale('ony-state'),'Stale');
   // The tracker reconnects and reports the same raids again (newer seq).
   const fresh=rebase('onyxia-two-raids');
   const snap=JSON.parse(JSON.stringify(fresh.events.filter(e=>e.type==='raid_sessions').pop()));
   snap.seq+=1e6;snap.eventId=snap.eventId+'-b';
   assert.equal((await post(env,snap)).status,202);
   await stale.next(await summaryJson(env));
-  assert.equal(stale('ony-state'),'TRACKED');
+  assert.equal(stale('ony-state'),'Tracked');
   assert.equal(r.expected.live.length,2);
   assert.equal(stale('ony-count'),'2');
 });
@@ -136,7 +136,7 @@ test('aggregate-only activity shows "1+" with no raid id, timer or claimed separ
   const now=Date.now();
   const text=await run({generated_at:iso(now),realms:[{realm:"N'Zoth",population:null,raids:{a:{zone:'Onyxia',players:40,at:iso(now-MIN),active:true,activityStart:iso(now-48*MIN)}},buffs:{},sessions:{},heads:{onyxia:{clear:{status:'learning',samples:1,minSamples:5,confidence:'none'},drops:{}}}}]});
   assert.equal(text('ony-count'),'1+');
-  assert.equal(text('ony-state'),'ESTIMATED');
+  assert.equal(text('ony-state'),'Estimated');
   assert.deepEqual(text.rows(),[]);
   assert.ok(!text.created.some(e=>/^Raid #?\d/.test(String(e.textContent))));
   assert.match(text('ony-evidence'),/cannot be counted/);
@@ -149,7 +149,7 @@ test('ambiguity makes the count a lower bound and says so',async()=>{
   assert.equal((await post(env,amb)).status,202);
   const text=await run(await summaryJson(env));
   assert.equal(text('ony-count'),'1+');
-  assert.equal(text('ony-state'),'ESTIMATED');
+  assert.equal(text('ony-state'),'Estimated');
   assert.match(text('ony-evidence'),/19 more players could not be separated/);
 });
 
@@ -159,7 +159,7 @@ test('a tentative cohort is labelled an estimated group, not a verified raid',as
   snap.sessions[1].confidence='tentative';
   assert.equal((await post(env,snap)).status,202);
   const text=await run(await summaryJson(env));
-  assert.equal(text('ony-state'),'ESTIMATED');
+  assert.equal(text('ony-state'),'Estimated');
   const rows=text.rows();
   assert.match(rows[1].note||'',/Estimated group/);
 });

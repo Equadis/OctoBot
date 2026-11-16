@@ -47,8 +47,8 @@ test('an Onyxia drop from the API shows the elapsed time with its head, from the
   const now=Date.now(),text=await run(feed(now,{lastDrops:{alliance:drop(now-15*MIN,'onyxia'),horde:null},listeners:healthy,monitoring:fresh}));
   assert.match(text('alliance-last'),/^1[45]m \d\ds ago$/);
   assert.match(text('alliance-last-note'),/^Recorded .* · Onyxia head$/);
-  assert.equal(text('alliance-state'),'DROP RECORDED');
-  assert.equal(text('horde-last'),'NO DATA');
+  assert.equal(text('alliance-state'),'Drop recorded');
+  assert.equal(text('horde-last'),'No data');
 });
 
 test('a newer Nefarian drop replaces an older Onyxia drop for the same faction; the other faction is untouched',async()=>{
@@ -72,19 +72,19 @@ test('the newest timestamp wins wherever it appears in the response, and a later
   assert.match(text('alliance-last-note'),/Nefarian head/,'a genuinely newer drop does replace it');
 });
 
-test('only a confirmed npc_yell announcement is shown; anything else is NO DATA',async()=>{
+test('only a confirmed npc_yell announcement is shown; anything else is No data',async()=>{
   const now=Date.now();
   for(const bad of [{...drop(now-MIN,'onyxia'),source:'addon_report'},{...drop(now-MIN,'onyxia'),confirmed:false},{...drop(now-MIN,'onyxia'),source:undefined}]){
     const text=await run(feed(now,{lastDrops:{alliance:bad,horde:null},listeners:healthy,monitoring:fresh}));
-    assert.equal(text('alliance-last'),'NO DATA');assert.equal(text('alliance-state'),'AWAITING DATA');
+    assert.equal(text('alliance-last'),'No data');assert.equal(text('alliance-state'),'Awaiting data');
   }
 });
 
-test('invalid or future timestamps show NO DATA instead of a nonsense timer',async()=>{
+test('invalid or future timestamps show No data instead of a nonsense timer',async()=>{
   const now=Date.now();
   for(const at of ['not a date',iso(now+3*3600_000),'']){
     const text=await run(feed(now,{lastDrops:{alliance:{...drop(now,'onyxia'),at},horde:null},listeners:healthy,monitoring:fresh}));
-    assert.equal(text('alliance-last'),'NO DATA',String(at));
+    assert.equal(text('alliance-last'),'No data',String(at));
   }
 });
 
@@ -92,36 +92,36 @@ test('when the API is unavailable the last known drop stays visible, clearly lab
   const now=Date.now(),text=await run(feed(now,{lastDrops:{alliance:drop(now-15*MIN,'onyxia'),horde:null},listeners:healthy,monitoring:fresh}));
   await text.next(null);
   assert.match(text('alliance-last'),/^1[56]m \d\ds ago$/);
-  assert.equal(text('alliance-state'),'LAST KNOWN');
+  assert.equal(text('alliance-state'),'Last known');
   assert.match(text('alliance-last-note'),/^Last known: .*OctoMetrics is unavailable/);
 });
 
 test('a collector that has stopped reporting, or an offline listener, labels the drop as last known and says a newer one may be missing',async()=>{
   const now=Date.now(),lastDrops={alliance:drop(now-15*MIN,'onyxia'),horde:drop(now-15*MIN,'onyxia')};
   let text=await run(feed(now,{lastDrops,listeners:healthy,monitoring:{collectorFresh:false}}));
-  assert.equal(text('alliance-state'),'LAST KNOWN');assert.match(text('alliance-last-note'),/collector has stopped reporting/);
+  assert.equal(text('alliance-state'),'Last known');assert.match(text('alliance-last-note'),/collector has stopped reporting/);
   text=await run(feed(now,{lastDrops,listeners:{sw:{status:'offline'},org:{status:'healthy'}},monitoring:fresh}));
-  assert.equal(text('alliance-state'),'LAST KNOWN');assert.match(text('alliance-last-note'),/Stormwind listener is offline/);
-  assert.equal(text('horde-state'),'DROP RECORDED','one faction\'s listener problem does not mark the other');assert.doesNotMatch(text('horde-last-note'),/listener/);
+  assert.equal(text('alliance-state'),'Last known');assert.match(text('alliance-last-note'),/Stormwind listener is offline/);
+  assert.equal(text('horde-state'),'Drop recorded','one faction\'s listener problem does not mark the other');assert.doesNotMatch(text('horde-last-note'),/listener/);
 });
 
 test('a silent or degraded listener adds a caution but keeps the drop recorded',async()=>{
   const now=Date.now(),lastDrops={alliance:drop(now-15*MIN,'onyxia'),horde:drop(now-15*MIN,'onyxia')};
   const text=await run(feed(now,{lastDrops,listeners:{sw:{status:'silent'},org:{status:'degraded'}},monitoring:fresh}));
-  assert.equal(text('alliance-state'),'DROP RECORDED');assert.match(text('alliance-last-note'),/Stormwind listener has heard nothing/);
-  assert.equal(text('horde-state'),'DROP RECORDED');assert.match(text('horde-last-note'),/Orgrimmar are not being delivered reliably/);
+  assert.equal(text('alliance-state'),'Drop recorded');assert.match(text('alliance-last-note'),/Stormwind listener has heard nothing/);
+  assert.equal(text('horde-state'),'Drop recorded');assert.match(text('horde-last-note'),/Orgrimmar are not being delivered reliably/);
 });
 
 test('an unverified listener (collector not yet reporting health) raises no false alarm',async()=>{
   const now=Date.now(),text=await run(feed(now,{lastDrops:{alliance:drop(now-15*MIN,'onyxia'),horde:null},listeners:{sw:{status:'unverified'},org:{status:'unverified'}},monitoring:fresh}));
-  assert.equal(text('alliance-state'),'DROP RECORDED');assert.doesNotMatch(text('alliance-last-note'),/listener/);
+  assert.equal(text('alliance-state'),'Drop recorded');assert.doesNotMatch(text('alliance-last-note'),/listener/);
 });
 
 test('a browser clock that is minutes wrong neither hides a fresh drop nor invents a future one: elapsed time uses the server\'s clock',async()=>{
   const real=Date.now(),serverNow=real+10*MIN;        // the browser runs ten minutes behind the Worker
   const text=await run(feed(serverNow,{lastDrops:{alliance:drop(serverNow-2*MIN,'onyxia'),horde:null},listeners:healthy,monitoring:fresh,generated:serverNow}));
   assert.match(text('alliance-last'),/^[12]m \d\ds ago$/,'a drop two minutes old on the server is shown, not rejected as "in the future"');
-  assert.notEqual(text('alliance-last'),'NO DATA');
+  assert.notEqual(text('alliance-last'),'No data');
 });
 
 test('a new drop after a long gap resets the timer',async()=>{

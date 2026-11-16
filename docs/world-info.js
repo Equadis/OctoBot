@@ -45,6 +45,8 @@
   };
 
   function object(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : null; }
+  // The tracker names an unaffiliated group "PUG"; show it in proper case.
+  function groupLabel(name) { return String(name).trim().toUpperCase() === 'PUG' ? 'Pug' : name; }
   function first(...values) { return values.find(v => v !== undefined && v !== null) ?? null; }
   function time(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -71,12 +73,12 @@
     return parts.slice(first).map((v, i) => (i ? String(v).padStart(2, '0') : String(v)) + names[names.length - parts.length + first + i]).join(' ');
   }
   function span(ms) {
-    if (!Number.isFinite(ms)) return 'NO DATA';
+    if (!Number.isFinite(ms)) return 'No data';
     const seconds = Math.floor(Math.max(0, ms) / 1000);
     return units([Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60), seconds % 60]);
   }
   function spanWithDays(ms) {
-    if (!Number.isFinite(ms)) return 'NO DATA';
+    if (!Number.isFinite(ms)) return 'No data';
     const seconds = Math.floor(Math.max(0, ms) / 1000);
     return units([Math.floor(seconds / 86400), Math.floor(seconds % 86400 / 3600), Math.floor(seconds % 3600 / 60), seconds % 60]);
   }
@@ -166,7 +168,7 @@
     const total = Number.isFinite(players) && players > 0 ? players : listed;
     if (!entries.length || !total) return null;
     const top = entries.filter(([name]) => String(name).trim()).sort((a, b) => b[1] - a[1])[0];
-    return top && top[1] * 2 >= total ? { name: String(top[0]).trim(), pug: false } : { name: 'PUG', pug: true };
+    return top && top[1] * 2 >= total ? { name: String(top[0]).trim(), pug: false } : { name: 'Pug', pug: true };
   }
   function raidSession(row) {
     if (!object(row)) return null;
@@ -222,20 +224,20 @@
     activeNode.replaceChildren();
     $(key + '-count-label').textContent = (n >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
     // With activity hidden by ambiguity the number is a lower bound ("2+"), never an exact count.
-    count.textContent = n === 0 ? (stale ? 'NO DATA' : 'No raid') : String(n) + (ambiguity ? '+' : '');
+    count.textContent = n === 0 ? (stale ? 'No data' : 'No raid') : String(n) + (ambiguity ? '+' : '');
     count.classList.toggle('no-data', stale && n === 0);
     const allHigh = auth.sessions.every(session => ['high', 'confirmed'].includes(session.confidence));
-    if (stale) labelState(key + '-state', 'STALE');
-    else if (n === 0) labelState(key + '-state', 'NO RAID', 'unknown');
-    else if (allHigh && !ambiguity) labelState(key + '-state', 'TRACKED', 'online');
-    else labelState(key + '-state', 'ESTIMATED', 'estimated');
+    if (stale) labelState(key + '-state', 'Stale');
+    else if (n === 0) labelState(key + '-state', 'No raid', 'unknown');
+    else if (allHigh && !ambiguity) labelState(key + '-state', 'Tracked', 'online');
+    else labelState(key + '-state', 'Estimated', 'estimated');
     if (n === 0) appendEmpty(activeNode, stale ? 'Tracker is not reporting; the current raid state is unknown.' : 'No raid currently detected.');
     for (const session of auth.sessions) {
       const line = document.createElement('div');
       line.className = 'timer-row';
       const title = document.createElement('span');
       const guild = session.guild && session.guild.label ? session.guild.label : null;
-      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2014 ' + guild : '');
+      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2013 ' + groupLabel(guild) : '');
       title.title = session.confidence === 'tentative'
         ? 'Separated from another raid by arrival timing only. /who has no instance IDs, so this grouping is an estimate.'
         : guild === 'Unknown' ? 'Not enough roster information to name a guild or PUG.' : 'Grouped from the roster by the Bufftracker; not verified instance membership.';
@@ -262,12 +264,12 @@
       finished.textContent = span(now - auth.lastFinished.at) + ' ago';
       finished.title = (auth.lastFinished.id !== null ? 'Raid #' + auth.lastFinished.id + ' \u00b7 ' : '') + (auth.lastFinished.killConfirmed ? 'Boss kill confirmed by Chronicle.' : auth.lastFinished.endReason === 'disbanded' ? 'Group disbanded early; no kill.' : 'Roster left the zone; a boss kill is not confirmed.');
     } else {
-      finished.textContent = 'NO DATA';
+      finished.textContent = 'No data';
       finished.title = '';
     }
     const present = Number(auth.lair.present);
     const roster = Number.isFinite(present) ? playerCount(present) + ' in the lair. ' : '';
-    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2014 showing the last known raids; they may have changed.';
+    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2013 showing the last known raids; they may have changed.';
     else evidence.textContent = roster + 'Raids come from Bufftracker roster tracking; /who has no instance IDs, so groups are inferred.' + (ambiguity ? ' ' + ambiguity.players + ' more players could not be separated into a raid.' : '');
   }
   function playerCount(n) { return n + (n === 1 ? ' player' : ' players'); }
@@ -285,12 +287,12 @@
     const raidLabel = (raidTotal >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
     $(key + '-count-label').textContent = raidLabel;
     finished.textContent = raid && validPast(raid.lastFinishedAt)
-      ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'NO DATA';
+      ? span(Date.now() - raid.lastFinishedAt) + ' ago' : 'No data';
     finished.title = raid && validPast(raid.lastFinishedAt) && raid.clearConfirmed !== true ? 'Roster left the zone; a boss clear is not confirmed.' : '';
     count.classList.toggle('no-data', !raid || !freshAt(raid.stamp, FRESH_RAID_MS));
     if (!raid || !freshAt(raid.stamp, FRESH_RAID_MS)) {
-      count.textContent = 'NO DATA';
-      labelState(key + '-state', raid ? 'STALE' : 'AWAITING DATA');
+      count.textContent = 'No data';
+      labelState(key + '-state', raid ? 'Stale' : 'Awaiting data');
       evidence.textContent = raid ? 'Last /who reading is too old for a live raid status.' : '';
       appendEmpty(activeNode, 'No current verified raid sessions.');
       return;
@@ -298,12 +300,12 @@
     if (raid.sessions.length) {
       count.textContent = String(raid.sessions.length);
       const confirmed = raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence));
-      labelState(key + '-state', confirmed ? 'VERIFIED' : 'ESTIMATED', confirmed ? 'online' : 'estimated');
+      labelState(key + '-state', confirmed ? 'Verified' : 'Estimated', confirmed ? 'online' : 'estimated');
       for (const session of raid.sessions) {
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2014 ' + session.guild.name : '');
+        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2013 ' + groupLabel(session.guild.name) : '');
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
@@ -313,22 +315,22 @@
       evidence.textContent = 'Separate groups ' + (raid.sessions.every(session => ['confirmed', 'verified'].includes(session.confidence)) ? 'verified' : 'inferred') + ' from rosters · ' + (raid.players === null ? 'Roster observed' : playerCount(raid.players) + ' observed in /who') + '. /who alone cannot prove instance IDs.';
     } else if (raid.count !== null) {
       count.textContent = raid.count === 0 ? 'No raid' : String(raid.count);
-      labelState(key + '-state', raid.count ? 'ESTIMATED' : 'NO RAID', raid.count ? 'estimated' : 'unknown');
+      labelState(key + '-state', raid.count ? 'Estimated' : 'No raid', raid.count ? 'estimated' : 'unknown');
       appendEmpty(activeNode, raid.count ? 'Start timestamps not yet available.' : 'No raid currently detected.');
       evidence.textContent = raid.players !== null ? playerCount(raid.players) + ' listed in the latest /who response.' : 'Latest roster observation received.';
     } else if (raid.active === true) {
       count.textContent = '1+';
-      labelState(key + '-state', 'ESTIMATED', 'estimated');
+      labelState(key + '-state', 'Estimated', 'estimated');
       appendEmpty(activeNode, 'Raid activity detected; separate groups and start time not verified.');
       evidence.textContent = (raid.players === null ? 'Raid activity signal received.' : playerCount(raid.players) + ' in the observed zone.') + ' Multiple raids cannot be counted from the current collector.';
     } else if (raid.active === false) {
       count.textContent = 'No raid';
-      labelState(key + '-state', 'NO RAID', 'unknown');
+      labelState(key + '-state', 'No raid', 'unknown');
       appendEmpty(activeNode, 'No raid detected in the latest scan.');
       evidence.textContent = (raid.players === null ? '' : playerCount(raid.players) + ' listed. ') + 'No confirmed completed raid can be inferred from an empty zone.';
     } else {
-      count.textContent = 'NO DATA';
-      labelState(key + '-state', 'UNVERIFIED');
+      count.textContent = 'No data';
+      labelState(key + '-state', 'Unverified');
       appendEmpty(activeNode, 'Insufficient raid lifecycle information.');
       evidence.textContent = raid.players === null ? 'No usable observations available.' : playerCount(raid.players) + ' listed; the raid state is unknown.';
     }
@@ -359,14 +361,14 @@
   function serverNow() { return Date.now() + (Number.isFinite(state.clockOffsetMs) ? state.clockOffsetMs : 0); }
   // Why the live feed cannot be trusted right now, or null. A last known drop is still shown, but labelled as last known.
   function monitoringConcern(faction) {
-    if (state.apiOk === false) return { stale: true, note: 'OctoMetrics is unavailable \u2014 showing the last known drop, not live monitoring.' };
+    if (state.apiOk === false) return { stale: true, note: 'OctoMetrics is unavailable \u2013 showing the last known drop, not live monitoring.' };
     const m = object(state.monitoring);
-    if (m && m.collectorFresh === false) return { stale: true, note: 'The collector has stopped reporting \u2014 showing the last known drop; a newer one may be missing.' };
+    if (m && m.collectorFresh === false) return { stale: true, note: 'The collector has stopped reporting \u2013 showing the last known drop; a newer one may be missing.' };
     const l = object(state.listeners) && object(state.listeners[faction === 'alliance' ? 'sw' : 'org']);
     const city = faction === 'alliance' ? 'Stormwind' : 'Orgrimmar';
-    if (l && l.status === 'offline') return { stale: true, note: 'The ' + city + ' listener is offline \u2014 a newer drop may be missing.' };
-    if (l && l.status === 'silent') return { stale: false, note: 'The ' + city + ' listener has heard nothing for a long time (possibly out of range) \u2014 a newer drop may be missing.' };
-    if (l && l.status === 'degraded') return { stale: false, note: 'Drops from ' + city + ' are not being delivered reliably right now \u2014 a newer drop may be missing.' };
+    if (l && l.status === 'offline') return { stale: true, note: 'The ' + city + ' listener is offline \u2013 a newer drop may be missing.' };
+    if (l && l.status === 'silent') return { stale: false, note: 'The ' + city + ' listener has heard nothing for a long time (possibly out of range) \u2013 a newer drop may be missing.' };
+    if (l && l.status === 'degraded') return { stale: false, note: 'Drops from ' + city + ' are not being delivered reliably right now \u2013 a newer drop may be missing.' };
     return null;
   }
   function renderBuff(faction) {
@@ -380,11 +382,11 @@
       last.textContent = span(now - buff.last) + ' ago';
       lastNote.textContent = (concern && concern.stale ? 'Last known: ' : 'Recorded ') + when(buff.last) + (buff.head ? ' \u00b7 ' + headName(buff.head) + ' head' : '') + (concern ? ' \u00b7 ' + concern.note : '');
     } else {
-      last.textContent = 'NO DATA';
+      last.textContent = 'No data';
       lastNote.textContent = buff && Number.isFinite(buff.last) ? 'The recorded drop time is not valid.' : concern ? concern.note : '';
     }
-    if (known && concern && concern.stale) labelState(faction + '-state', 'LAST KNOWN', 'estimated');
-    else labelState(faction + '-state', known ? 'DROP RECORDED' : 'AWAITING DATA', known ? 'online' : 'unknown');
+    if (known && concern && concern.stale) labelState(faction + '-state', 'Last known', 'estimated');
+    else labelState(faction + '-state', known ? 'Drop recorded' : 'Awaiting data', known ? 'online' : 'unknown');
   }
 
 
@@ -392,7 +394,7 @@
   const MIN_SAMPLES_FALLBACK = 5;
   function dropLine(label, drop) {
     const at = drop && drop.confirmed === true ? time(drop.at) : null;
-    return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' ago' : 'NO DATA');
+    return label + ' · ' + (validPast(at) ? span(Date.now() - at) + ' ago' : 'No data');
   }
   // Low confidence is red, medium yellow, high green.
   function colourConfidence(note, level) {
@@ -414,22 +416,23 @@
     // With no raid there is nothing to estimate: N/A in red.
     const idle = $(prefix + '-count').textContent === 'No raid' || (clear && clear.status === 'idle');
     out.classList.toggle('na', Boolean(idle));
+    out.classList.remove('dots');
     if (idle) { out.textContent = 'N/A'; note.textContent = ''; return; }
     if (!clear || stale) {
-      out.textContent = 'NO DATA';
+      out.textContent = 'No data';
       note.textContent = stale && clear ? 'The latest estimate is too old to show.' : '';
       return;
     }
-    if (clear.status === 'stale') { out.textContent = 'STALE'; note.textContent = 'Bufftracker data is out of date; no estimate is shown and no clear is assumed.'; return; }
-    if (clear.status === 'leaving') { out.textContent = 'LEAVING'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
+    if (clear.status === 'stale') { out.textContent = 'Stale'; note.textContent = 'Bufftracker data is out of date; no estimate is shown and no clear is assumed.'; return; }
+    if (clear.status === 'leaving') { out.textContent = 'Leaving'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
     if (clear.status === 'learning') {
-      out.textContent = 'LEARNING';
+      out.textContent = 'Learning'; out.classList.add('dots');
       note.textContent = 'Needs ' + need + ' past raids to estimate · ' + (clear.samples || 0) + ' observed so far.';
       return;
     }
     const estimatedAt = time(clear.estimatedAt), latestAt = time(clear.latestAt), earliestAt = time(clear.earliestAt);
-    if (!Number.isFinite(estimatedAt)) { out.textContent = 'NO DATA'; note.textContent = ''; return; }
+    if (!Number.isFinite(estimatedAt)) { out.textContent = 'No data'; note.textContent = ''; return; }
     const now = Date.now();
     const range = Number.isFinite(earliestAt) && Number.isFinite(latestAt) ? ' · likely between ' + hhmm(earliestAt) + ' and ' + hhmm(latestAt) + ' UTC' : '';
     const basis = (clear.confidence || 'low') + ' confidence from ' + (clear.samples || 0) + ' past raids' + range + (clear.source === 'legacy_headcount' ? ' \u00b7 headcount-based, unverified' : '') + '.';
@@ -437,7 +440,7 @@
     const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); note.textContent = 'Estimated clear · ' + basis; }
     else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; { const tm = document.createElement('sup'); tm.className = 'tm'; tm.textContent = '™'; if (out.append) out.append(tm); } note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
-    else { out.textContent = 'OVERDUE'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+    else { out.textContent = 'Overdue'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
     colourConfidence(note, level);
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
@@ -476,7 +479,7 @@
     panel.classList.toggle('faction-alliance', Boolean(sw));
     panel.classList.toggle('faction-horde', Boolean(tb));
     panel.classList.toggle('faction-moving', !(sw || tb));
-    labelState('dmf-state', botSw || botTb ? 'CONFIRMED' : manual && (sw || tb) ? 'MANUAL' : 'NOT FOUND', botSw || botTb ? 'online' : manual && (sw || tb) ? 'estimated' : 'unknown');
+    labelState('dmf-state', botSw || botTb ? 'Confirmed' : manual && (sw || tb) ? 'Manual' : 'Not found', botSw || botTb ? 'online' : manual && (sw || tb) ? 'estimated' : 'unknown');
   }
 
   async function loadMetrics() {
@@ -613,6 +616,7 @@
   }
   function renderMadnessCountdown() {
     const rotation = currentRotation();
+    $('eom-current').classList.remove('dots');
     $('eom-current').textContent = rotation.current;
     $('eom-next').textContent = rotation.next;
     // Colour each boss name to match its calendar colour.
@@ -622,8 +626,8 @@
     }
     $('eom-current-until').textContent = 'Until ' + (rotation.end ? when(rotation.end) : 'unknown');
     $('eom-next-at').textContent = rotation.end ? 'From ' + when(rotation.end) : 'Start unknown';
-    $('eom-countdown').textContent = rotation.end ? spanWithDays(rotation.end - Date.now()) : 'NO DATA';
-    labelState('eom-source', rotation.api ? 'ERA API' : 'ERA REFERENCE', rotation.api ? 'estimated' : 'unknown');
+    $('eom-countdown').textContent = rotation.end ? spanWithDays(rotation.end - Date.now()) : 'No data';
+    labelState('eom-source', rotation.api ? 'Era API' : 'Era reference', rotation.api ? 'estimated' : 'unknown');
   }
   async function loadEra() {
     try {
