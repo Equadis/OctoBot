@@ -21,7 +21,7 @@ function normalise(raw){
  return {auction_id:raw.auction_id,item_id:raw.item_id,variant,item_name:raw.item_name||null,
    quality:raw.quality??null,icon_url:raw.icon_url??null,quantity:raw.quantity,
    start_bid:raw.start_bid,current_bid:raw.current_bid,min_next_bid:raw.min_next_bid,
-   buyout:raw.buyout===0?null:raw.buyout,
+   buyout:raw.buyout,
    owner_guid:raw.owner_guid||null,time_left_ms:raw.time_left_ms??null,captured_at:raw.captured_at};
 }
 const all=async(db,sql,...args)=>(await db.prepare(sql).bind(...args).all()).results||[];
@@ -40,7 +40,7 @@ async function upload(req,env,action){
    if(!validIso(body.started_at)||!integer(body.reported_total,0,1000000))return bad('invalid scan header');
    const existing=await first(db,'SELECT status FROM ah_scans WHERE scan_id=?',body.scan_id);
    if(existing)return respond({ok:true,duplicate:true,status:existing.status});
-   const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' AND started_at > datetime('now','-12 hours') LIMIT 1");
+   const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' AND started_at > strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 hours') LIMIT 1");
    if(unfinished)return bad('another upload already in progress',409);
    await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,"N'Zoth",body.started_at,body.reported_total).run();
    return respond({ok:true},201);
@@ -125,7 +125,7 @@ async function readApi(url,env){
    const itemId=apiId(detail[2]);if(!itemId)return bad('invalid item');
    const variant=(url.searchParams.get('variant')||'').slice(0,90);
    if(detail[1]==='item'){
-     const rows=await all(db,"SELECT auction_id,item_id,variant,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid AS seller,time_left_ms,captured_at,CASE WHEN buyout>0 THEN CAST(buyout AS REAL)/quantity END unit_buyout FROM ah_listings WHERE scan_id=? AND item_id=? AND variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC LIMIT 200",scan.scan_id,itemId,variant);
+     const rows=await all(db,"SELECT auction_id,item_id,variant,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid AS owner_guid,time_left_ms,captured_at,CASE WHEN buyout>0 THEN CAST(buyout AS REAL)/quantity END unit_buyout FROM ah_listings WHERE scan_id=? AND item_id=? AND variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC LIMIT 200",scan.scan_id,itemId,variant);
      return respond({listings:rows,scan_id:scan.scan_id,limited:rows.length===200});
    }
    const rows=await all(db,"SELECT day,representative_unit,quantity,listings FROM ah_daily WHERE item_id=? AND variant=? ORDER BY day DESC LIMIT 90",itemId,variant);
@@ -147,10 +147,10 @@ export async function auctionRoute(request,env){
 export async function auctionCleanup(env){
  // Retain the three latest complete scans for movement comparisons; historical prices are compact daily rows.
  const db=env.DB;
- await db.prepare("DELETE FROM ah_listings WHERE scan_id IN (SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='uploading' AND started_at<datetime('now','-2 days')) OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
- await db.prepare("DELETE FROM ah_pages WHERE scan_id NOT IN (SELECT DISTINCT scan_id FROM ah_listings)").run();
+ await db.prepare("DELETE FROM ah_listings WHERE scan_id IN (SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')) OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
+ await db.prepare("DELETE FROM ah_pages WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='uploading' OR (status='complete' AND scan_id IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
  await db.prepare("DELETE FROM ah_item_points WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
- await db.prepare("DELETE FROM ah_scans WHERE status='failed' AND started_at<datetime('now','-7 days')").run();
+ await db.prepare("DELETE FROM ah_scans WHERE status='failed' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days')").run();
  await db.prepare("DELETE FROM ah_scans WHERE status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
  await db.prepare("DELETE FROM ah_daily WHERE day < date('now','-365 days')").run();
 }
