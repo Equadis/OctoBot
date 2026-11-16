@@ -213,9 +213,11 @@
   }
   function renderAuthRaid(key, auth) {
     const count = $(key + '-count'), activeNode = $(key + '-active'), evidence = $(key + '-evidence'), finished = $(key + '-finished');
-    const now = Date.now();
-    const age = validPast(auth.observedAt) ? now - auth.observedAt : Infinity;
-    const stale = auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || now - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
+    // Raid start times are the tracker's (server) clock, so elapsed time is measured on the server clock too: a browser clock that is a few minutes off
+    // must not shift one raid's timer relative to the in-game report.
+    const now = serverNow();
+    const age = validPast(auth.observedAt, now) ? now - auth.observedAt : Infinity;
+    const stale = auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
     const n = auth.sessions.length, ambiguity = object(auth.lair.ambiguity);
     activeNode.replaceChildren();
     $(key + '-count-label').textContent = (n >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
@@ -243,8 +245,10 @@
       timer.textContent = span(now - session.startedAt);
       line.append(title, timer);
       const notes = [];
-      if (session.confidence === 'tentative') notes.push('Estimated group');
+      if (Number.isFinite(session.players) && session.players > 0) notes.push(playerCount(session.players));
+      notes.push(session.confidence === 'tentative' ? 'Estimated group' : session.confidence === 'confirmed' ? 'Confirmed' : 'Tracked');
       if (session.status === 'leaving') notes.push('Roster leaving');
+      if (stale) notes.push('Last known');
       if (session.resumed) notes.push('Resumed after a wipe');
       if (n >= 2 && !stale && session.estimate && session.estimate.status === 'estimated' && Number.isFinite(time(session.estimate.estimatedAt))) notes.push('Est. clear in ' + span(time(session.estimate.estimatedAt) - now));
       if (notes.length) {

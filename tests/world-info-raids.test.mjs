@@ -172,3 +172,16 @@ test('without tracker telemetry the card says so and keeps raid timers off',asyn
   assert.match(text('bwl-clear-note'),/headcount-based, unverified/);
   assert.match(text('source-status'),/Aggregate raid activity only/);
 });
+
+test('each raid row shows its player count and a confidence label, and both timers advance on their own every second',async()=>{
+  const {text}=await pageFrom('onyxia-two-raids');
+  const before=text.rows();
+  assert.equal(before.length,2);
+  for(const row of before)assert.match(String(row.note),/\d+ players? · (Tracked|Estimated group|Confirmed)/,`${row.title}: ${row.note}`);
+  await new Promise(resolve=>setTimeout(resolve,2100));
+  text.created.length=0;await text.tick();
+  const after=text.rows();
+  assert.equal(after.length,2,'rows are re-rendered by the 1 s tick, no page refresh needed');
+  after.forEach((row,i)=>assert.ok(seconds(row.timer)>=seconds(before[i].timer)+2,`${row.title}: ${before[i].timer} -> ${row.timer}`));
+  assert.notEqual(after[0].timer,after[1].timer,'the two raids never share a timer');
+});

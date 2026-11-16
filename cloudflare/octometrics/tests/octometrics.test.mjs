@@ -116,10 +116,14 @@ test('/api/summary keeps existing fields and adds per-head raid intelligence',as
   assert.equal(realm.buffs['Rallying Cry of the Dragonslayer:horde'].head,'nefarian');
   assert.equal(realm.heads.nefarian.drops.horde.confirmed,true);
   assert.equal(realm.heads.onyxia.drops.horde,null);
-  assert.equal(realm.heads.onyxia.clear.status,'estimated');
+  // Six past headcount sessions exist, but legacy activity sessions merge back-to-back raids, so they never teach an estimate:
+  // without Bufftracker telemetry the estimate is LEARNING with no samples, and the headcount start time is withheld.
+  assert.equal(realm.heads.onyxia.clear.status,'learning');
   assert.equal(realm.heads.onyxia.clear.confirmed,false);
-  assert.equal(realm.heads.onyxia.clear.confidence,'low');
-  assert.equal(realm.heads.onyxia.learned.samples,6);
+  assert.equal(realm.heads.onyxia.clear.samples,0);
+  assert.equal(realm.heads.onyxia.learned,null);
+  assert.equal(realm.heads.onyxia.raid.activityStart,null);
+  assert.equal(realm.heads.onyxia.raid.players,30);
   assert.equal(realm.heads.nefarian.clear.status,'learning'); // no past Blackwing Lair sessions yet
   assert.equal(realm.heads.nefarian.raid.players,40);
   // no cooldown and no buff-duration timer anywhere in the payload

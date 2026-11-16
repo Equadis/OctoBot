@@ -68,15 +68,6 @@ function sanitise(e){
 function isFresh(iso,seconds=180){return typeof iso==="string"&&Date.now()-Date.parse(iso)<=seconds*1000&&Date.now()-Date.parse(iso)>=-30000;}
 function decode(r){try{return {...r,payload:JSON.parse(r.payload_json)}}catch{return {...r,payload:{}};}}
 const LEARN_TTL_MS=5*60*1000,learnedCache=new Map();
-/** Completed raid sessions change slowly, so each realm/raid is recomputed at most every few minutes per isolate. */
-async function learnedFor(env,realm,raid){
-  const key=`${realm}:${raid.role}`,hit=learnedCache.get(key);
-  if(!env.NO_LEARN_CACHE&&hit&&Date.now()-hit.at<LEARN_TTL_MS)return hit.value;
-  const rows=await env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND role=? AND type='raid_who' AND json_extract(payload_json,'$.activityChange') IS NOT NULL ORDER BY id DESC LIMIT 400").bind(realm,raid.role).all();
-  const value=learnDurations(pairSessions(rows.results.map(decode).reverse()),raid);
-  learnedCache.set(key,{at:Date.now(),value});
-  return value;
-}
 /** Trusted tracker-ended sessions (authoritative boundaries only) teach the estimate; recomputed at most every few minutes. */
 async function learnedAuthFor(env,realm,zone,raid){
   const key=`${realm}:auth:${zone}`,hit=learnedCache.get(key);
@@ -167,9 +158,10 @@ async function summary(env,realm){
   const drops=summariseDrops(dropEvents,now0),now=now0,heads={};
   for(const raid of Object.values(RAIDS)){
     const who=latestWho[raid.role]||null;
-    const learned=who?await learnedFor(env,realm,raid):null;
-    const head=buildHead({raid,latestWho:who,learned,drops:drops[raid.head],now});
-    // Legacy clear estimates come from headcount "activity sessions", which merge back-to-back raids: label them as such.
+    // The legacy collector's headcount "activity sessions" merge back-to-back raids, so they never teach an estimate and never provide a start time:
+    // until the Bufftracker reports, the estimate is LEARNING (no data), not a misleading countdown or OVERDUE.
+    const head=buildHead({raid,latestWho:who,learned:null,drops:drops[raid.head],now});
+    head.raid=head.raid?{...head.raid,activityStart:null}:head.raid;
     head.clear={...head.clear,source:"legacy_headcount"};
     const zone=Object.keys(ZONE_HEAD).find(z=>ZONE_HEAD[z]===raid.head);
     const snapshot=latestSnapshots(snapshotRows.results,now)[zone]||null;
