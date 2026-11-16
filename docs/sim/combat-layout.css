@@ -62,6 +62,8 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .talent-node.allocated:not(.maxed) .rank{color:#1eff00}.planner-view .talent-node.maxed .rank{color:#ffd100}
 
 .saved-actions{display:flex;gap:7px;flex:none}.saved-row>span{min-width:0;flex:1}.saved-actions .delete-build{color:#ed6969;background:transparent}#load-dialog{width:min(620px,calc(100vw - 30px))}#saved-builds{max-height:50vh;overflow:auto}#save-dialog{width:min(440px,calc(100vw - 30px))}#save-error:empty{display:none}
+#save-form .save-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+#save-form .save-actions #save-error{color:#f27c7e;line-height:1.4;font-size:12px;flex:1 1 185px;margin:0}
 
 .planner-view .extra-slots{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}.extra-slots:empty,.extra-slots:not(:has(.slot:not([hidden]))){display:none}.appearance-slots{margin-top:15px}.appearance-slots summary{font-size:11px;color:#a1adbd;cursor:pointer}
 
