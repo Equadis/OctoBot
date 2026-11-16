@@ -49,6 +49,7 @@ export function overlayKind(path) {
  if(meta)return OVERLAY_CHARACTER_IDS.has(meta[1])?'meta':null;
  return /^meta\/armor\/1\/\d+\.json$/.test(path)?'helm':null;
 }
+const ITEM_RECORD=/^meta\/(?:armor\/\d+|item)\/\d+\.json$/;
 function typeFor(path) {return path.endsWith('.json')?'application/json':path.endsWith('.webp')?'image/webp':path.endsWith('.png')?'image/png':'application/octet-stream';}
 async function fromBucket(bucket,path,cache) {
  const object=await bucket.get(path);
@@ -151,8 +152,9 @@ export async function outfitter(request,fetcher=fetch,env={}) {
   }
   const response=await fetcher(ASSET_BASE+path,{redirect:'manual',signal:AbortSignal.timeout(20000),cf:{cacheTtl:604800,cacheEverything:true}});
   if(!response.ok) {
-   // OctoWoW's own helm looks have no record in Zam's library. A complete record built from the client may sit in the bucket under the same path.
-   if(kind==='helm'&&bucket&&(response.status===404||response.status===403)) {const own=await fromBucket(bucket,path,cache);if(own)return own;}
+   // OctoWoW's own looks have no record in Zam's library. A complete record built from the client may sit in the bucket under the same path
+   // (helms, body armour and weapons: meta/armor/<slot>/<id>.json and meta/item/<id>.json).
+   if(bucket&&ITEM_RECORD.test(path)&&(response.status===404||response.status===403)) {const own=await fromBucket(bucket,path,cache);if(own)return own;}
    return json({error:'This appearance is not available in the Classic model library.'},response.status===404||response.status===403?404:502);
   }
   if(kind==='helm'&&bucket) {
