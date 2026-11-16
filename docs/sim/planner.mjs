@@ -3,7 +3,8 @@ import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261114-ammo2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
-import {updateRaceIcons} from './race-icons.mjs?v=1';
+import {setupRacePicker} from './race-picker.mjs?v=2';
+let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261113-swaps1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
@@ -99,7 +100,7 @@ function applyBuild(candidate, message, legacy=false) {
   $('build-name').value = build.name;
   $('character-level').value = build.level;
   $('character-race').value = build.race;
-  updateRaceIcons(document, $('character-race').value);
+  racePicker?.sync();
   persistDraft();
   config?.render();
   settingsControls?.render();
@@ -455,8 +456,7 @@ async function initialise() {
   document.body.classList.add('planner-view');
   document.body.style.setProperty('--class-colour',currentClass.colour);
   $('character-race').replaceChildren(...CLASS_RACES[classId].map(race=>{const option=element('option','',race);option.value=race;return option;}));
-  updateRaceIcons(document, $('character-race').value);
-  $('character-race').addEventListener('change', () => updateRaceIcons(document, $('character-race').value));
+  if (racePicker) racePicker.sync(); else racePicker = setupRacePicker(document, $('character-race'));
   $('class-selection').hidden = true;
   try {
     const response = await fetch(new URL(`./data/talents/${classId}.json`, import.meta.url));
