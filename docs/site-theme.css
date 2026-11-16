@@ -92,3 +92,14 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 
 /* Discord and Buy Me a Coffee sit a little closer together */
 .site-header .header-link+.header-link{margin-left:-5px}
+
+/* Grouped navigation (rendered by site-nav.js): groups are separated by a thin rule matching the header's divider. */
+.page-nav{align-items:stretch}
+.page-nav .nav-group{display:flex;gap:6px;flex-wrap:wrap}
+.page-nav .nav-group+.nav-group{margin-left:6px;padding-left:12px;border-left:1px solid var(--line)}
+@media(max-width:900px){
+ .page-nav{flex-direction:column;gap:8px}
+ .page-nav .nav-group{flex-wrap:nowrap}
+ .page-nav .nav-group a{flex:1;min-width:0}
+ .page-nav .nav-group+.nav-group{margin-left:0;padding-left:0;padding-top:8px;border-left:0;border-top:1px solid var(--line)}
+}
