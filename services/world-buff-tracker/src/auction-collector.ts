@@ -12,10 +12,13 @@ import {WorldClient} from "./net/world-client.js";
 import {NpcWatch} from "./darkmoon/npc-watch.js";
 import {parseUpdateObject} from "./protocol/update-object.js";
 import type {AuctionResult,AuctionRow} from "./protocol/auction.js";
+import {AuctionScanCursor} from "./auction-scan.js";
+import {fetchAuctionCatalogue,type AuctionItemMetadata} from "./auction-metadata.js";
 import {createLogger,type Logger} from "./logger.js";
 import {resolveBuild} from "./net/client-resolver.js";
 import {VersionMismatchError} from "./errors.js";
 
+try{process.loadEnvFile();}catch{/* Railway injects environment variables without a .env file. */}
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const endpoint=process.env.AUCTION_PUSH_URL?.trim()||"https://octometrics.eqvoice.workers.dev/api/auction/scan";
 let stopping=false;
@@ -33,13 +36,33 @@ const token=process.env.AUCTION_PUSH_TOKEN?.trim();
 const uploadUrl=new URL(endpoint);
 if(uploadUrl.protocol!=="https:"||!uploadUrl.pathname.endsWith("/api/auction/scan")||
  uploadUrl.username||uploadUrl.password)throw new Error("AUCTION_PUSH_URL must be an HTTPS /api/auction/scan endpoint");
+class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
 async function publish(action:"start"|"page"|"complete"|"fail",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
- const response=await fetch(new URL(uploadUrl.toString().replace(/\/$/,"")+"/"+action),{
-   method:"POST",headers:{"authorization":"Bearer "+token,"content-type":"application/json"},
-   body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)
- });
- if(!response.ok)throw new Error("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180));
+ for(let attempt=0;attempt<3;attempt++){
+  try{
+   const response=await fetch(new URL(uploadUrl.toString().replace(/\/$/,"")+"/"+action),{
+     method:"POST",headers:{"authorization":"Bearer "+token,"content-type":"application/json"},
+     body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)
+   });
+   if(response.ok)return;
+   throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status);
+  }catch(error){
+   if(error instanceof UploadError&&error.status!==429&&error.status<500)throw error;
+   if(attempt===2)throw error;
+   await sleep(750*2**attempt);
+  }
+ }
+}
+let metadataPromise:Promise<ReadonlyMap<number,AuctionItemMetadata>>|null=null;
+async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItemMetadata>>{
+ try{
+  if(!metadataPromise)metadataPromise=fetchAuctionCatalogue();
+  return await metadataPromise;
+ }catch(error){
+  metadataPromise=null;log.warn("Auction item catalogue unavailable; retaining item IDs without guessing metadata: "+String(error));
+  return new Map();
+ }
 }
 function tcp(host:string,port:number):Promise<Socket>{
  return new Promise((resolve,reject)=>{
@@ -91,45 +114,40 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
   });
  };
  const run=async(guid:bigint):Promise<void>=>{
+   const catalogue=await cachedMetadata(log);
    const startedAt=new Date().toISOString();
    scanId="ah_"+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
-   let total=0,offset=0,page=0,seen=new Set<number>(),retrieved=0;
+   const cursor=new AuctionScanCursor();
    try{
     // Do not declare a scan started until the server actually replies to the first query.
-    for(;page<maxPages;page++){
+    while(cursor.page<maxPages){
+      const page=cursor.page,offset=cursor.retrieved;
       const sentAt=Date.now();
       const response=await query(guid,offset);
       const responseMs=Date.now()-sentAt;
+      cursor.accept(response); // Reject shifting totals, short pages and duplicate IDs BEFORE upload.
       if(page===0){
-       total=response.total;
-       await publish("start",{scan_id:scanId,started_at:startedAt,reported_total:total});
+       await publish("start",{scan_id:scanId,started_at:startedAt,reported_total:cursor.total});
        started=true;
       }
-      if(page>0&&response.auctions.length===0&&offset<total)throw new Error("Auction scan ended before all pages");
-      if(response.auctions.length>50)throw new Error("Unexpected page length");
-      for(const row of response.auctions){
-       if(seen.has(row.auction_id))throw new Error("Auction pagination shifted; duplicate listing across pages");
-       seen.add(row.auction_id);
-      }
-      const items=response.auctions.map((row:AuctionRow)=>({
-       auction_id:row.auction_id,item_id:row.item_id,variant:row.variant,quantity:row.quantity,
-       start_bid:row.start_bid,current_bid:row.current_bid,min_next_bid:row.min_next_bid,
-       buyout:row.buyout,owner_guid:row.owner_guid,time_left_ms:row.time_left_ms,
-       captured_at:row.captured_at
-       // No name, icon or quality is fabricated: protocol list omits these fields.
-      }));
+      const items=response.auctions.map((row:AuctionRow)=>{
+       const info=catalogue.get(row.item_id);
+       return {
+        auction_id:row.auction_id,item_id:row.item_id,variant:row.variant,quantity:row.quantity,
+        item_name:info?.item_name??null,quality:info?.quality??null,icon_url:info?.icon_url??null,
+        start_bid:row.start_bid,current_bid:row.current_bid,min_next_bid:row.min_next_bid,
+        buyout:row.buyout,owner_guid:row.owner_guid,time_left_ms:row.time_left_ms,
+        captured_at:row.captured_at
+       };
+      });
       await publish("page",{scan_id:scanId,page,items,response_ms:responseMs});
-      retrieved+=items.length;
-      offset+=response.auctions.length;
-      log.info("Auction scan "+scanId+": "+retrieved+"/"+total+" auctions; page "+(page+1)+" in "+responseMs+"ms");
-      if(offset>=total)break;
-      if(response.auctions.length<50)throw new Error("Unexpected short non-final auction page");
+      log.info("Auction scan "+scanId+": "+cursor.retrieved+"/"+cursor.total+" auctions; page "+cursor.page+" in "+responseMs+"ms");
+      if(cursor.complete)break;
     }
-    if(page>=maxPages)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES");
-    if(retrieved<total)throw new Error("Incomplete scan: server reported "+total+" but collected "+retrieved);
-    await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:page+1,reported_total:total});
+    if(!cursor.complete)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES or ended early");
+    await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     succeeded=true;
-    log.info("Auction scan completed: "+retrieved+" listings, "+(page+1)+" pages, "+(Date.now()-Date.parse(startedAt))+"ms");
+    log.info("Auction scan completed: "+cursor.retrieved+" listings, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
     throw error;
@@ -179,7 +197,6 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  if(!succeeded)throw new Error("No complete scan published");
 }
 async function main():Promise<void>{
- try{process.loadEnvFile();}catch{/* Railway environment variables */ }
  if(process.env.AUCTION_COLLECTOR_ENABLED!=="true"||process.env.AUCTION_RULES_APPROVED!=="true"){
    console.log("Auction collector DISABLED. Set AUCTION_COLLECTOR_ENABLED and AUCTION_RULES_APPROVED explicitly after verifying server rules.");
    return;
