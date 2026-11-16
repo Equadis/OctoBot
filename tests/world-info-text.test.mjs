@@ -12,7 +12,7 @@ test('status words and tags are in proper case, not all capitals',()=>{
   const tags=[...html.matchAll(/class="(?:state-tag|eyebrow)[^"]*"[^>]*>([^<]+)</g)].map(m=>m[1].trim());
   assert.ok(tags.length>=6);
   for(const t of tags)assert.notEqual(t,t.toUpperCase(),'all-caps tag in the page: '+t);
-  for(const word of ['No data','Awaiting data','Drop recorded','No raid','Estimated','Stale','Learning','Overdue','Not found'])
+  for(const word of ['No data','Awaiting data','Drop recorded','No raid','Estimated','Stale','Learning','Overdue','Unconfirmed'])
     assert.ok(js.includes(`'${word}'`)||html.includes(`>${word}<`),word);
   assert.match(js,/name: 'Pug'/);
 });
@@ -31,4 +31,15 @@ test('loading states show trailing dots one at a time through CSS, never by chan
 test('the tracker group name PUG is shown as Pug, and dashes in titles are en dashes',()=>{
   assert.match(js,/function groupLabel\(name\) \{ return String\(name\)\.trim\(\)\.toUpperCase\(\) === 'PUG' \? 'Pug' : name; \}/);
   assert.ok(!/\\u2014|—/.test(js+html+css),'no em dashes on the World Info page');
+});
+
+test('Darkmoon Faire derives location only from fresh observed NPC sightings',()=>{
+ assert.doesNotMatch(js,/MANUAL_DMF|Set manually until/);
+ assert.match(js,/darkmoon: object\(realm\.darkmoon\)/,'per-realm summary includes the DMF observation feed');
+ assert.match(js,/dmf\.latestConfirmed/);
+ assert.match(js,/found\.fresh === true/);
+ assert.match(js,/Elwynn observer:/);
+ assert.match(js,/Mulgore observer:/);
+ assert.match(html,/id="dmf-heading">Location unconfirmed/);
+ assert.doesNotMatch(html,/Faire is moving and in neither location/,'silence is not evidence of absence');
 });
