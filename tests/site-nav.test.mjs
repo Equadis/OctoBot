@@ -53,7 +53,7 @@ test('separators are thin borders between groups only, matching the header rule'
   assert.match(css,/\.nav-group\+\.nav-group\{[^}]*border-left:1px solid var\(--line\)/);
   assert.match(css,/site-header\{[^}]*border-bottom:1px solid var\(--line\)/);   // same colour token as the line under the header
   assert.doesNotMatch(css,/\.nav-group a\+a/);                                     // none between links within a group
-  assert.match(css,/@media\(max-width:900px\)\{[^@]*border-top:1px solid var\(--line\)/); // horizontal rule when stacked on narrow screens
+  assert.match(css,/@media\(max-width:1000px\)\{[^@]*border-top:1px solid var\(--line\)/); // horizontal rule when stacked on narrow screens
 });
 
 test('the home page lists the tools in the same order as the navigation',()=>{

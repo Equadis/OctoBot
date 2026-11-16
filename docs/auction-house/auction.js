@@ -164,7 +164,7 @@ async function fillDetail(cell,item,unavailable){
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }
-    cell.replaceChildren(...parts);
+    const inner=el('div',null,'ah-detail-inner');inner.append(...parts);cell.replaceChildren(inner);
   }catch{cell.textContent='Details are unavailable right now; the previous snapshot is unchanged.';}
 }
 

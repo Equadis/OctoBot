@@ -108,3 +108,13 @@
  .ah-grid{grid-template-columns:1fr 1fr}
  .ah-footer{flex-direction:column;align-items:stretch;text-align:center}.ah-pager{justify-content:space-between}
 }
+
+#fav-body>.ah-muted{padding:16px}
+.ah-row .tool-btn{margin-bottom:4px}
+/* The detail row spans the whole (horizontally scrolling) table; keep its content within the visible width. */
+.ah-detail-inner{position:sticky;left:0;width:min(100%,calc(100vw - 100px));box-sizing:border-box}
+@media(max-width:560px){
+ .ah-row>.ah-field-end{flex:0 0 auto}
+ .ah-row>.ah-field-end:nth-last-child(2){flex:1 1 0}
+ #fav-only{width:100%}
+}
