@@ -25,7 +25,7 @@ test('navigation has exactly three groups in the required order',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
-    ['GearPlanner (WIP)','Dressing Room'],
+    ['Gear Planner','Dressing Room'],
     ["World Info \u2013 N'Zoth",'Auction House (WIP)']]);
   assert.equal(GROUPS.length,3);
 });
@@ -67,12 +67,14 @@ test('tab size is pinned in the shared theme so pages that restyle .page-nav a c
   assert.match(css,/\.page-nav \.nav-group a\{[^}]*height:38px[^}]*padding:0 13px[^}]*font-size:12px/);
 });
 
-test('Dressing Room is no longer labelled WIP, while Auction House and Gear Planner still are',()=>{
+test('only the Auction House and World Info keep a WIP marker; Dressing Room and Gear Planner do not',()=>{
   const labels=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
-  assert.ok(labels.includes('Dressing Room'));
-  assert.ok(!labels.some(l=>/Dressing Room.*WIP/.test(l)));
+  assert.ok(labels.includes('Dressing Room')&&labels.includes('Gear Planner'));
+  assert.ok(!labels.some(l=>/(Dressing Room|Gear Planner).*WIP/.test(l)));
   assert.ok(page('outfitter').includes('<title>OctoBot · Dressing Room</title>')&&page('outfitter').includes('<h1>Dressing Room</h1>'));
+  assert.ok(page('sim').includes('<title>OctoBot · Gear Planner &amp; DPS Simulator</title>')&&page('sim').includes('<h1>Gear Planner &amp; DPS Simulator</h1>'));
   const home=readFileSync(new URL('index.html',docs),'utf8');
   assert.doesNotMatch(home,/Dressing Room <em>WIP<\/em>/);
+  assert.doesNotMatch(home,/Gear ?Planner[^<]*<em>WIP<\/em>/);
   assert.match(home,/Auction House <em>WIP<\/em>/);
 });
