@@ -18,7 +18,9 @@ function trend(n){
 }
 function left(ms,capturedAt){
   if(!Number.isFinite(Number(ms))||ms==null)return 'Uncertain';
-  const elapsed=Math.max(0,Date.now()-Date.parse(capturedAt||''));
+  const observedAt=Date.parse(capturedAt||'');
+  if(!Number.isFinite(observedAt))return 'Uncertain';
+  const elapsed=Math.max(0,Date.now()-observedAt);
   const remaining=Math.max(0,Number(ms)-elapsed);
   if(!remaining)return 'Uncertain';
   const hours=Math.floor(remaining/3600000);
@@ -77,11 +79,11 @@ function renderRows(data){
       try{
         const result=await request('/api/auction/item/'+encodeURIComponent(item.item_id)+'?variant='+encodeURIComponent(item.variant||''));
         const detailTable=el('table');const thead=el('thead');const headings=el('tr');
-        ['Seller','Quantity','Starting bid','Current bid','Minimum next bid','Buyout','Unit buyout','Time left'].forEach(v=>headings.append(el('th',v)));
+        ['Seller / owner GUID','Quantity','Starting bid','Current bid','Minimum next bid','Buyout','Unit buyout','Time left'].forEach(v=>headings.append(el('th',v)));
         thead.append(headings);detailTable.append(thead);const tbody=el('tbody');
         for(const row of result.listings||[]){
           const line=el('tr');
-          [row.seller||'Unknown',row.quantity,money(row.start_bid),money(row.current_bid),money(row.min_next_bid),money(row.buyout),money(row.unit_buyout),left(row.time_left_ms,row.captured_at)].forEach(value=>td(line,value));
+          [row.owner_guid?('GUID '+row.owner_guid):'Unknown',row.quantity,money(row.start_bid),money(row.current_bid),money(row.min_next_bid),money(row.buyout),money(row.unit_buyout),left(row.time_left_ms,row.captured_at)].forEach(value=>td(line,value));
           tbody.append(line);
         }
         detailTable.append(tbody);detailCell.replaceChildren(detailTable);
