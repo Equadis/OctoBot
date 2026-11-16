@@ -1,5 +1,13 @@
 import { classDefinition } from './classes.mjs?v=20261112-audit1';
-export const BUILDS_PER_CLASS=100;
+export const BUILDS_PER_CLASS=10;
+export const BUILD_LIMIT_MESSAGE='You cannot save any more builds for this class.';
+/** Default save name uses character and build name without repeated prefixes. */
+export function defaultSaveName(characterName,buildName){
+ const character=String(characterName??'').trim(),name=String(buildName??'').trim();
+ if(!character)return name.slice(0,80);
+ const prefix=character+' – ';
+ return name.startsWith(prefix)?name.slice(0,80):(prefix+name.slice(0,Math.max(0,80-prefix.length)));
+}
 export const MAX_BUILD_BYTES=64000;
 export function buildRecord(build,validate,savedAt=new Date().toISOString()){
  const value=validate(build);
@@ -46,7 +54,7 @@ export function buildLibrary(classId,validate,{databaseName='octosim-build-libra
   const db=await open();return new Promise((resolve,reject)=>{
    const tx=db.transaction('builds','readwrite'),store=tx.objectStore('builds');let full=false;
    const existing=store.get([classId,record.name]);existing.onsuccess=()=>{const count=store.index('classId').count(classId);count.onsuccess=()=>{if(!existing.result&&count.result>=BUILDS_PER_CLASS){full=true;tx.abort();}else store.put(record);};};
-   tx.oncomplete=()=>resolve(record);tx.onerror=()=>reject(errorMessage(tx.error));tx.onabort=()=>reject(full?new Error(`You have ${BUILDS_PER_CLASS} builds for this class. Update an existing name or delete a saved build.`):errorMessage(tx.error));
+   tx.oncomplete=()=>resolve(record);tx.onerror=()=>reject(errorMessage(tx.error));tx.onabort=()=>reject(full?new Error(BUILD_LIMIT_MESSAGE):errorMessage(tx.error));
   });
  }
  async function remove(name){const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction('builds','readwrite');tx.objectStore('builds').delete([classId,name]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
@@ -61,7 +69,7 @@ export function buildLibrary(classId,validate,{databaseName='octosim-build-libra
     if(names.size>BUILDS_PER_CLASS){full=true;tx.abort();return;}
     for(const record of records)store.put(record);
    };
-   tx.oncomplete=()=>resolve(records.length);tx.onerror=()=>reject(errorMessage(tx.error));tx.onabort=()=>reject(full?new Error(`Import would exceed ${BUILDS_PER_CLASS} builds. No saves were changed.`):errorMessage(tx.error));
+   tx.oncomplete=()=>resolve(records.length);tx.onerror=()=>reject(errorMessage(tx.error));tx.onabort=()=>reject(full?new Error(BUILD_LIMIT_MESSAGE):errorMessage(tx.error));
   });
  }
  return {list,save,remove,importBuilds,async close(){if(ready)(await ready).close();ready=null;}};
