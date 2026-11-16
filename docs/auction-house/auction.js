@@ -1,7 +1,7 @@
 /* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {itemTooltip} from './item-presentation.mjs?v=1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,dateTime,count} from './format.mjs';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,dateTime,count} from './format.mjs';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -13,7 +13,7 @@ const API=override&&['localhost','127.0.0.1'].includes(location.hostname)?overri
 const $=id=>document.getElementById(id);
 const storage=(()=>{try{return window.localStorage;}catch{return null;}})();
 const COLS=11;
-const state={filters:{...DEFAULTS},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,sortTouched:false,busy:0,favFailed:false};
+const state={filters:{...DEFAULTS},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,scan:{completedAt:null,scanning:false,startedAt:null,pages:''},sortTouched:false,busy:0,favFailed:false};
 
 function el(tag,content,className){
   const node=document.createElement(tag);
@@ -25,10 +25,16 @@ function el(tag,content,className){
 const td=(row,value,className)=>{const c=el('td',value,className);row.append(c);return c;};
 const note=message=>{$('ah-status').textContent=message;};
 /** Gold, silver and copper each in their own colour. */
+const COIN={g:'gold',s:'silver',c:'copper'};
 function moneyNode(n){
-  const wrap=el('span'),parts=moneyParts(n);
+  const wrap=el('span',null,'ah-money'),parts=moneyParts(n);
   if(!parts){wrap.textContent=money(n);return wrap;}
-  parts.forEach((p,i)=>{if(i)wrap.append(' ');wrap.append(el('span',p.text,'ah-m-'+p.unit));});
+  wrap.setAttribute('aria-label',parts.map(p=>(p.number==='<1'?'less than 1':p.amount)+' '+COIN[p.unit]).join(' '));
+  for(const p of parts){
+    wrap.append(el('span',p.number,'ah-num'));
+    const coin=document.createElement('img');coin.className='ah-coin';coin.src='../img/coin-'+COIN[p.unit]+'.png';coin.alt='';coin.width=16;coin.height=16;coin.title=COIN[p.unit];
+    wrap.append(coin);
+  }
   return wrap;
 }
 function timeNode(ms,capturedAt){const cls=timeClass(ms,capturedAt);return el('span',left(ms,capturedAt),cls||'');}
@@ -250,16 +256,25 @@ function busy(delta){
 }
 async function refreshSummary(first){
   try{
-    const s=await request('/api/auction/summary');
-    $('collector').textContent=s.collector_status||'OFFLINE';
+    const [s,st]=await Promise.all([request('/api/auction/summary'),request('/api/auction/scan-status').catch(()=>null)]);
+    state.scan={completedAt:s.completed_at,scanning:Boolean(st?st.scanning:s.scanning),startedAt:st?.started_at??null,pages:(s.pages_done??0)+' / '+(s.pages_expected??'?')+' pages'};
     $('last-scan').textContent=dateTime(s.completed_at);
+    renderScan();
     $('auction-count').textContent=count(s.auction_count);
     $('item-count').textContent=count(s.item_count);
-    $('scan-progress').textContent=s.scanning?((s.pages_done??0)+' / '+(s.pages_expected??'?')+' pages'):'Idle';
     // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
     note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
     if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';$('sort').value='name';}
-  }catch{note('Auction House feed unavailable – no data is being invented.');$('collector').textContent='OFFLINE';}
+  }catch{note('Auction House feed unavailable – no data is being invented.');}
+}
+/** Re-evaluates the two scan cards from the last data received; called every second so the timers run. */
+function renderScan(){
+  const now=Date.now(),sc=state.scan;
+  const last=$('last-scan');
+  last.className=lastScanClass(sc.completedAt,now)||'';
+  const status=$('scan-progress'),next=scanStatus(sc,now);
+  status.textContent=next.text;status.className=next.className;
+  status.title=sc.scanning?sc.pages:'';
 }
 async function refreshAll(first=false){
   busy(1);
@@ -364,3 +379,5 @@ function bind(){
 populate();bind();renderSaved();writeFilters();
 await refreshAll(true);
 setInterval(()=>{void refreshAll();},60_000);
+setInterval(renderScan,1000);                       // the countdown and the running timer
+setInterval(()=>{void refreshSummary(false);},15_000); // notice a scan starting or finishing within seconds
