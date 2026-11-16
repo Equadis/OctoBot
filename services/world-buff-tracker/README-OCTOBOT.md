@@ -53,7 +53,7 @@ A separate metrics-only OctoMetrics Railway worker handles only `OBPVPSW` and `O
 The live Railway service `octobot-metrics-tracker` runs the separate OctoMetrics collector (`start.mjs`), not this program. The learned-clear-duration method from this tracker has been ported into the OctoMetrics Worker (`cloudflare/octometrics`), working from events the collector already stores. Roster-cohort clear detection and Chronicle kill confirmation are **not** ported. See `cloudflare/octometrics/README.md` for the audit.
 
 
-## Dedicated DMF-only Railway service (OBPVEDMFA / OBPVEDMFH)
+## Dedicated DMF-only Railway service (two N'Zoth characters)
 
 Deploy a **separate** service in the existing Railway project using this repository,
 root directory `services/world-buff-tracker`, one replica, build command
@@ -69,21 +69,27 @@ do not commit them to GitHub):
 
 ```dotenv
 WOW_REALM=N'Zoth
-WOW_ACCOUNT=OBPVEDMFA
+WOW_ACCOUNT=PVEOBDMFA
 WOW_PASSWORD=<private-alliance-password>
-WOW_CHARACTER=<alliance-character-name>
+WOW_CHARACTER=OBPVEDMFA
 DARKMOON_WATCH_LOCATION=elwynn
-WOW_LISTENERS=[{"account":"OBPVEDMFH","password":"<private-horde-password>","character":"<horde-character-name>","darkmoonWatchLocation":"mulgore","onLogin":"none","yeller":false}]
+WOW_LISTENERS=[{"account":"PVEOBDMFH","password":"<private-horde-password>","character":"OBPVEDMFH","darkmoonWatchLocation":"mulgore","onLogin":"none","yeller":false}]
 METRICS_PUSH_TOKEN=<same-private-token-as-Cloudflare-OctoMetrics-Worker>
 METRICS_PUSH_URL=https://octometrics.eqvoice.workers.dev/api/ingest
 ```
 
-The DMF-only process refuses any account/realm/site combination other than
-OBPVEDMFA in Elwynn Forest and OBPVEDMFH in Mulgore on N'Zoth. Characters
-must be parked at their respective Faire grounds within NPC visibility.
+The login accounts are `PVEOBDMFA` and `PVEOBDMFH`, with in-game characters
+`OBPVEDMFA` and `OBPVEDMFH`. Old Railway settings that mistakenly used character
+names as account names are remapped at login, without changing passwords; the
+existing Worker telemetry identifiers remain the character names for compatibility.
+Characters must be parked at their respective Faire grounds within NPC visibility.
 
 The observer issues creature-name queries **once per newly encountered NPC entry
 per connection**, using the existing `NpcWatch` guard and `isFaireNpc` roster.
+This is the headless equivalent of checking the nearby names **Sayge**, **Silas Darkmoon**
+and **Gelvas Grimegate** with `/target`; headless clients do not execute player macros.
+A still-visible confirmed NPC refreshes the positive sighting every minute;
+objects that leave range or despawn are excluded. No sighting does not establish absence.
 It emits direct positive `dmf_sighting` events and `dmf_status` connection
 heartbeats approximately every minute. No named NPC means **unknown**,
 not confirmation of absence. A short network outage means **stale**, not absence.
