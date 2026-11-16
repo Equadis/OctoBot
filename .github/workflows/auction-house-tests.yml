@@ -1,0 +1,39 @@
+name: Auction House WIP validation
+on:
+  pull_request:
+    paths:
+      - 'services/world-buff-tracker/**'
+      - 'cloudflare/octometrics/**'
+      - 'docs/**'
+      - 'tests/site-routes.test.mjs'
+      - '.github/workflows/auction-house-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  auction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: services/world-buff-tracker/package-lock.json
+      - name: Cloudflare Auction API and price calculations
+        run: node --test cloudflare/octometrics/tests/*.test.mjs
+      - name: Website link regressions
+        run: node --test tests/site-routes.test.mjs
+      - name: Install existing client dependencies
+        working-directory: services/world-buff-tracker
+        run: npm ci
+      - name: Typecheck collector and Vanilla protocol
+        working-directory: services/world-buff-tracker
+        run: npm run typecheck
+      - name: Packet parser and existing collector tests
+        working-directory: services/world-buff-tracker
+        run: npm test
+      - name: Compile dedicated Railway entrypoint
+        working-directory: services/world-buff-tracker
+        run: npm run build
