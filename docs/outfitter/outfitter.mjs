@@ -298,7 +298,7 @@ function renderItems(){
   detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
-  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const note=approxNotes.get(item.id);if(note)links.append(infoIcon(note));links.append(link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
+  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
  }
  queueScan();
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
@@ -306,6 +306,9 @@ function renderItems(){
 }
 // Works out which Classic model (if any) previews an item, and whether that is an exact match or an estimate.
 const previewCache=new Map();
+// Notes already worked out, keyed like the preview cache, so a re-rendered row has its (i) from the first paint.
+const knownNotes=new Map();
+const noteKey=(item,slotId)=>`${item.id}:${viewerSlot(slotId,item)}`;
 const SLOW_LOOKUP_MS=4000;
 const NOTE_NAME='Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.';
 const NOTE_ICON='Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.';
@@ -345,6 +348,7 @@ function resolvePreview(item,slotId){
   if(iconMatch!==undefined)return {slot,displayId:iconMatch,kind:'icon',note:NOTE_ICON};
   return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:NOTE_NONE};
  })();
+ job.then(result=>{if(result?.note)knownNotes.set(key,result.note);}).catch(()=>{});
  previewCache.set(key,job);return job;
 }
 function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';return info;}
@@ -363,8 +367,8 @@ function pumpScan(){
   const answer=resolvePreview(job.item,job.slotId);
   answer.then(result=>{
    job.done=true;
-   if(!result.note||!job.row.isConnected||job.links.querySelector('.info-i'))return;
-   job.links.insertBefore(infoIcon(result.note),job.link);
+   const slot=job.links.querySelector('.info-slot');if(!result.note||!job.row.isConnected||!slot||slot.querySelector('.info-i'))return;
+   slot.append(infoIcon(result.note));
   }).catch(()=>{job.done=true;});
   Promise.race([answer,new Promise(resolve=>setTimeout(resolve,6000))]).catch(()=>{}).finally(()=>{scanActive--;scanVisibleRows();});
  }

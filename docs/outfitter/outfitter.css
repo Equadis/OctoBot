@@ -114,6 +114,8 @@
 .preview-heading>div>.panel-reset{height:30px;margin-left:6px}
 
 .result-links{display:flex;align-items:center;gap:8px}
+/* The (i) always has its 16px slot, filled or not, so a late answer never moves the DB link. */
+.info-slot{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none}
 .info-i{width:16px;height:16px;border:1px solid #5b6b82;border-radius:50%;color:#8fa0b6;font:italic 700 11px/14px Georgia,serif;text-align:center;cursor:help;user-select:none;flex:none}
 .info-i:hover,.info-i:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
 .info-tip{position:fixed;z-index:50;width:min(280px,80vw);padding:9px 11px;background:#0e1623;border:1px solid #39465a;border-radius:6px;color:#c6d0dc;font:400 11px/1.55 Arial,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.45);pointer-events:none}
