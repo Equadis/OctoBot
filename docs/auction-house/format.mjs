@@ -84,14 +84,28 @@ export function scanStatus({completedAt=null,scanning=false,startedAt=null}={},n
   const done=Date.parse(completedAt||'');
   if(Number.isFinite(done)){
     const left=IDLE_SECONDS-Math.floor((now-done)/1000);
-    if(left>0&&left<=IDLE_SECONDS)return {text:'Idle - '+clock(left),className:'ah-time-yellow'};
+    if(Math.max(0,now-done)>=24*3600000)return {text:'Idle',className:'ah-time-red'};
+   if(left>0&&left<=IDLE_SECONDS)return {text:'Idle - '+clock(left),className:'ah-time-yellow'};
   }
   return {text:'Idle',className:'ah-time-yellow'};
 }
-/** Colour of the last-complete-scan date: green under 2 hours old, yellow under 24 hours, red after that. */
+/** Last complete scan: green under 1 hour, yellow from 1 to under 24 hours, red thereafter. */
 export function lastScanClass(completedAt,now=Date.now()){
   const done=Date.parse(completedAt||'');
   if(!Number.isFinite(done))return null;
   const hours=Math.max(0,now-done)/3600000;
-  return hours<2?'ah-time-green':hours<24?'ah-time-yellow':'ah-time-red';
+  return hours<1?'ah-time-green':hours<24?'ah-time-yellow':'ah-time-red';
+}
+
+/** Share of auction item variants with verified catalogue metadata (not share of all WoW items). */
+export function indexCoverage(itemsWithMetadata,totalItems){
+  const indexed=Number(itemsWithMetadata),total=Number(totalItems);
+  if(itemsWithMetadata==null||totalItems==null||!Number.isSafeInteger(indexed)||!Number.isSafeInteger(total)||
+     indexed<0||total<=0||indexed>total)return null;
+  return indexed/total;
+}
+/** Greater than 90% green, below 50% red, between those boundaries yellow. */
+export function indexedClass(itemsWithMetadata,totalItems){
+  const share=indexCoverage(itemsWithMetadata,totalItems);
+  return share===null?null:share>0.9?'ah-time-green':share<0.5?'ah-time-red':'ah-time-yellow';
 }
