@@ -11,9 +11,6 @@
   // The Bufftracker reports every ~2 minutes; older than this its raids are shown as last known, flagged stale.
   const TRACKER_FRESH_MS = 3 * MINUTE;
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
-  // Set by hand until the bots can detect the Darkmoon Faire. A fresh sighting from the bots always takes priority.
-  // Set to null to go back to "Moving" when no sighting is available.
-  const MANUAL_DMF = Object.freeze({ location: 'mulgore' });
   const DAY = 86_400_000;
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
@@ -140,7 +137,7 @@
       const held = buffs[faction];
       if (!held || at > held.atMs) buffs[faction] = { confirmedLastDropAt: raw.at, atMs: at, ...(raw.head ? { lastHead: raw.head } : {}) };
     }
-    return { raids, buffs, heads: object(realm.heads) || null, listeners: object(realm.listeners) || null, monitoring: object(realm.monitoring) || null, observedAt: root.generated_at };
+    return { raids, buffs, heads: object(realm.heads) || null, listeners: object(realm.listeners) || null, monitoring: object(realm.monitoring) || null, darkmoon: object(realm.darkmoon) || null, observedAt: root.generated_at };
   }
 
   function findRaid(root, key) {
@@ -445,41 +442,46 @@
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
 
+  // Only verified on-site sightings from the N'Zoth DMF collectors can identify a location.
+  // An online collector with no sighting does not establish that the Faire is absent.
   function findDmf(root) {
-    const world = object(root.worldInfo) || object(root.world_info) || root;
-    const dmf = object(first(world.dmf, world.darkmoonFaire, world.darkmoon, root.dmf)) || null;
+    const dmf = object(root.darkmoon);
     if (!dmf) return null;
-    return { location: String(first(dmf.location, dmf.site, dmf.zone, '')).toLowerCase(), observedAt: timeOf(dmf, 'observedAt', 'lastSeenAt', 'seenAt', 'timestamp'), source: String(first(dmf.source, 'observation')) };
+    const found = object(dmf.latestConfirmed);
+    const observedAt = found ? time(found.at) : null;
+    const location = found && (found.site === 'elwynn' || found.site === 'mulgore') ? found.site : '';
+    const sites = object(dmf.sites) || {};
+    return { location, observedAt, npc: found && typeof found.npc === 'string' ? found.npc : '',
+      sites, confirmed: found && found.fresh === true };
   }
   function renderDmf() {
-    const dmf = state.dmf;
-    const fresh = dmf && freshAt(dmf.observedAt, FRESH_DMF_MS);
-    const botSw = fresh && /^(sw|elwynn|stormwind|elwynn forest)$/.test(dmf.location);
-    const botTb = fresh && /^(tb|mulgore|thunder bluff)$/.test(dmf.location);
-    // No fresh bot sighting: fall back to the manual setting, and say so on the panel.
-    const manual = !(botSw || botTb) && MANUAL_DMF;
-    const sw = botSw || Boolean(manual && /^(sw|elwynn|stormwind|elwynn forest)$/.test(manual.location));
-    const tb = botTb || Boolean(manual && /^(tb|mulgore|thunder bluff)$/.test(manual.location));
-    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Moving';
+    const dmf = state.dmf, latest = dmf && dmf.observedAt;
+    const fresh = dmf && dmf.confirmed && validPast(latest) && freshAt(latest, FRESH_DMF_MS);
+    const sw = Boolean(fresh && dmf.location === 'elwynn');
+    const tb = Boolean(fresh && dmf.location === 'mulgore');
+    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Location unconfirmed';
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
     if (sw || tb) icon.src = sw ? '../img/alliance-crest.png' : '../img/horde-crest.png';
     const description = $('dmf-description');
     description.hidden = Boolean(sw || tb);
-    description.textContent = 'Faire is moving and in neither location';
-    $('dmf-observed').textContent = botSw || botTb
-      ? 'Last observed ' + span(Date.now() - dmf.observedAt) + ' ago · ' + dmf.source
-      : manual && (sw || tb)
-        ? 'Set manually until the bots can detect the Faire. Not a bot observation.'
-      : dmf && validPast(dmf.observedAt)
-        ? 'Last sighting is stale: ' + when(dmf.observedAt)
-        : 'No Faire sighting at Elwynn Forest or Mulgore';
-    // Horde and Alliance use the same panel colouring as Rallying Cry; a moving Faire is grey.
+    description.textContent = 'Awaiting a confirmed on-site Darkmoon Faire NPC sighting.';
+    const sites = dmf && dmf.sites || {};
+    const status = key => {
+      const site = object(sites[key]), value = String(site && site.collectorStatus || 'unknown');
+      return value === 'online' ? 'online' : value === 'offline' ? 'offline' : value === 'stale' ? 'stale' : 'no data';
+    };
+    const observers = 'Elwynn observer: ' + status('elwynn') + ' · Mulgore observer: ' + status('mulgore');
+    $('dmf-observed').textContent = sw || tb
+      ? 'Confirmed ' + span(Date.now() - latest) + ' ago · ' + dmf.npc + ' · ' + observers
+      : validPast(latest)
+        ? 'Last confirmed ' + when(latest) + ' (now stale) · ' + observers
+        : 'No confirmed Faire sighting yet · ' + observers;
     const panel = $('dmf-panel');
-    panel.classList.toggle('faction-alliance', Boolean(sw));
-    panel.classList.toggle('faction-horde', Boolean(tb));
+    panel.classList.toggle('faction-alliance', sw);
+    panel.classList.toggle('faction-horde', tb);
     panel.classList.toggle('faction-moving', !(sw || tb));
-    labelState('dmf-state', botSw || botTb ? 'Confirmed' : manual && (sw || tb) ? 'Manual' : 'Not found', botSw || botTb ? 'online' : manual && (sw || tb) ? 'estimated' : 'unknown');
+    labelState('dmf-state', sw || tb ? 'Confirmed' : 'Unconfirmed', sw || tb ? 'online' : 'unknown');
   }
 
   async function loadMetrics() {
