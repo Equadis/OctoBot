@@ -206,6 +206,20 @@ test('the refresh control is the Dressing Room reset icon with an accessible lab
   assert.doesNotMatch(read('auction-house/auction.js'),/camera-reset|resetCamera/,'no Dressing Room behaviour is wired in');
   assert.match(read('auction-house/auction.js'),/button\.disabled=on;button\.classList\.toggle\('loading',on\)/,'disabled and spinning while loading');
 });
+test('item icons missing from the Wowhead CDN fall back to the OctoWoW database',()=>{
+  assert.ok(read('auction-house/index.html').includes('<script src="../icon-fallback.js?v=1"></script>'));
+  assert.ok(read('icon-fallback.js').includes('https://octowow.st/db/images/icons/'));
+});
+test('the rarity dropdown and item names use the shared rarity colours',()=>{
+  const html=read('auction-house/index.html'),css=read('auction-house/auction.css');
+  assert.match(html,/<select id="quality" class="quality-select">/);
+  assert.match(html,/quality-select\.css/);
+  const names=read('outfitter/outfitter.css');
+  for(const [q,c] of [[2,'#1eff70'],[3,'#69a8ff'],[4,'#c786ff'],[5,'#ffab55']]){
+    assert.ok(names.includes(`.quality-${q}{color:${c}}`));
+    assert.ok(css.includes(`.ah-q${q} a{color:${c}}`),'item name colour for quality '+q);
+  }
+});
 test('the page uses UK English and the shared palette instead of one-off colours',()=>{
   const css=read('auction-house/auction.css'),text=read('auction-house/index.html')+read('auction-house/auction.js');
   assert.doesNotMatch(text,/\b(favorite|favorites|armor|gray|catalog)\b/i);

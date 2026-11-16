@@ -66,7 +66,8 @@
 .ah-item{display:flex;align-items:center;gap:9px}.ah-icon{width:28px;height:28px;object-fit:cover;border:1px solid #44536b;border-radius:3px;background:#162236;display:inline-block}
 .ah-item a{color:#e5e9ef;text-decoration:none}.ah-item a:hover{text-decoration:underline}
 .ah-variant{font-size:11px;color:#98a6b8}
-.ah-q0 a{color:#9d9d9d}.ah-q2 a{color:#1eff00}.ah-q3 a{color:#4d9bff}.ah-q4 a{color:#a335ee}.ah-q5 a{color:#ff8000}.ah-q6 a{color:#e6cc80}
+/* Rarity colours match the Dressing Room item names and the quality dropdowns (docs/quality-select.css). */
+.ah-q0 a{color:#9d9d9d}.ah-q2 a{color:#1eff70}.ah-q3 a{color:#69a8ff}.ah-q4 a{color:#c786ff}.ah-q5 a{color:#ffab55}.ah-q6 a{color:#e6cc80}
 .ah-change-up{color:#f27c7e}.ah-change-down{color:#5bdb9d}.ah-change-neutral{color:#a8b7c7}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}

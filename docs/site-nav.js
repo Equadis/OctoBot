@@ -10,10 +10,10 @@
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
     { label: 'World and character tools', links: [
       { id: 'world-info', href: 'world-info/', text: "World Info – N'Zoth" },
-      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room (WIP)' } ] },
+      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'Planning and economy', links: [
-      { id: 'sim', href: 'sim/', text: 'Gear Planner & DPS Sim (WIP)' },
-      { id: 'auction-house', href: 'auction-house/', text: 'Auction House (WIP)' } ] }
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House (WIP)' },
+      { id: 'sim', href: 'sim/', text: 'Gear Planner & DPS Sim (WIP)' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
