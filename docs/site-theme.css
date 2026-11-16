@@ -113,3 +113,6 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 
 /* Same header height on every tab: its 74px minimum includes the bottom padding. Pages that lack a global border-box rule (the Auction House) made it 19px taller. */
 .site-header,.planner-view .site-header{box-sizing:border-box}
+
+/* Item rarity colours. These are the Gear Planner's, and every page uses them (Dressing Room, Auction House, dropdowns). */
+:root{--quality-0:#fff;--quality-1:#fff;--quality-2:#1eff00;--quality-3:#0070dd;--quality-4:#a335ee;--quality-5:#ff8000;--quality-6:#ff8000}

@@ -1,11 +1,11 @@
-/* Race dropdown with the male and female portraits to the left of each race, built the same way as the Dressing Room's background picker:
+/* Race dropdown with a portrait to the left of each race, built the same way as the Dressing Room's background picker:
  * the native <select> stays as the source of truth (hidden), and a button plus a list of options sits beside it.
  * Whatever sets select.value (the user, a restored build, a class change) only has to call sync(). */
 import {raceIconUrl} from './race-icons.mjs?v=2';
 
 function portraits(doc,race){
   const wrap=doc.createElement('span');wrap.className='rp-faces';
-  for(const sex of ['male','female']){
+  for(const sex of ['male']){   // one portrait per race keeps the selector narrow
     const url=raceIconUrl(race,sex),image=doc.createElement(url?'img':'span');
     if(url){image.src=url;image.alt='';image.loading='lazy';image.width=20;image.height=20;}
     else image.className='rp-blank';

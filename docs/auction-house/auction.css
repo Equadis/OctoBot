@@ -1,8 +1,7 @@
 /* Auction House: uses the shared navy/gold shell. Controls reuse the navigation's palette so buttons, selects and toggles match every other tab:
    resting #1f2b3b with the shared line colour, gold hover border, pressed/active #3a3827 with gold text. */
-.ah-note,.ah-caveat{font-size:13px;color:#aab7c9;line-height:1.65}
-.ah-note{margin:0 0 15px}.ah-caveat{margin:16px 0}
-.ah-status{min-height:18px;color:#d4c485;font-size:12px;margin:14px 0}
+.ah-caveat{font-size:13px;color:#aab7c9;line-height:1.65;margin:16px 0}
+.ah-status{color:#d4c485;font-size:12px;margin:14px 0}.ah-status:empty{display:none}
 .ah-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
 .ah-kpi,.ah-panel{background:var(--panel);border:1px solid var(--line);border-radius:5px}
 .ah-panel{margin-bottom:18px}
@@ -63,11 +62,15 @@
 .ah-scroll .ah-empty{text-align:center;color:#94a4b8;padding:30px 36px;white-space:normal}
 .ah-col-star{width:34px}
 .ah-unavailable{color:#c9b56a;font-style:italic;white-space:normal}
-.ah-item{display:flex;align-items:center;gap:9px}.ah-icon{width:28px;height:28px;object-fit:cover;border:1px solid #44536b;border-radius:3px;background:#162236;display:inline-block}
+.ah-item{display:flex;align-items:center;gap:9px}/* Item icons match the Dressing Room and Gear Planner: a smooth 3px corner, and a border in the item's rarity colour with a soft glow. */
+.ah-icon{width:32px;height:32px;object-fit:cover;border:1px solid var(--item-quality,#536277);border-radius:3px;background:#162236;display:inline-block;flex:none;box-shadow:0 0 5px color-mix(in srgb,var(--item-quality,#536277) 60%,transparent)}
+.ah-q0{--item-quality:var(--quality-0)}.ah-q1{--item-quality:var(--quality-1)}.ah-q2{--item-quality:var(--quality-2)}.ah-q3{--item-quality:var(--quality-3)}.ah-q4{--item-quality:var(--quality-4)}.ah-q5{--item-quality:var(--quality-5)}.ah-q6{--item-quality:var(--quality-6)}
 .ah-item a{color:#e5e9ef;text-decoration:none}.ah-item a:hover{text-decoration:underline}
 .ah-variant{font-size:11px;color:#98a6b8}
 /* Rarity colours match the Dressing Room item names and the quality dropdowns (docs/quality-select.css). */
-.ah-q0 a{color:#9d9d9d}.ah-q2 a{color:#1eff70}.ah-q3 a{color:#69a8ff}.ah-q4 a{color:#c786ff}.ah-q5 a{color:#ffab55}.ah-q6 a{color:#e6cc80}
+.ah-q0 a,.ah-q1 a,.ah-q2 a,.ah-q3 a,.ah-q4 a,.ah-q5 a,.ah-q6 a{color:var(--item-quality)}
+.ah-m-g{color:#ffd100}.ah-m-s{color:#c8ccd6}.ah-m-c{color:#e8894a}
+.ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:#f4d65c}.ah-time-green{color:#4fdc7a}
 .ah-change-up{color:#f27c7e}.ah-change-down{color:#5bdb9d}.ah-change-neutral{color:#a8b7c7}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}

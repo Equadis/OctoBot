@@ -1,7 +1,7 @@
 /* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {itemTooltip} from './item-presentation.mjs?v=1';
-import {money,pct,trend,left,dateTime,count} from './format.mjs';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,dateTime,count} from './format.mjs';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -17,12 +17,22 @@ const state={filters:{...DEFAULTS},page:0,limit:50,queryId:0,favId:0,fav:loadFav
 
 function el(tag,content,className){
   const node=document.createElement(tag);
-  if(content!==undefined&&content!==null)node.textContent=String(content);
+  if(content instanceof Node)node.append(content);
+  else if(content!==undefined&&content!==null)node.textContent=String(content);
   if(className)node.className=className;
   return node;
 }
 const td=(row,value,className)=>{const c=el('td',value,className);row.append(c);return c;};
 const note=message=>{$('ah-status').textContent=message;};
+/** Gold, silver and copper each in their own colour. */
+function moneyNode(n){
+  const wrap=el('span'),parts=moneyParts(n);
+  if(!parts){wrap.textContent=money(n);return wrap;}
+  parts.forEach((p,i)=>{if(i)wrap.append(' ');wrap.append(el('span',p.text,'ah-m-'+p.unit));});
+  return wrap;
+}
+function timeNode(ms,capturedAt){const cls=timeClass(ms,capturedAt);return el('span',left(ms,capturedAt),cls||'');}
+const moneyTd=(row,n)=>{const c=el('td');c.append(moneyNode(n));row.append(c);return c;};
 async function request(path){
   const r=await fetch(API+path,{cache:'no-store',headers:{Accept:'application/json'}});
   if(!r.ok)throw new Error('API HTTP '+r.status);
@@ -92,13 +102,14 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
   if(unavailable){
     td(tr,error?'Latest data is unavailable, so this item’s current prices cannot be shown.':'Not listed in the latest completed scan. It stays in your favourites.','ah-unavailable').colSpan=COLS-2;
   }else{
-    td(tr,item.quantity??'–');td(tr,item.listings??'–');td(tr,money(item.unit_buyout));
-    td(tr,money(item.stack_buyout));
-    td(tr,item.current_bid>0?money(item.current_bid):money(item.start_bid)+' (start)');
-    td(tr,money(item.historical_avg));td(tr,pct(item.market_pct));
+    td(tr,item.quantity??'–');td(tr,item.listings??'–');moneyTd(tr,item.unit_buyout);
+    moneyTd(tr,item.stack_buyout);
+    const bid=bidAmount(item.current_bid,item.start_bid,item.stack_buyout,item.unit_buyout);
+    if(bid===null)td(tr,'-');else moneyTd(tr,bid);
+    moneyTd(tr,item.historical_avg);td(tr,pct(item.market_pct));
     const t=trend(item.trend_pct),tc=td(tr,t.label,t.className);
     tc.title=item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct));
-    td(tr,left(item.time_left_ms,item.captured_at));
+    td(tr).append(timeNode(item.time_left_ms,item.captured_at));
   }
   body.append(tr);
   expand.addEventListener('click',()=>toggleDetail(tr,item,expand,unavailable));
@@ -132,14 +143,14 @@ async function fillDetail(cell,item,unavailable){
     const days=Array.isArray(history.history)?history.history:[];
     const stats=el('dl',null,'ah-stats');
     if(!unavailable){
-      stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':money(item.unit_buyout)));
-      stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':money(item.stack_buyout)));
+      stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
+      stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':moneyNode(item.stack_buyout)));
       stats.append(stat('Available',count(item.quantity),count(item.listings)+' listing'+(item.listings===1?'':'s')));
-      stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':money(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
+      stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
       stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ historical average'));
       const t=trend(item.trend_pct);
       stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':t.label+' '+pct(item.trend_pct),item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
-      stats.append(stat('Cheapest listing time left',left(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
+      stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
     }else stats.append(stat('Current status','Not listed','No auctions in the latest completed scan'));
     const parts=[stats];
     if(state.listingFiltered&&!unavailable)parts.push(el('p','Totals above reflect your active price, stack and time filters. The listings below are every auction for this item.','ah-muted'));
@@ -150,7 +161,7 @@ async function fillDetail(cell,item,unavailable){
     else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
     if(days.length){
       const raw=section('Daily observations ('+days.length+')',false);
-      raw.body.append(simpleTable(['Day','Lowest unit buyout','Quantity','Listings'],days.map(d=>[d.day,money(d.representative_unit),count(d.quantity),count(d.listings)])));
+      raw.body.append(simpleTable(['Day','Lowest unit buyout','Quantity','Listings'],days.map(d=>[d.day,moneyNode(d.representative_unit),count(d.quantity),count(d.listings)])));
       hist.body.append(raw.d);
     }
     parts.push(hist.d);
@@ -160,7 +171,7 @@ async function fillDetail(cell,item,unavailable){
       const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
       if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
       else auctions.body.append(simpleTable(['Seller (owner GUID)','Quantity','Starting bid','Current bid','Minimum next bid','Buyout','Unit buyout','Time left (est.)'],
-        rows.map(r=>[r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,money(r.start_bid),r.current_bid>0?money(r.current_bid):'No bids',money(r.min_next_bid),r.buyout>0?money(r.buyout):'No buyout',money(r.unit_buyout),left(r.time_left_ms,r.captured_at)])));
+        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,moneyNode(r.start_bid),r.current_bid>0?(bid===null?'-':moneyNode(r.current_bid)):'No bids',moneyNode(r.min_next_bid),r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }
@@ -245,14 +256,8 @@ async function refreshSummary(first){
     $('auction-count').textContent=count(s.auction_count);
     $('item-count').textContent=count(s.item_count);
     $('scan-progress').textContent=s.scanning?((s.pages_done??0)+' / '+(s.pages_expected??'?')+' pages'):'Idle';
-    if(!s.completed_at)note('No data – no completed Auction House scan has been verified.');
-    else{
-      const age=Math.max(0,Date.now()-Date.parse(s.completed_at));
-      let message='Latest full snapshot: '+dateTime(s.completed_at)+(age>2*3600000?' · Stale':' · Recently observed');
-      if(s.items_with_metadata!=null&&s.item_count>0&&s.items_with_metadata<s.item_count)
-        message+=' · Level, category and slot filters can see '+count(s.items_with_metadata)+' of '+count(s.item_count)+' items; the catalogue does not describe the rest.';
-      note(message);
-    }
+    // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
+    note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
     if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';$('sort').value='name';}
   }catch{note('Auction House feed unavailable – no data is being invented.');$('collector').textContent='OFFLINE';}
 }

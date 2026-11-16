@@ -23,16 +23,16 @@ test('unknown races and sexes get no icon rather than a wrong one',()=>{
   assert.equal(raceIconUrl('Night Elf','female'),RACE_ICON_BASE+'nightelf_female.png');
 });
 
-test('the Race selector is back in its original place: first column beside Level, with no icon column',()=>{
+test('the Race selector sits in its original place beside Level, with no icon column, and both are narrow',()=>{
   const html=read('sim/index.html'),css=read('sim/combat-layout.css');
   assert.match(html,/<div class="character-controls"><label class="field">Race<select id="character-race">/);
   assert.doesNotMatch(html,/race-icon/);
-  assert.match(css,/\.character-controls\{display:grid;grid-template-columns:1fr 58px;gap:14px\}/,'Level is a narrow second column');
+  assert.match(css,/\.character-controls\{display:grid;grid-template-columns:132px 58px;gap:14px;align-items:end\}/,'a narrow Race column and a narrow Level column');
 });
 
-test('the race dropdown shows both portraits to the left of every race, like the Dressing Room background picker',()=>{
+test('the race dropdown shows one portrait to the left of every race, like the Dressing Room background picker',()=>{
   const picker=read('sim/race-picker.mjs'),js=read('sim/planner.mjs'),css=read('sim/combat-layout.css');
-  assert.match(picker,/for\(const sex of \['male','female'\]\)/,'male and female portrait for each row');
+  assert.match(picker,/for\(const sex of \['male'\]\)/,'one portrait per race');
   assert.match(picker,/frag\.append\(portraits\(doc,race\),label\)/,'portraits come before the race name');
   assert.match(picker,/role="listbox"|setAttribute\('role','listbox'\)/);
   assert.match(picker,/e\.key==='Escape'/);
