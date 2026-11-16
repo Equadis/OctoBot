@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,trend,remaining,left,pct,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,trend,remaining,left,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -178,10 +178,23 @@ test('Auction House scan colours follow the one-hour and 24-hour thresholds',()=
   assert.equal(lastScanClass(before(23.99),now),'ah-time-yellow');
   assert.equal(lastScanClass(before(24),now),'ah-time-red');
   assert.equal(lastScanClass(null,now),null);
-  assert.equal(scanStatus({scanning:true,completedAt:before(30)},now).className,'ah-time-green');
-  assert.equal(scanStatus({scanning:false,completedAt:before(25)},now).className,'ah-time-red');
-  assert.equal(scanStatus({scanning:false,completedAt:before(2)},now).className,'ah-time-yellow');
-  assert.equal(scanStatus({scanning:false,completedAt:null},now).className,'ah-time-yellow');
+  assert.deepEqual(scanStatus({scanning:true,startedAt:before(0.5),completedAt:before(30)},now),
+    {text:'Scanning · 30m 00s',className:'ah-time-green'});
+  assert.deepEqual(scanStatus({scanning:true,completedAt:before(30)},now),
+    {text:'Scanning',className:'ah-time-green'});
+  assert.deepEqual(scanStatus({scanning:false,completedAt:before(25)},now),
+    {text:'Last scan · 1d 1h ago',className:'ah-time-red'});
+  assert.deepEqual(scanStatus({scanning:false,completedAt:before(2)},now),
+    {text:'Last scan · 2h ago',className:'ah-time-yellow'});
+  assert.deepEqual(scanStatus({scanning:false,completedAt:null},now),
+    {text:'No completed scan',className:'ah-time-yellow'});
+  assert.deepEqual(scanStatus({scanning:true,collectorStatus:'STALE',completedAt:before(2)},now),
+    {text:'Last scan · 2h ago',className:'ah-time-yellow'},'stale upload must not be shown as scanning');
+  assert.equal(scanAge(before(0.001),now),'just now');
+  assert.equal(scanAge(before(0.5),now),'30m ago');
+  assert.equal(scanAge(before(1.5),now),'1h 30m ago');
+  assert.equal(scanAge(before(49),now),'2d 1h ago');
+  assert.equal(scanAge(null,now),null);
 });
 test('items-indexed coverage compares known metadata against all observed item variants',()=>{
   assert.equal(indexCoverage(91,100),0.91);
