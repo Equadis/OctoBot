@@ -23,6 +23,8 @@ jobs:
           cache-dependency-path: services/world-buff-tracker/package-lock.json
       - name: Cloudflare Auction API and price calculations
         run: node --test cloudflare/octometrics/tests/*.test.mjs
+      - name: SQLite integrity and aggregation tests
+        run: python3 -m unittest discover -s cloudflare/octometrics/tests -p 'test_auction_sql.py'
       - name: Website link regressions
         run: node --test tests/site-routes.test.mjs
       - name: Install existing client dependencies
