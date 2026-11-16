@@ -1,7 +1,7 @@
 -- Apply ONLY after backup and approval: npx wrangler d1 execute octometrics --remote --file cloudflare/octometrics/migrations/0002_auction.sql
 -- Dedicated Auction House tables; metric_events and all existing APIs are untouched.
 CREATE TABLE IF NOT EXISTS ah_scans (
- scan_id TEXT PRIMARY KEY, realm TEXT NOT NULL CHECK(realm="N'Zoth"),
+ scan_id TEXT PRIMARY KEY, realm TEXT NOT NULL CHECK(realm='N''Zoth'),
  status TEXT NOT NULL CHECK(status IN ('uploading','complete','failed')),
  started_at TEXT NOT NULL, completed_at TEXT, expected_pages INTEGER,
  reported_total INTEGER, page_count INTEGER NOT NULL DEFAULT 0,
@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS ah_scans (
  error TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE INDEX IF NOT EXISTS idx_ah_complete ON ah_scans(status,completed_at DESC);
+-- Concurrent start requests cannot both create an uploading scan.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ah_single_upload ON ah_scans(status) WHERE status='uploading';
 CREATE TABLE IF NOT EXISTS ah_pages (
  scan_id TEXT NOT NULL, page INTEGER NOT NULL, count INTEGER NOT NULL,
  response_ms INTEGER NOT NULL DEFAULT 0, received_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),

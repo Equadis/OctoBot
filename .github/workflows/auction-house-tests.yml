@@ -18,13 +18,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: services/world-buff-tracker/package-lock.json
       - name: Cloudflare Auction API and price calculations
         run: node --test cloudflare/octometrics/tests/*.test.mjs
+      - name: SQLite integrity and aggregation tests
+        run: python3 -m unittest discover -s cloudflare/octometrics/tests -p 'test_auction_sql.py'
       - name: Website link regressions
-        run: node --test tests/site-routes.test.mjs
+        run: node --test tests/site-routes.test.mjs tests/auction-item-ui.test.mjs
       - name: Install existing client dependencies
         working-directory: services/world-buff-tracker
         run: npm ci

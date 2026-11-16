@@ -1,4 +1,5 @@
 /* OctoBot Auction House — no mock records and no frontend secrets. */
+import {itemTooltip} from './item-presentation.mjs?v=1';
 const API='https://octometrics.eqvoice.workers.dev';
 const $=id=>document.getElementById(id);
 const state={page:0,limit:50,loading:false,last:null,queryId:0};
@@ -40,7 +41,7 @@ async function request(path){
   if(!r.ok)throw new Error('API HTTP '+r.status);
   return r.json();
 }
-function qualityClass(q){return 'ah-q'+(Number.isInteger(Number(q))?Math.max(0,Math.min(5,Number(q))):1);}
+function qualityClass(q){const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';}
 function itemCell(item){
   const wrapper=el('div',null,'ah-item');
   const icon=el('span');
@@ -49,7 +50,7 @@ function itemCell(item){
   const link=el('a',item.item_name||('Item #'+item.item_id));
   link.href='https://octowow.st/db/?item='+encodeURIComponent(item.item_id);
   link.target='_blank';link.rel='noopener noreferrer';
-  link.title='Open the OctoWoW item database';
+  link.title=itemTooltip(item);
   wrapper.append(icon,link);
   wrapper.classList.add(qualityClass(item.quality));
   return wrapper;
