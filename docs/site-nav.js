@@ -8,12 +8,12 @@
     { label: 'Server monitoring', links: [
       { id: 'population', href: 'population/#server=all', text: 'Population' },
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
-    { label: 'World and character tools', links: [
-      { id: 'world-info', href: 'world-info/', text: "World Info – N'Zoth" },
+    { label: 'Character tools', links: [
+      { id: 'sim', href: 'sim/', text: 'Gear Planner & DPS Sim (WIP)' },
       { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
-    { label: 'Planning and economy', links: [
-      { id: 'auction-house', href: 'auction-house/', text: 'Auction House (WIP)' },
-      { id: 'sim', href: 'sim/', text: 'Gear Planner & DPS Sim (WIP)' } ] }
+    { label: 'World and economy', links: [
+      { id: 'world-info', href: 'world-info/', text: "World Info – N'Zoth" },
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House (WIP)' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
