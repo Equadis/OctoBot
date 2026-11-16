@@ -27,19 +27,17 @@ const HEARTBEAT_MS = 60_000;
 
 export function watchersFromConfig(config:BotConfig): readonly Watcher[] {
   const h = config.listeners[0];
-  // OBPVEDMFA / OBPVEDMFH are in-game CHARACTER names, not authentication accounts.
-  // Legacy Railway variables used those character names as WOW_ACCOUNT; correct the
-  // login here without exposing or changing the existing stored passwords.
-  const allianceLogin=config.account==="OBPVEDMFA"?"PVEOBDMFA":config.account;
-  const hordeLogin=h?.account==="OBPVEDMFH"?"PVEOBDMFH":h?.account;
-  if(config.realm !== "N'Zoth" || allianceLogin !== "PVEOBDMFA" ||
-    config.darkmoonWatchLocation !== "elwynn" || config.listeners.length !== 1 ||
-    !h || hordeLogin !== "PVEOBDMFH" || h.darkmoonWatchLocation !== "mulgore") {
-    throw new Error("DMF-only mode needs login accounts PVEOBDMFA (Elwynn) and PVEOBDMFH (Mulgore) on N'Zoth");
+  // Keep the public telemetry identifiers stable, but take the actual game login
+  // names from WOW_ACCOUNT and WOW_LISTENERS; the login accounts may differ from
+  // the in-game character names and are not readable through Railway OAuth.
+  if(config.realm !== "N'Zoth" || config.darkmoonWatchLocation !== "elwynn" ||
+    config.listeners.length !== 1 || !h || h.darkmoonWatchLocation !== "mulgore" ||
+    !config.account.trim() || !h.account.trim() || config.account===h.account) {
+    throw new Error("DMF-only mode requires two distinct configured game accounts at Elwynn and Mulgore on N'Zoth");
   }
   return [
-    {account:"OBPVEDMFA",loginAccount:allianceLogin,password:config.password,character:config.characterName,role:"dmfa",site:"elwynn"},
-    {account:"OBPVEDMFH",loginAccount:hordeLogin,password:h.password,character:h.characterName,role:"dmfh",site:"mulgore"},
+    {account:"OBPVEDMFA",loginAccount:config.account,password:config.password,character:config.characterName,role:"dmfa",site:"elwynn"},
+    {account:"OBPVEDMFH",loginAccount:h.account,password:h.password,character:h.characterName,role:"dmfh",site:"mulgore"},
   ];
 }
 
