@@ -7,6 +7,19 @@
   for(const r of data){const t=Date.parse(r.timestamp);if(!Number.isFinite(t)||!Number.isInteger(r.online)||r.online<0)throw Error('Invalid observation');rows.set(t,{t,value:r.online});}
   return [...rows.values()].sort((a,b)=>a.t-b.t);
  }
+ // Equal-weight mean of all real observations recorded up to each timestamp.
+ // Calculate across the full realm history, never just the selected graph window.
+ // Estimates and synthetic data are excluded.
+ function runningAverage(rows){
+  let sum=0,count=0;
+  return rows.map(row=>({t:row.t,value:(sum+=row.value)/(++count)}));
+ }
+ // Latest observed cumulative mean at or before the inspected time; no look-ahead.
+ function runningAverageAt(averages,time){
+  if(!averages.length||!Number.isFinite(time))return null;
+  const at=lowerBound(averages,time);
+  return at<averages.length&&averages[at].t===time?averages[at].value:at?averages[at-1].value:null;
+ }
  function intervals(rows,start,end){
   const missing=[];let cursor=start,area=0,duration=0;
   for(let i=1;i<rows.length;i++){const a=rows[i-1],b=rows[i],span=b.t-a.t,left=Math.max(start,a.t),right=Math.min(end,b.t);if(span>GAP||span<=0||left>=right)continue;
@@ -185,5 +198,5 @@
   addSegment(group);
   return {recorded,smoothed};
  }
- const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,panRange,wheelPanOffset,visibleSeries,normalise,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
+ const api={GAP,MAX_ESTIMATE_GAP,MIN_VIEW_MS,zoomRange,panRange,wheelPanOffset,visibleSeries,normalise,runningAverage,runningAverageAt,intervals:intervalsWithEstimates,nearest,at,downsample,estimatedGaps,estimateAt,smooth,combine};root.PopulationData=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
