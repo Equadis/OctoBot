@@ -74,3 +74,16 @@ test('uploading a background photo opens a crop with the viewer shape before it 
   assert.match(script,/openPhotoCrop\(bitmap\)/);
   assert.match(script,/Photo not changed/);   // cancelling leaves the background alone
 });
+
+// The wiki's image host refuses hotlinked requests that carry no referrer, and does so intermittently (checked in a browser: with no referrer a
+// different handful of class backgrounds failed each run; with the site's origin as referrer all of them loaded every time).
+test('backgrounds are requested with the site origin as referrer, never with none, and are retried once',()=>{
+  const source=readFileSync(new URL('../docs/outfitter/outfitter.mjs',import.meta.url),'utf8');
+  const body=source.slice(source.indexOf('function applyBackdrop'),source.indexOf('// The background list shows a small class or race icon'));
+  assert.ok(body.length>200,'found applyBackdrop');
+  assert.ok(!/no-referrer/.test(body),'a request without a referrer is what the image host intermittently refuses');
+  assert.match(body,/referrerPolicy='origin'/);
+  assert.match(body,/attempt\(1\)/,'one retry');
+  assert.match(body,/if\(left>0\)/);
+  assert.match(body,/could not be loaded, so the default is shown/,'a final failure is still reported');
+});

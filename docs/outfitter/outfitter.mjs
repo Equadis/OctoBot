@@ -74,11 +74,20 @@ function applyBackdrop(id,{persistChoice=true}={}){
  $('backdrop').value=choice?choice.id:'';
  updateBackdropButton();
  if(!choice){clear();return;}
- // Load first so a failed image never leaves a blank frame.
- const probe=new Image();probe.referrerPolicy='no-referrer';
- probe.onload=()=>{if(token!==backdropRequest)return;wrap.style.setProperty('--backdrop-image',`url("${choice.url}")`);wrap.classList.add('has-backdrop');};
- probe.onerror=()=>{if(token!==backdropRequest)return;clear();$('backdrop').value='';feedback(`The ${choice.label} background could not be loaded, so the default is shown.`);};
- probe.src=choice.url;
+ // Load first so a failed image never leaves a blank frame. The wiki's image host refuses hotlinked requests that carry no referrer, and it does so
+ // at random (druid, hunter and rogue one time, priest and shaman the next), so the request sends the site's origin only (never a path or query)
+ // and is tried once more before giving up.
+ const attempt=left=>{
+  const probe=new Image();probe.referrerPolicy='origin';
+  probe.onload=()=>{if(token!==backdropRequest)return;wrap.style.setProperty('--backdrop-image',`url("${choice.url}")`);wrap.classList.add('has-backdrop');};
+  probe.onerror=()=>{
+   if(token!==backdropRequest)return;
+   if(left>0){setTimeout(()=>{if(token===backdropRequest)attempt(left-1);},700);return;}
+   clear();$('backdrop').value='';feedback(`The ${choice.label} background could not be loaded, so the default is shown.`);
+  };
+  probe.src=choice.url;
+ };
+ attempt(1);
 }
 // The background list shows a small class or race icon beside each name. Race icons follow the character's body (male / female).
 // A native <select> cannot show images, so a custom list sits on top of it; the select stays as the single source of truth.
