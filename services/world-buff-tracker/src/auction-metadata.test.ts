@@ -24,3 +24,16 @@ describe("Auction House item metadata sourced from the existing Gear Planner cat
   expect(map.get(5)?.item_name).toBe("Source item");
  });
 });
+describe("against the real published catalogue file (docs/sim/data/items/catalogue.json)",()=>{
+ it("parses the actual structure and gives most items a name, rarity and icon",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const raw=JSON.parse(readFileSync(new URL("../../../docs/sim/data/items/catalogue.json",import.meta.url),"utf8"));
+  const map=metadataFromCatalogue(raw);
+  expect(map.size).toBe(raw.length);                       // every entry has a valid id and name
+  expect(map.size).toBeGreaterThan(19000);
+  const withIcon=[...map.values()].filter(m=>m.icon_url).length;
+  expect(withIcon/map.size).toBeGreaterThan(0.98);         // a few malformed icon ids are deliberately dropped
+  expect([...map.values()].every(m=>m.quality!==null)).toBe(true);
+  expect(map.get(36701)?.icon_url).toBeNull();             // malformed icon id is not turned into a URL
+ });
+});
