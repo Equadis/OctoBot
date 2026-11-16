@@ -66,6 +66,7 @@ async function upload(req,env,action){
  }
  const scan=await first(db,"SELECT * FROM ah_scans WHERE scan_id=?",body.scan_id);
  if(!scan)return bad('unknown scan',404);
+ const liveSnapshot=scan.scan_id.startsWith('ahl_');
  if(action==='complete'&&scan.status==='complete'){
    if(integer(body.expected_pages,1,30001)&&integer(body.reported_total,0,1000000)&&validIso(body.completed_at)&&
       scan.expected_pages===body.expected_pages&&scan.reported_total===body.reported_total&&scan.completed_at===body.completed_at)
@@ -80,7 +81,7 @@ async function upload(req,env,action){
  }
  if(action==='page'){
    if(!integer(body.page,0,30000)||!integer(body.response_ms,0,600000)||!Array.isArray(body.items)||body.items.length>50)return bad('invalid page');
-   const expected=expectedPageLength(scan.reported_total,body.page);
+   const expected=liveSnapshot?body.items.length:expectedPageLength(scan.reported_total,body.page);
    if(expected===null||body.items.length!==expected)return bad('page outside scan range or incorrect length',409);
    const rows=body.items.map(normalise);
    if(rows.some(r=>!r))return bad('invalid listing');
@@ -88,7 +89,7 @@ async function upload(req,env,action){
    // A retry replaces exactly one page. D1 batch is atomic, so transient failures cannot partially replace a page.
    const ops=[db.prepare('DELETE FROM ah_listings WHERE scan_id=? AND page=?').bind(body.scan_id,body.page)];
    for(const r of rows)ops.push(db.prepare(
-     'INSERT INTO ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+     (liveSnapshot?'INSERT OR REPLACE INTO':'INSERT INTO')+' ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
    ).bind(body.scan_id,r.auction_id,body.page,r.item_id,r.variant,r.item_name,r.quality,r.icon_url,r.quantity,r.start_bid,r.current_bid,r.min_next_bid,r.buyout,r.owner_guid,r.time_left_ms,r.captured_at,r.item_level,r.req_level,r.class_id,r.subclass_id,r.slot_id));
    ops.push(db.prepare('INSERT INTO ah_pages(scan_id,page,count,response_ms) VALUES (?,?,?,?) ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')').bind(body.scan_id,body.page,rows.length,body.response_ms));
    try{await db.batch(ops)}catch{return bad('page write failed (retry safely)',503)}
@@ -96,15 +97,22 @@ async function upload(req,env,action){
  }
  if(action==='complete'){
    if(!integer(body.expected_pages,1,30001)||!integer(body.reported_total,0,1000000)||!validIso(body.completed_at))return bad('invalid completion');
-   if(body.reported_total!==scan.reported_total||body.expected_pages!==Math.max(1,Math.ceil(scan.reported_total/50)))
+   if(body.reported_total!==scan.reported_total||(!liveSnapshot&&body.expected_pages!==Math.max(1,Math.ceil(scan.reported_total/50))))
      return bad('completion disagrees with original server total',409);
    if(Date.parse(body.completed_at)<Date.parse(scan.started_at))return bad('completion precedes scan start',409);
    const check=await first(db,"SELECT COUNT(*) n,MIN(page) first_page,MAX(page) last_page,SUM(count) rows FROM ah_pages WHERE scan_id=?",body.scan_id);
    if(check.n!==body.expected_pages||check.first_page!==0||check.last_page!==body.expected_pages-1)return bad('incomplete or missing pages',409);
    const count=await first(db,'SELECT COUNT(*) n,COUNT(DISTINCT auction_id) distinct_auctions FROM ah_listings WHERE scan_id=?',body.scan_id);
-   if(count.n!==check.rows||count.n!==count.distinct_auctions)return bad('missing or duplicate listings',409);
-   // The AH can change mid-scan; never claim completeness if fewer listings than the server reported.
-   if(count.n!==scan.reported_total)return bad('auction count differs from original server total; rescan',409);
+   if(count.n!==count.distinct_auctions)return bad('duplicate listings persisted',409);
+   if(liveSnapshot){
+     // A live AH changes during a scan. Deduplicate cross-page overlaps while
+     // preserving the truthful observed count rather than calling it an atomic snapshot.
+     if(count.n>check.rows||(scan.reported_total>0&&count.n===0))
+       return bad('live traversal has no valid listings',409);
+   }else{
+     if(count.n!==check.rows)return bad('missing listings',409);
+     if(count.n!==scan.reported_total)return bad('auction count differs from original server total; rescan',409);
+   }
    const duration=Math.max(0,Date.parse(body.completed_at)-Date.parse(scan.started_at));
    const ops=[
      db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
@@ -112,24 +120,25 @@ async function upload(req,env,action){
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
    ];
    try{await db.batch(ops)}catch{return bad('finalisation failed',503)}
-   return respond({ok:true,auction_count:count.n,duration_ms:duration},201);
+   return respond({ok:true,auction_count:count.n,duration_ms:duration,snapshot_quality:liveSnapshot?'live_estimate':'strict'},201);
  }
  return bad('unknown upload action',404);
 }
 function apiId(s){const id=Number(s);return integer(id,1,4294967295)?id:null;}
 async function readApi(url,env){
  const db=env.DB;const scan=await active(db);
- const current=await first(db,"SELECT scan_id,started_at,(SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id) last_page_at,(SELECT COUNT(*) FROM ah_pages WHERE scan_id=ah_scans.scan_id) pages_done FROM ah_scans WHERE status='uploading' ORDER BY started_at DESC LIMIT 1");
+ const current=await first(db,"SELECT scan_id,started_at,reported_total,(SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id) last_page_at,(SELECT COUNT(*) FROM ah_pages WHERE scan_id=ah_scans.scan_id) pages_done FROM ah_scans WHERE status='uploading' ORDER BY started_at DESC LIMIT 1");
  const recent=current&&Date.now()-Date.parse(current.last_page_at||current.started_at)<600000;
- if(url.pathname==='/api/auction/scan-status')return respond({scanning:!!current,collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',pages_done:current?.pages_done??0,started_at:current?.started_at??null});
+ if(url.pathname==='/api/auction/scan-status')return respond({scanning:!!current,collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',pages_done:current?.pages_done??0,pages_expected:current?Math.max(1,Math.ceil(current.reported_total/50)):null,started_at:current?.started_at??null});
  if(url.pathname==='/api/auction/summary'){
    const item=scan?await first(db,'SELECT COUNT(*) n FROM ah_item_points WHERE scan_id=?',scan.scan_id):null;
    const hist=await first(db,'SELECT COUNT(DISTINCT day) n FROM ah_daily');
    const meta=scan?await first(db,'SELECT COUNT(DISTINCT item_id||\':\'||variant) n FROM ah_listings WHERE scan_id=? AND class_id IS NOT NULL',scan.scan_id):null;
    return respond({collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',scanning:!!current,
-     pages_done:current?.pages_done??0,pages_expected:current?.expected_pages??null,
+     pages_done:current?.pages_done??0,pages_expected:current?Math.max(1,Math.ceil(current.reported_total/50)):null,
      completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,
-     item_count:item?.n??null,items_with_metadata:meta?.n??null,scan_duration_ms:scan?.duration_ms??null,historical_days:hist?.n??0});
+     item_count:item?.n??null,items_with_metadata:meta?.n??null,scan_duration_ms:scan?.duration_ms??null,historical_days:hist?.n??0,
+      snapshot_quality:scan?(scan.scan_id.startsWith('ahl_')?'live_estimate':'strict'):null});
  }
  if(!scan){
    if(url.pathname==='/api/auction/items')return respond({items:[],total:0,has_more:false});
