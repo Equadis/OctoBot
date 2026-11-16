@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import {buildAuctionHello,buildAuctionSearch,parseAuctionHello,parseAuctionList,type AuctionResult} from "../protocol/auction.js";
 import { inflateSync } from "node:zlib";
 import { VanillaHeaderCrypt } from "../crypto/header-crypt.js";
 import { FatalError } from "../errors.js";
@@ -61,6 +62,10 @@ import { pongLatency } from "../realm-health.js";
 export interface WorldClientHandlers {
   /** Character is in the world; /who can now be requested. */
   onReady?: () => void;
+  /** Read-only Auction House session handshake; server must echo the target NPC. */
+  onAuctionHello?: (hello:{guid:bigint;houseId:number}) => void;
+  /** Unfiltered auction query response; completion must be validated by the caller. */
+  onAuctionList?: (result:AuctionResult) => void;
   onWho?: (result: WhoResult) => void;
   /** A player whispered the bot; `sender` is resolved to a character name. */
   onWhisper?: (sender: string, text: string) => void;
@@ -390,6 +395,18 @@ export class WorldClient {
     this.#send(WorldOpcode.CMSG_GAMEOBJ_USE, buildGameObjUseBody(guid));
   }
 
+  /** Open the Auction House as if the player right-clicked a verified nearby auctioneer. */
+  auctionHello(guid:bigint):void{
+    if(!this.#ready)throw new Error("cannot interact with auctioneer before character is in world");
+    this.#send(WorldOpcode.MSG_AUCTION_HELLO,buildAuctionHello(guid));
+  }
+
+  /** Read-only query; never sends a bid, buyout or inventory-modifying opcode. */
+  auctionList(guid:bigint,offset:number):void{
+    if(!this.#ready)throw new Error("cannot search auction house before character is in world");
+    this.#send(WorldOpcode.CMSG_AUCTION_LIST_ITEMS,buildAuctionSearch(guid,offset));
+  }
+
   /** Invite a player to the guild by character name (no-op server-side if not guilded). */
   guildInvite(name: string): void {
     if (!this.#ready) throw new Error("cannot guild-invite before the character is in world");
@@ -459,6 +476,12 @@ export class WorldClient {
           break;
         case WorldOpcode.SMSG_LOGIN_VERIFY_WORLD:
           this.#handleInWorld();
+          break;
+        case WorldOpcode.MSG_AUCTION_HELLO:
+          this.#handlers.onAuctionHello?.(parseAuctionHello(body));
+          break;
+        case WorldOpcode.SMSG_AUCTION_LIST_RESULT:
+          this.#handlers.onAuctionList?.(parseAuctionList(body));
           break;
         case WorldOpcode.SMSG_WHO:
           this.#handleWho(parseWhoResponseBody(body));
