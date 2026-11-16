@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,trend,remaining,left,pct} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,trend,remaining,left,pct,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -171,6 +171,32 @@ test('remaining time is an estimate and says so when unknown',()=>{
   assert.equal(left(null,seen,t0),'Uncertain');assert.equal(left(1000,'garbage',t0),'Uncertain');
 });
 
+test('Auction House scan colours follow the one-hour and 24-hour thresholds',()=>{
+  const now=Date.parse('2026-11-16T20:00:00Z'),before=hours=>new Date(now-hours*3600000).toISOString();
+  assert.equal(lastScanClass(before(0.99),now),'ah-time-green');
+  assert.equal(lastScanClass(before(1),now),'ah-time-yellow');
+  assert.equal(lastScanClass(before(23.99),now),'ah-time-yellow');
+  assert.equal(lastScanClass(before(24),now),'ah-time-red');
+  assert.equal(lastScanClass(null,now),null);
+  assert.equal(scanStatus({scanning:true,completedAt:before(30)},now).className,'ah-time-green');
+  assert.equal(scanStatus({scanning:false,completedAt:before(25)},now).className,'ah-time-red');
+  assert.equal(scanStatus({scanning:false,completedAt:before(2)},now).className,'ah-time-yellow');
+  assert.equal(scanStatus({scanning:false,completedAt:null},now).className,'ah-time-yellow');
+});
+test('items-indexed coverage compares known metadata against all observed item variants',()=>{
+  assert.equal(indexCoverage(91,100),0.91);
+  assert.equal(indexedClass(91,100),'ah-time-green');
+  assert.equal(indexedClass(90,100),'ah-time-yellow');
+  assert.equal(indexedClass(50,100),'ah-time-yellow');
+  assert.equal(indexedClass(49,100),'ah-time-red');
+  for(const [indexed,total] of [[null,100],[5,0],[6,5]]){
+    assert.equal(indexCoverage(indexed,total),null);
+    assert.equal(indexedClass(indexed,total),null);
+  }
+  const css=read('auction-house/auction.css');
+  for(const status of ['green','yellow','red'])
+    assert.ok(css.includes('.ah-kpi strong.ah-time-'+status+'{color:'),'KPI overrides gold for '+status);
+});
 /* ---------------- chart geometry ---------------- */
 test('the price chart needs real history and never invents points',()=>{
   assert.equal(layout([]),null);
