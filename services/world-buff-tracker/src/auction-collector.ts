@@ -28,7 +28,7 @@ const positiveInt=(raw:string|undefined,fallback:number,min:number,max:number)=>
  if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error("Invalid auction collector numeric configuration");
  return n;
 };
-const intervalMs=positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,5500,5000,600000);
+const intervalMs=positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,0,0,600000);
 const cooldownMs=positiveInt(process.env.AUCTION_SCAN_COOLDOWN_MS,3600000,60000,86400000);
 const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000,180000);
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
@@ -116,8 +116,8 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  const run=async(guid:bigint):Promise<void>=>{
    const catalogue=await cachedMetadata(log);
    const startedAt=new Date().toISOString();
-   scanId="ah_"+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
-   const cursor=new AuctionScanCursor();
+   scanId="ahl_"+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
+   const cursor=new AuctionScanCursor(true);
    try{
     // Do not declare a scan started until the server actually replies to the first query.
     while(cursor.page<maxPages){
@@ -125,7 +125,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
       const sentAt=Date.now();
       const response=await query(guid,offset);
       const responseMs=Date.now()-sentAt;
-      cursor.accept(response); // Reject shifting totals, short pages and duplicate IDs BEFORE upload.
+      cursor.accept(response); // Live AH counts drift; allow offset shifts, deduplicate IDs during ingestion.
       if(page===0){
        await publish("start",{scan_id:scanId,started_at:startedAt,reported_total:cursor.total});
        started=true;
@@ -143,13 +143,13 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
        };
       });
       await publish("page",{scan_id:scanId,page,items,response_ms:responseMs});
-      log.info("Auction scan "+scanId+": "+cursor.retrieved+"/"+cursor.total+" auctions; page "+cursor.page+" in "+responseMs+"ms");
+      if(page===0||cursor.page%20===0||cursor.complete)log.info("Auction scan "+scanId+": "+cursor.retrieved+"/"+cursor.latestTotal+" rows traversed; page "+cursor.page+" in "+responseMs+"ms");
       if(cursor.complete)break;
     }
     if(!cursor.complete)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES or ended early");
     await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     succeeded=true;
-    log.info("Auction scan completed: "+cursor.retrieved+" listings, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms");
+    log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
     throw error;
