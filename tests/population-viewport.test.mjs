@@ -13,6 +13,20 @@ const epoch=Date.parse('2026-11-03T02:00:00Z');
 const reading=(minute,value=1300+minute)=>({t:epoch+minute*MINUTE,value});
 const source=Array.from({length:61},(_,n)=>reading(n));
 
+test('running average reflects every confirmed observation up to each timestamp, regardless of view range',()=>{
+ const history=[reading(0,100),reading(1,200),reading(2,300),reading(20,500)];
+ const means=D.runningAverage(history);
+ assert.deepEqual(means.map(row=>row.value),[100,150,200,275]);
+ assert.deepEqual(means.map(row=>row.t),history.map(row=>row.t));
+ assert.equal(D.runningAverageAt(means,epoch-1000),null,'no historical average before the first observation');
+ assert.equal(D.runningAverageAt(means,epoch+90*1000),150,'never looks ahead to later observations');
+ assert.equal(D.runningAverageAt(means,epoch+30*MINUTE),275,'last known average remains defined after a gap');
+ assert.equal(D.runningAverage([]).length,0);
+ const segment=D.visibleSeries(means,epoch+MINUTE,epoch+21*MINUTE,0).recorded;
+ assert.equal(segment.length,2,'the blue average line must not connect across unobserved gaps');
+ assert.equal(segment[0].at(-1).value,200);
+ assert.equal(segment[1][0].value,275);
+});
 test('10-minute window preserves continuous recorded and smoothed curves at both exact boundaries',()=>{
  const start=epoch+12.5*MINUTE,end=start+10*MINUTE;
  const visible=D.visibleSeries(source,start,end,45000);
