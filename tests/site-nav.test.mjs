@@ -26,7 +26,7 @@ test('navigation has exactly three groups in the required order',()=>{
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
     ['Gear Planner','Dressing Room'],
-    ["World Info \u2013 N'Zoth",'Auction House (WIP)']]);
+    ['World Info','Auction House']]);
   assert.equal(GROUPS.length,3);
 });
 
@@ -67,7 +67,7 @@ test('tab size is pinned in the shared theme so pages that restyle .page-nav a c
   assert.match(css,/\.page-nav \.nav-group a\{[^}]*height:38px[^}]*padding:0 13px[^}]*font-size:12px/);
 });
 
-test('only the Auction House and World Info keep a WIP marker; Dressing Room and Gear Planner do not',()=>{
+test('no tab carries a WIP marker, and the World Info tab drops N\'Zoth while its page title keeps it',()=>{
   const labels=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
   assert.ok(labels.includes('Dressing Room')&&labels.includes('Gear Planner'));
   assert.ok(!labels.some(l=>/(Dressing Room|Gear Planner).*WIP/.test(l)));
@@ -76,5 +76,16 @@ test('only the Auction House and World Info keep a WIP marker; Dressing Room and
   const home=readFileSync(new URL('index.html',docs),'utf8');
   assert.doesNotMatch(home,/Dressing Room <em>WIP<\/em>/);
   assert.doesNotMatch(home,/Gear ?Planner[^<]*<em>WIP<\/em>/);
-  assert.match(home,/Auction House <em>WIP<\/em>/);
+  assert.doesNotMatch(home,/Auction House <em>WIP<\/em>/);
+  const labels2=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
+  assert.deepEqual(labels2.filter(l=>/WIP/.test(l)),[]);
+  assert.ok(labels2.includes('World Info')&&!labels2.some(l=>/N'Zoth/.test(l)));
+  assert.ok(page('world-info').includes('<h1>World Info – N&#39;Zoth</h1>')||page('world-info').includes("<h1>World Info – N'Zoth</h1>"),'the page heading keeps N\'Zoth');
+  assert.match(page('world-info'),/<title>OctoBot · World Info – N(?:'|&#39;)Zoth<\/title>/);
+});
+
+test('the header box model is fixed in the shared theme, so every tab has the same header height',()=>{
+  const css=readFileSync(new URL('site-theme.css',docs),'utf8');
+  assert.match(css,/\.site-header,\.planner-view \.site-header\{box-sizing:border-box\}/);
+  assert.match(css,/min-height:74px/);
 });

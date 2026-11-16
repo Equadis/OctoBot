@@ -12,8 +12,8 @@
       { id: 'sim', href: 'sim/', text: 'Gear Planner' },
       { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
-      { id: 'world-info', href: 'world-info/', text: "World Info – N'Zoth" },
-      { id: 'auction-house', href: 'auction-house/', text: 'Auction House (WIP)' } ] }
+      { id: 'world-info', href: 'world-info/', text: 'World Info' },
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;

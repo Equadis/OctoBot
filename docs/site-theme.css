@@ -110,3 +110,6 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .tool-btn{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;cursor:pointer}
 .tool-btn:hover,.tool-btn:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
 .tool-btn .flip{display:block;font-size:17px;line-height:1;transform:rotate(90deg)}
+
+/* Same header height on every tab: its 74px minimum includes the bottom padding. Pages that lack a global border-box rule (the Auction House) made it 19px taller. */
+.site-header,.planner-view .site-header{box-sizing:border-box}
