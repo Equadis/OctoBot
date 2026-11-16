@@ -14,7 +14,7 @@ test("auction reads are no-data until a verified full scan exists",async()=>{
   const response=await auctionRoute(request(path),{DB:fake});
   assert.equal(response.status,200);
   const json=await response.json();
-  assert.notEqual(json.completed_at,undefined,path==="summary"?"summary should expose no completedAt":undefined);
+  if(path.endsWith("/summary"))assert.equal(json.completed_at,null);
   if(path.endsWith("/items"))assert.deepEqual(json.items,[]);
  }
 });
