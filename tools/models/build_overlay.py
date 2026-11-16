@@ -1,6 +1,7 @@
 """Builds the whole overlay of converted Goblin and Blood Elf files in one command (README step 9).
 
     python tools/models/build_overlay.py <Data folder> <out folder> [--no-helms] [--only 9:0,10:1] [--limit-helms N]
+                                         [--custom-helms ids.json] [--custom-gear missing.json] [--custom-only]
 
 Writes, under the out folder:
     m2/ skin/ skel/ textures/            converted files, named by invented file ids (bodies from 9,000,000, customisation textures from
@@ -9,6 +10,12 @@ Writes, under the out folder:
     meta/charactercustomization/<id>.json
     helms.json                           Classic helm display id -> {"race:gender": model file id}; for the Worker to merge into Zam's own
                                          helm item data (Zam has helm models for races 1 to 8 only)
+    meta/armor/<slot>/<id>.json          (with --custom-gear) item records for chest, shirt, tabard, wrists, gloves, belt, legs and boots looks Zam
+                                         has none for; textures from 10,100,000 (see custom_gear.py)
+    meta/armor/3/<id>.json, meta/item/<id>.json   (with --custom-gear) shoulder, weapon, shield and ranged looks with their models, from
+                                         10,200,000, and textures from 10,300,000 (see custom_props.py)
+    meta/armor/1/<id>.json               (with --custom-helms) complete item records for OctoWoW helm looks Zam has none for, with their models
+                                         from 9,700,000 and textures from 9,900,000 (see custom_helms.py); --custom-only builds just these
     version.json                         {"version": a fingerprint of every file}; the Worker reports it and the site puts it in asset URLs, so a
                                          rebuilt model set can never be served from an old browser cache
     manifest.json                        every file with its size and sha256, plus counts, missing textures and verification results
@@ -27,6 +34,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import blp  # noqa: E402
 import customisation  # noqa: E402
+import custom_gear  # noqa: E402
+import custom_helms  # noqa: E402
+import custom_props  # noqa: E402
 import helms  # noqa: E402
 import m2v274  # noqa: E402
 import octo_mpq  # noqa: E402
@@ -86,14 +96,14 @@ def character_record(model_id, race, gender, chr_model_id):
                 Character={'RaceFlags': 1, 'ChrModelFlags': 0, 'Race': race, 'Gender': gender, 'ChrModelId': chr_model_id})
 
 
-def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=print):
+def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=print, custom_ids=None, bodies=True, custom_gear_missing=None):
     out = check_output_folder(out)
     client = octo_mpq.Client(data_folder)
     manifest = {'files': {}, 'bodies': {}, 'missing_textures': [], 'verification': {}, 'helms': {}}
     textures = {}                      # client texture path (upper case) -> file id, shared by every body
     started = time.time()
     for k, ((race, gender), (path, chr_id)) in enumerate(sorted(BODIES.items())):
-        if only and (race, gender) not in only:
+        if not bodies or (only and (race, gender) not in only):
             continue
         data = client.read(path)
         if data is None:
@@ -123,8 +133,9 @@ def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=pri
             manifest['missing_textures'].append(tex_path)
             continue
         write(out, f'textures/{tex_id}.webp', blp.blp_to_webp(data)[0], manifest)
-    log(f'textures: {len(textures) - len(manifest["missing_textures"])} written, {len(manifest["missing_textures"])} missing')
-    if with_helms:
+    if bodies:
+        log(f'textures: {len(textures) - len(manifest["missing_textures"])} written, {len(manifest["missing_textures"])} missing')
+    if with_helms and bodies:
         converter = helms.HelmConverter(client)
         wanted = sorted(d for d in converter.info.rows if (converter.info.model(d) or '').lower().startswith('helm'))
         if helm_limit:
@@ -142,6 +153,15 @@ def build(data_folder, out, only=None, with_helms=True, helm_limit=None, log=pri
         write(out, 'helms.json', json.dumps(table, sort_keys=True).encode(), manifest)
         manifest['helms'] = {'display_ids': len(table), 'models': sum(1 for v in converter.done.values() if v), 'failed': converter.failed}
         log(f'helms: {len(table)} display ids, {manifest["helms"]["models"]} models, {len(converter.failed)} unusable')
+    if custom_ids:
+        manifest['custom_helms'] = custom_helms.build_all(client, custom_ids, lambda rel, blob: write(out, rel, blob, manifest), log=log)
+    if custom_gear_missing:
+        with open(os.path.join(REPO, 'docs', 'sim', 'data', 'items', 'catalogue.json'), encoding='utf8') as handle:
+            catalogue = json.load(handle)
+        wanted = custom_gear.wanted_from_missing(custom_gear_missing, catalogue)
+        manifest['custom_gear'] = custom_gear.build_all(client, wanted, lambda rel, blob: write(out, rel, blob, manifest), log=log)
+        props = custom_props.wanted_from_missing(custom_gear_missing, catalogue)
+        manifest['custom_props'] = custom_props.build_all(client, props, lambda rel, blob: write(out, rel, blob, manifest), log=log)
     version = compute_version(manifest['files'])
     write(out, 'version.json', json.dumps({'version': version, 'files': len(manifest['files'])}).encode(), manifest)
     manifest['version'] = version
@@ -159,7 +179,7 @@ def main(argv):
     if len(args) < 2:
         print(__doc__)
         return 2
-    only, limit = None, None
+    only, limit, custom_ids, custom_gear_missing = None, None, None, None
     for i, a in enumerate(argv):
         if a == '--only':
             only = {tuple(int(x) for x in p.split(':')) for p in argv[i + 1].split(',')}
@@ -167,8 +187,17 @@ def main(argv):
         if a == '--limit-helms':
             limit = int(argv[i + 1])
             args = [x for x in args if x != argv[i + 1]]
+        if a == '--custom-gear':
+            with open(argv[i + 1]) as handle:
+                custom_gear_missing = json.load(handle)
+            args = [x for x in args if x != argv[i + 1]]
+        if a == '--custom-helms':
+            with open(argv[i + 1]) as handle:
+                custom_ids = [int(x) for x in json.load(handle)]
+            args = [x for x in args if x != argv[i + 1]]
     try:
-        build(args[0], args[1], only=only, with_helms='--no-helms' not in argv, helm_limit=limit)
+        build(args[0], args[1], only=only, with_helms='--no-helms' not in argv, helm_limit=limit,
+              custom_ids=custom_ids, bodies='--custom-only' not in argv, custom_gear_missing=custom_gear_missing)
     except UnsafeOutput as error:
         print('refused:', error)
         return 1

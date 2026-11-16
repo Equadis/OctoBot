@@ -37,5 +37,14 @@ class RealModels(unittest.TestCase):
             self.assertEqual(len(files), 3)
 
 
+class TrackTimes(unittest.TestCase):
+    def test_a_key_before_its_sequence_starts_is_clamped_not_rejected(self):
+        blob = m2v274.Blob(0)
+        track = {'values': [1, 2], 'times': [90, 150], 'global_sequence': -1, 'interpolation': 0, 'ranges': [(0, 1)]}
+        record = m2v274.write_track(blob, track, [{'start': 100}], 'int16')   # first key is 10 ticks before the sequence
+        self.assertEqual(len(record), 20)
+        self.assertIn(b'\x00\x00\x00\x00\x32\x00\x00\x00', bytes(blob.buf), 'times 0 and 50')
+
+
 if __name__ == '__main__':
     unittest.main()
