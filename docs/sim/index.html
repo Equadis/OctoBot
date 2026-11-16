@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="planner.css?v=20261115-blue1">
   <link rel="stylesheet" href="../quality-select.css?v=1">
   <link rel="stylesheet" href="combat-layout.css?v=20261115-gap1">
-  <script type="module" src="planner.mjs?v=20261116-name1"></script>
+  <script type="module" src="planner.mjs?v=20261116-save10b"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261116-q2">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
@@ -110,8 +110,8 @@
     <section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section>
   </div>
 </dialog>
-<dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" required autocomplete="off"></label><p id="save-build-count" class="muted small"></p><p id="save-error" class="error" role="status"></p><button type="submit">Save</button></form></dialog>
-<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><p id="saved-build-count" class="muted small"></p><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off"></label><div class="library-actions"><button id="export-library" type="button">Export class builds</button><button id="import-library" type="button">Import class builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
+<dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" required autocomplete="off"></label><div class="save-actions"><button type="submit">Save</button><span id="save-error" class="error" role="status" aria-live="polite"></span></div></form></dialog>
+<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off"></label><div class="library-actions"><button id="export-library" type="button">Export class builds</button><button id="import-library" type="button">Import class builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>
 <input id="import-library-file" type="file" accept=".json,application/json" hidden>
 <input id="import-file" type="file" accept=".json,application/json" hidden>
