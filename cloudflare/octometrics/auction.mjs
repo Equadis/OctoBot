@@ -9,6 +9,12 @@ const text=(s,max=100)=>typeof s==='string'&&s.length<=max;
 const validIso=s=>typeof s==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d/.test(s)&&Number.isFinite(Date.parse(s));
 const validId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(s);
 const amount=n=>n===null?true:integer(n,0,4294967295);
+export function expectedPageLength(total,page){
+ if(!integer(total,0,1000000))return null;
+ const pages=Math.max(1,Math.ceil(total/50));
+ if(!integer(page,0,pages-1))return null;
+ return Math.max(0,Math.min(50,total-page*50));
+}
 function normalise(raw){
  if(!raw||!integer(raw.auction_id,1,4294967295)||!integer(raw.item_id,1,4294967295)||
     !integer(raw.quantity,1,100000)||!amount(raw.start_bid)||!amount(raw.current_bid)||
@@ -38,15 +44,31 @@ async function upload(req,env,action){
  const db=env.DB;
  if(action==='start'){
    if(!validIso(body.started_at)||!integer(body.reported_total,0,1000000))return bad('invalid scan header');
-   const existing=await first(db,'SELECT status FROM ah_scans WHERE scan_id=?',body.scan_id);
-   if(existing)return respond({ok:true,duplicate:true,status:existing.status});
-   const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' AND started_at > strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 hours') LIMIT 1");
+   const existing=await first(db,'SELECT status,started_at,reported_total FROM ah_scans WHERE scan_id=?',body.scan_id);
+   if(existing){
+     // Safe retry only for the identical ongoing scan; no completed scan ID reuse.
+     if(existing.status==='uploading'&&existing.started_at===body.started_at&&existing.reported_total===body.reported_total)
+       return respond({ok:true,duplicate:true,status:existing.status});
+     return bad('scan ID already used or different scan header',409);
+   }
+   await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 hours')").run();
+   const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' LIMIT 1");
    if(unfinished)return bad('another upload already in progress',409);
-   await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,"N'Zoth",body.started_at,body.reported_total).run();
+   // Partial unique D1 index also protects concurrent starts.
+   try{
+     await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,"N'Zoth",body.started_at,body.reported_total).run();
+   }catch{return bad('another upload already in progress or duplicate scan ID',409)}
    return respond({ok:true},201);
  }
  const scan=await first(db,"SELECT * FROM ah_scans WHERE scan_id=?",body.scan_id);
  if(!scan)return bad('unknown scan',404);
+ if(action==='complete'&&scan.status==='complete'){
+   if(integer(body.expected_pages,1,30001)&&integer(body.reported_total,0,1000000)&&validIso(body.completed_at)&&
+      scan.expected_pages===body.expected_pages&&scan.reported_total===body.reported_total&&scan.completed_at===body.completed_at)
+     return respond({ok:true,duplicate:true,auction_count:scan.auction_count,duration_ms:scan.duration_ms});
+   return bad('completion does not match published scan',409);
+ }
+ if(action==='fail'&&scan.status==='failed')return respond({ok:true,duplicate:true});
  if(scan.status!=='uploading')return bad('scan no longer uploading',409);
  if(action==='fail'){
    await db.prepare("UPDATE ah_scans SET status='failed',error=? WHERE scan_id=? AND status='uploading'").bind(String(body.reason||'interrupted').slice(0,200),body.scan_id).run();
@@ -54,6 +76,8 @@ async function upload(req,env,action){
  }
  if(action==='page'){
    if(!integer(body.page,0,30000)||!integer(body.response_ms,0,600000)||!Array.isArray(body.items)||body.items.length>50)return bad('invalid page');
+   const expected=expectedPageLength(scan.reported_total,body.page);
+   if(expected===null||body.items.length!==expected)return bad('page outside scan range or incorrect length',409);
    const rows=body.items.map(normalise);
    if(rows.some(r=>!r))return bad('invalid listing');
    if(new Set(rows.map(r=>r.auction_id)).size!==rows.length)return bad('duplicate auction on page');
@@ -68,15 +92,18 @@ async function upload(req,env,action){
  }
  if(action==='complete'){
    if(!integer(body.expected_pages,1,30001)||!integer(body.reported_total,0,1000000)||!validIso(body.completed_at))return bad('invalid completion');
+   if(body.reported_total!==scan.reported_total||body.expected_pages!==Math.max(1,Math.ceil(scan.reported_total/50)))
+     return bad('completion disagrees with original server total',409);
+   if(Date.parse(body.completed_at)<Date.parse(scan.started_at))return bad('completion precedes scan start',409);
    const check=await first(db,"SELECT COUNT(*) n,MIN(page) first_page,MAX(page) last_page,SUM(count) rows FROM ah_pages WHERE scan_id=?",body.scan_id);
    if(check.n!==body.expected_pages||check.first_page!==0||check.last_page!==body.expected_pages-1)return bad('incomplete or missing pages',409);
    const count=await first(db,'SELECT COUNT(*) n,COUNT(DISTINCT auction_id) distinct_auctions FROM ah_listings WHERE scan_id=?',body.scan_id);
    if(count.n!==check.rows||count.n!==count.distinct_auctions)return bad('missing or duplicate listings',409);
    // The AH can change mid-scan; never claim completeness if fewer listings than the server reported.
-   if(count.n<body.reported_total)return bad('fewer auctions than server reported; rescan',409);
+   if(count.n!==scan.reported_total)return bad('auction count differs from original server total; rescan',409);
    const duration=Math.max(0,Date.parse(body.completed_at)-Date.parse(scan.started_at));
    const ops=[
-     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout IS NULL THEN 1 ELSE 0 END,CAST(l2.buyout AS REAL)/l2.quantity,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
+     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
      db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND 1=1 ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id").bind(body.completed_at,body.scan_id,body.scan_id),
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
    ];
