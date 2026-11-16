@@ -1,4 +1,4 @@
-# OctoBot Dressing Room (WIP)
+# OctoBot Dressing Room
 
 Static browser dressing room at `docs/outfitter/`, linked from all dashboard pages.
 Uses the existing OctoWoW equipment catalogue, independent of simulator builds.

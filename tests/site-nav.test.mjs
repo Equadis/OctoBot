@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const BASE='https://equadis.github.io/OctoBot/';
-const ROUTES=['population','status','world-info','outfitter','sim','auction-house'];
+const ROUTES=['population','status','world-info','outfitter','auction-house','sim'];
 const docs=new URL('../docs/',import.meta.url);
 const page=route=>readFileSync(new URL(route+'/index.html',docs),'utf8');
 const source=readFileSync(new URL('site-nav.js',docs),'utf8');
@@ -25,8 +25,8 @@ test('navigation has exactly three groups in the required order',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
-    ["World Info \u2013 N'Zoth",'Dressing Room (WIP)'],
-    ['Gear Planner & DPS Sim (WIP)','Auction House (WIP)']]);
+    ["World Info \u2013 N'Zoth",'Dressing Room'],
+    ['Auction House (WIP)','Gear Planner & DPS Sim (WIP)']]);
   assert.equal(GROUPS.length,3);
 });
 
@@ -41,7 +41,7 @@ test('every page uses the shared script, names itself, and highlights only its o
 });
 
 test('links resolve to the six canonical directory URLs from every page, in the same order',()=>{
-  const expected=['population/','status/','world-info/','outfitter/','sim/','auction-house/'].map(p=>new URL(p,BASE).href);
+  const expected=['population/','status/','world-info/','outfitter/','auction-house/','sim/'].map(p=>new URL(p,BASE).href);
   for(const route of ROUTES){
     const urls=rendered(route,'../').flatMap(g=>g.links).map(l=>{const u=new URL(l.href,new URL(route+'/',BASE));return u.origin+u.pathname;});
     assert.deepEqual(urls,expected,route);
@@ -59,5 +59,20 @@ test('separators are thin borders between groups only, matching the header rule'
 test('the home page lists the tools in the same order as the navigation',()=>{
   const html=readFileSync(new URL('index.html',docs),'utf8');
   const hrefs=[...html.matchAll(/class="home-card" href="([^"]+)"/g)].map(m=>m[1]);
-  assert.deepEqual(hrefs,['population/#server=all','status/','world-info/','outfitter/','sim/','auction-house/']);
+  assert.deepEqual(hrefs,['population/#server=all','status/','world-info/','outfitter/','auction-house/','sim/']);
+});
+
+test('tab size is pinned in the shared theme so pages that restyle .page-nav a cannot make tabs taller or thinner',()=>{
+  const css=readFileSync(new URL('site-theme.css',docs),'utf8');
+  assert.match(css,/\.page-nav \.nav-group a\{[^}]*height:38px[^}]*padding:0 13px[^}]*font-size:12px/);
+});
+
+test('Dressing Room is no longer labelled WIP, while Auction House and Gear Planner still are',()=>{
+  const labels=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
+  assert.ok(labels.includes('Dressing Room'));
+  assert.ok(!labels.some(l=>/Dressing Room.*WIP/.test(l)));
+  assert.ok(page('outfitter').includes('<title>OctoBot · Dressing Room</title>')&&page('outfitter').includes('<h1>Dressing Room</h1>'));
+  const home=readFileSync(new URL('index.html',docs),'utf8');
+  assert.doesNotMatch(home,/Dressing Room <em>WIP<\/em>/);
+  assert.match(home,/Auction House <em>WIP<\/em>/);
 });
