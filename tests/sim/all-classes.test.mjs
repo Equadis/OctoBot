@@ -24,7 +24,7 @@ test('every official class dataset and its presets round trip independently',()=
   const another=CLASS_DEFINITIONS.find(c=>c.id!==cls.id);
   assert.throws(()=>validateBuild({...build,classId:another.id},data));
  }
- assert.equal(total,476);assert.equal(BUILDS_PER_CLASS,100);assert.equal(MAX_BUILD_BYTES,64000);
+ assert.equal(total,476);assert.equal(BUILDS_PER_CLASS,10);assert.equal(MAX_BUILD_BYTES,64000);
 });
 test('class masks, armour, dual wield and relic slots are class-aware',()=>{
  const wand={id:1,classs:2,subclass:19,slot:26,reqlevel:1};
