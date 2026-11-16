@@ -101,6 +101,7 @@ function applyBuild(candidate, message, legacy=false) {
   $('character-level').value = build.level;
   $('character-race').value = build.race;
   racePicker?.sync();
+  $('character-name').value = build.characterName || '';
   persistDraft();
   config?.render();
   settingsControls?.render();
@@ -357,7 +358,7 @@ function wireControls() {
   $('reset-results').addEventListener('click',()=>{$('simulation-output').replaceChildren();feedback('Results reset.');});
   $('reset-combat-log').addEventListener('click',()=>{$('combat-log-output').replaceChildren(element('p','small muted','Run a simulation to see the combat log.'));feedback('Combat log reset.');});
   config=configuration({getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker?.lookup(id),onChange:controls=>{const classOptions={...build.classOptions};if(controls.buffIds.includes('wizard-oil-mh')){if(classId==='rogue')classOptions.mhPoison='None';if(classId==='shaman')classOptions.mhImbue='None';}if(controls.buffIds.includes('wizard-oil-oh')&&classId==='rogue')classOptions.ohPoison='None';build=validateBuild({...build,classOptions,controls},data);renderClassOptions();persistDraft();render();}});
-  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
+  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level'], ['character-name', 'characterName']]) {
     $(id).addEventListener('change', async () => {
       try {
         const restored=restoreLegacyBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
@@ -375,12 +376,12 @@ function wireControls() {
   $('reset-all').hidden=false;
   $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
-    try{$('save-name').value=build.name;$('save-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
+    try{$('save-name').value=$('character-name').value.trim()||build.name;$('save-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
     catch(error){feedback(error.message,true);}
   });
   $('save-form').addEventListener('submit',async event=>{
     event.preventDefault();
-    try{const next=validateBuild({...build,name:$('save-name').value.trim()},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
+    try{const next=validateBuild({...build,characterName:$('character-name').value.trim(),name:$('save-name').value.trim()},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
     catch(error){$('save-error').textContent=error.message;}
   });
   $('load-build').addEventListener('click',async()=>{try{$('saved-build-search').value='';$('saved-library-status').textContent='';await showSavedBuilds();$('load-dialog').showModal();}catch(error){feedback(error.message,true);}});

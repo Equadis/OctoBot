@@ -4,9 +4,9 @@ import {readFileSync} from 'node:fs';
 const docs=new URL('../docs/',import.meta.url);
 const read=p=>readFileSync(new URL(p,docs),'utf8');
 const css=read('quality-select.css');
-const COLOURS={0:'#9d9d9d',1:'#eee',2:'#1eff70',3:'#69a8ff',4:'#c786ff',5:'#ffab55'};
+const COLOURS={0:'var(--quality-0)',1:'var(--quality-1)',2:'var(--quality-2)',3:'var(--quality-3)',4:'var(--quality-4)',5:'var(--quality-5)'};
 
-test('every rarity option and the closed dropdown use the same colour as item names in the Dressing Room',()=>{
+test('every rarity option and the closed dropdown use the shared rarity colours, as the Dressing Room item names do',()=>{
   const names=read('outfitter/outfitter.css');
   for(const [q,colour] of Object.entries(COLOURS)){
     assert.ok(names.includes(`.quality-${q}{color:${colour}}`),`Dressing Room item colour for quality ${q}`);

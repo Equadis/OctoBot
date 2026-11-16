@@ -214,11 +214,8 @@ test('the rarity dropdown and item names use the shared rarity colours',()=>{
   const html=read('auction-house/index.html'),css=read('auction-house/auction.css');
   assert.match(html,/<select id="quality" class="quality-select">/);
   assert.match(html,/quality-select\.css/);
-  const names=read('outfitter/outfitter.css');
-  for(const [q,c] of [[2,'#1eff70'],[3,'#69a8ff'],[4,'#c786ff'],[5,'#ffab55']]){
-    assert.ok(names.includes(`.quality-${q}{color:${c}}`));
-    assert.ok(css.includes(`.ah-q${q} a{color:${c}}`),'item name colour for quality '+q);
-  }
+  assert.match(css,/\.ah-q0 a,\.ah-q1 a,\.ah-q2 a,\.ah-q3 a,\.ah-q4 a,\.ah-q5 a,\.ah-q6 a\{color:var\(--item-quality\)\}/);
+  for(let q=0;q<=6;q++)assert.ok(css.includes(`.ah-q${q}{--item-quality:var(--quality-${q})}`),'rarity variable for quality '+q);
 });
 test('the page uses UK English and the shared palette instead of one-off colours',()=>{
   const css=read('auction-house/auction.css'),text=read('auction-house/index.html')+read('auction-house/auction.js');

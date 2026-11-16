@@ -40,3 +40,30 @@ export function left(ms,capturedAt,now=Date.now()){
 }
 export const dateTime=s=>s?new Date(s).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'})+' UTC':'No data';
 export const count=n=>n==null?'–':Number(n).toLocaleString('en-GB');
+
+
+/** Copper split into gold, silver and copper pieces, for colouring each unit. */
+export function moneyParts(n){
+  if(n==null||!Number.isFinite(Number(n)))return null;
+  const v=Number(n);
+  if(v>0&&v<1)return [{unit:'c',text:'<1c'}];
+  const c=Math.round(Math.max(0,v)),g=Math.floor(c/10000),s=Math.floor(c%10000/100),b=c%100,out=[];
+  if(g)out.push({unit:'g',text:g+'g'});
+  if(g||s)out.push({unit:'s',text:s+'s'});
+  out.push({unit:'c',text:b+'c'});
+  return out;
+}
+/** Colour class for the estimated time left: under 2h red, under 8h orange, under 24h yellow, under 72h green, otherwise none. */
+export function timeClass(ms,capturedAt,now=Date.now()){
+  const r=remaining(ms,capturedAt,now);
+  if(r===null)return null;
+  const hours=r/3600000;
+  return hours<2?'ah-time-red':hours<8?'ah-time-orange':hours<24?'ah-time-yellow':hours<72?'ah-time-green':null;
+}
+/** The amount to show in a bid column, or null (shown as a hyphen) when it merely repeats the stack or unit buyout. */
+export function bidAmount(current,start,stackBuyout,unitBuyout){
+  const value=Number(current)>0?Number(current):Number(start);
+  if(!Number.isFinite(value))return null;
+  const same=x=>x!=null&&Number.isFinite(Number(x))&&Number(x)>0&&Math.abs(Number(x)-value)<1e-9;
+  return same(stackBuyout)||same(unitBuyout)?null:value;
+}

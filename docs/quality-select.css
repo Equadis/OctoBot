@@ -1,15 +1,15 @@
 /* Quality (rarity) dropdowns: each option is drawn in its item-rarity colour, and the closed dropdown takes the colour of the
-   selected option. Palette matches the Dressing Room item names. Add class="quality-select" to a select whose option values are 0 to 5. */
+   selected option. Colours are the shared --quality-N variables from site-theme.css (the Gear Planner's palette). Add class="quality-select" to a select whose option values are 0 to 5. */
 .quality-select option{background:#182333;color:#e5e9ef}
-.quality-select option[value="0"]{color:#9d9d9d}
-.quality-select option[value="1"]{color:#eee}
-.quality-select option[value="2"]{color:#1eff70}
-.quality-select option[value="3"]{color:#69a8ff}
-.quality-select option[value="4"]{color:#c786ff}
-.quality-select option[value="5"]{color:#ffab55}
-.quality-select:has(option[value="0"]:checked){color:#9d9d9d}
-.quality-select:has(option[value="1"]:checked){color:#eee}
-.quality-select:has(option[value="2"]:checked){color:#1eff70}
-.quality-select:has(option[value="3"]:checked){color:#69a8ff}
-.quality-select:has(option[value="4"]:checked){color:#c786ff}
-.quality-select:has(option[value="5"]:checked){color:#ffab55}
+.quality-select option[value="0"]{color:var(--quality-0)}
+.quality-select option[value="1"]{color:var(--quality-1)}
+.quality-select option[value="2"]{color:var(--quality-2)}
+.quality-select option[value="3"]{color:var(--quality-3)}
+.quality-select option[value="4"]{color:var(--quality-4)}
+.quality-select option[value="5"]{color:var(--quality-5)}
+.quality-select:has(option[value="0"]:checked){color:var(--quality-0)}
+.quality-select:has(option[value="1"]:checked){color:var(--quality-1)}
+.quality-select:has(option[value="2"]:checked){color:var(--quality-2)}
+.quality-select:has(option[value="3"]:checked){color:var(--quality-3)}
+.quality-select:has(option[value="4"]:checked){color:var(--quality-4)}
+.quality-select:has(option[value="5"]:checked){color:var(--quality-5)}
