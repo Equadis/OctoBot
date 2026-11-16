@@ -8,7 +8,7 @@ let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261113-swaps1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
-import { buildLibrary, BUILDS_PER_CLASS } from './core/build-library.mjs?v=20261112-audit1';
+import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261113-swaps1';
 import { itemPicker } from './item-picker.mjs?v=20261114-ammo2';
@@ -288,7 +288,6 @@ function openItem(slot) {
 
 async function showSavedBuilds(){
   const entries=await library.list();
-  $('saved-build-count').textContent=`${entries.length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;
   const query=$('saved-build-search').value.trim().toLowerCase();
   $('saved-builds').replaceChildren();
   if(!entries.length)$('saved-builds').append(element('p','muted','No named builds saved yet.'));
@@ -300,7 +299,7 @@ async function showSavedBuilds(){
     const load=element('button','','Load');load.type='button';
     load.addEventListener('click',async()=>{try{const restored=await restoreSaved(entry.build);applyBuild(restored.build,'Saved build loaded.'+(restored.changes.length?' '+restored.changes.join('; ')+'. Original saved copy retained.':''));$('load-dialog').close();}catch(error){feedback(error.message,true);}});
     const remove=element('button','delete-build','Delete');remove.type='button';remove.setAttribute('aria-label',`Delete ${entry.name}`);
-    remove.addEventListener('click',async()=>{try{await library.remove(entry.name);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.addEventListener('click',async()=>{try{await library.save(entry.build,entry.savedAt);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);$('saved-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;}catch(error){feedback(error.message,true);}});
+    remove.addEventListener('click',async()=>{try{await library.remove(entry.name);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.addEventListener('click',async()=>{try{await library.save(entry.build,entry.savedAt);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);}catch(error){feedback(error.message,true);}});
     actions.append(load,remove);row.append(label,actions);$('saved-builds').append(row);
   }
 }
@@ -376,7 +375,7 @@ function wireControls() {
   $('reset-all').hidden=false;
   $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
-    try{$('save-name').value=$('character-name').value.trim()||build.name;$('save-build-count').textContent=`${(await library.list()).length} / ${BUILDS_PER_CLASS} ${currentClass.name} builds`;$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
+    try{$('save-name').value=defaultSaveName($('character-name').value, $('build-name').value);$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
     catch(error){feedback(error.message,true);}
   });
   $('save-form').addEventListener('submit',async event=>{
