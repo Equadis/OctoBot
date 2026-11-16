@@ -135,6 +135,8 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
        return {
         auction_id:row.auction_id,item_id:row.item_id,variant:row.variant,quantity:row.quantity,
         item_name:info?.item_name??null,quality:info?.quality??null,icon_url:info?.icon_url??null,
+        item_level:info?.item_level??null,req_level:info?.req_level??null,class_id:info?.class_id??null,
+        subclass_id:info?.subclass_id??null,slot_id:info?.slot_id??null,
         start_bid:row.start_bid,current_bid:row.current_bid,min_next_bid:row.min_next_bid,
         buyout:row.buyout,owner_guid:row.owner_guid,time_left_ms:row.time_left_ms,
         captured_at:row.captured_at
