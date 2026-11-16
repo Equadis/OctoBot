@@ -25,7 +25,7 @@ test('navigation has exactly three groups in the required order',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
-    ['Gear Planner & DPS Sim (WIP)','Dressing Room'],
+    ['GearPlanner (WIP)','Dressing Room'],
     ["World Info \u2013 N'Zoth",'Auction House (WIP)']]);
   assert.equal(GROUPS.length,3);
 });
