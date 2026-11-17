@@ -284,3 +284,25 @@ describe("durable independent raid recovery", () => {
     expect(ended(restored)[0]).toMatchObject({id:701,endReason:"kill_confirmed"});
   });
 });
+
+it("a resumed raid keeps its identity even when its original slot has been reused",()=>{
+  const t=make({rosterCap:40,maxConcurrentRaids:3});
+  const a=group("A",40),b=group("B",40),c=group("C",40);
+  feed(t,a,1,10);feed(t,[...a,...b],11,17);feed(t,b,18,24);
+  expect(ended(t).some(s=>s.id===701)).toBe(true);
+  feed(t,[...b,...c],25,30);
+  const obs=t.observe(view([...a,...b,...c],31));
+  expect(obs.events).toContainEqual(expect.objectContaining({kind:"resumed",number:701}));
+  expect(live(t).map(s=>s.id).sort()).toEqual([701,702,703]);
+  expect(live(t).reduce((total,s)=>total+s.players,0)).toBe(120);
+});
+it("confirms the specified pending raid, not just the first pending slot",()=>{
+  const t=make({rosterCap:40});
+  const a=group("A",40),b=group("B",40);
+  feed(t,a,1,10);feed(t,[...a,...b],11,17);feed(t,[],18,19);
+  const target=t.pendingClears().find(p=>p.number===702);
+  expect(target).toBeDefined();
+  expect(t.confirmClearNow(T0+19*M,target)?.number).toBe(702);
+  expect(t.pendingClear()?.number).toBe(701);
+  expect(ended(t).find(s=>s.id===702)?.endReason).toBe("kill_confirmed");
+});

@@ -103,6 +103,7 @@ export function createRaidZonePipeline(
   const { zone, watch, lanes, chronicle, broadcasts, durationStore, snapshots, lairActivity, push } = services;
   const { buffTracker, raidStateStore, lockoutStore, store, whisperPool, yellSink, broadcastWhisper, getWhisperQueue, raidTelemetry } = shared;
   const lastChronicleCheck = new Map<string, number>();
+  const appliedDurations = new Map<string, string>();
 
   // The single fan-out: this lair's Discord post + per-capital yell + per-side subscriber whisper.
   const delivery = new AlertDelivery({
@@ -171,6 +172,14 @@ export function createRaidZonePipeline(
   const processLane = async (lane: DetectionLane, split: FactionSplit, complete: boolean, now: number): Promise<void> => {
     const { events, census } = lane.watch.observe({ present: lane.players(split), complete, at: now });
 
+    // Classify sustained departures before saving. Otherwise a crash between the initial
+    // checkpoint and later alert delivery can preserve a disband as a trusted finish.
+    for (const session of lane.watch.sessions().sessions) {
+      if (session.status !== "ended" || session.endReason !== "departed" || session.endedAt === undefined) continue;
+      const ms = session.endedAt - session.formedAt;
+      if (ms < watch.raidDisbandMs) lane.watch.annotateEnd(session.id, "disbanded");
+      else if (!isPlausibleClear(ms, watch.raidMinClearMs) || ms > watch.raidMaxClearMs) lane.watch.annotateEnd(session.id, "interrupted");
+    }
     // Save the whole lane atomically, including ended cohorts and original guild/session IDs.
     const persist = async (): Promise<void> => {
       if (raidStateStore.saveCheckpoint) {
@@ -185,10 +194,30 @@ export function createRaidZonePipeline(
       }
       await lockoutStore.save(lane.label, lane.watch.lockoutSnapshot());
     };
+    // Replay checkpointed duration changes idempotently. A crash after the checkpoint but
+    // before the sample write is recovered on boot, and a retraction cannot be lost either.
+    const reconcileDurations = async (): Promise<void> => {
+      const sessions = lane.watch.sessions().sessions;
+      const keys = new Set(sessions.map(s => `${lane.label}|${s.key}`));
+      for (const key of appliedDurations.keys()) {
+        if (key.startsWith(`${lane.label}|`) && !keys.has(key)) appliedDurations.delete(key);
+      }
+      for (const session of sessions) {
+        const key = `${lane.label}|${session.key}`;
+        if (session.status !== "ended" && !session.resumed) continue;
+        const revision = [session.status === "ended" ? "end" : "resume", session.endedAt, session.confirmedAt, session.resumedAt, session.endReason, session.trusted].join("|");
+        if (appliedDurations.get(key) === revision) continue;
+        const ms = (session.endedAt ?? session.formedAt) - session.formedAt;
+        if (session.status === "ended" && session.trusted && isPlausibleClear(ms, watch.raidMinClearMs) && ms <= watch.raidMaxClearMs) {
+          await durationStore.record({ms, ts:new Date(session.confirmedAt ?? now), sessionKey:session.key, valid:true});
+        } else {
+          await durationStore.invalidate?.(session.key);
+        }
+        appliedDurations.set(key, revision);
+      }
+    };
     await persist();
-    for (const session of lane.watch.sessions().sessions) {
-      if (session.status !== "ended" && session.resumed) await durationStore.invalidate?.(session.key);
-    }
+    await reconcileDurations();
 
     // Followed a blind gap: the tracker already resumed-or-discarded its raid; skip this read so a
     // crash-and-refill isn't read as a raid starting or ending.
@@ -337,20 +366,10 @@ export function createRaidZonePipeline(
         return;
       }
       // One "raid has ended" alert per cycle (deduped) — the recap AND the park CTA in one post.
+      // The checkpoint is the durable source for learning, not this alert path.
+      await persist();
+      await reconcileDurations();
       await gateAndAnnounce(clearedRaidEvent(clear.peak, killConfirmed, clear.number, ms));
-      const session = lane.watch.sessions().sessions.find(s=>s.id===clear.number && s.status==='ended');
-      if (!session?.trusted || !isPlausibleClear(ms, watch.raidMinClearMs) || ms > watch.raidMaxClearMs) return;
-      await (async () => {
-        await durationStore.record({ ms, ts: new Date(now), sessionKey: session.key, valid: true });
-        const [learned, samples] = await Promise.all([durationStore.median(watch.raidLearnMinSamples), durationStore.count()]);
-        logger.info(
-          `${zone.raidName} raid clear recorded: ~${mins(ms)}m (peak ${clear.peak}, ${samples} samples; ` +
-            (learned
-              ? `learned median ${mins(learned)}m now driving the about-to-clear heads-up`
-              : `need ${watch.raidLearnMinSamples} to switch off the ${mins(watch.raidDurationEstimateMs)}m estimate`) +
-            ")",
-        );
-      })().catch((error) => logger.debug(`duration: ${describeError(error)}`));
     };
 
     // During a departure WE detected, seek a Chronicle kill by one of this raid's roster to confirm
@@ -417,6 +436,7 @@ export function createRaidZonePipeline(
     const endingElapsedMs = lane.watch.raidElapsedMs(now);
     // Persist final classification and Chronicle confirmations, not just the pre-alert state.
     await persist();
+    await reconcileDurations();
     if (endingElapsedMs !== null && !lane.watch.pendingClear()) {
       const predictedMs = await predictRaidDurationMs();
       if (raidEndingDue(endingElapsedMs, predictedMs, watch.raidEndingLeadMs)) {

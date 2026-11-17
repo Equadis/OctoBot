@@ -29,6 +29,7 @@ export function auditRaidHistory(rows,now=Date.now()){
       if(eid)seen.add(eid);
       if(r.type==='raid_sessions'){
         if(!Array.isArray(p.sessions)||p.schema!==1||!Number.isFinite(p.seq)){malformed++;continue;}
+        if(p.sessions.some(s=>!cleanSession(s,now))){malformed++;continue;}
         snapshots.push(r);
         for(const s of p.sessions)addRevision(s,r);
       }else if(r.type==='raid_session_ended'||r.type==='raid_session_revision'){

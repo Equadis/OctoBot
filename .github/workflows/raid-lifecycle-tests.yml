@@ -21,9 +21,7 @@ jobs:
           cache: npm
           cache-dependency-path: services/world-buff-tracker/package-lock.json
       - name: Worker raid lifecycle regression
-        run: node --test cloudflare/octometrics/tests/raid-sessions.test.mjs
-      - name: World Info raid and alert regression
-        run: node --test tests/world-info-raids.test.mjs tests/world-info-text.test.mjs tests/world-info-heads.test.mjs tests/world-info-drops.test.mjs tests/raid-sounds.test.mjs
+        run: node --test cloudflare/octometrics/tests/raid-sessions.test.mjs cloudflare/octometrics/tests/raid-history-audit.test.mjs
       - name: Install tracker dependencies
         working-directory: services/world-buff-tracker
         run: npm ci

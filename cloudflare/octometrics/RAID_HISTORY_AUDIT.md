@@ -1,6 +1,12 @@
 # Production raid history audit
 
-Run from the repository root with authenticated Wrangler. Read-only; retain all original rows.
+Run from the repository root with authenticated Wrangler. Read-only; retain all original rows. On Windows, the complete paginated audit is one command:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\cloudflare\octometrics\audit-production-raid-history.ps1
+```
+
+Alternatively, export pages manually:
 
 ```powershell
 npx wrangler d1 execute octometrics --remote --config .\wrangler.metrics.toml --command "SELECT id,type,realm,observed_at,payload_json FROM metric_events WHERE type IN ('raid_sessions','raid_session_ended','raid_session_revision') ORDER BY id LIMIT 1000" --json > raid-history-1.json

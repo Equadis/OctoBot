@@ -111,11 +111,12 @@ export class MongoDurationStore implements DurationStore {
     // Legacy unkeyed observations cannot be linked to a raid or a later retraction.
     // Retain them in Mongo for audit, but do not use them for authoritative predictions.
     const verified = { valid: true, sessionKey: { $type: "string" as const } };
+    const unique = [{ $match: verified }, { $sort: { ts: -1, _id: -1 } }, { $group: { _id: "$sessionKey", doc: { $first: "$ROOT" } } }, { $replaceRoot: { newRoot: "$doc" } }];
     const db: DurationDb = {
       insert: (doc) => doc.sessionKey ? collection.updateOne({sessionKey:doc.sessionKey},{$set:doc},{upsert:true}).then(()=>undefined) : collection.insertOne(doc).then(() => undefined),
       invalidate: (sessionKey) => collection.updateMany({sessionKey},{$set:{valid:false}}).then(()=>undefined),
-      recent: (limit) => collection.find(verified).sort({ ts: -1 }).limit(limit).toArray(),
-      count: () => collection.countDocuments(verified),
+      recent: (limit) => collection.aggregate<DurationDoc>([...unique, { $sort: { ts: -1 } }, { $limit: limit }]).toArray(),
+      count: async () => (await collection.aggregate<{ count:number }>([...unique, { $count: "count" }]).next())?.count ?? 0,
       close: releaseSharedClient,
     };
     return new MongoDurationStore(db);
