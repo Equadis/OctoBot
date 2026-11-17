@@ -1,5 +1,5 @@
 import {describe,it,expect,vi} from "vitest";
-import {CATALOGUE_URL,metadataFromCatalogue,fetchAuctionCatalogue} from "./auction-metadata.js";
+import {CATALOGUE_URL,metadataFromCatalogue,fetchAuctionCatalogue,metadataFromItemPage,fetchAuctionItem} from "./auction-metadata.js";
 describe("Auction House item metadata sourced from the existing Gear Planner catalogue",()=>{
  it("maps names, rarity and icon identifiers with the same verified CDN as the planner",()=>{
   const map=metadataFromCatalogue([{id:19019,name:"A Verified Item",quality:4,icon:"INV_Sword_01"}]);
@@ -40,11 +40,26 @@ describe("against the real published catalogue file (docs/sim/data/items/catalog
   const {readFileSync}=await import("node:fs");
   const raw=JSON.parse(readFileSync(new URL("../../../docs/sim/data/items/catalogue.json",import.meta.url),"utf8"));
   const map=metadataFromCatalogue(raw);
-  expect(map.size).toBe(raw.length);                       // every entry has a valid id and name
+  expect(map.size).toBe(raw.length+(raw.some((i:{id:number})=>i.id===4304)?0:1));                       // every entry has a valid id and name
   expect(map.size).toBeGreaterThan(19000);
   const withIcon=[...map.values()].filter(m=>m.icon_url).length;
   expect(withIcon/map.size).toBeGreaterThan(0.98);         // a few malformed icon ids are deliberately dropped
   expect([...map.values()].every(m=>m.quality!==null)).toBe(true);
   expect(map.get(36701)?.icon_url).toBeNull();             // malformed icon id is not turned into a URL
+ });
+});
+
+describe("exact-ID auction metadata recovery",()=>{
+ it("includes Thick Leather when the shared catalogue omits it",()=>{
+  expect(metadataFromCatalogue([]).get(4304)).toMatchObject({item_name:"Thick Leather",quality:1,item_level:40,class_id:7});
+ });
+ it("requires an exact item marker and real database title",()=>{
+  const html='<title>Fletcher&#39;s Cloth - Items - OctoWoW Database</title><div id="tooltip123-generic"><b class="q1">Fletcher&#39;s Cloth</b></div><script>_[123]={icon: \'inv_misc_cloth_01\'}</script>';
+  expect(metadataFromItemPage(123,html)).toMatchObject({item_name:"Fletcher's Cloth",quality:1,icon_url:"https://wow.zamimg.com/images/wow/icons/large/inv_misc_cloth_01.jpg",class_id:null});
+  expect(metadataFromItemPage(124,html)).toBeNull();
+  expect(metadataFromItemPage(123,'<title>Login</title>')).toBeNull();
+ });
+ it("does not fabricate data if the item lookup fails",async()=>{
+  expect(await fetchAuctionItem(123,vi.fn(async()=>new Response("",{status:404})) as typeof fetch)).toBeNull();
  });
 });
