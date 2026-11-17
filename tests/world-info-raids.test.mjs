@@ -56,7 +56,7 @@ async function pageFrom(name,ageMs=0){
 test('Onyxia with two raids shows the tracker ids, guilds and elapsed times — never "Raid 1"',async()=>{
   const {text,r}=await pageFrom('onyxia-two-raids');
   const rows=text.rows();
-  assert.deepEqual(rows.map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
+  assert.deepEqual(rows.map(x=>x.title),['Raid #702 – <Nightfall>','Raid #703 – <Stormguard>']);
   rows.forEach((row,i)=>assert.ok(Math.abs(seconds(row.timer)-r.expected.live[i].elapsedMs/1000)<=3,`${row.timer} vs ${r.expected.live[i].elapsedMs}`));
   assert.equal(text('ony-count'),'2');
   assert.equal(text('ony-count-label'),'Raids in progress:');
@@ -77,7 +77,7 @@ test('back-to-back raids: the second raid has its own clock and the first is "la
   const {text,r}=await pageFrom('onyxia-back-to-back');
   const rows=text.rows();
   assert.equal(rows.length,1);
-  assert.equal(rows[0].title,'Raid #702 – Beta');
+  assert.equal(rows[0].title,'Raid #702 – <Beta>');
   assert.ok(seconds(rows[0].timer)<r.expected.live[0].elapsedMs/1000+5);
   assert.match(text('ony-finished'),/ago$/);
   assert.match(text.el('ony-finished').title,/Raid #701/);
@@ -99,7 +99,7 @@ test('website elapsed time equals tracker elapsed time for every fixture session
 test('stale tracker data is flagged, keeps the same raids and start times, and claims no clear',async()=>{
   const {text}=await pageFrom('onyxia-two-raids',10*MIN);
   assert.equal(text('ony-state'),'Stale');
-  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
+  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 – <Nightfall>','Raid #703 – <Stormguard>']);
   assert.match(text('ony-evidence'),/old .* last known raids/);
   assert.equal(text('ony-clear'),'Stale');
   assert.equal(text('ony-finished'),'No data');
