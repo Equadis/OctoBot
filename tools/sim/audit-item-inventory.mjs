@@ -26,3 +26,6 @@ fs.writeFileSync('item-inventory-audit.json',JSON.stringify({summary,effects:[..
 const unresolvedEffectSamples=[...effects].filter(([,v])=>classifyEquipmentEffect(v.examples[0].raw).status==='unmapped').sort((a,b)=>b[1].count-a[1].count).map(([pattern,v])=>({pattern,count:v.count,example:v.examples[0]}));
 const setExceptions=unparsedSets.map(x=>({...x,text:details[x.id].tooltipText}));
 console.log('ITEM_REVIEW_BEGIN'+JSON.stringify({unresolvedEffectSamples,setExceptions})+'ITEM_REVIEW_END');
+
+console.log('ITEM_SET_PATTERNS_BEGIN'+JSON.stringify([...setLines].filter(([k])=>/^\(#\) Set:/i.test(k)).map(([k,v])=>[v.count,v.examples[0].line,v.examples[0].id]))+'ITEM_SET_PATTERNS_END');
+console.log('ITEM_CONDITIONAL_PATTERNS_BEGIN'+JSON.stringify([...effects].filter(([,v])=>classifyEquipmentEffect(v.examples[0].raw).status==='conditional').map(([k,v])=>[v.count,v.examples[0].raw,v.examples[0].id]))+'ITEM_CONDITIONAL_PATTERNS_END');
