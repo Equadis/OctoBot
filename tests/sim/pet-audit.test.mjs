@@ -24,6 +24,6 @@ test('petless owner modifier is conditional; no sacrifice or pet buffs awarded',
  assert.equal(characterStats(b,d).petAudit.pet,'Imp');
 });
 test('every configured companion is audited and unsupported engines cannot silently omit it',()=>{
- const r=petInventory();assert.equal(r.configuredTypes,13);assert.equal(r.verifiedBaseTables,0);
+ const r=petInventory();assert.equal(r.configuredTypes,26);assert.equal(r.verifiedBaseTables,0);
  for(const [cls,pets] of Object.entries(r.catalogue))for(const pet of Object.keys(pets)){const b=newBuild(cls);b.classOptions.pet=pet;assert.equal(petProfile(b,data(cls)).active,true);assert.ok(petEngineErrors(b,{},data(cls)).length);assert.deepEqual(petEngineErrors(b,{petRulesetRevision:PET_RULESET_REVISION,verifiedPetTypes:[pet]},data(cls)),[]);}
 });

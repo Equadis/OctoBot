@@ -1,9 +1,10 @@
 // Planning-only pet contributions. No imported Vanilla pet baselines or fabricated DPS.
-export const PET_RULESET_REVISION='octo-pet-audit-20261117-1';
+import {HUNTER_FAMILIES,petAbilityCandidates,familyEvidence,trainingInventory} from './pet-training-audit.mjs?v=20261117-pet-audit2';
+export const PET_RULESET_REVISION='octo-pet-audit-20261117-2';
 const hunterGuide='https://octowow.st/index.php/hunter',warlockGuide='https://octowow.st/index.php/warlock';
 const hunterBug='https://octowow.st/bug-report?id=320',unleashedPatch='https://octowow.st/forum/viewtopic.php?p=17845',unleashedFollowup='https://octowow.st/forum/viewtopic.php?p=18613';
 export const PET_CATALOGUE=Object.freeze({
- hunter:{Cat:{},Wolf:{},'Wind Serpent':{},Raptor:{},Boar:{},Bear:{}},
+ hunter:Object.fromEntries(HUNTER_FAMILIES.map(name=>[name,{}])),
  warlock:{Imp:{min:1},Voidwalker:{min:10},Succubus:{min:20},Felhunter:{min:30},Infernal:{min:50,greater:true},Felguard:{min:60,greater:true,durationSeconds:180,cooldownSeconds:1800},Doomguard:{min:60,greater:true}}
 });
 export const PET_ABILITY_FACTS=Object.freeze({
@@ -29,7 +30,9 @@ export function petProfile(build,talentData,owner={}){
  if(!opt||!Number.isInteger(level)||level<1||level>build.level||c==='hunter'&&build.level<10||c==='warlock'&&build.level<opt?.min){
   issues.push('Pet type or level is incompatible with the owner (training/summoning availability needs verification).');return {pet,level,active:false,status:'ineligible',contributions,events,issues,baseStats:null,directBuffs:{applied:[],status:'unverified'}};
  }
+ const abilityCandidates=petAbilityCandidates(c,pet,level);
  issues.push('Companion base attributes, family damage/armour/health modifiers and attack speeds are not verified.');
+ issues.push('Ability rank candidates are reference data, not learned spells. No automatic training or damage projection.');
  issues.push('Direct pet buff eligibility, range and uptime are unresolved. Owner buffs are not automatically copied; only explicitly described talent inheritance is evaluated.');
  if(c==='hunter'){
   use('Endurance Training',t=>{add(t,'Inherited Stamina',scale(owner.stamina,param(t,0)));add(t,'Pet health multiplier contribution',param(t,1),'%')});
@@ -58,7 +61,7 @@ export function petProfile(build,talentData,owner={}){
   use('Unleashed Potential',t=>ev(t,'Oct 23 patch confirms combined Fire/Shadow AP; developer follow-up says SP fix was still pending. No SP assumption or permanent AP applied.',{perStackPct:param(t,0),maxStacks:3,durationSeconds:20,maxStackCombinedAP: Number.isFinite(owner.fireSpellPower)&&Number.isFinite(owner.shadowSpellPower)?(owner.fireSpellPower+owner.shadowSpellPower)*param(t,0)*3/100:null,sources:[unleashedPatch,unleashedFollowup],status:'source-conflict'}));
   if(opt.greater)issues.push('Greater demon duration/control and exact summon availability are not fully validated.');
  }
- return {pet,level,active:true,status:'partial-contributions',baseStats:null,contributions,events,issues,directBuffs:{applied:[],status:'unverified'},source:c==='hunter'?hunterGuide:warlockGuide};
+ return {pet,level,active:true,status:'partial-contributions',baseStats:null,contributions,events,issues,abilityCandidates,familyEvidence:c==='hunter'?familyEvidence(pet):null,directBuffs:{applied:[],status:'unverified'},source:c==='hunter'?hunterGuide:warlockGuide};
 }
 export function petEngineErrors(build,engine,talents){
  if(!PET_CATALOGUE[build.classId]||!build.classOptions?.pet||build.classOptions.pet==='None')return [];
@@ -67,4 +70,4 @@ export function petEngineErrors(build,engine,talents){
  if(!engine||engine.petRulesetRevision!==PET_RULESET_REVISION||!engine.verifiedPetTypes?.includes(p.pet))return ['Selected companion base statistics, abilities and pet ruleset are not verified by the combat engine.'];
  return [];
 }
-export function petInventory(){return {rulesetRevision:PET_RULESET_REVISION,configuredTypes:Object.values(PET_CATALOGUE).reduce((n,v)=>n+Object.keys(v).length,0),verifiedBaseTables:0,liveValidatedTypes:0,catalogue:PET_CATALOGUE,abilityFacts:PET_ABILITY_FACTS,sources:[hunterGuide,warlockGuide,hunterBug,unleashedPatch,unleashedFollowup]};}
+export function petInventory(){return {rulesetRevision:PET_RULESET_REVISION,configuredTypes:Object.values(PET_CATALOGUE).reduce((n,v)=>n+Object.keys(v).length,0),verifiedBaseTables:0,liveValidatedTypes:0,catalogue:PET_CATALOGUE,training:trainingInventory(),abilityFacts:PET_ABILITY_FACTS,sources:[hunterGuide,warlockGuide,hunterBug,unleashedPatch,unleashedFollowup]};}
