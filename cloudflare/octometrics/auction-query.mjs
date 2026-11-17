@@ -29,6 +29,7 @@ export function parseKeys(raw){
   return keys.length>MAX_FAVOURITE_KEYS?null:keys;
 }
 const SORTS={
+  recent:{expr:'latest_listing_seen_at',dir:'DESC',nullable:true},
   name:{expr:"COALESCE(item_name,'Item #'||item_id) COLLATE NOCASE",dir:'ASC'},
   unit_buyout:{expr:'unit_buyout',dir:'ASC',nullable:true},
   stack_buyout:{expr:'(CASE WHEN stack_buyout>0 THEN stack_buyout END)',dir:'ASC',nullable:true},
@@ -42,16 +43,16 @@ const SORTS={
   level:{expr:'req_level',dir:'ASC',nullable:true}
 };
 export const SORT_NAMES=Object.keys(SORTS);
-const COLUMNS="item_id,variant,quantity,listings,unit_buyout,item_name,quality,icon_url,start_bid,current_bid,stack_buyout,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id,cheapest_auction_id";
+const COLUMNS="item_id,variant,quantity,listings,unit_buyout,item_name,quality,icon_url,start_bid,current_bid,stack_buyout,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id,cheapest_auction_id,latest_listing_seen_at";
 
 /** @returns {{error:string}|{sql:string,countSql:string,binds:any[],listingFiltered:boolean,limit:number,offset:number}} */
-export function buildItemsQuery(params,scan,previousScanId){
+export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
   const get=name=>params.get(name);
   const bad=message=>({error:message});
   const limit=Math.min(100,Math.max(1,Number(get('limit'))||50));
   const offset=Math.min(100000,Math.max(0,Number(get('offset'))||0));
   const q=(get('q')||'').trim().slice(0,80).replace(/[!%_]/g,m=>'!'+m);
-  const sort=SORTS[get('sort')||'market_pct'];
+  const sort=SORTS[get('sort')||'recent'];
   if(!sort)return bad('invalid sort');
   const dirParam=get('dir');
   if(dirParam!==null&&dirParam!=='asc'&&dirParam!=='desc')return bad('invalid dir');
@@ -82,8 +83,11 @@ export function buildItemsQuery(params,scan,previousScanId){
   if(ints.stack!==undefined){lw.push('quantity=?');lb.push(ints.stack);}
   if(flag('has_buyout'))lw.push('buyout>0');
   if(owner){lw.push('owner_guid=?');lb.push(owner);}
-  if(timeLeft){const [lo,hi]=TIME_BUCKETS[timeLeft];lw.push('time_left_ms IS NOT NULL AND time_left_ms>'+(lo===0?'-1':'?')+(Number.isFinite(hi)?' AND time_left_ms<=?':''));
-    if(lo!==0)lb.push(lo);if(Number.isFinite(hi))lb.push(hi);}
+  if(timeLeft){const [lo,hi]=TIME_BUCKETS[timeLeft];
+    const remaining="(time_left_ms-MAX(0,ROUND((julianday(?)-julianday(captured_at))*86400000)))";
+    const at=new Date(now).toISOString();
+    lw.push('time_left_ms IS NOT NULL AND '+remaining+'>?'+(Number.isFinite(hi)?' AND '+remaining+'<=?':''));
+    lb.push(at,lo);if(Number.isFinite(hi))lb.push(at,hi);}
   const listingFiltered=lw.length>1;
 
   const binds=[];
@@ -91,12 +95,12 @@ export function buildItemsQuery(params,scan,previousScanId){
   if(listingFiltered){
     pts="ranked AS (SELECT l.*,CASE WHEN buyout>0 THEN CAST(buyout AS REAL)/quantity END unit,"
       +"ROW_NUMBER() OVER (PARTITION BY item_id,variant ORDER BY CASE WHEN buyout>0 THEN 0 ELSE 1 END,CASE WHEN buyout>0 THEN CAST(buyout AS REAL)/quantity END,auction_id) rn,"
-      +"SUM(quantity) OVER (PARTITION BY item_id,variant) qty,COUNT(*) OVER (PARTITION BY item_id,variant) n "
+      +"SUM(quantity) OVER (PARTITION BY item_id,variant) qty,COUNT(*) OVER (PARTITION BY item_id,variant) n,MAX((SELECT first_seen_at FROM ah_first_seen f WHERE f.auction_id=l.auction_id)) OVER (PARTITION BY item_id,variant) latest_listing_seen_at "
       +"FROM ah_listings l WHERE "+lw.join(' AND ')+"),"
-      +"pts AS (SELECT item_id,variant,qty quantity,n listings,unit unit_buyout,item_name,quality,icon_url,start_bid,current_bid,buyout stack_buyout,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id,auction_id cheapest_auction_id FROM ranked WHERE rn=1)";
+      +"pts AS (SELECT item_id,variant,qty quantity,n listings,unit unit_buyout,item_name,quality,icon_url,start_bid,current_bid,buyout stack_buyout,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id,auction_id cheapest_auction_id,latest_listing_seen_at FROM ranked WHERE rn=1)";
     binds.push(...lb);
   }else{
-    pts="pts AS (SELECT p.item_id,p.variant,p.quantity,p.listings,p.unit_buyout,l.item_name,l.quality,l.icon_url,l.start_bid,l.current_bid,l.buyout stack_buyout,l.time_left_ms,l.captured_at,l.item_level,l.req_level,l.class_id,l.subclass_id,l.slot_id,p.cheapest_auction_id "
+    pts="pts AS (SELECT p.item_id,p.variant,p.quantity,p.listings,p.unit_buyout,l.item_name,l.quality,l.icon_url,l.start_bid,l.current_bid,l.buyout stack_buyout,l.time_left_ms,l.captured_at,l.item_level,l.req_level,l.class_id,l.subclass_id,l.slot_id,p.cheapest_auction_id,(SELECT MAX(f.first_seen_at) FROM ah_listings a JOIN ah_first_seen f ON f.auction_id=a.auction_id WHERE a.scan_id=p.scan_id AND a.item_id=p.item_id AND a.variant=p.variant) latest_listing_seen_at "
       +"FROM ah_item_points p LEFT JOIN ah_listings l ON l.scan_id=p.scan_id AND l.auction_id=p.cheapest_auction_id WHERE p.scan_id=?)";
     binds.push(scan.scan_id);
   }
