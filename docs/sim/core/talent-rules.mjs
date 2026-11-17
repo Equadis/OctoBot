@@ -7,6 +7,13 @@ export const TALENT_RULES={
       "scope": "Blessing of Might/Wisdom",
       "stat": "effectivenessPct",
       "param": 0
+    },
+    {
+      "kind": "buff",
+      "source": "might",
+      "stat": "ap",
+      "param": 0,
+      "note": "Only the selected might buff is enhanced; unrelated buffs are unchanged"
     }
   ],
   "429": [
@@ -264,7 +271,7 @@ export const TALENT_RULES={
 export const TALENT_COVERAGE={
   "428": {
     "status": "partial",
-    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
+    "note": "Static enhancement is applied only when its specific buff or pet is selected; other ability effects remain scoped or require verification."
   },
   "429": {
     "status": "partial",
