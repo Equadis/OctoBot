@@ -60,7 +60,7 @@ const ABILITIES={
   melee('Riposte','Sinister Strike/Eviscerate/Riposte/Surprise Attack'),
   profile('Poison damage','unknown','Poisons','Poison application'),
   utility('Cheap Shot','Cheap Shot/Garrote'),utility('Slice and Dice','Slice and Dice/Flourish'),
-  utility('Flourish','Slice and Dice/Flourish'),utility('Expose Armor'),utility('Distract'),
+  utility('Flourish','Slice and Dice/Flourish'),utility('Envenom','Poisons'),utility('Expose Armor'),utility('Distract'),
   utility('Gouge'),utility('Stealth'),utility('Throw','Throw/Deadly Throw'),utility('Deadly Throw','Throw/Deadly Throw')
  ].map(p=>['melee','periodic','unknown'].includes(p.type)?allDmg(p,'Humanoid/Giant/Beast/Dragonkin targets'):p),
  druid:[

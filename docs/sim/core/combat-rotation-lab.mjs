@@ -24,6 +24,7 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
+  if(field==='crusaderModel')policy.crusaderModel={apCoefficient:null,holyBonusMultiplier:1};
   if(field==='arcaneShotModel')policy.arcaneShotModel={flatDamage:null,weaponCoefficient:null,spellPowerCoefficient:null,defense:null};
   if(field==='dualWeaponModel')policy.dualWeaponModel={mainhand:{coefficient:null,flatDamage:null},offhand:{coefficient:null,flatDamage:null},offhandNormalisedSpeed:null};
   if(field==='rendStancePolicy')policy.rendStancePolicy=['Battle','Defensive'];

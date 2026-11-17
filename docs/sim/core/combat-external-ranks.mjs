@@ -1,4 +1,4 @@
-// Pinned third-party, guide and imported talent reference values, not verified live OctoWoW observations.
+// External and official guide reference values; no live verification.
 export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
   {
     "classId": "rogue",
@@ -2765,6 +2765,300 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
         "externalReference": "17348, rank 3, flat vulnerability",
         "importedTalent": "16511, 110% weapon damage; +2% physical, 50 charges or 15 s"
       }
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:crusader-strike",
+    "spellId": 45409,
+    "rank": 1,
+    "learnLevel": 10,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 20,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 30,
+        "max": 30
+      }
+    ],
+    "source": "https://octowow.st/index.php/paladin",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:crusader-strike",
+      "spellId": 45409,
+      "rank": 1,
+      "level": 10,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/paladin",
+      "liveVerified": false
+    },
+    "holyBonus": 5,
+    "requiredPolicy": [
+      "crusaderModel"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:crusader-strike",
+    "spellId": 45410,
+    "rank": 2,
+    "learnLevel": 22,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 40,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 46,
+        "max": 46
+      }
+    ],
+    "source": "https://octowow.st/index.php/paladin",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:crusader-strike",
+      "spellId": 45410,
+      "rank": 2,
+      "level": 22,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/paladin",
+      "liveVerified": false
+    },
+    "holyBonus": 9,
+    "requiredPolicy": [
+      "crusaderModel"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:crusader-strike",
+    "spellId": 45411,
+    "rank": 3,
+    "learnLevel": 34,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 70,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 70,
+        "max": 70
+      }
+    ],
+    "source": "https://octowow.st/index.php/paladin",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:crusader-strike",
+      "spellId": 45411,
+      "rank": 3,
+      "level": 34,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/paladin",
+      "liveVerified": false
+    },
+    "holyBonus": 14,
+    "requiredPolicy": [
+      "crusaderModel"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:crusader-strike",
+    "spellId": 45412,
+    "rank": 4,
+    "learnLevel": 46,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 100,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 106,
+        "max": 106
+      }
+    ],
+    "source": "https://octowow.st/index.php/paladin",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:crusader-strike",
+      "spellId": 45412,
+      "rank": 4,
+      "level": 46,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/paladin",
+      "liveVerified": false
+    },
+    "holyBonus": 21,
+    "requiredPolicy": [
+      "crusaderModel"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:crusader-strike",
+    "spellId": 45413,
+    "rank": 5,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 120,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 160,
+        "max": 160
+      }
+    ],
+    "source": "https://octowow.st/index.php/paladin",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:crusader-strike",
+      "spellId": 45413,
+      "rank": 5,
+      "level": 58,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/paladin",
+      "liveVerified": false
+    },
+    "holyBonus": 29,
+    "requiredPolicy": [
+      "crusaderModel"
+    ]
+  },
+  {
+    "classId": "rogue",
+    "abilityId": "rogue:envenom",
+    "spellId": 52531,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "poison-aura",
+        "stat": "attackPower",
+        "durations": [
+          12000,
+          16000,
+          20000,
+          24000,
+          28000
+        ]
+      }
+    ],
+    "source": "https://octowow.st/index.php/rogue",
+    "referenceSource": "https://octowow.st/index.php/rogue",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "rogue",
+      "abilityId": "rogue:envenom",
+      "spellId": 52531,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "unmeasured live damage, rank learnability, coefficients or timings"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/rogue",
+      "liveVerified": false
+    },
+    "comboSpend": true,
+    "referenceGcdMs": 1000,
+    "refreshStrategy": "actor-buff",
+    "requiredPolicy": [
+      "costOverride"
     ]
   }
 ]);
