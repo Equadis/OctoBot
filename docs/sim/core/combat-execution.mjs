@@ -14,7 +14,7 @@ const key=(s)=>{if(typeof s!=='string'||!s.trim())throw new TypeError('Nonempty 
 const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must be a function');return v;};
 const copy=structuredClone;
 export class CombatEncounter{
- #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;
+ #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;#shields=new Map();#shieldSeq=0;
  constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null}){
   this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');
@@ -50,8 +50,16 @@ export class CombatEncounter{
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
  recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active())this.#record(type,copy(details));}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
+ applyAbsorb({id,targetId,actorId,source,amount:capacity,durationMs,schools=null,refresh='replace'}){
+  key(id);key(source);if(!this.#units.has(targetId)||!this.#units.has(actorId))throw new Error('Unknown absorb unit');positive(capacity,'absorb capacity');integer(durationMs,'absorb duration',1);if(!['replace','keep-stronger'].includes(refresh)||schools!==null&&(!Array.isArray(schools)||!schools.length||schools.some(s=>typeof s!=='string'||!s)))throw new Error('Invalid absorb policy');
+  const k=JSON.stringify([actorId,targetId,id]),old=this.#shields.get(k);if(old&&old.expiresAt>this.timeline.now&&refresh==='keep-stronger'&&old.remaining>=capacity)return false;
+  if(old)this.timeline.cancel(old.ticket);const shield={id,targetId,actorId,source,remaining:capacity,expiresAt:this.timeline.now+durationMs,schools:schools===null?null:[...schools],order:++this.#shieldSeq,ticket:null};
+  shield.ticket=this.timeline.schedule(shield.expiresAt,P.expire,()=>{if(this.#shields.get(k)===shield){this.#shields.delete(k);if(this.#active())this.#record('absorb-expire',{id,actorId,targetId,source,remaining:shield.remaining});}});this.#shields.set(k,shield);this.#record('absorb-apply',{id,targetId,actorId,source,capacity,durationMs,replaced:old?.remaining??0});return true;
+ }
+ #absorb(targetId,school,value){let remaining=value;const shields=[...this.#shields.entries()].filter(([k,s])=>s.targetId===targetId&&s.expiresAt>this.timeline.now&&(!s.schools||s.schools.includes(school))).sort((a,b)=>a[1].order-b[1].order);for(const [k,s] of shields){if(remaining<=0)break;const used=Math.min(remaining,s.remaining);if(used<=0)continue;s.remaining-=used;remaining-=used;this.#record('absorb',{id:s.id,targetId,actorId:s.actorId,source:s.source,school,amount:used,remaining:s.remaining});if(s.remaining===0){this.timeline.cancel(s.ticket);this.#shields.delete(k);}}return value-remaining;}
+ #recordCosts(a,targetId){for(const c of a.costs)if(c.delta!==0)this.#record('resource-change',{actorId:this.#player,targetId,source:a.name,resource:c.resource,delta:c.delta,overflow:0});}
  #checkFinish(){if(this.#finishedAt===null&&!this.#active()){this.#finishedAt=this.timeline.now;this.interrupt('encounter ended');this.#queued.clear();}}
- damage({targetId,value,source,actorId=null,threat=null}){key(source);if(actorId!==null&&!this.#units.has(actorId))throw new Error('Unknown damage actor');amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const effective=Math.min(value,u.health);let generatedThreat=null;if(threat){if(!this.#targets.includes(targetId))throw new Error('Damage threat requires enemy target');if(actorId!==null&&threat.actorId!==actorId)throw new Error('Damage and threat actor mismatch');generatedThreat=this.threat.apply({...threat,enemyIds:[targetId],effective,distribution:'each'}).reduce((n,x)=>n+x.value,0);}u.health-=effective;this.#record('damage',{targetId,source,actorId,raw:value,effective,overkill:value-effective,generatedThreat});this.#checkFinish();return {effective,overkill:value-effective};}
+ damage({targetId,value,source,actorId=null,threat=null,school=null}){key(source);if(actorId!==null&&!this.#units.has(actorId))throw new Error('Unknown damage actor');amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const absorbed=this.#absorb(targetId,school,value),remaining=value-absorbed,effective=Math.min(remaining,u.health);let generatedThreat=null;if(threat){if(!this.#targets.includes(targetId))throw new Error('Damage threat requires enemy target');if(actorId!==null&&threat.actorId!==actorId)throw new Error('Damage and threat actor mismatch');generatedThreat=this.threat.apply({...threat,enemyIds:[targetId],effective,distribution:'each'}).reduce((n,x)=>n+x.value,0);}u.health-=effective;this.#record('damage',{targetId,source,actorId,raw:value,effective,overkill:remaining-effective,...(absorbed?{absorbed}:{}),generatedThreat});this.#checkFinish();return {effective,overkill:remaining-effective,...(absorbed?{absorbed}:{})};}
  heal({targetId,value,source,actorId=null,threat=null}){key(source);if(actorId!==null&&!this.#units.has(actorId))throw new Error('Unknown healing actor');amount(value,'healing');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown healing target');if(!this.#active()||u.health<=0)return {effective:0,overheal:0,ignored:true};const r=effectiveHealing(value,u.maxHealth-u.health);let generatedThreat=null;if(threat){if(actorId!==null&&threat.actorId!==actorId)throw new Error('Healing and threat actor mismatch');if(this.#targets.includes(targetId))throw new Error('Healing threat requires friendly target');if(threat.enemyIds?.some(id=>!this.#targets.includes(id)||!this.#alive(id)))throw new Error('Healing threat requires living enemy targets');generatedThreat=this.threat.apply({...threat,effective:r.effective}).reduce((n,x)=>n+x.value,0);}u.health+=r.effective;this.#record('heal',{targetId,source,actorId,...r,generatedThreat});return r;}
  interrupt(reason='interrupted'){if(!this.#cast)return false;const c=this.#cast;this.#cast=null;for(const ticket of c.tickets||[c.ticket])this.timeline.cancel(ticket);this.#record(c.action.kind==='channel'?'channel-interrupted':'cast-interrupted',{ability:c.action.name,targetId:c.targetId,reason});if(this.#active()&&this.timeline.now<this.#duration)this.#scheduleDecision(this.timeline.now+this.#cadence);return true;}
  #role(id){return id===this.#player?'self':id===this.#pet?'pet':this.#targets.includes(id)?'enemy':this.#allies.includes(id)?'ally':null;}
@@ -70,7 +78,7 @@ export class CombatEncounter{
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
   if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));}
   for(const a of this.#actions.values()){
-   const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)))/1000;
+   const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)),...(a.requiresGcdReady?[this.resources.cooldowns.remaining('gcd')]:[]))/1000;
    const available=resourceLedger(pool,a.costs).ok&&(a.kind!=='queued-melee'||this.#swings.has(a.swingId)&&!this.#queued.has(a.swingId))&&(!a.available||a.available(this,state)===true);
    cooldowns[a.name]=remaining;cooldowns[a.id]=remaining;actions[a.id]=actions[a.name]={kind:a.kind,ready:remaining===0,available};
   }
@@ -97,7 +105,7 @@ export class CombatEncounter{
    this.#queued.set(a.swingId,{action:a,targetId});this.#record('attack-queued',{ability:a.name,targetId,swingId:a.swingId});this.#scheduleDecision(this.timeline.now+this.#cadence);return;
   }
   const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
-  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});
+  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});this.#recordCosts(a,targetId);
   if(a.kind==='instant'){a.resolve(this,targetId);this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
   const completeAt=this.timeline.now+a.castMs;
   if(a.kind==='channel'){
@@ -143,7 +151,7 @@ export class CombatEncounter{
       // retargeting and no automatic refunds; failed queues fall back to white.
       if(queued.targetId===targetId&&this.#allows(a,targetId)&&(!a.available||a.available(this,this.#state())===true)&&(!a.availableForTarget||a.availableForTarget(this,targetId,this.#state())===true)){
        const paid=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});
-       if(paid.ok){replaced=true;this.#record('queued-attack',{ability:a.name,targetId,swingId:s.id});a.resolve(this,targetId);}
+       if(paid.ok){replaced=true;this.#record('queued-attack',{ability:a.name,targetId,swingId:s.id});this.#recordCosts(a,targetId);a.resolve(this,targetId);}
       }
       if(!replaced)this.#record('queued-attack-failed',{ability:a.name,targetId:queued.targetId,swingId:s.id});
      }
