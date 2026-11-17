@@ -1,0 +1,8 @@
+import fs from 'node:fs';import {CombatTimeline,CombatResources,PeriodicEffects,scheduleResourceRegen,REFERENCE_PRIORITIES as P,TIMELINE_REVISION} from '../../docs/sim/core/combat-timeline.mjs';
+const t=new CombatTimeline(),r=new CombatResources(t,{energy:{current:60,max:100}}),p=new PeriodicEffects(t),events=[];
+scheduleResourceRegen(p,r,{id:'fixture-regen',resource:'energy',amount:20,durationMs:6000,intervalMs:2000,priority:P.resource,tickAtExpiry:true,onTick:e=>events.push({time:e.time,event:'regen',energy:e.result.pools.energy.current,overflow:e.result.overflow.energy})});
+p.apply({id:'fixture-dot',durationMs:6000,intervalMs:2000,refresh:'restart',tickAtExpiry:true,tickPriority:P.tick,expirePriority:P.expire,snapshot:{damage:50},onTick:e=>events.push({time:e.time,event:'tick',damage:e.snapshot.damage}),onExpire:e=>events.push({time:e.time,event:'expire'})});
+t.schedule(2000,P.decision,()=>{const a=r.startAction({changes:[{resource:'energy',delta:-40}],cooldowns:[{id:'fixture-action',duration:4000}]});events.push({time:t.now,event:'action',ok:a.ok,energy:r.snapshot().energy.current});});
+const result=t.runUntil(6000);
+const report={revision:TIMELINE_REVISION,synthetic:true,liveVerified:false,classesSimulated:0,events,result,finalResources:r.snapshot(),note:'Fixture inputs and order are chosen for deterministic coverage, not OctoWoW mechanics.'};
+console.log('COMBAT_TIMELINE_AUDIT_BEGIN'+JSON.stringify({events:events.length,result,finalResources:report.finalResources,classesSimulated:0})+'COMBAT_TIMELINE_AUDIT_END');fs.writeFileSync('combat-timeline-audit.json',JSON.stringify(report,null,2));
