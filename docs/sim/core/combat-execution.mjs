@@ -2,7 +2,7 @@ import {CombatTimeline,CombatResources,PeriodicEffects,seededRandom,REFERENCE_PR
 import {resourceLedger,effectiveHealing} from './combat-math.mjs';
 import {evaluatePriority} from './rotations/conditions.mjs';
 // Generic execution primitives. No default spell ranks, attack tables, or class-specific actions.
-export const EXECUTION_REVISION='octo-combat-execution-20261117-1';
+export const EXECUTION_REVISION='octo-combat-execution-20261117-2';
 const integer=(n,label,min=0)=>{if(!Number.isSafeInteger(n)||n<min)throw new RangeError(label+' must be an integer >= '+min);return n;};
 const positive=(n,label)=>{if(!Number.isFinite(n)||n<=0)throw new RangeError(label+' must be positive');return n;};
 const amount=(n,label)=>{if(!Number.isFinite(n)||n<0)throw new RangeError(label+' must be nonnegative');return n;};
@@ -10,7 +10,7 @@ const key=(s)=>{if(typeof s!=='string'||!s.trim())throw new TypeError('Nonempty 
 const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must be a function');return v;};
 const copy=structuredClone;
 export class CombatEncounter{
- #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#done=false;
+ #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;
  constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({})}){
   this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');
@@ -21,12 +21,15 @@ export class CombatEncounter{
   if(!this.#targets.includes(this.#primary)||new Set(this.#targets).size!==this.#targets.length||new Set(this.#allies).size!==this.#allies.length||this.#targets.some(id=>id===this.#player||id===this.#pet||this.#allies.includes(id)))throw new Error('Invalid encounter unit roles');
   for(const a of actions){
    key(a.id);key(a.name);if(this.#actions.has(a.id)||[...this.#actions.values()].some(x=>x.name===a.name))throw new Error('Duplicate action');
-   if(!['instant','cast'].includes(a.kind))throw new Error('Unsupported execution action kind: '+a.kind);
-   integer(a.castMs,'cast duration',a.kind==='cast'?1:0);if(a.kind==='instant'&&a.castMs!==0)throw new Error('Instant action cannot have a cast duration');
+   if(!['instant','cast','channel','queued-melee'].includes(a.kind))throw new Error('Unsupported execution action kind: '+a.kind);
+   integer(a.castMs,'cast duration',['cast','channel'].includes(a.kind)?1:0);
+   if(['instant','queued-melee'].includes(a.kind)&&a.castMs!==0)throw new Error('Instant or queued action cannot have a cast duration');
+   if(a.kind==='channel'){if(!Number.isSafeInteger(a.tickMs)||a.tickMs<=0||a.tickMs>a.castMs||typeof a.tickAtEnd!=='boolean'||typeof a.onTick!=='function')throw new Error('Unsupported execution action kind: channel requires explicit interval, final-tick policy and resolver');}
+   if(a.kind==='queued-melee'){key(a.swingId);if(a.targets.length!==1||a.targets[0]!=='enemy')throw new Error('Queued melee requires enemy target');}
    if(!Array.isArray(a.costs)||!Array.isArray(a.cooldowns)||!Array.isArray(a.targets)||!a.targets.length||a.targets.some(x=>!['enemy','ally','self','pet'].includes(x)))throw new Error('Explicit action costs, cooldowns and targets required');
    for(const c of a.costs){key(c.resource);if(!Number.isFinite(c.delta)||c.delta>0)throw new Error('Start costs must be nonpositive');}
    this.resources.cooldowns.check(a.cooldowns);resourceLedger(this.resources.snapshot(),a.costs);
-   fn(a.resolve,'action resolver');if(a.available!==undefined)fn(a.available,'availability predicate');this.#actions.set(a.id,{...a,costs:copy(a.costs),cooldowns:copy(a.cooldowns),targets:[...a.targets]});
+   if(a.kind!=='channel'||a.resolve!==undefined)fn(a.resolve,'action resolver');if(a.available!==undefined)fn(a.available,'availability predicate');this.#actions.set(a.id,{...a,costs:copy(a.costs),cooldowns:copy(a.cooldowns),targets:[...a.targets]});
   }
   if(!Array.isArray(rows)||!rows.length)throw new Error('Explicit rotation rows required');
   this.#rows=copy(rows);
@@ -37,10 +40,10 @@ export class CombatEncounter{
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
- #checkFinish(){if(this.#finishedAt===null&&!this.#active()){this.#finishedAt=this.timeline.now;this.interrupt('encounter ended');}}
+ #checkFinish(){if(this.#finishedAt===null&&!this.#active()){this.#finishedAt=this.timeline.now;this.interrupt('encounter ended');this.#queued.clear();}}
  damage({targetId,value,source}){key(source);amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const effective=Math.min(value,u.health);u.health-=effective;this.#record('damage',{targetId,source,raw:value,effective,overkill:value-effective});this.#checkFinish();return {effective,overkill:value-effective};}
  heal({targetId,value,source}){key(source);amount(value,'healing');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown healing target');if(!this.#active()||u.health<=0)return {effective:0,overheal:0,ignored:true};const r=effectiveHealing(value,u.maxHealth-u.health);u.health+=r.effective;this.#record('heal',{targetId,source,...r});return r;}
- interrupt(reason='interrupted'){if(!this.#cast)return false;const c=this.#cast;this.#cast=null;this.timeline.cancel(c.ticket);this.#record('cast-interrupted',{ability:c.action.name,targetId:c.targetId,reason});if(this.#active()&&this.timeline.now<this.#duration)this.#scheduleDecision(this.timeline.now+this.#cadence);return true;}
+ interrupt(reason='interrupted'){if(!this.#cast)return false;const c=this.#cast;this.#cast=null;for(const ticket of c.tickets||[c.ticket])this.timeline.cancel(ticket);this.#record(c.action.kind==='channel'?'channel-interrupted':'cast-interrupted',{ability:c.action.name,targetId:c.targetId,reason});if(this.#active()&&this.timeline.now<this.#duration)this.#scheduleDecision(this.timeline.now+this.#cadence);return true;}
  #role(id){return id===this.#player?'self':id===this.#pet?'pet':this.#targets.includes(id)?'enemy':this.#allies.includes(id)?'ally':null;}
  #allows(a,id){return id!=null&&this.#alive(id)&&a.targets.includes(this.#role(id));}
  #state(){
@@ -48,7 +51,7 @@ export class CombatEncounter{
   const pool=this.resources.snapshot();const resources=Object.fromEntries(Object.entries(pool).map(([k,v])=>[k,v.current]));if(pool.mana&&pool.mana.max>0)resources.manaPercent=pool.mana.current/pool.mana.max*100;
   const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent};};
   const aliveTargets=this.#targets.filter(id=>this.#alive(id)),aliveAllies=this.#allies.filter(id=>this.#alive(id));
-  const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:Boolean(this.#cast),channeling:false,targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
+  const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:this.#cast?.action.kind==='cast',channeling:this.#cast?.action.kind==='channel',targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
   // Adapter may supply only missing mechanics (auras, reach, known ranks, etc.).
   // Built-in resource and health values cannot be overwritten.
   const extra=this.#context(this);const state={...extra,...base};
@@ -56,7 +59,7 @@ export class CombatEncounter{
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
   for(const a of this.#actions.values()){
    const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)))/1000;
-   const available=resourceLedger(pool,a.costs).ok&&(!a.available||a.available(this,state)===true);
+   const available=resourceLedger(pool,a.costs).ok&&(a.kind!=='queued-melee'||this.#swings.has(a.swingId)&&!this.#queued.has(a.swingId))&&(!a.available||a.available(this,state)===true);
    cooldowns[a.name]=remaining;cooldowns[a.id]=remaining;actions[a.id]=actions[a.name]={kind:a.kind,ready:remaining===0,available};
   }
   return state;
@@ -77,10 +80,32 @@ export class CombatEncounter{
    const result=evaluatePriority([row],context);if(result){chosen={a,targetId:result.targetId,state};break;}
   }
   if(!chosen){this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
-  const {a,targetId}=chosen;const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
+  const {a,targetId}=chosen;
+  if(a.kind==='queued-melee'){
+   this.#queued.set(a.swingId,{action:a,targetId});this.#record('attack-queued',{ability:a.name,targetId,swingId:a.swingId});this.#scheduleDecision(this.timeline.now+this.#cadence);return;
+  }
+  const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
   this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});
   if(a.kind==='instant'){a.resolve(this,targetId);this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
   const completeAt=this.timeline.now+a.castMs;
+  if(a.kind==='channel'){
+   const c={action:a,targetId,completeAt,tickets:[]};this.#cast=c;
+   // Same-priority insertion order makes any exact-end tick precede completion.
+   for(let offset=a.tickMs;offset<a.castMs||(a.tickAtEnd&&offset===a.castMs);offset+=a.tickMs){
+    const tickIndex=offset/a.tickMs;
+    c.tickets.push(this.timeline.after(offset,P.cast,()=>{
+     if(this.#cast!==c)return;
+     if(!this.#active()||!this.#allows(a,targetId)){this.interrupt('target unavailable');return;}
+     this.#record('channel-tick',{ability:a.name,targetId,tickIndex});a.onTick(this,targetId,tickIndex);
+    }));
+   }
+   c.tickets.push(this.timeline.schedule(completeAt,P.cast,()=>{
+    if(this.#cast!==c)return;this.#cast=null;
+    if(this.#active()&&this.#allows(a,targetId)){this.#record('channel-complete',{ability:a.name,targetId});a.resolve?.(this,targetId);}
+    else this.#record('channel-failed',{ability:a.name,targetId,reason:'target unavailable'});
+    this.#scheduleDecision(this.timeline.now);
+   }));return;
+  }
   const ticket=this.timeline.schedule(completeAt,P.cast,()=>{
    this.#cast=null;
    if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId);}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
@@ -89,15 +114,48 @@ export class CombatEncounter{
  }
  addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve}){
   if(this.#started)throw new Error('Configure auto-attacks before run');key(id);integer(intervalMs,'auto interval',1);integer(firstAtMs,'first auto');fn(resolve,'auto resolver');if(!['continue','skip-during-cast'].includes(castPolicy)||this.#swings.has(id))throw new Error('Invalid auto policy or duplicate hand');
-  const swing={id,intervalMs,nextAt:firstAtMs,lastAt:null,castPolicy,resolve};this.#swings.set(id,swing);
-  const tick=()=>{if(!this.#active())return;const targetId=this.#alive(this.#primary)?this.#primary:this.#targets.find(x=>this.#alive(x));if(!this.#cast||castPolicy==='continue'){swing.lastAt=this.timeline.now;this.#record('auto-attack',{id,targetId});resolve(this,targetId);}else this.#record('auto-skipped',{id,targetId,reason:'casting'});
-   swing.nextAt=this.timeline.now+intervalMs;if(swing.nextAt<=this.#duration&&this.#active())this.timeline.schedule(swing.nextAt,P.tick,tick);
-  };
-  if(firstAtMs<=this.#duration)this.timeline.schedule(firstAtMs,P.tick,tick);
+  const s={id,intervalMs,nextAt:firstAtMs,lastAt:null,castPolicy,resolve,ticket:null,firing:false};this.#swings.set(id,s);this.#scheduleSwing(s);
  }
+ #scheduleSwing(s){
+  if(s.nextAt>this.#duration||!this.#active())return;
+  s.ticket=this.timeline.schedule(s.nextAt,P.tick,()=>{
+   s.ticket=null;if(!this.#active())return;
+   const targetId=this.#alive(this.#primary)?this.#primary:this.#targets.find(x=>this.#alive(x));
+   s.firing=true;try{
+    if(!this.#cast||s.castPolicy==='continue'){
+     s.lastAt=this.timeline.now;const queued=this.#queued.get(s.id);this.#queued.delete(s.id);
+     let replaced=false;
+     if(queued){
+      const a=queued.action;
+      // Cost and cooldown belong to the swing, not the reservation. No
+      // retargeting and no automatic refunds; failed queues fall back to white.
+      if(queued.targetId===targetId&&this.#allows(a,targetId)&&(!a.available||a.available(this,this.#state())===true)){
+       const paid=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});
+       if(paid.ok){replaced=true;this.#record('queued-attack',{ability:a.name,targetId,swingId:s.id});a.resolve(this,targetId);}
+      }
+      if(!replaced)this.#record('queued-attack-failed',{ability:a.name,targetId:queued.targetId,swingId:s.id});
+     }
+     if(!replaced){this.#record('auto-attack',{id:s.id,targetId});s.resolve(this,targetId);}
+    }else this.#record('auto-skipped',{id:s.id,targetId,reason:'casting'});
+   }finally{s.firing=false;}
+   s.nextAt=this.timeline.now+s.intervalMs;this.#scheduleSwing(s);
+  });
+ }
+ // Explicit haste/reset policies. Fractional progress, ceiling to ms, and
+ // already-due swings remaining due are chosen reference conventions.
+ setSwingInterval(id,intervalMs,policy){
+  integer(intervalMs,'auto interval',1);const s=this.#swings.get(key(id));if(!s)throw new Error('Unknown swing');
+  if(!['preserve-progress','reset','next-swing'].includes(policy))throw new Error('Explicit swing timing policy required');
+  const old=s.intervalMs;s.intervalMs=intervalMs;
+  if(s.firing||policy==='next-swing'||s.nextAt<=this.timeline.now)return this.swing(id);
+  const remaining=s.nextAt-this.timeline.now;
+  s.nextAt=this.timeline.now+(policy==='reset'?intervalMs:Math.ceil(remaining*intervalMs/old));
+  if(s.ticket!==null)this.timeline.cancel(s.ticket);s.ticket=null;this.#scheduleSwing(s);return this.swing(id);
+ }
+ cancelQueuedAttack(id){key(id);const q=this.#queued.get(id);if(!q)return false;this.#queued.delete(id);this.#record('queue-cancelled',{ability:q.action.name,targetId:q.targetId,swingId:id});return true;}
  swing(id){const s=this.#swings.get(id);return s?{nextAt:s.nextAt,lastAt:s.lastAt}:null;}
  run({maxEvents=100000}={}){
-  if(this.#started)throw new Error('Encounter instances are single-use');this.#started=true;this.#checkFinish();this.#scheduleDecision(0);
+  if(this.#started)throw new Error('Encounter instances are single-use');for(const a of this.#actions.values())if(a.kind==='queued-melee'&&!this.#swings.has(a.swingId))throw new Error('Queued action requires configured swing: '+a.swingId);this.#started=true;this.#checkFinish();this.#scheduleDecision(0);
   this.timeline.runUntil(this.#duration,{maxEvents});if(this.#cast)this.interrupt('time limit');this.#done=true;
   const durationMs=this.#finishedAt??this.#duration;const totals={damage:0,overkill:0,healing:0,overheal:0,enemyDamage:0,allyHealing:0};
   for(const e of this.#log){if(e.type==='damage'){totals.damage+=e.effective;totals.overkill+=e.overkill;if(this.#targets.includes(e.targetId))totals.enemyDamage+=e.effective;}if(e.type==='heal'){totals.healing+=e.effective;totals.overheal+=e.overheal;if(!this.#targets.includes(e.targetId))totals.allyHealing+=e.effective;}}

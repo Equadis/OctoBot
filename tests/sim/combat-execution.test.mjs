@@ -41,3 +41,31 @@ test('seeded synthetic encounters replay identically',()=>{
  const make=()=>fixture({actions:[hit('hit',0,{resolve:(e,t)=>e.damage({targetId:t,value:Math.floor(e.random()*100),source:'hit'})})]});
  assert.deepEqual(make().run(),make().run());
 });
+
+const channel=(id,extra={})=>hit(id,0,{kind:'channel',castMs:3000,tickMs:1000,tickAtEnd:true,cooldowns:[{id:'gcd',duration:3000}],onTick:(e,target)=>e.damage({targetId:target,value:30,source:id}),resolve:undefined,...extra});
+const queue=(id,extra={})=>hit(id,70,{kind:'queued-melee',swingId:'mh',costs:[{resource:'energy',delta:-30}],cooldowns:[],...extra});
+const auto=(e,extra={})=>e.addAutoAttack({id:'mh',intervalMs:1000,firstAtMs:1000,castPolicy:'continue',resolve:(e,t)=>e.damage({targetId:t,value:20,source:'white'}),...extra});
+test('channels resolve ticks exactly once; final tick is optional and precedes completion',()=>{
+ for(const [tickAtEnd,total] of [[true,90],[false,60]]){const e=fixture({durationMs:3000,actions:[channel('beam',{tickAtEnd})],rows:[row('beam')]});const r=e.run();assert.equal(r.totals.enemyDamage,total);assert.deepEqual(r.events.filter(x=>x.type==='channel-tick').map(x=>x.time),tickAtEnd?[1000,2000,3000]:[1000,2000]);assert.equal(r.events.at(-1).type,'channel-complete');}
+});
+test('channel interruption cancels future ticks including final tick; costs are not refunded',()=>{
+ const e=fixture({durationMs:2500,actions:[channel('beam',{costs:[{resource:'energy',delta:-30}]})],rows:[row('beam')]});e.timeline.schedule(1500,P.resource,()=>e.interrupt('movement'));const r=e.run();assert.equal(r.totals.enemyDamage,30);assert.equal(r.resources.energy.current,70);assert.equal(r.events.filter(x=>x.type==='channel-interrupted').length,1);assert.ok(!r.events.some(x=>x.type==='channel-complete'));
+});
+test('queued strike replaces only its designated swing and spends at impact, not queue time',()=>{
+ const e=fixture({durationMs:2000,actions:[queue('special')],rows:[row('special')]});auto(e);auto(e,{id:'oh',firstAtMs:500});let before;e.timeline.schedule(500,P.resource,()=>{before=e.resources.snapshot().energy.current});const r=e.run();assert.equal(before,100);assert.equal(r.resources.energy.current,40);assert.equal(r.totals.enemyDamage,180);assert.equal(r.events.filter(x=>x.type==='queued-attack').length,2);assert.equal(r.events.filter(x=>x.type==='auto-attack'&&x.id==='mh').length,0);
+});
+test('starved or cancelled queued attacks revert to white swings without duplicate costs',()=>{
+ const e=fixture({durationMs:1000,actions:[queue('special')],rows:[row('special')]});auto(e);e.timeline.schedule(500,P.resource,()=>e.resources.change([{resource:'energy',delta:-100}]));const r=e.run();assert.equal(r.totals.enemyDamage,20);assert.equal(r.events.filter(x=>x.type==='queued-attack-failed').length,1);
+ const c=fixture({durationMs:1000,actions:[queue('special')],rows:[row('special')]});auto(c);c.timeline.schedule(950,P.resource,()=>c.cancelQueuedAttack('mh'));const cr=c.run();assert.equal(cr.totals.enemyDamage,20);assert.equal(cr.resources.energy.current,100);
+});
+test('dynamic swing timings preserve fractional progress, reset, or affect only later swings',()=>{
+ for(const [policy,expected] of [['preserve-progress',[750,1250,1750]],['reset',[1000,1500,2000]],['next-swing',[1000,1500,2000]]]){
+  const e=fixture({durationMs:2000,actions:[hit('idle',0,{available:()=>false})],rows:[row('idle')]});auto(e);e.timeline.schedule(500,P.resource,()=>e.setSwingInterval('mh',500,policy));assert.deepEqual(e.run().events.filter(x=>x.type==='auto-attack').map(x=>x.time),expected);
+ }
+});
+test('swing changes triggered inside a strike do not create duplicate attacks; due swing stays due',()=>{
+ const e=fixture({durationMs:2000,actions:[hit('idle',0,{available:()=>false})],rows:[row('idle')]});auto(e,{resolve:(enc)=>enc.setSwingInterval('mh',500,'preserve-progress')});e.timeline.schedule(1000,P.resource,()=>e.setSwingInterval('mh',800,'reset'));assert.deepEqual(e.run().events.filter(x=>x.type==='auto-attack').map(x=>x.time),[1000,1500,2000]);
+});
+test('queued actions require matching configured swing and invalid timing policy is rejected',()=>{
+ const e=fixture({actions:[queue('special')],rows:[row('special')]});assert.throws(()=>e.run(),/configured swing/);assert.throws(()=>fixture({actions:[channel('beam',{tickMs:0})],rows:[row('beam')]}),/channel requires/);const a=fixture();auto(a);assert.throws(()=>a.setSwingInterval('mh',500,'guess'),/Explicit swing/);
+});
