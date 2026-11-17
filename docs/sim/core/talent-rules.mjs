@@ -194,6 +194,27 @@ export const TALENT_RULES={
       "scope": "Mark/Gift of the Wild",
       "stat": "buffEffectivenessPct",
       "param": 0
+    },
+    {
+      "kind": "buff",
+      "source": "wild",
+      "stat": "str",
+      "param": 0,
+      "note": "Only the selected wild buff is enhanced; unrelated buffs are unchanged"
+    },
+    {
+      "kind": "buff",
+      "source": "wild",
+      "stat": "agi",
+      "param": 0,
+      "note": "Only the selected wild buff is enhanced; unrelated buffs are unchanged"
+    },
+    {
+      "kind": "buff",
+      "source": "wild",
+      "stat": "sta",
+      "param": 0,
+      "note": "Only the selected wild buff is enhanced; unrelated buffs are unchanged"
     }
   ],
   "287": [
@@ -462,7 +483,7 @@ export const TALENT_COVERAGE={
   },
   "285": {
     "status": "partial",
-    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
+    "note": "Static enhancement is applied only when its specific buff or pet is selected; other ability effects remain scoped or require verification."
   },
   "286": {
     "status": "proc-or-conditional",
