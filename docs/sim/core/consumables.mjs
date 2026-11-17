@@ -69,7 +69,7 @@ export function resolveConsumableSelection(controls,prefer='consumables'){
  for(const id of consumableIds){const group=consumableGroup(CONSUMABLE_BY_ID.get(id)||{}),old=LEGACY_GROUPS[group]||[];if(!old.some(id=>buffIds.includes(id)))continue;if(prefer==='consumables')buffIds=buffIds.filter(id=>!old.includes(id));else consumableIds=consumableIds.filter(other=>other!==id);}
  return {...controls,buffIds,consumableIds};
 }
-export function crossConsumableErrors(controls){const next=resolveConsumableSelection(controls);return next.buffIds.length===controls.buffIds.length?[]:['A consumable conflicts with a selected shared buff.'];}
+export function crossConsumableErrors(controls){const next=resolveConsumableSelection(controls);return next.buffIds.length===new Set(controls.buffIds).size?[]:['A consumable conflicts with a selected shared buff.'];}
 
 // Published item text is evidence of exclusivity; shared cooldowns and similar
 // stat names alone are not. Unlisted interactions remain explicitly unresolved.
