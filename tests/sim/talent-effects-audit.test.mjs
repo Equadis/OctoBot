@@ -26,7 +26,7 @@ test('every imported talent has an explicit audit record, including non-sheet me
 test('every mapped rank source exists; no implicit tooltip-first-percentage scraping',()=>{
  for(const t of data.talents){
   for(const rule of rules[t.id]||[]){
-   assert.ok(['global','percent','special','offhand','weapon','ranged','spell','pet','scoped','pending'].includes(rule.kind));
+   assert.ok(['global','percent','special','offhand','weapon','ranged','spell','pet','scoped','buff','pending'].includes(rule.kind));
    if(rule.kind==='pending')continue;
    for(let r=1;r<=t.maxRanks;r++){
     const value=rule.values?.[r-1]??t.rankParameters?.[rule.param??0]?.[r-1];
@@ -166,5 +166,57 @@ if(cls==='priest'){
   assert.equal(r.Spell['Spell Hit'],'0%');
   assert.equal(r['Talent Scope Bonuses']['Holy hit'],'6%');
   assert.equal(r['Talent Scope Bonuses']['Discipline hit'],'6%');
+ });
+}
+
+test('source buff enhancements never apply when the buff is absent',()=>{
+ if(!['warrior','paladin','druid','shaman'].includes(cls))return;
+ const name={warrior:'Improved Shouts',paladin:'Improved Blessings',druid:'Improved Mark of the Wild',shaman:'Enhancing Totems'}[cls];
+ const b=rank(build(),name);
+ const r=rows(b),z=rows(build());
+ assert.equal(r['Base Stats'].Strength,z['Base Stats'].Strength);
+ assert.equal(r.Melee.Power,z.Melee.Power);
+});
+
+if(cls==='warrior')test('Improved Shouts scales only the selected Battle Shout AP contribution',()=>{
+ const b=rank(build(),'Improved Shouts',5);b.controls.buffIds=['battle-shout'];
+ const control=build();control.controls.buffIds=['battle-shout'];
+ near(+row(b,'Melee','Power')-+row(control,'Melee','Power'),58,1);
+});
+
+if(cls==='paladin')test('Improved Blessings scales only selected Might, not total AP',()=>{
+ const b=rank(build(),'Improved Blessings',5);b.controls.buffIds=['might'];
+ const control=build();control.controls.buffIds=['might'];
+ near(+row(b,'Melee','Power')-+row(control,'Melee','Power'),44.4,1);
+});
+
+if(cls==='druid')test('Improved Mark of the Wild adds only 35 percent of selected buff attributes',()=>{
+ const b=rank(build(),'Improved Mark of the Wild',5);b.controls.buffIds=['wild'];
+ const control=build();control.controls.buffIds=['wild'];
+ for(const stat of ['Strength','Agility','Stamina'])
+  near(+row(b,'Base Stats',stat)-+row(control,'Base Stats',stat),4.2,1);
+});
+
+if(cls==='shaman')test('Enhancing Totems augments selected Earth and Air by 25 percent',()=>{
+ const b=rank(build(),'Enhancing Totems',2);b.controls.buffIds=['earth','air'];
+ const control=build();control.controls.buffIds=['earth','air'];
+ near(+row(b,'Base Stats','Strength')-+row(control,'Base Stats','Strength'),24,1);
+ near(+row(b,'Base Stats','Agility')-+row(control,'Base Stats','Agility'),24,1);
+});
+
+if(cls==='warlock'){
+ test('Demonologist grants pet-specific passive Felhunter resistances without a demon it does nothing',()=>{
+  const b=rank(build(),'Master Demonologist',5);
+  const control=rows(b);
+  b.classOptions.pet='Felhunter';const r=rows(b);
+  for(const school of ['Arcane','Fire','Nature','Frost','Shadow']){
+   near(+r.Defence[school+' Res']-+control.Defence[school+' Res'],60,.01);
+  }
+ });
+ test('Rapid Deterioration cast-speed bonus is 6 percent at both ranks, not the 50/100 tick coefficient',()=>{
+  const b=rank(build(),'Rapid Deterioration',1);
+  assert.equal(rows(b)['Talent Scope Bonuses']['Affliction castSpeedPct'],'6%');
+  b.talents[talent('Rapid Deterioration').id]=2;
+  assert.equal(rows(b)['Talent Scope Bonuses']['Affliction castSpeedPct'],'6%');
  });
 }
