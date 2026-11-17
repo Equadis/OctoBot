@@ -66,3 +66,7 @@
 4. Expand the explicit mapping for any remaining genuinely permanent character-sheet effects.
 
 The class-specific registry is `docs/sim/core/talent-rules.mjs`; `tests/sim/talent-effects-audit.test.mjs` verifies rank vectors, class coverage and key regressions. **Merging note:** each class branch uses the same registry filename; consolidate the per-class exports before merging multiple branches, rather than allowing later changes to overwrite earlier class rules.
+
+### Source anomaly requiring live confirmation
+
+`Improved Healing Wave`'s official imported calculator ranks alternately claim **15 seconds, 0.3 seconds, 45 seconds, 0.6 seconds, 75 seconds** cast-time reduction. The extreme ranks are inconsistent with plausible healing cast times. None of these has been converted into a permanent haste bonus; server verification is required before implementing the spell timing.
