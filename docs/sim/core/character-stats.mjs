@@ -138,7 +138,7 @@ export function characterStats(build,talentData,gear={}){
  const rangedCrit=level===60&&base?baseCrit+s.agi*critAgi+s.crit+(rangedSkill-level*5)*.04+(audit.ranged.crit||0):null;
  const rangedHit=s.hit+(audit.ranged.hit||0),rangedMiss=clamp(5+Math.max(0,targetDefense-rangedSkill)*.2-rangedHit);
  const equippedShield=gear.offhand?.classs===4&&gear.offhand?.subclass===6?gear.offhand:null;
- const shieldBlockBase=equippedShield?Number(equippedShield.block??equippedShield.attributes?.Block??equippedShield.tooltipText?.match(/(?:^|\\n)\\s*(\\d+)\\s+Block\\b/i)?.[1]):NaN;
+ const shieldBlockBase=equippedShield?Number(equippedShield.block??equippedShield.attributes?.Block??equippedShield.tooltipText?.match(/(?:^|\n)\s*(\d+)\s+Block\b/i)?.[1]):NaN;
  const shieldBlock=Number.isFinite(shieldBlockBase)?shieldBlockBase*(1+(audit.special.shieldBlockValuePct||0)/100):null;
  const abilities=audit.active?abilityEstimates(c,audit,{spell:{missPct:spellMiss,critPct:spellCrit},heal:{critPct:spellCrit},melee:{missPct:yellow,critPct:crit[0]},ranged:{missPct:clamp(5+Math.max(0,targetDefense-rangedSkill)*.2-s.hit),critPct:rangedCrit===null?null:rangedCrit-(audit.ranged.crit||0)}},build):[];
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
@@ -205,7 +205,7 @@ export function characterStats(build,talentData,gear={}){
    if(v.castFactor!==1)addRow('Cast time multiplier','×'+v.castFactor.toFixed(4));
    if(v.cooldownReductionSeconds)addRow('Cooldown reduction',v.cooldownReductionSeconds+' s');
    if(m.cooldownReductionPct)addRow('Cooldown multiplier','×'+(1-m.cooldownReductionPct/100).toFixed(3));
-   if(v.criticalBonusFactor!==1)addRow('Critical damage bonus','×'+v.criticalBonusFactor.toFixed(3));
+   if(v.criticalBonusFactor!==1&&!['periodic','heal-periodic','utility'].includes(a.profile.type))addRow('Critical damage bonus','×'+v.criticalBonusFactor.toFixed(3));
    if(m.rageCostReduction||m.rageEnergyCostReduction)addRow('Rage cost reduction',num((m.rageCostReduction||0)+(m.rageEnergyCostReduction||0)));
    if(m.energyCostReduction||m.rageEnergyCostReduction)addRow('Energy cost reduction',num((m.energyCostReduction||0)+(m.rageEnergyCostReduction||0)));
    if(m.globalCooldownReductionSeconds)addRow('GCD reduction',m.globalCooldownReductionSeconds+' s');
@@ -213,6 +213,11 @@ export function characterStats(build,talentData,gear={}){
    if(m.durationPct)addRow('Duration multiplier','×'+(1+m.durationPct/100).toFixed(3));
    if(m.absorbPct)addRow('Absorb multiplier','×'+(1+m.absorbPct/100).toFixed(3));
    if(m.manaRefundPct)addRow('Conditional mana refund',pct(m.manaRefundPct,0));
+   if(v.resistReductionPct)addRow('Resistance chance reduction',pct(v.resistReductionPct,1));
+   if(v.rangeBonusYards)addRow('Range increase',v.rangeBonusYards+' yd');
+   if(v.rangeFactor!==1)addRow('Range multiplier','×'+v.rangeFactor.toFixed(3));
+   if(v.threatFactor!==1)addRow('Threat multiplier','×'+v.threatFactor.toFixed(3));
+   if(v.hasteFactor!==1)addRow('Attack speed multiplier','×'+v.hasteFactor.toFixed(3));
   }
   if(calculated.length)group('Calculated Ability Modifiers',calculated);
   if(Object.keys(audit.pet).length){
@@ -220,7 +225,7 @@ export function characterStats(build,talentData,gear={}){
    const row=(n,v,note)=>petRows.push([n,v,note||'Talent contribution only; pet base stats and exact inheritance are not live-verified.']);
    if(p.staminaFromOwnerPct&&s.sta!==null)row('Owner Stamina Contribution',num(s.sta*p.staminaFromOwnerPct/100));
    if(p.intellectFromOwnerPct&&s.int!==null)row('Owner Intellect Contribution',num(s.int*p.intellectFromOwnerPct/100));
-   if(p.armourFromOwnerPct)row('Owner Item Armour Contribution',num(itemArmour*p.armourFromOwnerPct/100));
+   if(p.armourFromOwnerPct)row('Owner Armour Contribution',num(armour===null?null:armour*p.armourFromOwnerPct/100),'Applies published percentage to estimated total owner armour, not pet base armour; live inheritance unverified.');
    if(p.ownerHitCritInheritancePct){row('Inherited Hit Bonus',pct(s.spellHit*p.ownerHitCritInheritancePct/100,2),'Global owner spell hit only. School- or family-specific hit is not inherited.');if(spellCrit!==null)row('Inherited Crit Chance',pct(spellCrit*p.ownerHitCritInheritancePct/100,2));}
    if(p.hit||p.ownerHitCritInheritancePct)row('Total Pet Talent Hit Contribution',pct((p.hit||0)+s.spellHit*(p.ownerHitCritInheritancePct||0)/100,2));
    if(p.crit||p.ownerHitCritInheritancePct)row('Total Pet Talent Crit Contribution',pct(p.ownerHitCritInheritancePct&&spellCrit===null?null:(p.crit||0)+(spellCrit||0)*(p.ownerHitCritInheritancePct||0)/100,2));
@@ -228,6 +233,8 @@ export function characterStats(build,talentData,gear={}){
    if(referenceAP>0&&p.attackPowerFromOwnerRangedPct)row('Pet AP from Reference Ranged AP',num(referenceAP*p.attackPowerFromOwnerRangedPct/100),'Based on explicitly entered reference ranged AP, not an independently verified ranged AP calculation.');
    if(referenceAP>0&&p.spellPowerFromOwnerRangedPct)row('Pet SP from Reference Ranged AP',num(referenceAP*p.spellPowerFromOwnerRangedPct/100),'Based on explicitly entered reference ranged AP.');
    if(p.ownerAndPetHealthRegenPctPer5s&&health!==null)row('Owner Health per 5s',num(health*p.ownerAndPetHealthRegenPctPer5s/100));
+   if(p.spellCrit)row('Pet Talent Spell Crit Bonus',pct(p.spellCrit,2));
+   if(p.spellHit)row('Pet Talent Spell Hit Bonus',pct(p.spellHit,2));
    if(p.damagePct)row('Pet Damage Multiplier','×'+(1+p.damagePct/100).toFixed(3));
    if(petRows.length)group('Calculated Pet Contributions',petRows);
   }
