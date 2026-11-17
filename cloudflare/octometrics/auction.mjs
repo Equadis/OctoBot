@@ -158,6 +158,22 @@ async function readApi(url,env){
    if(url.pathname==='/api/auction/items')return respond({items:[],total:0,has_more:false});
    return respond({listings:[],history:[],error:'no complete scan'});
  }
+ if(url.pathname==='/api/auction/expiry-diagnostics'){
+   const prev=await previous(db,scan);
+   if(!prev)return respond({sample_size:0,reason:'No previous complete scan',scan_id:scan.scan_id});
+   const rows=await all(db,"SELECT c.time_left_ms newer_ms,p.time_left_ms older_ms,c.captured_at newer_at,p.captured_at older_at FROM ah_listings c JOIN ah_listings p ON p.scan_id=? AND p.auction_id=c.auction_id AND p.item_id=c.item_id AND p.variant=c.variant AND p.owner_guid IS c.owner_guid WHERE c.scan_id=? AND c.time_left_ms IS NOT NULL AND p.time_left_ms IS NOT NULL AND julianday(c.captured_at)>julianday(p.captured_at) ORDER BY c.auction_id LIMIT 1000",prev.scan_id,scan.scan_id);
+   const values=rows.map(r=>{
+     const elapsed=Date.parse(r.newer_at)-Date.parse(r.older_at);
+     const decrease=r.older_ms-r.newer_ms;
+     return {elapsed,decrease,drift:Math.abs(elapsed-decrease)};
+   }).filter(r=>Number.isFinite(r.drift)&&r.elapsed>=1000);
+   const median=xs=>{const a=xs.sort((x,y)=>x-y);return a.length?(a[Math.floor((a.length-1)/2)]+a[Math.floor(a.length/2)])/2:null;};
+   return respond({scan_id:scan.scan_id,previous_scan_id:prev.scan_id,sample_size:values.length,
+     median_elapsed_ms:median(values.map(v=>v.elapsed)),median_decrease_ms:median(values.map(v=>v.decrease)),
+     median_absolute_drift_ms:median(values.map(v=>v.drift)),
+     within_2s:values.filter(v=>v.drift<=2000).length,within_10s:values.filter(v=>v.drift<=10000).length,
+     note:'Matching auction IDs across two complete scans; compares packet duration decay with observation time, not actual in-game expiry.'});
+ }
  if(url.pathname==='/api/auction/incomplete-metadata'){
    const rows=await all(db,"SELECT l.item_id,COUNT(*) listings,MAX(CASE WHEN COALESCE(l.item_name,m.item_name) IS NULL THEN 1 ELSE 0 END) missing_name FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND (COALESCE(l.item_name,m.item_name) IS NULL OR COALESCE(l.quality,m.quality) IS NULL OR COALESCE(l.class_id,m.class_id) IS NULL OR COALESCE(l.subclass_id,m.subclass_id) IS NULL OR COALESCE(l.item_level,m.item_level) IS NULL OR COALESCE(l.req_level,m.req_level) IS NULL OR COALESCE(l.icon_url,m.icon_url) IS NULL) AND (m.resolved_at IS NULL OR julianday(m.resolved_at)<julianday('now','-30 minutes')) GROUP BY l.item_id ORDER BY missing_name DESC,listings DESC,l.item_id LIMIT 1000",scan.scan_id);
    return respond({items:rows,scan_id:scan.scan_id});
