@@ -1,73 +1,88 @@
-# Druid — talent effect audit
+# Druid — talent effects audit
 
-**Independent branch:** `audit/talent-effects-druid`; source [official class calculator](https://octowow.st/talents/druid/) (retrieved 2026-11-11T23:29:44.058837+00:00, HTML SHA256 `7137a9837ef004335ceefa79899e196be18fcdde24f303cbbd4615deb26d5bdc`).
+**Branch:** `audit/talent-effects-druid` (isolated, no changes to main).
 
-**Review coverage:** all 54 talents have a classification; 13 have explicitly mapped effect rules. Counts: {"active-or-non-stat":4,"ability-specific":15,"proc-or-conditional":22,"sheet":3,"partial":10}. These are calculator-derived estimates, not verified live combat formulas.
+**Source:** [https://octowow.st/talents/druid/](https://octowow.st/talents/druid/) · snapshot 2026-11-11T23:29:44.058837+00:00 · SHA256 `7137a9837ef004335ceefa79899e196be18fcdde24f303cbbd4615deb26d5bdc`.
 
-**Status guide:** `sheet` contributes to static or weapon-derived numbers, `partial` tracks a subset with remaining combat work, and other categories are intentionally excluded from blanket stats. Every unimplemented entry is a tracked verification gap.
+### Coverage status
 
-| ID | Talent | Max ranks | Status | Mapped / outstanding effect |
+| Measure | Count |
+|---|---:|
+| Imported talent definitions | 54 |
+| Explicitly mapped/reviewed rules | 35 |
+| Talents with an applied static/weapon effect | 6 |
+| Additional talents with scoped tooltip contributions only | 27 |
+| Talents without numeric rules (recorded but pending) | 19 |
+
+Status labels: `partial`: 32; `sheet`: 3; `proc-or-conditional`: 16; `active-or-non-stat`: 1; `ability-specific`: 2.
+
+**Interpretation:** Static and weapon effects may alter the character sheet. Scoped entries describe where published bonuses apply, but do not imply functioning ability damage, mana, cast-time, pet or DPS mechanics. Temporary and conditional effects are not automatically added to permanent totals. The existing calculator still relies on partially unverified Vanilla base coefficients.
+
+### Talent-by-talent ledger
+
+| ID | Talent | Ranks | Coverage | Mapped effects or outstanding mechanic |
 |---:|---|---:|---|---|
-| 301 | Improved Wrath | 5 | `ability-specific` | Not in character-sheet calculation: Reduces the cast time and global cooldown of your Wrath spell by 0.5 sec. |
-| 302 | Nature's Grasp | 1 | `proc-or-conditional` | Not in character-sheet calculation: While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1). Only u |
-| 303 | Improved Nature's Grasp | 4 | `proc-or-conditional` | Not in character-sheet calculation: Increases the chance for your Nature's Grasp to entangle an enemy by 65%. |
-| 304 | Sylvan Blessing | 2 | `proc-or-conditional` | Not in character-sheet calculation: Gives you a 100% chance after killing a target that yields experience or honor to allow your Mana to regenerate at a 100% rate whi |
-| 305 | Guidance of the Dream | 3 | `proc-or-conditional` | Not in character-sheet calculation: Gives you a 70% chance to avoid interruption caused by damage while casting your Balance spells. |
-| 306 | Improved Moonfire | 2 | `partial` | spell Moonfire crit (rank vector 0) |
-| 307 | Natural Weapons | 3 | `partial` | global  hit (rank vector 1); global  spellHit (rank vector 1); scoped All physical attacks damagePct (rank vector 0) |
-| 308 | Natural Shapeshifter | 3 | `ability-specific` | Not in character-sheet calculation: Reduces the mana cost of all shapeshifting by 30%. |
-| 309 | Moonfury | 3 | `partial` | scoped Starfire/Moonfire/Hurricane/Insect Swarm/Wrath damagePct (rank vector 0) |
-| 310 | Omen of Clarity | 1 | `proc-or-conditional` | Not in character-sheet calculation: Imbues the Druid with natural energy. Each of the Druid's melee attacks or offensive spell casts has a chance of causing the caste |
-| 311 | Nature's Reach | 2 | `ability-specific` | Not in character-sheet calculation: Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, Insect Swarm, Hurricane, Remove Curse, Aboli |
-| 312 | Vengeance | 5 | `ability-specific` | Not in character-sheet calculation: Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 100%. |
-| 313 | Moonglow | 3 | `ability-specific` | Not in character-sheet calculation: Reduces the Mana cost of your Moonfire, Starfire, Wrath, Hurricane, Insect Swarm, Healing Touch, Regrowth and Rejuvenation spells  |
-| 314 | Owlkin Frenzy | 3 | `proc-or-conditional` | Not in character-sheet calculation: Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage wh |
-| 315 | Moonkin Form | 1 | `proc-or-conditional` | Not in character-sheet calculation: Transforms the Druid into Moonkin Form. While in this form the armor contribution from items is increased by 180%, the Mana cost o |
-| 316 | Nature's Grace | 1 | `ability-specific` | Not in character-sheet calculation: All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec. |
-| 317 | Improved Starfire | 3 | `proc-or-conditional` | Not in character-sheet calculation: Reduces the cast time of Starfire by 0.5 sec and gives it a 15% chance to stun the target for 3 sec. |
-| 318 | Balance of All Things | 3 | `proc-or-conditional` | Not in character-sheet calculation: Damaging a target afflicted by Insect Swarm with Wrath refunds 30% of its mana cost. Starfire has a 9% increased chance to critica |
-| 319 | Gale Winds | 2 | `ability-specific` | Not in character-sheet calculation: Reduces the mana cost of Hurricane by 20% and causes it to reduce the attack speed of affected enemies by 25%. |
-| 320 | Eclipse | 1 | `proc-or-conditional` | Not in character-sheet calculation: Aligns natural and astral energies. Damage from Wrath has a 40% chance to grant Arcane Eclipse, increasing Arcane damage dealt. Da |
-| 267 | Ferocity | 5 | `active-or-non-stat` | Not in character-sheet calculation: Reduces the cost of your Maul, Swipe, Savage Bite, Claw, and Rake abilities by 5 Rage or Energy. |
-| 268 | Feral Aggression | 5 | `ability-specific` | Not in character-sheet calculation: Increases the Attack Power reduction of your Demoralizing Roar by 40% and the damage caused by your Ferocious Bite by 15%. |
-| 269 | Feral Instinct | 3 | `proc-or-conditional` | Not in character-sheet calculation: Increases threat caused in Bear and Dire Bear Form by 15% and reduces the chance enemies have to detect you while Prowling. |
-| 270 | Brutal Impact | 2 | `active-or-non-stat` | Not in character-sheet calculation: Increases the stun duration of your Bash and Pounce abilities by 1 sec. |
-| 271 | Thick Hide | 3 | `sheet` | special  itemArmourPct (rank vector 0) |
-| 272 | Open Wounds | 3 | `ability-specific` | Not in character-sheet calculation: Increases the damage of Rip by 15%. In addition, increases the damage of Claw by 30% for each of your active Bleed effects on the  |
-| 273 | Feral Swiftness | 2 | `partial` | global  dodge (rank vector 1); active only under {"form":["Cat","Bear"]}; Proc/event awaiting combat simulation: Outdoor Cat Form movement speed is not a permanent combat stat |
-| 274 | Feral Charge | 1 | `proc-or-conditional` | Not in character-sheet calculation: Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec. |
-| 275 | Sharpened Claws | 3 | `sheet` | global  crit (rank vector 0); active only under {"form":["Cat","Bear"]} |
-| 276 | Primal Fury | 2 | `proc-or-conditional` | Not in character-sheet calculation: Gives you a 100% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form and your c |
-| 277 | Predatory Strikes | 3 | `partial` | special  apPct (rank vector 0); active only under {"form":["Cat","Bear"]}; scoped Claw/Rake/Maul/Swipe/Savage Bite damagePct (rank vector 1) |
-| 278 | Blood Frenzy | 2 | `proc-or-conditional` | Not in character-sheet calculation: Increases the duration of Tiger's Fury by 12 sec, and causes Enrage to instantly generate 10 Rage. In addition, Tiger's Fury and E |
-| 279 | Improved Shred | 2 | `ability-specific` | Not in character-sheet calculation: Increases the damage of Shred by 10% and reduces its Energy cost by 12. |
-| 280 | Ancient Brutality | 2 | `proc-or-conditional` | Not in character-sheet calculation: Dodging an attack while in Bear or Dire Bear Form imbues you with the spirit of the Ancients, generating 4 Rage per second for 5 s |
-| 281 | Berserk | 1 | `proc-or-conditional` | Not in character-sheet calculation: Removes all Fear effects and increases your energy regeneration rate by 100% while in Cat form, and increases your total health by |
-| 282 | Heart of the Wild | 5 | `sheet` | percent  int (rank vector 0); percent  sta (rank vector 1); active only under {"form":"Bear"}; percent  str (rank vector 2); active only under {"form":"Cat"} |
-| 283 | Carnage | 2 | `proc-or-conditional` | Not in character-sheet calculation: Your Maul, Swipe, and Savage Bite abilities return 10% of their damage as healing to you. In addition, gives your Ferocious Bite a |
-| 284 | Leader of the Pack | 1 | `partial` | scoped Leader of the Pack partyCritPct (rank vector explicit); active only under {"form":["Cat","Bear"]}; Proc/event awaiting combat simulation: Aura self-application/party eligibility not independently validated |
-| 285 | Improved Mark of the Wild | 5 | `active-or-non-stat` | Not in character-sheet calculation: Increases the effects of your Mark of the Wild and Gift of the Wild spells by 35%. |
-| 286 | Furor | 5 | `proc-or-conditional` | Not in character-sheet calculation: Gives you 100% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat F |
-| 287 | Improved Healing Touch | 5 | `ability-specific` | Not in character-sheet calculation: Reduces the cast time of your Healing Touch spell by 0.5 sec. |
-| 288 | Nature's Focus | 5 | `proc-or-conditional` | Not in character-sheet calculation: Gives you a 70% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells. |
-| 289 | Subtlety | 5 | `ability-specific` | Not in character-sheet calculation: Reduces the threat generated by your spells by 20%. |
-| 290 | Swiftmend | 1 | `active-or-non-stat` | Not in character-sheet calculation: Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation  |
-| 291 | Genesis | 3 | `partial` | scoped Periodic magic damageAndHealingPct (rank vector 0) |
-| 292 | Reflection | 3 | `proc-or-conditional` | Not in character-sheet calculation: Allows 15% of your Mana regeneration to continue while casting. |
-| 293 | Gift of Nature | 5 | `partial` | scoped Healing spells healingPct (rank vector 0) |
-| 294 | Tranquil Spirit | 5 | `ability-specific` | Not in character-sheet calculation: Reduces the mana cost of your Healing Touch, Regrowth and Tranquility spells by 10%. |
-| 295 | Aessina's Bloom | 2 | `ability-specific` | Not in character-sheet calculation: Healing a target affected by Regrowth or Rejuvenation with your Healing Touch spells reduces the casting time of your next Healing |
-| 296 | Nature's Swiftness | 1 | `proc-or-conditional` | Not in character-sheet calculation: When activated, your next Nature spell becomes an instant cast spell. |
-| 297 | Preservation | 3 | `ability-specific` | Not in character-sheet calculation: Increases the periodic healing of Regrowth by 30% if the friendly target is affected by Rejuvenation. |
-| 298 | Improved Regrowth | 5 | `partial` | spell Regrowth crit (rank vector 0) |
-| 299 | Improved Tranquility | 2 | `partial` | scoped Tranquility healingPct (rank vector 0) |
-| 300 | Tree of Life Form | 1 | `proc-or-conditional` | Not in character-sheet calculation: Shapeshift into the Tree of Life. While in this form armor contribution from items is inreased by 180%, the healing power of nearb |
+| 301 | Improved Wrath | 5 | `partial` | scoped Wrath castTimeReductionSeconds (vector 0); scoped Wrath globalCooldownReductionSeconds (vector 0) |
+| 302 | Nature's Grasp | 1 | `proc-or-conditional` | Pending: While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1). Only useable outdoors |
+| 303 | Improved Nature's Grasp | 4 | `proc-or-conditional` | Pending: Increases the chance for your Nature's Grasp to entangle an enemy by 65%. |
+| 304 | Sylvan Blessing | 2 | `proc-or-conditional` | Pending: Gives you a 100% chance after killing a target that yields experience or honor to allow your Mana to regenerate at a 100% rate while casting. Las |
+| 305 | Guidance of the Dream | 3 | `proc-or-conditional` | Pending: Gives you a 70% chance to avoid interruption caused by damage while casting your Balance spells. |
+| 306 | Improved Moonfire | 2 | `partial` | spell Moonfire crit (vector 0) |
+| 307 | Natural Weapons | 3 | `partial` | global  hit (vector 1); global  spellHit (vector 1); scoped All physical attacks damagePct (vector 0) |
+| 308 | Natural Shapeshifter | 3 | `partial` | scoped Shapeshifting manaCostReductionPct (vector 0) |
+| 309 | Moonfury | 3 | `partial` | scoped Starfire/Moonfire/Hurricane/Insect Swarm/Wrath damagePct (vector 0) |
+| 310 | Omen of Clarity | 1 | `proc-or-conditional` | Pending: Imbues the Druid with natural energy. Each of the Druid's melee attacks or offensive spell casts has a chance of causing the caster to enter a Cl |
+| 311 | Nature's Reach | 2 | `partial` | scoped Balance/utility spells rangeIncreasePct (vector 0) |
+| 312 | Vengeance | 5 | `partial` | scoped Starfire/Moonfire/Wrath criticalDamagePct (vector 0) |
+| 313 | Moonglow | 3 | `partial` | scoped Balance and healing spells manaCostReductionPct (vector 0) |
+| 314 | Owlkin Frenzy | 3 | `proc-or-conditional` | Pending: Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage while casting and |
+| 315 | Moonkin Form | 1 | `partial` | Pending: The Moonkin form armour multiplier is implemented by the existing form calculator. Remaining spell mana/damage effects need modelling. |
+| 316 | Nature's Grace | 1 | `ability-specific` | Pending: All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec. |
+| 317 | Improved Starfire | 3 | `partial` | scoped Starfire castTimeReductionSeconds (vector 0); Pending: Starfire stun chance requires hit/event resolution |
+| 318 | Balance of All Things | 3 | `proc-or-conditional` | Pending: Damaging a target afflicted by Insect Swarm with Wrath refunds 30% of its mana cost. Starfire has a 9% increased chance to critically strike agai |
+| 319 | Gale Winds | 2 | `partial` | scoped Hurricane manaCostReductionPct (vector 0); scoped Hurricane target slow attackSpeedReductionPct (vector 1) |
+| 320 | Eclipse | 1 | `proc-or-conditional` | Pending: Aligns natural and astral energies. Damage from Wrath has a 40% chance to grant Arcane Eclipse, increasing Arcane damage dealt. Damage from Starf |
+| 267 | Ferocity | 5 | `partial` | scoped Feral abilities rageEnergyCostReduction (vector 0) |
+| 268 | Feral Aggression | 5 | `partial` | scoped Demoralizing Roar attackPowerReductionPct (vector 0); scoped Ferocious Bite damagePct (vector 1) |
+| 269 | Feral Instinct | 3 | `partial` | scoped Bear Form threatPct (vector 0), conditional on {"form":"Bear"} |
+| 270 | Brutal Impact | 2 | `partial` | scoped Bash/Pounce stunDurationIncreaseSeconds (vector 0) |
+| 271 | Thick Hide | 3 | `sheet` | special  itemArmourPct (vector 0) |
+| 272 | Open Wounds | 3 | `partial` | scoped Rip damagePct (vector 0); scoped Claw per active Bleed damagePct (vector 1) |
+| 273 | Feral Swiftness | 2 | `partial` | global  dodge (vector 1), conditional on {"form":["Cat","Bear"]}; Pending: Outdoor Cat Form movement speed is not a permanent combat stat |
+| 274 | Feral Charge | 1 | `proc-or-conditional` | Pending: Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec. |
+| 275 | Sharpened Claws | 3 | `sheet` | global  crit (vector 0), conditional on {"form":["Cat","Bear"]} |
+| 276 | Primal Fury | 2 | `proc-or-conditional` | Pending: Gives you a 100% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form and your critical strikes |
+| 277 | Predatory Strikes | 3 | `partial` | special  apPct (vector 0), conditional on {"form":["Cat","Bear"]}; scoped Claw/Rake/Maul/Swipe/Savage Bite damagePct (vector 1) |
+| 278 | Blood Frenzy | 2 | `partial` | scoped Tiger's Fury durationIncreaseSeconds (vector 0); scoped Enrage instantRageGained (vector 1); Pending: Attack speed increase from active Tiger's Fury/Enrage is not passive |
+| 279 | Improved Shred | 2 | `partial` | scoped Shred damagePct (vector 0); scoped Shred energyCostReduction (vector 1) |
+| 280 | Ancient Brutality | 2 | `proc-or-conditional` | Pending: Dodging an attack while in Bear or Dire Bear Form imbues you with the spirit of the Ancients, generating 4 Rage per second for 5 sec. This effect |
+| 281 | Berserk | 1 | `proc-or-conditional` | Pending: Removes all Fear effects and increases your energy regeneration rate by 100% while in Cat form, and increases your total health by 20% while in B |
+| 282 | Heart of the Wild | 5 | `sheet` | percent  int (vector 0); percent  sta (vector 1), conditional on {"form":"Bear"}; percent  str (vector 2), conditional on {"form":"Cat"} |
+| 283 | Carnage | 2 | `proc-or-conditional` | Pending: Your Maul, Swipe, and Savage Bite abilities return 10% of their damage as healing to you. In addition, gives your Ferocious Bite a 20% chance per |
+| 284 | Leader of the Pack | 1 | `partial` | scoped Leader of the Pack partyCritPct (vector explicit), conditional on {"form":["Cat","Bear"]}; Pending: Aura self-application/party eligibility not independently validated |
+| 285 | Improved Mark of the Wild | 5 | `partial` | scoped Mark/Gift of the Wild buffEffectivenessPct (vector 0) |
+| 286 | Furor | 5 | `proc-or-conditional` | Pending: Gives you 100% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form. |
+| 287 | Improved Healing Touch | 5 | `partial` | scoped Healing Touch castTimeReductionSeconds (vector 0) |
+| 288 | Nature's Focus | 5 | `proc-or-conditional` | Pending: Gives you a 70% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells. |
+| 289 | Subtlety | 5 | `partial` | scoped Spells threatReductionPct (vector 0) |
+| 290 | Swiftmend | 1 | `active-or-non-stat` | Pending: Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation or 18 sec. of R |
+| 291 | Genesis | 3 | `partial` | scoped Periodic magic damageAndHealingPct (vector 0) |
+| 292 | Reflection | 3 | `partial` | scoped Mana regeneration while casting regenPct (vector 0) |
+| 293 | Gift of Nature | 5 | `partial` | scoped Healing spells healingPct (vector 0) |
+| 294 | Tranquil Spirit | 5 | `partial` | scoped Healing Touch/Regrowth/Tranquility manaCostReductionPct (vector 0) |
+| 295 | Aessina's Bloom | 2 | `ability-specific` | Pending: Healing a target affected by Regrowth or Rejuvenation with your Healing Touch spells reduces the casting time of your next Healing Touch spell by |
+| 296 | Nature's Swiftness | 1 | `proc-or-conditional` | Pending: When activated, your next Nature spell becomes an instant cast spell. |
+| 297 | Preservation | 3 | `partial` | scoped Regrowth with Rejuvenation periodicHealingPct (vector 0) |
+| 298 | Improved Regrowth | 5 | `partial` | spell Regrowth crit (vector 0) |
+| 299 | Improved Tranquility | 2 | `partial` | scoped Tranquility healingPct (vector 0) |
+| 300 | Tree of Life Form | 1 | `partial` | Pending: Tree of Life cannot currently be selected in class form options; do not assume its aura or armour effect is active |
 
-### Validation still required
+### Verification blockers
 
-1. Reconcile effect values, rounding and buff stacking with controlled in-game tests.
-2. Verify spell family, weapon subtype, form, shield, aura and pet conditions.
-3. Implement simulated abilities, procs, resources, encounter targets and rotation effects without adding temporary bonuses permanently.
-4. Expand the explicit mapping for any remaining genuinely permanent character-sheet effects.
+1. Compare all passive/weapon numbers and rounding with controlled OctoWoW client observations.
+2. Verify stance, shield, form, aspect, pet, active buff and equipment eligibility.
+3. Verify spell-family, ranged and individual-ability hit/crit tables, proc uptime and cast/resource timing before using DPS, TPS or HPS comparisons.
+4. Complete mappings of remaining talents if the source indicates a permanent, testable sheet effect.
+5. Re-run the branch Actions workflow and the baseline simulator regression suite after changes.
 
-The class-specific registry is `docs/sim/core/talent-rules.mjs`; `tests/sim/talent-effects-audit.test.mjs` verifies rank vectors, class coverage and key regressions. **Merging note:** each class branch uses the same registry filename; consolidate the per-class exports before merging multiple branches, rather than allowing later changes to overwrite earlier class rules.
+**Integration caution:** all class branches currently use `core/talent-rules.mjs`; their per-class registries need consolidation before multiple branches are merged. Never merge one registry over another.
