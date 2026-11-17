@@ -59,9 +59,13 @@ export const TALENT_RULES={
       "stat": "castSpeedPct",
       "param": 0,
       "values": [
-        3,
+        6,
         6
       ]
+    },
+    {
+      "kind": "pending",
+      "note": "DoT/channeled tick-speed efficiency increases from 50% to 100% with talent rank; this is not a permanent extra 6% cast speed"
     }
   ],
   "353": [
@@ -234,7 +238,7 @@ export const TALENT_COVERAGE={
   },
   "349": {
     "status": "partial",
-    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+    "note": "Permanent +6% Affliction cast speed at both ranks; the rank-dependent tick-speed conversion needs simulation."
   },
   "350": {
     "status": "active-or-non-stat",
