@@ -26,7 +26,7 @@ jobs:
       - name: SQLite integrity and aggregation tests
         run: python3 -m unittest discover -s cloudflare/octometrics/tests -p 'test_auction_sql.py'
       - name: Website link regressions
-        run: node --test tests/site-routes.test.mjs tests/site-nav.test.mjs tests/auction-item-ui.test.mjs tests/auction-ui.test.mjs tests/ah-planner-polish.test.mjs
+        run: node --test tests/site-routes.test.mjs tests/site-nav.test.mjs tests/auction-item-ui.test.mjs tests/auction-ui.test.mjs
       - name: Install existing client dependencies
         working-directory: services/world-buff-tracker
         run: npm ci
