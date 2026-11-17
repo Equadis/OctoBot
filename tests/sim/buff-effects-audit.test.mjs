@@ -1,0 +1,43 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {CONSUMABLES,CONSUMABLE_BY_ID,consumablePassiveStats,selectConsumable,resolveConsumableSelection,consumableRestriction} from '../../docs/sim/core/consumables.mjs';
+import {consumableEffectAudit} from '../../docs/sim/core/consumable-effects.mjs';
+import {buffDefinition,resolveBuffEffects} from '../../docs/sim/core/buff-effect-audit.mjs';
+import {BUFF_OPTIONS} from '../../docs/sim/core/configuration.mjs';
+import {newBuild} from '../../docs/sim/core/builds.mjs';
+import {characterStats} from '../../docs/sim/core/character-stats.mjs';
+const item=id=>CONSUMABLE_BY_ID.get(id),stats=id=>consumablePassiveStats(item(id));
+const sheet=(b,g={})=>Object.fromEntries(characterStats(b,JSON.parse(fs.readFileSync(new URL('../../docs/sim/data/talents/'+b.classId+'.json',import.meta.url))),g).groups.map(x=>[x.name,Object.fromEntries(x.rows.map(r=>[r.label,r.value]))]));
+test('every imported consumable and shared selection has explicit coverage; no events inflate prepull stats',()=>{
+ for(const i of CONSUMABLES){const a=i.effectAudit;assert.ok(a.status,i.id);assert.ok(Object.values(a.stats).every(Number.isFinite),i.id);if(a.status!=='prepull')assert.deepEqual(consumablePassiveStats(i),{},i.name);}
+ for(const b of BUFF_OPTIONS){const e=buffDefinition(b.id);assert.ok(e.status,b.id);assert.ok(Object.values(e.stats).every(Number.isFinite));assert.ok(e.reason);}
+});
+test('source item vectors retain all attributes and precise damage schools',()=>{
+ for(const [id,expected] of [[13452,{agi:25,crit:2}],[13453,{str:18,sta:18}],[13447,{int:18,spi:18}],[13445,{armour:450}],[13510,{health:1200}],[13511,{mana:2000}],[13512,{damageOnlySp:150}],[13513,{arcaneRes:25,fireRes:25,frostRes:25,natureRes:25,shadowRes:25}],[20079,{spi:50,sta:50}],[20007,{mp5:12}],[3826,{hp5:12}],[9264,{shadowSp:40}],[50237,{natureSp:55}],[21023,{sta:30,dodge:2}],[60976,{rangedAP:45}],[60977,{damageOnlySp:22}],[60978,{haste:2}],[84040,{dodge:1,defense:4}],[47410,{sp:15,agi:25,crit:2,spellCrit:2}],[47412,{damageOnlySp:35,str:25}],[47414,{damageOnlySp:35,ap:35}],[61174,{sta:25}],[21151,{sta:15}],[17048,{sta:10}],[724,{sta:4,spi:4}]]){
+ assert.deepEqual(stats(id),expected,item(id).name);
+ }
+});
+test('short buffs are not averaged and temporary/permanent equipment use is excluded',()=>{
+ for(const id of ['quickness','flurry','chili','tea','windfury','mark-death']){const e=buffDefinition(id);assert.equal(e.status,'event',id);assert.deepEqual(e.stats,{});}
+ assert.equal(item(61181).effectAudit.durationSeconds,30);assert.deepEqual(stats(61181),{});
+ assert.equal(item(65).effectAudit.status,'enhancement');assert.match(consumableRestriction(item(65),newBuild('mage')),/enhancements/);
+ const b=newBuild('rogue');const before=sheet(b);b.controls.buffIds.push('quickness','flurry');assert.equal(sheet(b).Melee.Haste,before.Melee.Haste);
+});
+test('food, drink and spell source aliases use the intended item IDs; same-category alternatives replace',()=>{
+ assert.equal(item(21151).buffId,'rum');assert.equal(item(17048).buffId,null);assert.equal(item(61174).buffId,'merlot');assert.equal(item(21023).buffId,'chimaerek');
+ assert.deepEqual(selectConsumable([17048],61175),[61175]);
+ assert.deepEqual(selectConsumable([954],2289),[2289]);
+ assert.deepEqual(selectConsumable([724],60976),[60976]);
+ assert.deepEqual(resolveConsumableSelection({buffIds:['rum'],consumableIds:[20709]},'consumables').buffIds,[]);
+});
+test('spell damage and healing are distinct, and armour and health apply from additional consumables',()=>{
+ const b=newBuild('mage');b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['supreme-power'];let a=sheet(b);
+ assert.equal(+a.Spell['Spell Power']-+before.Spell['Spell Power'],150);assert.equal(+a.Spell['Healing Power'],+before.Spell['Spell Power']);
+ b.controls.buffIds=[];b.controls.consumableIds=[13445,13510];a=sheet(b);assert.equal(+a.Defence.Armour-+before.Defence.Armour,450);assert.equal(+a.Defence.Health-+before.Defence.Health,1200);
+});
+test('weapon oils are restricted to equipped weapons, not bare hands, shields or active poison',()=>{
+ const b=newBuild('rogue');b.controls.buffIds=['wizard-oil-mh','wizard-oil-oh'];
+ assert.ok(resolveBuffEffects(b,{}).entries.every(e=>!e.active));
+ const gear={mainhand:{classs:2,subclass:15},offhand:{classs:4,subclass:6}};
+ assert.deepEqual(resolveBuffEffects(b,gear).entries.map(e=>e.active),[true,false]);
+ b.classOptions.mhPoison='Instant Poison VI';assert.ok(resolveBuffEffects(b,gear).entries.every(e=>!e.active));
+});

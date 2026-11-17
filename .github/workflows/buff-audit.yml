@@ -1,0 +1,22 @@
+name: Buff and consumable audit
+on:
+  push:
+    branches: ['audit/buff-consumable-effects']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tools/sim/audit-buff-consumables.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: buff-consumable-audit
+          path: buff-consumable-audit.json
+      - run: node --test tests/sim/*.test.mjs
+      - run: python -m unittest discover -s tests/sim -p 'test_*.py'
