@@ -35,10 +35,10 @@ export function validatePoisonConfig(config,abilityIds){
 }
 export function createPoisonRuntime(config,abilityIds){
  if(!config)return null;validatePoisonConfig(config,abilityIds);const t=config.talents,charges=Object.fromEntries(Object.entries(config.hands).map(([h,p])=>[h,p.charges]));
- const apply=(e,{actor,target,hand,abilityId,white,stats})=>{
-  const p=config.hands[hand];if(!p||charges[hand]<=0||!e.unit(target).alive||!(white?p.white:p.eligibleAbilityIds.includes(abilityId)))return;
+ const apply=(e,{actor,target,hand,abilityId,white,stats,forced=false})=>{
+  const p=config.hands[hand];if(!p||charges[hand]<=0||!e.unit(target).alive||!forced&&!(white?p.white:p.eligibleAbilityIds.includes(abilityId)))return;
   const factor=e.auras.stat(actor,'poisonChanceFactor',1),base=p.chance+t.chancePct/100,chance=Math.min(1,p.envenomChanceMode==='relative'?base*factor:base+factor-1);
-  if(e.random()>=chance)return;
+  if(!forced&&e.random()>=chance)return;
   const spend=()=>{if(e.random()<t.freeChargeChance)return;charges[hand]--;e.recordMechanic('poison-charge',{actorId:actor,targetId:target,hand,name:p.name,remaining:charges[hand]});};
   if(p.chargeOn==='attempt')spend();
   const dot=p.name==='Deadly Poison V',scale=()=>{const ap=finite(e.auras.stat(actor,'attackPower',finite(stats.attackPower??0,'attack power')),'effective attack power');const m=(1+t.damagePct/100)*e.auras.stat(actor,'poisonDamageFactor',1);return {min:(p.min+p.apCoefficient*ap)*m,max:(p.max+p.apCoefficient*ap)*m};};
