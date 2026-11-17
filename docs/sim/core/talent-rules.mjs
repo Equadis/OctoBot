@@ -1,11 +1,49 @@
 /* All 54 warrior talents reviewed against https://octowow.st/talents/warrior/; snapshot SHA256 b8b800af1b9e2927d3fc7647a155fcf7fc87f216f520b8bf3d2782d2bf2879a2. */
 export const AUDITED_CLASS="warrior";
 export const TALENT_RULES={
+  "56": [
+    {
+      "kind": "scoped",
+      "scope": "Heroic Strike",
+      "stat": "rageCostReduction",
+      "param": 0
+    }
+  ],
+  "58": [
+    {
+      "kind": "scoped",
+      "scope": "Rend bleed",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "59": [
+    {
+      "kind": "scoped",
+      "scope": "Charge",
+      "stat": "rageGained",
+      "param": 0
+    }
+  ],
   "60": [
     {
       "kind": "global",
       "stat": "parry",
       "param": 0
+    }
+  ],
+  "61": [
+    {
+      "kind": "scoped",
+      "scope": "Thunder Clap",
+      "stat": "rageCostReduction",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Thunder Clap",
+      "stat": "damagePct",
+      "param": 1
     }
   ],
   "63": [
@@ -64,11 +102,52 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "70": [
+    {
+      "kind": "scoped",
+      "scope": "Retaliation/Recklessness/Shield Wall",
+      "stat": "cooldownReductionMinutes",
+      "param": 0
+    }
+  ],
+  "71": [
+    {
+      "kind": "scoped",
+      "scope": "Slam",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Slam",
+      "stat": "globalCooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "72": [
+    {
+      "kind": "scoped",
+      "scope": "Execute per extra Rage",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "74": [
+    {
+      "kind": "scoped",
+      "scope": "Bloodrage",
+      "stat": "instantRageGained",
+      "param": 0
+    }
+  ],
   "75": [
     {
       "kind": "special",
       "stat": "blockChance",
-      "param": 0
+      "param": 0,
+      "when": {
+        "shield": true
+      }
     },
     {
       "kind": "pending",
@@ -79,6 +158,14 @@ export const TALENT_RULES={
     {
       "kind": "global",
       "stat": "defense",
+      "param": 0
+    }
+  ],
+  "77": [
+    {
+      "kind": "scoped",
+      "scope": "Stun/Charm",
+      "stat": "resistChancePct",
       "param": 0
     }
   ],
@@ -94,12 +181,97 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "81": [
+    {
+      "kind": "scoped",
+      "scope": "Taunt",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "82": [
+    {
+      "kind": "scoped",
+      "scope": "Revenge",
+      "stat": "stunChancePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Revenge",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
+  "85": [
+    {
+      "kind": "scoped",
+      "scope": "Defensive Stance",
+      "stat": "threatPct",
+      "param": 0,
+      "when": {
+        "stance": "Defensive"
+      }
+    }
+  ],
   "86": [
     {
       "kind": "weapon",
       "weapon": "onehand",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "88": [
+    {
+      "kind": "scoped",
+      "scope": "Shield Slam",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Temporary next-attack block chance requires an event model"
+    }
+  ],
+  "89": [
+    {
+      "kind": "scoped",
+      "scope": "Revenge",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Refund Rage on hit is event-dependent"
+    }
+  ],
+  "90": [
+    {
+      "kind": "scoped",
+      "scope": "Shield Wall",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Shield Wall",
+      "stat": "cooldownReductionMinutes",
+      "param": 1
+    }
+  ],
+  "93": [
+    {
+      "kind": "scoped",
+      "scope": "Shouts",
+      "stat": "areaOfEffectPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Battle/Demoralizing Shout",
+      "stat": "durationPct",
+      "param": 1
     }
   ],
   "94": [
@@ -125,6 +297,66 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Increases the strength of selected shouts; buff source/stacking verification needed"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Battle Shout",
+      "stat": "attackPowerBonusPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Demoralizing Shout",
+      "stat": "attackPowerReductionPct",
+      "param": 1
+    }
+  ],
+  "100": [
+    {
+      "kind": "scoped",
+      "scope": "Intercept/Intervene",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Charge",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
+  "102": [
+    {
+      "kind": "scoped",
+      "scope": "Pummel school lockout",
+      "stat": "durationIncreaseSeconds",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "Pummel slow is proc/ability-specific"
+    }
+  ],
+  "103": [
+    {
+      "kind": "scoped",
+      "scope": "Whirlwind",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Cleave",
+      "stat": "rageCostReduction",
+      "param": 1
+    }
+  ],
+  "105": [
+    {
+      "kind": "scoped",
+      "scope": "Execute",
+      "stat": "rageCostReduction",
+      "param": 0
     }
   ],
   "107": [
@@ -136,28 +368,28 @@ export const TALENT_RULES={
 };
 export const TALENT_COVERAGE={
   "56": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the cost of your Heroic Strike ability by 3 rage points."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "57": {
     "status": "proc-or-conditional",
     "note": "You retain up to 25 of your rage points when you change stances."
   },
   "58": {
-    "status": "ability-specific",
-    "note": "Increases the bleed damage done by your Rend ability by 20%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "59": {
-    "status": "active-or-non-stat",
-    "note": "Increases the amount of rage generated by your Charge ability by 10."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "60": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "61": {
-    "status": "ability-specific",
-    "note": "Reduces the cost of your Thunder Clap ability by 4 rage point and increases the damage by 60%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "62": {
     "status": "proc-or-conditional",
@@ -192,24 +424,24 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "70": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Retaliation, Recklessness and Shield Wall abilities by 12 min."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "71": {
-    "status": "ability-specific",
-    "note": "Reduces the cast time and global cooldown of your Slam ability by 0.5 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "72": {
-    "status": "ability-specific",
-    "note": "Increases damage dealt per extra rage point spent on Execute by 75%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "73": {
     "status": "proc-or-conditional",
     "note": "A vicious strike that deals 115% weapon damage and wounds the target, reducing the effectiveness of any healing by 50% for 10 sec."
   },
   "74": {
-    "status": "active-or-non-stat",
-    "note": "Increases the instant Rage generated by your Bloodrage ability by 10."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "75": {
     "status": "partial",
@@ -220,8 +452,8 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "77": {
-    "status": "proc-or-conditional",
-    "note": "Increases your chance to resist Stun and Charm effects by an additional 15%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "78": {
     "status": "sheet",
@@ -236,12 +468,12 @@ export const TALENT_COVERAGE={
     "note": "Grants a 100% chance to gain immunity to movement impairing effects for 3 sec after using Intervene."
   },
   "81": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Taunt ability by 2 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "82": {
-    "status": "proc-or-conditional",
-    "note": "Gives your Revenge ability a 45% chance to stun the target for 3 sec and reduces its cooldown by 1.5 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "83": {
     "status": "proc-or-conditional",
@@ -252,8 +484,8 @@ export const TALENT_COVERAGE={
     "note": "Decreases the cooldown of your Disarm ability by 20 secs."
   },
   "85": {
-    "status": "proc-or-conditional",
-    "note": "Increases the threat generated while in Defensive Stance by an additional 20%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "86": {
     "status": "sheet",
@@ -264,16 +496,16 @@ export const TALENT_COVERAGE={
     "note": "Slam the target with your shield, causing 174 to 184 damage, modified by your shield block value and attack power. This attack causes a high amount of threat, and has a 50% ch"
   },
   "88": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the cooldown of Shield Slam by 1.5 sec, and using this ability will also grant you an extra 70% chance to block the next attack within 4.5 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "89": {
-    "status": "proc-or-conditional",
-    "note": "Increases the damage dealt by your Revenge ability by 50%, and has a 100% chance to refund its rage cost if successful."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "90": {
-    "status": "ability-specific",
-    "note": "Increases the effect duration of your Shield Wall ability by 2 secs and reduces its cooldown by 10 min."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "91": {
     "status": "proc-or-conditional",
@@ -284,8 +516,8 @@ export const TALENT_COVERAGE={
     "note": "Deals 115 damage and stuns the opponent for 3 sec. This ability deals a high amount of threat and penetrates 100% of the enemy's armor. Instantly generates 10 rage."
   },
   "93": {
-    "status": "active-or-non-stat",
-    "note": "Increases the area of effect of all shouts by 60% and the duration of your Battle and Demoralizing Shout by 60%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "94": {
     "status": "sheet",
@@ -301,7 +533,7 @@ export const TALENT_COVERAGE={
   },
   "97": {
     "status": "partial",
-    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "98": {
     "status": "proc-or-conditional",
@@ -312,28 +544,28 @@ export const TALENT_COVERAGE={
     "note": "Regenerates 6% of your total Health over 6 sec after being the victim of a critical strike."
   },
   "100": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Intercept and Intervene abilities by 10 sec, and your Charge ability by 4 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "101": {
     "status": "proc-or-conditional",
     "note": "Gives you a 20% melee damage bonus for 8 sec after being the victim of a critical strike."
   },
   "102": {
-    "status": "proc-or-conditional",
-    "note": "Gives your Pummel ability a 100% chance to slow the victim for 4 sec. In addition, increases the duration of spellcasting school lockouts by 2 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "103": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Whirlwind by 2 sec and the Rage cost of your Cleave by 3."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "104": {
     "status": "proc-or-conditional",
     "note": "When activated, increases your physical damage by 20% and makes you immune to Fear effects, but lowers your armor and all resistances by 20%. Lasts 30 sec."
   },
   "105": {
-    "status": "ability-specific",
-    "note": "Reduces the Rage cost of your Execute ability by 5."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "106": {
     "status": "proc-or-conditional",
