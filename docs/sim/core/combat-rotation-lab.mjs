@@ -1,3 +1,4 @@
+import {shadowOfDeathTemplate} from './combat-shadow-of-death.mjs';
 import {companionTemplate} from './combat-companion-reference.mjs';
 import {elementalShieldTemplate,lightningStrikeTemplate} from './combat-elemental-shield.mjs';
 import {sealTemplate} from './combat-seal-reference.mjs';
@@ -30,6 +31,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='shadowOfDeathModel')policy.shadowOfDeathModel=shadowOfDeathTemplate();
   if(field==='exposeModel')policy.exposeModel={durationMs:rank.components[0].durationMs,armourByCombo:[1,2,3,4,5].map(n=>n*rank.components[0].armourPerCombo),outcomes:null};
   if(field==='rogueCooldownModel')policy.rogueCooldownModel=rank.abilityId==='rogue:preparation'?{resetAbilityIds:[]}:rank.abilityId==='rogue:cold-blood'?{durationMs:null,criticalMultiplier:null,consume:null}:{};
   if(field==='sealModel')policy.sealModel=sealTemplate(rank.abilityId,rank.record.fields);

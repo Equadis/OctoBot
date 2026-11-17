@@ -1,3 +1,4 @@
+import {validateShadowOfDeath} from './combat-shadow-of-death.mjs';
 import {compileExposeArmor,compileRogueCooldown} from './combat-rogue-cooldowns.mjs';
 import {compileUtilityCurse} from './combat-curse-reference.mjs';
 import {compileElementalShield,validateLightningStrike} from './combat-elemental-shield.mjs';
@@ -58,6 +59,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
   if(isWeapon){const wp=rank.form?'actual-swing':policy.weaponPolicy;if(!['actual-swing','normalised'].includes(wp))throw new Error('Explicit weapon scaling policy required');if(kind==='queued-melee'&&wp!=='actual-swing')throw new Error('Queued strikes require actual swing damage');if(wp==='normalised'){const speed=finite(hand==='offhand'?policy.dualWeaponModel?.offhandNormalisedSpeed:policy.normalisedSpeed,'normalised weapon speed',.01);stats[weaponMinKey]=(weapon.rawMin+snap.attackPower*speed/14+weapon.flatDamage)*weapon.handMultiplier;stats[weaponMaxKey]=(weapon.rawMax+snap.attackPower*speed/14+weapon.flatDamage)*weapon.handMultiplier;}else{stats[weaponMinKey]=weapon.min;stats[weaponMaxKey]=weapon.max;}}
   const m=models(build.classId,componentName,audit,{durationSeconds:periodic?(component.durationMs??component.durations?.[0])/1000:undefined});
   const mods=m.modifiers,values=m.values;
+  if(component.kind==='shadow-of-death'){if(Number(build.talents?.['161']??0)<1)throw new Error('Shadow of Death requires its talent');effects.push({kind:'shadow-of-death',when:'always',model:validateShadowOfDeath(policy.shadowOfDeathModel)});continue;}
   if(component.kind==='expose-armor'){effects.push(compileExposeArmor(build,component,policy));continue;}
   if(component.kind==='rogue-cooldown'){effects.push(compileRogueCooldown(build,rank,policy.rogueCooldownModel));continue;}
   if(component.kind==='utility-curse'){effects.push(compileUtilityCurse(rank.abilityId,abilityName,policy.utilityCurseModel));continue;}
