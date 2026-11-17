@@ -258,10 +258,6 @@ export const TALENT_RULES={
       "when": {
         "aura": "Concentration Aura"
       }
-    },
-    {
-      "kind": "pending",
-      "note": "The planner does not offer Concentration Aura as a selectable aura"
     }
   ],
   "454": [
