@@ -82,9 +82,9 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(rank.comboSpend)effects.push({kind:'combo-spend',when:explicitBool(policy.spendOnMiss,'finisher spend on miss')?'always':'landed',points:'all'});
  const action={abilityId:rank.abilityId,spellId,rank:rank.rank,learnLevel:rank.learnLevel,source:rank.source,evidenceStatus:'reference',actorId,kind,castMs:roundMs(v.castSeconds),gcdMs:roundMs(v.gcdSeconds),cooldownMs:roundMs(v.cooldownSeconds),sharedCooldown:null,costs:[{resource:rank.resource,amount:rank.resource==='mana'?v.manaCost:rank.resource==='rage'?v.rageCost:v.energyCost}],targets:[rank.components.every(c=>c.kind.endsWith('heal'))?'ally':'enemy'],minRangeYards:rank.minRange,maxRangeYards:v.rangeYards,position:rank.position??null,comboRequired:rank.comboSpend?1:null,requiredContext:null,effects,...(kind==='queued-melee'?{swingId:'mainhand'}:{})};
  if(action.kind==='cast'&&action.castMs===0)action.kind='instant';
- if(rank.sharedCooldownGroup)action.sharedCooldown={group:rank.sharedCooldownGroup,durationMs:action.cooldownMs};
+ if(rank.sharedCooldownGroup)action.sharedCooldown={id:rank.sharedCooldownGroup,durationMs:finite(action.cooldownMs,'shared cooldown duration',1)};
  if(build.classId==='priest'&&build.classOptions?.form==='Shadowform'&&(action.targets[0]==='ally'||rank.record.fields.school==='holy'))throw new Error('Holy healing unavailable in Shadowform');
- if(build.classId==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)&&action.targets[0]==='ally')throw new Error('Healing requires caster form');
+ if(build.classId==='druid'&&(['Cat','Bear'].includes(build.classOptions?.form)||(build.classOptions?.form==='Moonkin'&&action.targets[0]==='ally')))throw new Error('Healing requires caster form');
  if(!Number.isFinite(action.costs[0].amount)||!Number.isFinite(action.castMs))throw new Error('Unresolved timing or cost');
  return {action,stats,rank,provenance,matchedTalents:mv.matched,liveVerified:false};
 }

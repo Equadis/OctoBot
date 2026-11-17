@@ -711,5 +711,239 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/moonfire.go",
       "liveVerified": false
     }
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:holy-light",
+    "spellId": 10329,
+    "rank": 8,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 580,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": 0.7142857142857143,
+        "min": 1246,
+        "max": 1389
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=10329",
+    "referenceSource": "https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:holy-light",
+      "spellId": 10329,
+      "rank": 8,
+      "level": 54,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=10329",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:flash-of-light",
+    "spellId": 19943,
+    "rank": 6,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 140,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": 0.42857142857142855,
+        "min": 343,
+        "max": 384
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=19943",
+    "referenceSource": "https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:flash-of-light",
+      "spellId": 19943,
+      "rank": 6,
+      "level": 58,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=19943",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:healing-wave",
+    "spellId": 10396,
+    "rank": 9,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 560,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": 0.8571428571428571,
+        "min": 1367,
+        "max": 1562
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=10396",
+    "referenceSource": "https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:healing-wave",
+      "spellId": 10396,
+      "rank": 9,
+      "level": 56,
+      "fields": {
+        "school": "nature"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=10396",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:rejuvenation",
+    "spellId": 9841,
+    "rank": 10,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 335,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": 0.2,
+        "min": 189,
+        "max": 189,
+        "durationMs": 12000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=9841",
+    "referenceSource": "https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:rejuvenation",
+      "spellId": 9841,
+      "rank": 10,
+      "level": 58,
+      "fields": {
+        "school": "nature"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=9841",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:renew",
+    "spellId": 10929,
+    "rank": 9,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 365,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": 0.2,
+        "min": 162,
+        "max": 162,
+        "durationMs": 15000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=10929",
+    "referenceSource": "https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:renew",
+      "spellId": 10929,
+      "rank": 9,
+      "level": 56,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=10929",
+      "liveVerified": false
+    }
   }
 ]);

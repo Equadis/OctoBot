@@ -31,10 +31,14 @@ test('rank compiler refuses missing knowledge, conflicting ranks, missing coeffi
 });
 test('school-specific power and mana cost are not read from rounded display strings',()=>{
  const a=scenario('mage');a.sheet.combatSnapshot.schools.frost=123.45;const c=compileReferenceRank(a);
- assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,33);assert.equal(referenceRanks('priest').length,5);
+ assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,38);assert.equal(referenceRanks('priest').length,6);
 });
 
 test('external-only ranks require acknowledgement and unknown live sting cost requires explicit input',()=>{
  let a=scenario('mage',10181);a.learnedSpellIds=[10181];assert.throws(()=>compileReferenceRank(a),/external reference acknowledgement/);a.policy.acceptExternalReference=true;assert.equal(compileReferenceRank(a).action.costs[0].amount,260);
  a=scenario('hunter',13555);a.learnedSpellIds=[13555];a.policy.acceptExternalReference=true;assert.throws(()=>compileReferenceRank(a),/rank cost override/);a.policy.costOverride=190;assert.equal(compileReferenceRank(a).action.costs[0].amount,190);
+});
+
+test('every executable reference rank has correct identity and compilable mechanics',()=>{
+ for(const rank of REFERENCE_RANKS){const a=scenario(rank.classId,rank.spellId,{phase:3,acceptExternalReference:true,costOverride:230,cooldownMs:rank.referenceCooldownMs??0,componentCoefficients:[.2,.13]});const c=compileReferenceRank(a);assert.equal(c.action.spellId,rank.spellId);assert.equal(c.action.abilityId,rank.abilityId);assert.equal(c.liveVerified,false);if(rank.sharedCooldownGroup)assert.equal(c.action.sharedCooldown.id,rank.sharedCooldownGroup);}
 });

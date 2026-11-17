@@ -1,3 +1,4 @@
+import {wireReferenceLab} from './reference-lab.mjs?v=20261117-mvp6';
 import {classReleaseReadiness} from './core/combat-release-readiness.mjs?v=20261117-mvp1';
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
@@ -36,7 +37,7 @@ if(selectedView!=='classes'){
 const currentClass=classDefinition(classId);
 const DRAFT_KEY=`octosim.planner.draft.${classId}.v2`;
 let library;
-let picker, config, settingsControls, swapControls;
+let picker, config, settingsControls, swapControls, resetReferenceLab;
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 // Remember folded stat sections while gear, talents and buffs trigger character-sheet rerenders.
@@ -188,8 +189,9 @@ function createTalents() {
 }
 
 function render() {
+  resetReferenceLab?.();
   const readiness=classReleaseReadiness(classId);
-  $('simulation-readiness').textContent=`Research runtime available · ${readiness.evidenceAbilities} / ${readiness.registered} registered abilities have published evidence · ${readiness.validatedAbilities} validated. Public simulations remain disabled until rank and live-client checks pass.`;
+  $('simulation-readiness').textContent=`Research runtime available · ${readiness.evidenceAbilities} / ${readiness.registered} registered abilities have published evidence · ${readiness.executableReferenceRanks} executable reference ranks · ${readiness.validatedAbilities} validated. Public simulations remain disabled until rank and live-client checks pass.`;
   swapControls?.render();
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);
@@ -362,6 +364,7 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];if(slot==='ranged'){delete build.gear.ammo;delete build.gear.quiver;}persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
+  resetReferenceLab=wireReferenceLab({classId,getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker.lookup(id)});
   swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>picker.open(slot,options),inspect:id=>picker.inspect(id)});
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();config?.renderChecks();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
