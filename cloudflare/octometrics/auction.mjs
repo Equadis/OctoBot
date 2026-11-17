@@ -147,10 +147,11 @@ async function readApi(url,env){
  if(url.pathname==='/api/auction/summary'){
    const item=scan?await first(db,'SELECT COUNT(*) n FROM ah_item_points WHERE scan_id=?',scan.scan_id):null;
    const hist=await first(db,'SELECT COUNT(DISTINCT day) n FROM ah_daily');
+   const total=await first(db,'SELECT auction_count FROM ah_historical_total WHERE id=1');
    const meta=scan?await first(db,"SELECT COUNT(DISTINCT l.item_id||':'||l.variant) n FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND COALESCE(l.class_id,m.class_id) IS NOT NULL",scan.scan_id):null;
    return respond({collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',scanning:!!current,
      pages_done:current?.pages_done??0,pages_expected:current?Math.max(1,Math.ceil(current.reported_total/50)):null,
-     completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,
+     completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,total_historical_auctions:total?.auction_count??null,
      item_count:item?.n??null,items_with_metadata:meta?.n??null,scan_duration_ms:scan?.duration_ms??null,historical_days:hist?.n??0,
       snapshot_quality:scan?(scan.scan_id.startsWith('ahl_')?'live_estimate':'strict'):null});
  }
