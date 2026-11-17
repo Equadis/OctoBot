@@ -383,12 +383,6 @@ export const TALENT_RULES={
       "scope": "Melee attacks",
       "stat": "criticalDamagePct",
       "param": 1
-    },
-    {
-      "kind": "global",
-      "stat": "spellCrit",
-      "param": 0,
-      "note": "Published all-attacks critical strike increase; spell classification remains a planning estimate"
     }
   ],
   "407": [
