@@ -52,6 +52,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='executeModel')policy.executeModel={baseDamage:null,extraRageCoefficient:null,extraRageCap:null,payment:null};
   if(field==='physicalAPModel')policy.physicalAPModel={coefficient:null,flatDamage:null};
   if(field==='noxiousModel')policy.noxiousModel={attackModel:null,poisonTrigger:null};
+  if(field==='killCommandModel')policy.killCommandModel={baseMana:null,ownerRangeYards:null,petMaxRangeYards:null,windowMs:null,consume:null,triggerAbilityIds:[],includeMelee:null,includeRanged:null,allowDuringPetCast:null,outcomes:null,mitigation:null,flatReduction:null,threat:null};
   if(field==='rangedModel')policy.rangedModel={attackPower:null,weaponPolicy:'normalised',normalisedSpeed:2.8,ammoUsesActualSpeed:true,missPct:null,critPct:null,blockPct:0,blockValue:0,critSuppressionPct:0,criticalMultiplier:2,order,ammoPerShot:1};
  }
  if(rank.abilityId==='shaman:frost-shock')policy.frostShockModel=null; // Explicit {durationMs,slowPct} for target debuff interactions.

@@ -50,5 +50,5 @@ export function buildCompanionConfig(build,m,durationMs){
  const autos=m.auto===null?[]:[{id:'companion-white',actorId:'pet',source:'Companion auto attack',intervalMs:integer(m.auto?.intervalMs,'swing interval',1),firstAtMs:integer(m.auto?.firstAtMs,'first swing'),castPolicy:'continue',...(t.frenzyRank?{hasteStat:'meleeHasteFactor',hastePolicy:t.frenzySwingPolicy}:{}),minRangeYards:0,maxRangeYards:num(m.auto?.maxRangeYards,'melee range',0),effects:[damage(m.auto?.damage,m,'Companion auto attack')]}];
  if(!abilities.length&&!autos.length)throw new Error('Companion requires at least one explicit auto attack or active ability');
  if(autos.some(a=>a.effects[0].school!=='physical'))throw new Error('Companion auto attack must be physical');
- return {id:'pet',unit:{id:'pet',maxHealth,health},stats,geometry,pool:{resource,current,max},autos,priority:{resource,decisionIntervalMs,gcdMs,abilities},talents:t,regen:{amount:regenAmount+t.focusPerTick,intervalMs:regenIntervalMs,durationMs}};
+ return {id:'pet',unit:{id:'pet',maxHealth,health},stats,geometry,pool:{resource,current,max},autos,priority:{resource,decisionIntervalMs,gcdMs,abilities},talents:t,damageMultiplier:m.damageMultiplier*(1+t.damageBonus),regen:{amount:regenAmount+t.focusPerTick,intervalMs:regenIntervalMs,durationMs}};
 }
