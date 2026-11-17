@@ -1,3 +1,4 @@
+import {classReleaseReadiness} from './core/combat-release-readiness.mjs?v=20261117-mvp1';
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
@@ -187,6 +188,8 @@ function createTalents() {
 }
 
 function render() {
+  const readiness=classReleaseReadiness(classId);
+  $('simulation-readiness').textContent=`Research runtime available · ${readiness.evidenceAbilities} / ${readiness.registered} registered abilities have published evidence · ${readiness.validatedAbilities} validated. Public simulations remain disabled until rank and live-client checks pass.`;
   swapControls?.render();
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);

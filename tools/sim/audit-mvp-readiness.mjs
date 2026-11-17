@@ -1,0 +1,2 @@
+import fs from 'node:fs';import {releaseReadiness} from '../../docs/sim/core/combat-release-readiness.mjs';
+const r=releaseReadiness();console.log('MVP_READINESS_BEGIN'+JSON.stringify({totals:r.totals,classes:r.classes.map(({abilities,...c})=>c)})+'MVP_READINESS_END');fs.writeFileSync(process.argv[2]||'combat-release-readiness.json',JSON.stringify(r,null,2)+'\n');if(process.argv.includes('--require-public-ready')&&!r.publicReady)process.exitCode=1;

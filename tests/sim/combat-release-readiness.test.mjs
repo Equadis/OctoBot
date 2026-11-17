@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {releaseReadiness,classReleaseReadiness} from '../../docs/sim/core/combat-release-readiness.mjs';
+import {combatAbilityInventory} from '../../docs/sim/core/combat-ability-audit.mjs';
+import {RANK_EVIDENCE} from '../../docs/sim/core/combat-rank-evidence.mjs';
+test('readiness inventories every class and registered ability without promoting published or synthetic data',()=>{const r=releaseReadiness();assert.equal(r.classes.length,9);assert.equal(r.totals.registered,combatAbilityInventory().totals.registered);assert.equal(r.totals.observedRanks,RANK_EVIDENCE.length);assert.equal(r.totals.validatedAbilities,0);assert.equal(r.totals.validatedClasses,0);assert.equal(r.publicReady,false);assert.ok(r.classes.every(c=>!c.publicReady&&c.observedRanks>0));assert.ok(r.totals.missingBaseRows>0);});
+test('conflicts remain explicit and cached reports cannot be externally modified',()=>{const c=classReleaseReadiness('hunter');const s=c.abilities.find(a=>a.id==='hunter:serpent-sting');assert.equal(s.status,'source-conflict');assert.ok(s.ranks[0].conflicts.some(x=>x.field==='manaCost'));c.publicReady=true;assert.equal(classReleaseReadiness('hunter').publicReady,false);assert.throws(()=>classReleaseReadiness('unknown'),/Unknown class/);});
