@@ -150,3 +150,27 @@ test('additional defence, health regeneration and school-elixir replacement grou
  assert.deepEqual(resolveConsumableSelection({buffIds:['firepower'],consumableIds:[6373]},'buffs').consumableIds,[]);
  assert.deepEqual(selectConsumable([17708],55046),[55046]);
 });
+
+test('triggered effects retain source conflicts without adding permanent sheet stats',()=>{
+ const wf=buffDefinition('windfury'),ft=buffDefinition('flametongue'),chili=buffDefinition('chili'),tea=buffDefinition('tea');
+ assert.equal(wf.eventEvidence,'source-conflict');assert.equal(wf.eventModifiers.procChancePct,20);
+ assert.equal(wf.sourceVariants.database.extraAttackPower,315);assert.equal(wf.sourceVariants.communityChangeHistory.extraAttackPower,0);
+ assert.equal(wf.sourceVariants.communityChangeHistory.internalCooldownSeconds,1.5);
+ assert.equal(ft.sourceVariants.communityChangeHistory.triggersOnHit,false);
+ assert.equal(ft.sourceVariants.communityChangeHistory.stacksWithWindfury,true);
+ assert.equal(chili.durationSeconds,600);assert.equal(chili.eventModifiers.categoryCooldownSeconds,60);
+ assert.equal(chili.eventModifiers.procChancePct,undefined);
+ assert.equal(tea.eventModifiers.energyRestore,100);assert.equal(tea.eventModifiers.categoryCooldownSeconds,60);
+ assert.equal(tea.eventModifiers.cooldownSeconds,undefined);
+ for(const e of [wf,ft,chili,tea])assert.deepEqual(e.stats,{});
+});
+test('event eligibility is distinct from static activity and handles recipient restrictions',()=>{
+ const b=newBuild('shaman');b.controls.buffIds=['windfury','flametongue'];b.classOptions.mhImbue='None';
+ assert.deepEqual(resolveBuffEffects(b).entries.map(e=>[e.active,e.eventEligible]),[[false,true],[false,true]]);
+ b.classOptions.mhImbue='Rockbiter Weapon';
+ assert.deepEqual(resolveBuffEffects(b).entries.map(e=>[e.active,e.eventEligible]),[[false,false],[false,false]]);
+ const r=newBuild('rogue');r.level=34;r.controls.buffIds=['chili','tea'];
+ assert.deepEqual(resolveBuffEffects(r).entries.map(e=>e.eventEligible),[false,true]);
+ r.level=35;assert.equal(resolveBuffEffects(r).entries[0].eventEligible,true);
+ const m=newBuild('mage');m.controls.buffIds=['tea'];assert.equal(resolveBuffEffects(m).entries[0].eventEligible,false);
+});

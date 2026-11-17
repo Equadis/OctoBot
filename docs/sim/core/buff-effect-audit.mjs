@@ -41,11 +41,21 @@ const spellSources={
  faerie:{stats:{targetArmour:-505},sources:['https://octowow.st/db/?spell=17392'],duration:40,assumption:'Feral rank 4.'}
 };
 const eventSources={
+ windfury:{source:'https://octowow.st/db/?spell=10614',sources:['https://octowow.st/db/?spell=10614','https://octowow.st/forum/viewtopic.php?p=13033'],eventEvidence:'source-conflict',eventModifiers:{procChancePct:20,extraAttacks:1},sourceVariants:{database:{extraAttackPower:315,durationSeconds:120,rangeYards:20},communityChangeHistory:{extraAttackPower:0,internalCooldownSeconds:1.5}},reason:'Database and community patch history disagree on bonus AP and aura implementation. Main-hand hit; personal Shaman imbue takes priority under the community ruleset. No combat variant selected.'},
+ flametongue:{source:'https://octowow.st/db/?spell=8227',sources:['https://octowow.st/db/?spell=8227','https://octowow.st/forum/viewtopic.php?p=13033'],eventEvidence:'partial-source',eventModifiers:{},sourceVariants:{databaseRank1:{minimumFireDamage:6.35,maximumFireDamage:19.56,durationSeconds:120,rangeYards:20},communityChangeHistory:{spellPowerScalingPct:0,triggersOnHit:false,stacksWithWindfury:true}},reason:'Rank 1 tooltip scales fire damage with weapon speed; maximum rank formula and live aura behavior unresolved. Community history permits both totems and prevents recursive on-hit procs.'},
+ chili:{source:'https://octowow.st/db/?item=12217',sources:['https://octowow.st/db/?item=12217','https://octowow.st/db/?spell=15852','https://octowow.st/db/?spell=15851'],eventEvidence:'partial-source',durationSeconds:600,recipientLevel:35,eventModifiers:{fireDamageSpellEffectValue:61,radiusYards:10,categoryCooldownSeconds:60},reason:'Melee-triggered fire area damage. Database lists effect value 61; proc probability, actual damage, spell scaling and proc cooldown are unverified. Category cooldown is not an internal proc cooldown.'},
+ tea:{source:'https://octowow.st/db/?item=7676',sources:['https://octowow.st/db/?item=7676','https://octowow.st/db/?spell=9512'],eventEvidence:'partial-source',recipientLevel:5,recipientClasses:['rogue'],eventModifiers:{energyRestore:100,categoryCooldownSeconds:60},reason:'Database confirms 100 energy and a 60-second category cooldown, not the item-specific 300-second reuse assumption. Actual reuse, resource cap and activation depend on the engine.'},
  'mark-death':{source:'https://octowow.st/index.php/rogue',durationSeconds:8,eventModifiers:{providerMeleeAPToSpellDamagePct:18,partyAttackPowerPct:30},reason:'Imported rogue talent 165; provider AP and activation timing must be supplied by engine.'},
  flurry:{source:'https://octowow.st/db/?item=12450',durationSeconds:20,eventModifiers:{meleeHastePct:3},reason:'Tooltip gives 3% attack speed for 20 seconds; cooldown/uptime unresolved.'},
  quickness:{source:'https://octowow.st/db/?item=61181',durationSeconds:30,eventModifiers:{hastePct:5},reason:'Imported tooltip gives 5% haste for 30 seconds; cooldown/uptime unresolved.'}
 };
 const events=new Set(['windfury','flametongue','mark-death','chili','tea','flurry','quickness']);
+function eventRestriction(entry,build){
+ if(entry.recipientClasses&&!entry.recipientClasses.includes(build.classId))return 'Not applicable to this class.';
+ if(entry.recipientLevel&&build.level<entry.recipientLevel)return 'Requires level '+entry.recipientLevel+'.';
+ if(['windfury','flametongue'].includes(entry.id)&&build.classId==='shaman'&&build.classOptions?.mhImbue&&build.classOptions.mhImbue!=='None')return 'Suppressed by personal Shaman weapon imbue (community ruleset; live behaviour unverified).';
+ return null;
+}
 export function buffDefinition(id){
  const item=sourceItems.get(id),base={id,name:item?.name||id,stats:{},source:item?.source||null,durationSeconds:item?.effectAudit?.durationSeconds??null};
  if(events.has(id))return {...base,status:'event',...(eventSources[id]||{}),reason:eventSources[id]?.reason||(item?'Imported source tooltip; timed/triggered effect requires combat simulation.':'Reference effect; timing and server behaviour unresolved.')};
@@ -65,7 +75,12 @@ export function buffDefinition(id){
 export function resolveBuffEffects(build,gear={}){
  const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[])},'buffs');
  const entries=controls.buffIds.map(id=>{
-  const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};let active=['source-prepull','source-spell','source-conflict','reference-static','reference-scoped'].includes(e.status);
+  const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};
+  if(e.status==='event'){
+   const item=sourceItems.get(id),restriction=eventRestriction(e,build)||(item&&consumableRestriction(item,build));
+   return {...e,active:false,eventEligible:!restriction,...(restriction?{reason:restriction}:{})};
+  }
+  let active=['source-prepull','source-spell','source-conflict','reference-static','reference-scoped'].includes(e.status);
   if(id==='wisdom'&&['warrior','rogue'].includes(build.classId))return {...e,active:false,reason:'Requires a Mana-using class.'};
   if(e.recipientLevel&&build.level<e.recipientLevel)return {...e,active:false,reason:'Requires level '+e.recipientLevel+'.'};
   const item=sourceItems.get(id);if(item&&consumableRestriction(item,build))return {...e,active:false,reason:consumableRestriction(item,build)};
