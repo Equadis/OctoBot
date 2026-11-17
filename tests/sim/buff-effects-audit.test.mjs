@@ -84,3 +84,14 @@ test('oil level gate and imported consumable conflict handling',()=>{
  const b=newBuild('rogue');b.level=44;b.controls.buffIds=['wizard-oil-mh'];assert.equal(resolveBuffEffects(b,{mainhand:{classs:2,subclass:15}}).entries[0].active,false);
  b.level=60;b.controls.buffIds=[];b.controls.consumableIds=[13510,13511,13510];assert.deepEqual(resolveBuffEffects(b).consumables.map(c=>c.id),[13510]);
 });
+
+test('source-backed active target procs do not give personal penetration or permanent spell power',()=>{
+ const b=newBuild('rogue');b.controls.buffIds=[];const base=sheet(b);b.controls.buffIds=['wind-serpent','shartateth','hemorrhage','mark-death'];const a=sheet(b);
+ assert.equal(Number(a['Melee vs Target'].Armour)-Number(base['Melee vs Target'].Armour),-650);
+ assert.equal(a.Melee['Armor Pen'],base.Melee['Armor Pen']);
+ assert.equal(a['Target Debuff Contributions'].targetPhysicalDamageTakenPct,'2%');
+ assert.equal(a.Spell['Spell Power'],base.Spell['Spell Power']);
+ assert.equal(buffDefinition('hemorrhage').status,'source-conflict');
+ assert.deepEqual(buffDefinition('pack').stats,{crit:3,rangedCrit:3});
+ assert.equal(buffDefinition('tricks').durationSeconds,12);assert.equal(buffDefinition('mark-death').eventModifiers.providerMeleeAPToSpellDamagePct,18);
+});

@@ -6,6 +6,6 @@ const counts={},rows=CONSUMABLES.map(i=>({id:i.id,name:i.name,source:i.source,bu
 for(const r of rows)counts[r.status]=(counts[r.status]||0)+1;
 const groups={},buffs=BUFF_OPTIONS.map(o=>({...buffDefinition(o.id),name:o.name,display:o.effect}));
 for(const b of buffs)groups[b.status]=(groups[b.status]||0)+1;
-const summary={consumables:rows.length,counts,sharedBuffs:buffs.length,groups,unresolved:buffs.filter(b=>['unresolved','unmapped','source-conflict'].includes(b.status)),examples:rows.filter(x=>x.status==='unmapped')};
+const summary={consumables:rows.length,counts,sharedBuffs:buffs.length,groups,unresolved:buffs.filter(b=>['unresolved','unmapped','source-conflict','reference-static','reference-scoped'].includes(b.status)),examples:rows.filter(x=>x.status==='unmapped')};
 console.log('BUFF_AUDIT_BEGIN'+JSON.stringify(summary)+'BUFF_AUDIT_END');
 fs.writeFileSync('buff-consumable-audit.json',JSON.stringify({summary,buffs,rows},null,2));

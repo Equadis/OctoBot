@@ -1,5 +1,5 @@
-import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit1';
-import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit1';
+import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit2';
+import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit2';
 // Match source items by exact IDs through audited aliases. Missing items and
 // static raid assumptions remain reference values, never called source-verified.
 const sourceItems=new Map(CONSUMABLES.filter(i=>i.buffId&&i.verified).map(i=>[i.buffId,i]));
@@ -8,6 +8,11 @@ const scoped={
 };
 // Spell tooltips checked against the public OctoWoW DB, 2026-11-17.
 const spellSources={
+ 'wind-serpent':{stats:{targetArmour:-400},sources:['https://octowow.st/db/?item=12462'],assumption:'Active post-stack decay state after 55 stacks; no uptime or siphon damage inferred.'},
+ shartateth:{stats:{targetArmour:-250},sources:['https://octowow.st/db/?item=55127'],assumption:'Active target proc only; item-specific 75 armour penetration is not a raid debuff.'},
+ pack:{stats:{crit:3,rangedCrit:3},sources:['docs/sim/data/talents/druid.json#284'],assumption:'Imported talent tooltip; recipient within 45 yards of a provider in Cat/Bear/Dire Bear. Ranged and melee only.'},
+ tricks:{stats:{crit:4},sources:['docs/sim/data/talents/rogue.json#164','https://octowow.st/index.php/rogue'],duration:12,assumption:'Two active stacks of 2%; critical strike scope beyond melee not confirmed. No uptime assumed.'},
+ hemorrhage:{stats:{targetPhysicalDamageTakenPct:2},sources:['docs/sim/data/talents/rogue.json#155','https://octowow.st/forum/viewtopic.php?p=11685'],duration:15,conflict:true,assumption:'Imported talent states 2% and 50 charges; community report states 4%. Use the tooltip value for planning, not a live-verified multiplier.'},
  'juju-might':{stats:{ap:40},sources:['https://octowow.st/db/?spell=16329'],duration:600,assumption:'Selected active aura; does not imply availability of the item in the imported catalogue.'},
  'juju-power':{stats:{str:30},sources:['https://octowow.st/db/?item=12451','https://octowow.st/db/?spell=16323'],duration:1800,assumption:'Selected active aura.'},
  'wizard-oil-mh':{stats:{damageOnlySp:36,spellCrit:1},sources:['https://octowow.st/db/?item=20749'],duration:1800,assumption:'Weapon coating, requires level 45 and a compatible weapon.',recipientLevel:45},
@@ -32,6 +37,7 @@ const spellSources={
  faerie:{stats:{targetArmour:-505},sources:['https://octowow.st/db/?spell=17392'],duration:40,assumption:'Feral rank 4.'}
 };
 const eventSources={
+ 'mark-death':{source:'https://octowow.st/index.php/rogue',durationSeconds:8,eventModifiers:{providerMeleeAPToSpellDamagePct:18,partyAttackPowerPct:30},reason:'Imported rogue talent 165; provider AP and activation timing must be supplied by engine.'},
  flurry:{source:'https://octowow.st/db/?item=12450',durationSeconds:20,eventModifiers:{meleeHastePct:3},reason:'Tooltip gives 3% attack speed for 20 seconds; cooldown/uptime unresolved.'},
  quickness:{source:'https://octowow.st/db/?item=61181',durationSeconds:30,eventModifiers:{hastePct:5},reason:'Imported tooltip gives 5% haste for 30 seconds; cooldown/uptime unresolved.'}
 };
