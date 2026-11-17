@@ -3,9 +3,10 @@ import {resourceLedger,effectiveHealing} from './combat-math.mjs';
 import {CombatAuras} from './combat-auras.mjs';
 import {ThreatLedger} from './combat-threat.mjs';
 import {aggregateCombatAttribution} from './combat-attribution.mjs';
+import {ComboPointBank} from './combat-class-state.mjs';
 import {evaluatePriority} from './rotations/conditions.mjs';
 // Generic execution primitives. No default spell ranks, attack tables, or class-specific actions.
-export const EXECUTION_REVISION='octo-combat-execution-20261117-mvp4';
+export const EXECUTION_REVISION='octo-combat-execution-20261117-mvp5';
 const integer=(n,label,min=0)=>{if(!Number.isSafeInteger(n)||n<min)throw new RangeError(label+' must be an integer >= '+min);return n;};
 const positive=(n,label)=>{if(!Number.isFinite(n)||n<=0)throw new RangeError(label+' must be positive');return n;};
 const amount=(n,label)=>{if(!Number.isFinite(n)||n<0)throw new RangeError(label+' must be nonnegative');return n;};
@@ -14,7 +15,7 @@ const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must b
 const copy=structuredClone;
 export class CombatEncounter{
  #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;
- constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false}){
+ constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null}){
   this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');
   for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health});}
@@ -23,6 +24,8 @@ export class CombatEncounter{
   this.#targets=targetIds.map(check);this.#allies=allyIds.map(check);
   if(!this.#targets.includes(this.#primary)||new Set(this.#targets).size!==this.#targets.length||new Set(this.#allies).size!==this.#allies.length||this.#targets.some(id=>id===this.#player||id===this.#pet||this.#allies.includes(id)))throw new Error('Invalid encounter unit roles');
   this.manageAuras=manageAuras===true;
+  if(comboPoints&&Object.hasOwn(pools,'comboPoints'))throw new Error('Target-banked combo points must not share a global resource pool');
+  this.comboPoints=comboPoints===null?null:new ComboPointBank({...comboPoints,validateTarget:id=>this.#targets.includes(id)});
   this.auras=new CombatAuras(this.timeline,{validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active())this.#record(e.type,e);}});
   this.threat=new ThreatLedger(this.timeline,{enemyIds:this.#targets,actorIds:[...new Set([this.#player,...this.#allies,...(this.#pet?[this.#pet]:[])])],onChange:e=>{if(this.#active())this.#record('threat',e);}});
   for(const a of actions){
@@ -35,7 +38,7 @@ export class CombatEncounter{
    if(!Array.isArray(a.costs)||!Array.isArray(a.cooldowns)||!Array.isArray(a.targets)||!a.targets.length||a.targets.some(x=>!['enemy','ally','self','pet'].includes(x)))throw new Error('Explicit action costs, cooldowns and targets required');
    for(const c of a.costs){key(c.resource);if(!Number.isFinite(c.delta)||c.delta>0)throw new Error('Start costs must be nonpositive');}
    this.resources.cooldowns.check(a.cooldowns);resourceLedger(this.resources.snapshot(),a.costs);
-   if(a.kind!=='channel'||a.resolve!==undefined)fn(a.resolve,'action resolver');if(a.available!==undefined)fn(a.available,'availability predicate');this.#actions.set(a.id,{...a,costs:copy(a.costs),cooldowns:copy(a.cooldowns),targets:[...a.targets]});
+   if(a.kind!=='channel'||a.resolve!==undefined)fn(a.resolve,'action resolver');if(a.available!==undefined)fn(a.available,'availability predicate');if(a.availableForTarget!==undefined)fn(a.availableForTarget,'target availability predicate');this.#actions.set(a.id,{...a,costs:copy(a.costs),cooldowns:copy(a.cooldowns),targets:[...a.targets]});
   }
   if(!Array.isArray(rows)||!rows.length)throw new Error('Explicit rotation rows required');
   this.#rows=copy(rows);
@@ -55,7 +58,8 @@ export class CombatEncounter{
  #state(){
   const primary=this.#alive(this.#primary)?this.#primary:this.#targets.find(id=>this.#alive(id));
   const pool=this.resources.snapshot();const resources=Object.fromEntries(Object.entries(pool).map(([k,v])=>[k,v.current]));if(pool.mana&&pool.mana.max>0)resources.manaPercent=pool.mana.current/pool.mana.max*100;
-  const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent};};
+  if(this.comboPoints)resources.comboPoints=this.comboPoints.points(primary);
+  const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent,...(this.comboPoints&&this.#targets.includes(id)?{resources:{...resources,comboPoints:this.comboPoints.points(id)}}:{})};};
   const aliveTargets=this.#targets.filter(id=>this.#alive(id)),aliveAllies=this.#allies.filter(id=>this.#alive(id));
   const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:this.#cast?.action.kind==='cast',channeling:this.#cast?.action.kind==='channel',targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
   // Adapter may supply only missing mechanics (auras, reach, known ranks, etc.).
@@ -81,7 +85,7 @@ export class CombatEncounter{
   for(const row of this.#rows){
    const a=this.#action(row.abilityId||row.ability),action=state.actions[a.id];if(!action.ready||!action.available)continue;
    const type=row.target??'primary';let frame=type==='cycle'?state.targets:type==='ally'?state.allies:type==='self'?[state.self]:type==='pet'?(state.pet?[state.pet]:[]):[{id:state.targetId}];
-   frame=frame.filter(x=>this.#allows(a,x.id));if(!frame.length)continue;
+   frame=frame.filter(x=>this.#allows(a,x.id)&&(!a.availableForTarget||a.availableForTarget(this,x.id,{...state,...x})===true));if(!frame.length)continue;
    // Existing evaluator receives target-specific frames; primary row stays primary.
    const context={...state,...(type==='cycle'?{targets:frame}:type==='ally'?{allies:frame}:type==='self'?{self:frame[0]}:type==='pet'?{pet:frame[0]}:{targetId:frame[0].id})};
    const result=evaluatePriority([row],context);if(result){chosen={a,targetId:result.targetId,state};break;}
@@ -136,7 +140,7 @@ export class CombatEncounter{
       const a=queued.action;
       // Cost and cooldown belong to the swing, not the reservation. No
       // retargeting and no automatic refunds; failed queues fall back to white.
-      if(queued.targetId===targetId&&this.#allows(a,targetId)&&(!a.available||a.available(this,this.#state())===true)){
+      if(queued.targetId===targetId&&this.#allows(a,targetId)&&(!a.available||a.available(this,this.#state())===true)&&(!a.availableForTarget||a.availableForTarget(this,targetId,this.#state())===true)){
        const paid=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});
        if(paid.ok){replaced=true;this.#record('queued-attack',{ability:a.name,targetId,swingId:s.id});a.resolve(this,targetId);}
       }
@@ -166,6 +170,6 @@ export class CombatEncounter{
   this.timeline.runUntil(this.#duration,{maxEvents,stopWhen:()=>this.#finishedAt!==null});if(this.#cast)this.interrupt('time limit');this.#done=true;
   const durationMs=this.#finishedAt??this.#duration;const totals={damage:0,overkill:0,healing:0,overheal:0,enemyDamage:0,allyHealing:0};
   for(const e of this.#log){if(e.type==='damage'){totals.damage+=e.effective;totals.overkill+=e.overkill;if(this.#targets.includes(e.targetId))totals.enemyDamage+=e.effective;}if(e.type==='heal'){totals.healing+=e.effective;totals.overheal+=e.overheal;if(!this.#targets.includes(e.targetId))totals.allyHealing+=e.effective;}}
-  return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),totals,attribution:aggregateCombatAttribution(this.#log,{unitIds:[...this.#units.keys()],targetIds:this.#targets}),events:copy(this.#log),auras:this.auras.uptime(durationMs),threat:this.threat.snapshot(),engineValidated:false};
+  return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),...(this.comboPoints?{comboPoints:this.comboPoints.snapshot()}:{}),totals,attribution:aggregateCombatAttribution(this.#log,{unitIds:[...this.#units.keys()],targetIds:this.#targets}),events:copy(this.#log),auras:this.auras.uptime(durationMs),threat:this.threat.snapshot(),engineValidated:false};
  }
 }
