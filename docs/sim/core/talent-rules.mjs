@@ -113,6 +113,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Sword extra-attack proc and polearm range require combat/range support"
+    },
+    {
+      "kind": "weapon",
+      "weapon": "polearm",
+      "stat": "rangeYards",
+      "param": 3
     }
   ],
   "68": [
@@ -210,7 +216,10 @@ export const TALENT_RULES={
     {
       "kind": "special",
       "stat": "shieldBlockValuePct",
-      "param": 1
+      "param": 1,
+      "when": {
+        "shield": true
+      }
     }
   ],
   "79": [
@@ -375,7 +384,7 @@ export const TALENT_RULES={
     {
       "kind": "offhand",
       "stat": "hit",
-      "param": 0
+      "param": 1
     }
   ],
   "96": [
