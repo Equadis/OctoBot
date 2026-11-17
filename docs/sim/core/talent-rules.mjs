@@ -349,6 +349,20 @@ export const TALENT_RULES={
       "scope": "Grounding Totem",
       "stat": "cooldownReductionSeconds",
       "param": 1
+    },
+    {
+      "kind": "buff",
+      "source": "earth",
+      "stat": "str",
+      "param": 0,
+      "note": "Only the selected earth buff is enhanced; unrelated buffs are unchanged"
+    },
+    {
+      "kind": "buff",
+      "source": "air",
+      "stat": "agi",
+      "param": 0,
+      "note": "Only the selected air buff is enhanced; unrelated buffs are unchanged"
     }
   ],
   "263": [
@@ -551,7 +565,7 @@ export const TALENT_COVERAGE={
   },
   "262": {
     "status": "partial",
-    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
+    "note": "Static enhancement is applied only when its specific buff or pet is selected; other ability effects remain scoped or require verification."
   },
   "263": {
     "status": "partial",
