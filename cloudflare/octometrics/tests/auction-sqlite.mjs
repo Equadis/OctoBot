@@ -8,7 +8,7 @@ export const token="lifecycle-test-only-token";
 
 export function d1(){
  const sqlite=new DatabaseSync(":memory:");
- for(const file of ["0002_auction.sql","0003_auction_item_metadata.sql","0004_auction_first_seen.sql"])
+ for(const file of ["0002_auction.sql","0003_auction_item_metadata.sql","0004_auction_first_seen.sql","0005_auction_metadata_recovery.sql"])
   sqlite.exec(readFileSync(new URL("../migrations/"+file,import.meta.url),"utf8"));
  const stmt=sql=>{
   let args=[];
