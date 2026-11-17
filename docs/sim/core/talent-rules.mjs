@@ -1,0 +1,379 @@
+/* All 49 shaman talents reviewed against https://octowow.st/talents/shaman/; snapshot SHA256 8340d1af2ba89a41d8c28c5e9829f7cf5679b11864f6a7d00307fa1e2a02d2ac. */
+export const AUDITED_CLASS="shaman";
+export const TALENT_RULES={
+  "219": [
+    {
+      "kind": "spell",
+      "scope": [
+        "Fire",
+        "Frost",
+        "Nature"
+      ],
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "222": [
+    {
+      "kind": "global",
+      "stat": "hit",
+      "param": 0
+    },
+    {
+      "kind": "global",
+      "stat": "spellHit",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Melee-crit-triggered additional spell hit is a 10-second proc: rank 1/2/3 gives +3/+6/+9%, not passive"
+    }
+  ],
+  "225": [
+    {
+      "kind": "spell",
+      "scope": [
+        "Lightning Bolt",
+        "Chain Lightning"
+      ],
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "229": [
+    {
+      "kind": "spell",
+      "scope": "Fire",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "232": [
+    {
+      "kind": "spell",
+      "scope": [
+        "Fire",
+        "Frost",
+        "Nature"
+      ],
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Totem critical-damage effects remain combat-engine scoped"
+    }
+  ],
+  "239": [
+    {
+      "kind": "spell",
+      "scope": [
+        "Healing spells",
+        "Lightning spells"
+      ],
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "245": [
+    {
+      "kind": "pending",
+      "note": "Water Shield conditional mana/5 requires an actual shield-state control"
+    }
+  ],
+  "251": [
+    {
+      "kind": "percent",
+      "stat": "str",
+      "param": 0
+    },
+    {
+      "kind": "percent",
+      "stat": "agi",
+      "param": 0
+    },
+    {
+      "kind": "percent",
+      "stat": "sta",
+      "param": 0
+    },
+    {
+      "kind": "percent",
+      "stat": "int",
+      "param": 0
+    },
+    {
+      "kind": "percent",
+      "stat": "spi",
+      "param": 0
+    }
+  ],
+  "252": [
+    {
+      "kind": "special",
+      "stat": "blockChance",
+      "param": 0
+    },
+    {
+      "kind": "special",
+      "stat": "shieldBlockValuePct",
+      "param": 1
+    }
+  ],
+  "254": [
+    {
+      "kind": "global",
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "259": [
+    {
+      "kind": "special",
+      "stat": "itemArmourPct",
+      "param": 0
+    },
+    {
+      "kind": "global",
+      "stat": "dodge",
+      "param": 1
+    }
+  ],
+  "260": [
+    {
+      "kind": "pending",
+      "note": "Flurry is temporary for three attacks after a crit; do not add permanent haste"
+    }
+  ],
+  "261": [
+    {
+      "kind": "special",
+      "stat": "shieldArmourPct",
+      "param": 0,
+      "when": {
+        "shield": true
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Shield active",
+      "stat": "threatPct",
+      "param": 1,
+      "when": {
+        "shield": true
+      }
+    }
+  ],
+  "265": [
+    {
+      "kind": "scoped",
+      "scope": "Weapons / Stormstrike / Lightning Strike",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "spell",
+      "scope": "Instant spells",
+      "stat": "crit",
+      "param": 1
+    }
+  ]
+};
+export const TALENT_COVERAGE={
+  "218": {
+    "status": "ability-specific",
+    "note": "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 10%."
+  },
+  "219": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "220": {
+    "status": "active-or-non-stat",
+    "note": "Increases the health of your Stoneclaw Totem by 50% and the radius of your Earthbind Totem by 20%."
+  },
+  "221": {
+    "status": "ability-specific",
+    "note": "Reduces damage taken from Fire, Frost and Nature effects by 10%."
+  },
+  "222": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "223": {
+    "status": "proc-or-conditional",
+    "note": "After landing a critical strike with a Fire, Frost, or Nature damage spell or melee attack, you enter a Clearcasting state. The Clearcasting state reduces the mana cost of you"
+  },
+  "224": {
+    "status": "ability-specific",
+    "note": "Reduces the cooldown of your Shock spells by 1 sec."
+  },
+  "225": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "226": {
+    "status": "ability-specific",
+    "note": "Refreshing Flame Shock with Molten Blast deals damage equal to 60% of the refreshed duration."
+  },
+  "227": {
+    "status": "ability-specific",
+    "note": "Reduces the delay before your Fire Nova Totem activates by 2 sec, decreases the threat generated by your Magma Totem by 50%, and increases your Searing Totem's attack speed by"
+  },
+  "228": {
+    "status": "proc-or-conditional",
+    "note": "Increases the maximum charges of your Earth Shield by 4. While Earth Shield is active, increases your chance to avoid interruption caused by damage while casting damaging spel"
+  },
+  "229": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "230": {
+    "status": "ability-specific",
+    "note": "Increases the range of your Lightning Bolt and Chain Lightning spells by 6 yards."
+  },
+  "231": {
+    "status": "proc-or-conditional",
+    "note": "Increases your Fire, Frost, and Nature damage by 15% and reduces the mana cost of your offensive spells by 20% for 10 sec."
+  },
+  "232": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "233": {
+    "status": "ability-specific",
+    "note": "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 1 sec."
+  },
+  "234": {
+    "status": "proc-or-conditional",
+    "note": "Breaks the earth beneath the target, dealing 262 to 291 Nature damage to the target and an additional 35% of that damage as Nature damage to other enemies within 10 yards. Cre"
+  },
+  "235": {
+    "status": "ability-specific",
+    "note": "Reduces the casting time of your Healing Wave spell by 75 sec."
+  },
+  "236": {
+    "status": "ability-specific",
+    "note": "Reduces the Mana cost of your healing spells by 5% and your totems by 25%."
+  },
+  "237": {
+    "status": "ability-specific",
+    "note": "Reduces the cooldown of your Reincarnation spell by 20 min and increases the amount of health and mana you reincarnate with by an additional 20%."
+  },
+  "238": {
+    "status": "proc-or-conditional",
+    "note": "Increases your target's armor value by 25% for 15 sec after getting a critical effect from one of your healing spells."
+  },
+  "239": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "240": {
+    "status": "proc-or-conditional",
+    "note": "Your Healing Wave and Lesser Healing Wave spells each have a 100% chance, and your Chain Heal spell has a 33% chance to increase the healing of your next Healing Wave or Chain"
+  },
+  "241": {
+    "status": "proc-or-conditional",
+    "note": "Gives you a 70% chance to avoid interruption caused by damage while casting any healing spell."
+  },
+  "242": {
+    "status": "active-or-non-stat",
+    "note": "Increases the duration of your helpful totems by 20% and the amount of mana refunded by Totemic Recall by an additional 15%."
+  },
+  "243": {
+    "status": "ability-specific",
+    "note": "Reduces the threat generated by your Nature spells by 15%."
+  },
+  "244": {
+    "status": "ability-specific",
+    "note": "Reduces mana cost of your Mana Spring Totem by 50% and increases the effect of your Healing Stream Totem by 25%."
+  },
+  "245": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "246": {
+    "status": "proc-or-conditional",
+    "note": "After healing a target affected by your Healing Way effect, you have a 30% chance to regain mana equal to 15% of the base cost of the spell."
+  },
+  "247": {
+    "status": "proc-or-conditional",
+    "note": "When activated, your next Nature spell with a casting time less than 10 sec becomes an instant cast spell. Affected damaging spells have 25% reduced effectiveness."
+  },
+  "248": {
+    "status": "proc-or-conditional",
+    "note": "Your Healing Wave and Lesser Healing Wave spells have a 50% chance to restore a charge of your active Water Shield. When your Water Shield is at maximum charges, this effect c"
+  },
+  "249": {
+    "status": "ability-specific",
+    "note": "Reduces the cast time of your Chain Heal spell by 1 sec."
+  },
+  "250": {
+    "status": "proc-or-conditional",
+    "note": "Links the spirit of an ally to that of other group members within 35 yards. When the target takes damage, 30% is distributed among nearby allies. Lasts 20 sec."
+  },
+  "251": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "252": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "253": {
+    "status": "ability-specific",
+    "note": "90% of the threat generated by your totems is transferred to you."
+  },
+  "254": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "255": {
+    "status": "ability-specific",
+    "note": "Increases the number of charges of your shield spells by 6, but increases the cooldown between activations by 1 sec."
+  },
+  "256": {
+    "status": "ability-specific",
+    "note": "Reduces the cast time of your Ghost Wolf spell by 2 sec."
+  },
+  "257": {
+    "status": "proc-or-conditional",
+    "note": "Reduces threat generated by your physical attacks, weapon imbue effects, and your Lightning Strike and Stormstrike abilities by 25%. This effect does not apply while Rockbiter"
+  },
+  "258": {
+    "status": "proc-or-conditional",
+    "note": "Instantly strikes your target, causing 20% weapon damage and an additional 10% as Nature damage. This strike also triggers an empowered version of your active shield, consumin"
+  },
+  "259": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "260": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "261": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "262": {
+    "status": "ability-specific",
+    "note": "Increases the effect of your Strength of Earth and Grace of Air Totems by 25% and reduces the cooldown of your Grounding Totem by 2 sec. Stoneskin Totem's damage reduction is "
+  },
+  "263": {
+    "status": "proc-or-conditional",
+    "note": "Imbuing your weapon grants a special benefit based on the imbue: Flametongue: Hitting enemies with your attacks increases damage done by Fire Totems and Fire spells by 30% for"
+  },
+  "264": {
+    "status": "proc-or-conditional",
+    "note": "Gives you an extra attack for 100% weapon damage and increases the next 2 sources of Nature damage you deal by 25%. Lasts 12 sec."
+  },
+  "265": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "266": {
+    "status": "proc-or-conditional",
+    "note": "Fly into a frenzy, increasing your attack speed by 20% and spell casting speed by 20% for 30 sec. While under this effect, your melee critical strikes increase the attack and "
+  }
+};
