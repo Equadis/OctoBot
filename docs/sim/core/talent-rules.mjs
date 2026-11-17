@@ -1,6 +1,12 @@
 /* All 55 hunter talents reviewed against https://octowow.st/talents/hunter/; snapshot SHA256 5de146011a25875988790d305d181c8798dd371aa5d74d058fd2f4d81f0e0854. */
 export const AUDITED_CLASS="hunter";
 export const TALENT_RULES={
+  "373": [
+    {
+      "kind": "pending",
+      "note": "Swift Aspects procs timed ranged or melee attack-speed buffs while the corresponding Hawk/Wolf aspect is active"
+    }
+  ],
   "374": [
     {
       "kind": "pet",
@@ -88,6 +94,12 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "380": [
+    {
+      "kind": "pending",
+      "note": "Coordinated Assault grants a limited-timing pet extra strike after Arcane/Steady Shot or Raptor Strike"
+    }
+  ],
   "381": [
     {
       "kind": "pet",
@@ -126,6 +138,24 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "385": [
+    {
+      "kind": "pending",
+      "note": "Scent of Blood is an owner-hit-triggered temporary pet damage bonus"
+    }
+  ],
+  "386": [
+    {
+      "kind": "pending",
+      "note": "Bestial Wrath is an on-use timed pet damage/CC immunity effect"
+    }
+  ],
+  "387": [
+    {
+      "kind": "pending",
+      "note": "Intimidation applies a stun and threat benefit on the pet's next successful melee attack"
+    }
+  ],
   "388": [
     {
       "kind": "pet",
@@ -153,6 +183,18 @@ export const TALENT_RULES={
       "kind": "pet",
       "stat": "spellPowerFromOwnerRangedPct",
       "param": 1
+    }
+  ],
+  "390": [
+    {
+      "kind": "pending",
+      "note": "Frenzy temporarily increases pet attack speed after pet critical strike; not permanent pet haste"
+    }
+  ],
+  "391": [
+    {
+      "kind": "pending",
+      "note": "Kill Command is an active pet attack enabled by the owner's critical strike"
     }
   ],
   "392": [
@@ -189,6 +231,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "395": [
+    {
+      "kind": "pending",
+      "note": "Entrapment gives active trap effects a chance to immobilise their target"
+    }
+  ],
   "396": [
     {
       "kind": "offhand",
@@ -208,6 +256,12 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "397": [
+    {
+      "kind": "pending",
+      "note": "Improved Wing Clip gives Wing Clip a chance to immobilise the target"
+    }
+  ],
   "398": [
     {
       "kind": "scoped",
@@ -219,11 +273,35 @@ export const TALENT_RULES={
       }
     }
   ],
+  "399": [
+    {
+      "kind": "pending",
+      "note": "Planning Ahead modifies traps only if their trigger is delayed more than 5 seconds after placement"
+    }
+  ],
   "400": [
     {
       "kind": "special",
       "stat": "maxHealthPct",
       "param": 0
+    }
+  ],
+  "401": [
+    {
+      "kind": "pending",
+      "note": "Carve is an active cone attack sharing cooldown with Multi-Shot and requires a multi-target model"
+    }
+  ],
+  "402": [
+    {
+      "kind": "pending",
+      "note": "Deterrence grants temporary dodge/parry on use; must never affect permanent sheet stats"
+    }
+  ],
+  "403": [
+    {
+      "kind": "pending",
+      "note": "Stinging Nettle applies a short Serpent Sting via Mongoose Bite or triggered Fire traps, requiring effect duration and resist handling"
     }
   ],
   "404": [
@@ -285,6 +363,12 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "408": [
+    {
+      "kind": "pending",
+      "note": "Lacerate requires a prior critical hit and then deals direct and periodic melee-AP-based damage"
+    }
+  ],
   "409": [
     {
       "kind": "scoped",
@@ -315,6 +399,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Untamed Trapper is a passive with several cross-ability coefficients absent from the rankParameters snapshot; verify the full tooltip and live effect before mapping"
+    }
+  ],
+  "412": [
+    {
+      "kind": "pending",
+      "note": "Improved Concussive Shot adds a chance-based stun from a successful Concussive Shot"
     }
   ],
   "413": [
@@ -360,6 +450,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "417": [
+    {
+      "kind": "pending",
+      "note": "Aimed Shot is an active ranged attack with +70 damage; requires ranged weapon and attack table"
+    }
+  ],
   "418": [
     {
       "kind": "scoped",
@@ -374,11 +470,35 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "419": [
+    {
+      "kind": "pending",
+      "note": "Endless Quiver triggers an extra ranged attack after selected shot hits with no ammo cost"
+    }
+  ],
   "420": [
     {
       "kind": "ranged",
       "stat": "criticalDamagePct",
       "param": 0
+    }
+  ],
+  "421": [
+    {
+      "kind": "pending",
+      "note": "Scatter Shot is an active short-range ranged strike and disorient"
+    }
+  ],
+  "422": [
+    {
+      "kind": "pending",
+      "note": "Experimental Ammunition switches Aimed Shot secondary element and additional next-attack effects; requires active ammo choice"
+    }
+  ],
+  "423": [
+    {
+      "kind": "pending",
+      "note": "Piercing Shots creates a timed bleed from critical shots; cannot add bleed DPS without event simulation"
     }
   ],
   "424": [
@@ -409,12 +529,18 @@ export const TALENT_RULES={
       "stat": "damagePct",
       "param": 0
     }
+  ],
+  "427": [
+    {
+      "kind": "pending",
+      "note": "Lock and Load resets Aimed Shot after critical shot and grants a temporary cast-speed buff"
+    }
   ]
 };
 export const TALENT_COVERAGE={
   "373": {
     "status": "proc-or-conditional",
-    "note": "While Aspect of the Hawk is active, all normal ranged attacks have a 10% chance of increasing ranged attack speed by 15% for 12 sec. While Aspect of the Wolf is active, all no"
+    "note": "Swift Aspects procs timed ranged or melee attack-speed buffs while the corresponding Hawk/Wolf aspect is active"
   },
   "374": {
     "status": "partial",
@@ -441,8 +567,8 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "380": {
-    "status": "ability-specific",
-    "note": "Hitting an enemy with Arcane Shot, Steady Shot, or Raptor Strike causes your pet's next attack within 6 sec to also strike for Physical damage equal to 20% of your Attack Powe"
+    "status": "proc-or-conditional",
+    "note": "Coordinated Assault grants a limited-timing pet extra strike after Arcane/Steady Shot or Raptor Strike"
   },
   "381": {
     "status": "partial",
@@ -462,15 +588,15 @@ export const TALENT_COVERAGE={
   },
   "385": {
     "status": "proc-or-conditional",
-    "note": "Your attacks have a 15% chance to send your pet into a rage, causing it to deal 40% additional damage for 8 sec."
+    "note": "Scent of Blood is an owner-hit-triggered temporary pet damage bonus"
   },
   "386": {
     "status": "proc-or-conditional",
-    "note": "Sends your pet into a rage, granting it Scent of Blood for 18 sec. While enraged, the beast does not feel pity, remorse, or fear, and cannot be stopped except by death."
+    "note": "Bestial Wrath is an on-use timed pet damage/CC immunity effect"
   },
   "387": {
     "status": "proc-or-conditional",
-    "note": "Command your pet to intimidate the target on the next successful melee attack, stunning the target for 3 sec, and increasing the pet's threat generation by 50% for 8 sec."
+    "note": "Intimidation applies a stun and threat benefit on the pet's next successful melee attack"
   },
   "388": {
     "status": "partial",
@@ -482,11 +608,11 @@ export const TALENT_COVERAGE={
   },
   "390": {
     "status": "proc-or-conditional",
-    "note": "Gives your pet a 100% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike."
+    "note": "Frenzy temporarily increases pet attack speed after pet critical strike; not permanent pet haste"
   },
   "391": {
     "status": "proc-or-conditional",
-    "note": "Commands your pet to instantly attack for 80% of its Attack Power. Can only be used after the Hunter lands a critical strike on the target."
+    "note": "Kill Command is an active pet attack enabled by the owner's critical strike"
   },
   "392": {
     "status": "partial",
@@ -502,7 +628,7 @@ export const TALENT_COVERAGE={
   },
   "395": {
     "status": "proc-or-conditional",
-    "note": "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 25% chance to entrap the target, preventing them from moving for 5 sec."
+    "note": "Entrapment gives active trap effects a chance to immobilise their target"
   },
   "396": {
     "status": "partial",
@@ -510,7 +636,7 @@ export const TALENT_COVERAGE={
   },
   "397": {
     "status": "proc-or-conditional",
-    "note": "Gives your Wing Clip ability a 40% chance to immobilize the target for 5 sec."
+    "note": "Improved Wing Clip gives Wing Clip a chance to immobilise the target"
   },
   "398": {
     "status": "partial",
@@ -518,23 +644,23 @@ export const TALENT_COVERAGE={
   },
   "399": {
     "status": "proc-or-conditional",
-    "note": "The duration of Freezing and Frost Trap effects and the damage of Immolation and Explosive Trap effects are increased by 25% if the traps are not triggered within the first 5 "
+    "note": "Planning Ahead modifies traps only if their trigger is delayed more than 5 seconds after placement"
   },
   "400": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "401": {
-    "status": "ability-specific",
-    "note": "A sweeping attack that strikes up to 5 enemies in a 10 yard cone in front of you, dealing 60% weapon damage. This ability shares a cooldown with Multi-Shot."
+    "status": "proc-or-conditional",
+    "note": "Carve is an active cone attack sharing cooldown with Multi-Shot and requires a multi-target model"
   },
   "402": {
     "status": "proc-or-conditional",
-    "note": "When activated, increases your Dodge and Parry chance by 25% for 10 sec."
+    "note": "Deterrence grants temporary dodge/parry on use; must never affect permanent sheet stats"
   },
   "403": {
     "status": "proc-or-conditional",
-    "note": "Your Mongoose Bite and triggered Fire traps now apply your highest rank of Serpent Sting for 40% of the duration. Serpent Stings applied this way ignore resistances and immuni"
+    "note": "Stinging Nettle applies a short Serpent Sting via Mongoose Bite or triggered Fire traps, requiring effect duration and resist handling"
   },
   "404": {
     "status": "partial",
@@ -554,7 +680,7 @@ export const TALENT_COVERAGE={
   },
   "408": {
     "status": "proc-or-conditional",
-    "note": "Deepens the target's open wound, dealing damage equal to 40% of melee Attack Power and causing the target to bleed for 20% of that damage over 8 sec. Can only be used after cr"
+    "note": "Lacerate requires a prior critical hit and then deals direct and periodic melee-AP-based damage"
   },
   "409": {
     "status": "partial",
@@ -570,7 +696,7 @@ export const TALENT_COVERAGE={
   },
   "412": {
     "status": "proc-or-conditional",
-    "note": "Gives your Concussive Shot a 20% chance to stun the target for 3 sec."
+    "note": "Improved Concussive Shot adds a chance-based stun from a successful Concussive Shot"
   },
   "413": {
     "status": "partial",
@@ -589,8 +715,8 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "417": {
-    "status": "ability-specific",
-    "note": "An aimed shot that increases ranged damage by 70."
+    "status": "proc-or-conditional",
+    "note": "Aimed Shot is an active ranged attack with +70 damage; requires ranged weapon and attack table"
   },
   "418": {
     "status": "partial",
@@ -598,7 +724,7 @@ export const TALENT_COVERAGE={
   },
   "419": {
     "status": "proc-or-conditional",
-    "note": "Your Auto Shot, Arcane Shot, Steady Shot and Multi-Shot have a 6% chance to fire an additional normal ranged attack. This additional shot does not spend ammo."
+    "note": "Endless Quiver triggers an extra ranged attack after selected shot hits with no ammo cost"
   },
   "420": {
     "status": "partial",
@@ -606,15 +732,15 @@ export const TALENT_COVERAGE={
   },
   "421": {
     "status": "proc-or-conditional",
-    "note": "A short-range shot that deals 50% weapon damage and disorients the target for 4 sec. Any damage caused will remove the effect. Turns off your attack when used."
+    "note": "Scatter Shot is an active short-range ranged strike and disorient"
   },
   "422": {
     "status": "proc-or-conditional",
-    "note": "Your Aimed Shot deals an additional 5% of its damage as Fire, Arcane, or Nature damage, based on the active effect. Grants a further benefit depending on the element: Explosiv"
+    "note": "Experimental Ammunition switches Aimed Shot secondary element and additional next-attack effects; requires active ammo choice"
   },
   "423": {
-    "status": "ability-specific",
-    "note": "Your critical strikes from Multi-Shot, Steady Shot and Aimed Shot cause the target to bleed, dealing 30% of the damage over 8 sec. This damage generates no threat."
+    "status": "proc-or-conditional",
+    "note": "Piercing Shots creates a timed bleed from critical shots; cannot add bleed DPS without event simulation"
   },
   "424": {
     "status": "partial",
@@ -630,6 +756,6 @@ export const TALENT_COVERAGE={
   },
   "427": {
     "status": "proc-or-conditional",
-    "note": "Your Steady Shot, Aimed Shot, and Arcane Shot critical strikes have a 100% chance to reset the cooldown of Aimed Shot and trigger Lock and Load. Lock and Load reduces the cast"
+    "note": "Lock and Load resets Aimed Shot after critical shot and grants a temporary cast-speed buff"
   }
 };
