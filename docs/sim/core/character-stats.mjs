@@ -151,6 +151,8 @@ export function characterStats(build,talentData,gear={}){
   for(const [school,stats] of Object.entries(audit.spell)){
    for(const [stat,value] of Object.entries(stats)){
     scoped.push([school+' '+stat,fmt(stat,value),'Talent contribution only; not included in global spell stats.']);
+    if(stat==='hit')scoped.push([school+' Estimated Spell Miss',pct(clamp(baseSpellMiss-s.spellHit-value,1,99),1),'Uses the shared target-level miss baseline. Actual spell-family resistance mechanics remain unverified.']);
+    if(stat==='crit'&&spellCrit!==null)scoped.push([school+' Estimated Spell Crit',pct(spellCrit+value,2),'General spell crit baseline plus this scoped bonus; not an independent server measurement.']);
    }
   }
   for(const [stat,value] of Object.entries(audit.ranged))scoped.push(['Ranged '+stat,fmt(stat,value),'Ranged weapon bonus, not melee.']);
