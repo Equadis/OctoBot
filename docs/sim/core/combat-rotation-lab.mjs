@@ -1,3 +1,4 @@
+import {sealTemplate} from './combat-seal-reference.mjs';
 import {poisonTemplate} from './combat-poison-reference.mjs';
 import {feralTemplate} from './combat-feral-reference.mjs';
 import {referenceRanks,referenceRank} from './combat-reference-ranks.mjs';
@@ -6,7 +7,7 @@ import {CURRENT_ENCHANT_PHASE} from './equipment-options.mjs';
 import {prepareReferenceScenario} from './combat-reference-adapter.mjs';
 
 const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aura','combo-bleed','physical-flat','physical-bleed']);
-const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind));
+const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind)||c.kind==='seal-aura');
 const isRanged=r=>r.components.some(c=>['ranged-weapon','ranged-arcane'].includes(c.kind));
 const rowsFor=b=>b.controls.rotationRows;
 const rankPhase=r=>r.referenceAvailableFromPhase??1;
@@ -25,7 +26,9 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
-  if(field==='crusaderModel')policy.crusaderModel={apCoefficient:null,holyBonusMultiplier:1};
+  if(field==='sealModel')policy.sealModel=sealTemplate();
+  if(field==='judgementPolicy')policy.judgementPolicy={consume:null};
+  if(field==='crusaderModel')policy.crusaderModel={apCoefficient:null,weaponCoefficient:null,spellPowerCoefficient:null,weaponPolicy:null,normalisedSpeed:null,holyBonusMultiplier:1};
   if(field==='arcaneShotModel')policy.arcaneShotModel={flatDamage:null,weaponCoefficient:null,spellPowerCoefficient:null,defense:null};
   if(field==='dualWeaponModel')policy.dualWeaponModel={mainhand:{coefficient:null,flatDamage:null},offhand:{coefficient:null,flatDamage:null},offhandNormalisedSpeed:null};
   if(field==='rendStancePolicy')policy.rendStancePolicy=['Battle','Defensive'];

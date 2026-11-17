@@ -2805,7 +2805,13 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "unknown": [
         "unmeasured live damage, rank learnability, coefficients or timings"
       ],
-      "conflicts": [],
+      "conflicts": [
+        {
+          "field": "strike formula",
+          "guide": "rank flat damage and Holy vulnerability",
+          "archive": "normalised weapon component and Spell Power scaling; revisions differ"
+        }
+      ],
       "status": "external-reference-only",
       "source": "https://octowow.st/index.php/paladin",
       "liveVerified": false
@@ -2853,7 +2859,13 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "unknown": [
         "unmeasured live damage, rank learnability, coefficients or timings"
       ],
-      "conflicts": [],
+      "conflicts": [
+        {
+          "field": "strike formula",
+          "guide": "rank flat damage and Holy vulnerability",
+          "archive": "normalised weapon component and Spell Power scaling; revisions differ"
+        }
+      ],
       "status": "external-reference-only",
       "source": "https://octowow.st/index.php/paladin",
       "liveVerified": false
@@ -2901,7 +2913,13 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "unknown": [
         "unmeasured live damage, rank learnability, coefficients or timings"
       ],
-      "conflicts": [],
+      "conflicts": [
+        {
+          "field": "strike formula",
+          "guide": "rank flat damage and Holy vulnerability",
+          "archive": "normalised weapon component and Spell Power scaling; revisions differ"
+        }
+      ],
       "status": "external-reference-only",
       "source": "https://octowow.st/index.php/paladin",
       "liveVerified": false
@@ -2949,7 +2967,13 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "unknown": [
         "unmeasured live damage, rank learnability, coefficients or timings"
       ],
-      "conflicts": [],
+      "conflicts": [
+        {
+          "field": "strike formula",
+          "guide": "rank flat damage and Holy vulnerability",
+          "archive": "normalised weapon component and Spell Power scaling; revisions differ"
+        }
+      ],
       "status": "external-reference-only",
       "source": "https://octowow.st/index.php/paladin",
       "liveVerified": false
@@ -2997,7 +3021,13 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "unknown": [
         "unmeasured live damage, rank learnability, coefficients or timings"
       ],
-      "conflicts": [],
+      "conflicts": [
+        {
+          "field": "strike formula",
+          "guide": "rank flat damage and Holy vulnerability",
+          "archive": "normalised weapon component and Spell Power scaling; revisions differ"
+        }
+      ],
       "status": "external-reference-only",
       "source": "https://octowow.st/index.php/paladin",
       "liveVerified": false
@@ -3059,6 +3089,173 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
     "refreshStrategy": "actor-buff",
     "requiredPolicy": [
       "costOverride"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:seal-of-righteousness",
+    "spellId": 20293,
+    "rank": 8,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 200,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "seal-aura",
+        "stat": "holy"
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/sor.go",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:seal-of-righteousness",
+      "spellId": 20293,
+      "rank": 8,
+      "level": 58,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "exact live rank effects, coefficient and attack outcome"
+      ],
+      "conflicts": [
+        {
+          "field": "proc and judgement scaling",
+          "reference": "Pinned external implementation",
+          "archive": "2025 revisions to spell power and judgement melee defense"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/sor.go",
+      "liveVerified": false
+    },
+    "refreshStrategy": "actor-buff",
+    "requiredPolicy": [
+      "sealModel",
+      "costOverride"
+    ],
+    "conflicts": [
+      {
+        "field": "proc and judgement scaling",
+        "reference": "Pinned external implementation",
+        "archive": "2025 revisions to spell power and judgement melee defense"
+      }
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:seal-of-command",
+    "spellId": 20920,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 210,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "seal-aura",
+        "stat": "holy"
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/soc.go",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:seal-of-command",
+      "spellId": 20920,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "exact live rank effects, coefficient and attack outcome"
+      ],
+      "conflicts": [
+        {
+          "field": "proc rate and weapon basis",
+          "externalReference": "7 ppm, separate weapon roll",
+          "archive": "9 ppm",
+          "guide": "based on melee damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/soc.go",
+      "liveVerified": false
+    },
+    "refreshStrategy": "actor-buff",
+    "requiredPolicy": [
+      "sealModel",
+      "costOverride"
+    ],
+    "conflicts": [
+      {
+        "field": "proc rate and weapon basis",
+        "externalReference": "7 ppm, separate weapon roll",
+        "archive": "9 ppm",
+        "guide": "based on melee damage"
+      }
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:judgement",
+    "spellId": 20271,
+    "rank": 1,
+    "learnLevel": 4,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "judgement",
+        "stat": "holy"
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/judgement.go",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:judgement",
+      "spellId": 20271,
+      "rank": 1,
+      "level": 4,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "exact live rank effects, coefficient and attack outcome"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/judgement.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 10000,
+    "referenceGcdMs": 0,
+    "requiredPolicy": [
+      "costOverride",
+      "judgementPolicy"
     ]
   }
 ]);
