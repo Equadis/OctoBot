@@ -154,7 +154,7 @@ async function readApi(url,env){
      item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
      quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
      historical_avg:r.days>=4?r.avg_unit:null,historical_days:r.days??0,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
-     time_left_ms:r.time_left_ms,captured_at:r.captured_at})),
+     time_left_ms:r.time_left_ms,captured_at:r.captured_at,latest_listing_seen_at:r.latest_listing_seen_at})),
      total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
      listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
  }
