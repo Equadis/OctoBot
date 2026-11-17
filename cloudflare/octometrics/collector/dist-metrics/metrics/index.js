@@ -147,6 +147,7 @@ async function runSession(account) {
                         const infoOnly = infoOnlyFor(account);
                         const infoSecond = serverInfoSlot(account);
                         const whoSecond = raidWhoSlot(account);
+                        stopJobs.push(scheduleSlot((whoSecond + 30) % 60, 60, () => { if (!whoBusy) void worldChat.guildTick(); }));
                         log.info(infoOnly ? `in world; .server info at :${String(infoSecond).padStart(2, "0")}; raid polling disabled` : `in world; .server info at :${String(infoSecond).padStart(2, "0")}; /who ${account.zoneName} at :${String(whoSecond).padStart(2, "0")} once/minute`);
                         emit(account, "session_online", { zone: account.zoneName });
                         // Facts about what this listener has actually heard, not just whether it is logged in (see listener-health.js).
@@ -178,6 +179,7 @@ async function runSession(account) {
                                 return;
                             whoBusy = true;
                             void world.whoOnce({ zoneIds: [account.zone] }, 8000).then(result => {
+                                worldChat.observeWho(result.players);
                                 const at = new Date().toISOString();
                                 const observed = result.players.filter(p => p.areaId === account.zone).length;
                                 const transition = raidState.get(account.account).observe(observed, at);

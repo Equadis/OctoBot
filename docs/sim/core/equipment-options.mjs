@@ -2,6 +2,8 @@
 // These enchant choices and patch tags are not validated combat modifiers.
 export const EQUIPMENT_REFERENCE=Object.freeze({url:'https://www.combatgum.app/rogue',retrievedAt:'2026-11-11'});
 export const NEW_ITEM_IDS=new Set([33053, 33056, 33059, 33062, 33067, 33074, 33078, 33081, 33138, 33139, 33149, 33153, 33154, 33156, 33157, 33188, 33209, 33225, 33241, 33242, 33247, 33248, 33249, 33253, 33269, 33271, 33273, 33275, 33276, 33277, 33279, 33284, 33288, 33293, 33301, 33304, 33306, 33308, 33312, 33314, 33315, 33326, 33330, 33331, 33345, 33386, 33387, 33388, 33389, 33390, 33391, 33662, 33668, 33670, 33671, 33673, 33849, 33850, 33851, 33852, 33853, 33855, 33858, 33886, 33887, 33888, 33889, 33890, 33892, 33893, 33907, 33908, 33909, 33910, 33911, 33913, 33914, 42183, 42184, 42193, 42195, 61533]);
+// OctoWoW roadmap: https://octowow.st/index.php/roadmap (BWL opened 2026-11-01).
+export const CURRENT_ENCHANT_PHASE=2;
 export const ENCHANTS=Object.freeze([
   {
     "id": "crusader_mh",
@@ -151,6 +153,7 @@ export const ENCHANTS=Object.freeze([
   },
   {
     "id": "enchant_shoulder_naxx",
+    "availableFromPhase": 6,
     "name": "Might of the Scourge (+26 AP, +1% Crit)",
     "slot": "shoulder"
   },
@@ -171,6 +174,7 @@ export const ENCHANTS=Object.freeze([
   },
   {
     "id": "enchant_shoulder_sp",
+    "availableFromPhase": 6,
     "name": "Power of the Scourge (+15 SP, +1% Spell Crit)",
     "slot": "shoulder"
   },
@@ -186,6 +190,8 @@ export const ENCHANTS=Object.freeze([
   },
   {
     "id": "enchant_back_agi7",
+    "availableFromPhase": 5,
+    "source": "https://octowow.st/db/?item=42187",
     "name": "Enchant Cloak - Agility (+7 Agi)",
     "slot": "back"
   },
@@ -259,6 +265,9 @@ export const ENCHANTS=Object.freeze([
     "name": "Enchant Gloves - Nature Power (+20 SP)",
     "slot": "hands"
   },
+  {"id":"enchant_feet_minor_speed","name":"Enchant Boots - Minor Speed (+8% Movement Speed)","slot":"feet","source":"https://octowow.st/db/?spell=13890"},
+  {"id":"enchant_feet_stamina7","name":"Enchant Boots - Greater Stamina (+7 Sta)","slot":"feet","source":"https://octowow.st/db/?spell=20020"},
+  {"id":"enchant_feet_spirit5","name":"Enchant Boots - Spirit (+5 Spirit)","slot":"feet","source":"https://octowow.st/db/?spell=20024"},
   {
     "id": "enchant_feet_defense",
     "name": "Defense (+5 Defense)",
@@ -342,10 +351,15 @@ export const ENCHANTS=Object.freeze([
   {"id":"scope_18283","name":"Biznicks 247x128 Accurascope (+3% Ranged Hit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedHit":3},"source":"https://octowow.st/db/?item=18283"},
   {"id":"scope_33146","name":"Facetted Crystal Scope (+2% Ranged Crit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedCrit":2},"source":"https://octowow.st/db/?item=33146"}
 ].map(enchant=>Object.freeze(enchant)));
-export function enchantsForSlot(slot,classId='warrior',item=null,level=60){
- return ENCHANTS.filter(enchant=>enchant.slot===slot && (!enchant.classes||enchant.classes.includes(classId)) && (!enchant.requiredLevel||level>=enchant.requiredLevel) && (!['mainhand','offhand'].includes(slot)||!item||item.classs===2) && (!enchant.weaponSubclasses||!item||item.classs===2&&enchant.weaponSubclasses.includes(item.subclass)));
+export function enchantAvailable(enchant,phase=CURRENT_ENCHANT_PHASE){return (enchant?.availableFromPhase??0)<=phase;}
+export function enchantsForSlot(slot,classId='warrior',item=null,level=60,{includeFuture=false}={}){
+ return ENCHANTS.filter(enchant=>(includeFuture||enchantAvailable(enchant)) && enchant.slot===slot && (!enchant.classes||enchant.classes.includes(classId)) && (!enchant.requiredLevel||level>=enchant.requiredLevel) && (!['mainhand','offhand'].includes(slot)||!item||item.classs===2) && (!enchant.weaponSubclasses||!item||item.classs===2&&enchant.weaponSubclasses.includes(item.subclass)));
 }
-export function validEnchant(id,slot,classId='warrior',item=null,level=60){return enchantsForSlot(slot,classId,item,level).some(enchant=>enchant.id===id);}
+// Display locked options without treating them as legal new selections.
+export function enchantChoicesForSlot(slot,classId='warrior',item=null,level=60,phase=CURRENT_ENCHANT_PHASE){
+ return enchantsForSlot(slot,classId,item,level,{includeFuture:true}).map(enchant=>({...enchant,disabled:!enchantAvailable(enchant,phase),displayName:enchantAvailable(enchant,phase)?enchant.name:`${enchant.name} — Phase ${enchant.availableFromPhase}`}));
+}
+export function validEnchant(id,slot,classId='warrior',item=null,level=60){return enchantsForSlot(slot,classId,item,level,{includeFuture:true}).some(enchant=>enchant.id===id);}
 export const SORT_OPTIONS=Object.freeze([['new','NEW ITEMS'],['level','Item Level'],['name','Name'],['dps','Weapon DPS'],['speed','Weapon Speed'],['armor','Armour'],['Strength','Strength'],['Agility','Agility'],['Stamina','Stamina'],['Intellect','Intellect'],['Spirit','Spirit'],['attackPower','Attack Power'],['hitRating','Hit %'],['critRating','Crit %'],['hastePercent','Haste %'],['armorPenetration','Armor Pen'],['spellDamage','Spell Damage'],['spellCritRating','Spell Crit %'],['hasProc','Has Proc'],['weaponSkill','Weapon Skill'],['spellstrike','Spellstrike']]);
 export function sortEquipment(items,sort='new',direction='desc',details={},references={}){
  const sign=direction==='asc'?1:-1;

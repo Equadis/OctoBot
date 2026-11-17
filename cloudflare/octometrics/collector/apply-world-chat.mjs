@@ -12,15 +12,19 @@ export function patchCollector(input){
     ['let world = null;','const worldChat = createWorldChat({account,config,log,getWorld:()=>world});','after'],
     ['whisperResponder.stop();','worldChat.stop();','after'],
     ['wasReady = true;','worldChat.start();','after'],
-    ['onMonsterYell: (sender, text) => {','onChannelMessage: (channel, guid, text, raw) => worldChat.receive(channel,guid,text,raw),','before']
+    ['onMonsterYell: (sender, text) => {','onChannelMessage: (channel, guid, text, raw) => worldChat.receive(channel,guid,text,raw),','before'],
+    ['const whoSecond = raidWhoSlot(account);','stopJobs.push(scheduleSlot((whoSecond + 30) % 60, 60, () => { if (!whoBusy) void worldChat.guildTick(); }));','after'],
+    ['void world.whoOnce({ zoneIds: [account.zone] }, 8000).then(result => {','worldChat.observeWho(result.players);','after']
   ];
   const present=edits.map(([,line])=>src.includes(line));
   if(present.every(Boolean))return src;
-  if(present.some(Boolean)||/onChannelMessage\s*:/.test(src))throw Error("Existing or partial channel hook: merge manually; no files changed.");
+  const initial=present.slice(0,5);
+  if((initial.some(Boolean)&&!initial.every(Boolean))||(!initial.every(Boolean)&&/onChannelMessage\s*:/.test(src)))throw Error("Existing or partial channel hook: merge manually; no files changed.");
   for(const [anchor,line,position] of edits){
+    if(src.includes(line))continue;
     if(src.split(anchor).length!==2)throw Error("Expected exactly one collector anchor: "+anchor);
     const indent=src.slice(src.lastIndexOf("\n",src.indexOf(anchor)-1)+1,src.indexOf(anchor));
-    src=src.replace(anchor,position==="before"?line+"\n"+indent+anchor:anchor+"\n"+indent+line);
+    src=src.replace(anchor,position==="before"?line+"\n"+indent+anchor:anchor+"\n"+indent+(anchor.endsWith("{")?"    ":"")+line);
   }
   return src;
 }
@@ -29,7 +33,7 @@ export function makePlan(root){
   const client=join(root,"dist-metrics","net","world-client.js");
   for(const p of [entry,client,join(root,"package.json"),join(root,"wrangler.metrics.toml")])if(!existsSync(p))throw Error("Missing "+p);
   const original=readFileSync(entry,"utf8"),wire=readFileSync(client,"utf8");
-  for(const marker of ["joinChannel(","resolveName(","onChannelMessage?.("])if(!wire.includes(marker))throw Error("Collector client lacks "+marker+"; refusing to patch.");
+  for(const marker of ["joinChannel(","resolveName(","onChannelMessage?.(","whoOnce("])if(!wire.includes(marker))throw Error("Collector client lacks "+marker+"; refusing to patch.");
   return [
     {path:entry,content:patchCollector(original)},
     {path:join(dir,"world-chat.js"),content:readFileSync(join(here,"dist-metrics","metrics","world-chat.js"),"utf8")}

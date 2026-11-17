@@ -6,6 +6,13 @@ let generation=0,controller=null,current=null,requesting=false;
 function node(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e;}
 function status(state,text){const e=byId("feed-state");e.dataset.state=state;e.textContent=text;}
 function empty(parent,message){parent.replaceChildren(node("div","chat-empty",message));}
+function appendChatLine(parent,row,withTime=true){
+  if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
+  const content=node("span","chat-content");
+  const author=(row.gm?"<GM> ":"")+row.author+(row.guild?" <"+row.guild+">":"")+":";
+  content.append(node("span","chat-author",author),document.createTextNode(" "+row.message));
+  parent.append(content);
+}
 function drawFeed(key,rows){
   const parent=byId(key),atBottom=parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
   const existing=parent.firstElementChild?.dataset.id, first=rows[0]?.id;
@@ -15,8 +22,7 @@ function drawFeed(key,rows){
     const frag=document.createDocumentFragment();
     for(const row of rows){
       const line=node("div","chat-line");line.dataset.id=row.id;
-      line.append(node("span","chat-time",new Date(row.time).toISOString().slice(11,19)),
-        node("span","chat-author",(row.gm?"<GM> ":"")+row.author+":"),document.createTextNode(row.message));frag.append(line);
+      appendChatLine(line,row);frag.append(line);
     }
     parent.replaceChildren(frag);
     parent.scrollTop=atBottom?parent.scrollHeight:Math.max(0,existing===first?before:before+parent.scrollHeight-oldHeight);
@@ -33,7 +39,7 @@ function drawListings(){
     for(const row of rows){
       const remaining=Math.max(0,Math.ceil((row.expiresAt-now)/1000)),line=node("div","list-row");
       if(key==="lfg")line.append(node("span","list-tag",row.tag));
-      const body=node("div");body.append(node("span","chat-author",row.author+":"),document.createTextNode(row.message));line.append(body);
+      const body=node("div");appendChatLine(body,row,false);line.append(body);
       line.append(node("span","list-expiry"+(remaining<=30?" critical":remaining<=60?" soon":""),Math.floor(remaining/60)+":"+String(remaining%60).padStart(2,"0")));frag.append(line);
     }
     if(rows.length)parent.replaceChildren(frag);else empty(parent,"No active listings.");

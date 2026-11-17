@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="planner.css?v=20261115-blue1">
   <link rel="stylesheet" href="../quality-select.css?v=1">
   <link rel="stylesheet" href="combat-layout.css?v=20261117-character-width2">
-  <script type="module" src="planner.mjs?v=20261117-stat-fold2"></script>
+  <script type="module" src="planner.mjs?v=20261117-picker3"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261116-q2">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
@@ -116,8 +116,8 @@
       <label class="field">Sort By<select id="item-sort"></select></label>
       <label class="field">Direction<button id="item-direction" type="button">Descending ▼</button></label>
       <label class="field">Quality<select id="item-quality" class="quality-select"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
-      <label class="field enchant-field">Enchant<select id="item-enchant"><option value="">— None —</option></select></label>
-      <div class="item-picker-actions"><p id="item-error" class="error" role="alert"></p><button id="select-item" type="button" disabled>Select</button><button id="clear-item" type="button">Clear Slot</button></div>
+      <label class="field enchant-field">Equipped item enchant<select id="item-enchant"><option value="">— None —</option></select></label>
+      <div class="item-picker-actions"><p id="item-error" class="error" role="alert"></p><button id="clear-item" type="button">Clear Slot</button></div>
     </aside>
     <div id="item-results" class="item-results" role="listbox" aria-label="Items"></div>
     <section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section>
