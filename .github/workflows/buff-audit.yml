@@ -14,6 +14,11 @@ jobs:
         with:
           node-version: '22'
       - run: node tools/sim/audit-buff-consumables.mjs
+      - run: node tools/sim/audit-base-stats.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: base-stat-audit
+          path: base-stat-audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: buff-consumable-audit

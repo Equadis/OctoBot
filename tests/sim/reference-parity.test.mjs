@@ -105,7 +105,7 @@ test('racial passives use database evidence and developer-confirmed weapon speci
   };
   for (const [race, entries] of Object.entries(facts)) for (const [source, expected] of Object.entries(entries)) {
     const got = racialPassives(race);
-    // Human also has The Human Spirit (+5% Spirit, spell 20598); the Vanilla base table already includes it (see the todo below).
+    // Human Spirit (spell 20598) is now represented, with naked source values preserved.
     for (const [key, value] of Object.entries(expected)) assert.deepEqual(got[key], value, `${race}: ${source}`);
   }
 });
@@ -118,6 +118,16 @@ test('class base stats: the Vanilla (cmangos) table differs from WoWSims Turtle 
   const b = newBuild('mage'); b.race = 'Human'; assert.equal(rows(b).Defence.Health, '1370');
 });
 
-test('Gnome Intellect: the Vanilla base table appears to include Expansive Mind already, so the planner may apply the +5% twice', { todo: 'Gnome Mage sheet shows 139; WoWSims Turtle raw 128 x 1.05 = 134. The cmangos table values equal raw x 1.05 for Human Spirit (all six classes) and most Gnome Intellect values. Needs one in-game or Combat Gum caster sheet to settle.' }, () => {
-  const b = newBuild('mage'); b.race = 'Gnome'; assert.equal(rows(b)['Base Stats'].Intellect, '134');
+test('Gnome Intellect: preserve imported naked 133; scale external flat gains once, not twice', () => {
+  // WoWSims Turtle raw 128 x 1.05 = 134 differs from CMaNGOS's 133.
+  // Neither value is a live OctoWoW measurement; preserve the chosen source.
+  const b = newBuild('mage'); b.race = 'Gnome'; assert.equal(rows(b)['Base Stats'].Intellect, '133');
+  const gear={chest:{attributes:{Intellect:20},effects:[]}};
+  assert.equal(rows(b,gear)['Base Stats'].Intellect,'154');
+  b.controls.buffIds=['kings'];
+  assert.equal(rows(b,gear)['Base Stats'].Intellect,'169');
+});
+test('Human Spirit preserves naked source and scales external flat spirit gains',()=>{
+ const b=newBuild('priest');b.race='Human';assert.equal(rows(b)['Base Stats'].Spirit,'131');
+ assert.equal(rows(b,{chest:{attributes:{Spirit:40},effects:[]}})['Base Stats'].Spirit,'173');
 });

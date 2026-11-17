@@ -1,7 +1,7 @@
 import {resolveBuffEffects} from './buff-effect-audit.mjs?v=20261117-buff-audit4';
 import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261117-buff-audit4';
-import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
+import {baseStatProfile,racialAttributeEstimate} from './base-stat-audit.mjs?v=20261117-racial-audit1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit4';
 import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit3';
 import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit3';
@@ -21,7 +21,7 @@ export function enchantStats(id){return {...(ENCHANTS.find(e=>e.id===id)?.effect
 export function characterStats(build,talentData,gear={}){
  if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
  const racial=racialPassives(build.race);
- const c=build.classId,level=build.level,base=BASE_STATS[`${build.race}:${c}`]?.[level-1];
+ const c=build.classId,level=build.level,baseAudit=baseStatProfile(build.race,c,level),base=baseAudit.row;
  const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0,holySp:0,healingPower:0,hp5:0,blockValue:0,blockChance:0,rangedAP:0,rangedHit:0,rangedCrit:0,rangedDamage:0,rangedHaste:0,castingRegenPct:0,critDamageTakenReductionPct:0,dotDamageTakenReductionPct:0,weaponDamage:0,damageOnlySp:0,castSpeedPct:0,spellDamageTakenReductionPct:0,spellDamageTakenReductionFlat:0,aoeDamageTakenReductionPct:0,silenceResistPct:0,interruptDurationReductionPct:0,runSpeedPct:0,swimSpeedPct:0,mountSpeedPct:0};
  let haste=1,rangedHaste=1;const skillBonuses={};const unresolvedEquipment=[],scopedEquipment=[];
  const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key==='rangedHaste')rangedHaste*=1+value/100;else if(key.startsWith('weaponSkill:'))skillBonuses[key]=(skillBonuses[key]||0)+value;else if(key in s&&s[key]!==null)s[key]+=value;}};
@@ -33,6 +33,9 @@ export function characterStats(build,talentData,gear={}){
  const buffAudit=resolveBuffEffects(build,gear);const buffs=buffAudit.ids;add(buffAudit.weaponMasteryStats);for(const entry of buffAudit.entries)if(entry.active)add(entry.stats);
  const has=id=>buffs.includes(id);
  for(const entry of buffAudit.consumables)if(entry.status==='prepull')add(entry.stats);
+ // Imported base values already appear to include the naked Gnome/Human racial modifier.
+ // Apply it once to external flat contributions before class and Kings multipliers.
+ for(const [key,i,multiplier] of [['int',3,racial.intellectMultiplier],['spi',4,racial.spiritMultiplier],['agi',1,racial.agilityMultiplier]])if(multiplier&&base)s[key]=racialAttributeEstimate(s[key],base[i],multiplier,baseAudit.includedRacialAttributes.includes(key));
  const talents=new Map((talentData?.talents||[]).map(t=>[t.name,{...t,rank:build.talents[t.id]||0}]));
  const value=name=>{const t=talents.get(name);return t?.rank?Number(t.descriptions[t.rank-1]?.match(/(\d+(?:\.\d+)?)%?/)?.[1]||0):0;};
  const selected=name=>(talents.get(name)?.rank||0)>0;
@@ -46,8 +49,7 @@ export function characterStats(build,talentData,gear={}){
  if(c==='shaman'){for(const k of ['str','agi','sta','int','spi'])mult(k,value('Ancestral Knowledge'));s.crit+=value('Thundering Strikes');}
  if(c==='druid'){mult('int',value('Heart of the Wild'));if(build.classOptions.form==='Cat')mult('str',value('Heart of the Wild'));if(build.classOptions.form==='Bear')mult('sta',value('Heart of the Wild'));if(selected('Natural Weapons')){const t=talents.get('Natural Weapons');const text=t.descriptions[t.rank-1];s.hit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);s.spellHit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);}}
  if(buffAudit.entries.some(e=>e.id==='kings'&&e.active))for(const k of ['str','agi','sta','int','spi'])mult(k,10);
- if(racial.intellectMultiplier)mult('int',(racial.intellectMultiplier-1)*100);
- if(racial.agilityMultiplier)mult('agi',(racial.agilityMultiplier-1)*100);
+
  s.parry+=value('Deflection');s.defense+=value('Anticipation');
  const nonItemArmour=s.armour-rawItemArmour;
  const improvedItemArmour=rawItemArmour*(1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0));
@@ -90,6 +92,7 @@ export function characterStats(build,talentData,gear={}){
  const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=s.weaponDamage+(validEnchant(enchantId,slot,c,weapon,level)?(enchantStats(enchantId).weaponDamage||0):0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
+ if(baseAudit.status!=='reference-only')group('Base Stat Audit',[['Source status',baseAudit.status,baseAudit.issues.join(' ')]]);
  group('Base Stats',[['Strength',num(s.str)],['Agility',num(s.agi)],['Stamina',num(s.sta)],...(!['warrior','rogue'].includes(c)?[['Intellect',num(s.int)],['Spirit',num(s.spi)]]:[])]);
  group('Melee',[
  ['Wep Skill',pair(skills.map(num))],['Damage',pair(weapons.map(w=>w.damage))],['Speed',pair(weapons.map(w=>w.speed))],['Power',num(ap)],['Hit Rating',pct(s.hit,0)],['WS Crit',sameOrPair(wsCrit.map(n=>'+'+pct(n,2)))],['Crit Chance',sameOrPair(crit.map(n=>pct(n,2)))],['Haste',pct((haste-1)*100)],['Armor Pen',num(s.armorPen)],['Poison Chance','+'+pct(s.poisonChance,0)],['Poison Crit',pct(spellCrit,2)]
@@ -124,5 +127,5 @@ export function characterStats(build,talentData,gear={}){
  if(rawResRows.length)group('Target Resistance Estimates',rawResRows);
  if(Object.keys(targetMods).length)group('Target Debuff Contributions',Object.entries(targetMods).map(([k,v])=>[k,String(v)+(k.endsWith('Pct')?'%':''),'Scoped target contribution; not applied to player stats or final damage.']));
  if(buffAudit.entries.some(e=>e.status!=='source-prepull')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull').map(e=>[e.name,e.active?e.status:e.eventEligible?'Event — not simulated':'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
- return {groups,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
+ return {groups,baseAudit,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }

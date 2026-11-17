@@ -52,3 +52,9 @@ Verify remaining 17 reference numerical/shared scoped buff choices, seven event 
 - No engine, live client validation or merge to main. CI required on this commit.
 
 - Phase 5 follow-up: first CI exposed eight expected-reference/default mismatches. Updated the affected tests to preserve their original observations while explicitly asserting the changed OctoWoW rules; source conflict with earlier racial DB snapshots (+5) is documented. Dodge and glancing retain their original nonnegative difference, only miss uses the signed developer formula. No live verification of the disputed racial values.
+
+## Phase 6 — base-stat provenance and racial percentage calculations
+
+- Added complete 59-combination / 3,540-level coverage inventory: 2,400 imported reference rows, 1,140 missing, 0 live verified; three anomalies flagged. Missing and anomalous inputs are blocked by simulation readiness; anomalous rows remain visible as labelled reference estimates.
+- Corrected Gnome Intellect double-counting against imported naked reference (133 at Mage 60, not 139). Human Spirit now scales external flat gains; the imported naked values appear already modified. Racial rounding and ordering are explicit provisional assumptions, not a live validation. Alternate reference gives 134 Gnome Mage Intellect, retained as a source conflict.
+- CI now emits a base-stat coverage artifact. No missing data inferred; no combat engine or live-server check. Main untouched.
