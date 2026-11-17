@@ -85,13 +85,15 @@ export async function richItemTooltip(item){
  }
  const raw=typeof base?.tooltipText==='string'?base.tooltipText.trim():'';
  const lines=raw?raw.split("\n").map(x=>x.trim()).filter(Boolean).filter((x,i)=>i!==0||x!==clean(item?.item_name)):[];
- const details=variantLines(item);
+ const details=variantLines(item),notes=[];
  if(item?.item_level!=null&&!raw)lines.push("Item level "+item.item_level);
  if(item?.req_level!=null&&!raw)lines.push("Requires level "+item.req_level);
- if(details.length)lines.push("Variant effects",...details);
- if(v.hasVariant&&v.bonuses.length)lines.push("Standard Classic DBC reference; custom values may differ.");
- if(!lines.length)lines.push("Full item attributes are not available in the catalogue.");
- if(base?.source==="OctoWoW DB")lines.push("Base stats: OctoWoW DB.");
- else if(raw)lines.push("Base stats: Gear Planner reference.");
- return {title,lines};
+ const rollStats=details.filter(line=>!line.startsWith("Unmapped random enchantment"));
+ if(rollStats.length)lines.push("Variant effects",...rollStats);
+ notes.push(...details.filter(line=>line.startsWith("Unmapped random enchantment")));
+ if(v.hasVariant&&v.bonuses.length)notes.push("Standard Classic DBC reference; custom values may differ.");
+ if(!lines.length)notes.push("Full item attributes are not available in the catalogue.");
+ if(base?.source==="OctoWoW DB")notes.push("Base stats: OctoWoW DB.");
+ else if(raw)notes.push("Base stats: Gear Planner reference.");
+ return {title,lines,notes};
 }
