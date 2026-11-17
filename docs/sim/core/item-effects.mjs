@@ -26,6 +26,7 @@ export function classifyEquipmentEffect(raw){
  else if((m=match('(?:Increases|Improves) your chance to (hit|get a critical strike) with (?:missile weapons|ranged weapons|ranged attacks) by '+number+'%')))put(/critical/i.test(m[1])?'rangedCrit':'rangedHit',m[2]);
  else if((m=match('(?:Increases|Improves) your chance to (hit|get a critical strike|dodge|parry) by '+number+'%')))put(({hit:'hit','get a critical strike':'crit',dodge:'dodge',parry:'parry'})[m[1].toLowerCase()],m[2]);
  else if((m=match('Increases your chance to (dodge|parry) an attack by '+number+'%')))put(m[1].toLowerCase(),m[2]);
+ else if((m=match('Decreases your chance to parry an attack by '+number+'%')))put('parry',-Number(m[1]));
  else if((m=match('Increases your chance to block attacks with a shield by '+number+'%')))put('blockChance',m[1]);
  else if((m=match('Increases the block value of your shield by '+number)))put('blockValue',m[1]);
  else if((m=match('Increased Defense \\+'+number)))put('defense',m[1]);

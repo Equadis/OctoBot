@@ -105,3 +105,5 @@ test('event gates and pet context do not manufacture permanent bonuses',()=>{
  const p=classifyEquipmentEffect("Equip: Increases your pet's damage by 3%, maximum health by 5% and critical strike chance by 2%.");
  assert.equal(p.status,'scoped');assert.deepEqual(combineScopedEquipment([p],{classOptions:{pet:'None'}}).map(x=>x.active),[false,false,false]);assert.deepEqual(combineScopedEquipment([p],{classOptions:{pet:'Cat'}}).map(x=>x.amount),[3,5,2]);
 });
+
+test('single pet damage bonus requires an explicitly selected pet',()=>{const e=classifyEquipmentEffect('Equip: Increases damage dealt by your pet by 4%.');assert.equal(e.status,'scoped');assert.equal(combineScopedEquipment([e],{classOptions:{pet:'None'}})[0].active,false);const p=combineScopedEquipment([e],{classOptions:{pet:'Cat'}})[0];assert.equal(p.active,true);assert.equal(p.amount,4);});
