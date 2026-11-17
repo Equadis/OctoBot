@@ -23,11 +23,12 @@ test('unknown races and sexes get no icon rather than a wrong one',()=>{
   assert.equal(raceIconUrl('Night Elf','female'),RACE_ICON_BASE+'nightelf_female.png');
 });
 
-test('the Race selector sits in its original place beside Level, with no icon column, and both are narrow',()=>{
+test('Race, character name and Level share a row without an extra portrait column',()=>{
   const html=read('sim/index.html'),css=read('sim/combat-layout.css');
   assert.match(html,/<div class="character-controls"><label class="field">Race<select id="character-race">/);
   assert.doesNotMatch(html,/race-icon/);
-  assert.match(css,/\.character-controls\{display:grid;grid-template-columns:132px 58px;gap:14px;align-items:end\}/,'a narrow Race column and a narrow Level column');
+  assert.match(html, /id="character-race"[\s\S]*id="character-name"[\s\S]*id="character-level"/,'name sits between race and level');
+  assert.match(css,/\.character-controls\{display:grid;grid-template-columns:132px minmax\(0,1fr\) 58px;gap:14px;align-items:end\}/,'the name takes available width while Race and Level retain their sizes');
 });
 
 test('the race dropdown shows one portrait to the left of every race, like the Dressing Room background picker',()=>{

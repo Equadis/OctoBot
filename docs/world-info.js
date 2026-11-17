@@ -44,6 +44,27 @@
   function object(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : null; }
   // The tracker names an unaffiliated group "PUG"; show it in proper case.
   function groupLabel(name) { return String(name).trim().toUpperCase() === 'PUG' ? 'Pug' : name; }
+  // Real guilds appear as <Guild Name>; unaffiliated Pugs and unknown rosters are not guilds.
+  function raidGroupLabel(name) {
+    const label = String(groupLabel(name) ?? '').trim();
+    if (!label || /^(pug|unknown)$/i.test(label)) return label;
+    return '<' + label.replace(/^<|>$/g, '') + '>';
+  }
+  // Build raid labels with text nodes, not HTML, because guild names come from roster data.
+  function setRaidTitle(node, label, guild) {
+    node.textContent = label;
+    if (!guild) return;
+    const name = raidGroupLabel(guild);
+    node.append(document.createTextNode(' \u2013 '));
+    if (name.startsWith('<') && name.endsWith('>')) {
+      const bold = document.createElement('strong');
+      bold.className = 'raid-guild';
+      bold.textContent = name;
+      node.append(bold);
+    } else {
+      node.append(document.createTextNode(name));
+    }
+  }
   function first(...values) { return values.find(v => v !== undefined && v !== null) ?? null; }
   function time(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -234,7 +255,7 @@
       line.className = 'timer-row';
       const title = document.createElement('span');
       const guild = session.guild && session.guild.label ? session.guild.label : null;
-      title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (guild ? ' \u2013 ' + groupLabel(guild) : '');
+      setRaidTitle(title, session.id !== null ? 'Raid #' + session.id : 'Raid in progress', guild);
       title.title = session.confidence === 'tentative'
         ? 'Separated from another raid by arrival timing only. /who has no instance IDs, so this grouping is an estimate.'
         : guild === 'Unknown' ? 'Not enough roster information to name a guild or PUG.' : 'Grouped from the roster by the Bufftracker; not verified instance membership.';
@@ -302,7 +323,7 @@
         const line = document.createElement('div');
         line.className = 'timer-row';
         const title = document.createElement('span');
-        title.textContent = (session.id !== null ? 'Raid #' + session.id : 'Raid in progress') + (session.guild ? ' \u2013 ' + groupLabel(session.guild.name) : '');
+        setRaidTitle(title, session.id !== null ? 'Raid #' + session.id : 'Raid in progress', session.guild?.name);
         const timer = document.createElement('strong');
         timer.className = 'mono';
         timer.textContent = span(Date.now() - session.startedAt);
@@ -618,7 +639,6 @@
   }
   function renderMadnessCountdown() {
     const rotation = currentRotation();
-    $('eom-current').classList.remove('dots');
     $('eom-current').textContent = rotation.current;
     $('eom-next').textContent = rotation.next;
     // Colour each boss name to match its calendar colour.
@@ -628,7 +648,15 @@
     }
     $('eom-current-until').textContent = 'Until ' + (rotation.end ? when(rotation.end) : 'unknown');
     $('eom-next-at').textContent = rotation.end ? 'From ' + when(rotation.end) : 'Start unknown';
-    $('eom-countdown').textContent = rotation.end ? spanWithDays(rotation.end - Date.now()) : 'No data';
+    const countdown = $('eom-countdown');
+    const timeLeft = rotation.end ? rotation.end - Date.now() : null;
+    countdown.textContent = timeLeft === null ? 'No data' : spanWithDays(timeLeft);
+    // 7 days or more: green; 1-7 days: yellow; less than a day: red.
+    // Recompute on the existing one-second timer so colours switch at the actual boundary.
+    countdown.classList.remove('rotation-safe', 'rotation-week', 'rotation-soon');
+    if (Number.isFinite(timeLeft) && timeLeft > 0) {
+      countdown.classList.add(timeLeft >= 7 * DAY ? 'rotation-safe' : timeLeft >= DAY ? 'rotation-week' : 'rotation-soon');
+    }
     labelState('eom-source', rotation.api ? 'Era API' : 'Era reference', rotation.api ? 'estimated' : 'unknown');
   }
   async function loadEra() {

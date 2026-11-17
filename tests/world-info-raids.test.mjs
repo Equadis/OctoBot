@@ -7,16 +7,22 @@ import {MIN,iso,rebase,memoryDb,envFor,summaryJson,replay,post} from '../cloudfl
 const script=readFileSync(new URL('../docs/world-info.js',import.meta.url),'utf8');
 
 function element(){
-  const store={};
+  const store={children:[],ownText:''};
   return new Proxy(function(){},{
     get(_t,key){
+      if(key==='textContent')return store.ownText+store.children.map(n=>n.textContent??'').join('');
+      if(key==='append')return (...nodes)=>{store.children.push(...nodes);};
+      if(key==='replaceChildren')return (...nodes)=>{store.children=[...nodes];store.ownText='';};
       if(key in store)return store[key];
       if(key==='classList')return {toggle(){},add(){},remove(){}};
       if(key==='style'||key==='dataset')return store[key]={};
-      if(key==='children')return [];
       return ()=>element();
     },
-    set(_t,key,value){store[key]=value;return true;},
+    set(_t,key,value){
+      if(key==='textContent'){store.ownText=String(value??'');store.children=[];}
+      else store[key]=value;
+      return true;
+    },
     apply(){return element();},
   });
 }
@@ -35,13 +41,12 @@ async function run(payload){
   text.el=id=>elements.get(id);text.created=created;
   text.tick=async()=>{for(const [fn,ms] of intervals)if(ms===1000)await fn();};
   text.next=async next=>{current=next;for(const [fn,ms] of intervals)if(ms===60000)await fn();await new Promise(resolve=>setTimeout(resolve,50));};
-  /** Raid rows in render order: [{title, timer, note}] read from the elements the page created. */
-  text.rows=()=>{
-    const out=[];
-    const texts=created.map(e=>e.textContent);
-    texts.forEach((t,i)=>{if(typeof t==='string'&&/^Raid( #|\s+in progress)/.test(t))out.push({title:t,timer:texts[i+1],note:/ · |Estimated group|Roster/.test(String(texts[i+2]))?texts[i+2]:undefined});});
-    return out;
-  };
+  /** Raid rows read from their actual span/strong/small children, including guild formatting. */
+  text.rows=()=>created.filter(e=>e.className==='timer-row').map(row=>{
+    const [title,timer,note]=row.children;
+    return {title:title.textContent,timer:timer.textContent,note:note?.textContent,
+      guildBold:title.children.some(child=>child.className==='raid-guild')};
+  });
   return text;
 }
 /** "1h 05m 03s" / "23m 14s" / "12s" -> seconds. */
@@ -56,7 +61,8 @@ async function pageFrom(name,ageMs=0){
 test('Onyxia with two raids shows the tracker ids, guilds and elapsed times — never "Raid 1"',async()=>{
   const {text,r}=await pageFrom('onyxia-two-raids');
   const rows=text.rows();
-  assert.deepEqual(rows.map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
+  assert.deepEqual(rows.map(x=>x.title),['Raid #702 – <Nightfall>','Raid #703 – <Stormguard>']);
+  assert.deepEqual(rows.map(x=>x.guildBold),[true,true],'guild text and brackets are bold');
   rows.forEach((row,i)=>assert.ok(Math.abs(seconds(row.timer)-r.expected.live[i].elapsedMs/1000)<=3,`${row.timer} vs ${r.expected.live[i].elapsedMs}`));
   assert.equal(text('ony-count'),'2');
   assert.equal(text('ony-count-label'),'Raids in progress:');
@@ -68,6 +74,7 @@ test('BWL shows raid #33 with the tracker elapsed time, about 49 minutes',async(
   const {text}=await pageFrom('bwl-single');
   const [row]=text.rows();
   assert.equal(row.title,'Raid #33 – Pug');
+  assert.equal(row.guildBold,false,'Pug is not a guild and remains normal weight');
   assert.ok(Math.abs(seconds(row.timer)-49*60)<=8,row.timer);
   assert.equal(text('bwl-count'),'1');
   assert.equal(text('bwl-count-label'),'Raid in progress:');
@@ -77,7 +84,7 @@ test('back-to-back raids: the second raid has its own clock and the first is "la
   const {text,r}=await pageFrom('onyxia-back-to-back');
   const rows=text.rows();
   assert.equal(rows.length,1);
-  assert.equal(rows[0].title,'Raid #702 – Beta');
+  assert.equal(rows[0].title,'Raid #702 – <Beta>');
   assert.ok(seconds(rows[0].timer)<r.expected.live[0].elapsedMs/1000+5);
   assert.match(text('ony-finished'),/ago$/);
   assert.match(text.el('ony-finished').title,/Raid #701/);
@@ -99,7 +106,7 @@ test('website elapsed time equals tracker elapsed time for every fixture session
 test('stale tracker data is flagged, keeps the same raids and start times, and claims no clear',async()=>{
   const {text}=await pageFrom('onyxia-two-raids',10*MIN);
   assert.equal(text('ony-state'),'Stale');
-  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 – Nightfall','Raid #703 – Stormguard']);
+  assert.deepEqual(text.rows().map(x=>x.title),['Raid #702 – <Nightfall>','Raid #703 – <Stormguard>']);
   assert.match(text('ony-evidence'),/old .* last known raids/);
   assert.equal(text('ony-clear'),'Stale');
   assert.equal(text('ony-finished'),'No data');

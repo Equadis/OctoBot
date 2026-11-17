@@ -21,11 +21,30 @@ test('loading states show trailing dots one at a time through CSS, never by chan
   assert.match(css,/\.dots::after\{content:"\.\.\.";[^}]*overflow:hidden;[^}]*animation:loading-dots 1\.2s steps\(4,end\) infinite\}/);
   assert.match(css,/@keyframes loading-dots\{to\{width:1\.13em\}\}/);
   assert.match(css,/prefers-reduced-motion:reduce\)\{\.dots::after\{animation:none;width:auto\}/,'reduced motion shows all three dots');
-  assert.match(html,/id="eom-current" class="dots">Loading</);
+  assert.match(html,/id="eom-current">Loading</,'the boss loads without animated dots');
+  assert.match(html,/id="eom-current-until">Checking rotation</,'the UTC line does not animate');
+  assert.doesNotMatch(html,/id="eom-current-until"[^>]*class="dots"/);
   assert.match(html,/id="source-status" class="source-label dots"[^>]*>Connecting to OctoMetrics</);
   assert.ok(!/Loading…|Connecting to OctoMetrics…|Checking rotation…/.test(html),'no typed ellipsis next to the animated dots');
   assert.match(js,/out\.textContent = 'Learning'; out\.classList\.add\('dots'\)/);
   assert.match(js,/out\.classList\.remove\('dots'\)/,'dots are removed as soon as the real value arrives');
+});
+
+test('Edge of Madness countdown switches green at 7 days, yellow at 1 day and red below 1 day',()=>{
+  assert.match(js,/timeLeft >= 7 \* DAY \? 'rotation-safe' : timeLeft >= DAY \? 'rotation-week' : 'rotation-soon'/);
+  assert.match(js,/countdown\.classList\.remove\('rotation-safe', 'rotation-week', 'rotation-soon'\)/);
+  assert.match(js,/if \(Number\.isFinite\(timeLeft\) && timeLeft > 0\)/,'unavailable or expired data is not shown as urgent');
+  for(const [tone,colour] of Object.entries({'rotation-safe':'#78dfa6','rotation-week':'#ffd100','rotation-soon':'#ff6b5e'}))
+    assert.ok(css.includes('.zg-panel #eom-countdown.'+tone+'{color:'+colour+'}'),tone+' has the expected colour');
+  assert.match(js,/setInterval\(renderLive, 1000\)/,'countdown transitions are recomputed each second');
+});
+
+test('only guild labels are bold inside angle brackets; Pugs remain plain',()=>{
+  assert.match(js,/function setRaidTitle\(node, label, guild\)/);
+  assert.match(js,/bold\.className = 'raid-guild'/);
+  assert.match(js,/bold\.textContent = name/,'guild text is safely assigned, not parsed as HTML');
+  assert.match(js,/setRaidTitle\(title, session\.id !== null/);
+  assert.match(css,/\.timer-row span strong\.raid-guild\{color:inherit;font-size:inherit;font-weight:700/,'guild text does not inherit the timer font size');
 });
 
 test('the tracker group name PUG is shown as Pug, and dashes in titles are en dashes',()=>{

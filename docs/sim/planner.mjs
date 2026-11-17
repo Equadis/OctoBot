@@ -38,6 +38,8 @@ let library;
 let picker, config, settingsControls, swapControls;
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
+// Remember folded stat sections while gear, talents and buffs trigger character-sheet rerenders.
+const collapsedStatGroups = new Set();
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -232,8 +234,16 @@ function render() {
   const verifiedGear=Object.fromEntries(Object.entries(build.gear).filter(([slot,item])=>picker?.usable(slot,item.id)).map(([slot,item])=>[slot,picker.lookup(item.id)]));
   const sheet=characterStats(build,data,verifiedGear);
   $('gear-stats').replaceChildren(...sheet.groups.map(group=>{
-    const section=element('section','character-stat-group');
-    const heading=element('h3','',group.name);section.append(heading);
+    const section=element('details','character-stat-group');
+    section.open=!collapsedStatGroups.has(group.name);
+    const heading=element('summary','character-stat-toggle',group.name);
+    // The browser handles mouse, touch and keyboard activation of a native details/summary.
+    // Capture the next state before the native toggle so a subsequent render preserves it.
+    heading.addEventListener('click',()=>{
+      if(section.open)collapsedStatGroups.add(group.name);
+      else collapsedStatGroups.delete(group.name);
+    });
+    section.append(heading);
     for(const stat of group.rows){
       const row=element('div','gear-stat');row.append(element('span','',stat.label),element('strong','',stat.value));
       row.dataset.tone=statTone(group.name,stat.label,stat.value);
