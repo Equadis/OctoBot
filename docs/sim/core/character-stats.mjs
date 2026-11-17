@@ -45,7 +45,8 @@ export function characterStats(build,talentData,gear={}){
  for(const [key,i,multiplier] of [['int',3,racial.intellectMultiplier],['spi',4,racial.spiritMultiplier],['agi',1,racial.agilityMultiplier]])if(multiplier&&base)s[key]=racialAttributeEstimate(s[key],base[i],multiplier,baseAudit.includedRacialAttributes.includes(key));
  const selected=name=>(talentData?.talents||[]).some(t=>t.name===name&&(build.talents?.[t.id]||0)>0);
  const mult=(key,percentage)=>{if(s[key]!==null)s[key]=Math.floor(s[key]*(1+percentage/100));};
- const talentAudit=resolveTalentEffects(build,talentData??{classId:c,talents:[]},gear,{buffAudit});
+ const metadata=talentData==null||(!talentData.classId&&Array.isArray(talentData.talents)&&talentData.talents.length===0)?{classId:c,talents:[]}:talentData;
+ const talentAudit=resolveTalentEffects(build,metadata,gear,{buffAudit});
  add(talentAudit.flat);
  for(const [key,percent] of Object.entries(talentAudit.percent))mult(key,percent);
  const special=talentAudit.special;
