@@ -1,5 +1,7 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
-import {appendChatMessage} from "./chat-links.mjs?v=2";
+import {appendChatMessage} from "./chat-links.mjs?v=3";
+import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
+import {installItemPopup} from "./item-popup.mjs?v=1";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=3";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
@@ -12,14 +14,49 @@ guildToggle.addEventListener("change",()=>{showGuilds=guildToggle.checked;docume
 function node(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e;}
 function status(state,text){const e=byId("feed-state");e.dataset.state=state;e.textContent=text;}
 function empty(parent,message){parent.replaceChildren(node("div","chat-empty",message));}
+let focusedPlayer="",knownPlayers=new Set();
+const tradeSignatures={};
+const closeItemPopup=installItemPopup();
+function playerButton(name,cls,key=playerKey(name)){
+ const button=node("button",cls,name);button.type="button";button.dataset.player=key;
+ button.setAttribute("aria-label","Highlight "+name);return button;
+}
+function appendMessage(parent,row){
+ appendChatMessage(parent,row,{interactiveItems:true,appendText:(target,text)=>{
+  for(const part of mentionParts(text,knownPlayers)){
+   if(part.player)target.append(playerButton(part.text,"chat-mention",part.player));
+   else target.append(document.createTextNode(part.text));
+  }
+ }});
+}
+function refreshKnownPlayers(){
+ const next=new Set();
+ for(const key of feeds)for(const row of history[key]?.rows??[])next.add(playerKey(row.author));
+ for(const key of ["world","gm","lfg","wtb","wts"])for(const row of current?.[key]??[])next.add(playerKey(row.author));
+ next.delete("");next.delete("unknown player");knownPlayers=next;
+}
+function focusSignature(row){return JSON.stringify([row,mentionParts(row.message,knownPlayers).filter(p=>p.player).map(p=>p.player)]);}
+function applyPlayerFocus(){
+ for(const line of document.querySelectorAll(".chat-line[data-author]")){
+  const mentions=[...line.querySelectorAll(".chat-mention")].map(e=>e.dataset.player);
+  line.classList.toggle("chat-dimmed",!rowInFocus(line.dataset.author,mentions,focusedPlayer));
+ }
+ for(const e of document.querySelectorAll(".chat-line [data-player]"))e.setAttribute("aria-pressed",String(Boolean(focusedPlayer)&&e.dataset.player===focusedPlayer));
+}
+document.addEventListener("click",event=>{
+ const token=event.target instanceof Element?event.target.closest(".chat-line [data-player]"):null;
+ focusedPlayer=token&&token.dataset.player!==focusedPlayer?token.dataset.player:"";applyPlayerFocus();
+});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&focusedPlayer){focusedPlayer="";applyPlayerFocus();}});
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
   if(row.gm)content.append(node("span","chat-gm-tag","<GM> "));
-  const author=node("span","chat-author",row.author);
-  if(row.guild)author.append(node("span","chat-guild"," <"+row.guild+">"));
-  content.append(author,document.createTextNode(": "));
-  appendChatMessage(content,row);
+  const author=withTime&&row.author!=="Unknown player"?playerButton(row.author,"chat-author"):node("span","chat-author",row.author);
+  content.append(author);
+  if(row.guild)content.append(node("span","chat-guild"," <"+row.guild+">"));
+  content.append(document.createTextNode(": "));
+  appendMessage(content,row);
   parent.append(content);
 }
 const feeds=["world","gm"],history={};
@@ -27,30 +64,41 @@ let historyGeneration=0,historyQuery="",searchTimer=null;
 function freshFeed(){return {rows:[],ready:false,loading:false,more:false,capacity:historyPageSize(historyQuery),error:"",controller:null,signature:""};}
 function syncHistoryButton(key){
  const state=history[key],button=byId(key+"-older");
- button.hidden=!state.more&&!state.error;button.disabled=state.loading;
+ button.hidden=!showOlderButton(state,byId(key).scrollTop);button.disabled=state.loading;
  button.textContent=state.loading?"Loading…":state.error?"Retry history":historyQuery?"Load 100 more matching messages":"Load 1,000 older messages";
  byId(key+"-history-state").textContent=state.error||(state.ready?historyQuery?state.rows.length+" matching messages":state.rows.length+" messages loaded":"Loading history…");
 }
-function drawHistory(key,{forceBottom=false}={}){
+function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
  const parent=byId(key),state=history[key],rows=state.rows;
  syncHistoryButton(key);
- const signature=JSON.stringify([state.ready,state.error,rows]);
+ refreshKnownPlayers();
+ const rowSignatures=rows.map(focusSignature);
+ const signature=JSON.stringify([state.ready,state.error,rowSignatures]);
  if(!forceBottom&&state.signature===signature)return;state.signature=signature;
- const atBottom=forceBottom||parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
+ const atBottom=forceBottom||!preserveTop&&parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
  const top=parent.getBoundingClientRect().top;
  // Record the first visible row rather than relying on total height differences.
  const anchor=[...parent.children].find(e=>e.dataset.id&&e.getBoundingClientRect().bottom>top);
  const anchorId=anchor?.dataset.id,offset=anchor?anchor.getBoundingClientRect().top-top:0,before=parent.scrollTop;
  if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":historyQuery?"No messages match your search.":key==="gm"?"No recent verified GM messages.":"No recent public messages."));
  else{
-  const frag=document.createDocumentFragment();
-  for(const row of rows){const line=node("div","chat-line");line.dataset.id=row.id;appendChatLine(line,row);frag.append(line);}
-  parent.replaceChildren(frag);
+  const existing=new Map([...parent.children].filter(e=>e.dataset.id).map(e=>[e.dataset.id,e]));
+  const keep=new Set(rows.map(r=>r.id));
+  for(const child of [...parent.children])if(!keep.has(child.dataset.id))child.remove();
+  // Reuse unchanged DOM nodes so hover, pinned tooltips and keyboard focus survive live polls.
+  for(let i=0;i<rows.length;i++){
+   const row=rows[i];let line=existing.get(row.id);
+   if(!line||line.dataset.signature!==rowSignatures[i]){
+    const next=node("div","chat-line");next.dataset.id=row.id;next.dataset.author=playerKey(row.author);next.dataset.signature=rowSignatures[i];appendChatLine(next,row);
+    if(line?.parentNode===parent)line.replaceWith(next);line=next;
+   }
+   if(parent.children[i]!==line)parent.insertBefore(line,parent.children[i]??null);
+  }
   if(atBottom)parent.scrollTop=parent.scrollHeight;
   else{const replacement=anchorId&&[...parent.children].find(e=>e.dataset.id===anchorId);
    parent.scrollTop=replacement?parent.scrollTop+replacement.getBoundingClientRect().top-parent.getBoundingClientRect().top-offset:before;}
  }
- byId(key+"-count").textContent=String(rows.length);
+ byId(key+"-count").textContent=String(rows.length);syncHistoryButton(key);applyPlayerFocus();
 }
 async function fetchHistory(key,older=false){
  const state=history[key],token=historyGeneration,realm=select.value,q=historyQuery;
@@ -70,7 +118,7 @@ async function fetchHistory(key,older=false){
   state.ready=true;state.more=Boolean(data.hasMore);state.capacity=Math.max(state.capacity,older?state.rows.length:historyPageSize(q));
   // Merge a live poll that may have completed while the initial archive loaded.
   if(current?.realm===realm)mergeLiveHistory(key,current[key],false,older);
-  drawHistory(key,{forceBottom:!older});
+  drawHistory(key,{forceBottom:!older,preserveTop:older});
  }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error=e.historyFailure?e.message:historyErrorMessage();
   if(!state.ready&&current?.realm===realm)state.rows=liveFallback(current[key],q);
   drawHistory(key);}
@@ -93,7 +141,10 @@ function resetHistory(query=historyQuery,load=true){
  historyGeneration++;historyQuery=query;
  for(const key of feeds){history[key]?.controller?.abort();history[key]=freshFeed();drawHistory(key);if(load)void fetchHistory(key);}
 }
-for(const key of feeds)byId(key+"-older").addEventListener("click",()=>void fetchHistory(key,history[key].ready));
+for(const key of feeds){
+ byId(key+"-older").addEventListener("click",()=>void fetchHistory(key,history[key].ready));
+ byId(key).addEventListener("scroll",()=>syncHistoryButton(key),{passive:true});
+}
 byId("chat-search").addEventListener("input",()=>{
  clearTimeout(searchTimer);const q=byId("chat-search").value.trim().slice(0,160);
  resetHistory(q,false);searchTimer=setTimeout(()=>{for(const key of feeds)void fetchHistory(key);},350);
@@ -124,7 +175,7 @@ for(const key of ["kind","intent","role","tag","query","blacklist","sort","alert
 }
 byId("lfg-reset").addEventListener("click",()=>{filters={...defaultFilters};collapsed.clear();for(const key of Object.keys(defaultFilters)){const control=byId("lfg-"+key);if(key==="alerts")control.checked=false;else control.value=filters[key];}save();lastLfgKey="";drawListings();});
 function updateTimers(parent,now){
- for(const e of parent.querySelectorAll("[data-expires]")){const seconds=Math.max(0,Math.ceil((Number(e.dataset.expires)-now)/1000));e.textContent=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");e.classList.toggle("critical",seconds<=30);e.classList.toggle("soon",seconds>30&&seconds<=60);}
+ for(const e of parent.querySelectorAll("[data-expires]")){const remaining=Math.max(0,Math.ceil((Number(e.dataset.expires)-now)/1000));e.textContent=elapsedLabel(Number(e.dataset.time),now);e.classList.toggle("critical",remaining<=30);e.classList.toggle("soon",remaining>30&&remaining<=60);}
 }
 function drawLfg(now){
  const parent=byId("lfg"),all=current.lfg.filter(r=>r.expiresAt>now),rows=filterListings(all,filters,now);
@@ -132,7 +183,7 @@ function drawLfg(now){
  const ids=new Set(rows.map(r=>r.listingId??JSON.stringify([r.tag,r.author])));
  if(primed&&filters.alerts&&[...ids].some(x=>!known.has(x)))signalNew();
  known=ids;primed=true;
- const signature=JSON.stringify([rows,filters.sort,[...collapsed]]);
+ const signature=JSON.stringify([rows.map(focusSignature),filters.sort,[...collapsed]]);
  if(lastLfgKey===signature){updateTimers(parent,now);return;}
  lastLfgKey=signature;
  const groups=new Map();for(const r of rows){if(!groups.has(r.tag))groups.set(r.tag,[]);groups.get(r.tag).push(r);}
@@ -160,8 +211,8 @@ function drawLfg(now){
     if(info.intent!=="Unspecified")badges.append(node("span","lfg-chip",info.intent));
     for(const role of info.roles)badges.append(node("span","lfg-chip role-"+role.toLowerCase(),role));
     if(info.needed)badges.append(node("span","lfg-chip","LF"+info.needed));
-    const message=node("div","lfg-message");appendChatMessage(message,row);body.append(who,badges,message);
-    const expiry=node("span","list-expiry");expiry.dataset.expires=row.expiresAt;
+    const message=node("div","lfg-message");appendMessage(message,row);body.append(who,badges,message);
+    const expiry=node("span","list-expiry");expiry.dataset.expires=row.expiresAt;expiry.dataset.time=row.time;
     line.append(body,expiry);section.append(line);
    }
   }
@@ -176,17 +227,19 @@ function drawListings(){
   for(const key of ["wtb","wts"]){
     const parent=byId(key),rows=current[key].filter(r=>r.expiresAt>now);
     byId(key+"-count").textContent=String(rows.length);
-    const frag=document.createDocumentFragment();
-    for(const row of rows){
-      const remaining=Math.max(0,Math.ceil((row.expiresAt-now)/1000)),line=node("div","list-row");
-
-      const body=node("div");appendChatLine(body,row,false);line.append(body);
-      line.append(node("span","list-expiry"+(remaining<=30?" critical":remaining<=60?" soon":""),Math.floor(remaining/60)+":"+String(remaining%60).padStart(2,"0")));frag.append(line);
+    const signature=JSON.stringify(rows.map(focusSignature));
+    if(tradeSignatures[key]!==signature){
+     tradeSignatures[key]=signature;const frag=document.createDocumentFragment();
+     for(const row of rows){
+      const line=node("div","list-row"),body=node("div");appendChatLine(body,row,false);line.append(body);
+      const expiry=node("span","list-expiry");expiry.dataset.expires=row.expiresAt;expiry.dataset.time=row.time;line.append(expiry);frag.append(line);
+     }
+     if(rows.length)parent.replaceChildren(frag);else empty(parent,"No active listings.");
     }
-    if(rows.length)parent.replaceChildren(frag);else empty(parent,"No active listings.");
+    updateTimers(parent,now);
   }
 }
-function reset(){current=null;primed=false;known.clear();lastLfgKey="";for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
+function reset(){current=null;primed=false;known.clear();knownPlayers.clear();focusedPlayer="";closeItemPopup();lastLfgKey="";for(const k of Object.keys(tradeSignatures))delete tradeSignatures[k];for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
   if(requesting)return;requesting=true;
   const token=generation, realm=select.value;controller=new AbortController();
@@ -199,7 +252,7 @@ async function poll(){
     for(const key of ["world","gm","lfg","wtb","wts"])if(!Array.isArray(data[key]))throw Error("Invalid feed");
     current=data;status(data.status,data.status==="live"?"Live · collector connected":data.status==="stale"?"Collector stale · last known messages":"Waiting for collector");
     byId("last-updated").textContent="Updated "+new Date(data.generatedAt).toISOString().slice(11,19)+" UTC";
-    mergeLiveHistory("world",data.world);mergeLiveHistory("gm",data.gm);drawListings();
+    mergeLiveHistory("world",data.world,false);mergeLiveHistory("gm",data.gm,false);drawHistory("world");drawHistory("gm");drawListings();
   }catch{if(token===generation)status("error","Feed unavailable · retrying");}
   finally{clearTimeout(timeout);requesting=false;if(token!==generation)void poll();}
 }

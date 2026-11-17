@@ -58,29 +58,29 @@ export function splitWebLinks(value){
  if(last<text.length)parts.push({text:text.slice(last)});
  return parts;
 }
-function appendWebText(parent,text){
+function appendWebText(parent,text,options){
  const doc=parent.ownerDocument;
  for(const p of splitWebLinks(text)){
-  if(!p.href){parent.append(doc.createTextNode(p.text));continue;}
+  if(!p.href){if(options?.appendText)options.appendText(parent,p.text);else parent.append(doc.createTextNode(p.text));continue;}
   const a=doc.createElement("a");a.className="chat-web-link"+(visited.has(p.href)?" is-visited":"");a.href=p.href;a.target="_blank";a.rel="noopener noreferrer";a.textContent=p.text;
   const seen=()=>{markVisited(p.href);a.classList.add("is-visited");};
   a.addEventListener("click",seen);a.addEventListener("auxclick",e=>{if(e.button===1)seen();});parent.append(a);
  }
 }
-export function appendChatMessage(parent,row){
+export function appendChatMessage(parent,row,options){
  const doc=parent.ownerDocument;
  const message=String(row.message??"");
  const parts=row.parts;
  if(!Array.isArray(parts)||parts.some(p=>!p||typeof p.text!=="string")||parts.map(p=>p.text).join("")!==message){
-  appendWebText(parent,message);return;
+  appendWebText(parent,message,options);return;
  }
  for(const part of parts){
   const id=itemId(part.itemId);
-  if(!id){appendWebText(parent,part.text);continue;}
+  if(!id){appendWebText(parent,part.text,options);continue;}
   const a=doc.createElement("a");
   a.className="chat-item-link";a.href="https://octowow.st/db/?item="+id;
   a.target="_blank";a.rel="noopener noreferrer";
   a.style.color=itemColour(part.colour)??"#ffffff";
-  a.textContent=part.text;parent.append(a);
+  a.textContent=part.text;if(options?.interactiveItems){a.dataset.itemId=String(id);a.setAttribute("aria-haspopup","dialog");a.setAttribute("aria-expanded","false");}parent.append(a);
  }
 }

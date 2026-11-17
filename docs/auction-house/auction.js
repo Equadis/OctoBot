@@ -7,6 +7,7 @@ import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.
 import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs';
+import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
 
 // A different API origin is honoured only when the page itself is served from this machine (used for local testing against fixtures).
 const override=new URLSearchParams(location.search).get('api');
@@ -452,7 +453,9 @@ function bind(){
   });
   try{if(storage?.getItem('octobot.auction.favourites.collapsed')==='1')$('fav-collapse').click();}catch{/* ignore */}
 }
-populate();bind();renderSaved();writeFilters();
+populate();bind();renderSaved();
+state.filters.q=auctionSearchFromURL(location.href);
+writeFilters();
 await refreshAll(true);
 setInterval(()=>{void refreshAll();},60_000);
 setInterval(()=>{renderScan();tickAuctionTimes();},1000);                       // keep scan duration and last-scan age current
