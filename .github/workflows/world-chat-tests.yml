@@ -3,7 +3,8 @@ on:
   push:
     paths:
       - 'cloudflare/octometrics/world-chat*.mjs'
-      - 'cloudflare/octometrics/collector/dist-metrics/metrics/world-chat.js'
+      - 'cloudflare/octometrics/collector/**'
+      - 'cloudflare/octometrics/migrations/*world_chat*.sql'
       - 'cloudflare/octometrics/tests/world-chat.test.mjs'
       - 'docs/world-chat/**'
       - 'docs/site-nav.js'
