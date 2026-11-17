@@ -29,6 +29,9 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
+  if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='exposeModel')policy.exposeModel={durationMs:rank.components[0].durationMs,armourByCombo:[1,2,3,4,5].map(n=>n*rank.components[0].armourPerCombo),outcomes:null};
+  if(field==='rogueCooldownModel')policy.rogueCooldownModel=rank.abilityId==='rogue:preparation'?{resetAbilityIds:[]}:rank.abilityId==='rogue:cold-blood'?{durationMs:null,criticalMultiplier:null,consume:null}:{};
   if(field==='sealModel')policy.sealModel=sealTemplate(rank.abilityId,rank.record.fields);
   if(field==='elementalShieldModel')policy.elementalShieldModel=elementalShieldTemplate(rank);
   if(field==='lightningStrikeModel')policy.lightningStrikeModel=lightningStrikeTemplate();

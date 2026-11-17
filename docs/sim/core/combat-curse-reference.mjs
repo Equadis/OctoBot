@@ -15,7 +15,7 @@ export function compileUtilityCurse(id,name,p){
 }
 export function strongestCurseModifier(auras,stat){return Math.max(0,...auras.flatMap(a=>a.modifiers.filter(m=>m.stat===stat).map(m=>m.value)));}
 export function curseDamageFactor(auras,school){return 1+strongestCurseModifier(auras,'curse:'+school+':damagePct')/100;}
-export function curseMitigation(auras,model,baseline){return model?physicalArmourReduction({attackerLevel:model.attackerLevel,armour:Math.max(0,model.armour-strongestCurseModifier(auras,'curseArmourReduction'))}):baseline;}
+export function curseMitigation(auras,model,baseline){return model?physicalArmourReduction({attackerLevel:model.attackerLevel,armour:Math.max(0,model.armour-strongestCurseModifier(auras,'curseArmourReduction')-strongestCurseModifier(auras,'majorArmourReduction'))}):baseline;}
 const curseNames=new Set(['Curse of Agony','Curse of Doom','Curse of the Elements','Curse of Shadow','Curse of Recklessness','Curse of Elements','Curse of Weakness','Curse of Tongues','Curse of Exhaustion']);
 export function removeConflictingCurses(e,actor,target,name,malediction=false){
  if(!curseNames.has(name))return;
