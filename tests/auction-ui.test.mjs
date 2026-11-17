@@ -253,7 +253,7 @@ test('the rarity dropdown and item names use the shared rarity colours',()=>{
   const html=read('auction-house/index.html'),css=read('auction-house/auction.css');
   assert.match(html,/<select id="quality" class="quality-select">/);
   assert.match(html,/quality-select\.css/);
-  assert.match(css,/\.ah-q0 a,\.ah-q1 a,\.ah-q2 a,\.ah-q3 a,\.ah-q4 a,\.ah-q5 a,\.ah-q6 a\{color:var\(--item-quality\)\}/);
+  assert.match(css,/\.ah-q0 \.ah-name-text,\.ah-q1 \.ah-name-text,\.ah-q2 \.ah-name-text,\.ah-q3 \.ah-name-text,\.ah-q4 \.ah-name-text,\.ah-q5 \.ah-name-text,\.ah-q6 \.ah-name-text\{color:var\(--item-quality\)\}/);
   for(let q=0;q<=6;q++)assert.ok(css.includes(`.ah-q${q}{--item-quality:var(--quality-${q})}`),'rarity variable for quality '+q);
 });
 test('the page uses UK English and the shared palette instead of one-off colours',()=>{
@@ -262,4 +262,20 @@ test('the page uses UK English and the shared palette instead of one-off colours
   for(const old of ['#172232','#46546a'])assert.ok(!css.includes(old),'retired one-off shade '+old);
   assert.match(css,/\.ah-btn\[aria-pressed=true\][^{]*\{[^}]*#3a3827[^}]*#f4d65c/,'pressed buttons use the active navigation colours');
   assert.match(text,/lang="en-GB"/);
+});
+
+test('the full Auction House row expands on click and keyboard without navigation',()=>{
+ const script=read('auction-house/auction.js'),css=read('auction-house/auction.css');
+ assert.match(script,/tr\.addEventListener\('click',event=>/);
+ assert.match(script,/tr\.addEventListener\('keydown',event=>/);
+ assert.match(script,/event\.stopPropagation\(\)/,'favourite star should not expand row');
+ assert.doesNotMatch(script,/link\.href='https:\/\/octowow\.st\/db\/\?item='/,'item name is no longer the DB link');
+ assert.match(script,/dbLink\.href='https:\/\/octowow\.st\/db\/\?item='/,'database link remains available inside details');
+ assert.match(script,/attachTooltip\(wrapper,\(\)=>richItemTooltip\(item\)\)/);
+ assert.match(script,/variantLines\(item\)/);
+ assert.match(css,/\.ah-scroll>table\{[^}]*table-layout:fixed/);
+ assert.doesNotMatch(css,/min-width:1040px/);
+ assert.match(css,/@media\(max-width:1060px\)/,'rows become cards at narrower widths');
+ assert.match(css,/@keyframes ah-name-pan/,'long names glide then return');
+ assert.match(css,/prefers-reduced-motion:reduce/);
 });
