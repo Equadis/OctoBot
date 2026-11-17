@@ -60,7 +60,8 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Claw per active Bleed",
       "stat": "damagePct",
-      "param": 1
+      "param": 1,
+      "perOption": "activeBleeds"
     }
   ],
   "273": [
@@ -78,6 +79,16 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Outdoor Cat Form movement speed is not a permanent combat stat"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Cat outdoor movement",
+      "stat": "movementSpeedPct",
+      "param": 0,
+      "when": {
+        "form": "Cat",
+        "outdoors": "Yes"
+      }
     }
   ],
   "274": [
@@ -332,7 +343,10 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Regrowth with Rejuvenation",
       "stat": "periodicHealingPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "targetRejuvenation": "On"
+      }
     }
   ],
   "298": [
@@ -402,6 +416,12 @@ export const TALENT_RULES={
       "kind": "spell",
       "scope": "Moonfire",
       "stat": "crit",
+      "param": 0
+    },
+    {
+      "kind": "spell",
+      "scope": "Moonfire",
+      "stat": "damagePct",
       "param": 0
     }
   ],
@@ -479,6 +499,29 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "The Moonkin form armour multiplier is implemented by the existing form calculator. Remaining spell mana/damage effects need modelling."
+    },
+    {
+      "kind": "special",
+      "stat": "formItemArmourPct",
+      "param": 0,
+      "values": [
+        180
+      ],
+      "when": {
+        "form": "Moonkin"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Balance spells",
+      "stat": "manaCostReductionPct",
+      "param": 0,
+      "values": [
+        20
+      ],
+      "when": {
+        "form": "Moonkin"
+      }
     }
   ],
   "316": [
@@ -501,8 +544,26 @@ export const TALENT_RULES={
   ],
   "318": [
     {
+      "kind": "scoped",
+      "scope": "Wrath",
+      "stat": "manaRefundPct",
+      "param": 0,
+      "when": {
+        "targetInsectSwarm": "On"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Starfire",
+      "stat": "crit",
+      "param": 1,
+      "when": {
+        "targetMoonfire": "On"
+      }
+    },
+    {
       "kind": "pending",
-      "note": "Balance of All Things refunds mana only for Wrath against Insect Swarm targets and raises Starfire crit only against Moonfire targets"
+      "note": "Wrath mana refund requires damage to land; scenario preview is not a net unconditional cast cost"
     }
   ],
   "319": [
