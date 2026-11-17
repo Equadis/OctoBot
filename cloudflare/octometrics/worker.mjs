@@ -253,7 +253,7 @@ export default {
     // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
     // Raid snapshots are superseded every couple of minutes: keep 3 days. Ended sessions (the training data) keep the full 30.
-    await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days') AND id NOT IN (SELECT MAX(id) FROM metric_events WHERE type='raid_sessions' GROUP BY realm,json_extract(payload_json,'$.zone'))").run();
+    await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days') AND id NOT IN (SELECT id FROM (SELECT id,ROW_NUMBER() OVER (PARTITION BY realm,json_extract(payload_json,'$.zone') ORDER BY json_extract(payload_json,'$.seq') DESC,id DESC) AS rn FROM metric_events WHERE type='raid_sessions') WHERE rn=1)").run();
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended','raid_session_revision') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();

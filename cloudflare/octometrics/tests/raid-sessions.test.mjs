@@ -217,3 +217,19 @@ test('durable resume revision excludes old completion after session leaves the s
   revisions.push({observed_at:later,payload_json:JSON.stringify({...e,session:{...e.session,endedAt:later,confirmedAt:later},durationMs:Date.parse(later)-Date.parse(e.session.formedAt)})});
   assert.equal(endedEvents(rows,e.zone,null,revisions).length,1);
 });
+
+test('standalone end cannot advance an older atomic snapshot',async()=>{
+  const {endedEvents}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const s={payload:{sessions:[]},observedAt:iso(Date.parse(e.time)-MIN)};
+  assert.equal(endedEvents([{observed_at:e.time,payload_json:JSON.stringify(e)}],e.zone,s).length,0);
+});
+test('newer completion survives earlier resume regardless of insert order',async()=>{
+  const {endedEvents}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const resume=iso(Date.parse(e.time)+MIN),finish=iso(Date.parse(e.time)+3*MIN);
+  const later={...e,session:{...e.session,endedAt:finish,confirmedAt:finish},durationMs:Date.parse(finish)-Date.parse(e.session.formedAt)};
+  const revisions=[{observed_at:resume,payload_json:JSON.stringify({schema:1,zone:e.zone,session:{...e.session,status:'in_progress',resumedAt:resume}})}];
+  const rows=[{observed_at:finish,payload_json:JSON.stringify(later)},{observed_at:e.time,payload_json:JSON.stringify(e)}];
+  assert.equal(endedEvents(rows,e.zone,null,revisions)[0].confirmedAt,finish);
+});

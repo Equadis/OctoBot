@@ -357,25 +357,27 @@ export function createRaidZonePipeline(
     // the clear early. Throttled to ~once a minute; records every fresh clean kill it sees so
     // `chroniclekills` keeps the history. Can never manufacture a clear: confirmClearNow only fires
     // on a pending departure.
-    const tryChronicleConfirm = async (pending: PendingDeparture): Promise<ConfirmedClear | null> => {
-      if (!chronicle) return null;
+    const tryChronicleConfirm = async (pending: readonly PendingDeparture[]): Promise<ConfirmedClear[]> => {
+      if (!chronicle) return [];
       const last = lastChronicleCheck.get(lane.label) ?? 0;
-      if (now - last < 55_000) return null; // ~once a minute even if /who polls faster
+      if (now - last < 55_000) return []; // ~once a minute even if /who polls faster
       lastChronicleCheck.set(lane.label, now);
       let kills;
       try {
         kills = cleanOnyxiaKills(await chronicle.client.fetchRecentOnyxia(), chronicle.realm);
       } catch (error) {
         logger.debug(`chronicle: fetch failed (${describeError(error)})`);
-        return null;
+        return [];
       }
       const known = await chronicle.store.knownLogIds(kills.map((k) => k.logId));
       const fresh = kills.filter((k) => !known.has(k.logId));
-      if (fresh.length === 0) return null;
-      const from = pending.formedAt - chronicle.matchWindowMs;
-      const to = now + chronicle.matchWindowMs;
-      const confirming = confirmingKills(fresh, pending.roster, from, to);
-      const confirmingIds = new Set(confirming.map((k) => k.logId));
+      if (fresh.length === 0) return [];
+      const assignments = new Map<string, PendingDeparture>();
+      for (const kill of fresh) {
+        const matches = pending.filter(p => confirmingKills([kill], p.roster, p.formedAt - chronicle.matchWindowMs, now + chronicle.matchWindowMs).length > 0);
+        if (matches.length === 1 && matches[0]) assignments.set(kill.logId, matches[0]);
+      }
+      const confirmingIds = new Set(assignments.keys());
       const processedAt = new Date(now);
       for (const kill of fresh) {
         await chronicle.store
@@ -390,20 +392,21 @@ export function createRaidZonePipeline(
           })
           .catch((error) => logger.debug(`chronicle store: ${describeError(error)}`));
       }
-      return confirming.length > 0 ? lane.watch.confirmClearNow(now) : null;
+      const results: ConfirmedClear[] = [];
+      for (const target of new Set(assignments.values())) {
+        const clear=lane.watch.confirmClearNow(now,target); if(clear)results.push(clear);
+      }
+      return results;
     };
 
     for (const event of cleared) {
       await handleConfirmedClear({ durationMs: event.durationMs, peak: event.peak, number: event.number }, false);
     }
-    if (chronicle && cleared.length === 0 && complete) {
-      const pending = lane.watch.pendingClear();
-      if (pending) {
-        const early = await tryChronicleConfirm(pending);
-        if (early) {
-          logger.info(
-            `${lane.label}: Chronicle-confirmed clear #${early.number ?? "?"} (peak ${early.peak}) — skipping the ${mins(watch.raidClearSustainedMs)}m wait`,
-          );
+    if (chronicle && complete) {
+      const pending = lane.watch.pendingClears();
+      if (pending.length > 0) {
+        for (const early of await tryChronicleConfirm(pending)) {
+          logger.info(`${lane.label}: Chronicle-confirmed clear #${early.number ?? "?"} (peak ${early.peak})`);
           await handleConfirmedClear(early, true);
         }
       }

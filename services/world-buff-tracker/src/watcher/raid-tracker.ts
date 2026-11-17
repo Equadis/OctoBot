@@ -521,19 +521,17 @@ export class RaidTracker {
 
   /** A departure detected but not yet confirmed (still inside the sustained wait), or null — so a
    *  Chronicle kill can confirm the clear early. */
-  pendingClear(): PendingDeparture | null {
-    for (const slot of this.#slots) {
-      const pending = slot.clears.pending();
-      if (pending) return pending;
-    }
-    return null;
+  pendingClear(): PendingDeparture | null { return this.pendingClears()[0] ?? null; }
+  pendingClears(): PendingDeparture[] {
+    return this.#slots.flatMap(slot => { const pending=slot.clears.pending(); return pending ? [pending] : []; });
   }
 
   /** Confirm a pending departure now (a Chronicle kill proved it), returning the clear the wait would
    *  have produced, or null if none is pending. Never manufactures a clear. */
-  confirmClearNow(now = Date.now()): ConfirmedClear | null {
+  confirmClearNow(now = Date.now(), target?: PendingDeparture): ConfirmedClear | null {
     for (const slot of this.#slots) {
-      if (slot.clears.pending() === null) continue;
+      const pending = slot.clears.pending();
+      if (!pending || (target && (pending.number !== target.number || pending.formedAt !== target.formedAt))) continue;
       const formedAt = slot.clears.formedAt;
       const clear = slot.clears.confirmNow();
       if (clear && formedAt !== null) this.#end(slot, "kill_confirmed", formedAt + clear.durationMs, "chronicle_kill", Math.max(now, formedAt + clear.durationMs));

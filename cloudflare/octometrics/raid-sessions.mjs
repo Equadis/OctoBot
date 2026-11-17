@@ -113,35 +113,44 @@ export function latestSnapshots(rows,now=Date.now()){
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
 export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   const byKey=new Map();
+  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
+  const cutoff=snapshot?Date.parse(snapshot.observedAt):Infinity;
+  const apply=(p,observed,priority)=>{
+    const s=p?.session;
+    if(p?.schema!==SCHEMA||p.zone!==zone||!s||!str(s.key,48))return;
+    const at=stamp(s,observed),time=Date.parse(at);
+    if(!Number.isFinite(time))return;
+    if(s.status==='ended'){
+      const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
+      if(!Number.isFinite(durationMs)||durationMs<0||!END_REASON.has(s.endReason)||!CLEAR_SOURCE.has(s.clearSource))return;
+      if((s.endReason==='kill_confirmed')!==(s.clearSource==='chronicle_kill'))return;
+      if(p.durationMs!==undefined&&p.durationMs!==durationMs)return;
+      p={...p,durationMs,confirmedAt:at};
+    }
+    const prev=byKey.get(s.key);
+    if(!prev||time>prev.time||(time===prev.time&&priority>prev.priority))byKey.set(s.key,{p,time,priority});
+  };
+  // Standalone events are historical only. A completion newer than the last atomic snapshot
+  // must wait for that snapshot; it cannot advance Last Raid Finished on its own.
   for(const row of rows.map(parse)){
-    const p=row.payload;
-    if(!p||p.schema!==SCHEMA||p.zone!==zone||!p.session||p.session.status!=='ended')continue;
-    const prev=byKey.get(p.session.key);
-    const candidate={...p,confirmedAt:p.session.confirmedAt||row.observed_at||p.session.endedAt};
-    if(!prev||Date.parse(candidate.session.endedAt)>Date.parse(prev.session.endedAt)||Date.parse(candidate.session.endedAt)===Date.parse(prev.session.endedAt)&&Date.parse(candidate.confirmedAt)<Date.parse(prev.confirmedAt))byKey.set(p.session.key,candidate);
+    const p=row.payload,s=p?.session;
+    if(s?.status==='ended'&&Date.parse(stamp(s,row.observed_at))<=cutoff)apply(p,row.observed_at,1);
   }
-  // Only snapshots create durable revisions. A resumed raid supersedes an earlier finish even
-  // after it leaves the latest snapshot; a delayed standalone end cannot undo that revision.
-  const latest=new Map();
+  // Snapshot-derived revisions persist past the short snapshot retention. Compare actual
+  // transition times: an earlier resume cannot erase a later end, and vice versa.
   for(const row of revisions.map(parse)){
-    const p=row.payload,s=p?.session;if(p?.zone!==zone||!s)continue;
-    const at=s.status==='ended'?(s.confirmedAt||s.endedAt):(s.resumedAt||s.lastConfirmedAt);
-    const old=latest.get(s.key);
-    if(!old||Date.parse(at)>Date.parse(old.at))latest.set(s.key,{p,at,row});
+    const p=row.payload,s=p?.session;
+    if(s&&Date.parse(stamp(s,row.observed_at))<=cutoff)apply(p,row.observed_at,2);
   }
-  for(const [key,{p,at,row}] of latest){
-    if(p.session.status!=='ended'){byKey.delete(key);continue;}
-    const confirmedAt=p.session.confirmedAt||byKey.get(key)?.confirmedAt||row.observed_at||at;
-    byKey.set(key,{...p,confirmedAt});
-  }
-  // The snapshot is the atomic current lifecycle: standalone events cannot contradict it.
+  // The current snapshot is decisive for every session explicitly included in it.
   for(const s of snapshot?.payload.sessions||[]){
     if(s.status!=='ended'){byKey.delete(s.key);continue;}
-    const previous=byKey.get(s.key);
+    const previous=byKey.get(s.key)?.p;
     const confirmedAt=s.confirmedAt||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
-    byKey.set(s.key,{session:s,confirmedAt,durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)});
+    const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
+    byKey.set(s.key,{p:{session:s,confirmedAt,durationMs},time:Date.parse(confirmedAt),priority:3});
   }
-  return [...byKey.values()].filter(p=>['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));
+  return [...byKey.values()].map(x=>x.p).filter(p=>p.session.status==='ended'&&['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));
 }
 
 /**

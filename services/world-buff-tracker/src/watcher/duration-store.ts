@@ -108,11 +108,14 @@ export class MongoDurationStore implements DurationStore {
   ): Promise<MongoDurationStore> {
     const collection = database.collection<DurationDoc>(collectionName);
     await collection.createIndex({ ts: 1 }, { expireAfterSeconds: ttlDays * 86_400 });
+    // Legacy unkeyed observations cannot be linked to a raid or a later retraction.
+    // Retain them in Mongo for audit, but do not use them for authoritative predictions.
+    const verified = { valid: true, sessionKey: { $type: "string" as const } };
     const db: DurationDb = {
       insert: (doc) => doc.sessionKey ? collection.updateOne({sessionKey:doc.sessionKey},{$set:doc},{upsert:true}).then(()=>undefined) : collection.insertOne(doc).then(() => undefined),
       invalidate: (sessionKey) => collection.updateMany({sessionKey},{$set:{valid:false}}).then(()=>undefined),
-      recent: (limit) => collection.find({valid:{$ne:false}}).sort({ ts: -1 }).limit(limit).toArray(),
-      count: () => collection.countDocuments({valid:{$ne:false}}),
+      recent: (limit) => collection.find(verified).sort({ ts: -1 }).limit(limit).toArray(),
+      count: () => collection.countDocuments(verified),
       close: releaseSharedClient,
     };
     return new MongoDurationStore(db);

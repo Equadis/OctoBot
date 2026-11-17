@@ -116,17 +116,19 @@ export class RaidTelemetry {
     const now = this.#now();
     const merged = mergeLanes(lanes);
     const lair = observation ? { ...merged, present: observation.present, complete: observation.complete, unassigned: merged.unassigned + Math.max(0, observation.present - merged.present) } : merged;
-    void this.#reportEnded(zone, lair, now);
-    const shown = lair.sessions.filter((s) => s.status !== "ended" || (s.endedAt ?? 0) >= now - ENDED_IN_SNAPSHOT_MS).slice(0, 12);
-    const live = shown.filter((s) => s.status !== "ended");
-    const recent = shown.filter((s) => s.status === "ended").slice(0, ENDED_IN_SNAPSHOT_MAX);
+    // Live sessions must not be truncated by earlier lanes' historical rows.
+    const live = lair.sessions.filter(s => s.status !== "ended").slice(0, 12);
+    const recent = lair.sessions.filter(s => s.status === "ended" && (s.confirmedAt ?? s.endedAt ?? 0) >= now - ENDED_IN_SNAPSHOT_MS)
+      .sort((a,b) => (b.confirmedAt ?? b.endedAt ?? 0) - (a.confirmedAt ?? a.endedAt ?? 0))
+      .slice(0, Math.min(ENDED_IN_SNAPSHOT_MAX, 12-live.length));
     const sig = JSON.stringify([
-      [...live, ...recent].map((s) => [s.key, s.status, s.confidence, s.guild.label, s.endReason ?? null, s.players, s.resumed]),
+      [...live, ...recent].map((s) => [s.key, s.status, s.confidence, s.guild.label, s.endReason ?? null, s.players, s.resumed, s.resumedAt, s.confirmedAt]),
       lair.present, lair.complete, lair.unassigned,
       lair.ambiguity?.kind ?? null,
     ]);
     const due = sig !== this.#lastSig.get(zone) || now - (this.#lastAt.get(zone) ?? 0) >= HEARTBEAT_MS;
-    if (!due || this.#inFlight.has(zone)) return;
+    if (this.#inFlight.has(zone)) return;
+    if (!due) { void this.#reportEnded(zone, lair, now); return; }
     this.#seq = Math.max(this.#seq + 1, now);
     const body = {
       type: "raid_sessions",
@@ -154,6 +156,8 @@ export class RaidTelemetry {
         if (ok) {
           this.#lastSig.set(zone, sig);
           this.#lastAt.set(zone, now);
+          // Standalone history is published only AFTER the atomic lifecycle snapshot is acknowledged.
+          void this.#reportEnded(zone, lair, now);
         }
       })
       .catch((error) => this.#warn(error))
@@ -164,7 +168,7 @@ export class RaidTelemetry {
   async #reportEnded(zone: RaidZoneId, lair: LairSessions, now: number): Promise<void> {
     for (const s of lair.sessions) {
       if (s.status !== "ended" || s.endedAt === undefined) continue;
-      const id = `${this.#realm}|${zone}|${s.key}|${s.endedAt}`;
+      const id = `${this.#realm}|${zone}|${s.key}|${s.endedAt}|${s.confirmedAt ?? 0}|${s.endReason}`;
       if (this.#sentEnded.has(id)) continue;
       this.#sentEnded.add(id); // claim first so overlapping reports never double-send
       try {
