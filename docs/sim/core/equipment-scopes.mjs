@@ -14,7 +14,7 @@ export function scopedEquipmentEffect(raw){
  const t=clean(raw);let m;
  const match=p=>t.match(new RegExp('^'+p+'$','i'));
  // These are event-dependent mechanics, even if the source uses Equip:.
- if(/^(?:Use:|Chance on hit:)|\b(?:chance (?:on|of|when|after|whenever|to (?:trigger|grant|restore|summon|heal|deal|inflict|reflect|return|strike|become))|on (?:a |every )?(?:melee|ranged|spell) (?:hit|attack|critical)|when struck|whenever|after casting|critical hits (?:cause|trigger)|stacks up to|next (?:spell|attack|cast)|has a chance|have a chance|sometimes heals)\b/i.test(t))return {status:'event',stats:{}};
+ if(/^(?:Use:|Chance on hit:)|\b(?:chance (?:on|of (?!a critical hit)|when|after|whenever|to (?:trigger|grant|restore|summon|heal|deal|inflict|reflect|return|strike|become))|on (?:a |every )?(?:melee|ranged|spell) (?:hit|attack|critical)|when struck|whenever|after casting|critical hits (?:cause|trigger)|stacks up to|next (?:spell|attack|cast)|has a chance|have a chance|sometimes heals)\b/i.test(t))return {status:'event',stats:{}};
  if((m=match('(?:\\+'+N+' Attack Power|Attack Power increased by '+N+') when fighting (Undead|Beasts|Demons|Elementals|Dragonkin)(?:\\. It also allows the acquisition of Scourgestones on behalf of the Argent Dawn)?')))return found([mod('Target','attackPower',m[1]??m[2],{target:m[3].replace(/s$/,'')})]);
  if((m=match('\\+'+N+' Attack Power when fighting Undead and Demons(?:\\. It also allows the acquisition of Scourgestones on behalf of the Argent Dawn)?')))return found([mod('Target','attackPower',m[1],{target:'Undead or Demon'})]);
  if((m=match('\\+'+N+' All Resistances against players')))return found([mod('Target','allResistance',m[1],{target:'Player'})]);
@@ -61,9 +61,8 @@ export function combineScopedEquipment(entries,context={}){
   const c=m.condition||{};let active=true;
   if(c.pet)active=Boolean(context.classOptions?.pet&&context.classOptions.pet!=='None');
   if(c.aspect)active=context.classOptions?.aspect===c.aspect;
-  // Target type is not exposed in main's build schema. Keep unresolved modifiers
-  // visible but inactive until a caller supplies an explicit target type.
-  if(c.target){const target=String(context.targetCreature||'').toLowerCase();active=Boolean(target)&&c.target.toLowerCase().split(' or ').includes(target);}
+  // Target-dependent effects require an explicit scenario. No default creature type.
+  if(c.target){const target=String(context.classOptions?.targetCreature||context.targetCreature||'').toLowerCase();active=Boolean(target)&&c.target.toLowerCase().split(/ or | and /).map(t=>t.replace(/s$/,'')).includes(target.replace(/s$/,''));}
   const key=JSON.stringify([m.scope,m.stat,m.condition||null,active]);
   const old=result.get(key)||{...m,amount:0,active,sources:[]};old.amount+=m.amount;old.sources.push(e.source||e.raw||e.effect);result.set(key,old);
  }
