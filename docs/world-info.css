@@ -32,6 +32,8 @@ section{min-width:0}
 .timer-row:last-child{border-bottom:0}
 .timer-row span{color:#c6d0dc;font-size:13px;overflow-wrap:anywhere;max-width:100%}
 .timer-row strong{color:#78dfa6;font-size:24px;line-height:1.2;font-weight:500;white-space:nowrap}
+/* Only the bracketed guild name is bold; never inherit the green 24px timer styling. */
+.timer-row span strong.raid-guild{color:inherit;font-size:inherit;font-weight:700;line-height:inherit;white-space:normal}
 .timer-row small{display:block;color:#8898aa;font-size:10px;margin-top:5px}
 .empty{color:#8594a7;font-size:12px;margin:13px 0}
 .bottom-line{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:11px;padding-top:17px;margin-top:13px;border-top:1px solid var(--line);font-size:12px;color:#aab7c7}
@@ -233,3 +235,8 @@ small:empty,.evidence:empty{display:none}
 .dots::after{content:"...";display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:0;animation:loading-dots 1.2s steps(4,end) infinite}
 @keyframes loading-dots{to{width:1.13em}}
 @media (prefers-reduced-motion:reduce){.dots::after{animation:none;width:auto}}
+
+/* Edge of Madness: countdown urgency changes as its next rotation approaches. */
+.zg-panel #eom-countdown.rotation-safe{color:#78dfa6}
+.zg-panel #eom-countdown.rotation-week{color:#ffd100}
+.zg-panel #eom-countdown.rotation-soon{color:#ff6b5e}
