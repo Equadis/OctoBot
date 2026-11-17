@@ -425,13 +425,19 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Vampiric Embrace",
       "stat": "healingPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "useVampiricEmbrace": "On"
+      }
     },
     {
       "kind": "scoped",
       "scope": "Vampiric Embrace",
       "stat": "partyManaReturnPct",
-      "param": 1
+      "param": 1,
+      "when": {
+        "useVampiricEmbrace": "On"
+      }
     },
     {
       "kind": "pending",
