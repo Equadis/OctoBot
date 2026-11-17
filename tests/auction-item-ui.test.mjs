@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {itemTooltip,variantDetails,variantLines,displayItemName} from "../docs/auction-house/item-presentation.mjs";
+import {itemTooltip,variantDetails,variantLines,displayItemName,richItemTooltip} from "../docs/auction-house/item-presentation.mjs";
 test("catalogue tooltip describes sourced fields without making up item attributes",()=>{
  const text=itemTooltip({item_id:19019,item_name:"Example Sword",quality:4});
  assert.match(text,/Example Sword/);assert.match(text,/Rarity: Epic/);
@@ -36,4 +36,16 @@ test("unknown custom suffixes never invent attributes",()=>{
 test("permanent enchant ID can be shown without guessing suffix scaling",()=>{
  const permanent={item_id:1234,item_name:"Example Vest",quality:2,variant:"362:0:0"};
  assert.deepEqual(variantLines(permanent),["Enchant: +10 Strength"]);
+});
+
+test("Auction House tooltips reserve small notes for data provenance and unavailable rolls",async()=>{
+ const unresolved=await richItemTooltip({item_id:0,item_name:"Example",variant:"0:4294967287:12345"});
+ assert.ok(unresolved.notes.some(line=>/Unmapped random enchantment/.test(line)));
+ assert.ok(!unresolved.lines.some(line=>/Unmapped random enchantment/.test(line)));
+ const standard=await richItemTooltip({item_id:0,item_name:"Example",variant:"0:1246:0"});
+ assert.ok(standard.lines.some(line=>/\+24 Stamina/.test(line)));
+ assert.ok(standard.notes.some(line=>/Standard Classic DBC reference/.test(line)));
+ const css=(await import('node:fs')).readFileSync(new URL('../docs/auction-house/auction.css',import.meta.url),'utf8');
+ assert.match(css,/\.planner-tooltip p\.tooltip-note\{[^}]*font-size:10px[^}]*\}/);
+ assert.match(css,/\.ah-roll-detail small\{[^}]*font-size:10px[^}]*\}/);
 });
