@@ -64,7 +64,7 @@ test('the home page links to every tool with a large button and sends old Popula
  const home=readFileSync(new URL('index.html',docs),'utf8');
  assert.match(home,/Welcome to OctoBot/);
  const cards=[...home.matchAll(/<a class="home-card" href="([^"]*)"/g)].map(m=>new URL(m[1],BASE).href);
- assert.deepEqual(cards,['population/#server=all','status/','sim/','outfitter/','world-info/','auction-house/'].map(p=>new URL(p,BASE).href));
+ assert.deepEqual(cards,['population/#server=all','status/','sim/','outfitter/','world-info/','auction-house/','world-chat/'].map(p=>new URL(p,BASE).href));
  assert.match(home,/not the official OctoWoW website/);
  // links that predate the home page (the Discord bot posts /#server=...) are forwarded with their query and fragment
  assert.ok(home.includes("if(/^#server=/.test(location.hash))location.replace('population/'+location.search+location.hash);"));
