@@ -182,7 +182,7 @@ async function fillDetail(cell,item,unavailable){
       const vbox=el('section',null,'ah-roll-detail');
       vbox.append(el('strong','Item variant'));
       if(bonuses.length)for(const bonus of bonuses)vbox.append(el('span',bonus));
-      else vbox.append(el('span','Random stats unavailable for this variant.'));
+      else vbox.append(el('span','Random stats unavailable for this variant.','ah-note'));
       if(variant.unresolved)vbox.append(el('small','Unrecognised custom or suffix variant; stats not estimated.'));
       else vbox.append(el('small','Standard Classic DBC reference; OctoWoW custom changes may differ.'));
       parts.unshift(vbox);
