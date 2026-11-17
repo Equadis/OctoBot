@@ -40,14 +40,16 @@ test('prices are white numbers with a coin after each, and a zero amount is not 
 test('Auction House time-left colours follow 30m red, 2h orange, 8h yellow, 24h green, 72h blue',()=>{
   const seen='2026-11-01T00:00:00.000Z',t0=Date.parse(seen),H=3600000;
   const at=hours=>timeClass(hours*H,seen,t0);
-  assert.equal(at(0.5),'ah-time-red');assert.equal(at(1.99),'ah-time-red');
-  assert.equal(at(2),'ah-time-orange');assert.equal(at(7.99),'ah-time-orange');
-  assert.equal(at(8),'ah-time-yellow');assert.equal(at(23.99),'ah-time-yellow');
-  assert.equal(at(24),'ah-time-green');assert.equal(at(71.99),'ah-time-green');
+  assert.equal(at(0.1),'ah-time-red');assert.equal(at(0.5),'ah-time-red');
+  assert.equal(at(0.51),'ah-time-orange');assert.equal(at(2),'ah-time-orange');
+  assert.equal(at(2.01),'ah-time-yellow');assert.equal(at(8),'ah-time-yellow');
+  assert.equal(at(8.01),'ah-time-green');assert.equal(at(24),'ah-time-green');
+  assert.equal(at(24.01),'ah-time-blue');assert.equal(at(71.99),'ah-time-blue');
   assert.equal(at(72),'ah-time-blue');assert.equal(at(200),'ah-time-blue');
   assert.equal(timeClass(null,seen,t0),null,'unknown stays uncoloured');
   assert.equal(timeClass(H,seen,t0+2*H),null,'an expired estimate is not coloured as if it were live');
-  assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-red');
+  assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-orange');
+  assert.equal(timeClass(72*H,seen,t0+1),'ah-time-blue','a 72h auction remains blue after a second');
   const css=read('auction-house/auction.css');
   for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff9218',yellow:'#ffff00',green:'#1eff00',blue:'#2992ff'}))
     assert.ok(css.includes('.ah-auction-time.ah-time-'+colour+'{color:'+hex+'}'),'specific auction countdown colour for '+colour);
