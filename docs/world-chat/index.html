@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OctoBot · World Chat</title><meta name="description" content="Public world chat, GM announcements, dungeon recruitment and player trade listings.">
+<meta property="og:title" content="OctoBot — World Chat (Alpha)"><meta property="og:description" content="Live World chat, GM messages, LFG and player trade.">
+<link rel="icon" href="../favicon.png"><link rel="stylesheet" href="../site-theme.css?v=20261116-q2"><link rel="stylesheet" href="world-chat.css?v=1">
+<script src="../site-tooltips.js?v=20261116-tips1" defer></script><script src="../viewer-presence.js?v=20261113-live" defer></script>
+<script src="world-chat.js?v=1" type="module"></script></head><body><main>
+<header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>World Chat <span class="chat-alpha">ALPHA</span></h1></div></div>
+<div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" aria-label="Join the Discord" target="_blank" rel="noopener noreferrer"><span class="header-icon" style="mask:url(../img/discord.png) center/contain no-repeat"></span></a><span class="viewers" id="viewer-status"><i class="viewer-dot"></i><span id="viewer-count">—</span></span></div></header>
+<nav class="page-nav" aria-label="Dashboard pages" data-current="world-chat"></nav><script src="../site-nav.js?v=20261117-chat1"></script>
+<div class="chat-controls"><label>Realm <select id="realm"><option>N'Zoth</option><option>Y'Shaarj</option><option>C'Thun</option></select></label><span id="feed-state" role="status">Connecting…</span><span class="chat-muted" id="last-updated"></span></div>
+<div class="chat-feeds"><section class="chat-panel"><h2>World Chat <span id="world-count"></span></h2><div id="world" class="chat-scroll" role="log" aria-label="World chat messages"></div></section>
+<section class="chat-panel gm-panel"><h2>GM Messages <span id="gm-count"></span></h2><div id="gm" class="chat-scroll" role="log" aria-label="GM messages"></div></section></div>
+<section class="chat-panel listings"><h2>Looking for Group <span id="lfg-count"></span></h2><div id="lfg"></div></section>
+<div class="chat-trade"><section class="chat-panel listings"><h2>Want to Buy <span id="wtb-count"></span></h2><div id="wtb"></div></section><section class="chat-panel listings"><h2>Want to Sell <span id="wts-count"></span></h2><div id="wts"></div></section></div>
+<p class="chat-muted">Public World channel only. Listings expire five minutes after their last message; repeated recruitment for the same dungeon refreshes the listing. Trade listings are player advertisements, not verified auctions. GM messages are identified by the server chat flag. Alpha: coverage and classification may be incomplete.</p>
+<footer><span>Times shown in UTC</span><span>Community tools for OctoWoW</span></footer></main></body></html>

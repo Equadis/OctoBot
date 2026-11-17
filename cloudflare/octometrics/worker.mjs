@@ -1,4 +1,5 @@
 import {auctionRoute,auctionCleanup} from "./auction.mjs";
+import {worldChatRoute,worldChatCleanup} from "./world-chat.mjs";
 /** Standalone Cloudflare Worker for OctoMetrics, not a replacement for the existing OctoBot Worker.
  *  Ingest, validation, CORS and retention are unchanged from the deployed version. /api/summary keeps every
  *  existing field and adds per-head (Onyxia / Nefarian) raid intelligence: see raid-intel.mjs. */
@@ -194,6 +195,8 @@ export default {
     const url=new URL(request.url);
     if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(request)});
     if(!env.DB)return json({error:"D1 not configured"},503,request);
+    const chat=await worldChatRoute(request,env);
+    if(chat)return chat;
     const auction=await auctionRoute(request,env);
     if(auction)return auction;
     if(url.pathname==="/health")return json({ok:true},200,request);
@@ -257,5 +260,6 @@ export default {
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
     await auctionCleanup(env);
+    await worldChatCleanup(env);
   }
 };
