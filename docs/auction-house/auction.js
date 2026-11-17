@@ -424,7 +424,7 @@ function bind(){
     const node=$(id);
     node.addEventListener(node.tagName==='INPUT'&&node.type!=='checkbox'?'input':'change',()=>{
       if(id==='item_class'){$('item_subclass').value='';fillSubclasses();}
-      if(id==='sort'){state.sortTouched=true;state.filters.sort=$('sort').value;state.filters.dir='';syncDirection();updateSortHeaders();}
+      if(id==='sort'){state.sortTouched=true;state.filters.sort=$('sort').value;state.filters.dir='';syncDirection();updateSortHeaders();void refreshFavourites();}
       changed(node.tagName==='SELECT'||node.type==='checkbox');
     });
   }
