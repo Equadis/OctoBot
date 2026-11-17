@@ -254,6 +254,17 @@ export const TALENT_RULES={
       "scope": "Revenge",
       "stat": "cooldownReductionSeconds",
       "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Revenge",
+      "stat": "stunDurationSeconds",
+      "param": 0,
+      "values": [
+        3,
+        3,
+        3
+      ]
     }
   ],
   "83": [
@@ -460,6 +471,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Pummel slow is proc/ability-specific"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Pummel",
+      "stat": "slowChancePct",
+      "param": 0
     }
   ],
   "103": [
