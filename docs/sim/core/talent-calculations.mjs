@@ -17,6 +17,8 @@ const dest=(name,school,...tags)=>spell(name,school,'Destruction','Destruction s
 const war=(name,...tags)=>melee(name,'Battle/Defensive/Berserker abilities',...tags);
 const rogueBuilder=(name,...tags)=>melee(name,'Combo-point generators',...tags);
 const holyHeal=(name,...tags)=>heal(name,'Holy',...tags);
+const spellUtility=(name,...tags)=>utility(name,'All spells','Spell casting','Spells',...tags);
+const fireTotem=(name,...tags)=>profile(name,'unknown','Fire','Totems','Fire Totems',...tags);
 const sham=(name,school,...tags)=>spell(name,school,'Offensive Fire/Frost/Nature',...tags);
 const shock=(name,school,...tags)=>sham(name,school,'Shock spells','Instant spells',...tags);
 const hunterShot=(name,...tags)=>ranged(name,'Shots and Stings',...tags);
@@ -31,7 +33,7 @@ const ABILITIES={
   utility('Intervene','Intercept/Intervene'),utility('Pummel','Pummel school lockout'),
   ...many(['Taunt','Disarm','Bloodrage'],'utility'),utility('Berserker Rage','Berserker Rage activation'),
   utility('Shield Wall','Retaliation/Recklessness/Shield Wall'),utility('Recklessness','Retaliation/Recklessness/Shield Wall'),
-  utility('Retaliation','Retaliation/Recklessness/Shield Wall')
+  utility('Retaliation','Retaliation/Recklessness/Shield Wall'),utility('Battle Shout','Shouts','Battle/Demoralizing Shout'),utility('Demoralizing Shout','Shouts','Battle/Demoralizing Shout')
  ],
  paladin:[
   holyHeal('Holy Light','Holy Light / Flash of Light / Holy Shock','Flash of Light/Holy Light'),
@@ -40,8 +42,8 @@ const ABILITIES={
   spell('Holy Shock (damage)','Holy','Holy Shock'),spell('Exorcism','Holy'),
   melee('Crusader Strike'),profile('Holy Strike','unknown','Holy Strike'),
   profile('Holy Strike (healing)','heal','Holy Strike healing','Holy Strike healing power'),
-  profile('Judgement of Righteousness','unknown','Seal/Judgement of Righteousness','Judgement/Seals','Judgement'),
-  profile('Seal of Righteousness','unknown','Seal/Judgement of Righteousness','Judgement/Seals'),
+  profile('Judgement of Righteousness','unknown','Holy','Seal/Judgement of Righteousness','Judgement/Seals','Judgement'),
+  profile('Seal of Righteousness','unknown','Holy','Seal/Judgement of Righteousness','Judgement/Seals'),profile('Retribution Aura','unknown','Holy'),
   ...many(['Seal of Command','Seal of the Crusader','Seal of Wisdom','Seal of Light'],'utility','Judgement/Seals'),
   utility('Judgement','Judgement/Seals'),utility('Hand of Reckoning'),utility('Lay on Hands'),utility('Devotion Aura'),utility('Concentration Aura'),
   ...many(['Hand of Protection','Hand of Freedom','Hammer of Justice'],'utility')
@@ -87,7 +89,7 @@ const ABILITIES={
   ...['Healing Wave','Lesser Healing Wave','Chain Heal'].map(n=>heal(n,'Nature')),
   melee('Stormstrike','Physical/imbue attacks'),melee('Lightning Strike','Physical/imbue attacks'),
   utility('Stoneclaw Totem','Totems','Helpful Totems'),utility('Earthbind Totem','Totems','Helpful Totems'),
-  utility('Fire Nova Totem','Totems'),utility('Magma Totem','Totems'),utility('Grounding Totem','Totems','Helpful Totems'),
+  fireTotem('Fire Nova Totem'),fireTotem('Magma Totem'),fireTotem('Searing Totem'),utility('Grounding Totem','Totems','Helpful Totems'),
   utility('Mana Spring Totem','Totems','Helpful Totems'),utility('Healing Stream Totem','Totems','Helpful Totems'),
   utility('Earth Shield','Shield spells'),utility('Lightning Shield','Shield spells'),utility('Water Shield','Shield spells'),
   utility('Ghost Wolf'),utility('Reincarnation'),utility('Totemic Recall')
@@ -100,10 +102,10 @@ const ABILITIES={
   utility('Viper Sting','Shots and Stings'),utility('Scorpid Sting','Shots and Stings'),
   hunterMelee('Raptor Strike','Raptor Strike/Mongoose Bite'),hunterMelee('Mongoose Bite','Raptor Strike/Mongoose Bite'),
   hunterMelee('Carve'),hunterMelee('Lacerate'),hunterMelee('Wing Clip'),
-  utility('Freezing Trap','Frost/Freezing Trap','Traps and melee abilities'),
-  utility('Frost Trap','Frost/Freezing Trap','Traps and melee abilities'),
-  profile('Immolation Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities'),
-  profile('Explosive Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities'),
+  utility('Freezing Trap','Frost/Freezing Trap','Traps and melee abilities','Trap effects'),
+  utility('Frost Trap','Frost/Freezing Trap','Traps and melee abilities','Trap effects'),
+  profile('Immolation Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities','Trap effects'),
+  profile('Explosive Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities','Trap effects'),
   utility('Revive Pet'),profile('Mend Pet','heal-periodic'),utility('Feign Death')
  ].map(p=>['melee','ranged','periodic','unknown'].includes(p.type)?allDmg(allDmg(allDmg(p,'All damage when no pet'),'Beast/Giant/Dragonkin/Humanoid targets'),'These targets'):p),
  mage:[
@@ -113,11 +115,11 @@ const ABILITIES={
   spell('Blizzard','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Frost Nova','Frost','Frost Nova/Cone of Cold'),spell('Cone of Cold','Frost','Frost Nova/Cone of Cold'),
   spell('Arcane Missiles','Arcane','Arcane Missiles channel'),spell('Arcane Rupture','Arcane'),
-  spell('Arcane Explosion','Arcane'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor')
+  spell('Arcane Explosion','Arcane'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor')
  ],
  warlock:[
   profile('Corruption','periodic','Shadow','Affliction','Affliction spells','Affliction spell casting','All spells','Spell casting','Spells','Offensive spells'),profile('Curse of Agony','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),aff('Drain Soul','Drain Soul/Life/Mana','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
-  aff('Drain Life','Drain Soul/Life/Mana'),aff('Drain Mana','Drain Soul/Life/Mana'),
+  aff('Drain Life','Drain Soul/Life/Mana'),spellUtility('Drain Mana','Shadow','Affliction','Affliction spells','Drain Soul/Life/Mana'),
   aff('Dark Harvest','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),aff('Death Coil','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
   profile('Siphon Life','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),dest('Shadow Bolt','Shadow','Shadow Bolt/Searing Pain/Immolate'),
   dest('Searing Pain','Fire','Shadow Bolt/Searing Pain/Immolate'),
@@ -125,14 +127,14 @@ const ABILITIES={
   dest('Soul Fire','Fire'),dest('Shadowburn','Shadow'),dest('Conflagrate','Fire'),
   dest('Rain of Fire','Fire'),dest('Hellfire','Fire'),
   profile('Immolate (periodic)','periodic','Fire','Immolate','Immolate periodic','Destruction'),
-  ...many(['Life Tap','Curse of Weakness','Curse of Exhaustion','Health Funnel','Mana Funnel','Demon Armor'],'utility')
+  spellUtility('Life Tap','Imp'),...many(['Curse of Weakness','Curse of Exhaustion','Health Funnel','Mana Funnel','Demon Armor'],'utility')
  ].map(p=>['spell','periodic'].includes(p.type)?allDmg(allDmg(allDmg(allDmg(p,'All damage when no pet'),'All damage while Soul Link demon active'),'Succubus'),'Imp'):p),
  priest:[
   spell('Smite','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Holy Fire','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Chastise','Holy','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
-  spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
+  spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Shadow Word: Death','Shadow','Instant/Holy/Discipline spells'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
   profile('Shadow Word: Pain','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
   holyHeal('Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
   holyHeal('Greater Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
@@ -140,7 +142,7 @@ const ABILITIES={
   holyHeal('Flash Heal','Healing target with Renew'),
   holyHeal('Prayer of Healing','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Prayer of Healing/Holy Nova','Healing target with Renew'),
   profile('Renew','heal-periodic','Holy','All spells','Spell casting','Spells','Healing spells','Healing target with Renew','Instant/Holy/Discipline spells'),
-  utility('Power Word: Shield','Instant/Holy/Discipline spells'),utility('Psychic Scream'),utility('Fade')
+  spellUtility('Power Word: Shield','Instant/Holy/Discipline spells'),spellUtility('Psychic Scream','Instant/Holy/Discipline spells'),spellUtility('Fade','Instant/Holy/Discipline spells'),profile('Wand attack','unknown','Wand/Bow'),profile('Bow attack','unknown','Wand/Bow')
  ]
 };
 
@@ -177,14 +179,14 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
  const cooldownReduction=get('cooldownReductionSeconds')+get('cooldownReductionMinutes')*60;
  const value=(key,fn)=>finite(baseline[key])?fn(baseline[key]):null;
  const values={
-  absorbFactor:rel(get('absorbPct')),absorb:value('absorb',n=>noNegative(n)*rel(get('absorbPct'))),
+  resistReductionPct:get('resistReductionPct'),rangeBonusYards:get('rangeIncreaseYards'),rangeFactor:rel(get('rangeIncreasePct')),threatFactor:rel(get('threatPct')-get('threatReductionPct')),hasteFactor:rel(get('hastePct')),absorbFactor:rel(get('absorbPct')),absorb:value('absorb',n=>noNegative(n)*rel(get('absorbPct'))),
   damageFactor:rel(damagePct),healingFactor:rel(healingPct),manaFactor,castFactor,
   criticalBonusFactor:rel(get('criticalDamagePct')),
   castTimeReductionSeconds:get('castTimeReductionSeconds'),
   cooldownReductionSeconds:cooldownReduction,
   hitBonusPct:get('hit'),critBonusPct:get('crit'),
   missPct:value('missPct',n=>clamp(n-get('hit'),profile.type==='spell'?1:0,100)),
-  critPct:value('critPct',n=>clamp(n+get('crit'))),
+  critPct:['periodic','heal-periodic','utility'].includes(profile.type)?null:value('critPct',n=>clamp(n+get('crit'))),
   damage:value('damage',n=>noNegative(n)*rel(damagePct)),
   healing:value('healing',n=>noNegative(n)*rel(healingPct)),
   manaCost:value('manaCost',n=>noNegative(n)*manaFactor),
@@ -194,7 +196,11 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
   cooldownSeconds:value('cooldownSeconds',n=>noNegative(n-cooldownReduction)*reduction(get('cooldownReductionPct'))),
   gcdSeconds:value('gcdSeconds',n=>noNegative(n-get('globalCooldownReductionSeconds'))),
   durationSeconds:value('durationSeconds',n=>noNegative(n+get('durationIncreaseSeconds'))*rel(get('durationPct'))),
-  criticalBonus:value('criticalBonus',n=>noNegative(n)*rel(get('criticalDamagePct')))
+  criticalBonus:['periodic','heal-periodic','utility'].includes(profile.type)?null:value('criticalBonus',n=>noNegative(n)*rel(get('criticalDamagePct'))),
+  rangeYards:value('rangeYards',n=>noNegative(n+get('rangeIncreaseYards'))*rel(get('rangeIncreasePct'))),
+  resistPct:value('resistPct',n=>clamp(n-get('resistReductionPct'))),
+  threat:value('threat',n=>noNegative(n)*rel(get('threatPct')-get('threatReductionPct'))),
+  attackInterval:value('attackInterval',n=>noNegative(n)/rel(get('hastePct')))
  };
  return {profile,modifiers,matched,values};
 }
