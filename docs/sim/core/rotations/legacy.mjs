@@ -1716,6 +1716,7 @@ export const LEGACY_PROFILES={
       "Seal of Command",
       "Seal of Righteousness",
       "Seal of Wisdom",
+      "Seal of Light",
       "Judgement",
       "Consecration",
       "Exorcism",
