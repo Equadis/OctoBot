@@ -1,0 +1,334 @@
+/* All 49 paladin talents reviewed against https://octowow.st/talents/paladin/; snapshot SHA256 16f76bfbdb4faba8636986e58db45a38ccc6ef84e83395d99ce7c7849de35ee4. */
+export const AUDITED_CLASS="paladin";
+export const TALENT_RULES={
+  "432": [
+    {
+      "kind": "global",
+      "stat": "parry",
+      "param": 0
+    }
+  ],
+  "434": [
+    {
+      "kind": "global",
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "437": [
+    {
+      "kind": "weapon",
+      "weapon": "twohand-sword-mace-axe",
+      "stat": "skill",
+      "param": 1
+    },
+    {
+      "kind": "weapon",
+      "weapon": "twohand",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "444": [
+    {
+      "kind": "percent",
+      "stat": "str",
+      "param": 0
+    }
+  ],
+  "445": [
+    {
+      "kind": "percent",
+      "stat": "int",
+      "param": 0
+    }
+  ],
+  "448": [
+    {
+      "kind": "scoped",
+      "scope": "Seal/Judgement of Righteousness",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "449": [
+    {
+      "kind": "scoped",
+      "scope": "Holy Light / Flash of Light / Holy Shock",
+      "stat": "healingPct",
+      "param": 0
+    }
+  ],
+  "450": [
+    {
+      "kind": "scoped",
+      "scope": "Sanctity Aura",
+      "stat": "holyDamagePct",
+      "param": 0,
+      "values": [
+        10
+      ],
+      "when": {
+        "aura": "Sanctity Aura"
+      }
+    }
+  ],
+  "455": [
+    {
+      "kind": "special",
+      "stat": "healingFromItemArmourPct",
+      "param": 0
+    }
+  ],
+  "456": [
+    {
+      "kind": "spell",
+      "scope": "Holy Shock",
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "458": [
+    {
+      "kind": "spell",
+      "scope": [
+        "Holy Light",
+        "Flash of Light"
+      ],
+      "stat": "crit",
+      "param": 0
+    }
+  ],
+  "461": [
+    {
+      "kind": "scoped",
+      "scope": "Devotion Aura",
+      "stat": "armourBonusPct",
+      "param": 0
+    }
+  ],
+  "463": [
+    {
+      "kind": "global",
+      "stat": "hit",
+      "param": 0
+    },
+    {
+      "kind": "global",
+      "stat": "spellHit",
+      "param": 0
+    }
+  ],
+  "465": [
+    {
+      "kind": "special",
+      "stat": "itemArmourPct",
+      "param": 0
+    }
+  ],
+  "469": [
+    {
+      "kind": "global",
+      "stat": "defense",
+      "param": 0
+    }
+  ]
+};
+export const TALENT_COVERAGE={
+  "428": {
+    "status": "active-or-non-stat",
+    "note": "Increases the effectiveness your Blessing of Might and Wisdom by 20%."
+  },
+  "429": {
+    "status": "ability-specific",
+    "note": "Reduces the Mana cost of your Judgement and Seal spells by 15%."
+  },
+  "430": {
+    "status": "ability-specific",
+    "note": "Decreases the cooldown of your Judgement spell by 2 sec."
+  },
+  "431": {
+    "status": "ability-specific",
+    "note": "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 15%."
+  },
+  "432": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "433": {
+    "status": "ability-specific",
+    "note": "Increases the damage done by your Retribution Aura by 50%."
+  },
+  "434": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "435": {
+    "status": "active-or-non-stat",
+    "note": "Places a Blessing on the friendly target, increasing total stats by 10% for 10 min. Players may only have one Blessing on them per Paladin at any one time."
+  },
+  "436": {
+    "status": "proc-or-conditional",
+    "note": "Increases movement and mounted movement speed by 8%. This does not stack with other movement speed increasing effects."
+  },
+  "437": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "438": {
+    "status": "proc-or-conditional",
+    "note": "Gives the Paladin's damaging melee attacks a chance to reduce the target's damage dealt by 9% for 10 sec. Only affects targets of level 62 or lower."
+  },
+  "439": {
+    "status": "ability-specific",
+    "note": "All spell criticals against you cause 30% of the damage taken to the caster as well. The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health."
+  },
+  "440": {
+    "status": "proc-or-conditional",
+    "note": "Gives you a 5% bonus to all damage you deal and decreases threat you generate by 10% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This ef"
+  },
+  "441": {
+    "status": "proc-or-conditional",
+    "note": "Gives the Paladin a chance to deal additional Holy damage equal to 70% of melee damage. Only one Seal can be active on the Paladin at any one time. Lasts 30 sec. Unleashing th"
+  },
+  "442": {
+    "status": "proc-or-conditional",
+    "note": "Crusader Strike deals an additional 10% damage and Zeal increases your attack and casting speed by an additional 2% per stack. Holy Strike infuses you with Holy Might, increas"
+  },
+  "443": {
+    "status": "proc-or-conditional",
+    "note": "Puts the enemy target in a state of meditation, incapacitating them for up to 6 sec. Any damage caused will awaken the target. If the target is immune to the effect, they repe"
+  },
+  "444": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "445": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "446": {
+    "status": "active-or-non-stat",
+    "note": "Casting Judgement reduces the casting time of your next Holy Light by 1 sec."
+  },
+  "447": {
+    "status": "proc-or-conditional",
+    "note": "Gives your Flash of Light and Holy Light spells a 70% chance to not lose casting time when you take damage."
+  },
+  "448": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "449": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "450": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "451": {
+    "status": "ability-specific",
+    "note": "Gives the target of your Lay on Hands spell a 30% bonus to their armor value from items for 2 min. In addition, the cooldown for your Lay on Hands spell is reduced by 20 min."
+  },
+  "452": {
+    "status": "proc-or-conditional",
+    "note": "Increases your chance to resist Fear and Disorient effects by an additional 10%."
+  },
+  "453": {
+    "status": "proc-or-conditional",
+    "note": "Increases the effect of your Concentration Aura by an additional 15% and gives all group members affected by the aura an additional 15% chance to resist Silence and Interrupt "
+  },
+  "454": {
+    "status": "proc-or-conditional",
+    "note": "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 60% of the base cost of the spell."
+  },
+  "455": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "456": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "457": {
+    "status": "proc-or-conditional",
+    "note": "Blasts the target with Holy energy, causing 97 to 104 Holy damage to an enemy, or 311 to 320 healing to an ally. Casting Holy Shock has a chance to have no cooldown for its ne"
+  },
+  "458": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "459": {
+    "status": "proc-or-conditional",
+    "note": "Crusader Strike has a 100% chance to reset the cooldown of your Holy Shock. In addition, the healing effect of your Holy Strike is increased by 100% and benefits from an addit"
+  },
+  "460": {
+    "status": "proc-or-conditional",
+    "note": "Critically healing an ally applies Daybreak for 30 sec. When the ally takes damage, Daybreak is consumed to heal them for 248 to 289."
+  },
+  "461": {
+    "status": "partial",
+    "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
+  },
+  "462": {
+    "status": "proc-or-conditional",
+    "note": "Successful melee and ranged attacks against you have a 10% chance to increase your chance to block by 15%. Lasts 10 sec or 5 blocks."
+  },
+  "463": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "464": {
+    "status": "ability-specific",
+    "note": "Reduces the cooldown of your Hand of Protection by 120 sec and increases the duration of your Hand of Freedom by 6 sec."
+  },
+  "465": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "466": {
+    "status": "ability-specific",
+    "note": "Increases the amount of threat generated by your Righteous Fury spell by 75%."
+  },
+  "467": {
+    "status": "proc-or-conditional",
+    "note": "Places a Blessing on the friendly target, reducing damage taken from all sources by up to 10 for 10 min. In addition, when the target blocks a melee attack, the attacker takes"
+  },
+  "468": {
+    "status": "proc-or-conditional",
+    "note": "Increases the amount of damage absorbed by your shield by 30% and has a 100% chance to restore 2% of maximum mana when a block occurs. This effect cannot occur more than once "
+  },
+  "469": {
+    "status": "sheet",
+    "note": "Passive stat or equipment-specific effect included in planning estimates."
+  },
+  "470": {
+    "status": "proc-or-conditional",
+    "note": "Improves your chance to hit with Hand of Reckoning by 8%."
+  },
+  "471": {
+    "status": "ability-specific",
+    "note": "Decreases the cooldown of your Hammer of Justice spell by 15 sec."
+  },
+  "472": {
+    "status": "proc-or-conditional",
+    "note": "While Righteous Fury is active, your damage taken is reduced by 10%."
+  },
+  "473": {
+    "status": "proc-or-conditional",
+    "note": "Increases chance to block by 45% for 10 sec. While active, each blocked attack deals 35 Holy damage to the attacker. Damage caused by Holy Shield generates 50% additional thre"
+  },
+  "474": {
+    "status": "proc-or-conditional",
+    "note": "Gives you a 50% chance after blocking an attack to generate an additional attack."
+  },
+  "475": {
+    "status": "ability-specific",
+    "note": "Increases the threat generated by your Holy Strike by 25% and its damage by 25%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked a"
+  },
+  "476": {
+    "status": "proc-or-conditional",
+    "note": "Bash the target with your shield, dealing 274 to 301 Holy damage and reducing the damage you take by 30% for 12 sec."
+  }
+};
