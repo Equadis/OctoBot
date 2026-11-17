@@ -55,7 +55,13 @@ export function auditRaidHistory(rows,now=Date.now()){
     const snapshot=latestSnapshots(snapshots,now)[zone]??null;
     const reconciled=endedEvents(ends,zone,snapshot,revisions);
     const learned=learnAuthoritative(reconciled,RAIDS[ZONE_HEAD[zone]]);
-    result.push({realm,zone,rows:{snapshots:snapshots.length,standaloneEnds:ends.length,revisions:revisions.length},malformed,duplicateEventIds:duplicates,duplicateEndTransitions:semanticDuplicates,legacyEndsWithoutConfirmation:legacyEnds,untrustedEndRows:untrusted,disbandedEndRows:disbanded,interruptedEndRows:interrupted,standaloneKeysExcluded:[...keys].filter(k=>!reconciled.some(p=>p.session.key===k)),retainedFinishes:reconciled.length,prediction:learned,lastFinished:reconciled[0]?{key:reconciled[0].session.key,at:reconciled[0].confirmedAt}:null});
+    const details=reconciled.map(p=>({key:p.session.key,formedAt:p.session.formedAt,departedAt:p.session.endedAt,confirmedAt:p.confirmedAt,confirmationExact:Boolean(p.session.confirmedAt),endReason:p.session.endReason,clearSource:p.session.clearSource,trusted:p.session.trusted,durationMs:p.durationMs}));
+    const exclusions=[...keys].filter(k=>!reconciled.some(p=>p.session.key===k)).map(key=>{
+      const records=[...ends,...revisions].flatMap(r=>{try{const s=JSON.parse(r.payload_json).session;return s?.key===key?[{status:s.status,endReason:s.endReason??null,resumed:s.resumed,observedAt:r.observed_at}]:[];}catch{return [];}});
+      const live=snapshot?.payload.sessions.find(s=>s.key===key&&s.status!=='ended');
+      return {key,latestSnapshotStatus:live?.status??null,observedEndReasons:[...new Set(records.map(r=>r.endReason).filter(Boolean))],resumeObserved:records.some(r=>r.status!=='ended'&&r.resumed)};
+    });
+    result.push({realm,zone,rows:{snapshots:snapshots.length,standaloneEnds:ends.length,revisions:revisions.length},malformed,duplicateEventIds:duplicates,duplicateEndTransitions:semanticDuplicates,legacyEndsWithoutConfirmation:legacyEnds,untrustedEndRows:untrusted,disbandedEndRows:disbanded,interruptedEndRows:interrupted,standaloneKeysExcluded:[...keys].filter(k=>!reconciled.some(p=>p.session.key===k)),retainedFinishes:reconciled.length,excludedDetails:exclusions,retainedDetails:details,prediction:learned,lastFinished:reconciled[0]?{key:reconciled[0].session.key,at:reconciled[0].confirmedAt}:null});
   }
   return result;
 }

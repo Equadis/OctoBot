@@ -113,7 +113,20 @@ export function latestSnapshots(rows,now=Date.now()){
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
 export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   const byKey=new Map();
-  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
+  // Legacy snapshots repeat the same completed raid at every heartbeat but have no confirmedAt.
+  // Use the earliest retained report of that exact departure, not its most recent heartbeat.
+  const firstEnd=new Map();
+  const identity=s=>JSON.stringify([s.key,s.formedAt,s.endedAt]);
+  const note=(s,observed)=>{
+    if(s?.status!=='ended'||!s.key)return;
+    const explicit=Boolean(s.confirmedAt),at=s.confirmedAt||observed,ms=Date.parse(at);
+    if(!Number.isFinite(ms)||ms<Date.parse(s.endedAt))return;
+    const key=identity(s),prev=firstEnd.get(key);
+    if(!prev||(explicit&&!prev.explicit)||(explicit===prev.explicit&&ms<prev.ms))firstEnd.set(key,{at,ms,explicit});
+  };
+  for(const row of [...rows,...revisions].map(parse))if(row.payload?.zone===zone)note(row.payload.session,row.observed_at);
+  for(const s of snapshot?.payload.sessions||[])note(s,snapshot.observedAt);
+  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||firstEnd.get(identity(s))?.at||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
   const cutoff=snapshot?Date.parse(snapshot.observedAt):Infinity;
   const apply=(p,observed,priority)=>{
     const s=p?.session;
@@ -146,7 +159,7 @@ export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   for(const s of snapshot?.payload.sessions||[]){
     if(s.status!=='ended'){byKey.delete(s.key);continue;}
     const previous=byKey.get(s.key)?.p;
-    const confirmedAt=s.confirmedAt||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
+    const confirmedAt=s.confirmedAt||firstEnd.get(identity(s))?.at||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
     const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
     byKey.set(s.key,{p:{session:s,confirmedAt,durationMs},time:Date.parse(confirmedAt),priority:3});
   }

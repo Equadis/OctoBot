@@ -233,3 +233,24 @@ test('newer completion survives earlier resume regardless of insert order',async
   const rows=[{observed_at:finish,payload_json:JSON.stringify(later)},{observed_at:e.time,payload_json:JSON.stringify(e)}];
   assert.equal(endedEvents(rows,e.zone,null,revisions)[0].confirmedAt,finish);
 });
+
+test('legacy ended heartbeats do not reset the last finished timer',async()=>{
+  const {endedEvents}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const t=Date.parse(e.time),early=iso(t),late=iso(t+10*MIN);
+  const s={...e.session};delete s.confirmedAt;
+  const row=at=>({observed_at:at,payload_json:JSON.stringify({...e,session:s})});
+  const snapshots={payload:{sessions:[s]},observedAt:late};
+  const history=endedEvents([row(early)],e.zone,snapshots,[row(late),row(iso(t+5*MIN))]);
+  assert.equal(history[0].confirmedAt,early);
+  assert.equal(history.length,1);
+});
+test('explicit confirmation takes precedence over an inferred legacy observation',async()=>{
+  const {endedEvents}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const t=Date.parse(e.time),s={...e.session,confirmedAt:iso(t-MIN)};
+  const legacy={...s};delete legacy.confirmedAt;
+  const row=(session,at)=>({observed_at:at,payload_json:JSON.stringify({...e,session})});
+  const history=endedEvents([row(legacy,iso(t))],e.zone,{payload:{sessions:[legacy]},observedAt:iso(t+10*MIN)},[row(s,iso(t+5*MIN))]);
+  assert.equal(history[0].confirmedAt,s.confirmedAt);
+});
