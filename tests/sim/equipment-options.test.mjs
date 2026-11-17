@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {ENCHANTS,NEW_ITEM_IDS,enchantsForSlot,sortEquipment} from '../../docs/sim/core/equipment-options.mjs';
+import {ENCHANTS,NEW_ITEM_IDS,enchantsForSlot,sortEquipment,enchantAvailable,validEnchant} from '../../docs/sim/core/equipment-options.mjs';
 import {newBuild,validateBuild,encodeBuild,decodeBuild} from '../../docs/sim/core/builds.mjs';
 const data=JSON.parse(await readFile(new URL('../../docs/sim/data/talents/warrior.json',import.meta.url)));
 
@@ -54,4 +54,16 @@ test('imported ranged scopes are checked against actual weapon metadata before s
  item.subclass=3;item.slot=26;
  assert.deepEqual(equipmentErrors(b,()=>item),[]);
  assert.throws(()=>prepareSimulation(b,data,{lookup:()=>item}),/Scope .*not implemented by the combat engine/);
+});
+
+test('current phase hides gated enhancements without invalidating existing saved item references',()=>{
+ const boots=enchantsForSlot('feet','warrior').map(x=>x.id);
+ for(const id of ['enchant_feet_minor_speed','enchant_feet_stamina7','enchant_feet_spirit5'])assert.ok(boots.includes(id));
+ assert.ok(!enchantsForSlot('back','rogue').some(x=>x.id==='enchant_back_agi7'));
+ assert.ok(!enchantsForSlot('shoulder','rogue').some(x=>['enchant_shoulder_naxx','enchant_shoulder_sp'].includes(x.id)));
+ assert.ok(enchantsForSlot('shoulder','rogue').some(x=>x.id==='enchant_shoulder_ap'));
+ assert.ok(validEnchant('enchant_back_agi7','back','rogue'));
+ const cloak=ENCHANTS.find(x=>x.id==='enchant_back_agi7');
+ assert.equal(enchantAvailable(cloak,4),false);
+ assert.equal(enchantAvailable(cloak,5),true);
 });
