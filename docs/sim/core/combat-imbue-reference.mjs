@@ -12,6 +12,7 @@ export function imbueTemplate(name,eligibleAbilityIds=[]){
 export function validateImbueModel(m,abilityIds){
  if(!m||!names.includes(m.name)||typeof m.provenance!=='string'||!m.provenance.trim())throw new Error('Explicit imbue identity and provenance required');
  integer(m.durationMs,'duration',1);if(typeof m.white!=='boolean'||!Array.isArray(m.eligibleAbilityIds)||new Set(m.eligibleAbilityIds).size!==m.eligibleAbilityIds.length||m.eligibleAbilityIds.some(a=>!abilityIds.has(a)))throw new Error('Explicit imbue contact eligibility required');
+ if(m.elementalWeapons!==undefined){const t=m.elementalWeapons;integer(t.rank,'Elemental Weapons rank',0,3);if(t.rank>0&&m.name==='Frostbrand Weapon'){if(!['relative','percentage-points'].includes(t.chanceMode)||!['owner','any'].includes(t.frostShockScope))throw new Error('Explicit Frostbrand talent chance and Frost Shock scope required');finite(t.criticalMultiplier,'Frostbrand guaranteed critical multiplier',1);}}
  if(m.name==='Rockbiter Weapon'){finite(m.damageBonus,'Rockbiter per-contact base damage');finite(m.threatMultiplier,'Rockbiter threat multiplier');return m;}
  if(!['chance','ppm'].includes(m.rateType)||typeof m.oncePerAction!=='boolean')throw new Error('Explicit imbue proc rate and once-per-action policy required');
  finite(m.rate,'proc rate',0,m.rateType==='chance'?1:Infinity);finite(m.weaponSeconds,'unhasted weapon seconds',.01);integer(m.internalCooldownMs,'internal cooldown');integer(m.attacks,'bonus attacks',1,m.name==='Windfury Weapon'?8:1);
@@ -25,20 +26,25 @@ export function buildImbueConfig(build,gear,policy,abilityIds){
  if(build.classId!=='shaman'||!build.classOptions.mhImbue||build.classOptions.mhImbue==='None')return null;
  if(gear.mainhand?.classs!==2)throw new Error('Weapon imbue requires an equipped main-hand weapon');
  if(policy?.name!==build.classOptions.mhImbue)throw new Error('Explicit selected weapon imbue model required');
- return validateImbueModel(policy,abilityIds);
+ const rank=Number(build.talents?.['263']??0);
+ return validateImbueModel({...policy,elementalWeapons:{...policy.elementalWeapons,rank}},abilityIds);
 }
 export function createImbueRuntime(model,abilityIds){
  if(model===null)return null;const m=validateImbueModel(model,abilityIds);
  const eligible=(e,{hand,white,abilityId})=>e.timeline.now<m.durationMs&&hand==='mainhand'&&(white?m.white:m.eligibleAbilityIds.includes(abilityId));
+ const rank=m.elementalWeapons?.rank??0;
  const rockbiter=(e,contact)=>eligible(e,contact)&&m.name==='Rockbiter Weapon'?m:null;
+ const flameBuff=(e,contact)=>{if(rank>0&&m.name==='Flametongue Weapon'&&eligible(e,contact))e.auras.apply({id:'elemental-weapons-flame',name:'Elemental Weapons (Flametongue)',targetId:contact.actor,ownerId:contact.actor,kind:'buff',durationMs:5000,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'elementalWeaponsFirePct',mode:'flat',value:10*rank}]});};
+ const windBuff=(e,actor)=>{if(rank>0&&m.name==='Windfury Weapon')e.auras.apply({id:'elemental-weapons-wind',name:'Elemental Weapons (Windfury)',targetId:actor,ownerId:actor,kind:'buff',durationMs:5000,maxStacks:2,stacks:1,stackPolicy:'add',refreshPolicy:'refresh',modifiers:[{stat:'meleeHasteFactor',mode:'addPct',value:rank}]});};
  const attempt=(e,contact)=>{
   if(m.name==='Rockbiter Weapon'||!eligible(e,contact)||m.oncePerAction&&contact.actionState?.imbueRolled)return null;
   if(m.oncePerAction&&contact.actionState)contact.actionState.imbueRolled=true;
-  const chance=m.rateType==='chance'?m.rate:Math.min(1,m.rate*m.weaponSeconds/60);
+  const base=m.rateType==='chance'?m.rate:Math.min(1,m.rate*m.weaponSeconds/60),bonus=m.name==='Frostbrand Weapon'?[0,.08,.16,.25][rank]:0;const chance=Math.min(1,m.elementalWeapons?.chanceMode==='relative'?base*(1+bonus):base+bonus);
   const roll=attemptProc(e.resources.cooldowns,{id:'imbue:'+contact.actor+':'+m.name,chance,internalCooldownMs:m.internalCooldownMs},e.random);if(!roll.triggered)return null;
   const school=m.name==='Windfury Weapon'?'physical':m.name==='Flametongue Weapon'?'fire':'frost',d=m.damage;
   const effect={kind:'damage',when:'always',school,formula:{min:d.min,max:d.max,terms:[{stat:'attackPower',coefficient:d.apCoefficient},...(school==='physical'?[]:[{stat:school,coefficient:d.spellPowerCoefficient}])],multiplier:d.multiplier},outcomes:d.outcomes,mitigation:d.mitigation,flatReduction:d.flatReduction,threat:d.threat===null?null:{...d.threat,multipliers:[],distribution:'each'}};
+  if(rank>0&&m.name==='Frostbrand Weapon'&&e.auras.active(contact.target,'debuff').some(a=>a.name==='Frost Shock'&&(m.elementalWeapons.frostShockScope==='any'||a.ownerId===contact.actor))){effect.outcomes=effect.outcomes.map(o=>o.landed?{...o,name:'crit',critical:true,multiplier:o.critical===true||o.name==='crit'?o.multiplier:o.multiplier*m.elementalWeapons.criticalMultiplier}:o);}
   return {name:m.name,attacks:m.attacks,effect,slow:m.name==='Frostbrand Weapon'?m.slow:null};
  };
- return {rockbiter,attempt};
+ return {rockbiter,attempt,flameBuff,windBuff};
 }
