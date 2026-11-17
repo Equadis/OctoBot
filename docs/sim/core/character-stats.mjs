@@ -146,7 +146,12 @@ export function characterStats(build,talentData,gear={}){
  ['Spell Power',num(s.sp)],['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s[name.toLowerCase()+'Sp'])])
  ]);
  if(audit.active){
-  const fmt=(stat,n)=>/crit|hit|pct|haste|chance|speed|damage|healing|block|cast|effectiveness/i.test(stat)?pct(n,Number.isInteger(n)?0:1):num(n);
+  const fmt=(stat,n)=>{
+   if(/Seconds$/i.test(stat))return Number(n.toFixed(2))+' s';
+   if(/Minutes$/i.test(stat))return Number(n.toFixed(2))+' min';
+   if(/Yards$/i.test(stat))return Number(n.toFixed(2))+' yd';
+   return /crit|hit|pct|haste|chance|speed|damage|healing|block|effectiveness/i.test(stat)?pct(n,Number.isInteger(n)?0:1):num(n);
+  };
   const scoped=[];
   for(const [school,stats] of Object.entries(audit.spell)){
    for(const [stat,value] of Object.entries(stats)){
@@ -159,7 +164,10 @@ export function characterStats(build,talentData,gear={}){
   for(const [stat,value] of Object.entries(audit.pet))scoped.push(['Pet '+stat,fmt(stat,value),'Pet-only bonus; excluded from the player character stats.']);
   for(const [label,value] of Object.entries(audit.scoped))scoped.push([label,fmt(label,value),'Ability-specific or conditional bonus; not used as a general combat statistic.']);
   for(const [stat,key] of [['Maximum Rage','maxRage'],['Maximum Energy','maxEnergy'],['Block Chance','blockChance'],['Shield Block Value','shieldBlockValuePct'],['Healing from Item Armour','healingFromItemArmourPct']]){
-   if(audit.special[key])scoped.push([stat,fmt(key,audit.special[key]),'This is a talent contribution, not a complete resource or spell calculation.']);
+   if(audit.special[key]){
+    const val=key==='healingFromItemArmourPct'?itemArmour*audit.special[key]/100:audit.special[key];
+    scoped.push([stat,fmt(key==='healingFromItemArmourPct'?'healingPowerPoints':key,val),key==='healingFromItemArmourPct'?'Based on the equipped item Armour only; excludes temporary armour bonuses.':'Talent contribution, not a complete resource or spell calculation.']);
+   }
   }
   if(audit.special.maxHealthPct)scoped.push(['Maximum Health Bonus',pct(audit.special.maxHealthPct,0),'Applied to the displayed health estimate.']);
   if(scoped.length)group('Talent Scope Bonuses',scoped);
