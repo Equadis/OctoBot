@@ -1,8 +1,10 @@
 import {CombatTimeline,CombatResources,PeriodicEffects,seededRandom,REFERENCE_PRIORITIES as P} from './combat-timeline.mjs';
 import {resourceLedger,effectiveHealing} from './combat-math.mjs';
+import {CombatAuras} from './combat-auras.mjs';
+import {ThreatLedger} from './combat-threat.mjs';
 import {evaluatePriority} from './rotations/conditions.mjs';
 // Generic execution primitives. No default spell ranks, attack tables, or class-specific actions.
-export const EXECUTION_REVISION='octo-combat-execution-20261117-2';
+export const EXECUTION_REVISION='octo-combat-execution-20261117-3';
 const integer=(n,label,min=0)=>{if(!Number.isSafeInteger(n)||n<min)throw new RangeError(label+' must be an integer >= '+min);return n;};
 const positive=(n,label)=>{if(!Number.isFinite(n)||n<=0)throw new RangeError(label+' must be positive');return n;};
 const amount=(n,label)=>{if(!Number.isFinite(n)||n<0)throw new RangeError(label+' must be nonnegative');return n;};
@@ -11,7 +13,7 @@ const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must b
 const copy=structuredClone;
 export class CombatEncounter{
  #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;
- constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({})}){
+ constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false}){
   this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');
   for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health});}
@@ -19,6 +21,9 @@ export class CombatEncounter{
   this.#player=check(playerId);this.#primary=check(primaryId);this.#pet=petId===null?null:check(petId);
   this.#targets=targetIds.map(check);this.#allies=allyIds.map(check);
   if(!this.#targets.includes(this.#primary)||new Set(this.#targets).size!==this.#targets.length||new Set(this.#allies).size!==this.#allies.length||this.#targets.some(id=>id===this.#player||id===this.#pet||this.#allies.includes(id)))throw new Error('Invalid encounter unit roles');
+  this.manageAuras=manageAuras===true;
+  this.auras=new CombatAuras(this.timeline,{validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active())this.#record(e.type,e);}});
+  this.threat=new ThreatLedger(this.timeline,{enemyIds:this.#targets,actorIds:[...new Set([this.#player,...this.#allies,...(this.#pet?[this.#pet]:[])])],onChange:e=>{if(this.#active())this.#record('threat',e);}});
   for(const a of actions){
    key(a.id);key(a.name);if(this.#actions.has(a.id)||[...this.#actions.values()].some(x=>x.name===a.name))throw new Error('Duplicate action');
    if(!['instant','cast','channel','queued-melee'].includes(a.kind))throw new Error('Unsupported execution action kind: '+a.kind);
@@ -41,8 +46,8 @@ export class CombatEncounter{
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
  #checkFinish(){if(this.#finishedAt===null&&!this.#active()){this.#finishedAt=this.timeline.now;this.interrupt('encounter ended');this.#queued.clear();}}
- damage({targetId,value,source}){key(source);amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const effective=Math.min(value,u.health);u.health-=effective;this.#record('damage',{targetId,source,raw:value,effective,overkill:value-effective});this.#checkFinish();return {effective,overkill:value-effective};}
- heal({targetId,value,source}){key(source);amount(value,'healing');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown healing target');if(!this.#active()||u.health<=0)return {effective:0,overheal:0,ignored:true};const r=effectiveHealing(value,u.maxHealth-u.health);u.health+=r.effective;this.#record('heal',{targetId,source,...r});return r;}
+ damage({targetId,value,source,threat=null}){key(source);amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const effective=Math.min(value,u.health);if(threat){if(!this.#targets.includes(targetId))throw new Error('Damage threat requires enemy target');this.threat.apply({...threat,enemyIds:[targetId],effective,distribution:'each'});}u.health-=effective;this.#record('damage',{targetId,source,raw:value,effective,overkill:value-effective});this.#checkFinish();return {effective,overkill:value-effective};}
+ heal({targetId,value,source,threat=null}){key(source);amount(value,'healing');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown healing target');if(!this.#active()||u.health<=0)return {effective:0,overheal:0,ignored:true};const r=effectiveHealing(value,u.maxHealth-u.health);if(threat){if(this.#targets.includes(targetId))throw new Error('Healing threat requires friendly target');if(threat.enemyIds?.some(id=>!this.#targets.includes(id)||!this.#alive(id)))throw new Error('Healing threat requires living enemy targets');this.threat.apply({...threat,effective:r.effective});}u.health+=r.effective;this.#record('heal',{targetId,source,...r});return r;}
  interrupt(reason='interrupted'){if(!this.#cast)return false;const c=this.#cast;this.#cast=null;for(const ticket of c.tickets||[c.ticket])this.timeline.cancel(ticket);this.#record(c.action.kind==='channel'?'channel-interrupted':'cast-interrupted',{ability:c.action.name,targetId:c.targetId,reason});if(this.#active()&&this.timeline.now<this.#duration)this.#scheduleDecision(this.timeline.now+this.#cadence);return true;}
  #role(id){return id===this.#player?'self':id===this.#pet?'pet':this.#targets.includes(id)?'enemy':this.#allies.includes(id)?'ally':null;}
  #allows(a,id){return id!=null&&this.#alive(id)&&a.targets.includes(this.#role(id));}
@@ -57,6 +62,7 @@ export class CombatEncounter{
   const extra=this.#context(this);const state={...extra,...base};
   if(extra?.targets)state.targets=base.targets.map(t=>({...extra.targets.find(x=>x.id===t.id),...t}));
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
+  if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));}
   for(const a of this.#actions.values()){
    const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)))/1000;
    const available=resourceLedger(pool,a.costs).ok&&(a.kind!=='queued-melee'||this.#swings.has(a.swingId)&&!this.#queued.has(a.swingId))&&(!a.available||a.available(this,state)===true);
@@ -159,6 +165,6 @@ export class CombatEncounter{
   this.timeline.runUntil(this.#duration,{maxEvents});if(this.#cast)this.interrupt('time limit');this.#done=true;
   const durationMs=this.#finishedAt??this.#duration;const totals={damage:0,overkill:0,healing:0,overheal:0,enemyDamage:0,allyHealing:0};
   for(const e of this.#log){if(e.type==='damage'){totals.damage+=e.effective;totals.overkill+=e.overkill;if(this.#targets.includes(e.targetId))totals.enemyDamage+=e.effective;}if(e.type==='heal'){totals.healing+=e.effective;totals.overheal+=e.overheal;if(!this.#targets.includes(e.targetId))totals.allyHealing+=e.effective;}}
-  return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),totals,events:copy(this.#log),engineValidated:false};
+  return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),totals,events:copy(this.#log),auras:this.auras.uptime(durationMs),threat:this.threat.snapshot(),engineValidated:false};
  }
 }
