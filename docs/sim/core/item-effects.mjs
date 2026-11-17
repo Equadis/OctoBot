@@ -1,3 +1,4 @@
+import {scopedEquipmentEffect} from './equipment-scopes.mjs?v=20261117-item-audit2';
 // Conservative equipment effects: exact permanent lines only; classify every
 // other line for review. Percentages are percentage points, not ratings.
 const attrs={Strength:'str',Agility:'agi',Stamina:'sta',Intellect:'int',Spirit:'spi',Armor:'armour',Armour:'armour',Health:'health',Mana:'mana',Fortune:'fortune','Arcane Resistance':'arcaneRes','Fire Resistance':'fireRes','Nature Resistance':'natureRes','Frost Resistance':'frostRes','Shadow Resistance':'shadowRes'};
@@ -52,8 +53,10 @@ export function classifyEquipmentEffect(raw){
  else if((m=match('Reduces damage taken from critical hits by '+number+'%')))put('critDamageTakenReductionPct',m[1]);
  else if((m=match('Reduces damage taken from damage over time effects by '+number+'%')))put('dotDamageTakenReductionPct',m[1]);
  else if((m=match('\\+'+number+' Attack Power in Cat, Bear, Dire Bear, and Moonkin forms only')))return {status:'conditional',stats:{formAP:+m[1]},condition:'druid-form'};
- else if(/chance|when|while|for \d+ sec|only|against|your pet|your [A-Z][a-z]+ ability|your [A-Z][a-z]+ spell|in combat|per attack|on hit|on use|returned as healing|melee attacks|nearby party/i.test(t))return {status:'conditional',stats:{}};
- else return {status:'unmapped',stats:{}};
+ else {const scoped=scopedEquipmentEffect(raw);if(scoped)return scoped;
+  if(/chance|when|while|for \d+ sec|only|against|your pet|your [A-Z][a-z]+ ability|your [A-Z][a-z]+ spell|in combat|per attack|on hit|on use|returned as healing|melee attacks|nearby party/i.test(t))return {status:'conditional',stats:{}};
+  return {status:'unmapped',stats:{}};
+ }
  return {status:'passive',stats};
 }
 export function equipmentItemAudit(item,build={}){
