@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {rangedArcaneOutcomes} from '../../docs/sim/core/combat-ranged-reference.mjs';
+import {createExplicitClassEncounter} from '../../docs/sim/core/combat-class-runtime.mjs';
+const hit=[{name:'hit',probability:1,multiplier:1,landed:true}];
+test('ranged Arcane damage preserves ranged miss and crit, independently applies conditional resistance, and has no armour block',()=>{
+ const outcomes=[{name:'miss',probability:.1,multiplier:0,landed:false},{name:'hit',probability:.7,multiplier:1,landed:true},{name:'crit',probability:.2,multiplier:2,landed:true}],res={policy:'nonbinary',bins:[{fraction:0,probability:.5},{fraction:.25,probability:.4},{fraction:1,probability:.1}]};
+ const r=rangedArcaneOutcomes(outcomes,res,'synthetic test');assert.ok(Math.abs(r.reduce((s,x)=>s+x.probability,0)-1)<1e-8);assert.ok(Math.abs(r.filter(x=>!x.landed).reduce((s,x)=>s+x.probability,0)-.19)<1e-8);assert.equal(r.find(x=>x.name==='crit-resist-0.25').multiplier,1.5);assert.equal(r.find(x=>x.name==='crit-resist-0.25').critical,true);assert.throws(()=>rangedArcaneOutcomes([{name:'block',probability:1,multiplier:1,landed:true}],res,'test'),/block/);
+});
+test('charged physical vulnerability affects subsequent physical hits but never shadow damage',()=>{
+ const d=(school)=>({kind:'damage',when:'always',school,formula:{min:100,max:100,terms:[],multiplier:1},outcomes:hit,mitigation:0,flatReduction:0,threat:null});
+ const mk=(abilityId,spellId,effects,cooldownMs)=>({abilityId,spellId,rank:1,learnLevel:1,source:'fixture',evidenceStatus:'synthetic',actorId:'p',kind:'instant',castMs:0,gcdMs:1000,cooldownMs,sharedCooldown:null,costs:[{resource:'energy',amount:0}],targets:['enemy'],minRangeYards:0,maxRangeYards:5,position:null,comboRequired:null,requiredContext:null,effects});
+ const hemo=mk('rogue:hemorrhage',16511,[d('physical'),{kind:'aura',when:'landed',auraTarget:'target',aura:{id:'hemorrhage-physical',name:'Hemorrhage',kind:'debuff',durationMs:15000,maxStacks:2,stacks:2,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'chargedPhysicalBonusPct',mode:'flat',value:2}]}}],60000),ss=mk('rogue:sinister-strike',11294,[d('physical'),d('shadow')],0);
+ const r=createExplicitClassEncounter({mode:'research',provenance:'synthetic fixture',classId:'rogue',level:60,seed:1,durationMs:4000,decisionIntervalMs:100,pools:{energy:{current:100,max:100}},units:[{id:'p',maxHealth:1000},{id:'boss',maxHealth:100000}],playerId:'p',primaryId:'boss',targetIds:['boss'],allyIds:[],stats:{p:{}},classContext:{},geometry:{p:{boss:{distance:3,position:'behind'}}},actions:[hemo,ss],rows:[{ability:'Hemorrhage',target:'primary',conditions:[]},{ability:'Sinister Strike',target:'primary',conditions:[]}],autos:[],regeneration:[]}).run();
+ assert.deepEqual(r.events.filter(x=>x.type==='damage').map(x=>x.raw),[100,102,100,102,100,100,100]);assert.ok(r.events.some(x=>x.type==='aura-remove'&&x.id==='hemorrhage-physical'&&x.reason==='consumed'));
+});

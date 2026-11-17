@@ -87,10 +87,10 @@ function gainRage(e,actor,source,delta){if(delta<=0)return;const q=e.resources.c
 function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,classState={},castContext={}){
  let last=null,primaryHit=null;
  const resolve=(x,amountRange)=>{
-  const charge=x.school==='nature'&&['damage','periodic-damage'].includes(x.kind)?[...e.auras.active(actor,'buff'),...e.auras.active(target,'debuff')].find(a=>a.ownerId===actor&&a.modifiers.some(m=>m.stat==='chargedNatureBonusPct')):null;const chargeFactor=charge?1+charge.modifiers.find(m=>m.stat==='chargedNatureBonusPct').value/100:1;const bleedFactor=x.ownedBleedBonus?1+x.ownedBleedBonus.fraction*e.auras.active(target,'debuff').filter(a=>a.ownerId===actor&&x.ownedBleedBonus.names.includes(a.name)).length:1;amountRange={min:amountRange.min*chargeFactor*bleedFactor,max:amountRange.max*chargeFactor*bleedFactor};
+  const chargeKey=x.school==='nature'?'chargedNatureBonusPct':x.school==='physical'?'chargedPhysicalBonusPct':null;const charge=chargeKey&&['damage','periodic-damage'].includes(x.kind)?[...(x.school==='nature'?e.auras.active(actor,'buff'):[]),...e.auras.active(target,'debuff')].find(a=>(x.school==='physical'||a.ownerId===actor)&&a.modifiers.some(m=>m.stat===chargeKey)):null;const chargeFactor=charge?1+charge.modifiers.find(m=>m.stat===chargeKey).value/100:1;const bleedFactor=x.ownedBleedBonus?1+x.ownedBleedBonus.fraction*e.auras.active(target,'debuff').filter(a=>a.ownerId===actor&&x.ownedBleedBonus.names.includes(a.name)).length:1;amountRange={min:amountRange.min*chargeFactor*bleedFactor,max:amountRange.max*chargeFactor*bleedFactor};
   let outcomes=x.outcomes;if(castContext.guaranteeHit===true&&x.kind==='damage'){const landed=outcomes.filter(o=>o.landed),sum=landed.reduce((n,o)=>n+o.probability,0);if(sum<=0)throw new Error('Guaranteed cast has no landed outcome');outcomes=landed.map(o=>({...o,probability:o.probability/sum}));}
   const hit=sampleAttack({...amountRange,outcomes,mitigation:x.mitigation,flatReduction:x.flatReduction,random:e.random});
-  e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:x.school??null,...hit});
+  e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:x.school??null,...(x.hand?{hand:x.hand}:{}),...hit});
   // A miss does not generate hit-dependent flat threat; landed zero damage can.
   if(!hit.landed)return hit;if(charge&&hit.raw>0)e.auras.consume(charge,1);
   let threat=x.threat===null?null:{actorId:actor,...x.threat};const isHeal=x.kind.endsWith('heal');

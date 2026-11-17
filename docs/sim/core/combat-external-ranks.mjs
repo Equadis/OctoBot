@@ -1,4 +1,4 @@
-// Pinned third-party and published guide reference values, not verified live OctoWoW observations.
+// Pinned third-party, guide and imported talent reference values, not verified live OctoWoW observations.
 export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
   {
     "classId": "rogue",
@@ -2302,6 +2302,468 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
         "externalReference": "20 sec cooldown; target debuff",
         "guide": "rank-dependent nature bonus",
         "archive": "8 sec cooldown; next two nature damage sources; self buff"
+      }
+    ]
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:arcane-shot",
+    "spellId": 14287,
+    "rank": 8,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 125,
+    "castMs": 0,
+    "minRange": 8,
+    "maxRange": 35,
+    "components": [
+      {
+        "kind": "ranged-arcane",
+        "stat": "arcane",
+        "coefficient": null,
+        "flat": 166
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/arcane_shot.go",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:arcane-shot",
+      "spellId": 14287,
+      "rank": 8,
+      "level": 60,
+      "fields": {
+        "school": "arcane"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "cost and scaling",
+          "externalReference": "183 + 0.429 SP; 190 mana",
+          "guide": "ranged weapon contribution; 125 mana",
+          "archive": "166 +45% ranged weapon damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/arcane_shot.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 6000,
+    "requiredPolicy": [
+      "rangedModel",
+      "arcaneShotModel"
+    ],
+    "conflicts": [
+      {
+        "field": "cost and scaling",
+        "externalReference": "183 + 0.429 SP; 190 mana",
+        "guide": "ranged weapon contribution; 125 mana",
+        "archive": "166 +45% ranged weapon damage"
+      }
+    ]
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mongoose-bite",
+    "spellId": 14271,
+    "rank": 4,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 65,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 70,
+        "hand": "mainhand"
+      },
+      {
+        "kind": "weapon",
+        "stat": "offhand",
+        "coefficient": null,
+        "flat": 0,
+        "hand": "offhand",
+        "optional": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/mongoose_bite.go",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mongoose-bite",
+      "spellId": 14271,
+      "rank": 4,
+      "level": 58,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "attack mechanic",
+          "externalReference": "115 flat; dodge prerequisite",
+          "guide": "on demand; both hands when dual wielding",
+          "archive": "60% weapon +70; offhand partition unresolved"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/mongoose_bite.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 5000,
+    "requiredPolicy": [
+      "dualWeaponModel",
+      "weaponPolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "attack mechanic",
+        "externalReference": "115 flat; dodge prerequisite",
+        "guide": "on demand; both hands when dual wielding",
+        "archive": "60% weapon +70; offhand partition unresolved"
+      }
+    ]
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:wing-clip",
+    "spellId": 14268,
+    "rank": 3,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 80,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": 0.35,
+        "flat": 0
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/wing_clip.go",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:wing-clip",
+      "spellId": 14268,
+      "rank": 3,
+      "level": 60,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "damage and cooldown",
+          "externalReference": "50 flat",
+          "guide": "weapon percentage; 3 s cooldown",
+          "archive": "35% weapon damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/wing_clip.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 3000,
+    "requiredPolicy": [
+      "weaponPolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "damage and cooldown",
+        "externalReference": "50 flat",
+        "guide": "weapon percentage; 3 s cooldown",
+        "archive": "35% weapon damage"
+      }
+    ]
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:volley",
+    "spellId": 14295,
+    "rank": 3,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 330,
+    "castMs": 6000,
+    "minRange": 0,
+    "maxRange": 35,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "arcane",
+        "school": "arcane",
+        "coefficient": 0.056,
+        "min": 80,
+        "max": 80,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/volley.go",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:volley",
+      "spellId": 14295,
+      "rank": 3,
+      "level": 58,
+      "fields": {
+        "school": "arcane"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "cost",
+          "externalReference": 490,
+          "guide": 330
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/volley.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 60000,
+    "tickMs": 1000,
+    "multiTarget": {
+      "cap": 40,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "targetPolicy",
+      "channelTickAtEnd",
+      "channelApplicationPolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "cost",
+        "externalReference": 490,
+        "guide": 330
+      }
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:hurricane",
+    "spellId": 17402,
+    "rank": 3,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 1495,
+    "castMs": 10000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "nature",
+        "school": "nature",
+        "coefficient": 0.03,
+        "min": 134,
+        "max": 134,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/hurricane.go",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:hurricane",
+      "spellId": 17402,
+      "rank": 3,
+      "level": 60,
+      "fields": {
+        "school": "nature"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "externalReference": 60000,
+          "guide": 10000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/hurricane.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 10000,
+    "tickMs": 1000,
+    "multiTarget": {
+      "cap": 40,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "targetPolicy",
+      "channelTickAtEnd",
+      "channelApplicationPolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "cooldown",
+        "externalReference": 60000,
+        "guide": 10000
+      }
+    ]
+  },
+  {
+    "classId": "warrior",
+    "abilityId": "warrior:rend",
+    "spellId": 11574,
+    "rank": 7,
+    "learnLevel": 60,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-bleed",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 21,
+        "max": 21,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warrior/rend.go",
+    "referenceSource": "https://octowow.st/index.php/warrior",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "warrior",
+      "abilityId": "warrior:rend",
+      "spellId": 11574,
+      "rank": 7,
+      "level": 60,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "AP scaling",
+          "externalReference": "flat 21/tick",
+          "archive": "5% AP per tick"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warrior/rend.go",
+      "liveVerified": false
+    },
+    "requiredPolicy": [
+      "componentCoefficients",
+      "rendStancePolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "AP scaling",
+        "externalReference": "flat 21/tick",
+        "archive": "5% AP per tick"
+      }
+    ]
+  },
+  {
+    "classId": "rogue",
+    "abilityId": "rogue:hemorrhage",
+    "spellId": 16511,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 45,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": 1.1,
+        "flat": 0
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/rogue/hemorrhage.go",
+    "referenceSource": "https://octowow.st/index.php/rogue",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "rogue",
+      "abilityId": "rogue:hemorrhage",
+      "spellId": 16511,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "current live attack table, rank scaling and timings"
+      ],
+      "conflicts": [
+        {
+          "field": "rank and charge mechanics",
+          "externalReference": "17348, rank 3, flat vulnerability",
+          "importedTalent": "16511, 110% weapon damage; +2% physical, 50 charges or 15 s"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/rogue/hemorrhage.go",
+      "liveVerified": false
+    },
+    "referenceGcdMs": 1000,
+    "comboGain": 1,
+    "requiredPolicy": [
+      "weaponPolicy",
+      "hemorrhageModel"
+    ],
+    "conflicts": [
+      {
+        "field": "rank and charge mechanics",
+        "externalReference": "17348, rank 3, flat vulnerability",
+        "importedTalent": "16511, 110% weapon damage; +2% physical, 50 charges or 15 s"
       }
     ]
   }

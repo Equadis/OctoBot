@@ -6,7 +6,7 @@ import {prepareReferenceScenario} from './combat-reference-adapter.mjs';
 
 const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aura','combo-bleed','physical-flat','physical-bleed']);
 const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind));
-const isRanged=r=>r.components.some(c=>c.kind==='ranged-weapon');
+const isRanged=r=>r.components.some(c=>['ranged-weapon','ranged-arcane'].includes(c.kind));
 const rowsFor=b=>b.controls.rotationRows;
 const rankPhase=r=>r.referenceAvailableFromPhase??1;
 const provenance='Explicit experimental rotation policy; reference mechanics, not live verified';
@@ -24,6 +24,10 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
+  if(field==='arcaneShotModel')policy.arcaneShotModel={flatDamage:null,weaponCoefficient:null,spellPowerCoefficient:null,defense:null};
+  if(field==='dualWeaponModel')policy.dualWeaponModel={mainhand:{coefficient:null,flatDamage:null},offhand:{coefficient:null,flatDamage:null},offhandNormalisedSpeed:null};
+  if(field==='rendStancePolicy')policy.rendStancePolicy=['Battle','Defensive'];
+  if(field==='hemorrhageModel')policy.hemorrhageModel={charges:50,durationMs:15000,bonusPct:2};
   if(field==='biteModel')policy.biteModel={ranges:Array(5).fill(null),apPerComboPoint:null,pctPerEnergy:null,energyCap:null,payment:null};
   if(field==='stormstrikeModel')policy.stormstrikeModel={scope:null,charges:null,durationMs:null,bonusPct:null};
   if(field==='costOverride')policy.costOverride=null;
