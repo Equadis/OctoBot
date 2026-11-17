@@ -3,15 +3,15 @@
 import {parseMoney} from './format.mjs';
 
 export const DEFAULTS=Object.freeze({
-  q:'',sort:'market_pct',dir:'',quality:'',item_class:'',item_subclass:'',slot:'',min_level:'',max_level:'',gear:false,exact:false,
+  q:'',sort:'recent',dir:'',quality:'',item_class:'',item_subclass:'',slot:'',min_level:'',max_level:'',gear:false,exact:false,
   min_quantity:'',stack:'',max_unit_buyout:'',max_unit_bid:'',has_buyout:false,time_left:'',owner:'',min_market_pct:'',max_market_pct:'',favourites_only:false
 });
 export const SORTS=Object.freeze([
-  ['market_pct','Most underpriced (market %)'],['name','Item name'],['unit_buyout','Unit price'],['stack_buyout','Stack price'],
+  ['recent','Recent listings'],['market_pct','Most underpriced (market %)'],['name','Item name'],['unit_buyout','Unit price'],['stack_buyout','Stack price'],
   ['current_bid','Current bid'],['historical_avg','Historical average'],['quantity','Available quantity'],
   ['listings','Number of listings'],['trend_pct','Price movement'],['time_left','Time left (estimated)'],['level','Required level']]);
 // Matches the default ordering in cloudflare/octometrics/auction-query.mjs.
-export const SORT_DEFAULT_DIR=Object.freeze({name:'asc',unit_buyout:'asc',stack_buyout:'asc',current_bid:'asc',
+export const SORT_DEFAULT_DIR=Object.freeze({recent:'desc',name:'asc',unit_buyout:'asc',stack_buyout:'asc',current_bid:'asc',
  historical_avg:'asc',quantity:'desc',listings:'desc',trend_pct:'asc',market_pct:'asc',time_left:'asc',level:'asc'});
 // The star is an action, not a sortable data column. Every displayed metric is sortable.
 export const COLUMN_SORTS=Object.freeze([

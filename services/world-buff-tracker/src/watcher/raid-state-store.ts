@@ -1,6 +1,7 @@
 import type { Db } from "mongodb";
 import { releaseSharedClient } from "../mongo-connection.js";
 import type { ClearTrackerState } from "./clear-tracker.js";
+import type { RaidTrackerCheckpoint } from "./raid-tracker.js";
 
 /**
  * Persists the raid in progress per detection lane, so a restart RESUMES the same raid
@@ -16,6 +17,8 @@ export interface RaidStateStore {
   load(lane: string): Promise<ClearTrackerState | null>;
   /** Persist a lane's raid, or clear it (null). */
   save(lane: string, state: ClearTrackerState | null): Promise<void>;
+  loadCheckpoint?(lane: string): Promise<RaidTrackerCheckpoint | null>;
+  saveCheckpoint?(lane: string, checkpoint: RaidTrackerCheckpoint): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -23,6 +26,9 @@ export interface RaidStateStore {
  *  so this is only for when Mongo isn't configured). */
 export class InMemoryRaidStateStore implements RaidStateStore {
   readonly #byLane = new Map<string, ClearTrackerState>();
+  readonly #checkpoints = new Map<string, RaidTrackerCheckpoint>();
+  async loadCheckpoint(lane: string): Promise<RaidTrackerCheckpoint | null> { return this.#checkpoints.get(lane) ?? null; }
+  async saveCheckpoint(lane: string, checkpoint: RaidTrackerCheckpoint): Promise<void> { this.#checkpoints.set(lane, checkpoint); }
 
   async load(lane: string): Promise<ClearTrackerState | null> {
     return this.#byLane.get(lane) ?? null;
@@ -48,6 +54,8 @@ export interface RaidStateDb {
   get(lane: string): Promise<ClearTrackerState | null>;
   set(lane: string, state: ClearTrackerState): Promise<void>;
   remove(lane: string): Promise<void>;
+  getCheckpoint?(lane: string): Promise<RaidTrackerCheckpoint | null>;
+  setCheckpoint?(lane: string, checkpoint: RaidTrackerCheckpoint): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -62,7 +70,10 @@ export class MongoRaidStateStore implements RaidStateStore {
 
   static async open(database: Db): Promise<MongoRaidStateStore> {
     const collection = database.collection<RaidStateDoc>(COLLECTION);
+    const checkpoints = database.collection<{ _id: string; checkpoint: RaidTrackerCheckpoint }>("raidcheckpoints");
     const db: RaidStateDb = {
+      getCheckpoint: lane => checkpoints.findOne({ _id: lane }).then(doc => doc?.checkpoint ?? null),
+      setCheckpoint: (lane, checkpoint) => checkpoints.updateOne({ _id: lane }, { $set: { checkpoint } }, { upsert: true }).then(() => undefined),
       get: (lane) => collection.findOne({ _id: lane }).then((doc) => doc?.state ?? null),
       set: (lane, state) =>
         collection.updateOne({ _id: lane }, { $set: { state } }, { upsert: true }).then(() => undefined),
@@ -80,6 +91,9 @@ export class MongoRaidStateStore implements RaidStateStore {
     if (state) await this.#db.set(lane, state);
     else await this.#db.remove(lane);
   }
+
+  async loadCheckpoint(lane: string): Promise<RaidTrackerCheckpoint | null> { return this.#db.getCheckpoint?.(lane) ?? null; }
+  async saveCheckpoint(lane: string, checkpoint: RaidTrackerCheckpoint): Promise<void> { await this.#db.setCheckpoint?.(lane, checkpoint); }
 
   async close(): Promise<void> {
     await this.#db.close();

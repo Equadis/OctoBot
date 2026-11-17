@@ -13,7 +13,8 @@
       { id: 'outfitter', beta: true, href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
       { id: 'world-info', beta: true, href: 'world-info/', text: 'World Info' },
-      { id: 'auction-house', beta: true, href: 'auction-house/', text: 'Auction House' } ] }
+      { id: 'auction-house', beta: true, href: 'auction-house/', text: 'Auction House' },
+      { id: 'world-chat', alpha: true, href: 'world-chat/', text: 'World Chat' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
@@ -33,15 +34,15 @@
         // The current page links to itself without repeating the hash (matches the previous markup).
         a.setAttribute('href', base + link.href);
         a.textContent = link.text;
-        if (link.beta) {
+        if (link.beta || link.alpha) {
           var beta = doc.createElement('span');
           beta.className = 'nav-beta';
-          beta.textContent = 'BETA';
-          beta.setAttribute('data-site-tip', 'This section is currently in beta, results may not be 100% accurate.');
-          beta.setAttribute('aria-label', 'BETA: This section is currently in beta, results may not be 100% accurate.');
+          beta.textContent = link.alpha ? 'ALPHA' : 'BETA';
+          beta.setAttribute('data-site-tip', link.alpha ? 'Alpha: live coverage and classification may be incomplete.' : 'This section is currently in beta, results may not be 100% accurate.');
+          beta.setAttribute('aria-label', link.alpha ? 'ALPHA: coverage may be incomplete.' : 'BETA: This section is currently in beta, results may not be 100% accurate.');
           a.appendChild(beta);
           // Show the same explanation when the tab is reached by keyboard.
-          a.setAttribute('data-site-tip', 'This section is currently in beta, results may not be 100% accurate.');
+          a.setAttribute('data-site-tip', link.alpha ? 'Alpha: live coverage and classification may be incomplete.' : 'This section is currently in beta, results may not be 100% accurate.');
         }
         if (link.id === current) a.setAttribute('aria-current', 'page');
         box.appendChild(a);

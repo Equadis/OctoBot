@@ -216,7 +216,7 @@
     const sessions = (Array.isArray(a.sessions) ? a.sessions : []).map(row => {
       if (!object(row)) return null;
       const startedAt = time(row.startedAt), id = Number(row.id);
-      if (!validPast(startedAt)) return null;
+      if (!validPast(startedAt, serverNow())) return null;
       return {
         id: Number.isInteger(id) && id > 0 ? id : null, key: String(row.key || ''), startedAt,
         confidence: String(row.confidence || 'tentative'), status: String(row.status || 'in_progress'),
@@ -228,7 +228,7 @@
     return {
       observedAt: time(a.observedAt), stale: a.stale === true, expired: a.expired === true, sessions,
       lair: object(a.lair) || {},
-      lastFinished: last && validPast(time(last.at)) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
+      lastFinished: last && validPast(time(last.at), serverNow()) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
     };
   }
   function renderAuthRaid(key, auth) {
@@ -237,20 +237,21 @@
     // must not shift one raid's timer relative to the in-game report.
     const now = serverNow();
     const age = validPast(auth.observedAt, now) ? now - auth.observedAt : Infinity;
-    const stale = auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
-    const n = auth.sessions.length, ambiguity = object(auth.lair.ambiguity);
+    const stale = auth.expired || auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
+    const sessions = auth.expired ? [] : auth.sessions;
+    const n = sessions.length, ambiguity = object(auth.lair.ambiguity);
     activeNode.replaceChildren();
     $(key + '-count-label').textContent = (n >= 2 ? 'Raids in progress' : 'Raid in progress') + ':';
     // With activity hidden by ambiguity the number is a lower bound ("2+"), never an exact count.
     count.textContent = n === 0 ? (stale ? 'No data' : 'No raid') : String(n) + (ambiguity ? '+' : '');
     count.classList.toggle('no-data', stale && n === 0);
-    const allHigh = auth.sessions.every(session => ['high', 'confirmed'].includes(session.confidence));
+    const allHigh = sessions.every(session => ['high', 'confirmed'].includes(session.confidence));
     if (stale) labelState(key + '-state', 'Stale');
     else if (n === 0) labelState(key + '-state', 'No raid', 'unknown');
     else if (allHigh && !ambiguity) labelState(key + '-state', 'Tracked', 'online');
     else labelState(key + '-state', 'Estimated', 'estimated');
     if (n === 0) appendEmpty(activeNode, stale ? 'Tracker is not reporting; the current raid state is unknown.' : 'No raid currently detected.');
-    for (const session of auth.sessions) {
+    for (const session of sessions) {
       const line = document.createElement('div');
       line.className = 'timer-row';
       const title = document.createElement('span');
@@ -265,7 +266,7 @@
       timer.textContent = span(now - session.startedAt);
       line.append(title, timer);
       const notes = [];
-      if (Number.isFinite(session.players) && session.players > 0) notes.push(playerCount(session.players));
+      if (Number.isFinite(session.players)) notes.push(session.players + (auth.lair.complete === true ? '' : '+') + ' players attributed to this raid');
       notes.push(session.confidence === 'tentative' ? 'Estimated group' : session.confidence === 'confirmed' ? 'Confirmed' : 'Tracked');
       if (session.status === 'leaving') notes.push('Roster leaving');
       if (stale) notes.push('Last known');
@@ -286,14 +287,14 @@
       finished.title = '';
     }
     const present = Number(auth.lair.present);
-    const roster = Number.isFinite(present) ? playerCount(present) + ' in the lair. ' : '';
-    if (stale) evidence.textContent = 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2013 showing the last known raids; they may have changed.';
+    const roster = Number.isFinite(present) ? present + (auth.lair.complete === true ? '' : '+') + (present === 1 && auth.lair.complete === true ? ' player' : ' players') + ' detected in the lair. ' : '';
+    if (stale) evidence.textContent = (roster ? 'Last known: ' + roster : '') + 'Tracker data is ' + (Number.isFinite(age) ? span(age) : 'unknown time') + ' old \u2013 showing the last known raids; they may have changed.';
     else evidence.textContent = roster + 'Raids come from Bufftracker roster tracking; /who has no instance IDs, so groups are inferred.' + (ambiguity ? ' ' + ambiguity.players + ' more players could not be separated into a raid.' : '');
   }
   function playerCount(n) { return n + (n === 1 ? ' player' : ' players'); }
   function renderRaid(key) {
     const authRaid = state.auth[key];
-    if (authRaid && !authRaid.expired) { renderAuthRaid(key, authRaid); return; }
+    if (authRaid) { renderAuthRaid(key, authRaid); return; }
     const raid = state.raids[key];
     const count = $(key + '-count');
     const activeNode = $(key + '-active');
@@ -514,8 +515,10 @@
       state.raids.ony = normaliseRaid(findRaid(root, 'ony'), root);
       state.raids.bwl = normaliseRaid(findRaid(root, 'bwl'), root);
       const heads = object(root.heads) || {};
-      state.auth.ony = authView(object(heads.onyxia));
-      state.auth.bwl = authView(object(heads.nefarian));
+      const generated = time(root.observedAt);
+      state.clockOffsetMs = Number.isFinite(generated) && Math.abs(generated - Date.now()) < 6 * 3_600_000 ? generated - Date.now() : 0;
+      state.auth.ony = authView(object(heads.onyxia)) || state.auth.ony;
+      state.auth.bwl = authView(object(heads.nefarian)) || state.auth.bwl;
       state.heads.onyxia = object(heads.onyxia);
       state.heads.nefarian = object(heads.nefarian);
       // A response must never replace a newer drop with an older one (a stale edge copy, a late response), so the newer timestamp wins.
@@ -525,8 +528,7 @@
       }
       state.monitoring = object(root.monitoring);
       state.listeners = object(root.listeners);
-      const generated = time(root.observedAt);
-      state.clockOffsetMs = Number.isFinite(generated) && Math.abs(generated - Date.now()) < 6 * 3_600_000 ? generated - Date.now() : 0;
+
       state.apiOk = true;
       state.dmf = findDmf(root);
       state.metricsFetchedAt = Date.now();
@@ -555,7 +557,7 @@
       const raid = state.raids[raidKey], head = state.heads[headKey], clear = head && head.clear;
       if (fromData) {
         const authFinished = state.auth[raidKey] && state.auth[raidKey].lastFinished ? state.auth[raidKey].lastFinished.at : null;
-        const finishedAt = validPast(authFinished) ? authFinished : raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
+        const finishedAt = state.auth[raidKey] ? (validPast(authFinished, serverNow()) ? authFinished : null) : raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
         if (sound.baselined && finishedAt && finishedAt > (sound.finished[raidKey] || 0)) player.notify('finished');
         if (finishedAt) sound.finished[raidKey] = finishedAt;
         const confirmed = Boolean(clear && clear.confirmed === true);

@@ -52,7 +52,7 @@ describe("trackerOptions", () => {
       clearSustainedMs: 5 * 60_000,
       formConfirmMs: 0,
       fillWindowMs: 15 * 60_000,
-      rosterCap: 45,
+      rosterCap: 40,
       lockoutMs: 4 * 3_600_000,
       nextRaidNumber: next,
       maxConcurrentRaids: 2,

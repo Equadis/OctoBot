@@ -184,7 +184,7 @@ test('each raid row shows its player count and a confidence label, and both time
   const {text}=await pageFrom('onyxia-two-raids');
   const before=text.rows();
   assert.equal(before.length,2);
-  for(const row of before)assert.match(String(row.note),/\d+ players? · (Tracked|Estimated group|Confirmed)/,`${row.title}: ${row.note}`);
+  for(const row of before)assert.match(String(row.note),/\d+\+? players attributed to this raid · (Tracked|Estimated group|Confirmed)/,`${row.title}: ${row.note}`);
   await new Promise(resolve=>setTimeout(resolve,2100));
   text.created.length=0;await text.tick();
   const after=text.rows();

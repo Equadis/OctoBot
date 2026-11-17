@@ -15,6 +15,7 @@ import { createDropPipeline, DEFAULT_DEDUPE_MS } from "./drop-pipeline.js";
 import { ListenerHealth } from "./listener-health.js";
 import { loadMetricsConfig } from "./config.js";
 import { EventPublisher } from "./events.js";
+import { createWorldChat } from "./world-chat.js";
 import { RaidActivity } from "./raid-state.js";
 import { nextSlot, scheduleSlot } from "./schedule.js";
 import { parsePopulation, ServerInfoWindow } from "./server-info.js";
@@ -90,6 +91,7 @@ async function runSession(account) {
     const target = config.worldHost ? { host: config.worldHost, port: config.worldPort ?? 8085 } : parseWorldAddress(realm.address);
     const socket = await openSocket(target.host, target.port);
     let world = null;
+    const worldChat = createWorldChat({account,config,log,getWorld:()=>world});
     const health = new ListenerHealth(account);
     const whisperResponder = new WhisperAutoResponder({
         account: account.account,
@@ -113,6 +115,7 @@ async function runSession(account) {
                     stop();
                 infoWindow.clear();
                 whisperResponder.stop();
+                worldChat.stop();
                 if (world) {
                     world.close();
                     sessions.delete(world);
@@ -138,11 +141,13 @@ async function runSession(account) {
                 handlers: {
                     onReady: () => {
                         wasReady = true;
+                        worldChat.start();
                         health.connected(Date.now());
                         clearTimeout(readyTimer);
                         const infoOnly = infoOnlyFor(account);
                         const infoSecond = serverInfoSlot(account);
                         const whoSecond = raidWhoSlot(account);
+                        stopJobs.push(scheduleSlot((whoSecond + 30) % 60, 60, () => { if (!whoBusy) void worldChat.guildTick(); }));
                         log.info(infoOnly ? `in world; .server info at :${String(infoSecond).padStart(2, "0")}; raid polling disabled` : `in world; .server info at :${String(infoSecond).padStart(2, "0")}; /who ${account.zoneName} at :${String(whoSecond).padStart(2, "0")} once/minute`);
                         emit(account, "session_online", { zone: account.zoneName });
                         // Facts about what this listener has actually heard, not just whether it is logged in (see listener-health.js).
@@ -174,6 +179,7 @@ async function runSession(account) {
                                 return;
                             whoBusy = true;
                             void world.whoOnce({ zoneIds: [account.zone] }, 8000).then(result => {
+                                worldChat.observeWho(result.players);
                                 const at = new Date().toISOString();
                                 const observed = result.players.filter(p => p.areaId === account.zone).length;
                                 const transition = raidState.get(account.account).observe(observed, at);
@@ -195,6 +201,7 @@ async function runSession(account) {
                         if (line)
                             infoWindow.receive(line);
                     },
+                    onChannelMessage: (channel, guid, text, raw) => worldChat.receive(channel,guid,text,raw),
                     onMonsterYell: (sender, text) => {
                         // Any monster yell proves the listener is in earshot of the world, whatever it says.
                         health.heardYell(Date.now());

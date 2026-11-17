@@ -1,0 +1,28 @@
+name: World Chat alpha tests
+on:
+  push:
+    paths:
+      - 'cloudflare/octometrics/world-chat*.mjs'
+      - 'cloudflare/octometrics/collector/**'
+      - 'cloudflare/octometrics/migrations/*world_chat*.sql'
+      - 'cloudflare/octometrics/tests/world-chat.test.mjs'
+      - 'docs/world-chat/**'
+      - 'docs/site-nav.js'
+      - 'tests/site-*.test.mjs'
+      - '.github/workflows/world-chat-tests.yml'
+  pull_request:
+    paths:
+      - 'cloudflare/octometrics/**'
+      - 'docs/world-chat/**'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test cloudflare/octometrics/tests/world-chat.test.mjs
+      - run: node --test tests/site-nav.test.mjs tests/site-routes.test.mjs
+      - run: node --check docs/world-chat/world-chat.js
+      - run: node --check cloudflare/octometrics/worker.mjs

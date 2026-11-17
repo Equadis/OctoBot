@@ -1462,6 +1462,12 @@ async function main(): Promise<void> {
   // Resume any raid that was in progress when we last stopped, so its exit is still caught, and
   // reload the lockout ledger so the "a player can't be in two raids" rule survives the restart.
   for (const lane of [...zoneLanes.values()].flat()) {
+    const checkpoint = await raidStateStore.loadCheckpoint?.(lane.label);
+    if (checkpoint) {
+      lane.watch.restoreCheckpoint(checkpoint);
+      logger.info(`restored raid lifecycle checkpoint for ${lane.label} (${checkpoint.slots.length} active, ${checkpoint.ended.length} recent ends)`);
+      continue;
+    }
     const state = await raidStateStore.load(lane.label);
     if (state) {
       lane.watch.restoreRaidState(state);

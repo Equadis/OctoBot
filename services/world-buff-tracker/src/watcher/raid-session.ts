@@ -43,7 +43,9 @@ export interface RaidSessionSnapshot {
   readonly continuity: number;
   readonly guild: GuildComposition;
   /** Set when status is "ended". */
+  /** First sustained departure, used for duration; not the time the finish became known. */
   readonly endedAt?: number;
+  readonly confirmedAt?: number;
   readonly endReason?: SessionEndReason;
   /** "chronicle_kill" is the only source that proves a kill; "roster_departure" does not. */
   readonly clearSource?: "chronicle_kill" | "roster_departure";
@@ -51,6 +53,7 @@ export interface RaidSessionSnapshot {
   readonly trusted: boolean;
   /** The session resumed after a wipe read as a clear. */
   readonly resumed: boolean;
+  readonly resumedAt?: number;
 }
 
 /** Zone activity that could not be resolved into separate sessions. Never a confirmed raid. */

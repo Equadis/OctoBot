@@ -6,7 +6,7 @@ import {racialEventAudit} from './racial-event-audit.mjs?v=20261117-racial-audit
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261117-buff-audit4';
 import {baseStatProfile,racialAttributeEstimate} from './base-stat-audit.mjs?v=20261117-racial-audit1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit4';
-import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit3';
+import {ENCHANTS,validEnchant,enchantAvailable} from './equipment-options.mjs?v=20261117-mvp1';
 import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit3';
 import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit3';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
@@ -20,7 +20,7 @@ const num=n=>Number.isFinite(n)?String(Math.round(n)):'—';
 const pair=values=>values.join(' | ');
 const sameOrPair=values=>values.every(v=>v===values[0])?values[0]:pair(values);
 export const passiveItemStats=(item,build={})=>equipmentItemAudit(item,build).stats;
-export function enchantStats(id){return {...(ENCHANTS.find(e=>e.id===id)?.effects||{})};}
+export function enchantStats(id){const enchant=ENCHANTS.find(e=>e.id===id);return enchantAvailable(enchant)?{...enchant.effects}:{};}
 export function characterStats(build,talentData,gear={}){
  if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
  const racial=racialPassives(build.race);
@@ -28,7 +28,7 @@ export function characterStats(build,talentData,gear={}){
  const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0,holySp:0,healingPower:0,hp5:0,blockValue:0,blockChance:0,rangedAP:0,rangedHit:0,rangedCrit:0,rangedDamage:0,rangedHaste:0,castingRegenPct:0,critDamageTakenReductionPct:0,dotDamageTakenReductionPct:0,weaponDamage:0,damageOnlySp:0,castSpeedPct:0,spellDamageTakenReductionPct:0,spellDamageTakenReductionFlat:0,aoeDamageTakenReductionPct:0,silenceResistPct:0,interruptDurationReductionPct:0,runSpeedPct:0,swimSpeedPct:0,mountSpeedPct:0};
  let haste=1,rangedHaste=1;const skillBonuses={};const unresolvedEquipment=[],scopedEquipment=[];
  const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key==='rangedHaste')rangedHaste*=1+value/100;else if(key.startsWith('weaponSkill:'))skillBonuses[key]=(skillBonuses[key]||0)+value;else if(key in s&&s[key]!==null)s[key]+=value;}};
- for(const [slot,item] of Object.entries(gear)){const audit=equipmentItemAudit(item,build);add(audit.stats);for(const effect of audit.effects)if(effect.status==='scoped')scopedEquipment.push({...effect,source:item.name||slot});else if(!['passive','empty'].includes(effect.status)&&!(effect.condition==='druid-form'&&c==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)))unresolvedEquipment.push({item:item.name||slot,...effect});const id=build.gear[slot]?.enchantId;if(id&&validEnchant(id,slot,c,item,level)){const {weaponDamage:handDamage,...enchantVector}=enchantStats(id);add(enchantVector);if(!Object.keys(enchantStats(id)).length&&!/weapon damage/i.test(ENCHANTS.find(e=>e.id===id)?.name||''))unresolvedEquipment.push({item:item.name||slot,raw:ENCHANTS.find(e=>e.id===id)?.name,status:'unmapped enchant'});}}
+ for(const [slot,item] of Object.entries(gear)){const audit=equipmentItemAudit(item,build);add(audit.stats);for(const effect of audit.effects)if(effect.status==='scoped')scopedEquipment.push({...effect,source:item.name||slot});else if(!['passive','empty'].includes(effect.status)&&!(effect.condition==='druid-form'&&c==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)))unresolvedEquipment.push({item:item.name||slot,...effect});const id=build.gear[slot]?.enchantId;if(id&&validEnchant(id,slot,c,item,level)&&enchantAvailable(ENCHANTS.find(e=>e.id===id))){const {weaponDamage:handDamage,...enchantVector}=enchantStats(id);add(enchantVector);if(!Object.keys(enchantStats(id)).length&&!/weapon damage/i.test(ENCHANTS.find(e=>e.id===id)?.name||''))unresolvedEquipment.push({item:item.name||slot,raw:ENCHANTS.find(e=>e.id===id)?.name,status:'unmapped enchant'});}}
  const setAudit=equipmentSetAudit(gear,build);add(setAudit.stats);
  for(const e of setAudit.active)if(e.status==='scoped')scopedEquipment.push({...e,source:e.set+' ('+e.pieces+'pc)'});
  // Pet scopes are gated after companion eligibility has been established.
