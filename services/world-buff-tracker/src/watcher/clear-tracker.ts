@@ -251,7 +251,7 @@ export class ClearTracker {
     this.#number = state.number;
     this.#roster = new Set(state.roster);
     this.#peak = state.peak;
-    this.#belowSince = state.belowSince;
+    this.#belowSince = null; // restart requires fresh departure evidence
     this.#confirmed = true; // only confirmed raids are ever snapshotted
   }
 

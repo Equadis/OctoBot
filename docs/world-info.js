@@ -515,8 +515,10 @@
       state.raids.ony = normaliseRaid(findRaid(root, 'ony'), root);
       state.raids.bwl = normaliseRaid(findRaid(root, 'bwl'), root);
       const heads = object(root.heads) || {};
-      state.auth.ony = authView(object(heads.onyxia));
-      state.auth.bwl = authView(object(heads.nefarian));
+      const generated = time(root.observedAt);
+      state.clockOffsetMs = Number.isFinite(generated) && Math.abs(generated - Date.now()) < 6 * 3_600_000 ? generated - Date.now() : 0;
+      state.auth.ony = authView(object(heads.onyxia)) || state.auth.ony;
+      state.auth.bwl = authView(object(heads.nefarian)) || state.auth.bwl;
       state.heads.onyxia = object(heads.onyxia);
       state.heads.nefarian = object(heads.nefarian);
       // A response must never replace a newer drop with an older one (a stale edge copy, a late response), so the newer timestamp wins.
@@ -526,8 +528,7 @@
       }
       state.monitoring = object(root.monitoring);
       state.listeners = object(root.listeners);
-      const generated = time(root.observedAt);
-      state.clockOffsetMs = Number.isFinite(generated) && Math.abs(generated - Date.now()) < 6 * 3_600_000 ? generated - Date.now() : 0;
+
       state.apiOk = true;
       state.dmf = findDmf(root);
       state.metricsFetchedAt = Date.now();

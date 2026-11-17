@@ -153,6 +153,7 @@ export class RaidTracker {
   readonly #lastSeen = new Map<string, number>();
   #ambiguity: LairAmbiguity | null = null;
   #present = 0;
+  #presentNames = new Set<string>();
   #complete = true;
 
   constructor(options: RaidTrackerOptions) {
@@ -192,7 +193,8 @@ export class RaidTracker {
     const names = view.present.map((player) => player.name);
     for (const player of view.present) this.#seen.set(player.name, player);
     const census = this.#presence.observe(names, view.at, view.complete);
-    this.#present = names.length;
+    this.#presentNames = new Set(names);
+    this.#present = this.#presentNames.size;
     this.#complete = view.complete;
     this.#trackArrivals(names, view.at);
 
@@ -522,14 +524,14 @@ export class RaidTracker {
       live.push(slot.clears.belowSince !== null ? { ...snap, status: "leaving" } : snap);
     }
     const ended = this.#ended.map((e) => toSnap(e, e.guild.rosterSize, e));
-    let assigned = 0;
-    for (const slot of this.#slots) for (const name of slot.clears.members) if (this.#seen.has(name)) assigned += 1;
+    const assigned = new Set<string>();
+    for (const slot of this.#slots) for (const name of slot.clears.members) if (this.#presentNames.has(name)) assigned.add(name);
     return {
       sessions: [...live, ...ended],
       ambiguity: this.#ambiguity,
       present: this.#present,
       complete: this.#complete,
-      unassigned: Math.max(0, this.#present - assigned),
+      unassigned: Math.max(0, this.#present - assigned.size),
     };
   }
 

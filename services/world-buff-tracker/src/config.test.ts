@@ -160,10 +160,10 @@ describe("loadConfig", () => {
     expect(loadConfig({ ...minimalEnv, WOW_WHISPER_MAX_AGE_MINUTES: "3" }).whisperMaxAgeMs).toBe(3 * 60_000);
   });
 
-  it("defaults the arrival-cohort fill window to 5m and the roster cap to 30, both overridable", () => {
+  it("defaults the arrival-cohort fill window to 5m and the roster cap to 40, both overridable", () => {
     const cfg = loadConfig({ ...minimalEnv });
     expect(cfg.raidFillWindowMs).toBe(5 * 60_000);
-    expect(cfg.raidRosterCap).toBe(30);
+    expect(cfg.raidRosterCap).toBe(40);
     const over = loadConfig({ ...minimalEnv, WOW_RAID_FILL_WINDOW_MINUTES: "8", WOW_RAID_ROSTER_CAP: "40" });
     expect(over.raidFillWindowMs).toBe(8 * 60_000);
     expect(over.raidRosterCap).toBe(40);
@@ -595,7 +595,7 @@ describe("loadConfig blackwing lair watch", () => {
       raidStrengthSize: 20,
       raidLeftFloor: 20,
       raidDurationEstimateMs: 150 * 60_000,
-      raidRosterCap: 45,
+      raidRosterCap: 40,
       raidMinClearMs: 30 * 60_000,
       raidDisbandMs: 60 * 60_000,
       raidFreshWindowMs: 40 * 60_000,

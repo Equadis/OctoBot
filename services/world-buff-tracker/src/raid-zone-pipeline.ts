@@ -259,7 +259,7 @@ export function createRaidZonePipeline(
 
     // The tracker's roster-driven lifecycle events: "formed" at strength (first numbered), a
     // sustained "cleared", or "resumed" (a wipe whose run-back outlasted the wait — nothing to say).
-    let cleared: Extract<RaidLifecycleEvent, { kind: "cleared" }> | null = null;
+    const cleared: Extract<RaidLifecycleEvent, { kind: "cleared" }>[] = [];
     for (const event of events) {
       if (event.kind === "formed") await gateAndAnnounce(formedRaidEvent(event.peak, event.number));
       else if (event.kind === "resumed") {
@@ -267,7 +267,7 @@ export function createRaidZonePipeline(
           `${lane.label}: raid #${event.number ?? "?"} resumed — its members are back after ~${mins(event.awayMs)}m, ` +
             `so its clear was a wipe; the timer runs on at ~${mins(event.elapsedMs)}m`,
         );
-      } else cleared = event;
+      } else cleared.push(event);
     }
 
     // A raid that formed and got a "get ready to park" alert, but left too soon to have killed its
@@ -393,9 +393,10 @@ export function createRaidZonePipeline(
       return confirming.length > 0 ? lane.watch.confirmClearNow(now) : null;
     };
 
-    if (cleared) {
-      await handleConfirmedClear({ durationMs: cleared.durationMs, peak: cleared.peak, number: cleared.number }, false);
-    } else if (chronicle) {
+    for (const event of cleared) {
+      await handleConfirmedClear({ durationMs: event.durationMs, peak: event.peak, number: event.number }, false);
+    }
+    if (chronicle && cleared.length === 0 && complete) {
       const pending = lane.watch.pendingClear();
       if (pending) {
         const early = await tryChronicleConfirm(pending);
