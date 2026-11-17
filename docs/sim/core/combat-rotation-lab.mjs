@@ -1,9 +1,10 @@
+import {feralTemplate} from './combat-feral-reference.mjs';
 import {referenceRanks,referenceRank} from './combat-reference-ranks.mjs';
 import {abilityKey,ROTATION_REGISTRY} from './rotations/registry.mjs';
 import {CURRENT_ENCHANT_PHASE} from './equipment-options.mjs';
 import {prepareReferenceScenario} from './combat-reference-adapter.mjs';
 
-const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aura','combo-bleed']);
+const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aura','combo-bleed','physical-flat','physical-bleed']);
 const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind));
 const isRanged=r=>r.components.some(c=>c.kind==='ranged-weapon');
 const rowsFor=b=>b.controls.rotationRows;
@@ -12,7 +13,7 @@ const provenance='Explicit experimental rotation policy; reference mechanics, no
 const order=['miss','dodge','parry','block','glance','crit'];
 const physical=position=>({dualWieldPenaltyPct:19,parryPct:0,blockPct:0,critSuppressionPct:0,criticalMultiplier:2,blockValue:0,order,position});
 const resistance=()=>Object.fromEntries(['fire','frost','shadow','nature','arcane','holy'].map(s=>[s,{policy:'none',bins:[{fraction:0,probability:1}]}]));
-function availableRanks(b){return referenceRanks(b.classId).filter(r=>rankPhase(r)<=CURRENT_ENCHANT_PHASE&&r.learnLevel<=b.level);}
+function availableRanks(b){return referenceRanks(b.classId).filter(r=>rankPhase(r)<=CURRENT_ENCHANT_PHASE&&r.learnLevel<=b.level&&(!r.form||r.form===b.classOptions.form));}
 function distinctActions(b){return [...new Map(rowsFor(b).map(row=>[abilityKey(b.classId,row.ability),row.ability])).entries()];}
 function defaults(rank,position,normalisedSpeed){
  const policy={provenance,phase:CURRENT_ENCHANT_PHASE,acceptExternalReference:false,acceptSourceConflict:false,
@@ -23,6 +24,8 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
+  if(field==='biteModel')policy.biteModel={ranges:Array(5).fill(null),apPerComboPoint:null,pctPerEnergy:null,energyCap:null,payment:null};
+  if(field==='stormstrikeModel')policy.stormstrikeModel={scope:null,charges:null,durationMs:null,bonusPct:null};
   if(field==='costOverride')policy.costOverride=null;
   if(field==='castOverrideMs')policy.castOverrideMs=null;
   if(field==='shieldModel')policy.shieldModel={base:null,coefficient:null,stat:null,durationMs:null,lockoutMs:null};
@@ -59,7 +62,8 @@ export function rotationReferenceTemplate(build,gearById={}){
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
- if(build.classId==='warrior')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
+ if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}
+ if(build.classId==='warrior'||build.classId==='druid'&&build.classOptions.form==='Bear')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
  if(ranged){encounter.ammoCount=null;encounter.rangedAutoPolicy={...structuredClone(policies[selected.find(isRanged).abilityId]),autoCastPolicy:'skip-during-cast'};encounter.rangedAutoPolicy.rangedModel.weaponPolicy='actual-swing';}
  return {unsupported,rankChoices,config:{rankByAbility,policies,encounter,seed:42,iterations:build.planning.iterations}};
 }

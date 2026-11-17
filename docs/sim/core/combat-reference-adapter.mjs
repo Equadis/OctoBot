@@ -1,3 +1,4 @@
+import {feralWeapon} from './combat-feral-reference.mjs';
 import {buildCastProcs} from './combat-cast-procs.mjs';
 import {rangedWeaponModel} from './combat-ranged-reference.mjs';
 import {characterStats} from './character-stats.mjs';
@@ -56,13 +57,15 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
   for(const c of row.conditions||[])if(!supportedConditions.has(c.metric))throw new Error('Unsupported reference rotation condition: '+c.metric);
   return {...row,abilityId:aid,target:row.target??'primary',conditions:row.conditions||[]};
  });
+ const feral=build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form),form=build.classOptions.form;
+ const paw=feral?feralWeapon(snap,form,encounter.feralModel):null;
  const actions=[],stats={};const rankRows=[];
  for(const aid of new Set(normalized.map(r=>r.abilityId))){
   const spellId=rankByAbility[aid],policy=policies?.[aid];
   if(!policy)throw new Error('Explicit mechanics policy required for '+aid);
   if(policy.physical&&policy.physical.position!==position)throw new Error('Attack table position differs from encounter geometry');
   if(!Number.isSafeInteger(policy.phase))throw new Error('Explicit rank phase required');
-  const compiled=compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,policy,actorId:actor});
+  const compiled=compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,policy:feral?{...policy,feralModel:encounter.feralModel}:policy,actorId:actor});
   if(compiled.action.abilityId!==aid)throw new Error('Selected rank belongs to a different ability');
   for(const [k,v] of Object.entries(compiled.stats)){if(Number.isFinite(v)&&Object.hasOwn(stats,k)&&stats[k]!==v)throw new Error('Conflicting stat representations: '+k);if(Number.isFinite(v))stats[k]=v;}
   const myRows=normalized.filter(r=>r.abilityId===aid);
@@ -75,13 +78,14 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  if(build.classId==='warrior')pools.rage={current:Math.min(snap.maxRage,build.classOptions.startingRage),max:snap.maxRage};
  else if(build.classId==='rogue')pools.energy={current:Math.min(snap.maxEnergy,build.classOptions.startingEnergy),max:snap.maxEnergy};
  else pools.mana={current:finite(snap.mana,'mana pool')*build.classOptions.startingMana/100,max:snap.mana};
+ if(feral){if(form==='Cat')pools.energy={current:Math.min(snap.maxEnergy,build.classOptions.startingEnergy),max:snap.maxEnergy};else pools.rage={current:Math.min(snap.maxRage,build.classOptions.startingRage),max:snap.maxRage};}
  if(encounter.ammoCount!==undefined)pools.ammo={current:int(encounter.ammoCount,'ammunition count'),max:int(encounter.ammoCount,'ammunition count',1)};
  for(const x of encounter.regeneration||[])if(!Object.hasOwn(pools,x.resource))throw new Error('Regeneration references unavailable resource');
  const autos=[];
  if(bool(encounter.includeMelee,'auto-attack choice')){
    const p=encounter.autoPolicy;
    if(!p||!['immediate','after-interval'].includes(p.firstSwing)||!['continue','skip-during-cast'].includes(p.autoCastPolicy)||p.physical?.position!==position)throw new Error('Explicit matching auto-attack timing and position required');
-   for(const hand of ['mainhand','offhand'])if(gear[hand]?.classs===2)autos.push(whiteAttack(snap,hand,p));
+   if(feral){const formSnap={...snap,melee:{...snap.melee,mainhand:paw,hitPct:paw.hitPct,dual:false}};autos.push(whiteAttack(formSnap,'mainhand',p));}else for(const hand of ['mainhand','offhand'])if(gear[hand]?.classs===2)autos.push(whiteAttack(snap,hand,p));
  }
  if(encounter.includeRanged===true){if(build.classId!=='hunter')throw new Error('Ranged auto adapter currently supports Hunter');const p=encounter.rangedAutoPolicy,r=rangedWeaponModel(snap,p);autos.push({id:'ranged',actorId:actor,source:'Auto Shot',intervalMs:r.intervalMs,firstAtMs:r.intervalMs,castPolicy:p.autoCastPolicy,minRangeYards:8,maxRangeYards:35,costs:r.ammoCost?[{resource:'ammo',amount:r.ammoCost}]:[],effects:[{kind:'damage',when:'always',school:'physical',formula:{min:r.stats.rangedMin,max:r.stats.rangedMax,terms:[],multiplier:1},outcomes:r.outcomes,mitigation:r.mitigation,flatReduction:0,threat:null}]});}
  if(actions.some(a=>a.kind==='queued-melee')&&!autos.some(a=>a.id==='mainhand'))throw new Error('Queued strike requires enabled main-hand swings');
@@ -93,8 +97,8 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  const enemyCurrentHealth=encounter.enemyCurrentHealth===undefined?enemyHealth:finite(encounter.enemyCurrentHealth,'starting enemy health',1);if(enemyCurrentHealth>enemyHealth)throw new Error('Enemy health exceeds cap');
  const units=[{id:actor,maxHealth:snap.health},{id:boss,maxHealth:enemyHealth,health:enemyCurrentHealth},...(hasHealing?[{id:ally,maxHealth:allyMax,health:allyHealth}]:[]),...extraEnemies,...extraAllies];
  const classContext={...build.classOptions};const castProcData=buildCastProcs(build,actions,encounter.castProcPolicies,{requireComplete:encounter.requireCompleteCastProcs===true});
- const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss,...extraEnemies.map(x=>x.id)],allyIds:hasHealing?[ally,...extraAllies.map(x=>x.id)]:[],nearbyTargets:encounter.nearbyTargets??{[boss]:[],[ally]:[]},stats:{[actor]:stats},classContext,geometry:{[actor]:{[actor]:{distance:0,position:'self'},[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{}),...encounter.additionalGeometry}},rows:normalized,actions,autos,castProcs:castProcData.procs,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],incomingRage:encounter.incomingRage??null,...(build.classId==='rogue'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classOptions.comboPoints}}:{})};
- return {scenario:sc,rankRows,sourceNote:sheet.sourceNote,limitations:['Reference base stats, hit tables and coefficients are not live verified.','Only selected compiled ranks, static sheet effects, explicit regeneration and configured auto attacks are executed.',...(encounter.autoPolicy?.rageModel?['Swing rage uses explicitly supplied damage, weapon-speed, critical and hand factors; not live validated.']:build.classId==='warrior'?['No swing-driven rage model supplied; starting rage and explicit regeneration only.']:[]),'Remaining unimplemented proc talents, racials, poisons, set effects, item use, dynamic buffs and debuffs, school vulnerabilities, mana rules and threat policies may change actual results.',...(castProcData.procs.length?['Configured timed cast procs: '+castProcData.procs.map(x=>x.name).join(', ')+'. Imported talent descriptions, not live-verified timing.']:[]),...castProcData.omitted,encounter.incomingDamage?.length?'Healing uses explicit scripted incoming damage.':'Healing uses a fixed explicit ally deficit; no incoming damage is assumed.'],liveVerified:false};
+ const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss,...extraEnemies.map(x=>x.id)],allyIds:hasHealing?[ally,...extraAllies.map(x=>x.id)]:[],nearbyTargets:encounter.nearbyTargets??{[boss]:[],[ally]:[]},stats:{[actor]:stats},classContext,geometry:{[actor]:{[actor]:{distance:0,position:'self'},[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{}),...encounter.additionalGeometry}},rows:normalized,actions,autos,castProcs:castProcData.procs,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],incomingRage:encounter.incomingRage??null,...(build.classId==='rogue'||feral&&form==='Cat'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classId==='rogue'?build.classOptions.comboPoints:int(encounter.initialComboPoints??0,'starting feral combo points')}}:{})};
+ return {scenario:sc,rankRows,sourceNote:sheet.sourceNote,limitations:['Reference base stats, hit tables and coefficients are not live verified.',...(feral?['Fixed form; measured paw damage and timings supplied explicitly, not equipment weapon damage. Shapeshifting not modelled.']:[]),'Only selected compiled ranks, static sheet effects, explicit regeneration and configured auto attacks are executed.',...(encounter.autoPolicy?.rageModel?['Swing rage uses explicitly supplied damage, weapon-speed, critical and hand factors; not live validated.']:build.classId==='warrior'?['No swing-driven rage model supplied; starting rage and explicit regeneration only.']:[]),'Remaining unimplemented proc talents, racials, poisons, set effects, item use, dynamic buffs and debuffs, school vulnerabilities, mana rules and threat policies may change actual results.',...(castProcData.procs.length?['Configured timed cast procs: '+castProcData.procs.map(x=>x.name).join(', ')+'. Imported talent descriptions, not live-verified timing.']:[]),...castProcData.omitted,encounter.incomingDamage?.length?'Healing uses explicit scripted incoming damage.':'Healing uses a fixed explicit ally deficit; no incoming damage is assumed.'],liveVerified:false};
 }
 export function runReferenceScenario(prepared,{seed,iterations}){
  if(!prepared||prepared.liveVerified!==false||prepared.scenario.mode!=='research')throw new Error('Prepared reference scenario required');

@@ -1,4 +1,4 @@
-// Pinned third-party reference values and staging-database observations. Not live OctoWoW observations. Exact current-server costs and effects require validation.
+// Pinned third-party and published guide reference values, not verified live OctoWoW observations.
 export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
   {
     "classId": "rogue",
@@ -1714,6 +1714,595 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
     "referenceCooldownMs": 4000,
     "requiredPolicy": [
       "shieldModel"
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:claw",
+    "spellId": 9850,
+    "rank": 5,
+    "learnLevel": 58,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 45,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": 1,
+        "flat": 115
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/claw.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/claw.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:claw",
+      "spellId": 9850,
+      "rank": 5,
+      "level": 58,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/claw.go",
+      "liveVerified": false
+    },
+    "form": "Cat",
+    "referenceGcdMs": 1000,
+    "requiredPolicy": [
+      "feralModel"
+    ],
+    "comboGain": 1
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:shred",
+    "spellId": 9830,
+    "rank": 5,
+    "learnLevel": 54,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 60,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/shred.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/shred.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:shred",
+      "spellId": 9830,
+      "rank": 5,
+      "level": 54,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [
+        {
+          "field": "weapon scaling",
+          "externalReference": "2.25 × (weapon + 80)",
+          "guide": "six ranks; rank-dependent bonus damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/shred.go",
+      "liveVerified": false
+    },
+    "form": "Cat",
+    "referenceGcdMs": 1000,
+    "position": "behind",
+    "comboGain": 1,
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel"
+    ],
+    "conflicts": [
+      {
+        "field": "weapon scaling",
+        "externalReference": "2.25 × (weapon + 80)",
+        "guide": "six ranks; rank-dependent bonus damage"
+      }
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:rake",
+    "spellId": 9904,
+    "rank": 4,
+    "learnLevel": 54,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 40,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 58,
+        "max": 58,
+        "ignoreArmour": true
+      },
+      {
+        "kind": "physical-bleed",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 32,
+        "max": 32,
+        "durationMs": 9000,
+        "intervalMs": 3000,
+        "reusePreviousHit": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rake.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rake.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:rake",
+      "spellId": 9904,
+      "rank": 4,
+      "level": 54,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [
+        {
+          "field": "attack power scaling",
+          "externalReference": "no AP scaling",
+          "guide": "Rake scales with AP; coefficients unverified",
+          "archive": "0.12 initial and 0.03/tick"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rake.go",
+      "liveVerified": false
+    },
+    "form": "Cat",
+    "referenceGcdMs": 1000,
+    "comboGain": 1,
+    "requiredPolicy": [
+      "feralModel",
+      "componentCoefficients"
+    ],
+    "conflicts": [
+      {
+        "field": "attack power scaling",
+        "externalReference": "no AP scaling",
+        "guide": "Rake scales with AP; coefficients unverified",
+        "archive": "0.12 initial and 0.03/tick"
+      }
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:rip",
+    "spellId": 9896,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 30,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "combo-bleed",
+        "stat": "attackPower",
+        "coefficient": 0,
+        "ranges": [
+          [
+            45,
+            45
+          ],
+          [
+            73,
+            73
+          ],
+          [
+            101,
+            101
+          ],
+          [
+            129,
+            129
+          ],
+          [
+            157,
+            157
+          ]
+        ],
+        "comboCoefficients": [
+          0.01,
+          0.02,
+          0.03,
+          0.04,
+          0.04
+        ],
+        "durations": [
+          12000,
+          12000,
+          12000,
+          12000,
+          12000
+        ],
+        "intervalMs": 2000
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rip.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rip.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:rip",
+      "spellId": 9896,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/rip.go",
+      "liveVerified": false
+    },
+    "form": "Cat",
+    "referenceGcdMs": 1000,
+    "comboSpend": true,
+    "requiredPolicy": [
+      "feralModel",
+      "spendOnMiss"
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:ferocious-bite",
+    "spellId": 22829,
+    "rank": 4,
+    "learnLevel": 56,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 35,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "combo",
+        "stat": "attackPower",
+        "coefficient": null,
+        "ranges": [
+          [
+            173,
+            223
+          ],
+          [
+            301,
+            351
+          ],
+          [
+            429,
+            479
+          ],
+          [
+            557,
+            607
+          ],
+          [
+            685,
+            735
+          ]
+        ]
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/ferocious_bite.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/ferocious_bite.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:ferocious-bite",
+      "spellId": 22829,
+      "rank": 4,
+      "level": 56,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [
+        {
+          "field": "excess energy",
+          "externalReference": "flat per-energy damage",
+          "guide": "percentage increase"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/ferocious_bite.go",
+      "liveVerified": false
+    },
+    "form": "Cat",
+    "referenceGcdMs": 1000,
+    "comboSpend": true,
+    "requiredPolicy": [
+      "feralModel",
+      "biteModel",
+      "spendOnMiss"
+    ],
+    "conflicts": [
+      {
+        "field": "excess energy",
+        "externalReference": "flat per-energy damage",
+        "guide": "percentage increase"
+      }
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:swipe",
+    "spellId": 9908,
+    "rank": 5,
+    "learnLevel": 54,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 20,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-flat",
+        "stat": "attackPower",
+        "coefficient": null,
+        "min": 83,
+        "max": 83
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/swipe.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/swipe.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:swipe",
+      "spellId": 9908,
+      "rank": 5,
+      "level": 54,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/swipe.go",
+      "liveVerified": false
+    },
+    "form": "Bear",
+    "multiTarget": {
+      "cap": 3,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "feralModel",
+      "targetPolicy",
+      "componentCoefficients"
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:savage-bite",
+    "spellId": 45736,
+    "rank": 1,
+    "learnLevel": 58,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 30,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": 0.8,
+        "flat": 30
+      }
+    ],
+    "source": "https://octowow.st/index.php/druid",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:savage-bite",
+      "spellId": 45736,
+      "rank": 1,
+      "level": 58,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/druid",
+      "liveVerified": false
+    },
+    "form": "Bear",
+    "referenceCooldownMs": 6000,
+    "requiredPolicy": [
+      "feralModel",
+      "flatThreat"
+    ]
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:raptor-strike",
+    "spellId": 14266,
+    "rank": 8,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "queued-melee",
+    "cost": 100,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/raptor_strike.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/raptor_strike.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:raptor-strike",
+      "spellId": 14266,
+      "rank": 8,
+      "level": 56,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [
+        {
+          "field": "weapon scaling",
+          "externalReference": "normal weapon +140",
+          "guide": "percentage weapon damage plus flat bonus"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/raptor_strike.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 6000,
+    "requiredPolicy": [
+      "weaponDamageModel",
+      "weaponPolicy"
+    ],
+    "conflicts": [
+      {
+        "field": "weapon scaling",
+        "externalReference": "normal weapon +140",
+        "guide": "percentage weapon damage plus flat bonus"
+      }
+    ]
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:stormstrike",
+    "spellId": 17364,
+    "rank": 1,
+    "learnLevel": 40,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/stormstrike.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/stormstrike.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:stormstrike",
+      "spellId": 17364,
+      "rank": 1,
+      "level": 40,
+      "fields": {
+        "school": "physical"
+      },
+      "unknown": [
+        "exact live rank scaling, cost and attack timing"
+      ],
+      "conflicts": [
+        {
+          "field": "nature bonus",
+          "externalReference": "20 sec cooldown; target debuff",
+          "guide": "rank-dependent nature bonus",
+          "archive": "8 sec cooldown; next two nature damage sources; self buff"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/stormstrike.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 8000,
+    "requiredPolicy": [
+      "weaponDamageModel",
+      "costOverride",
+      "stormstrikeModel"
+    ],
+    "conflicts": [
+      {
+        "field": "nature bonus",
+        "externalReference": "20 sec cooldown; target debuff",
+        "guide": "rank-dependent nature bonus",
+        "archive": "8 sec cooldown; next two nature damage sources; self buff"
+      }
     ]
   }
 ]);
