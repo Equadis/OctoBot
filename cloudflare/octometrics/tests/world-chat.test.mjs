@@ -33,12 +33,14 @@ test("safe incremental collector patch, idempotence and refusal on mismatch",()=
  const original=patched.split("\n").filter(line=>!line.includes("worldChat")&&!line.includes("createWorldChat")).join("\n");
  assert.equal(patchCollector(original),patched);
  assert.equal(patchCollector(patched),patched);
+ const prior=patched.split("\n").filter(line=>!line.includes("worldChat.guildTick")&&!line.includes("worldChat.observeWho")).join("\n");assert.equal(patchCollector(prior),patched);
  assert.throws(()=>patchCollector(original.replace("whisperResponder.stop();","unknown();")));
  assert.throws(()=>patchCollector(original+"\nonChannelMessage: existing"));
 });
 function dbAdapter(){
  const sql=new DatabaseSync(":memory:");
  sql.exec(readFileSync(new URL("../migrations/0004_world_chat.sql",import.meta.url),"utf8"));
+ sql.exec(readFileSync(new URL("../migrations/0005_world_chat_guilds.sql",import.meta.url),"utf8"));
  return {sql,prepare(query){return {bind(...args){return {query,args}}}},async batch(statements){
    sql.exec("BEGIN");try{const out=statements.map(({query,args})=>{
      const stmt=sql.prepare(query);
@@ -51,7 +53,7 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
  let now=Date.now();const actual=Date.now;Date.now=()=>now;
  try{
   const line=(id,authorKey,message,gm=false,time=now)=>({id:"12345678-1234-1234-1234-"+String(id).padStart(12,"0"),authorKey,author:"Player"+authorKey,message,gm,time});
-  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only")=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages})}),env);
+  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only",guilds=[])=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages,guilds})}),env);
   const read=async(realm="N'Zoth")=>(await worldChatRoute(new Request(base+"?realm="+encodeURIComponent(realm)),env)).json();
   assert.equal((await read()).status,"waiting");
   assert.equal((await send([], "N'Zoth","OBPVESW","Bearer no")).status,401);
@@ -61,7 +63,12 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
   await send([first]);
   let data=await read();assert.equal(data.world.length,4);assert.equal(data.gm.length,1);assert.equal(data.lfg.length,2);assert.equal(data.wtb.length,1);
   assert.ok(data.world.some(x=>x.message==="<GM> fake"));
-  assert.equal((await read("Y'Shaarj")).world.length,0);
+  assert.equal(data.world.find(x=>x.author==="Player1").guild,null);
+  await send([], "N'Zoth","OBPVESW","Bearer test-only",[{authorKey:"1",guild:"Raiders",time:now}]);
+  data=await read();assert.equal(data.world.find(x=>x.author==="Player1").guild,"Raiders");assert.equal(data.lfg.find(x=>x.author==="Player1").guild,"Raiders");
+  assert.equal(data.world.find(x=>x.author==="Player2").guild,null);
+  await send([line(7,"1","LFG WC")],"Y'Shaarj","OBPVPSW");assert.equal((await read("Y'Shaarj")).world[0].guild,null);
+  assert.equal((await read("Y'Shaarj")).world.length,1);
   now+=180000;await send([line(6,"1","LF2M WC")]);data=await read();assert.equal(data.lfg.length,2);
   assert.equal(data.lfg.find(x=>x.author==="Player1").expiresAt,now+300000);
   now+=120000;data=await read();assert.equal(data.lfg.length,1);assert.equal(data.wtb.length,0);assert.equal(data.status,"stale");

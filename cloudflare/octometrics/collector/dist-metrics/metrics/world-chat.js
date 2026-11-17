@@ -13,9 +13,45 @@ export function decodeWorldPacket(channel,sender,text,raw){
   }catch{return null;}
 }
 export function createWorldChat({account,config,log,getWorld}){
-  const enabled=process.env.WORLD_CHAT_ENABLED==="true"&&account.role==="sw"&&!!config.pushUrl&&!!config.pushToken;
+  const sources={"N'Zoth":"OBPVESW","Y'Shaarj":"OBPVPSW","C'Thun":"OBHCSW"};
+  const enabled=process.env.WORLD_CHAT_ENABLED==="true"&&account.account.toUpperCase()===sources[account.realmName]&&!!config.pushUrl&&!!config.pushToken;
   let queue=[],timer=null,busy=false,seen=false,stopped=false,lookupCount=0,lastWarn=0;
-  const names=new Map(),pending=new Map();
+  const names=new Map(),pending=new Map(),guildCache=new Map(),guildRequests=new Map(),guildOut=new Map();
+  let guildBusy=false,lastLookup=0;
+  function queueGuild(guid,name){
+    if(!name||name==="Unknown player")return;
+    if(Date.now()-(guildCache.get(guid)??0)<30*60*1000||guildRequests.has(guid))return;
+    if(guildRequests.size>=500)guildRequests.delete(guildRequests.keys().next().value);
+    guildRequests.set(guid,name);
+  }
+  function observeWho(players){
+    if(!enabled||stopped||!Array.isArray(players))return;
+    const byName=new Map(players.filter(p=>typeof p.name==="string"&&typeof p.guild==="string").map(p=>[p.name.toLowerCase(),p.guild]));
+    for(const [guid,name] of guildRequests){
+      if(!byName.has(name.toLowerCase()))continue;
+      const time=Date.now(),guild=byName.get(name.toLowerCase()).slice(0,100);
+      if(guildCache.size>=3000)guildCache.delete(guildCache.keys().next().value);
+      guildCache.set(guid,time);guildRequests.delete(guid);
+      if(guildOut.size>=250)guildOut.delete(guildOut.keys().next().value);
+      guildOut.set(guid,{authorKey:guid.toString(),guild,time});
+    }
+  }
+  async function guildTick(){
+    const world=getWorld(),now=Date.now();
+    if(!enabled||stopped||!seen||guildBusy||!world?.isReady||typeof world.whoOnce!=="function"||now-lastLookup<55000||!guildRequests.size)return;
+    const [guid,name]=guildRequests.entries().next().value;
+    guildBusy=true;lastLookup=now;
+    try{
+      const result=await world.whoOnce({playerName:name},5000);
+      const match=result?.players?.find(p=>typeof p.name==="string"&&p.name.toLowerCase()===name.toLowerCase());
+      if(match)observeWho([match]);
+    }catch{}
+    finally{
+      // No result is not proof of being guildless. Rotate unanswered requests to avoid starvation.
+      if(guildRequests.has(guid)){guildRequests.delete(guid);guildRequests.set(guid,name);}
+      guildBusy=false;
+    }
+  }
   async function nameFor(guid){
     if(names.has(guid))return names.get(guid);
     if(pending.has(guid))return pending.get(guid);
@@ -33,11 +69,15 @@ export function createWorldChat({account,config,log,getWorld}){
     if(!seen||busy||stopped)return;
     busy=true;const now=Date.now();queue=queue.filter(x=>x.time>=now-100000);
     const messages=queue.splice(0,20);
+    for(const [key,item] of guildOut)if(item.time<now-100000)guildOut.delete(key);
+    const guilds=[...guildOut.entries()].slice(0,10);
+    for(const [key] of guilds)guildOut.delete(key);
+    function retryGuilds(){for(const [key,item] of guilds)if(!guildOut.has(key))guildOut.set(key,item);}
     try{
       const url=new URL(config.pushUrl);url.pathname="/api/world-chat/ingest";url.search="";url.hash="";
-      const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+config.pushToken},body:JSON.stringify({realm:account.realmName,account:account.account,channel:"world",messages}),signal:AbortSignal.timeout(7000)});
-      if(!response.ok){if(response.status>=500||response.status===429)queue=[...messages,...queue].slice(-250);if(now-lastWarn>60000){lastWarn=now;log.warn("World Chat alpha: ingest HTTP "+response.status);}}
-    }catch{queue=[...messages,...queue].slice(-250);}
+      const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+config.pushToken},body:JSON.stringify({realm:account.realmName,account:account.account,channel:"world",messages,guilds:guilds.map(([,item])=>item)}),signal:AbortSignal.timeout(7000)});
+      if(!response.ok){if(response.status>=500||response.status===429){queue=[...messages,...queue].slice(-250);retryGuilds();}if(now-lastWarn>60000){lastWarn=now;log.warn("World Chat alpha: ingest HTTP "+response.status);}}
+    }catch{queue=[...messages,...queue].slice(-250);retryGuilds();}
     finally{busy=false;}
   }
   return {
@@ -48,14 +88,15 @@ export function createWorldChat({account,config,log,getWorld}){
       try{world.joinChannel("world");log.info("World Chat alpha: joined requested public channel; awaiting valid packet");timer=setInterval(()=>void flush(),5000);}
       catch{log.warn("World Chat alpha: could not join world");}
     },
+    guildTick,observeWho,
     receive(channel,guid,text,raw){
       if(!enabled||stopped||!timer)return;
       const packet=decodeWorldPacket(channel,guid,text,raw);
       if(!packet||!packet.text||packet.text.length>1200)return;
       if(!seen)log.info("World Chat alpha: first valid public channel packet received");
       seen=true;const time=Date.now(),id=randomUUID();
-      void nameFor(guid).then(author=>{if(stopped)return;queue.push({id,time,authorKey:guid.toString(),author,message:packet.text,gm:packet.gm});if(queue.length>250)queue.shift();});
+      void nameFor(guid).then(author=>{if(stopped)return;queueGuild(guid,author);queue.push({id,time,authorKey:guid.toString(),author,message:packet.text,gm:packet.gm});if(queue.length>250)queue.shift();});
     },
-    stop(){stopped=true;if(timer)clearInterval(timer);queue=[];}
+    stop(){stopped=true;if(timer)clearInterval(timer);queue=[];guildRequests.clear();guildOut.clear();}
   };
 }

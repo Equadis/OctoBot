@@ -19,6 +19,7 @@ $collector = Join-Path $HOME 'Downloads\OctoBot-Metrics-Tracker-Raid-Work'
 node .\cloudflare\octometrics\collector\apply-world-chat.mjs $collector --dry-run
 node .\cloudflare\octometrics\collector\apply-world-chat.mjs $collector --apply
 npx wrangler d1 execute octometrics --remote --config "$collector\wrangler.metrics.toml" --file ".\cloudflare\octometrics\migrations\0004_world_chat.sql"
+npx wrangler d1 execute octometrics --remote --config "$collector\wrangler.metrics.toml" --file ".\cloudflare\octometrics\migrations\0005_world_chat_guilds.sql"
 npx wrangler deploy ".\cloudflare\octometrics\worker.mjs" --config "$collector\wrangler.metrics.toml" --dry-run
 npx wrangler deploy ".\cloudflare\octometrics\worker.mjs" --config "$collector\wrangler.metrics.toml"
 Invoke-RestMethod "https://octometrics.eqvoice.workers.dev/api/world-chat?realm=N%27Zoth"
@@ -26,3 +27,5 @@ Invoke-RestMethod "https://octometrics.eqvoice.workers.dev/api/world-chat?realm=
 Only proceed after each command succeeds and the API returns the expected waiting/live object. Check existing summary and auction routes before changing Railway. Set WORLD_CHAT_ENABLED=true on octobot-metrics-tracker only, using the Railway dashboard or CLI with skip-deploy if available; then upload the patched collector from its directory (`railway.cmd up . --path-as-root --service octobot-metrics-tracker`). Do not redeploy the other services. Production packet layout and names still require live confirmation. If disabling becomes necessary, remove WORLD_CHAT_ENABLED or set it false and redeploy only the metrics tracker.
 
 The Worker accepts at most 20 messages per batch and classifies at most three dungeon tags per message, keeping the D1 statement count bounded. The chat feed still contains the full message.
+
+Guild enrichment: OBPVESW, OBPVPSW and OBHCSW exclusively. Reuse guilds from existing roster replies, and attempt at most one additional exact-name /who per minute per SW connection, half a minute from its scheduled raid poll. Guilds are linked per realm and character GUID, not inferred from chat text; missing results are omitted. A confirmed empty guild is stored as empty. Verify live /who timing before treating coverage as complete. Display time is grey, player/guild/message white, and GM text #ACE5EE. Both 0004 and 0005 migrations must be applied before deploying the updated Worker.
