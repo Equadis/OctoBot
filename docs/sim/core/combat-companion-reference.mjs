@@ -1,0 +1,34 @@
+import {petAbilityCandidates} from './pet-training-audit.mjs';
+import {expectedOutcome} from './combat-math.mjs';
+// Observed companion stats and explicit research policies; never infer live stats from family.
+const num=(x,n,min=0,max=Infinity)=>{if(!Number.isFinite(x)||x<min||x>max)throw new Error('Explicit companion '+n+' required');return x;};
+const integer=(x,n,min=0,max=Infinity)=>{if(!Number.isSafeInteger(x)||x<min||x>max)throw new Error('Explicit companion '+n+' required');return x;};
+const direct=new Set(['Bite','Claw','Lightning Breath','Screech','Thunderstomp','Firebolt','Lash of Pain','Felstorm']);
+const periodic=new Set(['Scorpid Poison','Poison Spit']);
+const outcome=o=>{expectedOutcome({min:0,max:0,outcomes:o});if(o.some(x=>typeof x.landed!=='boolean'))throw new Error('Explicit companion landed outcomes required');return o;};
+const threat=t=>t===null?null:{coefficient:num(t?.coefficient,'threat coefficient'),flat:num(t?.flat,'flat threat'),multipliers:[],distribution:'each'};
+function damage(d,m,name,kind='damage'){
+ if(!d||!['physical','fire','frost','nature','shadow','arcane','holy'].includes(d.school))throw new Error('Explicit companion damage school required');
+ return {kind,when:'always',school:d.school,formula:{min:num(d.min,'damage min'),max:num(d.max,'damage max',d.min),terms:[{stat:'attackPower',coefficient:num(d.apCoefficient,'AP coefficient')},{stat:'spellPower',coefficient:num(d.spCoefficient,'SP coefficient')}],multiplier:m.damageMultiplier*num(d.multiplier,'ability multiplier')},outcomes:outcome(d.outcomes),mitigation:num(d.mitigation,'mitigation',0,1),flatReduction:num(d.flatReduction,'flat reduction'),threat:threat(d.threat),...(kind==='periodic-damage'?{durationMs:integer(d.durationMs,'periodic duration',1),intervalMs:integer(d.intervalMs,'periodic interval',1,d.durationMs),refresh:d.refresh,snapshot:d.snapshot,tickAtExpiry:d.tickAtExpiry,applicationOutcomes:outcome(d.applicationOutcomes),auraName:name}:{})};
+}
+export function companionTemplate(build){
+ const name=build.classOptions.pet;if(!name||name==='None')return null;const level=build.classId==='hunter'?build.classOptions.petLevel:build.level;
+ return {name,level,provenance:'',acceptReferenceRankUncertainty:false,health:null,initialHealth:null,attackPower:null,spellPower:null,damageMultiplier:null,resource:{max:null,current:null,regenAmount:null,regenIntervalMs:null},distanceYards:null,position:null,decisionIntervalMs:null,gcdMs:null,auto:null,abilities:[],candidateAbilities:petAbilityCandidates(build.classId,name,level).filter(a=>direct.has(a.name)||periodic.has(a.name)).map(a=>({name:a.name,maxCandidateRank:a.maxCandidateRank,source:a.source}))};
+}
+export function buildCompanionConfig(build,m,durationMs){
+ const name=build.classOptions.pet;if(!name||name==='None'){if(m!==null&&m!==undefined)throw new Error('Companion model supplied with no selected companion');return null;}
+ if(!['hunter','warlock'].includes(build.classId)||!m||m.name!==name||typeof m.provenance!=='string'||!m.provenance.trim()||m.acceptReferenceRankUncertainty!==true)throw new Error('Explicit selected companion ruleset and reference-rank acknowledgement required');
+ const resource=build.classId==='hunter'?'petFocus':'petMana',level=build.classId==='hunter'?build.classOptions.petLevel:build.level;
+ if(m.level!==level||level>build.level)throw new Error('Companion level must match selected level and not exceed player');
+ const maxHealth=num(m.health,'health',1),health=num(m.initialHealth,'initial health',1,maxHealth),current=num(m.resource?.current,'initial resource'),max=num(m.resource?.max,'maximum resource',Math.max(1,current)),regenAmount=num(m.resource?.regenAmount,'resource regeneration'),regenIntervalMs=integer(m.resource?.regenIntervalMs,'resource interval',1);
+ num(m.damageMultiplier,'damage multiplier');const stats={attackPower:num(m.attackPower,'attack power'),spellPower:num(m.spellPower,'spell power')};
+ if(!['behind','front','side'].includes(m.position))throw new Error('Explicit companion position required');
+ const geometry={distance:num(m.distanceYards,'distance'),position:m.position},decisionIntervalMs=integer(m.decisionIntervalMs,'decision interval',10,10000),gcdMs=integer(m.gcdMs,'GCD',1);
+ const candidates=petAbilityCandidates(build.classId,name,level),seen=new Set();
+ if(!Array.isArray(m.abilities)||m.abilities.length>20)throw new Error('Explicit companion ability priority required');
+ const abilities=m.abilities.map(a=>{const candidate=candidates.find(x=>x.name===a.name);if(!candidate||seen.has(a.name)||!direct.has(a.name)&&!periodic.has(a.name))throw new Error('Unsupported or duplicate companion ability: '+a.name);seen.add(a.name);integer(a.rank,'learned rank',1);if(candidate.maxCandidateRank!==null&&a.rank>candidate.maxCandidateRank)throw new Error('Companion rank exceeds reference level: '+a.name);if(typeof a.learnedConfirmed!=='boolean'||!a.learnedConfirmed)throw new Error('Explicit learned companion rank confirmation required: '+a.name);const c={name:a.name,rank:a.rank,cost:num(a.cost,'ability cost',0,max),castMs:integer(a.castMs,'cast time'),cooldownMs:integer(a.cooldownMs,'cooldown'),minRangeYards:num(a.minRangeYards,'minimum range'),maxRangeYards:num(a.maxRangeYards,'maximum range',a.minRangeYards),effects:[damage(a.damage,m,a.name,periodic.has(a.name)?'periodic-damage':'damage')]};if(typeof a.refreshOnlyAfterExpiry!=='boolean')throw new Error('Explicit companion refresh policy required');return {...c,refreshOnlyAfterExpiry:a.refreshOnlyAfterExpiry&&periodic.has(a.name)};});
+ const autos=m.auto===null?[]:[{id:'companion-white',actorId:'pet',source:'Companion auto attack',intervalMs:integer(m.auto?.intervalMs,'swing interval',1),firstAtMs:integer(m.auto?.firstAtMs,'first swing'),castPolicy:'continue',minRangeYards:0,maxRangeYards:num(m.auto?.maxRangeYards,'melee range',0),effects:[damage(m.auto?.damage,m,'Companion auto attack')]}];
+ if(!abilities.length&&!autos.length)throw new Error('Companion requires at least one explicit auto attack or active ability');
+ if(autos.some(a=>a.effects[0].school!=='physical'))throw new Error('Companion auto attack must be physical');
+ return {id:'pet',unit:{id:'pet',maxHealth,health},stats,geometry,pool:{resource,current,max},autos,priority:{resource,decisionIntervalMs,gcdMs,abilities},regen:{amount:regenAmount,intervalMs:regenIntervalMs,durationMs}};
+}

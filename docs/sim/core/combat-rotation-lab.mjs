@@ -1,3 +1,4 @@
+import {companionTemplate} from './combat-companion-reference.mjs';
 import {sealTemplate} from './combat-seal-reference.mjs';
 import {imbueTemplate} from './combat-imbue-reference.mjs';
 import {poisonTemplate} from './combat-poison-reference.mjs';
@@ -74,6 +75,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
+ if(['hunter','warlock'].includes(build.classId)&&build.classOptions.pet&&build.classOptions.pet!=='None')encounter.companionModel=companionTemplate(build);
  if(build.classId==='paladin'&&selected.some(r=>r.components.some(c=>c.kind==='seal-aura')))encounter.sealTwist=null; // Optional explicit {windowMs,swingPolicy,pairs}; no assumed live window.
  if(build.classId==='shaman'&&build.classOptions.mhImbue&&build.classOptions.mhImbue!=='None')encounter.imbueModel=imbueTemplate(build.classOptions.mhImbue,selected.filter(r=>r.components.some(c=>['weapon','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId));
  if(encounter.imbueModel?.name==='Frostbrand Weapon'&&Number(build.talents?.['263']??0)>0)encounter.imbueModel.elementalWeapons={chanceMode:null,frostShockScope:null,criticalMultiplier:null};
