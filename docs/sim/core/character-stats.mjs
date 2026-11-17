@@ -1,5 +1,6 @@
 import {resolveBuffEffects} from './buff-effect-audit.mjs?v=20261117-buff-audit4';
-import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
+import {racialPassives,validRace} from './class-rules.mjs?v=20261117-racial-audit1';
+import {racialEventAudit} from './racial-event-audit.mjs?v=20261117-racial-audit2';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261117-buff-audit4';
 import {baseStatProfile,racialAttributeEstimate} from './base-stat-audit.mjs?v=20261117-racial-audit1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit4';
@@ -91,6 +92,7 @@ export function characterStats(build,talentData,gear={}){
  const mitigation=100*targetArmour/(targetArmour+400+85*level);
  const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=s.weaponDamage+(validEnchant(enchantId,slot,c,weapon,level)?(enchantStats(enchantId).weaponDamage||0):0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
+ const racialEvents=racialEventAudit(build.race);
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
  if(baseAudit.status!=='reference-only')group('Base Stat Audit',[['Source status',baseAudit.status,baseAudit.issues.join(' ')]]);
  group('Base Stats',[['Strength',num(s.str)],['Agility',num(s.agi)],['Stamina',num(s.sta)],...(!['warrior','rogue'].includes(c)?[['Intellect',num(s.int)],['Spirit',num(s.spi)]]:[])]);
@@ -117,6 +119,7 @@ export function characterStats(build,talentData,gear={}){
  group('Spell',[
  ['Spell Power',num(s.sp+s.damageOnlySp)],...(s.healingPower||s.damageOnlySp?[['Healing Power',num(s.sp+s.healingPower)]]:[]),...(s.castSpeedPct?[['Item Casting Speed',pct(s.castSpeedPct,1)]]:[]),...(s.castingRegenPct?[['Natural Mana Regen While Casting (items)',pct(s.castingRegenPct,1)]]:[]),['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane','Holy'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s.damageOnlySp+s[name.toLowerCase()+'Sp'])])
  ]);
+ if(racialEvents.length)group('Racial Combat Effects (not simulated)',racialEvents.map(e=>[e.name,e.kind==='target-conditional'?'Conditional':'Activated / not simulated',e.note+' Source: '+e.source]));
  if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':x.status==='scoped'?'Scoped contribution':x.status==='utility'?'Utility (unquantified)':'Not simulated',x.effect]));
  if(scoped.length)group('Scoped Equipment Modifiers',scoped.map(x=>[x.scope+' — '+x.stat+(x.condition?.target?' ('+x.condition.target+')':''),String(Number(x.amount.toFixed(3)))+(x.stat.endsWith('Pct')?'%':'')+(x.active?'':' (inactive)'),[...new Set(x.sources)].join(', ')+'; relative contribution only.']));
  if(unresolvedEquipment.length||setAudit.unresolved.length)group('Uncalculated Equipment Effects',[...unresolvedEquipment.map(x=>[x.item,x.status,x.raw]),...setAudit.unresolved.map(x=>[x.set||x.item,'Unverified set',x.reason])]);
@@ -127,5 +130,5 @@ export function characterStats(build,talentData,gear={}){
  if(rawResRows.length)group('Target Resistance Estimates',rawResRows);
  if(Object.keys(targetMods).length)group('Target Debuff Contributions',Object.entries(targetMods).map(([k,v])=>[k,String(v)+(k.endsWith('Pct')?'%':''),'Scoped target contribution; not applied to player stats or final damage.']));
  if(buffAudit.entries.some(e=>e.status!=='source-prepull')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull').map(e=>[e.name,e.active?e.status:e.eventEligible?'Event — not simulated':'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
- return {groups,baseAudit,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
+ return {groups,baseAudit,buffAudit,racialEvents,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }

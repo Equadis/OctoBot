@@ -60,3 +60,9 @@ Verify remaining 17 reference numerical/shared scoped buff choices, seven event 
 - CI now emits a base-stat coverage artifact. No missing data inferred; no combat engine or live-server check. Main untouched.
 
 - First Phase 6 CI exposed the old Human Divine Spirit expectation (+40 instead of provisional +42). Expanded the regression to contrast Human and Gnome recipients. Existing class-health TODO now compares base resource columns rather than final character health.
+
+## Phase 7 — live-evidence intake and scoped racial mechanics
+- Public OctoWoW pages describe racial skills, not complete level attributes. Community addon estimates and Turtle-based cross-race substitutions were deliberately excluded. No missing rows are promoted.
+- Added experimental local-only 1.12 addon OctoStatCapture (tools/sim/OctoStatCapture), anonymous capture parser/review CLI and regression tests. Zero gear, visible auras, allocated talents, combat and druid form checks; captured UnitStat columns and maximum resources remain observations, not raw class health/mana. Conflicts are reported and nothing auto-imported. Addon needs live client validation.
+- Source-backed event contracts: Orc Blood Fury (20572), Troll Beast Slaying (20557), Tauren War Stomp (20549), High Elf Quel'dorei Meditation (https://forge.octowow.st/high-elves), Goblin Exit Strategy (https://forge.octowow.st/goblins). Visible as separate scoped/event effects, no permanent stat contribution, no timing engine. Remaining racial abilities need source and live verification.
+- Browser module revision refreshed. No merge to main.
