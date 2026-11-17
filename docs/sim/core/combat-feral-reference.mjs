@@ -8,6 +8,6 @@ export function feralWeapon(snap,form,model){
  const skill=n(model.skill,'skill'),critPct=n(model.critPct,'crit'),hitPct=n(model.hitPct,'hit'),targetDodgePct=n(model.targetDodgePct,'target dodge');
  const glanceMultiplier=n(model.glanceMultiplier,'glance multiplier'),glanceChancePct=n(model.glanceChancePct,'glance chance');
  if(critPct>100||hitPct>100||targetDodgePct>100||glanceChancePct>100||glanceMultiplier>1)throw new Error('Invalid feral attack percentage');
- return {...snap.melee.mainhand,min,max,intervalSeconds:interval,baseSpeedSeconds:speed,skill,critPct,hitPct,targetDodgePct,glanceMultiplier,glanceChancePct};
+ const targetArmour=n(snap.melee.mainhand.targetArmour,'target armour');return {targetArmour,min,max,intervalSeconds:interval,baseSpeedSeconds:speed,skill,critPct,hitPct,targetDodgePct,glanceMultiplier,glanceChancePct};
 }
 export function feralTemplate(form){return {form,provenance:'',min:null,max:null,speedSeconds:null,intervalSeconds:null,skill:null,critPct:null,hitPct:null,targetDodgePct:null,glanceMultiplier:null,glanceChancePct:null};}
