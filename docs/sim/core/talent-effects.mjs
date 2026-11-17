@@ -21,7 +21,7 @@ const satisfies=(when,build,gear)=>{
  if(!when)return true;
  for(const [key,expected] of Object.entries(when)){
   const actual=key==='dualWield'
-    ?Boolean(gear.mainhand?.classs===2&&gear.offhand?.classs===2)
+    ?Boolean(matches(gear.mainhand,'onehand')&&matches(gear.offhand,'onehand'))
     :key==='shield'
       ?Boolean(gear.offhand?.classs===4&&gear.offhand?.subclass===6)
       :build.classOptions?.[key];
@@ -44,22 +44,22 @@ export function resolveTalentEffects(build,talentData,gear={}){
  if(!talentData||talentData.classId!==AUDITED_CLASS)
    throw new Error('Talent audit requires matching official talent metadata.');
  for(const talent of talentData.talents){
-  const rank=build.talents[talent.id]||0;
+  const rank=build.talents[talent.id]??0;
   if(!rank)continue;
   if(rank<0||rank>talent.maxRanks||!Number.isInteger(rank))throw new Error('Invalid rank for '+talent.name);
   const audit=TALENT_COVERAGE[talent.id];
   if(!audit)throw new Error('Talent is missing its audit record: '+talent.name);
   const rules=TALENT_RULES[talent.id]||[];
   let applied=0;
-  for(const rule of rules){
-   if(rule.kind==='pending'){output.pending.push({name:talent.name,note:rule.note||'Requires combat simulation'});continue;}
+  for(const [ruleIndex,rule] of rules.entries()){
+   if(rule.kind==='pending'){output.pending.push({name:talent.name,talentId:talent.id,ruleIndex,note:rule.note||'Requires combat simulation'});continue;}
    if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)||(rule.kind==='buff'&&!normaliseBuffs(build.controls?.buffIds||[]).includes(rule.source))){
-    output.details.push({name:talent.name,stat:rule.stat,scope:rule.scope||rule.source||'',status:'inactive',note:rule.note||'Condition is not active'});
+    output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,scope:rule.scope||rule.source||'',status:'inactive',note:rule.note||'Condition is not active'});
     continue;
    }
    const scenarioValue=rule.perOption?build.classOptions?.[rule.perOption]:1;
    const optionFactor=Number.isFinite(rule.maxOption)?Math.min(scenarioValue,rule.maxOption):scenarioValue;
-   if(!Number.isFinite(optionFactor)||optionFactor<0||optionFactor===0){output.details.push({name:talent.name,stat:rule.stat,status:'inactive',note:'Requires an explicitly selected applicable scenario'});continue;}
+   if(!Number.isFinite(optionFactor)||optionFactor<0||optionFactor===0){output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,status:'inactive',note:'Requires an explicitly selected applicable scenario'});continue;}
    const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1)*optionFactor;
    if(rule.kind==='global')add(output.flat,rule.stat,amount);
    else if(rule.kind==='buff'){
@@ -70,8 +70,8 @@ export function resolveTalentEffects(build,talentData,gear={}){
    else if(rule.kind==='percent')add(output.percent,rule.stat,amount);
    else if(rule.kind==='special')add(output.special,rule.stat,amount);
    else if(rule.kind==='offhand'){
-    if(matches(gear.offhand,'onehand'))add(output.offhand,rule.stat,amount);
-    else {output.details.push({name:talent.name,stat:rule.stat,scope:'Off Hand',status:'inactive',note:'Requires an off-hand weapon'});continue;}
+    if(matches(gear.mainhand,'onehand')&&matches(gear.offhand,'onehand'))add(output.offhand,rule.stat,amount);
+    else {output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,scope:'Off Hand',status:'inactive',note:'Requires an off-hand weapon'});continue;}
    }else if(rule.kind==='weapon'){
     let matched=false;
     for(const slot of ['mainhand','offhand']){
@@ -79,7 +79,7 @@ export function resolveTalentEffects(build,talentData,gear={}){
       add(output.weapon[slot],rule.stat,amount);matched=true;
      }
     }
-    if(!matched){output.details.push({name:talent.name,stat:rule.stat,scope:rule.weapon,status:'inactive',note:'Requires a matching equipped weapon'});continue;}
+    if(!matched){output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,scope:rule.weapon,status:'inactive',note:'Requires a matching equipped weapon'});continue;}
    }else if(rule.kind==='ranged')add(output.ranged,rule.stat,amount);
    else if(rule.kind==='spell'){
     for(const scope of (Array.isArray(rule.scope)?rule.scope:[rule.scope])){
@@ -89,9 +89,9 @@ export function resolveTalentEffects(build,talentData,gear={}){
    }else if(rule.kind==='pet')add(output.pet,rule.stat,amount);
    else if(rule.kind==='scoped')add(output.scoped,rule.scope+' '+rule.stat,amount);
    else throw new Error('Unrecognised talent effect kind for '+talent.name);
-   if(['spell','scoped','ranged'].includes(rule.kind))output.abilityEffects.push({name:talent.name,kind:rule.kind,scope:rule.scope,stat:rule.stat,amount});
+   if(['spell','scoped','ranged'].includes(rule.kind))output.abilityEffects.push({name:talent.name,talentId:talent.id,ruleIndex,kind:rule.kind,scope:rule.scope,stat:rule.stat,amount});
    applied++;
-   output.details.push({name:talent.name,stat:rule.stat,amount,scope:rule.scope||rule.weapon||rule.kind,status:'calculated',note:rule.note||'Published rank effect; server mechanics not independently validated'});
+   output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,amount,scope:rule.scope||rule.weapon||rule.kind,status:'calculated',note:rule.note||'Published rank effect; server mechanics not independently validated'});
   }
   if(audit.status!=='sheet' || (rules.length===0&&applied===0))
    output.pending.push({name:talent.name,note:audit.note||'Requires combat-engine or contextual support',status:audit.status});
