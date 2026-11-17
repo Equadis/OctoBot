@@ -255,6 +255,9 @@ export class ClearTracker {
     this.#confirmed = true; // only confirmed raids are ever snapshotted
   }
 
+  /** The lane owns recovery across concurrent slots. */
+  forgetCleared(): void { this.#cleared = null; }
+
   /** The lockout ledger (name -> locked-at ms) as a plain object, to persist across a restart — so a
    *  redeploy doesn't clear the locks and let a just-cleared raid's members re-form a phantom. */
   lockoutSnapshot(): Record<string, number> {

@@ -241,3 +241,46 @@ describe("concurrent raids", () => {
     expect(live(t2).map((s) => s.id)).toEqual([701, 702]);
   });
 });
+
+describe("durable independent raid recovery", () => {
+  const a = group("Nightfall", 40);
+  const b = group("Stormguard", 40);
+  it("restores a secondary after an extended wipe and restart while the primary remains active", () => {
+    const t = make({ rosterCap: 40 });
+    feed(t, a, 1, 10);
+    feed(t, [...a, ...b], 11, 18);
+    const before = live(t).find(s => s.id === 702)!;
+    feed(t, a, 19, 25);
+    expect(ended(t).find(s => s.id === 702)).toBeDefined();
+    const restored = make({ rosterCap: 40 }, 702);
+    restored.restoreCheckpoint(JSON.parse(JSON.stringify(t.checkpoint())));
+    restored.observe(view(a, 26));
+    const obs = restored.observe(view([...a, ...b], 27));
+    expect(obs.events).toContainEqual(expect.objectContaining({kind:"resumed", number:702}));
+    expect(live(restored).find(s => s.id === 702)).toMatchObject({key:before.key, formedAt:before.formedAt, guild:before.guild, resumed:true, players:40});
+    expect(live(restored).map(s=>s.players).reduce((x,y)=>x+y,0)).toBe(80);
+    expect(ended(restored).some(s=>s.id===702)).toBe(false);
+  });
+  it("does not turn a missing cohort across restart into a departure; can recover it later", () => {
+    const t = make({ rosterCap: 40 });
+    feed(t, a, 1, 10);
+    const restored = make({ rosterCap: 40 }, 701);
+    restored.restoreCheckpoint(t.checkpoint());
+    expect(restored.observe(view([], 30)).events).toEqual([]);
+    expect(ended(restored)[0]).toMatchObject({ id:701, endReason:"interrupted", trusted:false });
+    restored.observe(view(a, 31, false));
+    expect(live(restored)).toHaveLength(0);
+    restored.observe(view(a, 32));
+    expect(live(restored)[0]).toMatchObject({id:701, formedAt:T0+M, resumed:true});
+  });
+  it("never resurrects a proven kill after restart", () => {
+    const t=make({rosterCap:40});
+    feed(t,a,1,10); feed(t,[],11,12);
+    expect(t.confirmClearNow(T0+12*M)).not.toBeNull();
+    const restored=make({rosterCap:40},701);
+    restored.restoreCheckpoint(t.checkpoint());
+    feed(restored,a,13,17);
+    expect(live(restored)).toHaveLength(0);
+    expect(ended(restored)[0]).toMatchObject({id:701,endReason:"kill_confirmed"});
+  });
+});

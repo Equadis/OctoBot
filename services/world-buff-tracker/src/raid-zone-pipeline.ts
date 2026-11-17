@@ -171,22 +171,24 @@ export function createRaidZonePipeline(
   const processLane = async (lane: DetectionLane, split: FactionSplit, complete: boolean, now: number): Promise<void> => {
     const { events, census } = lane.watch.observe({ present: lane.players(split), complete, at: now });
 
-    // Persist the raid in progress (or clear it) so a restart resumes exactly here, and the
-    // lockout ledger, so a redeploy can't let a just-cleared raid's lingerers re-form a phantom.
-    void raidStateStore
-      .save(lane.label, lane.watch.raidStateSnapshot())
-      .catch((error) => logger.debug(`raid state save: ${describeError(error)}`));
-    // Concurrent (non-primary) raids persist under their own keys, cleared when they end.
-    const extras = lane.watch.extraRaidStates();
-    for (let slot = 1; slot <= 3; slot += 1) {
-      const extra = extras.find((e) => e.slot === slot);
-      void raidStateStore
-        .save(`${lane.label}#${slot}`, extra ? extra.state : null)
-        .catch((error) => logger.debug(`raid state save: ${describeError(error)}`));
+    // Save the whole lane atomically, including ended cohorts and original guild/session IDs.
+    const persist = async (): Promise<void> => {
+      if (raidStateStore.saveCheckpoint) {
+        await raidStateStore.saveCheckpoint(lane.label, lane.watch.checkpoint());
+        return;
+      }
+      // Backwards-compatible port for legacy/test stores.
+      await raidStateStore.save(lane.label, lane.watch.raidStateSnapshot());
+      const extras = lane.watch.extraRaidStates();
+      for (let slot = 1; slot <= 3; slot++) {
+        await raidStateStore.save(`${lane.label}#${slot}`, extras.find(e => e.slot === slot)?.state ?? null);
+      }
+      await lockoutStore.save(lane.label, lane.watch.lockoutSnapshot());
+    };
+    await persist();
+    for (const session of lane.watch.sessions().sessions) {
+      if (session.status !== "ended" && session.resumed) await durationStore.invalidate?.(session.key);
     }
-    void lockoutStore
-      .save(lane.label, lane.watch.lockoutSnapshot())
-      .catch((error) => logger.debug(`lockout save: ${describeError(error)}`));
 
     // Followed a blind gap: the tracker already resumed-or-discarded its raid; skip this read so a
     // crash-and-refill isn't read as a raid starting or ending.
@@ -263,7 +265,6 @@ export function createRaidZonePipeline(
     for (const event of events) {
       if (event.kind === "formed") await gateAndAnnounce(formedRaidEvent(event.peak, event.number));
       else if (event.kind === "resumed") {
-        if (event.number !== null) await durationStore.invalidate?.(`n${event.number}`).catch(error => logger.debug(`duration invalidation: ${describeError(error)}`));
         logger.info(
           `${lane.label}: raid #${event.number ?? "?"} resumed — its members are back after ~${mins(event.awayMs)}m, ` +
             `so its clear was a wipe; the timer runs on at ~${mins(event.elapsedMs)}m`,
@@ -411,6 +412,8 @@ export function createRaidZonePipeline(
     // About-to-clear heads-up — LAST, and only for a raid genuinely still in the lair: not one that
     // just cleared above, nor one whose roster is already leaving. Deduped once per raid.
     const endingElapsedMs = lane.watch.raidElapsedMs(now);
+    // Persist final classification and Chronicle confirmations, not just the pre-alert state.
+    await persist();
     if (endingElapsedMs !== null && !lane.watch.pendingClear()) {
       const predictedMs = await predictRaidDurationMs();
       if (raidEndingDue(endingElapsedMs, predictedMs, watch.raidEndingLeadMs)) {

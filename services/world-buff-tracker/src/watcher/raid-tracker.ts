@@ -104,7 +104,7 @@ export interface RaidObservation {
 interface Slot {
   readonly index: number;
   readonly clears: ClearTracker;
-  readonly labeler: GuildLabelStabilizer;
+  labeler: GuildLabelStabilizer;
   live: LiveSession | null;
   /** The roster as it stood before this poll — what a secondary slot's members were when it ended. */
   lastRoster: ReadonlySet<string>;
@@ -126,6 +126,7 @@ interface LiveSession {
 }
 
 interface EndedSession extends LiveSession {
+  readonly roster: readonly string[];
   readonly endedAt: number;
   readonly confirmedAt: number;
   endReason: SessionEndReason;
@@ -133,7 +134,17 @@ interface EndedSession extends LiveSession {
 }
 
 const ENDED_RETENTION_MS = 2 * 60 * 60_000;
-const ENDED_MAX = 20;
+const ENDED_MAX = 100;
+
+/** Atomic per-lane checkpoint, including provisional ends needed for wipe recovery. */
+export interface RaidTrackerCheckpoint {
+  readonly version: 1;
+  readonly at: number;
+  readonly slots: readonly { index: number; state: ClearTrackerState; live: LiveSession | null }[];
+  readonly ended: readonly EndedSession[];
+  readonly locks: Record<string, number>;
+  readonly seen: readonly WhoPlayer[];
+}
 
 export class RaidTracker {
   readonly #options: RaidTrackerOptions;
@@ -156,6 +167,8 @@ export class RaidTracker {
   #present = 0;
   #presentNames = new Set<string>();
   #complete = true;
+  #lastAt = 0;
+  #restoring = false;
 
   constructor(options: RaidTrackerOptions) {
     this.#options = options;
@@ -193,7 +206,16 @@ export class RaidTracker {
   observe(view: LairView): RaidObservation {
     const names = [...new Set(view.present.map((player) => player.name))];
     for (const player of view.present) this.#seen.set(player.name, player);
-    const census = this.#presence.observe(names, view.at, view.complete);
+    const observed = this.#presence.observe(names, view.at, view.complete);
+    const census = this.#restoring
+      ? { ...observed, blackout: true, gapMs: Math.max(0, view.at - this.#lastAt), arrivals: [], departures: [] }
+      : observed;
+    if (view.complete) this.#restoring = false;
+    this.#lastAt = view.at;
+    const retention = Math.max(ENDED_RETENTION_MS, this.#options.lockoutMs ?? ENDED_RETENTION_MS);
+    for (let i = this.#ended.length - 1; i >= 0; i--) {
+      if (view.at - this.#ended[i]!.confirmedAt >= retention) this.#ended.splice(i, 1);
+    }
     this.#presentNames = new Set(names);
     this.#present = this.#presentNames.size;
     this.#complete = view.complete;
@@ -212,6 +234,9 @@ export class RaidTracker {
     }
 
     const events: RaidLifecycleEvent[] = [];
+    if (view.complete) this.#recover(names, view, events);
+    const locks = this.lockoutSnapshot();
+    for (const slot of this.#slots) slot.clears.restoreLockout(locks);
     for (const slot of [...this.#slots]) {
       slot.lastRoster = new Set(slot.clears.members);
       const obs = slot.clears.observe(this.#namesFor(slot, names, view.at), view.at, false, view.complete);
@@ -230,10 +255,40 @@ export class RaidTracker {
       }
       this.#settle(slot, obs, names, view);
     }
-    this.#detectConcurrent(names, view);
+    this.#detectConcurrent(names, view, events);
     for (const slot of this.#slots) this.#refreshGuild(slot);
     this.#forgetStrangers(names);
     return { events, census };
+  }
+
+  /** Recover any provisional departure (or interrupted raid) independently of the original slot.
+   * Do not guess through an incomplete census or overlap another cohort. */
+  #recover(names: readonly string[], view: LairView, events: RaidLifecycleEvent[]): void {
+    const present = new Set(names);
+    const horizon = this.#options.lockoutMs ?? ENDED_RETENTION_MS;
+    for (const ended of [...this.#ended]) {
+      if (ended.endReason === "kill_confirmed" || view.at - ended.confirmedAt >= horizon) continue;
+      if (ended.roster.some(name => this.#slots.some(s => s.clears.members.has(name)))) continue;
+      const back = ended.roster.filter(name => present.has(name)).length;
+      if (back < this.#floor) continue;
+      let slot = this.#slots.find(s => !s.clears.tracking && s.live === null);
+      if (!slot) {
+        if (this.#slots.length >= this.#maxConcurrent) continue;
+        const index = Array.from({ length: this.#maxConcurrent }, (_, i) => i).find(i => !this.#slots.some(s => s.index === i));
+        if (index === undefined) continue;
+        slot = this.#newSlot(index);
+        slot.clears.restoreLockout(this.lockoutSnapshot());
+        this.#slots.push(slot);
+      }
+      const { roster, endedAt, confirmedAt: _a, endReason: _r, clearSource: _c, ...live } = ended;
+      slot.clears.restore({ formedAt: live.formedAt, number: live.id, roster, peak: Math.max(live.peak, back), belowSince: null });
+      slot.clears.lockExternal(roster, view.at);
+      slot.labeler = new GuildLabelStabilizer(this.#rules);
+      slot.labeler.restore(live.guild);
+      slot.live = { ...live, players: back, resumed: true, resumedAt: view.at, lastConfirmedAt: view.at };
+      this.#ended.splice(this.#ended.indexOf(ended), 1);
+      events.push({ kind: "resumed", number: live.id, elapsedMs: view.at - live.formedAt, awayMs: view.at - endedAt, ...(slot.index > 0 ? { slot: slot.index } : {}) });
+    }
   }
 
   /** Names a slot should see this poll. Slot 0 sees everyone not claimed by another raid (identical to
@@ -266,7 +321,7 @@ export class RaidTracker {
       if (back >= 0) {
         const [revived] = this.#ended.splice(back, 1);
         if (revived) {
-          const { endedAt: _e, confirmedAt: _a, endReason: _r, clearSource: _c, ...live } = revived;
+          const { roster: _roster, endedAt: _e, confirmedAt: _a, endReason: _r, clearSource: _c, ...live } = revived;
           slot.live = { ...live, resumed: true, resumedAt: at };
         }
       }
@@ -309,13 +364,14 @@ export class RaidTracker {
     const live = slot.live;
     if (live === null) return;
     slot.live = null;
-    this.#ended.push({ ...live, endedAt, confirmedAt, endReason: reason, clearSource: source });
+    const roster = [...new Set([...slot.lastRoster, ...slot.clears.members])];
+    this.#ended.push({ ...live, roster, endedAt, confirmedAt, endReason: reason, clearSource: source });
+    slot.clears.forgetCleared();
+    for (const other of this.#slots) other.clears.lockExternal(roster, confirmedAt);
+    slot.labeler = new GuildLabelStabilizer(this.#rules);
     this.#ended.sort((a, b) => b.endedAt - a.endedAt);
     while (this.#ended.length > ENDED_MAX) this.#ended.pop();
-    for (let i = this.#ended.length - 1; i >= 0; i -= 1) {
-      const item = this.#ended[i];
-      if (item && endedAt - item.endedAt > ENDED_RETENTION_MS) this.#ended.splice(i, 1);
-    }
+
   }
 
   /**
@@ -324,7 +380,7 @@ export class RaidTracker {
    * own, arrived together, and arrived AFTER the tracked raid's fill window. Anything else that looks
    * like a second group is reported as ambiguity — never as a confirmed raid.
    */
-  #detectConcurrent(names: readonly string[], view: LairView): void {
+  #detectConcurrent(names: readonly string[], view: LairView, events: RaidLifecycleEvent[]): void {
     this.#ambiguity = null;
     const at = view.at;
     const strong = this.#slots.filter((slot) => {
@@ -367,9 +423,13 @@ export class RaidTracker {
       this.#ambiguity = { kind: "staggered_arrivals", players: best.length, reason: "concurrent raid limit reached" };
       return;
     }
-    const slot = this.#newSlot(Math.max(...this.#slots.map((s) => s.index)) + 1);
+    const index = Array.from({ length: this.#maxConcurrent }, (_, i) => i).find(i => !this.#slots.some(s => s.index === i));
+    if (index === undefined) return;
+    const slot = this.#newSlot(index);
+    slot.clears.restoreLockout(this.lockoutSnapshot());
     this.#slots.push(slot);
-    slot.clears.observe(best.map((entry) => entry.name), at, false, true);
+    const observation = slot.clears.observe(best.map((entry) => entry.name), at, false, true);
+    if (observation.formed) events.push({ kind: "formed", number: observation.formed.number, peak: observation.formed.peak, slot: index });
     this.#settle(slot, null, names, view);
   }
 
@@ -388,9 +448,8 @@ export class RaidTracker {
         primary.guild.kind === "guild" &&
         live.guild.kind === "guild" &&
         primary.guild.label !== live.guild.label;
-      live.confidence = distinct && !live.tainted ? "high" : "tentative";
-    } else {
-      live.confidence = "high";
+      if (distinct && !live.tainted) live.confidence = "high";
+      else if (live.tainted) live.confidence = "tentative";
     }
   }
 
@@ -525,7 +584,7 @@ export class RaidTracker {
       const snap = toSnap(slot.live, slot.clears.members.size);
       live.push(slot.clears.belowSince !== null ? { ...snap, status: "leaving" } : snap);
     }
-    const ended = this.#ended.map((e) => toSnap(e, e.guild.rosterSize, e));
+    const ended = this.#ended.map((e) => toSnap(e, e.roster.length, e));
     const assigned = new Set<string>();
     for (const slot of this.#slots) for (const name of slot.clears.members) if (this.#presentNames.has(name)) assigned.add(name);
     return {
@@ -535,6 +594,31 @@ export class RaidTracker {
       complete: this.#complete,
       unassigned: Math.max(0, this.#present - assigned.size),
     };
+  }
+
+  checkpoint(): RaidTrackerCheckpoint {
+    const slots = this.#slots.flatMap(slot => {
+      const state = slot.clears.snapshot();
+      return state ? [{ index: slot.index, state, live: slot.live ? { ...slot.live } : null }] : [];
+    });
+    return { version: 1, at: this.#lastAt, slots, ended: this.#ended.map(e => ({ ...e })), locks: this.lockoutSnapshot(), seen: [...this.#seen.values()] };
+  }
+
+  restoreCheckpoint(checkpoint: RaidTrackerCheckpoint): void {
+    if (checkpoint.version !== 1 || this.#slots.some(s => s.clears.tracking)) return;
+    this.#lastAt = checkpoint.at;
+    this.#restoring = true;
+    for (const entry of checkpoint.slots) {
+      this.restoreRaidState(entry.state, entry.index);
+      const slot = this.#slots.find(s => s.index === entry.index);
+      if (slot && entry.live) {
+        slot.live = { ...entry.live };
+        slot.labeler.restore(entry.live.guild);
+      }
+    }
+    this.#ended.push(...checkpoint.ended.map(e => ({ ...e })));
+    for (const player of checkpoint.seen) this.#seen.set(player.name, player);
+    this.restoreLockout(checkpoint.locks);
   }
 
   /** The primary raid in progress as a persistable snapshot, or null — to survive a restart. */
