@@ -53,6 +53,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='noxiousModel')policy.noxiousModel={attackModel:null,poisonTrigger:null};
   if(field==='rangedModel')policy.rangedModel={attackPower:null,weaponPolicy:'normalised',normalisedSpeed:2.8,ammoUsesActualSpeed:true,missPct:null,critPct:null,blockPct:0,blockValue:0,critSuppressionPct:0,criticalMultiplier:2,order,ammoPerShot:1};
  }
+ if(rank.abilityId==='shaman:frost-shock')policy.frostShockModel=null; // Explicit {durationMs,slowPct} for target debuff interactions.
  return policy;
 }
 export function rotationReferenceTemplate(build,gearById={}){
