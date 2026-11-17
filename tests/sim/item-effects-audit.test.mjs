@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {classifyEquipmentEffect,equipmentItemAudit,equipmentSetAudit,parseItemSet,weaponSkillBonus} from '../../docs/sim/core/item-effects.mjs';
+import {equipmentListingWithDetail,listingRestriction} from '../../docs/sim/core/items.mjs';
 import {combineScopedEquipment,applyScopedEquipment} from '../../docs/sim/core/equipment-scopes.mjs';
 import {characterStats,enchantStats} from '../../docs/sim/core/character-stats.mjs';import {newBuild} from '../../docs/sim/core/builds.mjs';import {ENCHANTS,validEnchant} from '../../docs/sim/core/equipment-options.mjs';
 const root=new URL('../../docs/sim/data/',import.meta.url),load=n=>JSON.parse(fs.readFileSync(new URL(n,root),'utf8'));
@@ -110,7 +111,7 @@ test('single pet damage bonus requires an explicitly selected pet',()=>{const e=
 
 test('compound item bonuses split static and scoped contributions without losing either',()=>{
  const a=equipmentItemAudit(item(33632));
- assert.equal(a.stats.spellCrit,1);
+ assert.equal(a.stats.spellCrit,2); // separate +1% static line and +1% compound line
  const scoped=combineScopedEquipment(a.effects);
  const dot=applyScopedEquipment(scoped,{name:'Corruption',tags:['Shadow periodic damage']},{damage:100});
  assert.equal(dot.damage,101);
@@ -142,4 +143,9 @@ test('shield, movement and outdoor context is explicit',()=>{
 test('unquantified utility and combat triggers cannot enter the permanent character stats',()=>{
  for(const raw of ['Equip: Run speed increased slightly.','Equip: Allows underwater breathing.','Equip: Immune to Disarm.'])assert.equal(classifyEquipmentEffect(raw).status,'utility');
  for(const raw of ['Equip: Chance to discharge electricity causing 100 to 151 Nature damage to your target.','Your Greater Heals now have a heal over time component equivalent to a rank 5 Renew.'])assert.equal(classifyEquipmentEffect(raw).status,'event');
+});
+
+test('source-confirmed obsolete record is excluded and retained items use detail metadata',()=>{
+ const obsolete=eq.find(x=>x.id===5410);assert.ok(obsolete);assert.equal(equipmentListingWithDetail(obsolete,details[5410]),null);assert.match(listingRestriction(obsolete,newBuild('warrior'),'mainhand'),/no equipment slot/i);
+ const normalized=eq.map(x=>equipmentListingWithDetail(x,details[x.id])).filter(Boolean);assert.equal(normalized.length,14086);for(const x of normalized){assert.ok(details[x.id]);assert.equal(x.slot,details[x.id].slot);assert.equal(x.name,details[x.id].name);}
 });
