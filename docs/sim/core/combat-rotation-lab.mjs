@@ -1,5 +1,5 @@
 import {companionTemplate} from './combat-companion-reference.mjs';
-import {elementalShieldTemplate} from './combat-elemental-shield.mjs';
+import {elementalShieldTemplate,lightningStrikeTemplate} from './combat-elemental-shield.mjs';
 import {sealTemplate} from './combat-seal-reference.mjs';
 import {imbueTemplate} from './combat-imbue-reference.mjs';
 import {poisonTemplate} from './combat-poison-reference.mjs';
@@ -31,6 +31,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='sealModel')policy.sealModel=sealTemplate(rank.abilityId,rank.record.fields);
   if(field==='elementalShieldModel')policy.elementalShieldModel=elementalShieldTemplate(rank);
+  if(field==='lightningStrikeModel')policy.lightningStrikeModel=lightningStrikeTemplate();
   if(field==='judgementPolicy')policy.judgementPolicy={consume:null};
   if(field==='crusaderModel')policy.crusaderModel={apCoefficient:null,weaponCoefficient:null,spellPowerCoefficient:null,weaponPolicy:null,normalisedSpeed:null,holyBonusMultiplier:1};
   if(field==='arcaneShotModel')policy.arcaneShotModel={flatDamage:null,weaponCoefficient:null,spellPowerCoefficient:null,defense:null};
