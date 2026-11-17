@@ -4,10 +4,7 @@ on:
     branches:
       - 'audit/talent-effects-*'
     paths:
-      - 'docs/sim/core/character-stats.mjs'
-      - 'docs/sim/core/talent-effects.mjs'
-      - 'docs/sim/core/talent-rules.mjs'
-      - 'docs/sim/planner.mjs'
+      - 'docs/sim/**'
       - 'tests/sim/**'
       - '.github/workflows/talent-branch-tests.yml'
   workflow_dispatch:
@@ -30,6 +27,8 @@ jobs:
           node --check docs/sim/core/character-stats.mjs
           node --check docs/sim/core/talent-effects.mjs
           node --check docs/sim/core/talent-rules.mjs
+          node --check docs/sim/core/talent-calculations.mjs
+          node --check docs/sim/core/class-options.mjs
       - name: Class audit and existing planner regression suite
         run: node --test tests/sim/*.test.mjs
       - name: Source importer checks
