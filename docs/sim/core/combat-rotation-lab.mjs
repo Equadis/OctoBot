@@ -24,6 +24,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='costOverride')policy.costOverride=null;
+  if(field==='holyShockModel')policy.holyShockModel={role:null,coefficient:null,resetChance:null,resetTrigger:null};
   if(field==='weaponDamageModel')policy.weaponDamageModel={coefficient:null,flatDamage:null};
   if(field==='stancePolicy')policy.stancePolicy=null;
   if(field==='consecrationModel')policy.consecrationModel={baseTick:null,coefficient:null,tickMultipliers:[null,null,null,null,null,null,null,null],tickCanMiss:null};

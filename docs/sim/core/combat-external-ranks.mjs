@@ -1,4 +1,4 @@
-// Pinned third-party reference values. Not OctoWoW observations. Exact current-server costs and effects require validation.
+// Pinned third-party reference values and staging-database observations. Not live OctoWoW observations. Exact current-server costs and effects require validation.
 export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
   {
     "classId": "rogue",
@@ -1407,6 +1407,110 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "targetPolicy",
       "consecrationModel",
       "acceptSourceConflict"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:flash-of-light",
+    "spellId": 51743,
+    "rank": 7,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 180,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 428,
+        "max": 494
+      }
+    ],
+    "source": "https://forge.octowow.st/database/?spell=51743",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-staging-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:flash-of-light",
+      "spellId": 51743,
+      "rank": 7,
+      "level": 60,
+      "fields": {
+        "school": "holy",
+        "staging": true
+      },
+      "unknown": [
+        "production client rank, coefficients, proc rates and timing"
+      ],
+      "conflicts": [],
+      "status": "staging-database-reference",
+      "source": "https://forge.octowow.st/database/?spell=51743",
+      "liveVerified": false
+    },
+    "requiredPolicy": [
+      "componentCoefficients"
+    ]
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:holy-shock",
+    "spellId": 51786,
+    "rank": 4,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 485,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 628,
+        "max": 681
+      }
+    ],
+    "source": "https://forge.octowow.st/database/?spell=51786",
+    "referenceSource": "https://octowow.st/index.php/paladin",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-staging-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:holy-shock",
+      "spellId": 51786,
+      "rank": 4,
+      "level": 56,
+      "fields": {
+        "school": "holy",
+        "staging": true
+      },
+      "unknown": [
+        "production client rank, coefficients, proc rates and timing"
+      ],
+      "conflicts": [],
+      "status": "staging-database-reference",
+      "source": "https://forge.octowow.st/database/?spell=51786",
+      "liveVerified": false
+    },
+    "damageComponent": {
+      "kind": "damage",
+      "stat": "holy",
+      "coefficient": null,
+      "min": 256,
+      "max": 272
+    },
+    "referenceCooldownMs": 20000,
+    "requiredPolicy": [
+      "holyShockModel"
     ]
   }
 ]);

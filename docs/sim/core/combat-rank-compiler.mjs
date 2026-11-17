@@ -28,10 +28,12 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  const provenance=string(policy?.provenance,'ruleset provenance');
  const kind=rank.mode,abilityName=ROTATION_REGISTRY[build.classId].abilityRegistry[rank.abilityId]?.name;
  if(!abilityName)throw new Error('Unregistered rank');
+ const shock=rank.requiredPolicy?.includes('holyShockModel')?policy.holyShockModel:null;let modelName=abilityName;
+ if(rank.requiredPolicy?.includes('holyShockModel')){if(!shock||!['heal','damage'].includes(shock.role))throw new Error('Explicit Holy Shock role required');if(shock.role==='damage')rank.components=[rank.damageComponent];rank.components[0]={...rank.components[0],coefficient:finite(shock.coefficient,'Holy Shock coefficient')};modelName=abilityName+(shock.role==='heal'?' (healing)':' (damage)');const chance=finite(shock.resetChance,'Holy Shock reset chance');if(chance>1)throw new Error('Invalid Holy Shock reset chance');if(!['always','landed'].includes(shock.resetTrigger))throw new Error('Explicit Holy Shock reset trigger required');if(!Number.isFinite(policy.cooldownMs)||policy.cooldownMs<=0)throw new Error('Explicit positive Holy Shock cooldown required');}
  if(rank.weaponSubclass!==undefined&&gear.mainhand?.subclass!==rank.weaponSubclass)throw new Error('Rank requires appropriate main-hand weapon');
  if(['warrior','rogue'].includes(build.classId)&&gear.mainhand?.classs!==2)throw new Error('Main-hand weapon required');
  const gcd=finite(policy.gcdMs,'global cooldown'),cooldown=finite(policy.cooldownMs,'rank cooldown'),cost=rank.requiredPolicy?.includes('costOverride')?finite(policy.costOverride,'observed rank cost override'):rank.cost;
- const mv=models(build.classId,abilityName,audit,{manaCost:cost,energyCost:cost,rageCost:cost,castSeconds:rank.castMs/1000,gcdSeconds:gcd/1000,cooldownSeconds:cooldown/1000,rangeYards:rank.maxRange});
+ const mv=models(build.classId,modelName,audit,{manaCost:cost,energyCost:cost,rageCost:cost,castSeconds:rank.castMs/1000,gcdSeconds:gcd/1000,cooldownSeconds:cooldown/1000,rangeYards:rank.maxRange});
  const v=mv.values;
  const stats={attackPower:snap.attackPower,healingPower:snap.healingPower,...snap.schools};
  const physical=rank.components.some(x=>['weapon','combo','execute','physical-ap'].includes(x.kind)),usesWeapon=rank.components.some(x=>x.kind==='weapon');
@@ -49,7 +51,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  const effects=[];
  for(const [index,component] of rank.components.entries()){
   const isWeapon=component.kind==='weapon',isCombo=component.kind==='combo',isExecute=component.kind==='execute',isAP=component.kind==='physical-ap',isRanged=component.kind==='ranged-weapon',isBleed=component.kind==='combo-bleed',isPhysical=isWeapon||isCombo||isExecute||isAP||isBleed,periodic=component.kind.startsWith('periodic-')||isBleed,heal=component.kind.endsWith('heal');
-  const componentName=periodic&&rank.components.length>1?abilityName+' (periodic)':abilityName;
+  const componentName=periodic&&rank.components.length>1?modelName+' (periodic)':modelName;
   const m=models(build.classId,componentName,audit,{durationSeconds:periodic?(component.durationMs??component.durations?.[0])/1000:undefined});
   const mods=m.modifiers,values=m.values;
   if(component.kind==='combo-aura'){if(!['preserve-progress','reset','next-swing'].includes(policy.swingHastePolicy))throw new Error('Explicit combo haste swing policy required');const durations=component.durations.map(ms=>roundMs((ms/1000+(mods.durationIncreaseSeconds||0))*(1+(mods.durationPct||0)/100)));effects.push({kind:'aura',when:'always',auraTarget:'actor',durationByCombo:durations,aura:{id:rank.abilityId,name:abilityName,kind:'buff',durationMs:durations[0],maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'meleeHasteFactor',mode:'multiplyPct',value:component.hastePct}]}});continue;}
@@ -84,6 +86,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
   // A null model means threat is unknown, not zero.
   effects.push({kind:isBleed?'periodic-damage':isPhysical||isRanged?'damage':component.kind,when:component.reusePreviousHit?'landed':'always',school:isPhysical||isRanged?'physical':heal?rank.record.fields.school:component.stat,formula,outcomes,mitigation,flatReduction:0,threat,...(isExecute?{additionalResource:{resource:'rage',coefficient:finite(policy.executeModel?.extraRageCoefficient,'execute extra rage coefficient'),cap:finite(policy.executeModel?.extraRageCap,'execute extra rage cap'),payment:policy.executeModel?.payment}}:{}),...(periodic?{durationMs:roundMs(values.durationSeconds),...(isBleed?{durationByCombo:component.durations.map(ms=>roundMs((ms/1000+(mods.durationIncreaseSeconds||0))*(1+(mods.durationPct||0)/100)))}:{}),intervalMs:component.intervalMs,...(decay?{tickMultipliers:decay.tickMultipliers}:{}),refresh:policy.refresh,tickAtExpiry:explicitBool(policy.tickAtExpiry,'tick-at-expiry policy'),snapshot:policy.snapshot,applicationOutcomes,auraName:abilityName,reusePreviousHit:component.reusePreviousHit===true}:{})});
  }
+ if(shock&&shock.resetChance>0)effects.push({kind:'proc',when:shock.resetTrigger,id:'holy-shock-reset',chance:shock.resetChance,internalCooldownMs:0,effects:[{kind:'cooldown-reset',when:'always',abilityId:rank.abilityId}]});
  if(rank.consumePeriodic)effects.push({kind:'consume-periodic',when:explicitBool(policy.consumeOnMiss,'periodic consumption on miss')?'always':'landed',...rank.consumePeriodic});
  if(rank.multiTarget&&policy.targetPolicy!=='ordered-nearby')throw new Error('Explicit ordered nearby-target policy required');
  if(rank.comboGain)effects.push({kind:'combo-gain',when:'landed',points:rank.comboGain});

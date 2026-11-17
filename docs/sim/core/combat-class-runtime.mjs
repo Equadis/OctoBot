@@ -71,6 +71,7 @@ function validateEffects(effects,ctx,depth=0){
    if(!ctx.comboEnabled)throw new Error('Combo effect requires target bank');if(x.points!=='all')int(x.points,'combo spend',1);
   }else if(x.kind==='aura'){
    choose(x.auraTarget,['actor','target'],'aura target');if(!x.aura)throw new Error('Explicit aura required');id(x.aura.id,'aura id');id(x.aura.name,'aura name');choose(x.aura.kind,['buff','debuff'],'aura kind');choose(x.aura.stackPolicy,['replace','add','max'],'stack policy');choose(x.aura.refreshPolicy,['refresh','preserve'],'aura refresh policy');int(x.aura.maxStacks,'max stacks',1);int(x.aura.stacks,'stacks',1);int(x.aura.durationMs,'aura duration',1);if(!Array.isArray(x.aura.modifiers))throw new Error('Explicit aura modifiers required');if(x.durationByCombo){if(!ctx.comboEnabled||!Array.isArray(x.durationByCombo)||!x.durationByCombo.length)throw new Error('Combo duration requires bank');for(const ms of x.durationByCombo)int(ms,'combo duration',1);}
+  }else if(x.kind==='cooldown-reset'){id(x.abilityId,'reset ability id');if(!ctx.abilityIds?.has(x.abilityId))throw new Error('Cooldown reset references unknown action');
   }else if(x.kind==='proc'){
    id(x.id,'proc id');finite(x.chance,'proc chance',0);if(x.chance>1)throw new Error('Invalid proc chance');int(x.internalCooldownMs,'proc ICD');validateEffects(x.effects,ctx,depth+1);
   }else if(x.kind==='class-state'){
@@ -116,6 +117,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   else if(x.kind==='combo-gain'){e.comboPoints.gain(target,x.points);e.recordMechanic('combo-change',{actorId:actor,source,...e.comboPoints.snapshot()});}
   else if(x.kind==='combo-spend'){const spent=e.comboPoints.spend(target,x.points);e.recordMechanic('combo-change',{actorId:actor,source,spent,...e.comboPoints.snapshot()});}
   else if(x.kind==='aura'){const who=x.auraTarget==='actor'?actor:target;const durationMs=x.durationByCombo?x.durationByCombo[e.comboPoints.points(target)-1]:x.aura.durationMs;if(!durationMs)throw new Error('Missing combo duration');e.auras.apply({...x.aura,durationMs,targetId:who,ownerId:actor});}
+  else if(x.kind==='cooldown-reset'){const remaining=e.resources.cooldowns.remaining(x.abilityId);e.resources.cooldowns.reset(x.abilityId);e.recordMechanic('cooldown-reset',{actorId:actor,source,abilityId:x.abilityId,remainingMs:remaining});}
   else if(x.kind==='proc'){const result=attemptProc(e.resources.cooldowns,{id:'proc:'+actor+':'+x.id,chance:x.chance,internalCooldownMs:x.internalCooldownMs},e.random);if(result.proc===true||result.triggered===true||result===true){e.recordMechanic('proc',{actorId:actor,targetId:target,source,procId:x.id});executeEffects(e,actor,target,source+' → '+x.id,x.effects,stats,enemyIds,depth+1,classState);}}
   else if(x.kind==='class-state'){const old=classState[x.key];classState[x.key]=x.value;e.recordMechanic('class-state-change',{actorId:actor,source,key:x.key,before:old,after:x.value});}
   else if(x.kind==='taunt')e.threat.taunt({enemyId:target,actorId:actor,matchHighest:x.matchHighest,forcedMs:x.forcedMs});
@@ -138,7 +140,7 @@ export function createExplicitClassEncounter(input){
  if(sc.comboPoints&&!['rogue','druid'].includes(classId))throw new Error('Combo bank unsupported for class');
  if(sc.petId&&!['hunter','warlock'].includes(classId))throw new Error('Companion engine unsupported for class');
  const actors=new Set([sc.playerId,...(sc.petId?[sc.petId]:[])]),statsFor=actor=>{const s=sc.stats[actor];if(!s)throw new Error('Explicit actor stats missing: '+actor);return s;};
- const classState={...sc.classContext};const contextFor=actor=>({stats:statsFor(actor),pools:sc.pools,comboEnabled:!!sc.comboPoints,classState});
+ const classState={...sc.classContext};const contextFor=actor=>({stats:statsFor(actor),pools:sc.pools,comboEnabled:!!sc.comboPoints,classState,abilityIds:new Set(sc.actions.map(a=>a.abilityId))});
  const actions=sc.actions.map(a=>{
   const ability=profile.abilityRegistry[a.abilityId];if(!ability)throw new Error('Unregistered class ability '+a.abilityId);
   const rank=int(a.rank,'learned rank',1),spellId=int(a.spellId,'spell id',1),learnLevel=int(a.learnLevel,'learn level',1);
