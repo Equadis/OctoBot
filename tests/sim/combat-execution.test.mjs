@@ -35,7 +35,8 @@ test('explicit interrupt cancels damage without implicit resource refund; unknow
  e.timeline.schedule(300,P.tick,()=>e.interrupt('fixture'));const r=e.run();assert.equal(r.totals.enemyDamage,0);assert.equal(r.resources.energy.current,60);assert.ok(r.events.some(x=>x.type==='cast-interrupted'));
  assert.throws(()=>fixture({rows:[row('missing')]}),/Unsupported rotation ability/);
  assert.throws(()=>fixture({rows:[row('hit',[condition('targetTimeToDie','>=',2)])]}).run(),/state unavailable/);
- assert.throws(()=>fixture({actions:[hit('hit',100,{kind:'channel'})]}),/Unsupported execution action kind/);
+ assert.throws(()=>fixture({actions:[hit('hit',100,{kind:'command'})]}),/Unsupported execution action kind/);
+ assert.throws(()=>fixture({actions:[hit('hit',100,{kind:'channel'})]}),/cast duration/);
 });
 test('seeded synthetic encounters replay identically',()=>{
  const make=()=>fixture({actions:[hit('hit',0,{resolve:(e,t)=>e.damage({targetId:t,value:Math.floor(e.random()*100),source:'hit'})})]});
