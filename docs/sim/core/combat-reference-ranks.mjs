@@ -1,6 +1,7 @@
 // Published ranks and distinct Classic reference assumptions. A reference
 // coefficient is not a verified OctoWoW coefficient; all ranks are research-only.
 // Exact rank observations are kept in combat-rank-evidence.mjs.
+import {EXTERNAL_REFERENCE_RANKS} from './combat-external-ranks.mjs';
 import {rankEvidence} from './combat-rank-evidence.mjs';
 const coefficientSource='https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool';
 const c=(kind,stat,coefficient,extra={})=>({kind,stat,coefficient,...extra});
@@ -10,6 +11,10 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
  return {classId,abilityId,spellId,rank:record.rank,learnLevel:record.level,resource,mode,components,record,source:record.source,status:'reference-implementation',liveVerified:false,...extra};
 };
 export const REFERENCE_RANKS=Object.freeze([
+ ...EXTERNAL_REFERENCE_RANKS,
+ row('mage','fireball',10151,'mana','cast',[c('damage','fire',1,{min:561,max:716}),c('periodic-damage','fire',null,{min:18,max:18,durationMs:8000,intervalMs:2000,reusePreviousHit:true})],{cost:275,costSource:'https://octowow.st/index.php/mage',castMs:3500,minRange:0,maxRange:35,referenceSource:'https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/fireball.go',requiredPolicy:['acceptSourceConflict','componentCoefficients'],refreshStrategy:'do-not-gate'}),
+ row('warlock','corruption',11672,'mana','cast',[c('periodic-damage','shadow',.167,{min:111,max:111,durationMs:18000,intervalMs:3000})],{cost:290,castMs:2000,minRange:0,maxRange:30,referenceSource:'https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/corruption.go'}),
+ row('warlock','immolate',11668,'mana','cast',[c('damage','fire',.2,{min:258,max:258}),c('periodic-damage','fire',.13,{min:97,max:97,durationMs:15000,intervalMs:3000,reusePreviousHit:true})],{cost:370,castMs:2000,minRange:0,maxRange:30,referenceSource:'https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/immolate.go'}),
  row('warrior','heroic-strike',11567,'rage','queued-melee',[c('weapon','mainhand',1,{flat:138})],{cost:15,castMs:0,minRange:0,maxRange:5,referenceSource:'https://www.wowhead.com/classic/spell=11567/heroic-strike',learnability:'trainer-reference',requiredPolicy:['flatThreat','weaponPolicy']}),
  row('rogue','backstab',11281,'energy','instant',[c('weapon','mainhand',1.5,{flat:210})],{cost:60,castMs:0,minRange:0,maxRange:5,position:'behind',weaponSubclass:15,comboGain:1,referenceSource:'https://www.wowhead.com/classic/spell=11281/backstab',learnability:'trainer-reference',requiredPolicy:['weaponPolicy','acceptSourceConflict']}),
  row('warlock','shadow-bolt',11661,'mana','cast',[c('damage','shadow',3/3.5,{min:455,max:508})],{cost:370,castMs:3000,minRange:0,maxRange:30,referenceSource:coefficientSource,learnability:'trainer-reference'}),

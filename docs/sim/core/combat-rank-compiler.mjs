@@ -21,6 +21,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  const rank=referenceRank(build.classId,spellId),snap=sheet.combatSnapshot,audit=sheet.talentAudit;
  if(build.level<rank.learnLevel)throw new Error('Rank unavailable at character level');
  if(snap.level!==60)throw new Error('Only level-60 reference coefficients supported');
+ if(rank.status==='external-reference-only'&&policy?.acceptExternalReference!==true)throw new Error('Explicit external reference acknowledgement required');
  if(rank.record.conflicts.length&&policy?.acceptSourceConflict!==true)throw new Error('Explicit source conflict acknowledgement required');
  if(rank.referenceAvailableFromPhase&&policy?.phase<rank.referenceAvailableFromPhase&&policy?.allowFutureRank!==true)throw new Error('Reference book rank not available in selected phase');
  const provenance=string(policy?.provenance,'ruleset provenance');
@@ -28,7 +29,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(!abilityName)throw new Error('Unregistered rank');
  if(rank.weaponSubclass!==undefined&&gear.mainhand?.subclass!==rank.weaponSubclass)throw new Error('Rank requires appropriate main-hand weapon');
  if(['warrior','rogue'].includes(build.classId)&&gear.mainhand?.classs!==2)throw new Error('Main-hand weapon required');
- const gcd=finite(policy.gcdMs,'global cooldown'),cooldown=finite(policy.cooldownMs,'rank cooldown'),cost=rank.cost;
+ const gcd=finite(policy.gcdMs,'global cooldown'),cooldown=finite(policy.cooldownMs,'rank cooldown'),cost=rank.requiredPolicy?.includes('costOverride')?finite(policy.costOverride,'observed rank cost override'):rank.cost;
  const mv=models(build.classId,abilityName,audit,{manaCost:cost,energyCost:cost,rageCost:cost,castSeconds:rank.castMs/1000,gcdSeconds:gcd/1000,cooldownSeconds:cooldown/1000,rangeYards:rank.maxRange});
  const v=mv.values;
  const stats={attackPower:snap.attackPower,healingPower:snap.healingPower,...snap.schools};
@@ -80,7 +81,9 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(rank.comboGain)effects.push({kind:'combo-gain',when:'landed',points:rank.comboGain});
  if(rank.comboSpend)effects.push({kind:'combo-spend',when:explicitBool(policy.spendOnMiss,'finisher spend on miss')?'always':'landed',points:'all'});
  const action={abilityId:rank.abilityId,spellId,rank:rank.rank,learnLevel:rank.learnLevel,source:rank.source,evidenceStatus:'reference',actorId,kind,castMs:roundMs(v.castSeconds),gcdMs:roundMs(v.gcdSeconds),cooldownMs:roundMs(v.cooldownSeconds),sharedCooldown:null,costs:[{resource:rank.resource,amount:rank.resource==='mana'?v.manaCost:rank.resource==='rage'?v.rageCost:v.energyCost}],targets:[rank.components.every(c=>c.kind.endsWith('heal'))?'ally':'enemy'],minRangeYards:rank.minRange,maxRangeYards:v.rangeYards,position:rank.position??null,comboRequired:rank.comboSpend?1:null,requiredContext:null,effects,...(kind==='queued-melee'?{swingId:'mainhand'}:{})};
- if(build.classId==='priest'&&build.classOptions?.form==='Shadowform'&&action.targets[0]==='ally')throw new Error('Holy healing unavailable in Shadowform');
+ if(action.kind==='cast'&&action.castMs===0)action.kind='instant';
+ if(rank.sharedCooldownGroup)action.sharedCooldown={group:rank.sharedCooldownGroup,durationMs:action.cooldownMs};
+ if(build.classId==='priest'&&build.classOptions?.form==='Shadowform'&&(action.targets[0]==='ally'||rank.record.fields.school==='holy'))throw new Error('Holy healing unavailable in Shadowform');
  if(build.classId==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)&&action.targets[0]==='ally')throw new Error('Healing requires caster form');
  if(!Number.isFinite(action.costs[0].amount)||!Number.isFinite(action.castMs))throw new Error('Unresolved timing or cost');
  return {action,stats,rank,provenance,matchedTalents:mv.matched,liveVerified:false};

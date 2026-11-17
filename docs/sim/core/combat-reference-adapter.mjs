@@ -65,7 +65,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
   for(const [k,v] of Object.entries(compiled.stats)){if(Number.isFinite(v)&&Object.hasOwn(stats,k)&&stats[k]!==v)throw new Error('Conflicting stat representations: '+k);if(Number.isFinite(v))stats[k]=v;}
   const myRows=normalized.filter(r=>r.abilityId===aid);
   if(myRows.some(r=>(r.target==='ally')!==compiled.action.targets.includes('ally')))throw new Error('Rotation target role mismatch for '+aid);
-  if(encounter.recastPeriodic==='after-expiry'&&compiled.action.effects.some(e=>e.kind.startsWith('periodic')))compiled.action.refreshGate={kind:compiled.action.targets[0]==='ally'?'buff':'debuff',name:ROTATION_REGISTRY[build.classId].abilityRegistry[aid].name,remainingMs:0};
+  if(encounter.recastPeriodic==='after-expiry'&&compiled.rank.refreshStrategy!=='do-not-gate'&&compiled.action.effects.some(e=>e.kind.startsWith('periodic')))compiled.action.refreshGate={kind:compiled.action.targets[0]==='ally'?'buff':'debuff',name:ROTATION_REGISTRY[build.classId].abilityRegistry[aid].name,remainingMs:0};
   actions.push(compiled.action);rankRows.push({abilityId:aid,spellId,rank:compiled.rank.rank,source:compiled.rank.source,referenceSource:compiled.rank.referenceSource,provenance:compiled.provenance});
  }
  if(!['after-expiry','rotation-only'].includes(encounter.recastPeriodic))throw new Error('Explicit periodic recast policy required');

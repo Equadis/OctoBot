@@ -84,7 +84,7 @@ const ABILITIES={
  shaman:[
   sham('Lightning Bolt','Nature','Lightning spells','Lightning Bolt/Chain Lightning'),
   sham('Chain Lightning','Nature','Lightning spells','Lightning Bolt/Chain Lightning'),
-  shock('Earth Shock','Nature'),shock('Flame Shock','Fire'),shock('Frost Shock','Frost'),
+  shock('Earth Shock','Nature'),shock('Flame Shock','Fire'),profile('Flame Shock (periodic)','periodic','Flame Shock','Fire','All spells','Spells','Offensive spells','Fire spells','Shock spells','Periodic magic','Offensive Fire/Frost/Nature'),shock('Frost Shock','Frost'),
   sham('Molten Blast','Fire','Instant spells'),sham('Earthquake','Nature'),
   ...['Healing Wave','Lesser Healing Wave','Chain Heal'].map(n=>heal(n,'Nature')),
   melee('Stormstrike','Physical/imbue attacks'),melee('Lightning Strike','Physical/imbue attacks'),
@@ -109,7 +109,7 @@ const ABILITIES={
   utility('Revive Pet'),profile('Mend Pet','heal-periodic'),utility('Feign Death')
  ].map(p=>['melee','ranged','periodic','unknown'].includes(p.type)?allDmg(allDmg(allDmg(p,'All damage when no pet'),'Beast/Giant/Dragonkin/Humanoid targets'),'These targets'):p),
  mage:[
-  spell('Fireball','Fire'),spell('Fire Blast','Fire'),spell('Scorch','Fire'),
+  spell('Fireball','Fire'),profile('Fireball (periodic)','periodic','Fireball','Fire','All spells','Spells','Offensive spells','Fire spells','Periodic magic'),spell('Fire Blast','Fire'),spell('Scorch','Fire'),
   spell('Pyroblast','Fire'),spell('Flamestrike','Fire'),spell('Blast Wave','Fire'),
   spell('Frostbolt','Frost','Frostbolt/Icicles/Blizzard'),spell('Icicles','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Blizzard','Frost','Frostbolt/Icicles/Blizzard'),
