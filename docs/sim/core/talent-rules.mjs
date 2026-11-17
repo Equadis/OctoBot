@@ -206,6 +206,18 @@ export const TALENT_RULES={
       "when": {
         "aura": "Sanctity Aura"
       }
+    },
+    {
+      "kind": "spell",
+      "scope": "Holy",
+      "stat": "damagePct",
+      "param": 0,
+      "values": [
+        10
+      ],
+      "when": {
+        "aura": "Sanctity Aura"
+      }
     }
   ],
   "451": [
@@ -233,13 +245,19 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Concentration Aura",
       "stat": "effectivenessPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "aura": "Concentration Aura"
+      }
     },
     {
       "kind": "scoped",
       "scope": "Concentration Aura",
       "stat": "resistSilenceInterruptPct",
-      "param": 1
+      "param": 1,
+      "when": {
+        "aura": "Concentration Aura"
+      }
     },
     {
       "kind": "pending",
@@ -313,7 +331,10 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Devotion Aura",
       "stat": "armourBonusPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "aura": "Devotion Aura"
+      }
     }
   ],
   "462": [
@@ -371,9 +392,8 @@ export const TALENT_RULES={
   ],
   "468": [
     {
-      "kind": "scoped",
-      "scope": "Shield",
-      "stat": "blockValuePct",
+      "kind": "special",
+      "stat": "shieldBlockValuePct",
       "param": 0,
       "when": {
         "shield": true
@@ -381,7 +401,7 @@ export const TALENT_RULES={
     },
     {
       "kind": "pending",
-      "note": "Mana restoration on blocking is conditional"
+      "note": "Block-triggered mana restoration requires event simulation"
     }
   ],
   "469": [
@@ -409,8 +429,12 @@ export const TALENT_RULES={
   ],
   "472": [
     {
-      "kind": "pending",
-      "note": "Damage reduction only while Righteous Fury is active; no Righteous Fury state control"
+      "kind": "special",
+      "stat": "damageTakenReductionPct",
+      "param": 0,
+      "when": {
+        "righteousFury": "On"
+      }
     }
   ],
   "473": [
