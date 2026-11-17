@@ -1,0 +1,37 @@
+name: World Chat production smoke check
+on:
+  push:
+    branches: [diagnostic/world-chat-live-20261117]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check public endpoints (counts and status only)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse, urllib.error
+          root='https://octometrics.eqvoice.workers.dev'
+          for realm in ("N'Zoth","Y'Shaarj","C'Thun"):
+            for route,params in [
+              ('/api/world-chat',{'realm':realm}),
+              ('/api/world-chat/history',{'realm':realm,'feed':'world'}),
+              ('/api/world-chat/history',{'realm':realm,'feed':'gm'}),
+              ('/api/world-chat/history',{'realm':realm,'feed':'world','q':'LFG'})]:
+              try:
+                req=urllib.request.Request(root+route+'?'+urllib.parse.urlencode(params),headers={'Origin':'https://equadis.github.io','User-Agent':'OctoBot public smoke check'})
+                with urllib.request.urlopen(req,timeout=12) as r:
+                  d=json.load(r)
+                  print(json.dumps({'route':route,'params':params,'http':r.status,'cors':r.headers.get('Access-Control-Allow-Origin'),'status':d.get('status'),'items':len(d.get('items',[])),'world':len(d.get('world',[])),'gm':len(d.get('gm',[])),'pageSize':d.get('pageSize'),'retentionDays':d.get('retentionDays'),'hasMore':d.get('hasMore'),'lastCollectorAt':d.get('lastCollectorAt')}),flush=True)
+              except urllib.error.HTTPError as e:
+                try:
+                  d=json.load(e)
+                  error=d.get('error');code=d.get('code')
+                except Exception: error='non-JSON response';code=None
+                print(json.dumps({'route':route,'params':params,'http':e.code,'error':error,'code':code}),flush=True)
+              except Exception as e:
+                print(json.dumps({'route':route,'params':params,'failure':str(e)}),flush=True)
+          PY
