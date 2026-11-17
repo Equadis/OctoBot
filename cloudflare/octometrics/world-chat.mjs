@@ -1,18 +1,20 @@
 import {cleanText,listingKinds} from "./world-chat-classify.mjs";
+import {publicChatMessage} from "../../docs/world-chat/chat-links.mjs";
 import {analyseRecruitment,classInfo} from "../../docs/world-chat/lfg-catalog.mjs";
 const REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
 const SOURCES={"N'Zoth":"OBPVESW","Y'Shaarj":"OBPVPSW","C'Thun":"OBHCSW"};
 const TTL=300000, HISTORY=1800000;
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
-const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,message:r.message,gm:!!r.gm,time:r.observed_ms});
+const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
 export function validLine(line,now){
   if(!line||typeof line!=="object"||typeof line.id!=="string"||!/^[a-f0-9-]{36}$/i.test(line.id)||
     typeof line.authorKey!=="string"||!/^[0-9]{1,20}$/.test(line.authorKey)||line.authorKey==="0"||
     typeof line.author!=="string"||line.author.length>80||typeof line.message!=="string"||line.message.length>1200||
     typeof line.gm!=="boolean"||!Number.isSafeInteger(line.time)||line.time<now-120000||line.time>now+5000)return null;
-  const message=cleanText(line.message),author=cleanText(line.author);
-  if(!message||!author)return null;
-  return {...line,author,message};
+  const storedMessage=line.message.replace(/[\u0000-\u001f\u007f]/g," ").trim();
+  const {message}=publicChatMessage(storedMessage),author=cleanText(line.author);
+  if(!message.trim()||!author)return null;
+  return {...line,author,message,storedMessage};
 }
 export async function worldChatRoute(request,env){
   const url=new URL(request.url);
@@ -37,9 +39,9 @@ export async function worldChatRoute(request,env){
     }
     for(const raw of payload.messages){
       const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
-      statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.message,Number(l.gm)));
+      statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.storedMessage,Number(l.gm)));
       if(!l.gm)for(const {kind,tag} of listingKinds(l.message).slice(0,3)){
-        statements.push(db.prepare("INSERT INTO world_chat_listings(realm,kind,author_key,tag,author,message,observed_ms) VALUES(?,?,?,?,?,?,?) ON CONFLICT(realm,kind,author_key,tag) DO UPDATE SET author=excluded.author,message=excluded.message,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_listings.observed_ms").bind(payload.realm,kind,l.authorKey,tag,l.author,l.message,l.time));
+        statements.push(db.prepare("INSERT INTO world_chat_listings(realm,kind,author_key,tag,author,message,observed_ms) VALUES(?,?,?,?,?,?,?) ON CONFLICT(realm,kind,author_key,tag) DO UPDATE SET author=excluded.author,message=excluded.message,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_listings.observed_ms").bind(payload.realm,kind,l.authorKey,tag,l.author,l.storedMessage,l.time));
       }
     }
     // Heartbeat is sent only after a valid World packet was seen on this connection.
@@ -57,7 +59,7 @@ export async function worldChatRoute(request,env){
       db.prepare("SELECT observed_ms FROM world_chat_heartbeat WHERE realm=?").bind(realm)
     ]);
     const last=heartbeat.results[0]?.observed_ms??null;
-    const listings=r=>r.results.map(x=>({tag:x.tag,author:x.author,guild:x.guild??null,level:x.level??null,classId:x.class_id??null,message:x.message,time:x.observed_ms,expiresAt:x.observed_ms+TTL}));
+    const listings=r=>r.results.map(x=>({tag:x.tag,author:x.author,guild:x.guild??null,level:x.level??null,classId:x.class_id??null,...publicChatMessage(x.message),time:x.observed_ms,expiresAt:x.observed_ms+TTL}));
     return reply({realm,generatedAt:now,lastCollectorAt:last,status:last===null?"waiting":now-last>45000?"stale":"live",world:world.results.map(publicLine).reverse(),gm:gm.results.map(publicLine).reverse(),lfg:listings(lfg),wtb:listings(wtb),wts:listings(wts)});
   }
   return reply({error:"method not allowed"},405);

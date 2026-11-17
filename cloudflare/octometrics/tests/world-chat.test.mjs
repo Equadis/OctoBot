@@ -87,3 +87,37 @@ test("catalogue, distinct wings, Octo instances and ambiguous shorthand",()=>{
  assert.deepEqual(filterListings(rows,{kind:"dungeon",role:"Tank",query:"wailing",blacklist:"boost"},10).map(x=>x.author),["A"]);
  assert.deepEqual(filterListings(rows,{kind:"raid",intent:"LFG",blacklist:"dps"},10),[]);
 });
+
+import {parseChatMessage,publicChatMessage,appendChatMessage} from "../../../docs/world-chat/chat-links.mjs";
+test("item links preserve numeric IDs, quality colours, surrounding text and multiple items",()=>{
+ const raw="WTS |cff1eff00|Hitem:18329:0:0:0|h[Arcanum of Rapidity]|h|r 50g, |cff0070dd|Hitem:16712:0:0:0|h[Shadowcraft Gloves]|h|r 90g";
+ const parts=publicChatMessage(raw);
+ assert.equal(parts.message,"WTS [Arcanum of Rapidity] 50g, [Shadowcraft Gloves] 90g");
+ assert.deepEqual(parts.parts.filter(x=>x.itemId),[{text:"[Arcanum of Rapidity]",itemId:18329,colour:"#1eff00"},{text:"[Shadowcraft Gloves]",itemId:16712,colour:"#0070dd"}]);
+ assert.equal(validLine({time:Date.now(),id:"12345678-1234-1234-1234-123456789abc",authorKey:"1",author:"Player",message:raw,gm:false},Date.now()).storedMessage,raw);
+ assert.deepEqual(listingKinds(parts.message).map(x=>x.kind),["wts"]);
+});
+test("safe markup, escaped pipes, unsupported link types and malformed IDs",()=>{
+ assert.deepEqual(publicChatMessage("WTB [Shadowcraft Gloves]"),{message:"WTB [Shadowcraft Gloves]"});
+ assert.deepEqual(publicChatMessage("|Hurl:javascript:alert(1)|h[evil]|h"),{message:"[evil]"});
+ assert.deepEqual(publicChatMessage("|Hitem:0|h[bad]|h |Hitem:2147483648|h[bad2]|h"),{message:"[bad] [bad2]"});
+ assert.equal(parseChatMessage("||Hitem:1|h[test]|h").parts.some(x=>x.itemId),false);
+ assert.equal(parseChatMessage("|cff123456|Hitem:1|h[Item]|h|r").parts[0].colour,"#ffffff");
+ const doc={createTextNode:text=>({text}),createElement:tag=>({tag,style:{}})},parent={ownerDocument:doc,children:[],append(x){this.children.push(x)}};
+ appendChatMessage(parent,{message:"<img> [test]",parts:[{text:"<img> "},{text:"[test]",itemId:16712,colour:"red; background:url(evil)"}]});
+ assert.deepEqual(parent.children[0],{text:"<img> "});
+ assert.equal(parent.children[1].href,"https://octowow.st/db/?item=16712");assert.equal(parent.children[1].rel,"noopener noreferrer");assert.equal(parent.children[1].style.color,"#ffffff");
+ appendChatMessage(parent,{message:"[Not a link]",parts:[{text:"different",itemId:1}]});assert.deepEqual(parent.children.at(-1),{text:"[Not a link]"});
+});
+test("item markup survives real SQL storage and listing refresh; legacy plain text remains plain",async()=>{
+ const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
+ const now=Date.now(),id=i=>"12345678-1234-1234-1234-"+String(i).padStart(12,"0");
+ const line=(i,message)=>({id:id(i),time:now+i,authorKey:"1",author:"Player",gm:false,message});
+ const send=messages=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm:"N'Zoth",account:"OBPVESW",channel:"world",messages})}),env);
+ try{
+  assert.equal((await send([line(1,"WTB [Shadowcraft Gloves]"),line(2,"WTB |cff0070dd|Hitem:16712:0:0:0|h[Shadowcraft Gloves]|h|r")])).status,202);
+  const data=await (await worldChatRoute(new Request(base),env)).json();
+  assert.equal(data.world.length,2);assert.equal(data.world[0].parts,undefined);assert.equal(data.world[1].parts[1].itemId,16712);
+  assert.equal(data.wtb.length,1);assert.equal(data.wtb[0].parts[1].colour,"#0070dd");assert.equal(data.wtb[0].message,"WTB [Shadowcraft Gloves]");
+ }finally{DB.sql.close();}
+});

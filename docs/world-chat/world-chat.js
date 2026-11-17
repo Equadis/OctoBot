@@ -1,4 +1,5 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
+import {appendChatMessage} from "./chat-links.mjs";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -10,8 +11,9 @@ function empty(parent,message){parent.replaceChildren(node("div","chat-empty",me
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
-  const author=(row.gm?"<GM> ":"")+row.author+(row.guild?" <"+row.guild+">":"")+":";
-  content.append(node("span","chat-author",author),document.createTextNode(" "+row.message));
+  if(row.gm)content.append(node("span","chat-gm-tag","<GM> "));
+  content.append(node("span","chat-author",row.author+(row.guild?" <"+row.guild+">":"")),document.createTextNode(": "));
+  appendChatMessage(content,row);
   parent.append(content);
 }
 function drawFeed(key,rows){
@@ -84,15 +86,15 @@ function drawLfg(now){
    entries.sort((a,b)=>filters.sort==="oldest"?a.time-b.time:b.time-a.time);
    for(const row of entries){
     const info=analyseRecruitment(row.message),line=node("div","lfg-row"),body=node("div","lfg-body"),author=node("button","lfg-player",row.author);author.type="button";author.disabled=row.author==="Unknown player";author.title="Copy /w "+row.author;author.addEventListener("click",()=>copyWhisper(row.author));
-    const cls=classInfo[row.classId];if(cls)author.style.color=cls[1];
+    const cls=classInfo[row.classId];
     const who=node("div","lfg-who");who.append(author);
     if(row.guild)who.append(node("span","lfg-guild"," <"+row.guild+">"));
-    if(row.level||cls)who.append(node("span","lfg-meta"," · "+[row.level&&"Lvl "+row.level,cls?.[0]].filter(Boolean).join(" ")));
+    if(row.level||cls){const meta=node("span","lfg-meta"," · "+(row.level?"Lvl "+row.level+(cls?" ":""):""));if(cls){const classLabel=node("span","lfg-class",cls[0]);classLabel.style.color=cls[1];meta.append(classLabel);}who.append(meta);}
     const badges=node("div","lfg-badges");
     if(info.intent!=="Unspecified")badges.append(node("span","lfg-chip",info.intent));
     for(const role of info.roles)badges.append(node("span","lfg-chip role-"+role.toLowerCase(),role));
     if(info.needed)badges.append(node("span","lfg-chip","LF"+info.needed));
-    body.append(who,badges,node("div","lfg-message",row.message));
+    const message=node("div","lfg-message");appendChatMessage(message,row);body.append(who,badges,message);
     const expiry=node("span","list-expiry");expiry.dataset.expires=row.expiresAt;
     line.append(body,expiry);section.append(line);
    }
