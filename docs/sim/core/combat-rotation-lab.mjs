@@ -49,6 +49,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='consumeOnMiss')policy.consumeOnMiss=null;
   if(field==='executeModel')policy.executeModel={baseDamage:null,extraRageCoefficient:null,extraRageCap:null,payment:null};
   if(field==='physicalAPModel')policy.physicalAPModel={coefficient:null,flatDamage:null};
+  if(field==='noxiousModel')policy.noxiousModel={attackModel:null,poisonTrigger:null};
   if(field==='rangedModel')policy.rangedModel={attackPower:null,weaponPolicy:'normalised',normalisedSpeed:2.8,ammoUsesActualSpeed:true,missPct:null,critPct:null,blockPct:0,blockValue:0,critSuppressionPct:0,criticalMultiplier:2,order,ammoPerShot:1};
  }
  return policy;
