@@ -9,6 +9,18 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "2": [
+    {
+      "kind": "pending",
+      "note": "Impact stuns on Fire spell proc; target crowd-control state pending"
+    }
+  ],
+  "3": [
+    {
+      "kind": "pending",
+      "note": "Ignite creates a DoT after Fire spell critical strikes; no event-driven periodic damage model"
+    }
+  ],
   "4": [
     {
       "kind": "scoped",
@@ -56,6 +68,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "8": [
+    {
+      "kind": "pending",
+      "note": "Pyroblast is an active Fire direct-plus-DoT spell; requires ability ranks and cast/target resolution"
+    }
+  ],
   "9": [
     {
       "kind": "scoped",
@@ -76,6 +94,24 @@ export const TALENT_RULES={
       "note": "Fire Vulnerability debuff application and duration are target-state mechanics, not permanent personal Fire damage"
     }
   ],
+  "11": [
+    {
+      "kind": "pending",
+      "note": "Improved Fire Ward can reflect a Fire spell while Fire Ward aura is active, requiring incoming spell events"
+    }
+  ],
+  "12": [
+    {
+      "kind": "pending",
+      "note": "Master of Elements refunds mana only after Fire/Frost spell critical strikes"
+    }
+  ],
+  "13": [
+    {
+      "kind": "pending",
+      "note": "Blast Wave is an active area Fire spell with target daze"
+    }
+  ],
   "14": [
     {
       "kind": "spell",
@@ -84,12 +120,24 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "15": [
+    {
+      "kind": "pending",
+      "note": "Hot Streak generates temporary stacked Pyroblast cast-time reduction after Fireball/Fire Blast crits"
+    }
+  ],
   "16": [
     {
       "kind": "spell",
       "scope": "Fire",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "17": [
+    {
+      "kind": "pending",
+      "note": "Combustion is an active accumulating Fire crit buff that expires after three Fire critical hits"
     }
   ],
   "18": [
@@ -137,6 +185,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "22": [
+    {
+      "kind": "pending",
+      "note": "Frostbite freezes targets probabilistically when Chill effects apply"
+    }
+  ],
   "23": [
     {
       "kind": "scoped",
@@ -165,6 +219,18 @@ export const TALENT_RULES={
       "scope": "Frost",
       "stat": "criticalDamagePct",
       "param": 0
+    }
+  ],
+  "26": [
+    {
+      "kind": "pending",
+      "note": "Cold Snap resets eligible Frost cooldowns on use"
+    }
+  ],
+  "27": [
+    {
+      "kind": "pending",
+      "note": "Improved Blizzard applies a movement slow with Blizzard ticks; needs target aura and time modelling"
     }
   ],
   "28": [
@@ -201,6 +267,18 @@ export const TALENT_RULES={
       "note": "Shatter's critical bonus only applies to frozen targets"
     }
   ],
+  "31": [
+    {
+      "kind": "pending",
+      "note": "Ice Block temporarily prevents damage but disables actions; cannot add permanent damage immunity"
+    }
+  ],
+  "32": [
+    {
+      "kind": "pending",
+      "note": "Icicles is a channeled attack with stationary state and a damage-reactive explosion"
+    }
+  ],
   "33": [
     {
       "kind": "scoped",
@@ -213,6 +291,18 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Winter's Chill adds a stackable target debuff and is not player passive critical strike chance"
+    }
+  ],
+  "35": [
+    {
+      "kind": "pending",
+      "note": "Flash Freeze triggers only when freeze fails due to permanent target immunity and changes Icicles cooldown"
+    }
+  ],
+  "36": [
+    {
+      "kind": "pending",
+      "note": "Ice Barrier is a temporary shield with a conditional active Frost damage benefit, not permanent spell damage"
     }
   ],
   "37": [
@@ -249,6 +339,14 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "39": [
+    {
+      "kind": "scoped",
+      "scope": "Arcane Missiles channel",
+      "stat": "pushbackAvoidancePct",
+      "param": 0
+    }
+  ],
   "40": [
     {
       "kind": "scoped",
@@ -271,12 +369,59 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "42": [
+    {
+      "kind": "pending",
+      "note": "Arcane Concentration generates Clearcasting with hit-proc chance and internal cooldown; next-spell mana state pending"
+    }
+  ],
+  "43": [
+    {
+      "kind": "scoped",
+      "scope": "Amplify/Dampen Magic",
+      "stat": "effectivenessPct",
+      "param": 0,
+      "values": [
+        100
+      ]
+    },
+    {
+      "kind": "pending",
+      "note": "Target eligibility and currently active magic buff are not modelled"
+    }
+  ],
   "44": [
     {
       "kind": "spell",
       "scope": "Arcane",
       "stat": "crit",
       "param": 0
+    }
+  ],
+  "45": [
+    {
+      "kind": "pending",
+      "note": "Arcane Rupture is an active Arcane hit and a timed Arcane Missiles damage/mana-cost aura"
+    }
+  ],
+  "46": [
+    {
+      "kind": "scoped",
+      "scope": "Mana Shield",
+      "stat": "manaLossReductionPct",
+      "param": 0
+    }
+  ],
+  "47": [
+    {
+      "kind": "pending",
+      "note": "Improved Counterspell applies silence only after a successful Counterspell"
+    }
+  ],
+  "48": [
+    {
+      "kind": "pending",
+      "note": "Temporal Convergence procs cooldown resets and refunds Arcane Rupture mana after Arcane Missiles events"
     }
   ],
   "49": [
@@ -289,6 +434,18 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Regeneration is tripled below 35% mana and requires a resource model"
+    }
+  ],
+  "50": [
+    {
+      "kind": "pending",
+      "note": "Arcane Instability has a chance to spend base mana for bonus Arcane damage on successful spells"
+    }
+  ],
+  "51": [
+    {
+      "kind": "pending",
+      "note": "Presence of Mind is an activated next-spell instant cast, not baseline casting speed"
     }
   ],
   "52": [
@@ -309,6 +466,18 @@ export const TALENT_RULES={
       "stat": "criticalDamagePct",
       "param": 0
     }
+  ],
+  "54": [
+    {
+      "kind": "pending",
+      "note": "Resonance Cascade duplicates Arcane spell damage probabilistically and can recursively trigger"
+    }
+  ],
+  "55": [
+    {
+      "kind": "pending",
+      "note": "Arcane Power temporarily hastens casting, changes mana income and drains mana; duration and expiry require combat resources"
+    }
   ]
 };
 export const TALENT_COVERAGE={
@@ -318,11 +487,11 @@ export const TALENT_COVERAGE={
   },
   "2": {
     "status": "proc-or-conditional",
-    "note": "Gives your Fire spells a 10% chance to stun the target for 2 sec."
+    "note": "Impact stuns on Fire spell proc; target crowd-control state pending"
   },
   "3": {
-    "status": "ability-specific",
-    "note": "Your critical strikes from Fire damage spells cause the target to burn for an additional 40% of your spell's damage over 4 sec."
+    "status": "proc-or-conditional",
+    "note": "Ignite creates a DoT after Fire spell critical strikes; no event-driven periodic damage model"
   },
   "4": {
     "status": "partial",
@@ -341,8 +510,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "8": {
-    "status": "ability-specific",
-    "note": "Hurls an immense fiery boulder that causes 148 to 194 Fire damage and an additional 56 Fire damage over 12 sec."
+    "status": "proc-or-conditional",
+    "note": "Pyroblast is an active Fire direct-plus-DoT spell; requires ability ranks and cast/target resolution"
   },
   "9": {
     "status": "partial",
@@ -354,15 +523,15 @@ export const TALENT_COVERAGE={
   },
   "11": {
     "status": "proc-or-conditional",
-    "note": "Causes your Fire Ward to have a 20% chance to reflect Fire spells while active."
+    "note": "Improved Fire Ward can reflect a Fire spell while Fire Ward aura is active, requiring incoming spell events"
   },
   "12": {
-    "status": "ability-specific",
-    "note": "Your Fire and Frost spell criticals will refund 45% of their base mana cost."
+    "status": "proc-or-conditional",
+    "note": "Master of Elements refunds mana only after Fire/Frost spell critical strikes"
   },
   "13": {
     "status": "proc-or-conditional",
-    "note": "A wave of flame radiates outward from the caster, damaging all enemies caught within the 10 yard blast for 160 to 192 Fire damage, and dazing them for 6 sec."
+    "note": "Blast Wave is an active area Fire spell with target daze"
   },
   "14": {
     "status": "partial",
@@ -370,7 +539,7 @@ export const TALENT_COVERAGE={
   },
   "15": {
     "status": "proc-or-conditional",
-    "note": "Gives your Fireball and Fire Blast critical strikes a 100% chance to grant Hot Streak, reducing the cast time of your next Pyroblast by 1 sec per stack for 3 min. Stacks up to"
+    "note": "Hot Streak generates temporary stacked Pyroblast cast-time reduction after Fireball/Fire Blast crits"
   },
   "16": {
     "status": "partial",
@@ -378,7 +547,7 @@ export const TALENT_COVERAGE={
   },
   "17": {
     "status": "proc-or-conditional",
-    "note": "When activated, this spell causes each of your Fire damage spell hits to increase your critical strike chance with Fire damage spells by 10%. This effect lasts until you have "
+    "note": "Combustion is an active accumulating Fire crit buff that expires after three Fire critical hits"
   },
   "18": {
     "status": "partial",
@@ -398,7 +567,7 @@ export const TALENT_COVERAGE={
   },
   "22": {
     "status": "proc-or-conditional",
-    "note": "Gives your Chill effects a 15% chance to freeze the target for 5 sec."
+    "note": "Frostbite freezes targets probabilistically when Chill effects apply"
   },
   "23": {
     "status": "partial",
@@ -414,11 +583,11 @@ export const TALENT_COVERAGE={
   },
   "26": {
     "status": "proc-or-conditional",
-    "note": "When activated, this spell finishes the cooldown on all of your Frost spells."
+    "note": "Cold Snap resets eligible Frost cooldowns on use"
   },
   "27": {
-    "status": "ability-specific",
-    "note": "Adds a chill effect to your Blizzard spell. This effect lowers the target's movement speed by 40%. Lasts 1.5 sec."
+    "status": "proc-or-conditional",
+    "note": "Improved Blizzard applies a movement slow with Blizzard ticks; needs target aura and time modelling"
   },
   "28": {
     "status": "partial",
@@ -434,11 +603,11 @@ export const TALENT_COVERAGE={
   },
   "31": {
     "status": "proc-or-conditional",
-    "note": "You become encased in a block of ice, protecting you from all physical attacks and spells for 10 sec, but during that time you cannot attack, move or cast spells."
+    "note": "Ice Block temporarily prevents damage but disables actions; cannot add permanent damage immunity"
   },
   "32": {
     "status": "proc-or-conditional",
-    "note": "Draw upon frost leylines, becoming frozen in place, and launch icicles at the enemy, dealing 101 Frost damage every 1 sec for 5 sec. Damage taken has a high chance to shatter "
+    "note": "Icicles is a channeled attack with stationary state and a damage-reactive explosion"
   },
   "33": {
     "status": "partial",
@@ -450,11 +619,11 @@ export const TALENT_COVERAGE={
   },
   "35": {
     "status": "proc-or-conditional",
-    "note": "If an effect that causes a target to freeze is not applied due to the target being permanently immune to freeze effects, you have a 100% chance to gain Flash Freeze instead. F"
+    "note": "Flash Freeze triggers only when freeze fails due to permanent target immunity and changes Icicles cooldown"
   },
   "36": {
     "status": "proc-or-conditional",
-    "note": "Instantly shields you, absorbing 454 damage and increasing your Frost damage by 10% for 1 min. While the shield holds, spells will not be interrupted and Frost damage is incre"
+    "note": "Ice Barrier is a temporary shield with a conditional active Frost damage benefit, not permanent spell damage"
   },
   "37": {
     "status": "sheet",
@@ -465,8 +634,8 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "39": {
-    "status": "proc-or-conditional",
-    "note": "Gives you a 100% chance to avoid interruption caused by damage while channeling Arcane Missiles."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "40": {
     "status": "partial",
@@ -478,11 +647,11 @@ export const TALENT_COVERAGE={
   },
   "42": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 10% chance of entering a Clearcasting state after any damage spell hits a target. The Clearcasting state reduces the mana cost of your next damage spell by 100%. T"
+    "note": "Arcane Concentration generates Clearcasting with hit-proc chance and internal cooldown; next-spell mana state pending"
   },
   "43": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effect of your Amplify Magic and Dampen Magic spells by 100% and allows them to be cast on enemies. Only affects targets level 62 or lower."
+    "status": "partial",
+    "note": "Target eligibility and currently active magic buff are not modelled"
   },
   "44": {
     "status": "partial",
@@ -490,19 +659,19 @@ export const TALENT_COVERAGE={
   },
   "45": {
     "status": "proc-or-conditional",
-    "note": "Rupture your target with the force of concentrated arcane energy, dealing 101 to 114 Arcane damage and increasing the damage and mana cost of your Arcane Missiles spell by 20%"
+    "note": "Arcane Rupture is an active Arcane hit and a timed Arcane Missiles damage/mana-cost aura"
   },
   "46": {
-    "status": "proc-or-conditional",
-    "note": "Decreases the mana lost per point of damage taken when Mana Shield is active by 25%."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "47": {
     "status": "proc-or-conditional",
-    "note": "Gives your Counterspell a 100% chance to silence the target for 4 sec."
+    "note": "Improved Counterspell applies silence only after a successful Counterspell"
   },
   "48": {
     "status": "proc-or-conditional",
-    "note": "Your Arcane Missiles have a chance of 15% to reset the cooldown of Arcane Rupture and cause it to return its base mana cost on its next cast. This effect can occur once every "
+    "note": "Temporal Convergence procs cooldown resets and refunds Arcane Rupture mana after Arcane Missiles events"
   },
   "49": {
     "status": "partial",
@@ -510,11 +679,11 @@ export const TALENT_COVERAGE={
   },
   "50": {
     "status": "proc-or-conditional",
-    "note": "Your successful damaging Arcane spells have an 25% chance to uncontrollably erupt, consuming 2% of your base mana to deal 25% more damage."
+    "note": "Arcane Instability has a chance to spend base mana for bonus Arcane damage on successful spells"
   },
   "51": {
     "status": "proc-or-conditional",
-    "note": "When activated, your next Mage spell with a casting time less than 10 sec becomes an instant cast spell."
+    "note": "Presence of Mind is an activated next-spell instant cast, not baseline casting speed"
   },
   "52": {
     "status": "partial",
@@ -526,10 +695,10 @@ export const TALENT_COVERAGE={
   },
   "54": {
     "status": "proc-or-conditional",
-    "note": "Your successful damaging Arcane spells have a 20% chance to duplicate for 50% of the damage. This effect can trigger off of itself and duplicated Arcane Missiles are channeled"
+    "note": "Resonance Cascade duplicates Arcane spell damage probabilistically and can recursively trigger"
   },
   "55": {
     "status": "proc-or-conditional",
-    "note": "When activated, your casting speed is increased by 30% while draining 1% of your maximum mana every second and reducing all mana gain by 50%. Falling below 10% maximum mana ca"
+    "note": "Arcane Power temporarily hastens casting, changes mana income and drains mana; duration and expiry require combat resources"
   }
 };
