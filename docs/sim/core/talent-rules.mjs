@@ -57,6 +57,16 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Melee-crit-triggered additional spell hit is a 10-second proc: rank 1/2/3 gives +3/+6/+9%, not passive"
+    },
+    {
+      "kind": "spell",
+      "scope": "Offensive spells",
+      "stat": "hit",
+      "param": 1,
+      "when": {
+        "elementalDevastationProc": "Active"
+      },
+      "note": "Manual scenario only; 10-second melee critical strike proc, not permanent hit"
     }
   ],
   "223": [
@@ -118,6 +128,12 @@ export const TALENT_RULES={
       "scope": "Fire",
       "stat": "damagePct",
       "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Flame Shock",
+      "stat": "rangeIncreaseYards",
+      "param": 1
     }
   ],
   "230": [
@@ -148,6 +164,16 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Totem critical-damage effects remain combat-engine scoped"
+    },
+    {
+      "kind": "spell",
+      "scope": [
+        "Fire",
+        "Frost",
+        "Nature"
+      ],
+      "stat": "criticalDamagePct",
+      "param": 1
     }
   ],
   "233": [
@@ -348,7 +374,10 @@ export const TALENT_RULES={
     {
       "kind": "special",
       "stat": "shieldBlockValuePct",
-      "param": 1
+      "param": 1,
+      "when": {
+        "shield": true
+      }
     }
   ],
   "253": [
@@ -485,6 +514,11 @@ export const TALENT_RULES={
       "scope": "Instant spells",
       "stat": "crit",
       "param": 1
+    },
+    {
+      "kind": "special",
+      "stat": "weaponDamagePct",
+      "param": 0
     }
   ],
   "266": [
