@@ -1,4 +1,4 @@
-import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
+import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-talent-audit2';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
