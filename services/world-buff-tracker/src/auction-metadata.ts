@@ -32,6 +32,8 @@ export function metadataFromCatalogue(raw:unknown):ReadonlyMap<number,AuctionIte
     icon_url:icon?`https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`:null,
     item_level,req_level,class_id:small(item.classs,20),subclass_id:small(item.subclass,30),slot_id:small(item.slot,40)}));
  }
+ // Official ID/name/level: https://octowow.st/db/?item=4304; standard Classic quality and icon cross-checked.
+ if(!metadata.has(4304))metadata.set(4304,Object.freeze({item_name:"Thick Leather",quality:1,icon_url:"https://wow.zamimg.com/images/wow/icons/large/inv_misc_leatherscrap_08.jpg",item_level:40,req_level:0,class_id:7,subclass_id:null,slot_id:null}));
  return metadata;
 }
 export async function fetchAuctionCatalogue(fetcher:typeof fetch=fetch):Promise<ReadonlyMap<number,AuctionItemMetadata>>{
@@ -39,4 +41,39 @@ export async function fetchAuctionCatalogue(fetcher:typeof fetch=fetch):Promise<
  if(!response.ok)throw new Error("Existing item catalogue HTTP "+response.status);
  if(Number(response.headers.get("content-length")||0)>8*1024*1024)throw new Error("Existing item catalogue exceeds size limit");
  return metadataFromCatalogue(await response.json());
+}
+
+/** Exact-ID fallback for auctionable records missing from the capped listing catalogue.
+ * Require the real item tooltip marker and title together, never infer a category from a name.
+ * An incomplete response remains incomplete; catalogue records take precedence. */
+function decodeHtml(value:string):string{
+ return value.replace(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|lt|gt|nbsp);/gi,(_,token:string)=>{
+  const named:Record<string,string>={amp:"&",quot:'"',apos:"'",lt:"<",gt:">",nbsp:" "};
+  if(token[0]!=="#")return named[token.toLowerCase()]??"";
+  const n=token[1]?.toLowerCase()==="x"?parseInt(token.slice(2),16):Number(token.slice(1));
+  return n>0&&n<=0x10ffff?String.fromCodePoint(n):"";
+ });
+}
+export function metadataFromItemPage(id:number,html:string):AuctionItemMetadata|null{
+ if(!Number.isSafeInteger(id)||id<=0)return null;
+ const marker=new RegExp("\\bid\\s*=\\s*['\"]tooltip"+id+"-generic['\"]","i").exec(html);
+ const title=/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
+ const name=title&&decodeHtml(title).replace(/\s+-\s+Items?\s+-\s+OctoWoW Database\s*$/i,"").trim();
+ if(!marker||!title||!name||name===decodeHtml(title).trim()||name.length>160||/[<>]/.test(name))return null;
+ const tooltip=html.slice(marker.index,marker.index+4000);
+ const bold=/<b\b[^>]*\bclass\s*=\s*['"]q([0-8])['"][^>]*>([^<]+)<\/b>/i.exec(tooltip);
+ const quality=bold&&decodeHtml(bold[2]).trim()===name?Number(bold[1]):null;
+ const icon=new RegExp("_\\["+id+"\\]\\s*=\\s*\\{icon:\\s*['\"]([a-z0-9_]{1,80})['\"]","i").exec(html)?.[1]?.toLowerCase();
+ const level=/<(?:li|div|span)[^>]*>\s*(?:<[^>]+>\s*)?Level:\s*(?:<\/[^>]+>\s*)?(\d+)/i.exec(html);
+ return Object.freeze({item_name:name,quality,icon_url:icon?"https://wow.zamimg.com/images/wow/icons/large/"+icon+".jpg":null,
+ item_level:level?small(Number(level[1]),200):null,req_level:null,class_id:null,subclass_id:null,slot_id:null});
+}
+export async function fetchAuctionItem(id:number,fetcher:typeof fetch=fetch):Promise<AuctionItemMetadata|null>{
+ if(!Number.isSafeInteger(id)||id<1||id>4294967295)return null;
+ try{
+  const response=await fetcher("https://octowow.st/db/?item="+id,{headers:{Accept:"text/html"},redirect:"error",signal:AbortSignal.timeout(6000)});
+  if(!response.ok||Number(response.headers.get("content-length")||0)>2*1024*1024)return null;
+  const html=await response.text();
+  return html.length<=2*1024*1024?metadataFromItemPage(id,html):null;
+ }catch{return null;}
 }

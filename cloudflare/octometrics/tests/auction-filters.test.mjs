@@ -2,7 +2,7 @@
 // Exercises the real Worker items endpoint on SQLite: filters, combinations, sorting, pagination and favourite keys.
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {skip,post,get,env} from "./auction-sqlite.mjs";
+import {skip,post,get,env,call} from "./auction-sqlite.mjs";
 import {buildItemsQuery,parseKeys,MAX_FAVOURITE_KEYS} from "../auction-query.mjs";
 
 const meta={
@@ -14,8 +14,9 @@ const meta={
  1006:{item_name:"Iron Mace",quality:2,class_id:2,subclass_id:4,slot_id:13,req_level:25,item_level:28}
 };
 let n=0;
+const CAPTURED=new Date().toISOString();
 const L=(item,over={})=>({auction_id:++n,item_id:item,variant:"0:0:0",quantity:1,icon_url:null,start_bid:10,current_bid:0,min_next_bid:10,
- buyout:1000,owner_guid:"7",time_left_ms:36000000,captured_at:"2026-11-01T00:00:00.000Z",...meta[item],...over});
+ buyout:1000,owner_guid:"7",time_left_ms:36000000,captured_at:CAPTURED,...meta[item],...over});
 const HOUR=3600000;
 /** One scan; `price` scales the Iron Sword's buyout so history and market % can be exercised. */
 function listings(price=500){
@@ -128,7 +129,7 @@ test("favourite keys restrict results server-side and combine with every other f
 test("sorting is stable and pagination neither repeats nor omits items, in both directions",{skip},async()=>{
  const e=await fresh();
  const total=(await q(e,"limit=100")).json.total;
- for(const sort of ["name","unit_buyout","stack_buyout","current_bid","historical_avg","quantity","listings","trend_pct","market_pct","time_left","level"])
+ for(const sort of ["recent","name","unit_buyout","stack_buyout","current_bid","historical_avg","quantity","listings","trend_pct","market_pct","time_left","level"])
   for(const dir of ["asc","desc"]){
    const seen=[];
    for(let offset=0;offset<total;offset+=2){
@@ -145,7 +146,7 @@ test("sorting is stable and pagination neither repeats nor omits items, in both 
  assert.equal(ids(await q(e,"sort=stack_buyout&dir=desc"))[0],"1002","highest stack buyout first");
  assert.equal(ids(await q(e,"sort=current_bid&dir=desc"))[0],"1006","highest current bid first");
  assert.equal(ids(await q(e,"sort=time_left&dir=desc"))[0],"1003","longest observed auction first");
- assert.equal(ids(await q(e,"sort=time_left&dir=asc"))[0],"1003","shortest remaining auction first");
+ assert.equal(ids(await q(e,"sort=time_left&dir=asc"))[0],"1001","shortest representative auction first, ties by item ID");
  assert.deepEqual(ids(await q(e,"sort=name&dir=desc&limit=2")),["1003","1005"],"unnamed items sort as Item #ID");
  assert.equal((await q(e,"sort=name&dir=sideways")).status,400);
 });
@@ -171,4 +172,81 @@ test("summary reports how many items have catalogue metadata",{skip},async()=>{
  const s=(await get(e,"summary")).json;
  assert.equal(s.item_count,7);          // 1001 (two variants), 1002..1006
  assert.equal(s.items_with_metadata,6);  // everything except item 1005
+});
+
+test("recent is the default and new auction IDs move their item ahead of existing listings",{skip},async()=>{
+ const e=await fresh();const newer=listings();newer.push(L(1003,{auction_id:99999}));
+ await scan(e,"ah_filters_recent","2026-11-11",newer);
+ const r=await q(e,"");assert.equal(r.status,200);assert.equal(r.json.items[0].item_id,1003);
+ assert.equal(r.json.items[0].latest_listing_seen_at,"2026-11-11T10:30:00.000Z");
+ const repeat=listings();repeat.push(L(1003,{auction_id:99999}));await scan(e,"ah_filters_repeat","2026-11-12",repeat);
+ assert.equal((await q(e,"")).json.items[0].latest_listing_seen_at,"2026-11-11T10:30:00.000Z");
+});
+test("time filters use elapsed time and exclude estimates that have elapsed",{skip},async()=>{
+ const e=await fresh();const stale=new Date(Date.now()-3*HOUR).toISOString();
+ await scan(e,"ah_filters_elapsed","2026-11-11",[L(1003,{time_left_ms:4*HOUR+15*60_000,captured_at:stale}),L(1004,{time_left_ms:HOUR,captured_at:stale})]);
+ assert.deepEqual(ids(await q(e,"time_left=medium")),["1003"]);assert.deepEqual(ids(await q(e,"time_left=short")),[]);
+});
+
+test("missing item metadata is persisted, immediately searchable and retained across scans",{skip},async()=>{
+ const e=await fresh();const before=await get(e,"missing-metadata");
+ assert.deepEqual(before.json.items,[{item_id:1005,listings:1}]);
+ const item={item_id:1005,item_name:"Recovered Material",quality:1,icon_url:"https://wow.zamimg.com/images/wow/icons/large/inv_misc_leatherscrap_08.jpg",item_level:40,req_level:0,class_id:7,subclass_id:1,slot_id:0};
+ assert.equal((await post(e,"metadata",{scan_id:"ah_filters_01",items:[{...item,item_id:99999}]})).status,409);
+ const denied=await (await import("../auction.mjs")).auctionRoute(new Request("https://octometrics.example/api/auction/scan/metadata",{method:"POST",body:JSON.stringify({scan_id:"ah_filters_01",items:[item]})}),e);
+ assert.equal(denied.status,401);
+ assert.equal((await post(e,"metadata",{scan_id:"ah_filters_01",items:[item]})).status,200);
+ assert.deepEqual(ids(await q(e,"q=Recovered+Material&item_class=7")) ,["1005"]);
+ assert.deepEqual(ids(await q(e,"q=Recovered+Material&item_class=7&max_unit_buyout=300")) ,["1005"]);
+ assert.deepEqual((await get(e,"missing-metadata")).json.items,[]);
+ assert.equal((await get(e,"summary")).json.items_with_metadata,7);
+ await scan(e,"ah_filters_meta_next","2026-11-11",listings());
+ const after=await q(e,"q=Recovered+Material");
+ assert.equal(after.json.items[0].item_name,"Recovered Material");
+ assert.equal(after.json.items[0].unit_buyout,300);
+ assert.deepEqual((await get(e,"missing-metadata")).json.items,[]);
+});
+test("partial and failed scans do not create first-seen records",{skip},async()=>{
+ const e=await fresh();const item=L(1003,{auction_id:90000});
+ assert.equal((await post(e,"start",{scan_id:"ah_failed_meta",started_at:"2026-11-11T10:00:00.000Z",reported_total:1})).status,201);
+ assert.equal((await post(e,"page",{scan_id:"ah_failed_meta",page:0,response_ms:1,items:[item]})).status,202);
+ assert.equal((await post(e,"metadata",{scan_id:"ah_failed_meta",items:[{item_id:1003,item_name:"Linen Cloth"}]})).status,409);
+ assert.equal((await post(e,"fail",{scan_id:"ah_failed_meta",reason:"fixture interruption"})).status,200);
+ assert.equal(e.DB.sqlite.prepare("SELECT COUNT(*) n FROM ah_first_seen WHERE auction_id=90000").get().n,0);
+ await scan(e,"ah_after_fail","2026-11-12",[item]);
+ assert.equal((await q(e,"")).json.items[0].latest_listing_seen_at,"2026-11-12T10:30:00.000Z");
+});
+
+test("expiry diagnostics compare the same auction across two completed snapshots",{skip},async()=>{
+ const e=env(),older=new Date(Date.now()-600000).toISOString(),newer=new Date().toISOString();
+ const before=L(1003,{auction_id:100,time_left_ms:7200000,captured_at:older});
+ const after={...before,time_left_ms:6600000,captured_at:newer};
+ await scan(e,"ah_expiry_before","2026-11-10",[before]);
+ await scan(e,"ah_expiry_after","2026-11-11",[after,L(1004,{auction_id:101,captured_at:newer})]);
+ const r=await get(e,"expiry-diagnostics");
+ assert.equal(r.status,200);assert.equal(r.json.sample_size,1);
+ assert.equal(r.json.median_decrease_ms,600000);assert.ok(r.json.median_absolute_drift_ms<1000);
+ assert.equal(r.json.within_2s,1);
+});
+test("elapsed countdowns sort last, in either direction",{skip},async()=>{
+ const e=env(),at=new Date(Date.now()-3*HOUR).toISOString();
+ await scan(e,"ah_time_sort_1","2026-11-10",[L(1003,{time_left_ms:HOUR,captured_at:at}),L(1004,{time_left_ms:4*HOUR,captured_at:at}),L(1006,{time_left_ms:null,captured_at:at})]);
+ for(const dir of ["asc","desc"])assert.equal(ids(await q(e,"sort=time_left&dir="+dir))[0],"1004");
+});
+
+test("deployed Worker entry point routes metadata reads and authenticated writes", {skip}, async()=>{
+ const e=await fresh();
+ const {default:worker}=await import("../worker.mjs");
+ const callWorker=(path,method="GET",body,auth=false)=>worker.fetch(new Request("https://octometrics.example/api/auction/"+path,{method,headers:{"content-type":"application/json",...(auth?{authorization:"Bearer "+e.AUCTION_PUSH_TOKEN}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})}),e);
+ const before=await callWorker("missing-metadata");
+ assert.equal(before.status,200);
+ assert.deepEqual((await before.json()).items,[{item_id:1005,listings:1}]);
+ const payload={scan_id:"ah_filters_01",items:[{item_id:1005,item_name:"Recovered Material"}]};
+ assert.equal((await callWorker("scan/metadata","POST",payload)).status,401);
+ assert.equal((await callWorker("scan/metadata","POST",payload,true)).status,200);
+ const after=await callWorker("missing-metadata");
+ assert.equal(after.status,200);assert.deepEqual((await after.json()).items,[]);
+ const items=await callWorker("items?q=Recovered+Material&sort=recent&dir=desc");
+ assert.equal(items.status,200);assert.equal((await items.json()).items[0].item_name,"Recovered Material");
+ assert.equal((await callWorker("expiry-diagnostics")).status,200);
 });

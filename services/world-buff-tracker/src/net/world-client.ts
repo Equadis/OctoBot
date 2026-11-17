@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import {buildItemQuery,parseItemTemplate,type ItemTemplateReply} from "../protocol/item-query.js";
 import {buildAuctionHello,buildAuctionSearch,parseAuctionHello,parseAuctionList,type AuctionResult} from "../protocol/auction.js";
 import { inflateSync } from "node:zlib";
 import { VanillaHeaderCrypt } from "../crypto/header-crypt.js";
@@ -66,6 +67,7 @@ export interface WorldClientHandlers {
   onAuctionHello?: (hello:{guid:bigint;houseId:number}) => void;
   /** Unfiltered auction query response; completion must be validated by the caller. */
   onAuctionList?: (result:AuctionResult) => void;
+  onItemTemplate?: (reply:ItemTemplateReply) => void;
   onWho?: (result: WhoResult) => void;
   /** A player whispered the bot; `sender` is resolved to a character name. */
   onWhisper?: (sender: string, text: string) => void;
@@ -395,6 +397,12 @@ export class WorldClient {
     this.#send(WorldOpcode.CMSG_GAMEOBJ_USE, buildGameObjUseBody(guid));
   }
 
+  /** Read-only item-template request; used only by the opt-in auction recovery path. */
+  queryItemTemplate(id:number):void{
+    if(!this.#ready)throw new Error('Cannot query item before entering world');
+    this.#send(WorldOpcode.CMSG_ITEM_QUERY_SINGLE,buildItemQuery(id));
+  }
+
   /** Open the Auction House as if the player right-clicked a verified nearby auctioneer. */
   auctionHello(guid:bigint):void{
     if(!this.#ready)throw new Error("cannot interact with auctioneer before character is in world");
@@ -479,6 +487,9 @@ export class WorldClient {
           break;
         case WorldOpcode.MSG_AUCTION_HELLO:
           this.#handlers.onAuctionHello?.(parseAuctionHello(body));
+          break;
+        case WorldOpcode.SMSG_ITEM_QUERY_SINGLE_RESPONSE:
+          if(this.#handlers.onItemTemplate){try{this.#handlers.onItemTemplate(parseItemTemplate(body));}catch(error){this.#logger.debug('world: invalid item-template response: '+String(error));}}
           break;
         case WorldOpcode.SMSG_AUCTION_LIST_RESULT:
           this.#handlers.onAuctionList?.(parseAuctionList(body));

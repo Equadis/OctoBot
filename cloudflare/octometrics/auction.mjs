@@ -46,6 +46,19 @@ async function upload(req,env,action){
  let body;try{body=await req.json()}catch{return bad('invalid JSON');}
  if(!validId(body?.scan_id))return bad('invalid scan_id');
  const db=env.DB;
+ if(action==='metadata'){
+   const scan=await first(db,"SELECT status FROM ah_scans WHERE scan_id=?",body.scan_id);
+   if(scan?.status!=='complete')return bad('metadata requires a completed scan',409);
+   if(!Array.isArray(body.items)||body.items.length<1||body.items.length>50)return bad('invalid metadata batch');
+   const rows=body.items.map(raw=>normalise({...raw,auction_id:1,quantity:1,start_bid:0,current_bid:0,min_next_bid:0,buyout:null,captured_at:new Date().toISOString()}));
+   if(rows.some(r=>!r||!r.item_name?.trim())||new Set(rows.map(r=>r.item_id)).size!==rows.length)return bad('invalid metadata item');
+   const observed=await all(db,"SELECT DISTINCT item_id FROM ah_listings WHERE scan_id=? AND item_id IN (SELECT value FROM json_each(?))",body.scan_id,JSON.stringify(rows.map(r=>r.item_id)));
+   if(observed.length!==rows.length)return bad('metadata item not observed in scan',409);
+   const fields=['item_name','quality','icon_url','item_level','req_level','class_id','subclass_id','slot_id'];
+   const sql='INSERT INTO ah_item_metadata(item_id,'+fields.join(',')+',resolved_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(item_id) DO UPDATE SET '+fields.map(k=>k+'=COALESCE(excluded.'+k+',ah_item_metadata.'+k+')').join(',')+',resolved_at=excluded.resolved_at';
+   try{await db.batch(rows.map(r=>db.prepare(sql).bind(r.item_id,...fields.map(k=>r[k]),new Date().toISOString())))}catch{return bad('metadata write failed',503)}
+   return respond({ok:true,resolved:rows.length});
+ }
  if(action==='start'){
    if(!validIso(body.started_at)||!integer(body.reported_total,0,1000000))return bad('invalid scan header');
    const existing=await first(db,'SELECT status,started_at,reported_total FROM ah_scans WHERE scan_id=?',body.scan_id);
@@ -115,6 +128,7 @@ async function upload(req,env,action){
    }
    const duration=Math.max(0,Date.parse(body.completed_at)-Date.parse(scan.started_at));
    const ops=[
+     db.prepare("INSERT OR IGNORE INTO ah_first_seen(auction_id,first_seen_at) SELECT auction_id,? FROM ah_listings WHERE scan_id=?").bind(body.completed_at,body.scan_id),
      db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
      db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND 1=1 ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id").bind(body.completed_at,body.scan_id,body.scan_id),
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
@@ -133,7 +147,7 @@ async function readApi(url,env){
  if(url.pathname==='/api/auction/summary'){
    const item=scan?await first(db,'SELECT COUNT(*) n FROM ah_item_points WHERE scan_id=?',scan.scan_id):null;
    const hist=await first(db,'SELECT COUNT(DISTINCT day) n FROM ah_daily');
-   const meta=scan?await first(db,'SELECT COUNT(DISTINCT item_id||\':\'||variant) n FROM ah_listings WHERE scan_id=? AND class_id IS NOT NULL',scan.scan_id):null;
+   const meta=scan?await first(db,"SELECT COUNT(DISTINCT l.item_id||':'||l.variant) n FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND COALESCE(l.class_id,m.class_id) IS NOT NULL",scan.scan_id):null;
    return respond({collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',scanning:!!current,
      pages_done:current?.pages_done??0,pages_expected:current?Math.max(1,Math.ceil(current.reported_total/50)):null,
      completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,
@@ -143,6 +157,30 @@ async function readApi(url,env){
  if(!scan){
    if(url.pathname==='/api/auction/items')return respond({items:[],total:0,has_more:false});
    return respond({listings:[],history:[],error:'no complete scan'});
+ }
+ if(url.pathname==='/api/auction/expiry-diagnostics'){
+   const prev=await previous(db,scan);
+   if(!prev)return respond({sample_size:0,reason:'No previous complete scan',scan_id:scan.scan_id});
+   const rows=await all(db,"SELECT c.time_left_ms newer_ms,p.time_left_ms older_ms,c.captured_at newer_at,p.captured_at older_at FROM ah_listings c JOIN ah_listings p ON p.scan_id=? AND p.auction_id=c.auction_id AND p.item_id=c.item_id AND p.variant=c.variant AND p.owner_guid IS c.owner_guid WHERE c.scan_id=? AND c.time_left_ms IS NOT NULL AND p.time_left_ms IS NOT NULL AND julianday(c.captured_at)>julianday(p.captured_at) ORDER BY c.auction_id LIMIT 1000",prev.scan_id,scan.scan_id);
+   const values=rows.map(r=>{
+     const elapsed=Date.parse(r.newer_at)-Date.parse(r.older_at);
+     const decrease=r.older_ms-r.newer_ms;
+     return {elapsed,decrease,drift:Math.abs(elapsed-decrease)};
+   }).filter(r=>Number.isFinite(r.drift)&&r.elapsed>=1000);
+   const median=xs=>{const a=xs.sort((x,y)=>x-y);return a.length?(a[Math.floor((a.length-1)/2)]+a[Math.floor(a.length/2)])/2:null;};
+   return respond({scan_id:scan.scan_id,previous_scan_id:prev.scan_id,sample_size:values.length,
+     median_elapsed_ms:median(values.map(v=>v.elapsed)),median_decrease_ms:median(values.map(v=>v.decrease)),
+     median_absolute_drift_ms:median(values.map(v=>v.drift)),
+     within_2s:values.filter(v=>v.drift<=2000).length,within_10s:values.filter(v=>v.drift<=10000).length,
+     note:'Matching auction IDs across two complete scans; compares packet duration decay with observation time, not actual in-game expiry.'});
+ }
+ if(url.pathname==='/api/auction/incomplete-metadata'){
+   const rows=await all(db,"SELECT l.item_id,COUNT(*) listings,MAX(CASE WHEN COALESCE(l.item_name,m.item_name) IS NULL THEN 1 ELSE 0 END) missing_name FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND (COALESCE(l.item_name,m.item_name) IS NULL OR COALESCE(l.quality,m.quality) IS NULL OR COALESCE(l.class_id,m.class_id) IS NULL OR COALESCE(l.subclass_id,m.subclass_id) IS NULL OR COALESCE(l.item_level,m.item_level) IS NULL OR COALESCE(l.req_level,m.req_level) IS NULL OR COALESCE(l.icon_url,m.icon_url) IS NULL) AND (m.resolved_at IS NULL OR julianday(m.resolved_at)<julianday('now','-30 minutes')) GROUP BY l.item_id ORDER BY missing_name DESC,listings DESC,l.item_id LIMIT 1000",scan.scan_id);
+   return respond({items:rows,scan_id:scan.scan_id});
+ }
+ if(url.pathname==='/api/auction/missing-metadata'){
+   const rows=await all(db,"SELECT l.item_id,COUNT(*) listings FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND COALESCE(l.item_name,m.item_name) IS NULL GROUP BY l.item_id ORDER BY listings DESC,l.item_id LIMIT 1000",scan.scan_id);
+   return respond({items:rows,scan_id:scan.scan_id});
  }
  if(url.pathname==='/api/auction/items'){
    const prev=await previous(db,scan);
@@ -154,7 +192,7 @@ async function readApi(url,env){
      item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
      quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
      historical_avg:r.days>=4?r.avg_unit:null,historical_days:r.days??0,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
-     time_left_ms:r.time_left_ms,captured_at:r.captured_at})),
+     time_left_ms:r.time_left_ms,captured_at:r.captured_at,latest_listing_seen_at:r.latest_listing_seen_at})),
      total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
      listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
  }
@@ -163,7 +201,7 @@ async function readApi(url,env){
    const itemId=apiId(detail[2]);if(!itemId)return bad('invalid item');
    const variant=(url.searchParams.get('variant')||'').slice(0,90);
    if(detail[1]==='item'){
-     const rows=await all(db,"SELECT auction_id,item_id,variant,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid AS owner_guid,time_left_ms,captured_at,CASE WHEN buyout>0 THEN CAST(buyout AS REAL)/quantity END unit_buyout FROM ah_listings WHERE scan_id=? AND item_id=? AND variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC LIMIT 200",scan.scan_id,itemId,variant);
+     const rows=await all(db,"SELECT l.auction_id,l.item_id,l.variant,l.quantity,l.start_bid,l.current_bid,l.min_next_bid,l.buyout,l.owner_guid,l.time_left_ms,l.captured_at,f.first_seen_at,CASE WHEN l.buyout>0 THEN CAST(l.buyout AS REAL)/l.quantity END unit_buyout FROM ah_listings l LEFT JOIN ah_first_seen f ON f.auction_id=l.auction_id WHERE l.scan_id=? AND l.item_id=? AND l.variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC,l.auction_id LIMIT 200",scan.scan_id,itemId,variant);
      return respond({listings:rows,scan_id:scan.scan_id,limited:rows.length===200});
    }
    const rows=await all(db,"SELECT day,representative_unit,quantity,listings FROM ah_daily WHERE item_id=? AND variant=? ORDER BY day DESC LIMIT 90",itemId,variant);
@@ -176,7 +214,7 @@ export async function auctionRoute(request,env){
  if(!url.pathname.startsWith('/api/auction/'))return null;
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
-   if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail'].includes(action))return bad('not found',404);
+   if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata'].includes(action))return bad('not found',404);
    return upload(request,env,action);
  }
  if(request.method==='GET')return readApi(url,env);

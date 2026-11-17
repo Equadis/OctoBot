@@ -4,7 +4,7 @@ import {displayItemName,variantDetails,variantLines,richItemTooltip} from './ite
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
 import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette1';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
-import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-columns1';
+import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs';
 
@@ -38,7 +38,9 @@ function moneyNode(n){
   }
   return wrap;
 }
-function timeNode(ms,capturedAt){const cls=timeClass(ms,capturedAt);return el('span',left(ms,capturedAt),cls?'ah-auction-time '+cls:'ah-auction-time');}
+function updateTimeNode(node,now=Date.now()){const ms=node.dataset.duration===''?null:Number(node.dataset.duration),capturedAt=node.dataset.capturedAt;const cls=timeClass(ms,capturedAt,now);node.textContent=left(ms,capturedAt,now);node.className=cls?'ah-auction-time '+cls:'ah-auction-time';}
+function timeNode(ms,capturedAt){const node=el('span',null,'ah-auction-time');node.dataset.duration=ms??'';node.dataset.capturedAt=capturedAt??'';updateTimeNode(node);return node;}
+function tickAuctionTimes(){const now=Date.now();for(const node of document.querySelectorAll('.ah-auction-time[data-duration]'))updateTimeNode(node,now);}
 const moneyTd=(row,n)=>{const c=el('td');c.append(moneyNode(n));row.append(c);return c;};
 async function request(path){
   const r=await fetch(API+path,{cache:'no-store',headers:{Accept:'application/json'}});
@@ -453,5 +455,5 @@ function bind(){
 populate();bind();renderSaved();writeFilters();
 await refreshAll(true);
 setInterval(()=>{void refreshAll();},60_000);
-setInterval(renderScan,1000);                       // keep scan duration and last-scan age current
+setInterval(()=>{renderScan();tickAuctionTimes();},1000);                       // keep scan duration and last-scan age current
 setInterval(()=>{void refreshSummary(false);},15_000); // notice a scan starting or finishing within seconds
