@@ -115,7 +115,10 @@ test('Goblin and High Elf base stats: Combat Gum shows numbers, the planner show
 });
 
 test('class base stats: the Vanilla (cmangos) table differs from WoWSims Turtle for Mage and Priest health and mana', { todo: 'Mage health 1360 vs 1370, mana 1273 vs 1213; Priest health 1387 vs 1397, mana 1436 vs 1376; several spirit and intellect values differ by 2 to 6' }, () => {
-  const b = newBuild('mage'); b.race = 'Human'; assert.equal(rows(b).Defence.Health, '1370');
+  const b = newBuild('mage'); b.race = 'Human';
+  const audited=characterStats(b,data('mage'),{}).baseAudit;
+  // Compare the class base health/mana columns, not the final stamina-derived health.
+  assert.deepEqual(audited.row.slice(5),[1370,1213]);
 });
 
 test('Gnome Intellect: preserve imported naked 133; scale external flat gains once, not twice', () => {

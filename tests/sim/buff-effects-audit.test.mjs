@@ -126,10 +126,12 @@ test('raid calculations ignore world buffs on all nine classes and restore outsi
 test('new spirit and shadow resistance modifiers preserve recipient and target separation',()=>{
  assert.deepEqual(buffDefinition('divine-spirit').stats,{spi:40});
  assert.deepEqual(buffDefinition('curse-shadow').stats,{targetShadowRes:-75,targetArcaneRes:-75,targetShadowDamageTakenPct:10,targetArcaneDamageTakenPct:10});
- const b=newBuild('mage');b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['divine-spirit','curse-shadow'];const after=sheet(b);
- assert.equal(+after['Base Stats'].Spirit-+before['Base Stats'].Spirit,40);
- assert.equal(after.Defence['Shadow Res'],before.Defence['Shadow Res']);
- assert.equal(after['Target Debuff Contributions'].targetShadowRes,'-75');
+ for(const [race,expected] of [['Human',42],['Gnome',40]]){
+  const b=newBuild('mage');b.race=race;b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['divine-spirit','curse-shadow'];const after=sheet(b);
+  assert.equal(+after['Base Stats'].Spirit-+before['Base Stats'].Spirit,expected);
+  assert.equal(after.Defence['Shadow Res'],before.Defence['Shadow Res']);
+  assert.equal(after['Target Debuff Contributions'].targetShadowRes,'-75');
+ }
 });
 
 test('custom raid target preserves world buff suppression when a raid preset is customised',()=>{
