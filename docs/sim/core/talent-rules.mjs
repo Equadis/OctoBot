@@ -26,6 +26,62 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "168": [
+    {
+      "kind": "scoped",
+      "scope": "Instant/Holy/Discipline spells",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    }
+  ],
+  "169": [
+    {
+      "kind": "scoped",
+      "scope": "All spells",
+      "stat": "threatReductionPct",
+      "param": 0
+    }
+  ],
+  "170": [
+    {
+      "kind": "scoped",
+      "scope": "Stun/Fear/Silence",
+      "stat": "resistChancePct",
+      "param": 0
+    }
+  ],
+  "172": [
+    {
+      "kind": "scoped",
+      "scope": "Power Word: Fortitude",
+      "stat": "buffEffectivenessPct",
+      "param": 0
+    }
+  ],
+  "173": [
+    {
+      "kind": "scoped",
+      "scope": "Inner Fire",
+      "stat": "buffEffectivenessPct",
+      "param": 0
+    }
+  ],
+  "175": [
+    {
+      "kind": "scoped",
+      "scope": "Power Word: Shield",
+      "stat": "absorbPct",
+      "param": 0
+    }
+  ],
+  "176": [
+    {
+      "kind": "scoped",
+      "scope": "Mana regeneration while casting",
+      "stat": "regenPct",
+      "param": 0
+    }
+  ],
   "179": [
     {
       "kind": "percent",
@@ -53,6 +109,14 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "184": [
+    {
+      "kind": "scoped",
+      "scope": "Renew",
+      "stat": "healingPct",
+      "param": 0
+    }
+  ],
   "186": [
     {
       "kind": "spell",
@@ -61,6 +125,58 @@ export const TALENT_RULES={
         "Discipline"
       ],
       "stat": "crit",
+      "param": 0
+    }
+  ],
+  "187": [
+    {
+      "kind": "scoped",
+      "scope": "Smite/Holy Fire/Heal/Greater Heal",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "188": [
+    {
+      "kind": "scoped",
+      "scope": "Incoming spell damage",
+      "stat": "damageReductionPct",
+      "param": 0
+    }
+  ],
+  "189": [
+    {
+      "kind": "scoped",
+      "scope": "Smite/Holy Fire/Chastise",
+      "stat": "rangeIncreasePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Prayer of Healing/Holy Nova",
+      "stat": "radiusIncreasePct",
+      "param": 0
+    }
+  ],
+  "193": [
+    {
+      "kind": "scoped",
+      "scope": "Renew",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Healing target with Renew",
+      "stat": "healingPct",
+      "param": 0
+    }
+  ],
+  "194": [
+    {
+      "kind": "scoped",
+      "scope": "Lesser Heal/Heal/Greater Heal/Prayer of Healing",
+      "stat": "manaCostReductionPct",
       "param": 0
     }
   ],
@@ -85,11 +201,43 @@ export const TALENT_RULES={
       "note": "Spirit of Redemption on death requires combat context"
     }
   ],
+  "198": [
+    {
+      "kind": "scoped",
+      "scope": "Lightwell Splendor of Light",
+      "stat": "effectivenessPct",
+      "param": 0
+    }
+  ],
   "199": [
     {
       "kind": "scoped",
       "scope": "Healing spells",
       "stat": "healingPct",
+      "param": 0
+    }
+  ],
+  "202": [
+    {
+      "kind": "scoped",
+      "scope": "Mind Blast",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "203": [
+    {
+      "kind": "scoped",
+      "scope": "Shadow spells",
+      "stat": "threatReductionPct",
+      "param": 0
+    }
+  ],
+  "204": [
+    {
+      "kind": "scoped",
+      "scope": "Shadow Word: Pain",
+      "stat": "durationIncreaseSeconds",
       "param": 0
     }
   ],
@@ -99,6 +247,66 @@ export const TALENT_RULES={
       "scope": "Shadow",
       "stat": "hit",
       "param": 0
+    }
+  ],
+  "207": [
+    {
+      "kind": "scoped",
+      "scope": "Psychic Scream",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "208": [
+    {
+      "kind": "scoped",
+      "scope": "Fade",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Fade end",
+      "stat": "threatReturnReductionPct",
+      "param": 1
+    }
+  ],
+  "210": [
+    {
+      "kind": "scoped",
+      "scope": "Mana Burn",
+      "stat": "castTimeReductionSeconds",
+      "param": 0,
+      "values": [
+        0.25,
+        0.5
+      ]
+    }
+  ],
+  "211": [
+    {
+      "kind": "scoped",
+      "scope": "Shadow spells",
+      "stat": "rangeIncreasePct",
+      "param": 0
+    }
+  ],
+  "215": [
+    {
+      "kind": "scoped",
+      "scope": "Vampiric Embrace",
+      "stat": "healingPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Vampiric Embrace",
+      "stat": "partyManaReturnPct",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "Target damage and active Vampiric Embrace aura need event-driven party resource handling"
     }
   ],
   "216": [
@@ -138,40 +346,40 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "168": {
-    "status": "ability-specific",
-    "note": "Reduces the mana cost of your instant cast spells and offensive Holy and Discipline spells by 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "169": {
-    "status": "ability-specific",
-    "note": "Reduces the threat generated by your spells by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "170": {
-    "status": "proc-or-conditional",
-    "note": "Increases your chance to resist Stun, Fear, and Silence effects by an additional 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "171": {
     "status": "proc-or-conditional",
     "note": "Gives you a 100% chance to gain the Focused Casting effect that lasts for 6 sec after being the victim of a melee or ranged critical strike. The Focused Casting effect prevent"
   },
   "172": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effect of your Power Word: Fortitude and Prayer of Fortitude spells by 30%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "173": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effects of your Inner Fire spell by 30%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "174": {
     "status": "proc-or-conditional",
     "note": "When activated, reduces the Mana cost of your next spell by 100% and increases its critical effect chance by 25% if it is capable of a critical effect."
   },
   "175": {
-    "status": "ability-specific",
-    "note": "Increases the damage absorbed by your Power Word: Shield by 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "176": {
-    "status": "proc-or-conditional",
-    "note": "Allows 15% of your Mana regeneration to continue while casting."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "177": {
     "status": "proc-or-conditional",
@@ -202,8 +410,8 @@ export const TALENT_COVERAGE={
     "note": "Chastise the target, causing 139 to 160 Holy damage. If the target is an enemy, they are disoriented for up to 2 sec or until they take damage. If the target is an ally, their"
   },
   "184": {
-    "status": "active-or-non-stat",
-    "note": "Increases the amount healed by your Renew spell by 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "185": {
     "status": "proc-or-conditional",
@@ -214,16 +422,16 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "187": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Smite, Holy Fire, Heal and Greater Heal spells by 0.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "188": {
-    "status": "ability-specific",
-    "note": "Reduces all spell damage taken by 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "189": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Smite, Holy Fire and Chastise spells and the radius of your Prayer of Healing and Holy Nova spells by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "190": {
     "status": "proc-or-conditional",
@@ -238,12 +446,12 @@ export const TALENT_COVERAGE={
     "note": "Causes an explosion of holy light around the caster, causing 27 to 31 Holy damage to all enemy targets within 10 yards and healing all party members within 10 yards for 54 to "
   },
   "193": {
-    "status": "ability-specific",
-    "note": "Increases the duration of Renew by 3 sec and increases healing done by your healing spells by 6% to targets affected by Renew."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "194": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of your Lesser Heal, Heal, Greater Heal and Prayer of Healing spells by 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "195": {
     "status": "sheet",
@@ -258,8 +466,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "198": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effectiveness of Lightwell's Splendor of Light by 100%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "199": {
     "status": "partial",
@@ -274,16 +482,16 @@ export const TALENT_COVERAGE={
     "note": "Gives you a 100% chance to gain a 100% bonus to your Spirit after killing a target that yields experience or critically striking a target with Mind Blast. For the duration, ma"
   },
   "202": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Mind Blast spell by 2.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "203": {
-    "status": "ability-specific",
-    "note": "Reduces the threat generated by your Shadow spells by 25%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "204": {
-    "status": "active-or-non-stat",
-    "note": "Increases the duration of your Shadow Word: Pain spell by 6 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "205": {
     "status": "partial",
@@ -294,24 +502,24 @@ export const TALENT_COVERAGE={
     "note": "Gives your Shadow damage spells a 10% chance to stun the target for 2 sec."
   },
   "207": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Psychic Scream spell by 4 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "208": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the cooldown of Fade by 6 sec and the threat returned when Fade ends by 50%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "209": {
     "status": "ability-specific",
     "note": "Assault the target's mind with Shadow energy, causing 75 Shadow damage over 3 sec and slowing their movement speed by 50%."
   },
   "210": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Mana Burn spell by 0.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "211": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Shadow damage spells by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "212": {
     "status": "proc-or-conditional",
@@ -326,8 +534,8 @@ export const TALENT_COVERAGE={
     "note": "Afflicts your target with Shadow energy that causes all party members to be healed for 20% of any Shadow spell damage you deal for 1 min."
   },
   "215": {
-    "status": "ability-specific",
-    "note": "Increases the percentage healed by Vampiric Embrace by an additional 5% and your Vampiric Embrace now causes all party members to also gain mana equal to 2% of any Shadow spel"
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "216": {
     "status": "partial",
