@@ -1,10 +1,11 @@
+import {buffDefinition} from './core/buff-effect-audit.mjs?v=20261117-buff-audit1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-item-audit3';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
-import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261112-consumes1';
-import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
-import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261117-item-audit3';
+import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261117-buff-audit1';
+import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261117-buff-audit1';
+import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261117-buff-audit1';
 import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -46,7 +47,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
    input.addEventListener('change',()=>{
     let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
-   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?[buffRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']}));
+   attachTooltip(label,()=>({title:option.name,lines:[option.effect,...(input.disabled?[buffRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),buffDefinition(option.id).reason]}));
    checkboxes.set(option.id,input);body.append(label);
    if(option.id==='tea'){
     const threshold=node('label',undefined,'tea-threshold');threshold.append(node('span','Use at <'));

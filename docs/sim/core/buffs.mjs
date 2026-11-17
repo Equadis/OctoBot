@@ -29,6 +29,6 @@ export const BUFF_STATS=Object.freeze({
  'emerald-mongoose':{sp:15,agi:25,crit:2,spellCrit:2},dreamwater:{sp:35,ap:35},'arcane-giant':{sp:35,str:25},'brute-force':{str:18,sta:18},
  'supreme-power':{sp:150},dreamtonic:{sp:35},'greater-arcane':{sp:35},'nature-power':{natureSp:55},firepower:{fireSp:40},
  'wizard-oil-mh':{sp:36,spellCrit:1},'wizard-oil-oh':{sp:36,spellCrit:1},
- medley:{haste:2},berry:{agi:10},skewer:{agi:20},carrots:{ap:32},chimaerek:{dodge:2,sta:30},fishe:{dodge:1,defense:4},merlot:{sta:25},rum:{sta:15},flurry:{haste:1},quickness:{haste:1.25},
+ medley:{haste:2},berry:{agi:10},skewer:{agi:20},carrots:{ap:32},chimaerek:{dodge:2,sta:30},fishe:{dodge:1,defense:4},merlot:{sta:25},rum:{sta:15},flurry:{},quickness:{},
  expose:{targetArmour:-2550},sunder:{targetArmour:-2250},eskhandar:{targetArmour:-1200},recklessness:{targetArmour:-640},faerie:{targetArmour:-505},'wind-serpent':{targetArmour:-400},annihilator:{targetArmour:-300},shartateth:{targetArmour:-250},ripper:{targetArmour:-163},'skill-book':{weaponSkill:5}
 });

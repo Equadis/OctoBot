@@ -1,7 +1,8 @@
+import {resolveBuffEffects} from './buff-effect-audit.mjs?v=20261117-buff-audit1';
 import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
-import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
+import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261117-buff-audit1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
-import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
+import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit1';
 import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit3';
 import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit3';
 import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit3';
@@ -28,9 +29,9 @@ export function characterStats(build,talentData,gear={}){
  const setAudit=equipmentSetAudit(gear,build);add(setAudit.stats);
  for(const e of setAudit.active)if(e.status==='scoped')scopedEquipment.push({...e,source:e.set+' ('+e.pieces+'pc)'});
  const scoped=combineScopedEquipment(scopedEquipment,build);
- const buffs=normaliseBuffs(build.controls.buffIds);for(const id of buffs)add(BUFF_STATS[id]||{});
+ const buffAudit=resolveBuffEffects(build,gear);const buffs=buffAudit.ids;for(const entry of buffAudit.entries)if(entry.active)add(entry.stats);
  const has=id=>buffs.includes(id);
- for(const id of build.controls.consumableIds||[]){const item=CONSUMABLE_BY_ID.get(id);if(!consumableRestriction(item,build))add(consumablePassiveStats(item));}
+ for(const entry of buffAudit.consumables)if(entry.status==='prepull')add(entry.stats);
  const talents=new Map((talentData?.talents||[]).map(t=>[t.name,{...t,rank:build.talents[t.id]||0}]));
  const value=name=>{const t=talents.get(name);return t?.rank?Number(t.descriptions[t.rank-1]?.match(/(\d+(?:\.\d+)?)%?/)?.[1]||0):0;};
  const selected=name=>(talents.get(name)?.rank||0)>0;
@@ -43,7 +44,7 @@ export function characterStats(build,talentData,gear={}){
  if(c==='warlock'){mult('sta',value('Demonic Embrace'));mult('spi',-value('Demonic Embrace')/3);}
  if(c==='shaman'){for(const k of ['str','agi','sta','int','spi'])mult(k,value('Ancestral Knowledge'));s.crit+=value('Thundering Strikes');}
  if(c==='druid'){mult('int',value('Heart of the Wild'));if(build.classOptions.form==='Cat')mult('str',value('Heart of the Wild'));if(build.classOptions.form==='Bear')mult('sta',value('Heart of the Wild'));if(selected('Natural Weapons')){const t=talents.get('Natural Weapons');const text=t.descriptions[t.rank-1];s.hit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);s.spellHit+=Number(text.match(/melee attacks and spells by (\d+)%/)?.[1]||0);}}
- if(has('kings'))for(const k of ['str','agi','sta','int','spi'])mult(k,10);
+ if(buffAudit.entries.some(e=>e.id==='kings'&&e.active))for(const k of ['str','agi','sta','int','spi'])mult(k,10);
  if(racial.intellectMultiplier)mult('int',(racial.intellectMultiplier-1)*100);
  if(racial.agilityMultiplier)mult('agi',(racial.agilityMultiplier-1)*100);
  s.parry+=value('Deflection');s.defense+=value('Anticipation');
@@ -54,7 +55,7 @@ export function characterStats(build,talentData,gear={}){
  if(c==='druid'&&build.classOptions.form==='Cat'&&base)ap=2*level-20+s.str*2+s.agi+s.ap;
  if(c==='druid'&&build.classOptions.form==='Bear'&&base)ap=3*level-20+s.str*2+s.ap;
  if(c==='hunter'&&selected('Lightning Reflexes')&&base)ap+=s.agi*value('Lightning Reflexes')*10/100;
- if(has('trueshot')&&ap!==null)ap*=1.03;
+ if(buffAudit.entries.some(e=>e.id==='trueshot'&&e.active)&&ap!==null)ap*=1.03;
  if(c==='priest'&&base)s.sp+=s.spi*value('Spiritual Guidance')/100;
  const health=base?(base[5]+s.health+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(racial.healthMultiplier||1):null;
  let armour=base?s.armour+s.agi*2:null;
@@ -80,7 +81,7 @@ export function characterStats(build,talentData,gear={}){
  const effectiveCrit=crit.map((v,i)=>v===null?null:clamp(Math.min(cap[i],v-Math.max(0,target.targetLevel-level))));
  const levelDiff=target.targetLevel-level,baseSpellMiss=levelDiff<=2?4+levelDiff:17+(levelDiff-3)*11;
  const spellMiss=clamp(baseSpellMiss-s.spellHit,1,99);
- const targetArmour=Math.max(0,target.targetArmour+buffs.reduce((n,id)=>n+(BUFF_STATS[id]?.targetArmour||0),0)-s.armorPen);
+ const targetArmour=Math.max(0,target.targetArmour+buffAudit.entries.reduce((n,e)=>n+(e.active?e.stats.targetArmour||0:0),0)-s.armorPen);
  const mitigation=100*targetArmour/(targetArmour+400+85*level);
  const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=s.weaponDamage+(validEnchant(enchantId,slot,c,weapon,level)?(enchantStats(enchantId).weaponDamage||0):0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
@@ -112,5 +113,6 @@ export function characterStats(build,talentData,gear={}){
  if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':x.status==='scoped'?'Scoped contribution':x.status==='utility'?'Utility (unquantified)':'Not simulated',x.effect]));
  if(scoped.length)group('Scoped Equipment Modifiers',scoped.map(x=>[x.scope+' — '+x.stat+(x.condition?.target?' ('+x.condition.target+')':''),String(Number(x.amount.toFixed(3)))+(x.stat.endsWith('Pct')?'%':'')+(x.active?'':' (inactive)'),[...new Set(x.sources)].join(', ')+'; relative contribution only.']));
  if(unresolvedEquipment.length||setAudit.unresolved.length)group('Uncalculated Equipment Effects',[...unresolvedEquipment.map(x=>[x.item,x.status,x.raw]),...setAudit.unresolved.map(x=>[x.set||x.item,'Unverified set',x.reason])]);
- return {groups,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
+ if(buffAudit.entries.some(e=>e.status!=='source-prepull'&&e.id!=='skill-book')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull'&&e.id!=='skill-book').map(e=>[e.name,e.active?e.status:'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
+ return {groups,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }
