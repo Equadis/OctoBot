@@ -143,6 +143,12 @@ export const TALENT_RULES={
       "scope": "Offensive spells",
       "stat": "crit",
       "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Power Word: Shield",
+      "stat": "absorbPct",
+      "param": 1
     }
   ],
   "183": [
@@ -231,13 +237,20 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Renew",
       "stat": "durationIncreaseSeconds",
-      "param": 0
+      "param": 0,
+      "values": [
+        3,
+        3
+      ]
     },
     {
       "kind": "scoped",
       "scope": "Healing target with Renew",
       "stat": "healingPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "targetRenew": "On"
+      }
     }
   ],
   "194": [
@@ -449,6 +462,17 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Shadowform armour/damage reduction and ability restrictions need combat support"
+    },
+    {
+      "kind": "special",
+      "stat": "physicalDamageTakenReductionPct",
+      "param": 0,
+      "values": [
+        15
+      ],
+      "when": {
+        "form": "Shadowform"
+      }
     }
   ]
 };
