@@ -1,3 +1,4 @@
+import {poisonTemplate} from './combat-poison-reference.mjs';
 import {feralTemplate} from './combat-feral-reference.mjs';
 import {referenceRanks,referenceRank} from './combat-reference-ranks.mjs';
 import {abilityKey,ROTATION_REGISTRY} from './rotations/registry.mjs';
@@ -67,6 +68,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
+ if(build.classId==='rogue'){const eligible=selected.filter(r=>r.components.some(c=>['weapon','combo','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId);encounter.poisonModel={};for(const [hand,key] of [['mainhand','mhPoison'],['offhand','ohPoison']]){const name=build.classOptions[key];if(name&&name!=='None')encounter.poisonModel[hand]=poisonTemplate(name,eligible);}}
  if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}
  if(build.classId==='warrior'||build.classId==='druid'&&build.classOptions.form==='Bear')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
  if(ranged){encounter.ammoCount=null;encounter.rangedAutoPolicy={...structuredClone(policies[selected.find(isRanged).abilityId]),autoCastPolicy:'skip-during-cast'};encounter.rangedAutoPolicy.rangedModel.weaponPolicy='actual-swing';}

@@ -3,7 +3,7 @@ import {HUNTER_FAMILIES,DEMON_TYPES} from './pet-training-audit.mjs?v=20261117-p
 const choice=(key,label,values,value=values[0])=>({key,label,values,value});
 const number=(key,label,value,min,max)=>({key,label,value,min,max});
 const mana=()=>number('startingMana','Starting Mana %',100,0,100);
-const poison=['None','Instant Poison VI','Deadly Poison V','Wound Poison IV','Crippling Poison II','Mind-numbing Poison III'];
+const poison=['None','Instant Poison VI','Deadly Poison V','Wound Poison IV','Agitating Poison','Crippling Poison II','Mind-numbing Poison III'];
 const BASE_CLASS_OPTIONS={
  warrior:[choice('stance','Stance',['Battle','Berserker','Defensive']),number('startingRage','Starting Rage',0,0,100)],
  rogue:[choice('mhPoison','MH Poison',poison),choice('ohPoison','OH Poison',poison),number('startingEnergy','Starting Energy',100,0,100),number('comboPoints','Starting Combo Points',0,0,5),choice('attackPosition','Scenario: Attack Position',['Unspecified','Behind','Front'])],

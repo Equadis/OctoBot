@@ -49,7 +49,7 @@ export class CombatEncounter{
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
- recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active())this.#record(type,copy(details));}
+ recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset','poison-charge'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active())this.#record(type,copy(details));}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
  applyAbsorb({id,targetId,actorId,source,amount:capacity,durationMs,schools=null,refresh='replace'}){
   key(id);key(source);if(!this.#units.has(targetId)||!this.#units.has(actorId))throw new Error('Unknown absorb unit');positive(capacity,'absorb capacity');integer(durationMs,'absorb duration',1);if(!['replace','keep-stronger'].includes(refresh)||schools!==null&&(!Array.isArray(schools)||!schools.length||schools.some(s=>typeof s!=='string'||!s)))throw new Error('Invalid absorb policy');
