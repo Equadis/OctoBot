@@ -1,89 +1,85 @@
-# Mage — talent effects audit
+# Mage: talent calculation audit and implementation ledger
 
-**Branch:** `audit/talent-effects-mage` (isolated, no changes to main).
+**Repository:** [Equadis/OctoBot](https://github.com/Equadis/OctoBot) · **branch:** `audit/talent-effects-mage` · **source:** [OctoWoW published talent calculator](https://octowow.st/talents/mage/) (2026-11-11T23:29:44.004273+00:00, SHA-256 `7ad369269087cf74092696a5f10e3115d660a8b0fdbf36af0009fc9815de6ad1`).
 
-**Source:** [https://octowow.st/talents/mage/](https://octowow.st/talents/mage/) · snapshot 2026-11-11T23:29:44.004273+00:00 · SHA256 `7ad369269087cf74092696a5f10e3115d660a8b0fdbf36af0009fc9815de6ad1`.
-
-### Coverage status
+## Coverage summary
 
 | Measure | Count |
 |---|---:|
-| Imported talent definitions | 55 |
-| Explicitly mapped/reviewed rules | 29 |
-| Talents with an applied static/weapon effect | 2 |
-| Additional talents with scoped tooltip contributions only | 24 |
-| Talents without numeric rules (recorded but pending) | 26 |
+| Imported talents | 55 |
+| Talents with individual reviewed registry entries | 55 |
+| At least one character-sheet or weapon-derived effect | 2 |
+| Scoped reference contributions only | 27 |
+| Simulation/event-only records | 26 |
 
-Status labels: `partial`: 27; `proc-or-conditional`: 21; `ability-specific`: 4; `sheet`: 2; `active-or-non-stat`: 1.
+**Important:** The second and third categories are not completed DPS/TPS/HPS mechanics. A school, attack type or pet effect may be described numerically without being incorporated into a full combat outcome. The planner uses unverified base coefficients and must not be represented as a validated OctoWoW simulator.
 
-**Interpretation:** Static and weapon effects may alter the character sheet. Scoped entries describe where published bonuses apply, but do not imply functioning ability damage, mana, cast-time, pet or DPS mechanics. Temporary and conditional effects are not automatically added to permanent totals. The existing calculator still relies on partially unverified Vanilla base coefficients.
+## Exact classification of all 55 talents
 
-### Talent-by-talent ledger
-
-| ID | Talent | Ranks | Coverage | Mapped effects or outstanding mechanic |
+| ID | Talent | Ranks | Status | Effect / precise unresolved dependency |
 |---:|---|---:|---|---|
-| 37 | Arcane Subtlety | 2 | `sheet` | global  spellPen (vector 0) |
-| 38 | Magic Absorption | 3 | `sheet` | global  arcaneRes (vector 0); global  fireRes (vector 0); global  frostRes (vector 0); global  natureRes (vector 0); global  shadowRes (vector 0) |
-| 39 | Improved Arcane Missiles | 5 | `proc-or-conditional` | Pending: Gives you a 100% chance to avoid interruption caused by damage while channeling Arcane Missiles. |
-| 40 | Wand Specialization | 2 | `partial` | scoped Wand damagePct (vector 0); scoped Wand hit (vector 1) |
-| 41 | Arcane Focus | 5 | `partial` | spell Arcane hit (vector 0) |
-| 42 | Arcane Concentration | 5 | `proc-or-conditional` | Pending: Gives you a 10% chance of entering a Clearcasting state after any damage spell hits a target. The Clearcasting state reduces the mana cost of you |
-| 43 | Magic Attunement | 1 | `active-or-non-stat` | Pending: Increases the effect of your Amplify Magic and Dampen Magic spells by 100% and allows them to be cast on enemies. Only affects targets level 62 o |
-| 44 | Arcane Impact | 3 | `partial` | spell Arcane crit (vector 0) |
-| 45 | Arcane Rupture | 1 | `proc-or-conditional` | Pending: Rupture your target with the force of concentrated arcane energy, dealing 101 to 114 Arcane damage and increasing the damage and mana cost of you |
-| 46 | Improved Mana Shield | 2 | `proc-or-conditional` | Pending: Decreases the mana lost per point of damage taken when Mana Shield is active by 25%. |
-| 47 | Improved Counterspell | 2 | `proc-or-conditional` | Pending: Gives your Counterspell a 100% chance to silence the target for 4 sec. |
-| 48 | Temporal Convergence | 3 | `proc-or-conditional` | Pending: Your Arcane Missiles have a chance of 15% to reset the cooldown of Arcane Rupture and cause it to return its base mana cost on its next cast. Thi |
-| 49 | Arcane Meditation | 3 | `partial` | scoped Mana regeneration while casting regenPct (vector 0); Pending: Regeneration is tripled below 35% mana and requires a resource model |
-| 50 | Arcane Instability | 3 | `proc-or-conditional` | Pending: Your successful damaging Arcane spells have an 25% chance to uncontrollably erupt, consuming 2% of your base mana to deal 25% more damage. |
-| 51 | Presence of Mind | 1 | `proc-or-conditional` | Pending: When activated, your next Mage spell with a casting time less than 10 sec becomes an instant cast spell. |
-| 52 | Accelerated Arcana | 1 | `partial` | spell Arcane castSpeedPct (vector explicit) |
-| 53 | Arcane Potency | 2 | `partial` | spell Arcane criticalDamagePct (vector 0) |
-| 54 | Resonance Cascade | 5 | `proc-or-conditional` | Pending: Your successful damaging Arcane spells have a 20% chance to duplicate for 50% of the damage. This effect can trigger off of itself and duplicated |
-| 55 | Arcane Power | 1 | `proc-or-conditional` | Pending: When activated, your casting speed is increased by 30% while draining 1% of your maximum mana every second and reducing all mana gain by 50%. Fal |
-| 1 | Improved Fireball | 5 | `partial` | scoped Fireball castTimeReductionSeconds (vector 0) |
-| 2 | Impact | 5 | `proc-or-conditional` | Pending: Gives your Fire spells a 10% chance to stun the target for 2 sec. |
-| 3 | Ignite | 5 | `ability-specific` | Pending: Your critical strikes from Fire damage spells cause the target to burn for an additional 40% of your spell's damage over 4 sec. |
-| 4 | Flame Throwing | 2 | `partial` | scoped Fire spells rangeIncreaseYards (vector 0); scoped Blast Wave radiusIncreasePct (vector 1) |
-| 5 | Improved Fire Blast | 3 | `partial` | scoped Fire Blast cooldownReductionSeconds (vector 0); scoped Fire Blast globalCooldownReductionSeconds (vector 1) |
-| 6 | Incinerate | 2 | `partial` | spell Fire Blast/Scorch crit (vector 0) |
-| 7 | Improved Flamestrike | 3 | `partial` | spell Flamestrike crit (vector 0) |
-| 8 | Pyroblast | 1 | `ability-specific` | Pending: Hurls an immense fiery boulder that causes 148 to 194 Fire damage and an additional 56 Fire damage over 12 sec. |
-| 9 | Burning Soul | 2 | `partial` | scoped Fire spells pushbackResistancePct (vector 0); scoped Fire spells threatReductionPct (vector 1) |
-| 10 | Fire Vulnerability | 3 | `partial` | Pending: Fire Vulnerability debuff application and duration are target-state mechanics, not permanent personal Fire damage |
-| 11 | Improved Fire Ward | 2 | `proc-or-conditional` | Pending: Causes your Fire Ward to have a 20% chance to reflect Fire spells while active. |
-| 12 | Master of Elements | 3 | `ability-specific` | Pending: Your Fire and Frost spell criticals will refund 45% of their base mana cost. |
-| 13 | Blast Wave | 1 | `proc-or-conditional` | Pending: A wave of flame radiates outward from the caster, damaging all enemies caught within the 10 yard blast for 160 to 192 Fire damage, and dazing the |
-| 14 | Critical Mass | 3 | `partial` | spell Fire crit (vector 0) |
-| 15 | Hot Streak | 2 | `proc-or-conditional` | Pending: Gives your Fireball and Fire Blast critical strikes a 100% chance to grant Hot Streak, reducing the cast time of your next Pyroblast by 1 sec per |
-| 16 | Fire Power | 5 | `partial` | spell Fire damagePct (vector 0) |
-| 17 | Combustion | 1 | `proc-or-conditional` | Pending: When activated, this spell causes each of your Fire damage spell hits to increase your critical strike chance with Fire damage spells by 10%. Thi |
-| 18 | Frost Warding | 2 | `partial` | scoped Frost/Ice Armor effectivenessPct (vector 0), conditional on {"armour":["Frost Armor","Ice Armor"]}; Pending: Frost Ward reflection chance requires event simulation |
-| 19 | Improved Frostbolt | 5 | `partial` | scoped Frostbolt castTimeReductionSeconds (vector 0) |
-| 20 | Elemental Precision | 3 | `partial` | spell Fire/Frost hit (vector 0) |
-| 21 | Piercing Ice | 3 | `partial` | spell Frost damagePct (vector 0) |
-| 22 | Frostbite | 3 | `proc-or-conditional` | Pending: Gives your Chill effects a 15% chance to freeze the target for 5 sec. |
-| 23 | Improved Frost Nova | 2 | `partial` | scoped Frost Nova cooldownReductionSeconds (vector 0) |
-| 24 | Permafrost | 3 | `partial` | scoped Chill effects durationIncreaseSeconds (vector 0); scoped Chill effects slowIncreasePct (vector 1) |
-| 25 | Ice Shards | 5 | `partial` | spell Frost criticalDamagePct (vector 0) |
-| 26 | Cold Snap | 1 | `proc-or-conditional` | Pending: When activated, this spell finishes the cooldown on all of your Frost spells. |
-| 27 | Improved Blizzard | 3 | `ability-specific` | Pending: Adds a chill effect to your Blizzard spell. This effect lowers the target's movement speed by 40%. Lasts 1.5 sec. |
-| 28 | Arctic Reach | 2 | `partial` | scoped Frostbolt/Icicles/Blizzard rangeIncreasePct (vector 0); scoped Frost Nova/Cone of Cold radiusIncreasePct (vector 0) |
-| 29 | Frost Channeling | 3 | `partial` | scoped Frost spells manaCostReductionPct (vector 0); scoped Frost spells threatReductionPct (vector 1) |
-| 30 | Shatter | 5 | `partial` | Pending: Shatter's critical bonus only applies to frozen targets |
-| 31 | Ice Block | 1 | `proc-or-conditional` | Pending: You become encased in a block of ice, protecting you from all physical attacks and spells for 10 sec, but during that time you cannot attack, mov |
-| 32 | Icicles | 1 | `proc-or-conditional` | Pending: Draw upon frost leylines, becoming frozen in place, and launch icicles at the enemy, dealing 101 Frost damage every 1 sec for 5 sec. Damage taken |
-| 33 | Improved Cone of Cold | 3 | `partial` | scoped Cone of Cold damagePct (vector 0) |
-| 34 | Winter's Chill | 5 | `partial` | Pending: Winter's Chill adds a stackable target debuff and is not player passive critical strike chance |
-| 35 | Flash Freeze | 2 | `proc-or-conditional` | Pending: If an effect that causes a target to freeze is not applied due to the target being permanently immune to freeze effects, you have a 100% chance t |
-| 36 | Ice Barrier | 1 | `proc-or-conditional` | Pending: Instantly shields you, absorbing 454 damage and increasing your Frost damage by 10% for 1 min. While the shield holds, spells will not be interru |
+| 37 | Arcane Subtlety | 2 | Sheet contribution | CHARACTER-SHEET global  spellPen (rank vector 0) |
+| 38 | Magic Absorption | 3 | Sheet contribution | CHARACTER-SHEET global  arcaneRes (rank vector 0); CHARACTER-SHEET global  fireRes (rank vector 0); CHARACTER-SHEET global  frostRes (rank vector 0); CHARACTER-SHEET global  natureRes (rank vector 0); CHARACTER-SHEET global  shadowRes (rank vector 0) |
+| 39 | Improved Arcane Missiles | 5 | Scoped/pending | SCOPED ONLY scoped Arcane Missiles channel pushbackAvoidancePct (rank vector 0) |
+| 40 | Wand Specialization | 2 | Scoped/pending | SCOPED ONLY scoped Wand damagePct (rank vector 0); SCOPED ONLY scoped Wand hit (rank vector 1) |
+| 41 | Arcane Focus | 5 | Scoped/pending | SCOPED ONLY spell Arcane hit (rank vector 0) |
+| 42 | Arcane Concentration | 5 | Event pending | SIMULATION PENDING — Arcane Concentration generates Clearcasting with hit-proc chance and internal cooldown; next-spell mana state pending |
+| 43 | Magic Attunement | 1 | Scoped/pending | SCOPED ONLY scoped Amplify/Dampen Magic effectivenessPct (explicit [100]); SIMULATION PENDING — Target eligibility and currently active magic buff are not modelled |
+| 44 | Arcane Impact | 3 | Scoped/pending | SCOPED ONLY spell Arcane crit (rank vector 0) |
+| 45 | Arcane Rupture | 1 | Event pending | SIMULATION PENDING — Arcane Rupture is an active Arcane hit and a timed Arcane Missiles damage/mana-cost aura |
+| 46 | Improved Mana Shield | 2 | Scoped/pending | SCOPED ONLY scoped Mana Shield manaLossReductionPct (rank vector 0) |
+| 47 | Improved Counterspell | 2 | Event pending | SIMULATION PENDING — Improved Counterspell applies silence only after a successful Counterspell |
+| 48 | Temporal Convergence | 3 | Event pending | SIMULATION PENDING — Temporal Convergence procs cooldown resets and refunds Arcane Rupture mana after Arcane Missiles events |
+| 49 | Arcane Meditation | 3 | Scoped/pending | SCOPED ONLY scoped Mana regeneration while casting regenPct (rank vector 0); SIMULATION PENDING — Regeneration is tripled below 35% mana and requires a resource model |
+| 50 | Arcane Instability | 3 | Event pending | SIMULATION PENDING — Arcane Instability has a chance to spend base mana for bonus Arcane damage on successful spells |
+| 51 | Presence of Mind | 1 | Event pending | SIMULATION PENDING — Presence of Mind is an activated next-spell instant cast, not baseline casting speed |
+| 52 | Accelerated Arcana | 1 | Scoped/pending | SCOPED ONLY spell Arcane castSpeedPct (explicit [5]) |
+| 53 | Arcane Potency | 2 | Scoped/pending | SCOPED ONLY spell Arcane criticalDamagePct (rank vector 0) |
+| 54 | Resonance Cascade | 5 | Event pending | SIMULATION PENDING — Resonance Cascade duplicates Arcane spell damage probabilistically and can recursively trigger |
+| 55 | Arcane Power | 1 | Event pending | SIMULATION PENDING — Arcane Power temporarily hastens casting, changes mana income and drains mana; duration and expiry require combat resources |
+| 1 | Improved Fireball | 5 | Scoped/pending | SCOPED ONLY scoped Fireball castTimeReductionSeconds (rank vector 0) |
+| 2 | Impact | 5 | Event pending | SIMULATION PENDING — Impact stuns on Fire spell proc; target crowd-control state pending |
+| 3 | Ignite | 5 | Event pending | SIMULATION PENDING — Ignite creates a DoT after Fire spell critical strikes; no event-driven periodic damage model |
+| 4 | Flame Throwing | 2 | Scoped/pending | SCOPED ONLY scoped Fire spells rangeIncreaseYards (rank vector 0); SCOPED ONLY scoped Blast Wave radiusIncreasePct (rank vector 1) |
+| 5 | Improved Fire Blast | 3 | Scoped/pending | SCOPED ONLY scoped Fire Blast cooldownReductionSeconds (rank vector 0); SCOPED ONLY scoped Fire Blast globalCooldownReductionSeconds (rank vector 1) |
+| 6 | Incinerate | 2 | Scoped/pending | SCOPED ONLY spell Fire Blast/Scorch crit (rank vector 0) |
+| 7 | Improved Flamestrike | 3 | Scoped/pending | SCOPED ONLY spell Flamestrike crit (rank vector 0) |
+| 8 | Pyroblast | 1 | Event pending | SIMULATION PENDING — Pyroblast is an active Fire direct-plus-DoT spell; requires ability ranks and cast/target resolution |
+| 9 | Burning Soul | 2 | Scoped/pending | SCOPED ONLY scoped Fire spells pushbackResistancePct (rank vector 0); SCOPED ONLY scoped Fire spells threatReductionPct (rank vector 1) |
+| 10 | Fire Vulnerability | 3 | Event pending | SIMULATION PENDING — Fire Vulnerability debuff application and duration are target-state mechanics, not permanent personal Fire damage |
+| 11 | Improved Fire Ward | 2 | Event pending | SIMULATION PENDING — Improved Fire Ward can reflect a Fire spell while Fire Ward aura is active, requiring incoming spell events |
+| 12 | Master of Elements | 3 | Event pending | SIMULATION PENDING — Master of Elements refunds mana only after Fire/Frost spell critical strikes |
+| 13 | Blast Wave | 1 | Event pending | SIMULATION PENDING — Blast Wave is an active area Fire spell with target daze |
+| 14 | Critical Mass | 3 | Scoped/pending | SCOPED ONLY spell Fire crit (rank vector 0) |
+| 15 | Hot Streak | 2 | Event pending | SIMULATION PENDING — Hot Streak generates temporary stacked Pyroblast cast-time reduction after Fireball/Fire Blast crits |
+| 16 | Fire Power | 5 | Scoped/pending | SCOPED ONLY spell Fire damagePct (rank vector 0) |
+| 17 | Combustion | 1 | Event pending | SIMULATION PENDING — Combustion is an active accumulating Fire crit buff that expires after three Fire critical hits |
+| 18 | Frost Warding | 2 | Scoped/pending | SCOPED ONLY scoped Frost/Ice Armor effectivenessPct (rank vector 0); only if {"armour":["Frost Armor","Ice Armor"]}; SIMULATION PENDING — Frost Ward reflection chance requires event simulation |
+| 19 | Improved Frostbolt | 5 | Scoped/pending | SCOPED ONLY scoped Frostbolt castTimeReductionSeconds (rank vector 0) |
+| 20 | Elemental Precision | 3 | Scoped/pending | SCOPED ONLY spell Fire/Frost hit (rank vector 0) |
+| 21 | Piercing Ice | 3 | Scoped/pending | SCOPED ONLY spell Frost damagePct (rank vector 0) |
+| 22 | Frostbite | 3 | Event pending | SIMULATION PENDING — Frostbite freezes targets probabilistically when Chill effects apply |
+| 23 | Improved Frost Nova | 2 | Scoped/pending | SCOPED ONLY scoped Frost Nova cooldownReductionSeconds (rank vector 0) |
+| 24 | Permafrost | 3 | Scoped/pending | SCOPED ONLY scoped Chill effects durationIncreaseSeconds (rank vector 0); SCOPED ONLY scoped Chill effects slowIncreasePct (rank vector 1) |
+| 25 | Ice Shards | 5 | Scoped/pending | SCOPED ONLY spell Frost criticalDamagePct (rank vector 0) |
+| 26 | Cold Snap | 1 | Event pending | SIMULATION PENDING — Cold Snap resets eligible Frost cooldowns on use |
+| 27 | Improved Blizzard | 3 | Event pending | SIMULATION PENDING — Improved Blizzard applies a movement slow with Blizzard ticks; needs target aura and time modelling |
+| 28 | Arctic Reach | 2 | Scoped/pending | SCOPED ONLY scoped Frostbolt/Icicles/Blizzard rangeIncreasePct (rank vector 0); SCOPED ONLY scoped Frost Nova/Cone of Cold radiusIncreasePct (rank vector 0) |
+| 29 | Frost Channeling | 3 | Scoped/pending | SCOPED ONLY scoped Frost spells manaCostReductionPct (rank vector 0); SCOPED ONLY scoped Frost spells threatReductionPct (rank vector 1) |
+| 30 | Shatter | 5 | Event pending | SIMULATION PENDING — Shatter's critical bonus only applies to frozen targets |
+| 31 | Ice Block | 1 | Event pending | SIMULATION PENDING — Ice Block temporarily prevents damage but disables actions; cannot add permanent damage immunity |
+| 32 | Icicles | 1 | Event pending | SIMULATION PENDING — Icicles is a channeled attack with stationary state and a damage-reactive explosion |
+| 33 | Improved Cone of Cold | 3 | Scoped/pending | SCOPED ONLY scoped Cone of Cold damagePct (rank vector 0) |
+| 34 | Winter's Chill | 5 | Event pending | SIMULATION PENDING — Winter's Chill adds a stackable target debuff and is not player passive critical strike chance |
+| 35 | Flash Freeze | 2 | Event pending | SIMULATION PENDING — Flash Freeze triggers only when freeze fails due to permanent target immunity and changes Icicles cooldown |
+| 36 | Ice Barrier | 1 | Event pending | SIMULATION PENDING — Ice Barrier is a temporary shield with a conditional active Frost damage benefit, not permanent spell damage |
 
-### Verification blockers
+## Known source and validation limitations
 
-1. Compare all passive/weapon numbers and rounding with controlled OctoWoW client observations.
-2. Verify stance, shield, form, aspect, pet, active buff and equipment eligibility.
-3. Verify spell-family, ranged and individual-ability hit/crit tables, proc uptime and cast/resource timing before using DPS, TPS or HPS comparisons.
-4. Complete mappings of remaining talents if the source indicates a permanent, testable sheet effect.
-5. Re-run the branch Actions workflow and the baseline simulator regression suite after changes.
+- **Spell schools:** Arcane Focus and Elemental Precision are shown as scoped Arcane, Fire or Frost bonuses, not universal hit. Spell-school and individual ability tables still require full engine testing.
+- The published calculator is a definition source, not a demonstration that the live server uses precisely the same mechanics.
+- Abilities requiring attack outcomes, time, procs, cast resolution, cooldown reset, movement, party state or target debuffs must be validated in a combat engine.
+- Gear, buffs, forms/stances and weapon choices require controlled in-game stacking and rounding comparisons.
+- All existing and new regression tests are run by `.github/workflows/talent-branch-tests.yml` on this branch.
 
-**Integration caution:** all class branches currently use `core/talent-rules.mjs`; their per-class registries need consolidation before multiple branches are merged. Never merge one registry over another.
+**Do not merge this branch directly together with another class branch without consolidating their separate `docs/sim/core/talent-rules.mjs` exports.** Each branch is isolated intentionally so independent class verification remains possible; `main` has not been altered by this audit.
