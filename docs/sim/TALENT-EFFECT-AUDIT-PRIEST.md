@@ -8,68 +8,74 @@
 |---|---:|
 | Imported talents | 52 |
 | Talents with individual reviewed registry entries | 52 |
-| At least one character-sheet or weapon-derived effect | 3 |
-| Scoped reference contributions only | 31 |
+| At least one character-sheet or weapon-derived effect | 4 |
+| Scoped numeric rules (not all have final absolute calculations) | 30 |
 | Simulation/event-only records | 18 |
 
 **Important:** The second and third categories are not completed DPS/TPS/HPS mechanics. A school, attack type or pet effect may be described numerically without being incorporated into a full combat outcome. The planner uses unverified base coefficients and must not be represented as a validated OctoWoW simulator.
+
+## Phase 2: calculation integration
+
+Separate offensive and healing crit scopes, combined Power Word: Shield absorption, fixed Renew duration increase at both ranks, target Renew scenario, and Shadowform damage reduction.
+
+The planner combines applicable talent modifiers across explicit ability profiles. Unknown base damage, cost, timing, pet stats and live stacking are not invented: relative multipliers/reductions and reference hit/crit estimates are shown. Scenario controls are inactive by default; event-only effects are not simulated. Additive percentage stacking in the isolated estimator is a provisional modelling choice pending live validation. Tests: `tests/sim/talent-calculations.test.mjs` and existing planner tests.
 
 ## Exact classification of all 52 talents
 
 | ID | Talent | Ranks | Status | Effect / precise unresolved dependency |
 |---:|---|---:|---|---|
-| 166 | Wand Specialization | 2 | Scoped/pending | SCOPED ONLY scoped Wand/Bow damagePct (rank vector 0); SCOPED ONLY scoped Wand/Bow hit (rank vector 1) |
-| 167 | Piercing Light | 3 | Scoped/pending | SCOPED ONLY spell Holy/Discipline hit (rank vector 0) |
-| 168 | Mental Agility | 5 | Scoped/pending | SCOPED ONLY scoped Instant/Holy/Discipline spells manaCostReductionPct (rank vector 0) |
-| 169 | Silent Resolve | 5 | Scoped/pending | SCOPED ONLY scoped All spells threatReductionPct (rank vector 0) |
-| 170 | Unbreakable Will | 5 | Scoped/pending | SCOPED ONLY scoped Stun/Fear/Silence resistChancePct (rank vector 0) |
-| 171 | Blessed Concentration | 2 | Event pending | SIMULATION PENDING — Blessed Concentration activates after taking melee/ranged crit damage; anti-pushback and spell effects expire after a short duration |
-| 172 | Improved Power Word: Fortitude | 2 | Scoped/pending | SCOPED ONLY scoped Power Word: Fortitude buffEffectivenessPct (rank vector 0) |
-| 173 | Improved Inner Fire | 2 | Scoped/pending | SCOPED ONLY scoped Inner Fire buffEffectivenessPct (rank vector 0) |
-| 174 | Inner Focus | 1 | Event pending | SIMULATION PENDING — Inner Focus is an on-use next-spell mana-free, extra-critical effect, not permanent crit chance |
-| 175 | Improved Power Word: Shield | 3 | Scoped/pending | SCOPED ONLY scoped Power Word: Shield absorbPct (rank vector 0) |
-| 176 | Meditation | 3 | Scoped/pending | SCOPED ONLY scoped Mana regeneration while casting regenPct (rank vector 0) |
-| 177 | Searing Light | 3 | Event pending | SIMULATION PENDING — Searing Light grants a timed instant and discounted Smite following Holy/Discipline spell critical hits |
-| 178 | Purifying Flames | 2 | Event pending | SIMULATION PENDING — Purifying Flames grants temporary Holy damage after Holy Fire hits |
-| 179 | Mental Strength | 3 | Sheet contribution | CHARACTER-SHEET percent  int (rank vector 0); SCOPED ONLY spell Spell casting castSpeedPct (rank vector 1) |
-| 180 | Enlighten | 1 | Event pending | SIMULATION PENDING — Enlighten links party member health/mana to the priest's helpful/harmful spell events |
-| 181 | Resurgent Shield | 1 | Event pending | SIMULATION PENDING — Resurgent Shield triggers a shield-break mana refund and temporary Holy damage/healing based on shield absorb amount |
-| 182 | Force of Will | 5 | Scoped/pending | SCOPED ONLY spell Offensive spells damagePct (rank vector 0); SCOPED ONLY spell Offensive spells crit (rank vector 0) |
-| 183 | Chastise | 1 | Event pending | SIMULATION PENDING — Chastise is an active enemy disorient or ally haste spell requiring explicit target type and ability timing |
-| 184 | Improved Renew | 3 | Scoped/pending | SCOPED ONLY scoped Renew healingPct (rank vector 0) |
-| 185 | Holy Focus | 2 | Scoped/pending | SCOPED ONLY scoped Holy spell casting pushbackAvoidancePct (rank vector 0) |
-| 186 | Divinity | 5 | Scoped/pending | SCOPED ONLY spell Holy/Discipline crit (rank vector 0) |
-| 187 | Divine Fury | 5 | Scoped/pending | SCOPED ONLY scoped Smite/Holy Fire/Heal/Greater Heal castTimeReductionSeconds (rank vector 0) |
-| 188 | Spell Warding | 3 | Scoped/pending | SCOPED ONLY scoped Incoming spell damage damageReductionPct (rank vector 0) |
-| 189 | Holy Reach | 2 | Scoped/pending | SCOPED ONLY scoped Smite/Holy Fire/Chastise rangeIncreasePct (rank vector 0); SCOPED ONLY scoped Prayer of Healing/Holy Nova radiusIncreasePct (rank vector 0) |
-| 190 | Blessed Recovery | 3 | Event pending | SIMULATION PENDING — Blessed Recovery heals over time only after the priest receives a melee/ranged critical hit |
-| 191 | Inspiration | 3 | Event pending | SIMULATION PENDING — Inspiration grants a temporary armour buff to a healed target after a critical heal, not to the priest |
-| 192 | Holy Nova | 1 | Event pending | SIMULATION PENDING — Holy Nova is an active area damage/healing spell and has different Shadowform interactions |
-| 193 | Empowered Recovery | 2 | Scoped/pending | SCOPED ONLY scoped Renew durationIncreaseSeconds (rank vector 0); SCOPED ONLY scoped Healing target with Renew healingPct (rank vector 0) |
-| 194 | Improved Healing | 3 | Scoped/pending | SCOPED ONLY scoped Lesser Heal/Heal/Greater Heal/Prayer of Healing manaCostReductionPct (rank vector 0) |
-| 195 | Spiritual Guidance | 5 | Sheet contribution | CHARACTER-SHEET special  spFromSpiritPct (rank vector 0) |
-| 196 | Book of Prayer | 2 | Event pending | SIMULATION PENDING — Book of Prayer refunds mana only when successive healing spells differ |
-| 197 | Spirit of Redemption | 1 | Sheet contribution | CHARACTER-SHEET percent  spi (explicit [10]); SIMULATION PENDING — Spirit of Redemption on death requires combat context |
-| 198 | Reservoir of Light | 3 | Scoped/pending | SCOPED ONLY scoped Lightwell Splendor of Light effectivenessPct (rank vector 0) |
-| 199 | Spiritual Healing | 5 | Scoped/pending | SCOPED ONLY scoped Healing spells healingPct (rank vector 0) |
-| 200 | Ascendance | 1 | Event pending | SIMULATION PENDING — Ascendance is an activated temporary healing-resource/cast-time buff with ally Apotheosis effects |
-| 201 | Spirit Tap | 5 | Event pending | SIMULATION PENDING — Spirit Tap grants temporary Spirit and while-casting mana regeneration after qualifying kill or Mind Blast crit |
-| 202 | Improved Mind Blast | 5 | Scoped/pending | SCOPED ONLY scoped Mind Blast cooldownReductionSeconds (rank vector 0) |
-| 203 | Shadow Affinity | 3 | Scoped/pending | SCOPED ONLY scoped Shadow spells threatReductionPct (rank vector 0) |
-| 204 | Improved Shadow Word: Pain | 2 | Scoped/pending | SCOPED ONLY scoped Shadow Word: Pain durationIncreaseSeconds (rank vector 0) |
-| 205 | Shadow Focus | 5 | Scoped/pending | SCOPED ONLY spell Shadow hit (rank vector 0) |
-| 206 | Blackout | 5 | Event pending | SIMULATION PENDING — Blackout stuns randomly following Shadow damage spell hits |
-| 207 | Improved Psychic Scream | 2 | Scoped/pending | SCOPED ONLY scoped Psychic Scream cooldownReductionSeconds (rank vector 0) |
-| 208 | Improved Fade | 2 | Scoped/pending | SCOPED ONLY scoped Fade cooldownReductionSeconds (rank vector 0); SCOPED ONLY scoped Fade end threatReturnReductionPct (rank vector 1) |
-| 209 | Mind Flay | 1 | Event pending | SIMULATION PENDING — Mind Flay is an active channeled Shadow DoT applying slow to a target |
-| 210 | Improved Mana Burn | 2 | Scoped/pending | SCOPED ONLY scoped Mana Burn castTimeReductionSeconds (explicit [0.25,0.5]) |
-| 211 | Shadow Reach | 2 | Scoped/pending | SCOPED ONLY scoped Shadow spells rangeIncreasePct (rank vector 0) |
-| 212 | Shadow Weaving | 5 | Event pending | SIMULATION PENDING — Shadow Weaving is a temporary self/target stacking Shadow vulnerability aura generated by Shadow spell casts |
-| 213 | Silence | 1 | Event pending | SIMULATION PENDING — Silence is an active target spell-lockout ability |
-| 214 | Vampiric Embrace | 1 | Event pending | SIMULATION PENDING — Vampiric Embrace links Shadow damage against affected target into party healing for an aura duration |
-| 215 | Vampiric Touch | 2 | Scoped/pending | SCOPED ONLY scoped Vampiric Embrace healingPct (rank vector 0); SCOPED ONLY scoped Vampiric Embrace partyManaReturnPct (rank vector 1); SIMULATION PENDING — Target damage and active Vampiric Embrace aura need event-driven party resource handling |
-| 216 | Darkness | 5 | Scoped/pending | SCOPED ONLY spell Shadow damagePct (rank vector 0) |
-| 217 | Shadowform | 1 | Scoped/pending | SCOPED ONLY spell Shadow damagePct (explicit [15]); only if {"form":"Shadowform"}; SIMULATION PENDING — Shadowform armour/damage reduction and ability restrictions need combat support |
+| 166 | Wand Specialization | 2 | Scoped numeric rule | scoped: Wand/Bow damagePct; rank vector 0; scoped: Wand/Bow hit; rank vector 1 |
+| 167 | Piercing Light | 3 | Scoped numeric rule | spell: Holy/Discipline hit; rank vector 0 |
+| 168 | Mental Agility | 5 | Scoped numeric rule | scoped: Instant/Holy/Discipline spells manaCostReductionPct; rank vector 0 |
+| 169 | Silent Resolve | 5 | Scoped numeric rule | scoped: All spells threatReductionPct; rank vector 0 |
+| 170 | Unbreakable Will | 5 | Scoped numeric rule | scoped: Stun/Fear/Silence resistChancePct; rank vector 0 |
+| 171 | Blessed Concentration | 2 | Event pending | PENDING: Blessed Concentration activates after taking melee/ranged crit damage; anti-pushback and spell effects expire after a short duration |
+| 172 | Improved Power Word: Fortitude | 2 | Scoped numeric rule | scoped: Power Word: Fortitude buffEffectivenessPct; rank vector 0 |
+| 173 | Improved Inner Fire | 2 | Scoped numeric rule | scoped: Inner Fire buffEffectivenessPct; rank vector 0 |
+| 174 | Inner Focus | 1 | Event pending | PENDING: Inner Focus is an on-use next-spell mana-free, extra-critical effect, not permanent crit chance |
+| 175 | Improved Power Word: Shield | 3 | Scoped numeric rule | scoped: Power Word: Shield absorbPct; rank vector 0 |
+| 176 | Meditation | 3 | Scoped numeric rule | scoped: Mana regeneration while casting regenPct; rank vector 0 |
+| 177 | Searing Light | 3 | Event pending | PENDING: Searing Light grants a timed instant and discounted Smite following Holy/Discipline spell critical hits |
+| 178 | Purifying Flames | 2 | Event pending | PENDING: Purifying Flames grants temporary Holy damage after Holy Fire hits |
+| 179 | Mental Strength | 3 | Sheet/weapon contribution | percent:  int; rank vector 0; spell: Spell casting castSpeedPct; rank vector 1 |
+| 180 | Enlighten | 1 | Event pending | PENDING: Enlighten links party member health/mana to the priest's helpful/harmful spell events |
+| 181 | Resurgent Shield | 1 | Event pending | PENDING: Resurgent Shield triggers a shield-break mana refund and temporary Holy damage/healing based on shield absorb amount |
+| 182 | Force of Will | 5 | Scoped numeric rule | spell: Offensive spells damagePct; rank vector 0; spell: Offensive spells crit; rank vector 0; scoped: Power Word: Shield absorbPct; rank vector 1 |
+| 183 | Chastise | 1 | Event pending | PENDING: Chastise is an active enemy disorient or ally haste spell requiring explicit target type and ability timing |
+| 184 | Improved Renew | 3 | Scoped numeric rule | scoped: Renew healingPct; rank vector 0 |
+| 185 | Holy Focus | 2 | Scoped numeric rule | scoped: Holy spell casting pushbackAvoidancePct; rank vector 0 |
+| 186 | Divinity | 5 | Scoped numeric rule | spell: Holy/Discipline crit; rank vector 0 |
+| 187 | Divine Fury | 5 | Scoped numeric rule | scoped: Smite/Holy Fire/Heal/Greater Heal castTimeReductionSeconds; rank vector 0 |
+| 188 | Spell Warding | 3 | Scoped numeric rule | scoped: Incoming spell damage damageReductionPct; rank vector 0 |
+| 189 | Holy Reach | 2 | Scoped numeric rule | scoped: Smite/Holy Fire/Chastise rangeIncreasePct; rank vector 0; scoped: Prayer of Healing/Holy Nova radiusIncreasePct; rank vector 0 |
+| 190 | Blessed Recovery | 3 | Event pending | PENDING: Blessed Recovery heals over time only after the priest receives a melee/ranged critical hit |
+| 191 | Inspiration | 3 | Event pending | PENDING: Inspiration grants a temporary armour buff to a healed target after a critical heal, not to the priest |
+| 192 | Holy Nova | 1 | Event pending | PENDING: Holy Nova is an active area damage/healing spell and has different Shadowform interactions |
+| 193 | Empowered Recovery | 2 | Scoped numeric rule | scoped: Renew durationIncreaseSeconds; explicit [3,3]; scoped: Healing target with Renew healingPct; rank vector 0; only {"targetRenew":"On"} |
+| 194 | Improved Healing | 3 | Scoped numeric rule | scoped: Lesser Heal/Heal/Greater Heal/Prayer of Healing manaCostReductionPct; rank vector 0 |
+| 195 | Spiritual Guidance | 5 | Sheet/weapon contribution | special:  spFromSpiritPct; rank vector 0 |
+| 196 | Book of Prayer | 2 | Event pending | PENDING: Book of Prayer refunds mana only when successive healing spells differ |
+| 197 | Spirit of Redemption | 1 | Sheet/weapon contribution | percent:  spi; explicit [10]; PENDING: Spirit of Redemption on death requires combat context |
+| 198 | Reservoir of Light | 3 | Scoped numeric rule | scoped: Lightwell Splendor of Light effectivenessPct; rank vector 0 |
+| 199 | Spiritual Healing | 5 | Scoped numeric rule | scoped: Healing spells healingPct; rank vector 0 |
+| 200 | Ascendance | 1 | Event pending | PENDING: Ascendance is an activated temporary healing-resource/cast-time buff with ally Apotheosis effects |
+| 201 | Spirit Tap | 5 | Event pending | PENDING: Spirit Tap grants temporary Spirit and while-casting mana regeneration after qualifying kill or Mind Blast crit |
+| 202 | Improved Mind Blast | 5 | Scoped numeric rule | scoped: Mind Blast cooldownReductionSeconds; rank vector 0 |
+| 203 | Shadow Affinity | 3 | Scoped numeric rule | scoped: Shadow spells threatReductionPct; rank vector 0 |
+| 204 | Improved Shadow Word: Pain | 2 | Scoped numeric rule | scoped: Shadow Word: Pain durationIncreaseSeconds; rank vector 0 |
+| 205 | Shadow Focus | 5 | Scoped numeric rule | spell: Shadow hit; rank vector 0 |
+| 206 | Blackout | 5 | Event pending | PENDING: Blackout stuns randomly following Shadow damage spell hits |
+| 207 | Improved Psychic Scream | 2 | Scoped numeric rule | scoped: Psychic Scream cooldownReductionSeconds; rank vector 0 |
+| 208 | Improved Fade | 2 | Scoped numeric rule | scoped: Fade cooldownReductionSeconds; rank vector 0; scoped: Fade end threatReturnReductionPct; rank vector 1 |
+| 209 | Mind Flay | 1 | Event pending | PENDING: Mind Flay is an active channeled Shadow DoT applying slow to a target |
+| 210 | Improved Mana Burn | 2 | Scoped numeric rule | scoped: Mana Burn castTimeReductionSeconds; explicit [0.25,0.5] |
+| 211 | Shadow Reach | 2 | Scoped numeric rule | scoped: Shadow spells rangeIncreasePct; rank vector 0 |
+| 212 | Shadow Weaving | 5 | Event pending | PENDING: Shadow Weaving is a temporary self/target stacking Shadow vulnerability aura generated by Shadow spell casts |
+| 213 | Silence | 1 | Event pending | PENDING: Silence is an active target spell-lockout ability |
+| 214 | Vampiric Embrace | 1 | Event pending | PENDING: Vampiric Embrace links Shadow damage against affected target into party healing for an aura duration |
+| 215 | Vampiric Touch | 2 | Scoped numeric rule | scoped: Vampiric Embrace healingPct; rank vector 0; scoped: Vampiric Embrace partyManaReturnPct; rank vector 1; PENDING: Target damage and active Vampiric Embrace aura need event-driven party resource handling |
+| 216 | Darkness | 5 | Scoped numeric rule | spell: Shadow damagePct; rank vector 0 |
+| 217 | Shadowform | 1 | Sheet/weapon contribution | spell: Shadow damagePct; explicit [15]; only {"form":"Shadowform"}; PENDING: Shadowform armour/damage reduction and ability restrictions need combat support; special:  physicalDamageTakenReductionPct; explicit [15]; only {"form":"Shadowform"} |
 
 ## Known source and validation limitations
 
