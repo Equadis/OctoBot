@@ -1,0 +1,27 @@
+// Published ranks and distinct Classic reference assumptions. A reference
+// coefficient is not a verified OctoWoW coefficient; all ranks are research-only.
+// Exact rank observations are kept in combat-rank-evidence.mjs.
+import {rankEvidence} from './combat-rank-evidence.mjs';
+const coefficientSource='https://www.warcrafttavern.com/wow-classic/guides/ozgars-downranking-guide-tool';
+const c=(kind,stat,coefficient,extra={})=>({kind,stat,coefficient,...extra});
+const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
+ const abilityId=classId+':'+slug,record=rankEvidence(abilityId,spellId);
+ if(!record)throw new Error('Missing rank evidence: '+abilityId);
+ return {classId,abilityId,spellId,rank:record.rank,learnLevel:record.level,resource,mode,components,record,source:record.source,status:'reference-implementation',liveVerified:false,...extra};
+};
+export const REFERENCE_RANKS=Object.freeze([
+ row('warrior','heroic-strike',25286,'rage','queued-melee',[c('weapon','mainhand',1,{flat:157})],{cost:15,castMs:0,minRange:0,maxRange:5,referenceSource:'https://www.wowhead.com/classic/spell=25286/heroic-strike',learnability:'book-required-or-confirmed',requiredPolicy:['flatThreat','weaponPolicy']}),
+ row('rogue','backstab',25300,'energy','instant',[c('weapon','mainhand',1.5,{flat:225})],{cost:60,castMs:0,minRange:0,maxRange:5,position:'behind',weaponSubclass:15,comboGain:1,referenceSource:'https://www.wowhead.com/classic/spell=25300/backstab',learnability:'book-required-or-confirmed',requiredPolicy:['weaponPolicy','acceptSourceConflict']}),
+ row('rogue','eviscerate',11300,'energy','instant',[c('combo','attackPower',null,{ranges:[[199,295],[350,446],[501,597],[652,748],[803,899]]})],{cost:30,castMs:0,minRange:0,maxRange:5,comboSpend:true,referenceSource:'https://octowow.st/index.php/rogue',requiredPolicy:['apPerComboPoint','acceptSourceConflict','spendOnMiss']}),
+ row('paladin','holy-light',25292,'mana','cast',[c('heal','healingPower',2.5/3.5,{min:1590,max:1771})],{cost:660,castMs:2500,minRange:0,maxRange:40,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'}),
+ row('hunter','serpent-sting',25295,'mana','instant',[c('periodic-damage','nature',.2,{min:111,max:111,durationMs:15000,intervalMs:3000})],{cost:165,castMs:0,minRange:8,maxRange:35,referenceSource:'https://www.wowhead.com/classic/spell=25295/serpent-sting',costSource:'https://octowow.st/index.php/hunter',requiredPolicy:['acceptSourceConflict'],learnability:'book-required-or-confirmed'}),
+ row('mage','frostbolt',25304,'mana','cast',[c('damage','frost',3/3.5*.95,{min:515,max:556})],{cost:290,castMs:3000,minRange:0,maxRange:30,referenceSource:'https://us.forums.blizzard.com/en/wow/t/how-will-spell-power-work-in-classic/99279',learnability:'book-required-or-confirmed'}),
+ row('warlock','shadow-bolt',25307,'mana','cast',[c('damage','shadow',3/3.5,{min:482,max:539})],{cost:380,castMs:3000,minRange:0,maxRange:30,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'}),
+ row('warlock','immolate',25309,'mana','cast',[c('damage','fire',null,{min:279,max:279}),c('periodic-damage','fire',null,{min:102,max:102,durationMs:15000,intervalMs:3000,reusePreviousHit:true})],{cost:380,castMs:2000,minRange:0,maxRange:30,referenceSource:coefficientSource,requiredPolicy:['componentCoefficients'],learnability:'book-required-or-confirmed'}),
+ row('priest','greater-heal',25314,'mana','cast',[c('heal','healingPower',3/3.5,{min:1966,max:2195})],{cost:710,castMs:3000,minRange:0,maxRange:40,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'}),
+ row('priest','renew',25315,'mana','instant',[c('periodic-heal','healingPower',.2,{min:194,max:194,durationMs:15000,intervalMs:3000})],{cost:410,castMs:0,minRange:0,maxRange:40,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'}),
+ row('shaman','healing-wave',25357,'mana','cast',[c('heal','healingPower',3/3.5,{min:1620,max:1851})],{cost:620,castMs:3000,minRange:0,maxRange:40,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'}),
+ row('druid','rejuvenation',25299,'mana','instant',[c('periodic-heal','healingPower',.2,{min:222,max:222,durationMs:12000,intervalMs:3000})],{cost:360,castMs:0,minRange:0,maxRange:40,referenceSource:coefficientSource,learnability:'book-required-or-confirmed'})
+]);
+export function referenceRanks(classId){return REFERENCE_RANKS.filter(r=>r.classId===classId).map(r=>structuredClone(r));}
+export function referenceRank(classId,spellId){const r=REFERENCE_RANKS.find(r=>r.classId===classId&&r.spellId===spellId);if(!r)throw new Error('No executable reference rank: '+classId+' '+spellId);return structuredClone(r);}

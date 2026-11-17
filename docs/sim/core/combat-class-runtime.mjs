@@ -52,7 +52,7 @@ function validateEffects(effects,ctx,depth=0){
   if(['damage','heal','periodic-damage','periodic-heal'].includes(x.kind)){
    validateFormula(x.formula,ctx.stats,ctx.comboEnabled);validateOutcomes(x.outcomes);validateThreat(x.threat);
    finite(x.mitigation,'mitigation',0);if(x.mitigation>1)throw new Error('Invalid mitigation');finite(x.flatReduction,'flat reduction',0);
-   if(x.kind.startsWith('periodic')){if(x.formula.comboRanges||x.formula.terms.some(t=>t.perComboPoint))throw new Error('Periodic combo scaling requires explicit application snapshot adapter');int(x.durationMs,'periodic duration',1);int(x.intervalMs,'tick interval',1);choose(x.refresh,['restart','preserve-next-tick'],'refresh');bool(x.tickAtExpiry,'expiry tick');choose(x.snapshot,['snapshot','dynamic'],'snapshot policy');validateOutcomes(x.applicationOutcomes);id(x.auraName,'aura name');}
+   if(x.kind.startsWith('periodic')){if((x.formula.comboRanges||x.formula.terms.some(t=>t.perComboPoint))&&x.snapshot!=='snapshot')throw new Error('Periodic combo scaling requires an application snapshot');int(x.durationMs,'periodic duration',1);int(x.intervalMs,'tick interval',1);choose(x.refresh,['restart','preserve-next-tick'],'refresh');bool(x.tickAtExpiry,'expiry tick');choose(x.snapshot,['snapshot','dynamic'],'snapshot policy');validateOutcomes(x.applicationOutcomes);id(x.auraName,'aura name');}
   }else if(x.kind==='resource'){
    if(!has(ctx.pools,x.resource))throw new Error('Unknown effect resource '+x.resource);finite(x.delta,'resource delta');
   }else if(x.kind==='combo-gain'){
@@ -88,7 +88,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   if(!trigger(x.when,landed))continue;
   if(x.kind==='damage'||x.kind==='heal'){landed=resolve(x,range(e,target,actor,x.formula,stats)).landed;}
   else if(x.kind.startsWith('periodic-')){
-   const application=sampleAttack({min:0,max:0,outcomes:x.applicationOutcomes,random:e.random});landed=application.landed;e.recordMechanic('attack-result',{actorId:actor,targetId:target,source:source+' (apply)',school:x.school??null,...application});
+   const application=x.reusePreviousHit===true?(landed===null?(()=>{throw new Error('No previous attack outcome to reuse');})():{landed}):sampleAttack({min:0,max:0,outcomes:x.applicationOutcomes,random:e.random});landed=application.landed;if(x.reusePreviousHit!==true)e.recordMechanic('attack-result',{actorId:actor,targetId:target,source:source+' (apply)',school:x.school??null,...application});
    if(!landed)continue;
    const periodicId=JSON.stringify([actor,target,source,index,depth]),kind=x.kind.endsWith('heal')?'buff':'debuff';
    const snap=x.snapshot==='snapshot'?range(e,target,actor,x.formula,stats):null;
