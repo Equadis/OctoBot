@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const BASE='https://equadis.github.io/OctoBot/';
-const ROUTES=['population','status','sim','outfitter','world-info','auction-house'];
+const ROUTES=['population','status','sim','outfitter','world-info','auction-house','world-chat'];
 const docs=new URL('../docs/',import.meta.url);
 const page=route=>readFileSync(new URL(route+'/index.html',docs),'utf8');
 const source=readFileSync(new URL('site-nav.js',docs),'utf8');
@@ -26,7 +26,7 @@ test('navigation has exactly three groups in the required order',()=>{
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
     ['Gear Planner','Dressing Room'],
-    ['World Info','Auction House']]);
+    ['World Info','Auction House','World Chat']]);
   assert.equal(GROUPS.length,3);
 });
 
@@ -55,8 +55,8 @@ test('every page uses the shared script, names itself, and highlights only its o
   }
 });
 
-test('links resolve to the six canonical directory URLs from every page, in the same order',()=>{
-  const expected=['population/','status/','sim/','outfitter/','world-info/','auction-house/'].map(p=>new URL(p,BASE).href);
+test('links resolve to the seven canonical directory URLs from every page, in the same order',()=>{
+  const expected=['population/','status/','sim/','outfitter/','world-info/','auction-house/','world-chat/'].map(p=>new URL(p,BASE).href);
   for(const route of ROUTES){
     const urls=rendered(route,'../').flatMap(g=>g.links).map(l=>{const u=new URL(l.href,new URL(route+'/',BASE));return u.origin+u.pathname;});
     assert.deepEqual(urls,expected,route);
@@ -74,7 +74,7 @@ test('separators are thin borders between groups only, matching the header rule'
 test('the home page lists the tools in the same order as the navigation',()=>{
   const html=readFileSync(new URL('index.html',docs),'utf8');
   const hrefs=[...html.matchAll(/class="home-card" href="([^"]+)"/g)].map(m=>m[1]);
-  assert.deepEqual(hrefs,['population/#server=all','status/','sim/','outfitter/','world-info/','auction-house/']);
+  assert.deepEqual(hrefs,['population/#server=all','status/','sim/','outfitter/','world-info/','auction-house/','world-chat/']);
 });
 
 test('tab size is pinned in the shared theme so pages that restyle .page-nav a cannot make tabs taller or thinner',()=>{
