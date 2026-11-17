@@ -193,3 +193,36 @@ test("history errors retain live fallback and distinguish incompatible API and s
  assert.equal(resp.headers.get("Access-Control-Allow-Origin"),"https://equadis.github.io");
  assert.equal((await resp.json()).code,"history_schema_missing");
 });
+
+
+import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus,itemAuctionHref,auctionSearchFromURL} from "../../../docs/world-chat/chat-interactions.mjs";
+test("elapsed listing timers count up, clamp future timestamps and pad seconds",()=>{
+ const t=1000000;
+ assert.equal(elapsedLabel(t,t),"0m 00s ago");
+ assert.equal(elapsedLabel(t,t+65000),"1m 05s ago");
+ assert.equal(elapsedLabel(t,t+299999),"4m 59s ago");
+ assert.equal(elapsedLabel(t,t-1000),"0m 00s ago");
+});
+test("history load button appears only at top, with separate retry visibility",()=>{
+ assert.equal(showOlderButton({more:true},0),true);
+ assert.equal(showOlderButton({more:true},3),false);
+ assert.equal(showOlderButton({more:false},0),false);
+ assert.equal(showOlderButton({error:"network"},500),true);
+});
+test("DGG-style focus is case-insensitive and includes whole-name mentions, not substrings",()=>{
+ const names=new Set(["alice","bob"]);
+ const parts=mentionParts("Hey ALICE, @Bob! Malice and bobcat.",names);
+ assert.equal(parts.map(p=>p.text).join(""),"Hey ALICE, @Bob! Malice and bobcat.");
+ assert.deepEqual(parts.filter(p=>p.player).map(p=>p.player),["alice","bob"]);
+ assert.equal(rowInFocus("ALICE",[],"alice"),true);
+ assert.equal(rowInFocus("Bob",["alice"],"alice"),true);
+ assert.equal(rowInFocus("Bob",[],"alice"),false);
+ assert.equal(rowInFocus("Bob",[],""),true);
+ assert.equal(playerKey(" Alice "),"alice");
+ assert.deepEqual(mentionParts("@Newplayer",new Set()),[{text:"@Newplayer",player:"newplayer"}]);
+});
+test("item menu AH links seed the existing search field with a numeric item ID",()=>{
+ assert.equal(itemAuctionHref(16712),"../auction-house/?q=16712");
+ assert.equal(itemAuctionHref(-1),null);
+ assert.equal(auctionSearchFromURL("https://equadis.github.io/OctoBot/auction-house/?q=16712"),"16712");
+});
