@@ -3,8 +3,8 @@ import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './c
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
-import {resolveTalentEffects} from './talent-effects.mjs?v=20261117-talent-audit2';
-import {abilityEstimates} from './talent-calculations.mjs?v=20261117-talent-audit2';
+import {resolveTalentEffects} from './talent-effects.mjs?v=20261117-talent-audit3';
+import {abilityEstimates} from './talent-calculations.mjs?v=20261117-talent-audit3';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
