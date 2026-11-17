@@ -29,6 +29,7 @@ export function characterStats(build,talentData,gear={}){
  const setAudit=equipmentSetAudit(gear,build);add(setAudit.stats);
  for(const e of setAudit.active)if(e.status==='scoped')scopedEquipment.push({...e,source:e.set+' ('+e.pieces+'pc)'});
  const scoped=combineScopedEquipment(scopedEquipment,build);
+ const rawItemArmour=s.armour;
  const buffAudit=resolveBuffEffects(build,gear);const buffs=buffAudit.ids;for(const entry of buffAudit.entries)if(entry.active)add(entry.stats);
  const has=id=>buffs.includes(id);
  for(const entry of buffAudit.consumables)if(entry.status==='prepull')add(entry.stats);
@@ -48,7 +49,9 @@ export function characterStats(build,talentData,gear={}){
  if(racial.intellectMultiplier)mult('int',(racial.intellectMultiplier-1)*100);
  if(racial.agilityMultiplier)mult('agi',(racial.agilityMultiplier-1)*100);
  s.parry+=value('Deflection');s.defense+=value('Anticipation');
- s.armour*=1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0);
+ const nonItemArmour=s.armour-rawItemArmour;
+ const improvedItemArmour=rawItemArmour*(1+value('Toughness')/100+(c==='druid'?value('Thick Hide')/100:0));
+ s.armour=improvedItemArmour+nonItemArmour;
  const [aps,apa,critAgi,dodgeAgi,critInt,baseCrit,baseSpellCrit]=COEFFICIENTS[c];
  let apBase=['warrior','paladin'].includes(c)?3*level-20:['rogue','hunter','shaman'].includes(c)?2*level-20:c==='druid'?-20:-10;
  let ap=base?apBase+s.str*aps+s.agi*apa+s.ap:null;
@@ -60,8 +63,8 @@ export function characterStats(build,talentData,gear={}){
  const health=base?(base[5]+s.health+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(racial.healthMultiplier||1):null;
  let armour=base?s.armour+s.agi*2:null;
  if(c==='druid'&&base){
-  if(build.classOptions.form==='Bear')armour=s.armour*(level>=40?4.6:2.8)+s.agi*2;
-  if(build.classOptions.form==='Moonkin')armour=selected('Moonkin Form')?s.armour*(1+value('Moonkin Form')/100)+s.agi*2:null;
+  if(build.classOptions.form==='Bear')armour=improvedItemArmour*(level>=40?4.6:2.8)+nonItemArmour+s.agi*2;
+  if(build.classOptions.form==='Moonkin')armour=selected('Moonkin Form')?improvedItemArmour*(1+value('Moonkin Form')/100)+nonItemArmour+s.agi*2:null;
  }
  for(const name of ['Arcane','Fire','Nature','Frost','Shadow'])s[name.toLowerCase()+'Res']+=racial[name.toLowerCase()+'Resistance']||0;
  let spellCrit=level===60&&base?baseSpellCrit+s.int*critInt+s.spellCrit:null;
@@ -113,6 +116,8 @@ export function characterStats(build,talentData,gear={}){
  if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':x.status==='scoped'?'Scoped contribution':x.status==='utility'?'Utility (unquantified)':'Not simulated',x.effect]));
  if(scoped.length)group('Scoped Equipment Modifiers',scoped.map(x=>[x.scope+' — '+x.stat+(x.condition?.target?' ('+x.condition.target+')':''),String(Number(x.amount.toFixed(3)))+(x.stat.endsWith('Pct')?'%':'')+(x.active?'':' (inactive)'),[...new Set(x.sources)].join(', ')+'; relative contribution only.']));
  if(unresolvedEquipment.length||setAudit.unresolved.length)group('Uncalculated Equipment Effects',[...unresolvedEquipment.map(x=>[x.item,x.status,x.raw]),...setAudit.unresolved.map(x=>[x.set||x.item,'Unverified set',x.reason])]);
+ const targetMods={};for(const e of buffAudit.entries)if(e.active)for(const [k,v] of Object.entries(e.stats))if(k.startsWith('target')&&k!=='targetArmour')targetMods[k]=(targetMods[k]||0)+v;
+ if(Object.keys(targetMods).length)group('Target Debuff Contributions',Object.entries(targetMods).map(([k,v])=>[k,String(v)+(k.endsWith('Pct')?'%':''),'Scoped target contribution; not applied to player stats or final damage.']));
  if(buffAudit.entries.some(e=>e.status!=='source-prepull'&&e.id!=='skill-book')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull'&&e.id!=='skill-book').map(e=>[e.name,e.active?e.status:'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
  return {groups,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }

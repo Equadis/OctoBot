@@ -24,7 +24,7 @@ export function selectBuffGroup(current,ids,enabled=true){
 }
 // Percentage values use percentage points; haste is combined multiplicatively.
 export const BUFF_STATS=Object.freeze({
- 'battle-shout':{ap:232},might:{ap:222},wild:{str:12,agi:12,sta:12},pack:{crit:3},earth:{str:96},air:{agi:96},trueshot:{ap:30,apMultiplier:1.03},tricks:{crit:4},
+ 'battle-shout':{ap:232},might:{ap:222},wild:{str:12,agi:12,sta:12,int:12,spi:12,armour:285,arcaneRes:20,fireRes:20,natureRes:20,frostRes:20,shadowRes:20},pack:{crit:3},earth:{str:96},air:{agi:96},trueshot:{ap:30,apMultiplier:1.03},tricks:{crit:4},
  mongoose:{agi:25,crit:2},'greater-agility':{agi:25},scorpok:{agi:25},firewater:{ap:35},'juju-might':{ap:40},giants:{str:25},'juju-power':{str:30},dreamshard:{sp:15,spellCrit:2},
  'emerald-mongoose':{sp:15,agi:25,crit:2,spellCrit:2},dreamwater:{sp:35,ap:35},'arcane-giant':{sp:35,str:25},'brute-force':{str:18,sta:18},
  'supreme-power':{sp:150},dreamtonic:{sp:35},'greater-arcane':{sp:35},'nature-power':{natureSp:55},firepower:{fireSp:40},

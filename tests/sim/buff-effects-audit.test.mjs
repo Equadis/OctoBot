@@ -41,3 +41,22 @@ test('weapon oils are restricted to equipped weapons, not bare hands, shields or
  assert.deepEqual(resolveBuffEffects(b,gear).entries.map(e=>e.active),[true,false]);
  b.classOptions.mhPoison='Instant Poison VI';assert.ok(resolveBuffEffects(b,gear).entries.every(e=>!e.active));
 });
+
+test('checked raid spell values include all attributes and source-aware recipient/target scope',()=>{
+ assert.deepEqual(buffDefinition('wild').stats,{str:12,agi:12,sta:12,int:12,spi:12,armour:285,arcaneRes:20,fireRes:20,natureRes:20,frostRes:20,shadowRes:20});
+ assert.equal(buffDefinition('wild').status,'source-spell');assert.equal(buffDefinition('sunder').stats.targetArmour,-2250);
+ assert.equal(buffDefinition('expose').stats.targetArmour,-2550);
+ assert.equal(buffDefinition('might').stats.ap,222);assert.equal(buffDefinition('recklessness').stats.targetAttackPower,90);
+ const mage=newBuild('mage');mage.controls.buffIds=[];const before=sheet(mage);mage.controls.buffIds=['wild','recklessness'];const after=sheet(mage);
+ assert.equal(Number(after['Base Stats'].Intellect)-Number(before['Base Stats'].Intellect),12);
+ assert.equal(Number(after['Base Stats'].Spirit)-Number(before['Base Stats'].Spirit),12);
+ assert.equal(Number(after.Defence.Armour)-Number(before.Defence.Armour),309); // +285 aura and +24 from agility
+ assert.equal(Number(after.Defence['Fire Res'])-Number(before.Defence['Fire Res']),20);
+ assert.equal(Number(after['Melee vs Target'].Armour)-Number(before['Melee vs Target'].Armour),-640);
+ assert.equal(after['Target Debuff Contributions'].targetAttackPower,'90');
+});
+test('additional long-duration stat effects and scoped effects preserve exact tooltip amount',()=>{
+ for(const [id,expected] of [[21072,{mp5:3}],[21217,{mp5:6}],[22236,{defense:13}],[22237,{hit:2}],[22239,{healingPower:44}],[83309,{healingPower:24}],[42131,{mountSpeedPct:5}],[42160,{defense:6}],[5265,{spi:1,sta:-1}],[9088,{shadowRes:10}]])assert.deepEqual(stats(id),expected,item(id).name);
+ assert.equal(item(51932).effectAudit.status,'scoped');assert.deepEqual(stats(51932),{});
+ assert.equal(item(23194).effectAudit.status,'unquantified');assert.equal(item(5996).effectAudit.status,'utility');
+});
