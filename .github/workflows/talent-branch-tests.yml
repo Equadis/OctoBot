@@ -1,0 +1,36 @@
+name: Talent calculation branch QA
+on:
+  push:
+    branches:
+      - 'audit/talent-effects-*'
+    paths:
+      - 'docs/sim/core/character-stats.mjs'
+      - 'docs/sim/core/talent-effects.mjs'
+      - 'docs/sim/core/talent-rules.mjs'
+      - 'docs/sim/planner.mjs'
+      - 'tests/sim/**'
+      - '.github/workflows/talent-branch-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  talent-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax-check calculation modules
+        run: |
+          node --check docs/sim/core/character-stats.mjs
+          node --check docs/sim/core/talent-effects.mjs
+          node --check docs/sim/core/talent-rules.mjs
+      - name: Class audit and existing planner regression suite
+        run: node --test tests/sim/*.test.mjs
+      - name: Source importer checks
+        run: python -m unittest discover -s tests/sim -p 'test_*.py'
