@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261117-variant2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261116-scanage1';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette1';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-columns1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -38,7 +38,7 @@ function moneyNode(n){
   }
   return wrap;
 }
-function timeNode(ms,capturedAt){const cls=timeClass(ms,capturedAt);return el('span',left(ms,capturedAt),cls||'');}
+function timeNode(ms,capturedAt){const cls=timeClass(ms,capturedAt);return el('span',left(ms,capturedAt),cls?'ah-auction-time '+cls:'ah-auction-time');}
 const moneyTd=(row,n)=>{const c=el('td');c.append(moneyNode(n));row.append(c);return c;};
 async function request(path){
   const r=await fetch(API+path,{cache:'no-store',headers:{Accept:'application/json'}});
