@@ -37,20 +37,22 @@ test('prices are white numbers with a coin after each, and a zero amount is not 
   assert.match(js,/wrap\.append\(el\('span',p\.number,'ah-num'\)\);/,'the number comes first, the coin after it');
 });
 
-test('time left is coloured red under 2h, orange under 8h, the site yellow under 24h, green under 72h, plain after that',()=>{
+test('Auction House time-left colours follow 30m red, 2h orange, 8h yellow, 24h green, 72h blue',()=>{
   const seen='2026-11-01T00:00:00.000Z',t0=Date.parse(seen),H=3600000;
   const at=hours=>timeClass(hours*H,seen,t0);
   assert.equal(at(0.5),'ah-time-red');assert.equal(at(1.99),'ah-time-red');
   assert.equal(at(2),'ah-time-orange');assert.equal(at(7.99),'ah-time-orange');
   assert.equal(at(8),'ah-time-yellow');assert.equal(at(23.99),'ah-time-yellow');
   assert.equal(at(24),'ah-time-green');assert.equal(at(71.99),'ah-time-green');
-  assert.equal(at(72),null);assert.equal(at(200),null);
+  assert.equal(at(72),'ah-time-blue');assert.equal(at(200),'ah-time-blue');
   assert.equal(timeClass(null,seen,t0),null,'unknown stays uncoloured');
   assert.equal(timeClass(H,seen,t0+2*H),null,'an expired estimate is not coloured as if it were live');
   assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-red');
   const css=read('auction-house/auction.css');
-  for(const c of ['red','orange','green'])assert.match(css,new RegExp(`\\.ah-time-${c}\\{color:#`));
-  assert.match(css,/\.ah-time-yellow\{color:var\(--gold\)\}/);
+  for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff9218',yellow:'#ffff00',green:'#1eff00',blue:'#2992ff'}))
+    assert.ok(css.includes('.ah-auction-time.ah-time-'+colour+'{color:'+hex+'}'),'specific auction countdown colour for '+colour);
+  const js=read('auction-house/auction.js');
+  assert.match(js,/cls\?'ah-auction-time '\+cls:'ah-auction-time'/,'all countdowns are styled without recolouring status indicators');
 });
 
 test('a bid that just repeats the stack or unit price shows a hyphen; the "(start)" label is gone',()=>{
