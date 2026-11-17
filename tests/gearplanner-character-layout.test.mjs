@@ -37,5 +37,6 @@ test('world info puts genuine guilds in angle brackets, but not Pugs',()=>{
   const js=read('world-info.js');
   assert.match(js,/function raidGroupLabel\(name\)/);
   assert.match(js,/if \(!label \|\| \/\^\(pug\|unknown\)\$\/i\.test\(label\)\) return label/);
-  assert.equal((js.match(/raidGroupLabel\((?:guild|session\.guild\.name)\)/g)||[]).length,2);
+  assert.match(js,/const name = raidGroupLabel\(guild\)/);
+  assert.equal((js.match(/setRaidTitle\(title, session\.id !== null/g)||[]).length,2);
 });
