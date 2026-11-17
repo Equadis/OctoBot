@@ -1,7 +1,12 @@
+import {isInstancedRaid} from './targets.mjs?v=20261117-buff-audit3';
 // Independently modelled from UI experiments, Combat Gum Alpha v3.01, 2026-11-12.
 // See data/reference/combatgum-buff-observations.json. This is a planning baseline,
 // not proof of OctoWoW server behaviour. Last selection wins, including imports.
 const exclusive=(...ids)=>ids.flatMap((a,i)=>ids.slice(i+1).map(b=>[a,b]));
+export const WORLD_BUFF_IDS=Object.freeze(['fengus','slipkik']);
+export const WORLD_BUFF_RAID_REASON='World buffs do not apply in instanced raids.';
+export function worldBuffRestriction(id,planning){return WORLD_BUFF_IDS.includes(id)&&isInstancedRaid(planning)?WORLD_BUFF_RAID_REASON:null;}
+export function effectiveBuffIds(ids,planning){return normaliseBuffs(ids).filter(id=>!worldBuffRestriction(id,planning));}
 export const BUFF_CONFLICTS=Object.freeze([
  ...exclusive('mongoose','greater-agility','emerald-mongoose'),
  ['emerald-mongoose','dreamshard'],

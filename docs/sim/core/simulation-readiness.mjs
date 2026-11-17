@@ -1,14 +1,15 @@
+import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit3';
 import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
 import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
-import {validateBuild} from './builds.mjs?v=20261117-buff-audit2';
+import {validateBuild} from './builds.mjs?v=20261117-buff-audit3';
 import {equipmentErrors} from './items.mjs?v=20261114-ammo2';
-import {consumableEngineErrors} from './consumables.mjs?v=20261117-buff-audit2';
+import {consumableEngineErrors} from './consumables.mjs?v=20261117-buff-audit3';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */
 export function prepareSimulation(input,talents,{lookup=()=>null,engine=null}={}){
- const build=validateBuild(input,talents),errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
+ const build=validateBuild(input,talents);build.controls.buffIds=effectiveBuffIds(build.controls.buffIds,build.planning);const errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
  if(!BASE_STATS[`${build.race}:${build.classId}`]?.[build.level-1])errors.push('Base attributes for this race/class/level have not been verified.');
  if(!engine||engine.classId!==build.classId||!['implemented-unverified','validated'].includes(engine.status))errors.push(`The ${build.classId} combat engine is not implemented.`);
  errors.push(...trinketSwapEngineErrors(build,engine));

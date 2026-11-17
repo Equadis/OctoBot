@@ -1,3 +1,6 @@
+import {BOSS_PRESETS,applyTarget,isInstancedRaid} from '../../docs/sim/core/targets.mjs';
+import {effectiveBuffIds,WORLD_BUFF_IDS} from '../../docs/sim/core/buffs.mjs';
+import {buffScenarioRestriction,BUFF_GROUPS} from '../../docs/sim/core/configuration.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {CONSUMABLES,CONSUMABLE_BY_ID,consumablePassiveStats,selectConsumable,resolveConsumableSelection,consumableRestriction} from '../../docs/sim/core/consumables.mjs';
 import {consumableEffectAudit} from '../../docs/sim/core/consumable-effects.mjs';
@@ -94,4 +97,37 @@ test('source-backed active target procs do not give personal penetration or perm
  assert.equal(buffDefinition('hemorrhage').status,'source-conflict');
  assert.deepEqual(buffDefinition('pack').stats,{crit:3,rangedCrit:3});
  assert.equal(buffDefinition('tricks').durationSeconds,12);assert.equal(buffDefinition('mark-death').eventModifiers.providerMeleeAPToSpellDamagePct,18);
+});
+
+test('world buffs are last and suppressed for instanced raid presets but retained in saved selections',()=>{
+ assert.equal(BUFF_GROUPS.at(-1).id,'world');
+ const b=newBuild('rogue');b.controls.buffIds=['fengus','slipkik','fortitude'];
+ for(const preset of BOSS_PRESETS){
+  b.planning=applyTarget(b.planning,preset.id);
+  const e=resolveBuffEffects(b).entries;
+  const raid=['Kara40','Naxx','AQ40','ES','BWL','MC','AQ20','Kara10','ZG',"Onyxia's Lair"].includes(preset.raid);
+  assert.equal(isInstancedRaid(b.planning),raid,preset.id);
+  assert.deepEqual(e.map(x=>x.active),[!raid,!raid,true],preset.id);
+  assert.deepEqual(effectiveBuffIds(b.controls.buffIds,b.planning),raid?['fortitude']:b.controls.buffIds);
+  assert.equal(b.controls.buffIds.length,3);
+  assert.equal(Boolean(buffScenarioRestriction(BUFF_OPTIONS.find(x=>x.id==='fengus'),b)),raid);
+ }
+});
+test('raid calculations ignore world buffs on all nine classes and restore outside raids',()=>{
+ for(const c of ['warrior','paladin','rogue','druid','shaman','hunter','mage','warlock','priest']){
+  const b=newBuild(c);b.planning=applyTarget(b.planning,'bwl');b.controls.buffIds=['fortitude'];
+  const base=sheet(b);b.controls.buffIds.push(...WORLD_BUFF_IDS);const raid=sheet(b);
+  assert.deepEqual(raid.Melee,base.Melee,c);assert.deepEqual(raid.Spell,base.Spell,c);
+  b.planning=applyTarget(b.planning,'heroic-dummy');const outside=sheet(b);
+  assert.equal(Number(outside.Melee.Power)-Number(raid.Melee.Power),200,c);
+  assert.ok(Math.abs(Number.parseFloat(outside.Spell['Spell Crit'])-Number.parseFloat(raid.Spell['Spell Crit'])-3)<1e-8,c);
+ }
+});
+test('new spirit and shadow resistance modifiers preserve recipient and target separation',()=>{
+ assert.deepEqual(buffDefinition('divine-spirit').stats,{spi:40});
+ assert.deepEqual(buffDefinition('curse-shadow').stats,{targetShadowRes:-75,targetArcaneRes:-75,targetShadowDamageTakenPct:10,targetArcaneDamageTakenPct:10});
+ const b=newBuild('mage');b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['divine-spirit','curse-shadow'];const after=sheet(b);
+ assert.equal(+after['Base Stats'].Spirit-+before['Base Stats'].Spirit,40);
+ assert.equal(after.Defence['Shadow Res'],before.Defence['Shadow Res']);
+ assert.equal(after['Target Debuff Contributions'].targetShadowRes,'-75');
 });

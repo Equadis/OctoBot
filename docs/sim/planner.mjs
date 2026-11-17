@@ -5,16 +5,16 @@ import {equipmentErrors} from './core/items.mjs?v=20261117-item-audit3';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {setupRacePicker} from './race-picker.mjs?v=2';
 let racePicker = null;
-import {characterStats} from './core/character-stats.mjs?v=20261117-buff-audit2';
+import {characterStats} from './core/character-stats.mjs?v=20261117-buff-audit3';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-item-audit3';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-buff-audit2';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-buff-audit3';
 import { itemPicker } from './item-picker.mjs?v=20261117-item-audit3';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261117-item-audit3';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261117-buff-audit2';
+import { configuration } from './configuration.mjs?v=20261117-buff-audit3';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
@@ -360,7 +360,7 @@ function wireControls() {
     onClear: slot => {delete build.gear[slot];for(const error of equipmentErrors(build,id=>picker.lookup(id)))delete build.gear[error.slot];persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
   swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>picker.open(slot,options),inspect:id=>picker.inspect(id)});
-  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
+  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();config?.renderChecks();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
   $('clear-talents').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'talents'),'Talents reset.'));
   for(const [id,section,label] of [['reset-buffs','buffs','Buffs & Debuffs'],['reset-rotation','rotation','Rotation'],['reset-settings','build-settings','Settings']])$(id).addEventListener('click',()=>{applyBuild(resetPlannerSection(build,section),`${label} reset.`);if(section==='rotation'){for(const field of ['rotation-name','rotation-save-status'])$(field)[field==='rotation-name'?'value':'textContent']='';$('rotation-add').value='';}});

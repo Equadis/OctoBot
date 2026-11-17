@@ -1,5 +1,5 @@
-import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit2';
-import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit2';
+import {BUFF_STATS,normaliseBuffs,worldBuffRestriction} from './buffs.mjs?v=20261117-buff-audit3';
+import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit3';
 // Match source items by exact IDs through audited aliases. Missing items and
 // static raid assumptions remain reference values, never called source-verified.
 const sourceItems=new Map(CONSUMABLES.filter(i=>i.buffId&&i.verified).map(i=>[i.buffId,i]));
@@ -8,6 +8,8 @@ const scoped={
 };
 // Spell tooltips checked against the public OctoWoW DB, 2026-11-17.
 const spellSources={
+ 'divine-spirit':{stats:{spi:40},sources:['https://octowow.st/db/?spell=27841'],duration:1800,assumption:'Rank 4 active buff from provider.'},
+ 'curse-shadow':{stats:{targetShadowRes:-75,targetArcaneRes:-75,targetShadowDamageTakenPct:10,targetArcaneDamageTakenPct:10},sources:['https://octowow.st/db/?spell=17937'],duration:300,assumption:'Rank 2; another Warlock required for each other selected curse.'},
  'wind-serpent':{stats:{targetArmour:-400},sources:['https://octowow.st/db/?item=12462'],assumption:'Active post-stack decay state after 55 stacks; no uptime or siphon damage inferred.'},
  shartateth:{stats:{targetArmour:-250},sources:['https://octowow.st/db/?item=55127'],assumption:'Active target proc only; item-specific 75 armour penetration is not a raid debuff.'},
  pack:{stats:{crit:3,rangedCrit:3},sources:['docs/sim/data/talents/druid.json#284'],assumption:'Imported talent tooltip; recipient within 45 yards of a provider in Cat/Bear/Dire Bear. Ranged and melee only.'},
@@ -57,7 +59,7 @@ export function buffDefinition(id){
 export function resolveBuffEffects(build,gear={}){
  const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[])},'buffs');
  const entries=controls.buffIds.map(id=>{
-  const e=buffDefinition(id);let active=['source-prepull','source-spell','source-conflict','reference-static','reference-scoped'].includes(e.status);
+  const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};let active=['source-prepull','source-spell','source-conflict','reference-static','reference-scoped'].includes(e.status);
   if(e.recipientLevel&&build.level<e.recipientLevel)return {...e,active:false,reason:'Requires level '+e.recipientLevel+'.'};
   const item=sourceItems.get(id);if(item&&consumableRestriction(item,build))return {...e,active:false,reason:consumableRestriction(item,build)};
   if(id.startsWith('wizard-oil-')){

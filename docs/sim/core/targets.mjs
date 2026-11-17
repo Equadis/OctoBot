@@ -53,3 +53,7 @@ export function applyTarget(planning,id){
  if(id==='expert-dummy' || id==='heroic-dummy')return {...planning,targetPreset:id,targetLevel:id==='expert-dummy'?60:63,targetArmour:id==='expert-dummy'?3000:4211,targetEnergyPerSecond:0,...Object.fromEntries(Object.keys(RESISTANCES).map(key=>[key,0]))};
  throw new Error('Unknown target preset.');
 }
+
+// The imported target list labels dungeons and open-world bosses separately.
+const INSTANCED_RAID_NAMES=new Set(['Kara40','Naxx','AQ40','ES','BWL','MC','AQ20','Kara10','ZG',"Onyxia's Lair"]);
+export function isInstancedRaid(planning){const preset=BOSS_PRESETS.find(p=>p.id===planning?.targetPreset);return Boolean(preset&&INSTANCED_RAID_NAMES.has(preset.raid));}
