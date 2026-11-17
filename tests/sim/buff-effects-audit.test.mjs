@@ -174,3 +174,27 @@ test('event eligibility is distinct from static activity and handles recipient r
  r.level=35;assert.equal(resolveBuffEffects(r).entries[0].eventEligible,true);
  const m=newBuild('mage');m.controls.buffIds=['tea'];assert.equal(resolveBuffEffects(m).entries[0].eventEligible,false);
 });
+
+test('weapon mastery is opt-in, level-gated and scoped to the equipped weapon type',()=>{
+ const b=newBuild('rogue');assert.deepEqual(b.controls.buffIds,[]);
+ const gear={mainhand:{classs:2,subclass:7},offhand:{classs:2,subclass:15},ranged:{classs:2,subclass:3}};
+ const read=()=>sheet(b,gear).Melee['Wep Skill'];
+ assert.equal(read(),'303 | 300');b.controls.buffIds=['mastery-daggers'];assert.equal(read(),'303 | 305');
+ b.controls.buffIds=['mastery-swords','mastery-daggers','skill-book'];assert.equal(read(),'308 | 305');
+ assert.equal(sheet(b,gear)['Ranged Equipment Contributions'],undefined); // no ranged sheet group for a rogue without ranged bonuses
+ assert.equal(sheet(b).Melee['Wep Skill'],'300 | 300');
+ b.level=59;assert.equal(read(),'298 | 295');
+ const h=newBuild('hunter');h.controls.buffIds=['mastery-bows'];const bow={ranged:{classs:2,subclass:2}};assert.equal(sheet(h,bow)['Ranged Equipment Contributions']['Ranged Weapon Skill'],'305');
+});
+test('unverified armour reductions do not inflate target mitigation estimates',()=>{
+ const b=newBuild('rogue');const initial=sheet(b)['Melee vs Target'].Armour;
+ b.controls.buffIds=['eskhandar','ripper'];assert.equal(sheet(b)['Melee vs Target'].Armour,initial);
+ assert.ok(resolveBuffEffects(b).entries.every(e=>!e.active&&e.status==='unresolved'));
+ b.controls.buffIds=['corrosive-poison'];assert.equal(+sheet(b)['Melee vs Target'].Armour,+initial-60);
+});
+test('developer melee miss formula handles skill above and below target defence',()=>{
+ const b=newBuild('warrior');b.race='Human';b.planning.targetLevel=60;
+ const gear={mainhand:{classs:2,subclass:7}};assert.equal(sheet(b,gear)['Melee vs Target']['Yellow Miss %'],'4.4%');
+ b.planning.targetLevel=63;assert.equal(sheet(b,gear)['Melee vs Target']['Yellow Miss %'],'7.4%');
+ b.controls.buffIds=['mastery-swords'];assert.equal(sheet(b,gear)['Melee vs Target']['Yellow Miss %'],'6.4%');
+});

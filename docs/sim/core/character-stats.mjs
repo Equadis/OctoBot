@@ -30,7 +30,7 @@ export function characterStats(build,talentData,gear={}){
  for(const e of setAudit.active)if(e.status==='scoped')scopedEquipment.push({...e,source:e.set+' ('+e.pieces+'pc)'});
  const scoped=combineScopedEquipment(scopedEquipment,build);
  const rawItemArmour=s.armour;
- const buffAudit=resolveBuffEffects(build,gear);const buffs=buffAudit.ids;for(const entry of buffAudit.entries)if(entry.active)add(entry.stats);
+ const buffAudit=resolveBuffEffects(build,gear);const buffs=buffAudit.ids;add(buffAudit.weaponMasteryStats);for(const entry of buffAudit.entries)if(entry.active)add(entry.stats);
  const has=id=>buffs.includes(id);
  for(const entry of buffAudit.consumables)if(entry.status==='prepull')add(entry.stats);
  const talents=new Map((talentData?.talents||[]).map(t=>[t.name,{...t,rank:build.talents[t.id]||0}]));
@@ -73,12 +73,13 @@ export function characterStats(build,talentData,gear={}){
  const parry=parryClasses.includes(c)?5+s.parry+s.defense*.04:0;
  const dodge=level===60&&base?baseCrit+s.agi*dodgeAgi+s.dodge+s.defense*.04+(racial.dodge||0):null;
  const target=build.planning,targetDefense=target.targetLevel*5;
- const weaponSkill=slot=>{const weapon=gear[slot];const bonus=racial.meleeSkills?.[weapon?.subclass]||0;return level*5+s.weaponSkill+bonus+weaponSkillBonus(skillBonuses,weapon);};
- const skills=['mainhand','offhand'].map(weaponSkill),delta=skills.map(skill=>Math.max(0,targetDefense-skill));
+ const weaponSkill=slot=>{const weapon=gear[slot];const bonus=weapon?.classs===2?(racial.meleeSkills?.[weapon.subclass]||0):0;return level*5+(weapon?.classs===2?s.weaponSkill+bonus+weaponSkillBonus(skillBonuses,weapon):0);};
+ const skills=['mainhand','offhand'].map(weaponSkill),delta=skills.map(skill=>targetDefense-skill);
  const wsCrit=skills.map(skill=>(skill-level*5)*.04);
  const crit=skills.map((_,i)=>level===60&&base?baseCrit+s.agi*critAgi+s.crit+wsCrit[i]+(c==='warrior'&&build.classOptions.stance==='Berserker'?3:0)+(c==='rogue'&&[4,15,13].includes(gear[i?'offhand':'mainhand']?.subclass)?value('Close Quarters Combat'):0):null);
  const dual=Boolean(gear.offhand?.classs===2),miss=delta.map(d=>clamp(5+d*.2+(dual?19:0)-s.hit));
- const yellow=clamp(5+delta[0]*.2-s.hit),dodgeTarget=delta.map(d=>clamp(5+d*.1)),glance=delta.map(d=>clamp(95-d*2,0,95));
+ const yellow=clamp(5+delta[0]*.2-s.hit),dodgeTarget=delta.map(d=>clamp(5+d*.1)),glance=delta.map(d=>clamp(95-Math.max(0,d)*2,0,95));
+ // Developer-confirmed miss formula: 5 - 0.2 * (skill - target defence). Other attack-table formulas remain reference only.
  const glanceChance=clamp(10+Math.max(0,target.targetLevel-level)*10,0,40);
  const cap=miss.map((m,i)=>clamp(100-m-dodgeTarget[i]-glanceChance));
  const effectiveCrit=crit.map((v,i)=>v===null?null:clamp(Math.min(cap[i],v-Math.max(0,target.targetLevel-level))));
@@ -109,7 +110,7 @@ export function characterStats(build,talentData,gear={}){
  if(s.spellDamageTakenReductionFlat)extraDef.push(['Flat Spell Damage Reduction',num(s.spellDamageTakenReductionFlat)]);
  if(extraDef.length)group('Equipment Defence',extraDef);
  const speedRows=[];for(const [label,key] of [['Run Speed','runSpeedPct'],['Swim Speed','swimSpeedPct'],['Mount Speed','mountSpeedPct']])if(s[key])speedRows.push([label,pct(s[key],1)]);if(speedRows.length)group('Equipment Movement Bonuses',speedRows);
- if(c==='hunter'||s.rangedAP||s.rangedHit||s.rangedCrit||s.rangedDamage||rangedHaste!==1){const rows=[['Ranged-specific AP Bonus',num(s.rangedAP)],['Ranged-only Hit Bonus',pct(s.rangedHit,1)],['Ranged-only Crit Bonus',pct(s.rangedCrit,1)],['Ranged-only Haste',pct((rangedHaste-1)*100,1)],['Scope Damage',num(s.rangedDamage)]];const ammo=gear.ammo;const ranged=gear.ranged;if(ammo&&ranged?.classs===2&&[2,3,18].includes(ranged.subclass)&&ammo.subclass===(ranged.subclass===3?3:2)){const dps=Number(ammo.ammunitionDps??ammo.tooltipText?.match(/Adds ([0-9.]+) damage per second/)?.[1]);rows.push(['Ammunition DPS',Number.isFinite(dps)?String(dps):'—']);}group('Ranged Equipment Contributions',rows);}
+ if(c==='hunter'||s.rangedAP||s.rangedHit||s.rangedCrit||s.rangedDamage||rangedHaste!==1){const rows=[['Ranged Weapon Skill',gear.ranged?.classs===2&&[2,3,16,18].includes(gear.ranged.subclass)?num(level*5+(racial.rangedSkills?.[gear.ranged.subclass]||0)+weaponSkillBonus(skillBonuses,gear.ranged)):'—','Skill contribution only; ranged attack table pending.'],['Ranged-specific AP Bonus',num(s.rangedAP)],['Ranged-only Hit Bonus',pct(s.rangedHit,1)],['Ranged-only Crit Bonus',pct(s.rangedCrit,1)],['Ranged-only Haste',pct((rangedHaste-1)*100,1)],['Scope Damage',num(s.rangedDamage)]];const ammo=gear.ammo;const ranged=gear.ranged;if(ammo&&ranged?.classs===2&&[2,3,18].includes(ranged.subclass)&&ammo.subclass===(ranged.subclass===3?3:2)){const dps=Number(ammo.ammunitionDps??ammo.tooltipText?.match(/Adds ([0-9.]+) damage per second/)?.[1]);rows.push(['Ammunition DPS',Number.isFinite(dps)?String(dps):'—']);}group('Ranged Equipment Contributions',rows);}
  group('Spell',[
  ['Spell Power',num(s.sp+s.damageOnlySp)],...(s.healingPower||s.damageOnlySp?[['Healing Power',num(s.sp+s.healingPower)]]:[]),...(s.castSpeedPct?[['Item Casting Speed',pct(s.castSpeedPct,1)]]:[]),...(s.castingRegenPct?[['Natural Mana Regen While Casting (items)',pct(s.castingRegenPct,1)]]:[]),['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane','Holy'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s.damageOnlySp+s[name.toLowerCase()+'Sp'])])
  ]);
@@ -122,6 +123,6 @@ export function characterStats(build,talentData,gear={}){
  const rawResRows=['Arcane','Fire','Frost','Nature','Shadow'].filter(n=>targetMods['target'+n+'Res']).map(n=>[n+' Resistance (raw)',num(target['target'+n+'Res']+targetMods['target'+n+'Res']),'Target resistance plus selected debuffs, before any ruleset-specific floor, penetration or level-based resistance.']);
  if(rawResRows.length)group('Target Resistance Estimates',rawResRows);
  if(Object.keys(targetMods).length)group('Target Debuff Contributions',Object.entries(targetMods).map(([k,v])=>[k,String(v)+(k.endsWith('Pct')?'%':''),'Scoped target contribution; not applied to player stats or final damage.']));
- if(buffAudit.entries.some(e=>e.status!=='source-prepull'&&e.id!=='skill-book')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull'&&e.id!=='skill-book').map(e=>[e.name,e.active?e.status:e.eventEligible?'Event — not simulated':'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
+ if(buffAudit.entries.some(e=>e.status!=='source-prepull')||buffAudit.consumables.some(e=>e.status!=='prepull'))group('Buff and Consumable Audit',[...buffAudit.entries.filter(e=>e.status!=='source-prepull').map(e=>[e.name,e.active?e.status:e.eventEligible?'Event — not simulated':'Inactive',e.reason]),...buffAudit.consumables.filter(e=>e.status!=='prepull').map(e=>[e.name,e.status,e.reason])]);
  return {groups,buffAudit,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Imported item tooltip prepull effects and explicitly labelled reference buffs/target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }

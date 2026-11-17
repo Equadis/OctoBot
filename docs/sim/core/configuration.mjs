@@ -1,6 +1,6 @@
 import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261117-buff-audit4';
 import {classDefinition} from './classes.mjs?v=20261112-audit1';
-import {normaliseBuffs,worldBuffRestriction} from './buffs.mjs?v=20261117-buff-audit4';
+import {normaliseBuffs,worldBuffRestriction,WEAPON_MASTERY} from './buffs.mjs?v=20261117-buff-audit4';
 import {rotationProfileData} from './rotations/registry.mjs?v=20261112-rotations1';
 import {CONDITION_DEFINITIONS} from './rotations/conditions.mjs?v=20261112-rotations1';
 import {metricsForClass,validateRows} from './rotations/validator.mjs?v=20261112-rotations1';
@@ -16,8 +16,9 @@ export const BUFF_GROUPS=Object.freeze([
  group('food','Food Buffs',false,[['chili','Dragonbreath Chili','Melee-triggered Fire AoE for 10 min; proc and scaling unverified'],['medley',"Danonzo’s Tel’Abim Medley",'+2% Haste'],['berry','Sour Mountain Berry','+10 Agi'],['skewer','Squid Eel Skewer','+20 Agi'],['carrots','Crunchy Sandwept Carrots','+32 AP'],['chimaerek',"Dirge’s Kickin’ Chimaerok Chops",'+2% Dodge, +30 Sta'],['fishe','Le Fishe Au Chocolat','+1% Dodge, +4 Defense']]),
  group('drink','Drink Buffs',false,[['merlot',"Medivh’s Merlot",'+25 Sta'],['rum','Rumsey Rum Black Label','+15 Sta']]),
  group('short','Short Duration Consumables',true,[['flurry','Juju Flurry','+3% Haste for 20s (reference; uptime unresolved)'],['quickness','Potion of Quickness','+5% Haste for 30s (timed; not averaged)']]),
- group('target','Target Debuffs',true,[['expose','Improved Expose Armor','−2550 Armor'],['sunder','Sunder Armor (5 stacks)','−2250 Armor'],['eskhandar','Spirit of Eskhandar','−1200 Armor'],['recklessness','Curse of Recklessness','−640 Armour, +90 Target AP'],['faerie','Faerie Fire','−505 Armor'],['wind-serpent','Embrace of the Wind Serpent (active)','−400 Armour after 55 stacks'],['annihilator','Annihilator (3 stacks)','−600 Armour'],['shartateth',"Shar’tateth",'−250 Armor'],['ripper','The Ripper','−163 Armor'],['nightfall','Nightfall (active)','Target takes 15% increased spell damage for 5s'],['arthas','Gift of Arthas','+8 physical damage taken by target'],['curse-elements','Curse of the Elements','−75 Fire/Frost Resistance, +10% Fire/Frost damage taken'],['curse-shadow','Curse of Shadow','−75 Shadow/Arcane Resistance, +10% Shadow/Arcane damage taken']]),
- group('other','Other',false,[['tea','Thistle Tea','100 Energy; actual item cooldown unverified',['rogue']],['skill-book','Weapon Skill Book','+5 Weapon Skill (assumes all relevant quests)']]),
+ group('target','Target Debuffs',true,[['expose','Improved Expose Armor','−2550 Armor'],['sunder','Sunder Armor (5 stacks)','−2250 Armor'],['eskhandar','Spirit of Eskhandar (unverified)','Armour reduction not established; excluded from estimates'],['recklessness','Curse of Recklessness','−640 Armour, +90 Target AP'],['faerie','Faerie Fire','−505 Armor'],['wind-serpent','Embrace of the Wind Serpent (active)','−400 Armour after 55 stacks'],['annihilator','Annihilator (3 stacks)','−600 Armour'],['shartateth',"Shar’tateth",'−250 Armor'],['ripper','The Ripper (unverified)','Armour reduction not established; excluded from estimates'],['corrosive-poison','Corrosive Poison (active)','−60 Armour for 30s; proc uptime unverified'],['nightfall','Nightfall (active)','Target takes 15% increased spell damage for 5s'],['arthas','Gift of Arthas','+8 physical damage taken by target'],['curse-elements','Curse of the Elements','−75 Fire/Frost Resistance, +10% Fire/Frost damage taken'],['curse-shadow','Curse of Shadow','−75 Shadow/Arcane Resistance, +10% Shadow/Arcane damage taken']]),
+ group('other','Other',false,[['tea','Thistle Tea','100 Energy; actual item cooldown unverified',['rogue']],['skill-book','All Weapon Masteries (legacy)','+5 per eligible weapon type; assumes all relevant quests completed']]),
+ group('mastery','Weapon Masteries',false,WEAPON_MASTERY.map(m=>[m.id,m.name,'+5 skill after completing the corresponding quest'])),
  group('world','World Buffs',false,[['fengus','Fengus’ Ferocity','+200 AP'],['slipkik','Slip’kik’s Savvy','+3% Spell Crit']]),
 ]);
 export const BUFF_OPTIONS=Object.freeze(BUFF_GROUPS.flatMap(group=>group.options));
@@ -25,7 +26,7 @@ export const ABILITIES=rotationProfileData('warrior').abilities;
 export const METRICS=Object.freeze(Object.fromEntries(Object.entries(CONDITION_DEFINITIONS).map(([id,def])=>[id,def.label])));
 export const OPERATORS=Object.freeze(['>=','<=','>','<','=']);
 export const ROTATION_PRESETS=rotationProfileData('warrior').presets;
-export const defaultControls=()=>({buffIds:['skill-book'],consumableIds:[],teaThreshold:20,rotationRole:'dps',rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
+export const defaultControls=()=>({buffIds:[],consumableIds:[],teaThreshold:20,rotationRole:'dps',rotationPreset:'custom',rotationRows:[],keyInterval:100,variability:true,variabilityMs:35});
 export function rotationProfile(classId='warrior'){return {...rotationProfileData(classId),metrics:metricsForClass(classId)};}
 export function validateRotationRows(rows,classId='warrior'){return validateRows(rows,classId);}
 export function validateControls(input,classId='warrior',context={}){
@@ -50,6 +51,9 @@ export function validateControls(input,classId='warrior',context={}){
 
 export function buffRestriction(option,build){
  if(!option)return 'Unknown buff.';
+ const mastery=WEAPON_MASTERY.find(m=>m.id===option.id);
+ if(mastery&&build.level<60)return 'Requires level 60.';
+ if(mastery&&!mastery.subclasses.some(s=>classDefinition(build.classId).weapons.includes(s)))return 'This class cannot use this weapon type.';
  if(option.classes&&!option.classes.includes(build.classId))return `${option.name} is not applicable to this class.`;
  if(option.id.startsWith('wizard-oil-')&&build.level<45)return 'Requires level 45.';
  if(option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(build.classId))return 'This class cannot coat an off-hand weapon.';

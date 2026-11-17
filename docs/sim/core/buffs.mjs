@@ -3,6 +3,17 @@ import {isInstancedRaid} from './targets.mjs?v=20261117-buff-audit4';
 // See data/reference/combatgum-buff-observations.json. This is a planning baseline,
 // not proof of OctoWoW server behaviour. Last selection wins, including imports.
 const exclusive=(...ids)=>ids.flatMap((a,i)=>ids.slice(i+1).map(b=>[a,b]));
+// Community quest guide + individual official quest/book records. The grouping
+// of one/two handed versions is a planning assumption pending live verification.
+export const WEAPON_MASTERY=Object.freeze([
+ ['axes','Axes',[0,1],'item=70227'],['maces','Maces',[4,5],'item=70229'],['swords','Swords',[7,8],'quest=41537'],['daggers','Daggers',[15],'quest=41548'],['fists','Fist Weapons',[13],'quest=41545'],['polearms','Polearms',[6],'quest=41533'],['staves','Staves',[10],'item=70232'],['bows','Bows',[2],'item=70234'],['guns','Guns',[3],'quest=41524'],['crossbows','Crossbows',[18],'quest=41528'],['thrown','Thrown Weapons',[16],'quest=41522']
+].map(([key,name,subclasses,source])=>({id:'mastery-'+key,name,subclasses,source:'https://octowow.st/db/?'+source})));
+export function weaponMasteryStats(ids,level){
+ if(level<60)return {};
+ const scoped=Object.create(null);
+ for(const m of WEAPON_MASTERY)if(ids.includes('skill-book')||ids.includes(m.id))for(const sub of m.subclasses)scoped['weaponSkill:'+sub]=5;
+ return {...scoped};
+}
 export const WORLD_BUFF_IDS=Object.freeze(['fengus','slipkik']);
 export const WORLD_BUFF_RAID_REASON='World buffs do not apply in instanced raids.';
 export function worldBuffRestriction(id,planning){return WORLD_BUFF_IDS.includes(id)&&isInstancedRaid(planning)?WORLD_BUFF_RAID_REASON:null;}
@@ -35,5 +46,5 @@ export const BUFF_STATS=Object.freeze({
  'supreme-power':{sp:150},dreamtonic:{sp:35},'greater-arcane':{sp:35},'nature-power':{natureSp:55},firepower:{fireSp:40},
  'wizard-oil-mh':{damageOnlySp:36,spellCrit:1},'wizard-oil-oh':{damageOnlySp:36,spellCrit:1},
  medley:{haste:2},berry:{agi:10},skewer:{agi:20},carrots:{ap:32},chimaerek:{dodge:2,sta:30},fishe:{dodge:1,defense:4},merlot:{sta:25},rum:{sta:15},flurry:{},quickness:{},
- expose:{targetArmour:-2550},sunder:{targetArmour:-2250},eskhandar:{targetArmour:-1200},recklessness:{targetArmour:-640},faerie:{targetArmour:-505},'wind-serpent':{targetArmour:-400},annihilator:{targetArmour:-600},shartateth:{targetArmour:-250},ripper:{targetArmour:-163},'skill-book':{weaponSkill:5}
+ expose:{targetArmour:-2550},sunder:{targetArmour:-2250},eskhandar:{},recklessness:{targetArmour:-640},faerie:{targetArmour:-505},'wind-serpent':{targetArmour:-400},annihilator:{targetArmour:-600},shartateth:{targetArmour:-250},ripper:{},'skill-book':{}
 });

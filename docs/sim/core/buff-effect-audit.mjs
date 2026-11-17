@@ -1,4 +1,4 @@
-import {BUFF_STATS,normaliseBuffs,worldBuffRestriction} from './buffs.mjs?v=20261117-buff-audit4';
+import {BUFF_STATS,normaliseBuffs,worldBuffRestriction,WEAPON_MASTERY,weaponMasteryStats} from './buffs.mjs?v=20261117-buff-audit4';
 import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit4';
 // Match source items by exact IDs through audited aliases. Missing items and
 // static raid assumptions remain reference values, never called source-verified.
@@ -8,6 +8,7 @@ const scoped={
 };
 // Spell tooltips checked against the public OctoWoW DB, 2026-11-17.
 const spellSources={
+ 'corrosive-poison':{stats:{targetArmour:-60},sources:['https://octowow.st/db/?spell=3396'],duration:30,assumption:'Active Corrosive Poison debuff only. Nature periodic damage (10 per 5 seconds) and proc uptake are engine-dependent; not a generic Ripper proc.'},
  earth:{stats:{str:96},sources:['https://octowow.st/db/?spell=25361','docs/sim/data/talents/shaman.json#262'],duration:120,assumption:'Rank 5 gives 77 strength. Assumed imported talent +25%, rounded down; provider talent/rounding disputed by community patch notes.'},
  wisdom:{stats:{mp5:33},sources:['https://octowow.st/db/?spell=25290'],duration:300,assumption:'Rank 6 unmodified; selecting other blessings assumes additional paladins.'},
  'divine-spirit':{stats:{spi:40},sources:['https://octowow.st/db/?spell=27841'],duration:1800,assumption:'Rank 4 active buff from provider.'},
@@ -58,6 +59,9 @@ function eventRestriction(entry,build){
 }
 export function buffDefinition(id){
  const item=sourceItems.get(id),base={id,name:item?.name||id,stats:{},source:item?.source||null,durationSeconds:item?.effectAudit?.durationSeconds??null};
+ const mastery=WEAPON_MASTERY.find(m=>m.id===id);
+ if(mastery||id==='skill-book')return {...base,name:mastery?.name||'All Weapon Masteries (legacy)',status:'community-scoped',source:mastery?.source||'https://octowow.st/forum/viewtopic.php?t=1666',stats:{},reason:'Community guide documents +5 per weapon quest. Level 60 book requirement; one/two-handed grouping and cap pending live verification. Legacy toggle assumes all relevant quests.'};
+ if(id==='eskhandar'||id==='ripper')return {...base,status:'unresolved',source:id==='eskhandar'?'https://octowow.st/db/?item=18203':'https://octowow.st/db/?item=80775',reason:id==='eskhandar'?'Set confirms summon, but -1200 armour is unsupported; excluded.':'Multiple Ripper items; -163 armour unsupported. Select Corrosive Poison separately for the documented -60 aura.'};
  if(events.has(id))return {...base,status:'event',...(eventSources[id]||{}),reason:eventSources[id]?.reason||(item?'Imported source tooltip; timed/triggered effect requires combat simulation.':'Reference effect; timing and server behaviour unresolved.')};
  if(item){
   const a=item.effectAudit;
@@ -76,6 +80,7 @@ export function resolveBuffEffects(build,gear={}){
  const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[])},'buffs');
  const entries=controls.buffIds.map(id=>{
   const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};
+  if(e.status==='community-scoped')return {...e,active:build.level>=60,reason:build.level<60?'Requires level 60.':e.reason};
   if(e.status==='event'){
    const item=sourceItems.get(id),restriction=eventRestriction(e,build)||(item&&consumableRestriction(item,build));
    return {...e,active:false,eventEligible:!restriction,...(restriction?{reason:restriction}:{})};
@@ -92,5 +97,5 @@ export function resolveBuffEffects(build,gear={}){
   return {...e,active};
  });
  const consumables=controls.consumableIds.map(id=>{const i=CONSUMABLE_BY_ID.get(id);const reason=consumableRestriction(i,build);return {id,name:i?.name||String(id),...(i?.effectAudit||{status:'unverified',stats:{}}),...(reason?{status:'ineligible',stats:{},modifiers:[],reason}:{})};});
- return {ids:controls.buffIds,entries,consumables};
+ return {ids:controls.buffIds,entries,consumables,weaponMasteryStats:weaponMasteryStats(controls.buffIds,build.level)};
 }
