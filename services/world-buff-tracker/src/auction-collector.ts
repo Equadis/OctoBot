@@ -13,7 +13,7 @@ import {NpcWatch} from "./darkmoon/npc-watch.js";
 import {parseUpdateObject} from "./protocol/update-object.js";
 import type {AuctionResult,AuctionRow} from "./protocol/auction.js";
 import {AuctionScanCursor} from "./auction-scan.js";
-import {fetchAuctionCatalogue,type AuctionItemMetadata} from "./auction-metadata.js";
+import {fetchAuctionCatalogue,fetchAuctionItem,type AuctionItemMetadata} from "./auction-metadata.js";
 import {createLogger,type Logger} from "./logger.js";
 import {resolveBuild} from "./net/client-resolver.js";
 import {VersionMismatchError} from "./errors.js";
@@ -55,13 +55,31 @@ async function publish(action:"start"|"page"|"complete"|"fail",payload:Record<st
  }
 }
 let metadataPromise:Promise<ReadonlyMap<number,AuctionItemMetadata>>|null=null;
+let metadataLoadedAt=0;
+let lastCatalogue:ReadonlyMap<number,AuctionItemMetadata>=new Map();
+const recoveredMetadata=new Map<number,AuctionItemMetadata>();
+const lookupAfter=new Map<number,number>();
+async function resolveMissingMetadata(ids:Set<number>,log:Logger):Promise<void>{
+ const pending=[...ids].filter(id=>!recoveredMetadata.has(id)&&(lookupAfter.get(id)??0)<=Date.now()).slice(0,15);
+ for(let i=0;i<pending.length;i+=3){
+  await Promise.all(pending.slice(i,i+3).map(async id=>{
+   const item=await fetchAuctionItem(id);
+   if(item)recoveredMetadata.set(id,item);
+   else lookupAfter.set(id,Date.now()+30*60_000);
+  }));
+ }
+ if(pending.length)log.info('Auction metadata lookups: '+pending.length+' attempted; '+recoveredMetadata.size+' resolved in this process; '+ids.size+' missing in scan');
+}
 async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItemMetadata>>{
  try{
-  if(!metadataPromise)metadataPromise=fetchAuctionCatalogue();
-  return await metadataPromise;
+  if(!metadataPromise||Date.now()-metadataLoadedAt>=60*60_000){
+   metadataPromise=fetchAuctionCatalogue();
+   metadataLoadedAt=Date.now();
+  }
+  lastCatalogue=await metadataPromise;return lastCatalogue;
  }catch(error){
   metadataPromise=null;log.warn("Auction item catalogue unavailable; retaining item IDs without guessing metadata: "+String(error));
-  return new Map();
+  return lastCatalogue;
  }
 }
 function tcp(host:string,port:number):Promise<Socket>{
@@ -115,6 +133,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  };
  const run=async(guid:bigint):Promise<void>=>{
    const catalogue=await cachedMetadata(log);
+   const missingIds=new Set<number>();
    const startedAt=new Date().toISOString();
    scanId="ahl_"+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
    const cursor=new AuctionScanCursor(true);
@@ -131,7 +150,8 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
        started=true;
       }
       const items=response.auctions.map((row:AuctionRow)=>{
-       const info=catalogue.get(row.item_id);
+       const info=catalogue.get(row.item_id)??recoveredMetadata.get(row.item_id);
+       if(!info)missingIds.add(row.item_id);
        return {
         auction_id:row.auction_id,item_id:row.item_id,variant:row.variant,quantity:row.quantity,
         item_name:info?.item_name??null,quality:info?.quality??null,icon_url:info?.icon_url??null,
@@ -149,6 +169,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
     if(!cursor.complete)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES or ended early");
     await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     succeeded=true;
+    await resolveMissingMetadata(missingIds,log);
     log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
