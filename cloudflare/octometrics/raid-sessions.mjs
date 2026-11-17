@@ -58,6 +58,7 @@ export function cleanSession(s,now=Date.now()){
     // Only a Chronicle kill may claim a kill.
     if(s.endReason==='kill_confirmed'&&s.clearSource!=='chronicle_kill')return null;
     if(s.clearSource==='chronicle_kill'&&s.endReason!=='kill_confirmed')return null;
+    if(s.confirmedAt!==undefined){const confirmed=ts(s.confirmedAt,now);if(confirmed===null||confirmed<endedAt)return null;out.confirmedAt=s.confirmedAt;}
     out.endedAt=s.endedAt;out.endReason=s.endReason;out.clearSource=s.clearSource;
   }else if(s.endedAt!==undefined||s.endReason!==undefined)return null;
   return out;
@@ -80,7 +81,7 @@ export function validateRaidSessions(e,now=Date.now()){
   const sessions=[];
   for(const s of e.sessions){const c=cleanSession(s,now);if(!c)return null;sessions.push(c);}
   return {schema:SCHEMA,eventId:e.eventId,seq:e.seq,zone:e.zone,thresholds:{formAt:e.thresholds.formAt,floor:e.thresholds.floor},
-    lair:{present:lair.present,complete:lair.complete,unassigned:lair.unassigned,ambiguity},sessions};
+    lair:{present:lair.present,complete:lair.complete,unassigned:lair.unassigned,ambiguity,...(ts(lair.observedAt,now)!==null?{observedAt:lair.observedAt}:{})},sessions};
 }
 
 /** A `raid_session_ended` event -> the stored payload, or null. */
@@ -109,15 +110,23 @@ export function latestSnapshots(rows,now=Date.now()){
 }
 
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
-export function endedEvents(rows,zone){
+export function endedEvents(rows,zone,snapshot=null){
   const byKey=new Map();
   for(const row of rows.map(parse)){
     const p=row.payload;
     if(!p||p.schema!==SCHEMA||p.zone!==zone||!p.session||p.session.status!=='ended')continue;
     const prev=byKey.get(p.session.key);
-    if(!prev||Date.parse(p.session.endedAt)>Date.parse(prev.session.endedAt))byKey.set(p.session.key,p);
+    const candidate={...p,confirmedAt:p.session.confirmedAt||row.observed_at||p.session.endedAt};
+    if(!prev||Date.parse(candidate.session.endedAt)>Date.parse(prev.session.endedAt)||Date.parse(candidate.session.endedAt)===Date.parse(prev.session.endedAt)&&Date.parse(candidate.confirmedAt)<Date.parse(prev.confirmedAt))byKey.set(p.session.key,candidate);
   }
-  return [...byKey.values()].sort((a,b)=>Date.parse(b.session.endedAt)-Date.parse(a.session.endedAt));
+  // The snapshot is the atomic current lifecycle: standalone events cannot contradict it.
+  for(const s of snapshot?.payload.sessions||[]){
+    if(s.status!=='ended'){byKey.delete(s.key);continue;}
+    const previous=byKey.get(s.key);
+    const confirmedAt=s.confirmedAt||previous?.confirmedAt||snapshot.observedAt;
+    byKey.set(s.key,{session:s,confirmedAt,durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)});
+  }
+  return [...byKey.values()].filter(p=>['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));
 }
 
 /**
@@ -157,13 +166,14 @@ export function buildAuthoritative({snapshot,endedRows,learned,raid,now}){
   const fresh=ageMs<=FRESH_MS,expired=ageMs>EXPIRE_MS;
   const p=snapshot.payload;
   const live=expired?[]:p.sessions.filter(s=>s.status!=='ended').map(s=>liveView(s,{now,fresh,learned,raid}));
-  const lastEnded=endedRows[0]||null;
+  const liveKeys=new Set(p.sessions.filter(s=>s.status!=='ended').map(s=>s.key));
+  const lastEnded=endedRows.find(e=>!liveKeys.has(e.session.key)&&['kill_confirmed','departed'].includes(e.session.endReason))||null;
   return {
     source:'bufftracker',schema:SCHEMA,observedAt:snapshot.observedAt,ageMs,fresh,stale:!fresh,expired,
     thresholds:p.thresholds,
-    lair:{present:p.lair.present,complete:p.lair.complete,unassigned:p.lair.unassigned,ambiguity:p.lair.ambiguity},
+    lair:{present:p.lair.present,complete:p.lair.complete,unassigned:p.lair.unassigned,ambiguity:p.lair.ambiguity,observedAt:p.lair.observedAt||snapshot.observedAt},
     sessions:live,
-    lastFinished:lastEnded?{at:lastEnded.session.endedAt,id:lastEnded.session.id,durationMs:lastEnded.durationMs,
+    lastFinished:lastEnded?{at:lastEnded.confirmedAt||lastEnded.session.confirmedAt||lastEnded.session.endedAt,departedAt:lastEnded.session.endedAt,id:lastEnded.session.id,durationMs:lastEnded.durationMs,
       endReason:lastEnded.session.endReason,clearSource:lastEnded.session.clearSource,
       killConfirmed:lastEnded.session.clearSource==='chronicle_kill',trusted:lastEnded.session.trusted}:null,
   };

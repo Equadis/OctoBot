@@ -188,3 +188,19 @@ test('existing summary fields and ingest types keep working alongside raid telem
   assert.ok(realm.heads.onyxia&&realm.heads.nefarian);
   assert.equal(realm.heads.onyxia.sessions.length,0); // Onyxia never reported: nothing invented
 });
+
+
+test('snapshot finishes atomically, then a resumed session retracts its prior finish',async()=>{
+  const {endedEvents,buildAuthoritative}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const snap=r.events.filter(x=>x.type==='raid_sessions').pop();
+  const ended={...e.session,confirmedAt:e.time};
+  const s={payload:{...snap,sessions:[ended]},observedAt:e.time};
+  const history=endedEvents([], 'onyxia',s);
+  assert.equal(history[0].confirmedAt,e.time);
+  const active={...ended,status:'in_progress',resumed:true};
+  delete active.endedAt;delete active.confirmedAt;delete active.endReason;delete active.clearSource;
+  const resumed={payload:{...snap,sessions:[active]},observedAt:snap.time};
+  const rows=[{observed_at:e.time,payload_json:JSON.stringify(e)}];
+  assert.deepEqual(endedEvents(rows,'onyxia',resumed),[]);
+});

@@ -390,7 +390,7 @@ export function createRaidZonePipeline(
           })
           .catch((error) => logger.debug(`chronicle store: ${describeError(error)}`));
       }
-      return confirming.length > 0 ? lane.watch.confirmClearNow() : null;
+      return confirming.length > 0 ? lane.watch.confirmClearNow(now) : null;
     };
 
     if (cleared) {
@@ -420,7 +420,7 @@ export function createRaidZonePipeline(
   };
 
   const onRoster = async (view: LairView): Promise<void> => {
-    const now = Date.now();
+    const now = view.at;
     const inZone = view.present; // players in the watch area; the source already filtered + logged it
     const complete = view.complete;
 
@@ -447,6 +447,7 @@ export function createRaidZonePipeline(
       zone.id,
       lanes.map((lane) => ({ label: lane.label, sessions: lane.watch.sessions() })),
       { formAt: watch.raidStrengthSize ?? watch.minRaidSize, floor: watch.raidLeftFloor ?? watch.minRaidSize },
+      { present: inZone.length, complete, at: view.at },
     );
   };
 

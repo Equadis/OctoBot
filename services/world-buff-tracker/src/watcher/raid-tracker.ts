@@ -126,6 +126,7 @@ interface LiveSession {
 
 interface EndedSession extends LiveSession {
   readonly endedAt: number;
+  readonly confirmedAt: number;
   endReason: SessionEndReason;
   clearSource: "chronicle_kill" | "roster_departure";
 }
@@ -256,13 +257,13 @@ export class RaidTracker {
     const c = slot.clears;
     const at = view.at;
     if (obs?.clear && slot.live) {
-      this.#end(slot, "departed", slot.live.formedAt + obs.clear.durationMs, "roster_departure");
+      this.#end(slot, "departed", slot.live.formedAt + obs.clear.durationMs, "roster_departure", at);
     } else if (obs?.resumed && slot.live === null) {
       const back = this.#ended.findIndex((e) => (c.number !== null ? e.id === c.number : e.formedAt === c.formedAt));
       if (back >= 0) {
         const [revived] = this.#ended.splice(back, 1);
         if (revived) {
-          const { endedAt: _e, endReason: _r, clearSource: _c, ...live } = revived;
+          const { endedAt: _e, confirmedAt: _a, endReason: _r, clearSource: _c, ...live } = revived;
           slot.live = { ...live, resumed: true };
         }
       }
@@ -301,11 +302,11 @@ export class RaidTracker {
     }
   }
 
-  #end(slot: Slot, reason: SessionEndReason, endedAt: number, source: "chronicle_kill" | "roster_departure"): void {
+  #end(slot: Slot, reason: SessionEndReason, endedAt: number, source: "chronicle_kill" | "roster_departure", confirmedAt = endedAt): void {
     const live = slot.live;
     if (live === null) return;
     slot.live = null;
-    this.#ended.push({ ...live, endedAt, endReason: reason, clearSource: source });
+    this.#ended.push({ ...live, endedAt, confirmedAt, endReason: reason, clearSource: source });
     this.#ended.sort((a, b) => b.endedAt - a.endedAt);
     while (this.#ended.length > ENDED_MAX) this.#ended.pop();
     for (let i = this.#ended.length - 1; i >= 0; i -= 1) {
@@ -468,12 +469,12 @@ export class RaidTracker {
 
   /** Confirm a pending departure now (a Chronicle kill proved it), returning the clear the wait would
    *  have produced, or null if none is pending. Never manufactures a clear. */
-  confirmClearNow(): ConfirmedClear | null {
+  confirmClearNow(now = Date.now()): ConfirmedClear | null {
     for (const slot of this.#slots) {
       if (slot.clears.pending() === null) continue;
       const formedAt = slot.clears.formedAt;
       const clear = slot.clears.confirmNow();
-      if (clear && formedAt !== null) this.#end(slot, "kill_confirmed", formedAt + clear.durationMs, "chronicle_kill");
+      if (clear && formedAt !== null) this.#end(slot, "kill_confirmed", formedAt + clear.durationMs, "chronicle_kill", Math.max(now, formedAt + clear.durationMs));
       return clear;
     }
     return null;
@@ -511,7 +512,7 @@ export class RaidTracker {
         guild: s.guild,
         trusted,
         resumed: s.resumed,
-        ...(ended !== undefined ? { endedAt: ended.endedAt, endReason: ended.endReason, clearSource: ended.clearSource } : {}),
+        ...(ended !== undefined ? { endedAt: ended.endedAt, confirmedAt: ended.confirmedAt, endReason: ended.endReason, clearSource: ended.clearSource } : {}),
       };
     };
     const live: RaidSessionSnapshot[] = [];

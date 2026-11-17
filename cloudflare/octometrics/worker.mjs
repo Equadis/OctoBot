@@ -125,8 +125,8 @@ async function summary(env,realm){
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_who' ORDER BY id DESC LIMIT 50").bind(realm).all(),
     env.DB.prepare("SELECT id,type,account,role,observed_at,received_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 200").bind(realm).all(),
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('session_online','session_offline','session_error') ORDER BY id DESC LIMIT 30").bind(realm).all(),
-    env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_sessions' ORDER BY id DESC LIMIT 12").bind(realm).all(),
-    env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_session_ended' ORDER BY id DESC LIMIT 20").bind(realm).all(),
+    env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_sessions' ORDER BY id DESC LIMIT 300").bind(realm).all(),
+    env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_session_ended' ORDER BY id DESC LIMIT 300").bind(realm).all(),
     env.DB.prepare("SELECT account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='listener_health' ORDER BY id DESC LIMIT 12").bind(realm).all(),
   ]);
   const populationEvent=populationRows.results.map(decode).find(x=>isFresh(x.observed_at,180) && Number.isInteger(x.type==="server_info"?x.payload.population:x.payload.serverWhoOnline));
@@ -168,8 +168,9 @@ async function summary(env,realm){
     const snapshot=latestSnapshots(snapshotRows.results,now)[zone]||null;
     if(snapshot){
       // The tracker's own lifecycle is authoritative. Never fall back to the merged headcount estimate once it has reported.
-      const authLearned=await learnedAuthFor(env,realm,zone,raid);
-      const auth=buildAuthoritative({snapshot,endedRows:endedEvents(endedRows.results,zone),learned:authLearned,raid,now});
+      const reconciled=endedEvents(endedRows.results,zone,snapshot);
+      const authLearned=learnAuthoritative(reconciled,raid);
+      const auth=buildAuthoritative({snapshot,endedRows:reconciled,learned:authLearned,raid,now});
       head.authoritative=auth;head.sessions=auth.sessions;
       head.learned=authLearned?{samples:authLearned.samples,medianMs:authLearned.medianMs===null?null:Math.round(authLearned.medianMs),p25Ms:authLearned.p25Ms===null?null:Math.round(authLearned.p25Ms),p75Ms:authLearned.p75Ms===null?null:Math.round(authLearned.p75Ms),confidence:authLearned.confidence,source:"authoritative"}:null;
       head.clear=authoritativeClear(auth,authLearned,now);
@@ -252,10 +253,10 @@ export default {
     // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
     // Raid snapshots are superseded every couple of minutes: keep 3 days. Ended sessions (the training data) keep the full 30.
-    await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days')").run();
+    await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days') AND id NOT IN (SELECT MAX(id) FROM metric_events WHERE type='raid_sessions' GROUP BY realm,json_extract(payload_json,'$.zone'))").run();
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
-    await env.DB.prepare("DELETE FROM metric_events WHERE observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
+    await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
     await auctionCleanup(env);
   }
 };

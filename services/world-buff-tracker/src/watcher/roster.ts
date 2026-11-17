@@ -50,8 +50,8 @@ export interface Roster {
  */
 export async function fetchRoster(who: WhoFn, areaId: number): Promise<Roster> {
   const base = await who({ minLevel: 0, maxLevel: 100, zoneIds: [areaId] });
-  if (base.players.length < WHO_RESULT_CAP) {
-    return { players: [...base.players], onlineCount: base.onlineCount, complete: true, sliced: false, failedSlices: 0 };
+  if (base.players.length < WHO_RESULT_CAP && base.onlineCount <= base.players.length) {
+    return { players: [...new Map(base.players.map(p => [p.name.toLowerCase(), p])).values()], onlineCount: base.onlineCount, complete: true, sliced: false, failedSlices: 0 };
   }
 
   // Truncated — fill in per-class-BUCKET slices to beat the cap: ask for three classes at once (one
@@ -65,22 +65,22 @@ export async function fetchRoster(who: WhoFn, areaId: number): Promise<Roster> {
     who({ minLevel: 0, maxLevel: 100, zoneIds: [areaId], classMask: mask });
 
   const byName = new Map<string, WhoPlayer>();
-  for (const player of base.players) byName.set(player.name, player);
+  for (const player of base.players) byName.set(player.name.toLowerCase(), player);
   let complete = true;
   let failedSlices = 0;
   for (const bucket of CLASS_BUCKETS) {
     try {
       const slice = await query(maskFor(bucket));
-      if (slice.players.length < WHO_RESULT_CAP) {
-        for (const player of slice.players) byName.set(player.name, player);
+      if (slice.players.length < WHO_RESULT_CAP && slice.onlineCount <= slice.players.length) {
+        for (const player of slice.players) byName.set(player.name.toLowerCase(), player);
         continue;
       }
       // Bucket itself hit the cap (an extreme zerg) — sub-slice it into individual classes.
       for (const classId of bucket) {
         try {
           const sub = await query(1 << (classId - 1));
-          for (const player of sub.players) byName.set(player.name, player);
-          if (sub.players.length >= WHO_RESULT_CAP) complete = false; // >49 of one class — still truncated
+          for (const player of sub.players) byName.set(player.name.toLowerCase(), player);
+          if (sub.players.length >= WHO_RESULT_CAP || sub.onlineCount > sub.players.length) complete = false; // >49 of one class — still truncated
         } catch {
           failedSlices += 1;
           complete = false;
@@ -91,5 +91,6 @@ export async function fetchRoster(who: WhoFn, areaId: number): Promise<Roster> {
       complete = false; // missing this bucket's members — a partial roster, but better than none
     }
   }
+  // All buckets being successful means coverage, not an atomic point-in-time instance roster.
   return { players: [...byName.values()], onlineCount: base.onlineCount, complete, sliced: true, failedSlices };
 }
