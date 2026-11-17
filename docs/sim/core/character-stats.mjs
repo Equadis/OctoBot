@@ -20,7 +20,9 @@ const num=n=>Number.isFinite(n)?String(Math.round(n)):'—';
 const pair=values=>values.join(' | ');
 const sameOrPair=values=>values.every(v=>v===values[0])?values[0]:pair(values);
 export const passiveItemStats=(item,build={})=>equipmentItemAudit(item,build).stats;
-export function enchantStats(id){const enchant=ENCHANTS.find(e=>e.id===id);return enchantAvailable(enchant)?{...enchant.effects}:{};}
+// Catalogue values remain available for inspection and future-phase build migration.
+export function enchantStats(id){return {...(ENCHANTS.find(e=>e.id===id)?.effects||{})};}
+export function activeEnchantStats(id){return enchantAvailable(ENCHANTS.find(e=>e.id===id))?enchantStats(id):{};}
 export function characterStats(build,talentData,gear={}){
  if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
  const racial=racialPassives(build.race);
@@ -92,7 +94,7 @@ export function characterStats(build,talentData,gear={}){
  const spellMiss=clamp(baseSpellMiss-s.spellHit,1,99);
  const targetArmour=Math.max(0,target.targetArmour+buffAudit.entries.reduce((n,e)=>n+(e.active?e.stats.targetArmour||0:0),0)-s.armorPen);
  const mitigation=100*targetArmour/(targetArmour+400+85*level);
- const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=s.weaponDamage+(validEnchant(enchantId,slot,c,weapon,level)?(enchantStats(enchantId).weaponDamage||0):0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
+ const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=s.weaponDamage+(validEnchant(enchantId,slot,c,weapon,level)?(activeEnchantStats(enchantId).weaponDamage||0):0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
  const racialEvents=racialEventAudit(build.race);
  const petAudit=petProfile(build,talentData,{stamina:s.sta,intellect:s.int,itemArmour:rawItemArmour,spellHit:s.spellHit,spellCrit,rangedAP:build.classOptions?.observedRangedAP,fireSpellPower:s.sp+s.damageOnlySp+s.fireSp,shadowSpellPower:s.sp+s.damageOnlySp+s.shadowSp});
