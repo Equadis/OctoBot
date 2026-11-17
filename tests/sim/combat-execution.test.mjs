@@ -70,3 +70,13 @@ test('swing changes triggered inside a strike do not create duplicate attacks; d
 test('queued actions require matching configured swing and invalid timing policy is rejected',()=>{
  const e=fixture({actions:[queue('special')],rows:[row('special')]});assert.throws(()=>e.run(),/configured swing/);assert.throws(()=>fixture({actions:[channel('beam',{tickMs:0})],rows:[row('beam')]}),/channel requires/);const a=fixture();auto(a);assert.throws(()=>a.setSwingInterval('mh',500,'guess'),/Explicit swing/);
 });
+
+
+test('healing reduction uses the strongest active effect, including self-leech, and does not inflate overheal',()=>{
+ const e=fixture({units:[{id:'player',maxHealth:500,health:100},{id:'enemy',maxHealth:1000}]});
+ for(const [id,owner,pct,stacks,durationMs] of [['weak','player',10,2,3000],['strong','enemy',40,1,1000]])e.auras.apply({id,name:id,targetId:'player',ownerId:owner,kind:'debuff',durationMs,maxStacks:stacks,stacks,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'healingReceivedReductionPct',mode:'flat',value:pct}]});
+ e.timeline.schedule(500,P.tick,()=>e.damage({targetId:'enemy',value:50,source:'test-drain',actorId:'player',leech:{fraction:1,basis:'effective'}}));
+ e.timeline.schedule(1500,P.tick,()=>e.heal({targetId:'player',value:100,source:'test-heal'}));
+ e.timeline.schedule(3500,P.tick,()=>e.heal({targetId:'player',value:400,source:'test-heal'}));
+ const events=e.run().events.filter(x=>x.type==='heal');assert.deepEqual(events.map(x=>[x.raw,x.effective,x.overheal,x.healingPrevented??0]),[[30,30,0,20],[80,80,0,20],[400,290,110,0]]);
+});
