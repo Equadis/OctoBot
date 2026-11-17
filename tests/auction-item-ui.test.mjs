@@ -49,3 +49,31 @@ test("Auction House tooltips reserve small notes for data provenance and unavail
  assert.match(css,/\.planner-tooltip p\.tooltip-note\{[^}]*font-size:10px[^}]*\}/);
  assert.match(css,/\.ah-roll-detail small\{[^}]*font-size:10px[^}]*\}/);
 });
+
+
+test("shared rich tooltips use actual same-origin official equipment and consumable snapshots before external DB",async()=>{
+ const {readFile}=await import("node:fs/promises");
+ const original=globalThis.fetch,requests=[];
+ globalThis.fetch=async url=>{
+  const u=new URL(url);requests.push(u.href);
+  if(u.protocol==="file:")return {ok:true,json:async()=>JSON.parse(await readFile(u,"utf8"))};
+  throw Error("Simulated blocked cross-origin database request");
+ };
+ try{
+  const equipment=JSON.parse(await readFile(new URL("../docs/sim/data/items/details.json",import.meta.url),"utf8"));
+  const sample=Object.values(equipment).find(x=>x.id&&x.tooltipText?.split("\n").length>3);
+  assert.ok(sample,"real official equipment fixture exists");
+  const result=await richItemTooltip({item_id:sample.id,item_name:sample.name});
+  assert.ok(result.lines.length>=2);
+  assert.ok(result.notes.includes("Base stats: OctoWoW DB snapshot."));
+  const potion=await richItemTooltip({item_id:118,item_name:"Minor Healing Potion"});
+  assert.ok(potion.lines.some(l=>/Use: Restores 70 to 91 health/.test(l)));
+  const arrow=await richItemTooltip({item_id:2512,item_name:"Rough Arrow"});
+  assert.ok(arrow.lines.some(l=>/1.5 damage per second/.test(l)));
+  assert.equal(requests.filter(u=>u.includes("/details.json")).length,1);
+  assert.equal(requests.some(u=>u.startsWith("https:")),false);
+  const missing=await richItemTooltip({item_id:2147483647,item_name:"Unknown item"});
+  assert.ok(missing.notes.some(l=>/No verified item tooltip/.test(l)));
+  assert.equal(missing.lines.length,0);
+ }finally{globalThis.fetch=original;}
+});
