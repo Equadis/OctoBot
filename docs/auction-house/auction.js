@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261117-variant2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette2';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette2';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -330,9 +330,10 @@ async function refreshSummary(first){
   try{
     const [s,st]=await Promise.all([request('/api/auction/summary'),request('/api/auction/scan-status').catch(()=>null)]);
     state.scan={completedAt:s.completed_at,scanning:Boolean(st?st.scanning:s.scanning),startedAt:st?.started_at??null,collectorStatus:st?.collector_status??s.collector_status??null,pages:(st?.pages_done??s.pages_done??0)+' / '+(st?.pages_expected??s.pages_expected??'?')+' pages'};
-    $('last-scan').textContent=dateTime(s.completed_at);
+    $('last-scan').textContent=s.completed_at?'Last scan: '+dateTime(s.completed_at):'No completed scan';
     renderScan();
     $('auction-count').textContent=count(s.auction_count);
+    $('historical-auction-count').textContent=count(s.total_historical_auctions);
     const itemCount=$('item-count'),coverage=indexCoverage(s.items_with_metadata,s.item_count);
     itemCount.textContent=count(s.item_count);
     itemCount.className=indexedClass(s.items_with_metadata,s.item_count)||'';
@@ -343,11 +344,9 @@ async function refreshSummary(first){
     if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';$('sort').value='name';}
   }catch{note('Auction House feed unavailable – no data is being invented.');}
 }
-/** Re-evaluates the two scan cards from the last data received; called every second so the timers run. */
+/** Re-evaluates the scan status card from the last data received; called every second so the timers run. */
 function renderScan(){
   const now=Date.now(),sc=state.scan;
-  const last=$('last-scan');
-  last.className=lastScanClass(sc.completedAt,now)||'';
   const status=$('scan-progress'),next=scanStatus(sc,now);
   status.textContent=next.text;status.className=next.className;
   status.title=sc.collectorStatus==='STALE'?'Scan upload has not reported progress recently':sc.scanning?sc.pages:'';

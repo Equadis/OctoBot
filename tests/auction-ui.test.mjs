@@ -290,3 +290,17 @@ test("auction countdown colours use upper duration bands and 72h remains blue as
  for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff9218",yellow:"#ffff00",green:"#1eff00",blue:"#2992ff"}))
   assert.ok(read("auction-house/auction.css").includes(".ah-auction-time.ah-time-"+colour+"{color:"+hex+"}"));
 });
+
+test("Auction House KPIs order scan status, item count, active auctions and historical total",()=>{
+ const html=read("auction-house/index.html"),js=read("auction-house/auction.js"),css=read("auction-house/auction.css");
+ const ids=["scan-progress","last-scan","item-count","auction-count","historical-auction-count"];
+ for(const [i,id] of ids.entries()){
+  assert.ok(html.includes('id="'+id+'"'));
+  if(i)assert.ok(html.indexOf('id="'+ids[i-1]+'"')<html.indexOf('id="'+id+'"'));
+ }
+ assert.match(html,/<small id="last-scan">/);
+ assert.match(css,/\.ah-kpi small\{font-size:11px;color:#9fadbf;/);
+ assert.ok(js.includes("count(s.total_historical_auctions)"));
+ assert.ok(js.includes("'Last scan: '+dateTime(s.completed_at)"));
+ assert.ok(!js.includes("last.className=lastScanClass"));
+});

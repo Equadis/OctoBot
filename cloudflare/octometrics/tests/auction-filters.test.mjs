@@ -250,3 +250,32 @@ test("deployed Worker entry point routes metadata reads and authenticated writes
  assert.equal(items.status,200);assert.equal((await items.json()).items[0].item_name,"Recovered Material");
  assert.equal((await callWorker("expiry-diagnostics")).status,200);
 });
+
+test("historical count tracks unique completed auction IDs, never repeat listings or price changes", {skip}, async()=>{
+ const e=env();
+ const first=L(1001,{auction_id:81001}),second=L(1003,{auction_id:81002}),third=L(1004,{auction_id:81003});
+ await scan(e,"ah_hist_first","2026-11-10",[first,second,third]);
+ let s=(await get(e,"summary")).json;
+ assert.equal(s.auction_count,3);assert.equal(s.total_historical_auctions,3);
+ await scan(e,"ah_hist_second","2026-11-11",[{...first,buyout:999},second]);
+ s=(await get(e,"summary")).json;
+ assert.equal(s.auction_count,2);assert.equal(s.total_historical_auctions,3);
+ const newer=L(1003,{auction_id:81004});
+ await scan(e,"ah_hist_third","2026-11-12",[first,newer]);
+ s=(await get(e,"summary")).json;
+ assert.equal(s.auction_count,2);assert.equal(s.total_historical_auctions,4);
+ const partial=L(1001,{auction_id:81005});
+ assert.equal((await post(e,"start",{scan_id:"ah_hist_failed",started_at:"2026-11-13T10:00:00.000Z",reported_total:1})).status,201);
+ assert.equal((await post(e,"page",{scan_id:"ah_hist_failed",page:0,response_ms:1,items:[partial]})).status,202);
+ assert.equal((await get(e,"summary")).json.total_historical_auctions,4);
+ assert.equal((await post(e,"fail",{scan_id:"ah_hist_failed",reason:"fixture"})).status,200);
+ assert.equal((await get(e,"summary")).json.total_historical_auctions,4);
+ const {readFileSync}=await import("node:fs");
+ const migration=readFileSync(new URL("../migrations/0010_auction_historical_total.sql",import.meta.url),"utf8");
+ e.DB.sqlite.exec("DROP TRIGGER ah_first_seen_count_insert; DROP TABLE ah_historical_total;");
+ e.DB.sqlite.exec(migration);e.DB.sqlite.exec(migration);
+ assert.equal((await get(e,"summary")).json.total_historical_auctions,4);
+ await scan(e,"ah_hist_fourth","2026-11-14",[partial]);
+ assert.equal((await get(e,"summary")).json.total_historical_auctions,5);
+ assert.equal(e.DB.sqlite.prepare("SELECT COUNT(*) n FROM ah_first_seen").get().n,5);
+});

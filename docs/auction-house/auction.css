@@ -6,7 +6,7 @@
 .ah-kpi,.ah-panel{background:var(--panel);border:1px solid var(--line);border-radius:5px}
 .ah-panel{margin-bottom:18px}
 .ah-kpi{padding:14px;display:flex;flex-direction:column;gap:8px}
-.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:var(--gold)}
+.ah-kpi small{font-size:11px;color:#9fadbf;font-weight:400;line-height:1.4;margin-top:-4px}.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:var(--gold)}
 /* Override the gold KPI default with freshness/coverage colour classes. */
 .ah-kpi strong.ah-time-green{color:#78dfa6}
 .ah-kpi strong.ah-time-yellow{color:#e3bd57}
