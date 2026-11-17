@@ -50,7 +50,17 @@ export function detailRestriction(item, detail, build, slot) {
   if (detail.raceMask !== -1 && !(detail.raceMask & race)) return 'This item is restricted to another race.';
   if (detail.requiredLevel > build.level) return `Requires level ${detail.requiredLevel}.`;
   if (!SLOT_TYPES[slot]?.includes(detail.slot)) return 'The source item detail specifies a different equipment slot.';
-  const unmet=detail.requirements.filter(requirement=>{const skill=requirement.match(/^Requires ([A-Za-z ]+) \((\d+)\)$/);return !skill||((build.skills?.[skill[1]]||0)+((build.skills?.[skill[1]]||0)>0?(racialPassives(build.race).skillBonuses?.[skill[1]]||0):0))<Number(skill[2]);});
+  // Reputation ranks and profession specialisations are displayed in the
+  // official tooltip, but a build has no reputation/specialisation state.
+  // Their absence from build.skills is not evidence that a character fails them.
+  // Enforce only verifiable numeric skill-rank requirements.
+  const unmet=detail.requirements.filter(requirement=>{
+    const skill=requirement.match(/^Requires ([A-Za-z ]+) \((\d+)\)$/);
+    if(!skill)return false;
+    const rank=build.skills?.[skill[1]]||0;
+    const racialBonus=rank>0?(racialPassives(build.race).skillBonuses?.[skill[1]]||0):0;
+    return rank+racialBonus<Number(skill[2]);
+  });
   if(unmet.length)return `Additional requirement: ${unmet.join('; ')}.`;
   if (detail.unique && Object.entries(build.gear).some(([other, equipped]) => other !== slot && equipped.id === item.id)) return 'This unique item is already equipped.';
   return null;
@@ -61,13 +71,20 @@ export function detailRestriction(item, detail, build, slot) {
 export function listingBuild(build,item,slot){
   return ['ammo','quiver'].includes(slot)?{...build,gear:{...build.gear,ranged:{subclass:item.subclass===3?3:2}}}:build;
 }
+// Match search terms despite punctuation and accidental repeated words.
+// The original item names remain unchanged for display and saved equipment.
+export function normaliseItemSearch(value){
+  return String(value||'').toLocaleLowerCase('en-GB')
+    .replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\b([a-z0-9]+)(?:\s+\1)+\b/g,'$1')
+    .replace(/\s+/g,' ');
+}
 export function filterItems(items, {build,slot,search='',quality=''}) {
-  const query = search.trim().toLowerCase();
-  const match = query.match(/^https:\/\/octowow\.st\/db\/\?item=(\d+)$/);
-  const term = match ? match[1] : query;
+  const query=String(search||'').trim();
+  const match=query.match(/^https:\/\/octowow\.st\/db\/\?item=(\d+)$/i);
+  const term=match?match[1]:normaliseItemSearch(query);
   return items.filter(item => !listingRestriction(item,listingBuild(build,item,slot),slot) &&
     (quality === '' || item.quality === Number(quality)) &&
-    (!term || String(item.id) === term || item.name.toLowerCase().includes(term)))
+    (!term || String(item.id) === term || normaliseItemSearch(item.name).includes(term)))
     .sort((a,b) => (b.level || 0)-(a.level || 0) || a.name.localeCompare(b.name) || a.id-b.id);
 }
 
