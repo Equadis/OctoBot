@@ -8,7 +8,7 @@
  * pending, instead of being treated as permanent or silently dropped.
  */
 import {getTalentAudit} from './talent-audits.mjs?v=20261117-mvp1';
-import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
+import {BUFF_STATS,effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
 
 const WEAPONS={
   axe:[0,1], mace:[4,5], sword:[7,8], dagger:[15], fist:[13],
@@ -43,8 +43,10 @@ export function resolveTalentEffects(build,talentData,gear={}){
  output.active=true;
  if(!talentData||talentData.classId!==build.classId)
    throw new Error('Talent audit requires matching official talent metadata.');
+ const known=new Set(talentData.talents.map(t=>String(t.id)));
+ for(const [id,rank] of Object.entries(build.talents||{}))if(rank!==0&&!known.has(id))throw new Error('Selected talent is not in class metadata: '+id);
  for(const talent of talentData.talents){
-  const rank=build.talents[talent.id]??0;
+  const rank=build.talents?.[talent.id]??0;
   if(!rank)continue;
   if(rank<0||rank>talent.maxRanks||!Number.isInteger(rank))throw new Error('Invalid rank for '+talent.name);
   const audit=TALENT_COVERAGE[talent.id];
@@ -53,7 +55,7 @@ export function resolveTalentEffects(build,talentData,gear={}){
   let applied=0;
   for(const [ruleIndex,rule] of rules.entries()){
    if(rule.kind==='pending'){output.pending.push({name:talent.name,talentId:talent.id,ruleIndex,note:rule.note||'Requires combat simulation'});continue;}
-   if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)||(rule.kind==='buff'&&!normaliseBuffs(build.controls?.buffIds||[]).includes(rule.source))){
+   if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)||(rule.kind==='buff'&&!effectiveBuffIds(build.controls?.buffIds||[],build.planning).includes(rule.source))){
     output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,scope:rule.scope||rule.source||'',status:'inactive',note:rule.note||'Condition is not active'});
     continue;
    }
