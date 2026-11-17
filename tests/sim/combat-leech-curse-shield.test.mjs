@@ -19,3 +19,10 @@ test('Weakened Soul blocks repeat shield even after a shield breaks',()=>{
  const e=createExplicitClassEncounter({...common,classId:'priest',durationMs:18000,units:[{id:'p',maxHealth:1000},{id:'boss',maxHealth:10000},{id:'ally',maxHealth:1000}],allyIds:['ally'],geometry:{p:{boss:{distance:10,position:'behind'},ally:{distance:10,position:'front'}}},incomingDamage:[{atMs:1000,actorId:'boss',targetId:'ally',source:'Swing',amount:150,school:'physical'}],actions:[action('priest:power-word-shield',10901,[{kind:'absorb',when:'always',id:'shield',formula:{min:100,max:100,terms:[],multiplier:1},durationMs:30000,schools:null,refresh:'replace'},{kind:'aura',when:'always',auraTarget:'target',aura:{id:'ws',name:'Weakened Soul',kind:'debuff',durationMs:15000,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[]}}],{targets:['ally'],cooldownMs:4000,blockingAura:'Weakened Soul'})],rows:[{ability:'Power Word: Shield',target:'ally',conditions:[]}]}).run();
  assert.deepEqual(e.events.filter(x=>x.type==='absorb-apply').map(x=>x.time),[0,15000]);assert.equal(e.events.filter(x=>x.type==='absorb').reduce((n,x)=>n+x.amount,0),100);
 });
+
+test('Agony and Doom replace each other without changing another owned periodic',()=>{
+ const dot=(name,intervalMs,replacePeriodicAuras)=>({...effect,kind:'periodic-damage',durationMs:24000,intervalMs,replacePeriodicAuras,refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',applicationOutcomes:hit,auraName:name});
+ const sc={...common,durationMs:12000,actions:[action('warlock:curse-of-agony',11713,[dot('Curse of Agony',2000,['Curse of Doom'])]),action('warlock:curse-of-doom',603,[dot('Curse of Doom',4000,['Curse of Agony'])])],rows:[{ability:'Curse of Doom',target:'primary',conditions:[{metric:'combatTime',operator:'>=',value:5}]},{ability:'Curse of Agony',target:'primary',conditions:[]}]};
+ const r=createExplicitClassEncounter(sc).run(),damage=r.events.filter(x=>x.type==='damage');
+ assert.deepEqual(damage.filter(x=>x.source==='Curse of Agony').map(x=>x.time),[2000,4000]);assert.deepEqual(damage.filter(x=>x.source==='Curse of Doom').map(x=>x.time),[9000]);
+});
