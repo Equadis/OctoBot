@@ -355,6 +355,10 @@ export function enchantAvailable(enchant,phase=CURRENT_ENCHANT_PHASE){return (en
 export function enchantsForSlot(slot,classId='warrior',item=null,level=60,{includeFuture=false}={}){
  return ENCHANTS.filter(enchant=>(includeFuture||enchantAvailable(enchant)) && enchant.slot===slot && (!enchant.classes||enchant.classes.includes(classId)) && (!enchant.requiredLevel||level>=enchant.requiredLevel) && (!['mainhand','offhand'].includes(slot)||!item||item.classs===2) && (!enchant.weaponSubclasses||!item||item.classs===2&&enchant.weaponSubclasses.includes(item.subclass)));
 }
+// Display locked options without treating them as legal new selections.
+export function enchantChoicesForSlot(slot,classId='warrior',item=null,level=60,phase=CURRENT_ENCHANT_PHASE){
+ return enchantsForSlot(slot,classId,item,level,{includeFuture:true}).map(enchant=>({...enchant,disabled:!enchantAvailable(enchant,phase),displayName:enchantAvailable(enchant,phase)?enchant.name:`${enchant.name} — Phase ${enchant.availableFromPhase}`}));
+}
 export function validEnchant(id,slot,classId='warrior',item=null,level=60){return enchantsForSlot(slot,classId,item,level,{includeFuture:true}).some(enchant=>enchant.id===id);}
 export const SORT_OPTIONS=Object.freeze([['new','NEW ITEMS'],['level','Item Level'],['name','Name'],['dps','Weapon DPS'],['speed','Weapon Speed'],['armor','Armour'],['Strength','Strength'],['Agility','Agility'],['Stamina','Stamina'],['Intellect','Intellect'],['Spirit','Spirit'],['attackPower','Attack Power'],['hitRating','Hit %'],['critRating','Crit %'],['hastePercent','Haste %'],['armorPenetration','Armor Pen'],['spellDamage','Spell Damage'],['spellCritRating','Spell Crit %'],['hasProc','Has Proc'],['weaponSkill','Weapon Skill'],['spellstrike','Spellstrike']]);
 export function sortEquipment(items,sort='new',direction='desc',details={},references={}){

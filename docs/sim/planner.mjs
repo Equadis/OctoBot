@@ -11,8 +11,8 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
-import { itemPicker } from './item-picker.mjs?v=20261117-picker2';
-import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker2';
+import { itemPicker } from './item-picker.mjs?v=20261117-picker3';
+import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';

@@ -2,7 +2,7 @@ import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
 import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
 import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker2';
+import {SORT_OPTIONS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
@@ -48,9 +48,9 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  function updateEnchants(){
   const build=selectionBuild(), equipped=build.gear[slot], item=equipped&&items?.find(item=>item.id===equipped.id);
   const current=equipped?.enchantId||'';
-  const options=item?enchantsForSlot(slot,build.classId,item,build.level):[];
+  const options=item?enchantChoicesForSlot(slot,build.classId,item,build.level):[];
   const empty=node('option','— None —');empty.value='';$('item-enchant').replaceChildren(empty);
-  for(const enchant of options){const option=node('option',enchant.name);option.value=enchant.id;$('item-enchant').append(option);}
+  for(const enchant of options){const option=node('option',enchant.displayName);option.value=enchant.id;option.disabled=enchant.disabled;$('item-enchant').append(option);}
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
   $('item-enchant').disabled=!options.length;
  }
@@ -121,7 +121,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const options=enchantsForSlot(targetSlot,build.classId,item,build.level);
    const wanted=explicitEnchant===undefined?build.gear[targetSlot]?.enchantId:explicitEnchant;
    const enchantId=options.some(enchant=>enchant.id===wanted)?wanted:'';
-   if(explicitEnchant&&enchantId!==explicitEnchant){error('This enchant cannot be used in this slot.');updateEnchants();return;}
+   if(explicitEnchant&&enchantId!==explicitEnchant){error('This enchant is unavailable in the current phase or incompatible with this slot.');updateEnchants();return;}
    (context.onEquip||onEquip)(targetSlot,{id:item.id,label:(source.name||item.name).slice(0,80),enchantId,twoHanded:(source.slot||item.slot)===17});
    if(close)$('item-dialog').close();else{updateEnchants();error();}
   }catch(failure){if(current()){error('Official item restrictions could not be verified. '+failure.message);updateEnchants();}}
