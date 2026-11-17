@@ -1,0 +1,106 @@
+import {CombatTimeline,CombatResources,PeriodicEffects,seededRandom,REFERENCE_PRIORITIES as P} from './combat-timeline.mjs';
+import {resourceLedger,effectiveHealing} from './combat-math.mjs';
+import {evaluatePriority} from './rotations/conditions.mjs';
+// Generic execution primitives. No default spell ranks, attack tables, or class-specific actions.
+export const EXECUTION_REVISION='octo-combat-execution-20261117-1';
+const integer=(n,label,min=0)=>{if(!Number.isSafeInteger(n)||n<min)throw new RangeError(label+' must be an integer >= '+min);return n;};
+const positive=(n,label)=>{if(!Number.isFinite(n)||n<=0)throw new RangeError(label+' must be positive');return n;};
+const amount=(n,label)=>{if(!Number.isFinite(n)||n<0)throw new RangeError(label+' must be nonnegative');return n;};
+const key=(s)=>{if(typeof s!=='string'||!s.trim())throw new TypeError('Nonempty identifier required');return s;};
+const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must be a function');return v;};
+const copy=structuredClone;
+export class CombatEncounter{
+ #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#done=false;
+ constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({})}){
+  this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
+  this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');
+  for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health});}
+  const check=id=>{if(!this.#units.has(id))throw new Error('Unknown unit: '+id);return id;};
+  this.#player=check(playerId);this.#primary=check(primaryId);this.#pet=petId===null?null:check(petId);
+  this.#targets=targetIds.map(check);this.#allies=allyIds.map(check);
+  if(!this.#targets.includes(this.#primary)||new Set(this.#targets).size!==this.#targets.length||new Set(this.#allies).size!==this.#allies.length||this.#targets.some(id=>id===this.#player||id===this.#pet||this.#allies.includes(id)))throw new Error('Invalid encounter unit roles');
+  for(const a of actions){
+   key(a.id);key(a.name);if(this.#actions.has(a.id)||[...this.#actions.values()].some(x=>x.name===a.name))throw new Error('Duplicate action');
+   if(!['instant','cast'].includes(a.kind))throw new Error('Unsupported execution action kind: '+a.kind);
+   integer(a.castMs,'cast duration',a.kind==='cast'?1:0);if(a.kind==='instant'&&a.castMs!==0)throw new Error('Instant action cannot have a cast duration');
+   if(!Array.isArray(a.costs)||!Array.isArray(a.cooldowns)||!Array.isArray(a.targets)||!a.targets.length||a.targets.some(x=>!['enemy','ally','self','pet'].includes(x)))throw new Error('Explicit action costs, cooldowns and targets required');
+   for(const c of a.costs){key(c.resource);if(!Number.isFinite(c.delta)||c.delta>0)throw new Error('Start costs must be nonpositive');}
+   this.resources.cooldowns.check(a.cooldowns);resourceLedger(this.resources.snapshot(),a.costs);
+   fn(a.resolve,'action resolver');if(a.available!==undefined)fn(a.available,'availability predicate');this.#actions.set(a.id,{...a,costs:copy(a.costs),cooldowns:copy(a.cooldowns),targets:[...a.targets]});
+  }
+  if(!Array.isArray(rows)||!rows.length)throw new Error('Explicit rotation rows required');
+  this.#rows=copy(rows);
+  for(const r of rows){const a=this.#action(r.abilityId||r.ability);if(!a||a.name!==r.ability)throw new Error('Unsupported rotation ability: '+r.ability);if(!Array.isArray(r.conditions)||!['primary','cycle','ally','self','pet'].includes(r.target??'primary'))throw new Error('Invalid rotation row');}
+ }
+ #action(id){return this.#actions.get(id)||[...this.#actions.values()].find(a=>a.name===id);}
+ unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
+ #alive(id){return this.#units.get(id).health>0;}
+ #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
+ #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
+ #checkFinish(){if(this.#finishedAt===null&&!this.#active()){this.#finishedAt=this.timeline.now;this.interrupt('encounter ended');}}
+ damage({targetId,value,source}){key(source);amount(value,'damage');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown damage target');if(!this.#active()||u.health<=0)return {effective:0,overkill:0,ignored:true};const effective=Math.min(value,u.health);u.health-=effective;this.#record('damage',{targetId,source,raw:value,effective,overkill:value-effective});this.#checkFinish();return {effective,overkill:value-effective};}
+ heal({targetId,value,source}){key(source);amount(value,'healing');const u=this.#units.get(targetId);if(!u)throw new Error('Unknown healing target');if(!this.#active()||u.health<=0)return {effective:0,overheal:0,ignored:true};const r=effectiveHealing(value,u.maxHealth-u.health);u.health+=r.effective;this.#record('heal',{targetId,source,...r});return r;}
+ interrupt(reason='interrupted'){if(!this.#cast)return false;const c=this.#cast;this.#cast=null;this.timeline.cancel(c.ticket);this.#record('cast-interrupted',{ability:c.action.name,targetId:c.targetId,reason});if(this.#active()&&this.timeline.now<this.#duration)this.#scheduleDecision(this.timeline.now+this.#cadence);return true;}
+ #role(id){return id===this.#player?'self':id===this.#pet?'pet':this.#targets.includes(id)?'enemy':this.#allies.includes(id)?'ally':null;}
+ #allows(a,id){return id!=null&&this.#alive(id)&&a.targets.includes(this.#role(id));}
+ #state(){
+  const primary=this.#alive(this.#primary)?this.#primary:this.#targets.find(id=>this.#alive(id));
+  const pool=this.resources.snapshot();const resources=Object.fromEntries(Object.entries(pool).map(([k,v])=>[k,v.current]));if(pool.mana&&pool.mana.max>0)resources.manaPercent=pool.mana.current/pool.mana.max*100;
+  const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent};};
+  const aliveTargets=this.#targets.filter(id=>this.#alive(id)),aliveAllies=this.#allies.filter(id=>this.#alive(id));
+  const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:Boolean(this.#cast),channeling:false,targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
+  // Adapter may supply only missing mechanics (auras, reach, known ranks, etc.).
+  // Built-in resource and health values cannot be overwritten.
+  const extra=this.#context(this);const state={...extra,...base};
+  if(extra?.targets)state.targets=base.targets.map(t=>({...extra.targets.find(x=>x.id===t.id),...t}));
+  if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
+  for(const a of this.#actions.values()){
+   const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)))/1000;
+   const available=resourceLedger(pool,a.costs).ok&&(!a.available||a.available(this,state)===true);
+   cooldowns[a.name]=remaining;cooldowns[a.id]=remaining;actions[a.id]=actions[a.name]={kind:a.kind,ready:remaining===0,available};
+  }
+  return state;
+ }
+ #scheduleDecision(at){if(at>this.#duration||!this.#active())return;if(this.#decision&&this.#decision.at<=at)return;if(this.#decision)this.timeline.cancel(this.#decision.ticket);const ticket=this.timeline.schedule(at,P.decision,()=>{this.#decision=null;this.#decide();});this.#decision={at,ticket};}
+ #decide(){
+  if(!this.#active()||this.#cast||this.timeline.now>=this.#duration)return;
+  const state=this.#state();
+  // Evaluate per row and eligible target, preserving priority, with unsupported
+  // conditions on otherwise eligible rows throwing rather than defaulting.
+  let chosen=null;
+  for(const row of this.#rows){
+   const a=this.#action(row.abilityId||row.ability),action=state.actions[a.id];if(!action.ready||!action.available)continue;
+   const type=row.target??'primary';let frame=type==='cycle'?state.targets:type==='ally'?state.allies:type==='self'?[state.self]:type==='pet'?(state.pet?[state.pet]:[]):[{id:state.targetId}];
+   frame=frame.filter(x=>this.#allows(a,x.id));if(!frame.length)continue;
+   // Existing evaluator receives target-specific frames; primary row stays primary.
+   const context={...state,...(type==='cycle'?{targets:frame}:type==='ally'?{allies:frame}:type==='self'?{self:frame[0]}:type==='pet'?{pet:frame[0]}:{targetId:frame[0].id})};
+   const result=evaluatePriority([row],context);if(result){chosen={a,targetId:result.targetId,state};break;}
+  }
+  if(!chosen){this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
+  const {a,targetId}=chosen;const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
+  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});
+  if(a.kind==='instant'){a.resolve(this,targetId);this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
+  const completeAt=this.timeline.now+a.castMs;
+  const ticket=this.timeline.schedule(completeAt,P.cast,()=>{
+   this.#cast=null;
+   if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId);}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
+   this.#scheduleDecision(this.timeline.now);
+  });this.#cast={ticket,action:a,targetId,completeAt};
+ }
+ addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve}){
+  if(this.#started)throw new Error('Configure auto-attacks before run');key(id);integer(intervalMs,'auto interval',1);integer(firstAtMs,'first auto');fn(resolve,'auto resolver');if(!['continue','skip-during-cast'].includes(castPolicy)||this.#swings.has(id))throw new Error('Invalid auto policy or duplicate hand');
+  const swing={id,intervalMs,nextAt:firstAtMs,lastAt:null,castPolicy,resolve};this.#swings.set(id,swing);
+  const tick=()=>{if(!this.#active())return;const targetId=this.#alive(this.#primary)?this.#primary:this.#targets.find(x=>this.#alive(x));if(!this.#cast||castPolicy==='continue'){swing.lastAt=this.timeline.now;this.#record('auto-attack',{id,targetId});resolve(this,targetId);}else this.#record('auto-skipped',{id,targetId,reason:'casting'});
+   swing.nextAt=this.timeline.now+intervalMs;if(swing.nextAt<=this.#duration&&this.#active())this.timeline.schedule(swing.nextAt,P.tick,tick);
+  };
+  if(firstAtMs<=this.#duration)this.timeline.schedule(firstAtMs,P.tick,tick);
+ }
+ swing(id){const s=this.#swings.get(id);return s?{nextAt:s.nextAt,lastAt:s.lastAt}:null;}
+ run({maxEvents=100000}={}){
+  if(this.#started)throw new Error('Encounter instances are single-use');this.#started=true;this.#checkFinish();this.#scheduleDecision(0);
+  this.timeline.runUntil(this.#duration,{maxEvents});if(this.#cast)this.interrupt('time limit');this.#done=true;
+  const durationMs=this.#finishedAt??this.#duration;const totals={damage:0,overkill:0,healing:0,overheal:0,enemyDamage:0,allyHealing:0};
+  for(const e of this.#log){if(e.type==='damage'){totals.damage+=e.effective;totals.overkill+=e.overkill;if(this.#targets.includes(e.targetId))totals.enemyDamage+=e.effective;}if(e.type==='heal'){totals.healing+=e.effective;totals.overheal+=e.overheal;if(!this.#targets.includes(e.targetId))totals.allyHealing+=e.effective;}}
+  return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),totals,events:copy(this.#log),engineValidated:false};
+ }
+}

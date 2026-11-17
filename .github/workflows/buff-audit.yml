@@ -19,12 +19,14 @@ jobs:
       - run: node tools/sim/audit-pets.mjs
       - run: node tools/sim/audit-combat-abilities.mjs
       - run: node tools/sim/audit-combat-timeline.mjs
+      - run: node tools/sim/audit-combat-execution.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: combat-ability-audit
           path: |
             combat-ability-audit.json
             combat-timeline-audit.json
+            combat-execution-audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: pet-audit
