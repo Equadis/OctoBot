@@ -17,6 +17,8 @@ The JSON contains build, exact gearById, learnedSpellIds, rankByAbility, policie
 - Complete rank/effect implementation for all registered abilities and actual learnability.
 - Live capture verification for cast, damage, resource, hit, crit, cooldown, tick timing and procs.
 - Verified missing race/class and companion base data.
-- Dynamic class talents, weapon imbues, poisons, pet abilities, trinket swaps, item/set procs, raid aura behaviour, complete tank mechanics, automatic resource regeneration and resistances still require implementation and verification. Scripted incoming damage, shields, dynamic swing haste, chained targets, ammunition, combo bleeds, health conversion and periodic consumption now have research runtime support.
+- Dynamic class talents, weapon imbues, poisons, pet abilities, trinket swaps, item/set procs, raid aura behaviour, complete tank mechanics, live resource coefficients and automatic mana/energy regeneration and resistances still require implementation and verification. Scripted incoming damage, shields, dynamic swing haste, chained targets, ammunition, combo bleeds, health conversion and periodic consumption now have research runtime support.
 - Browser integration is branch-only and needs real-browser smoke testing.
 No claim of full simulator completion or validated DPS.
+
+Warrior swings can now generate rage using explicit damage/speed/hand/critical/rounding policies. Incoming rage and single-outcome miss refunds accept explicit policies. Exact server coefficients are not assumed. The configured rotation template exposes rage inputs; the isolated benchmark remains a fixed starting-resource experiment.

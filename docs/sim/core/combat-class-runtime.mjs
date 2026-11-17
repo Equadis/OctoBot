@@ -1,3 +1,4 @@
+import {validateSwingRage,swingRage,validateIncomingRage,incomingRage} from './combat-rage-reference.mjs';
 import {CombatEncounter} from './combat-execution.mjs';
 import {expectedOutcome} from './combat-math.mjs';
 import {sampleAttack} from './combat-attack-tables.mjs';
@@ -51,7 +52,7 @@ function validateEffects(effects,ctx,depth=0){
  for(const x of effects){
   choose(x.when,['always','landed','missed','critical','noncritical'],'effect trigger');
   if(['damage','heal','periodic-damage','periodic-heal'].includes(x.kind)){
-   validateFormula(x.formula,ctx.stats,ctx.comboEnabled);validateOutcomes(x.outcomes);validateThreat(x.threat);
+   validateFormula(x.formula,ctx.stats,ctx.comboEnabled);validateOutcomes(x.outcomes);validateThreat(x.threat);if(x.swingRage){if(x.kind!=='damage'||!has(ctx.pools,'rage'))throw new Error('Swing rage requires rage pool and direct damage');validateSwingRage(x.swingRage);}
    finite(x.mitigation,'mitigation',0);if(x.mitigation>1)throw new Error('Invalid mitigation');finite(x.flatReduction,'flat reduction',0);
    if(x.additionalResource){if(x.kind!=='damage'||!has(ctx.pools,x.additionalResource.resource))throw new Error('Additional spend requires damage and known resource');finite(x.additionalResource.coefficient,'additional resource coefficient',0);finite(x.additionalResource.cap,'additional resource cap',0);choose(x.additionalResource.payment,['always','landed'],'additional spend policy');}
    if(x.kind.startsWith('periodic')){if((x.formula.comboRanges||x.formula.terms.some(t=>t.perComboPoint||t.comboCoefficients))&&x.snapshot!=='snapshot')throw new Error('Periodic combo scaling requires an application snapshot');int(x.durationMs,'periodic duration',1);if(x.durationByCombo){if(!ctx.comboEnabled||!Array.isArray(x.durationByCombo))throw new Error('Combo duration requires bank');for(const ms of x.durationByCombo)int(ms,'combo duration',1);}
@@ -79,6 +80,7 @@ function validateEffects(effects,ctx,depth=0){
   }else throw new Error('Unsupported rank effect '+x.kind);
  }
 }
+function gainRage(e,actor,source,delta){if(delta<=0)return;const q=e.resources.change([{resource:'rage',delta}]);if(!q.ok)throw new Error('Rage generation failed');e.recordMechanic('resource-change',{actorId:actor,source,resource:'rage',delta,overflow:q.overflow.rage??0});}
 function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,classState={}){
  let last=null;
  const resolve=(x,amountRange)=>{
@@ -89,7 +91,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   let threat=x.threat===null?null:{actorId:actor,...x.threat};const isHeal=x.kind.endsWith('heal');
   if(threat&&isHeal){const alive=enemyIds.filter(id=>e.unit(id).alive);threat=alive.length?{...threat,enemyIds:alive}:null;}
   const value=hit.raw;
-  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null});
+  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));}
   return hit;
  };
  for(const [index,x] of effects.entries()){
@@ -177,9 +179,10 @@ export function createExplicitClassEncounter(input){
   if(!actors.has(a.actorId))throw new Error('Unknown auto-attack actor');for(const c of a.costs??[]){if(!has(sc.pools,c.resource))throw new Error('Unknown auto resource');finite(c.amount,'auto cost',0);}const ctx=contextFor(a.actorId);validateEffects(a.effects,ctx);id(a.source,'auto source');int(a.intervalMs,'auto interval',1);int(a.firstAtMs,'first auto time');
   e.addAutoAttack({id:a.id,intervalMs:a.intervalMs,firstAtMs:a.firstAtMs,castPolicy:a.castPolicy,actorId:a.actorId,hasteStat:a.hasteStat??null,hastePolicy:a.hastePolicy??null,resolve:(enc,t)=>{if(enc.unit(a.actorId).alive){const g=geometry(sc,a.actorId,t);if(g.distance>=finite(a.minRangeYards,'auto minimum range',0)&&g.distance<=finite(a.maxRangeYards,'auto maximum range',0)){const costs=(a.costs??[]).map(c=>({resource:c.resource,delta:-c.amount}));const paid=enc.resources.change(costs);if(!paid.ok)return;for(const c of costs)if(c.delta)enc.recordMechanic('resource-change',{actorId:a.actorId,targetId:t,source:a.source,resource:c.resource,delta:c.delta,overflow:0});executeEffects(enc,a.actorId,t,a.source,a.effects,ctx.stats,sc.targetIds,0,classState);}}}});
  }
+ if(sc.incomingRage){if(!has(sc.pools,'rage'))throw new Error('Incoming rage requires rage pool');validateIncomingRage(sc.incomingRage);}
  for(const attack of sc.incomingDamage??[]){
   int(attack.atMs,'incoming damage time');if(attack.atMs>sc.durationMs)throw new Error('Incoming damage outside encounter');id(attack.source,'incoming attack source');finite(attack.amount,'incoming damage',0);if(!sc.targetIds.includes(attack.actorId)||![sc.playerId,...sc.allyIds,...(sc.petId?[sc.petId]:[])].includes(attack.targetId))throw new Error('Invalid incoming damage unit roles');if(attack.school!==null)id(attack.school,'incoming school');
-  e.timeline.schedule(attack.atMs,P.tick,()=>{if(e.unit(attack.actorId).alive&&e.unit(attack.targetId).alive)e.damage({targetId:attack.targetId,actorId:attack.actorId,source:attack.source,value:attack.amount,school:attack.school});});
+  e.timeline.schedule(attack.atMs,P.tick,()=>{if(e.unit(attack.actorId).alive&&e.unit(attack.targetId).alive){const d=e.damage({targetId:attack.targetId,actorId:attack.actorId,source:attack.source,value:attack.amount,school:attack.school});if(sc.incomingRage&&attack.targetId===sc.playerId&&e.unit(sc.playerId).alive)gainRage(e,sc.playerId,'Incoming damage (rage)',incomingRage(sc.incomingRage,attack.amount,d));}});
  }
  for(const r of sc.regeneration){if(!has(sc.pools,r.resource))throw new Error('Unknown regeneration resource');scheduleResourceRegen(e.periodic,e.resources,{...r,onTick:x=>e.recordMechanic('resource-change',{actorId:sc.playerId,source:r.id,resource:r.resource,delta:x.snapshot.amount,overflow:x.result.overflow[r.resource]??0})});}
  return e;
