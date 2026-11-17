@@ -35,7 +35,7 @@ const numberFor=(talent,rule,rank)=>{
  if(!Number.isFinite(n))throw new Error('Unmapped rank parameter for '+talent.name+' rank '+rank);
  return n*(rule.factor??1);
 };
-export function resolveTalentEffects(build,talentData,gear={}){
+export function resolveTalentEffects(build,talentData,gear={},context={}){
  const blank=()=>({flat:{},percent:{},special:{},weapon:{mainhand:{},offhand:{}},
    offhand:{},ranged:{},spell:{},pet:{},scoped:{},abilityEffects:[],pending:[],details:[],active:false});
  const output=blank();
@@ -63,6 +63,9 @@ export function resolveTalentEffects(build,talentData,gear={}){
    const optionFactor=Number.isFinite(rule.maxOption)?Math.min(scenarioValue,rule.maxOption):scenarioValue;
    if(!Number.isFinite(optionFactor)||optionFactor<0||optionFactor===0){output.details.push({name:talent.name,talentId:talent.id,ruleIndex,stat:rule.stat,status:'inactive',note:'Requires an explicitly selected applicable scenario'});continue;}
    const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1)*optionFactor;
+   // Selected party buffs do not establish provider identity, and some catalogue
+   // values already assume provider improvements. Never apply those twice.
+   if(rule.kind==='buff'&&context.buffAudit){output.pending.push({name:talent.name,talentId:talent.id,ruleIndex,note:'Buff provider ownership/rank is unresolved; the selected buff vector is retained without a second talent multiplier.'});continue;}
    if(rule.kind==='global')add(output.flat,rule.stat,amount);
    else if(rule.kind==='buff'){
     const base=BUFF_STATS[rule.source]?.[rule.stat];
