@@ -237,7 +237,7 @@
     // must not shift one raid's timer relative to the in-game report.
     const now = serverNow();
     const age = validPast(auth.observedAt, now) ? now - auth.observedAt : Infinity;
-    const stale = auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
+    const stale = auth.expired || auth.stale || age > TRACKER_FRESH_MS || !state.metricsFetchedAt || Date.now() - state.metricsFetchedAt > TRACKER_FRESH_MS * 2;
     const sessions = auth.expired ? [] : auth.sessions;
     const n = sessions.length, ambiguity = object(auth.lair.ambiguity);
     activeNode.replaceChildren();
