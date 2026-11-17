@@ -128,7 +128,7 @@ test("favourite keys restrict results server-side and combine with every other f
 test("sorting is stable and pagination neither repeats nor omits items, in both directions",{skip},async()=>{
  const e=await fresh();
  const total=(await q(e,"limit=100")).json.total;
- for(const sort of ["name","unit_buyout","historical_avg","quantity","listings","trend_pct","market_pct","level"])
+ for(const sort of ["name","unit_buyout","stack_buyout","current_bid","historical_avg","quantity","listings","trend_pct","market_pct","time_left","level"])
   for(const dir of ["asc","desc"]){
    const seen=[];
    for(let offset=0;offset<total;offset+=2){
@@ -142,6 +142,10 @@ test("sorting is stable and pagination neither repeats nor omits items, in both 
  const asc=ids(await q(e,"sort=unit_buyout&dir=asc")),desc=ids(await q(e,"sort=unit_buyout&dir=desc"));
  assert.equal(asc[0],"1003");assert.equal(desc[0],"1002");
  assert.deepEqual(asc.slice(0,3),["1003","1005","1001"]);
+ assert.equal(ids(await q(e,"sort=stack_buyout&dir=desc"))[0],"1002","highest stack buyout first");
+ assert.equal(ids(await q(e,"sort=current_bid&dir=desc"))[0],"1006","highest current bid first");
+ assert.equal(ids(await q(e,"sort=time_left&dir=desc"))[0],"1003","longest observed auction first");
+ assert.equal(ids(await q(e,"sort=time_left&dir=asc"))[0],"1003","shortest remaining auction first");
  assert.deepEqual(ids(await q(e,"sort=name&dir=desc&limit=2")),["1003","1005"],"unnamed items sort as Item #ID");
  assert.equal((await q(e,"sort=name&dir=sideways")).status,400);
 });
