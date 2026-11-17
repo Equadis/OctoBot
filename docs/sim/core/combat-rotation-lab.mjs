@@ -24,6 +24,9 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='costOverride')policy.costOverride=null;
+  if(field==='weaponDamageModel')policy.weaponDamageModel={coefficient:null,flatDamage:null};
+  if(field==='stancePolicy')policy.stancePolicy=null;
+  if(field==='consecrationModel')policy.consecrationModel={baseTick:null,coefficient:null,tickMultipliers:[null,null,null,null,null,null,null,null],tickCanMiss:null};
   if(field==='apPerComboPoint')policy.apPerComboPoint=null;
   if(field==='lifeTapFactor')policy.lifeTapFactor=null;
   if(field==='consumeOnMiss')policy.consumeOnMiss=null;
@@ -47,7 +50,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  }
  if(unsupported.length)return {unsupported,config:null,rankChoices};
  const melee=selected.some(isMelee),ranged=selected.some(isRanged);
- const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee?3:20,allyDistanceYards:20,
+ const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=8)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[]};

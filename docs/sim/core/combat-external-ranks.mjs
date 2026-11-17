@@ -1340,5 +1340,73 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
     },
     "referenceCooldownMs": 6000,
     "sharedCooldownGroup": "shaman:shock"
+  },
+  {
+    "classId": "paladin",
+    "abilityId": "paladin:consecration",
+    "spellId": 20924,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 205,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 8,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "holy",
+        "coefficient": null,
+        "min": 48,
+        "max": 48,
+        "durationMs": 8000,
+        "intervalMs": 1000
+      }
+    ],
+    "source": "https://forge.octowow.st/paladin",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/paladin/consecration.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "paladin",
+      "abilityId": "paladin:consecration",
+      "spellId": 20924,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "holy",
+        "guideManaCost": 205,
+        "guideDecay": true
+      },
+      "unknown": [
+        "exact tick decay",
+        "base damage",
+        "coefficient",
+        "tick miss",
+        "target movement"
+      ],
+      "conflicts": [
+        {
+          "field": "cost/decay",
+          "guide": "205 mana; declining ticks",
+          "externalReference": "565 mana; constant ticks"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://forge.octowow.st/paladin",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 8000,
+    "multiTarget": {
+      "cap": 40,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "targetPolicy",
+      "consecrationModel",
+      "acceptSourceConflict"
+    ]
   }
 ]);

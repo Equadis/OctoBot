@@ -3,6 +3,9 @@
 // fields separate. In particular, DB "mana" on Rage/Energy records is not trusted.
 const db=(classId,ability,spellId,rank,level,fields,unknown=[],conflicts=[])=>({classId,abilityId:classId+':'+ability,spellId,rank,level,fields,unknown,conflicts,status:'database-observed',source:'https://octowow.st/db/?spell='+spellId,guide:'https://octowow.st/'+classId,liveVerified:false});
 export const RANK_EVIDENCE=Object.freeze([
+ db('warrior','whirlwind',1680,1,36,{school:'physical',castMs:0,cooldownMs:10000,maxTargets:4,radiusYards:8,reportedResource:{unit:'mana',amount:250}},['live rage cost','weapon normalisation','stance','target selection']),
+ db('warrior','cleave',20569,5,60,{school:'physical',castMs:0,rangeYards:5,flatWeaponDamage:50,maxTargets:2,reportedResource:{unit:'mana',amount:200}},['live rage cost','queue behaviour','weapon scaling','flat threat']),
+
  db('hunter','aimed-shot',20904,6,60,{school:'physical',castMs:3000,minRangeYards:8,rangeYards:35,flatWeaponDamage:600,databaseManaCost:310,guideManaCost:205,guideCooldownMs:26000},['live weapon coefficient','cast timing','ammo','cooldown resets'],[{field:'manaCost',database:310,guide:205},{field:'castTime',database:3000,externalReference:3500}]),
  db('shaman','chain-lightning',10605,4,56,{school:'nature',castMs:2500,cooldownMs:6000,rangeYards:30,baseMin:493,baseMax:552,manaCost:605,maxTargets:3,jumpMultiplier:.7},['live coefficient','jump order/range','live cost'],[{field:'baseDamage',database:'493–552',externalReference:'505–564'}]),
  db('shaman','chain-heal',10623,3,54,{school:'nature',castMs:2500,rangeYards:40,baseMin:551,baseMax:630,manaCost:405,maxTargets:3,jumpMultiplier:.5},['healing coefficient','party and jump eligibility','jump targeting','crit']),

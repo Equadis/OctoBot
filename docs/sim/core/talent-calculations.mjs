@@ -39,7 +39,7 @@ const ABILITIES={
   holyHeal('Holy Light','Holy Light / Flash of Light / Holy Shock','Flash of Light/Holy Light'),
   holyHeal('Flash of Light','Holy Light / Flash of Light / Holy Shock','Flash of Light/Holy Light'),
   holyHeal('Holy Shock (healing)','Holy Shock','Holy Light / Flash of Light / Holy Shock'),
-  spell('Holy Shock (damage)','Holy','Holy Shock'),spell('Exorcism','Holy'),
+  spell('Holy Shock (damage)','Holy','Holy Shock'),spell('Exorcism','Holy'),spell('Consecration','Holy'),
   melee('Crusader Strike'),profile('Holy Strike','unknown','Holy Strike'),
   profile('Holy Strike (healing)','heal','Holy Strike healing','Holy Strike healing power'),
   profile('Judgement of Righteousness','unknown','Holy','Seal/Judgement of Righteousness','Judgement/Seals','Judgement'),
