@@ -328,6 +328,77 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Master Demonologist has five demon-specific rank vectors; bonuses need a controlled summon/active demon state and separate unit calculations"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Imp",
+      "stat": "spellCostReductionPct",
+      "param": 0,
+      "when": {
+        "pet": "Imp"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Voidwalker",
+      "stat": "physicalDamageReductionPct",
+      "param": 1,
+      "when": {
+        "pet": "Voidwalker"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Succubus",
+      "stat": "damagePct",
+      "param": 2,
+      "when": {
+        "pet": "Succubus"
+      }
+    },
+    {
+      "kind": "global",
+      "stat": "arcaneRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
+    },
+    {
+      "kind": "global",
+      "stat": "fireRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
+    },
+    {
+      "kind": "global",
+      "stat": "frostRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
+    },
+    {
+      "kind": "global",
+      "stat": "natureRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
+    },
+    {
+      "kind": "global",
+      "stat": "shadowRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
+    },
+    {
+      "kind": "pending",
+      "note": "Greater Demon spell-crit category and pet aura duplication require explicit live pet type verification"
     }
   ]
 };
@@ -530,7 +601,7 @@ export const TALENT_COVERAGE={
   },
   "370": {
     "status": "partial",
-    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
+    "note": "Static enhancement is applied only when its specific buff or pet is selected; other ability effects remain scoped or require verification."
   },
   "371": {
     "status": "proc-or-conditional",
