@@ -1,3 +1,4 @@
+import {handleRaidRoute,pruneRaidState} from "./raid-state.mjs";
 import {auctionRoute,auctionCleanup} from "./auction.mjs";
 import {worldChatRoute,worldChatCleanup} from "./world-chat.mjs";
 /** Standalone Cloudflare Worker for OctoMetrics, not a replacement for the existing OctoBot Worker.
@@ -187,6 +188,11 @@ export default {
     const url=new URL(request.url);
     if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(request)});
     if(!env.DB)return json({error:"D1 not configured"},503,request);
+    if(url.pathname.startsWith("/api/raid/")){
+      if(!env.METRICS_PUSH_TOKEN)return json({error:"ingest secret not configured"},503,request);
+      if(request.headers.get("authorization")!==`Bearer ${env.METRICS_PUSH_TOKEN}`)return json({error:"unauthorised"},401,request);
+      return handleRaidRoute(request,url,env,(body,status)=>json(body,status,request));
+    }
     const chat=await worldChatRoute(request,env);
     if(chat)return chat;
     const auction=await auctionRoute(request,env);
@@ -260,6 +266,7 @@ export default {
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended','raid_session_revision') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
+    await pruneRaidState(env.DB);
     await auctionCleanup(env);
     await worldChatCleanup(env);
   }
