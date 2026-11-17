@@ -140,7 +140,7 @@ export function characterStats(build,talentData,gear={}){
  const equippedShield=gear.offhand?.classs===4&&gear.offhand?.subclass===6?gear.offhand:null;
  const shieldBlockBase=equippedShield?Number(equippedShield.block??equippedShield.attributes?.Block??equippedShield.tooltipText?.match(/(?:^|\\n)\\s*(\\d+)\\s+Block\\b/i)?.[1]):NaN;
  const shieldBlock=Number.isFinite(shieldBlockBase)?shieldBlockBase*(1+(audit.special.shieldBlockValuePct||0)/100):null;
- const abilities=audit.active?abilityEstimates(c,audit,{spell:{missPct:spellMiss,critPct:spellCrit},heal:{critPct:spellCrit},melee:{missPct:yellow,critPct:crit[0]},ranged:{missPct:rangedMiss,critPct:rangedCrit-(audit.ranged.crit||0)}},build):[];
+ const abilities=audit.active?abilityEstimates(c,audit,{spell:{missPct:spellMiss,critPct:spellCrit},heal:{critPct:spellCrit},melee:{missPct:yellow,critPct:crit[0]},ranged:{missPct:clamp(5+Math.max(0,targetDefense-rangedSkill)*.2-s.hit),critPct:rangedCrit===null?null:rangedCrit-(audit.ranged.crit||0)}},build):[];
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
  group('Base Stats',[['Strength',num(s.str)],['Agility',num(s.agi)],['Stamina',num(s.sta)],...(!['warrior','rogue'].includes(c)?[['Intellect',num(s.int)],['Spirit',num(s.spi)]]:[])]);
  group('Melee',[
@@ -183,6 +183,8 @@ export function characterStats(build,talentData,gear={}){
     scoped.push([stat,fmt(key==='healingFromItemArmourPct'?'healingPowerPoints':key,val),key==='healingFromItemArmourPct'?'Based on the equipped item Armour only; excludes temporary armour bonuses.':'Talent contribution, not a complete resource or spell calculation.']);
    }
   }
+  const regen=(audit.scoped['Mana regeneration while casting regenPct']||0)+(audit.scoped['Mana regeneration while casting extraRegenPct']||0);
+  if(regen)scoped.push(['Natural Mana Regeneration While Casting',pct(regen,0),'Percentage of natural regeneration; actual spirit-based mana per five seconds is not yet verified.']);
   if(audit.special.maxHealthPct)scoped.push(['Maximum Health Bonus',pct(audit.special.maxHealthPct,0),'Applied to the displayed health estimate.']);
   if(c==='warrior')scoped.push(['Rage Capacity',num(100+(audit.special.maxRage||0)),'Base capacity plus selected passive talent.']);
   if(c==='rogue')scoped.push(['Energy Capacity',num(100+(audit.special.maxEnergy||0)),'Base capacity plus selected passive talent.']);
@@ -221,7 +223,10 @@ export function characterStats(build,talentData,gear={}){
    if(p.armourFromOwnerPct)row('Owner Item Armour Contribution',num(itemArmour*p.armourFromOwnerPct/100));
    if(p.ownerHitCritInheritancePct){row('Inherited Hit Bonus',pct(s.spellHit*p.ownerHitCritInheritancePct/100,2),'Global owner spell hit only. School- or family-specific hit is not inherited.');if(spellCrit!==null)row('Inherited Crit Chance',pct(spellCrit*p.ownerHitCritInheritancePct/100,2));}
    if(p.hit||p.ownerHitCritInheritancePct)row('Total Pet Talent Hit Contribution',pct((p.hit||0)+s.spellHit*(p.ownerHitCritInheritancePct||0)/100,2));
-   if(p.crit||p.ownerHitCritInheritancePct)row('Total Pet Talent Crit Contribution',pct((p.crit||0)+(spellCrit??0)*(p.ownerHitCritInheritancePct||0)/100,2));
+   if(p.crit||p.ownerHitCritInheritancePct)row('Total Pet Talent Crit Contribution',pct(p.ownerHitCritInheritancePct&&spellCrit===null?null:(p.crit||0)+(spellCrit||0)*(p.ownerHitCritInheritancePct||0)/100,2));
+   const referenceAP=build.classOptions?.referenceRangedAP;
+   if(referenceAP>0&&p.attackPowerFromOwnerRangedPct)row('Pet AP from Reference Ranged AP',num(referenceAP*p.attackPowerFromOwnerRangedPct/100),'Based on explicitly entered reference ranged AP, not an independently verified ranged AP calculation.');
+   if(referenceAP>0&&p.spellPowerFromOwnerRangedPct)row('Pet SP from Reference Ranged AP',num(referenceAP*p.spellPowerFromOwnerRangedPct/100),'Based on explicitly entered reference ranged AP.');
    if(p.ownerAndPetHealthRegenPctPer5s&&health!==null)row('Owner Health per 5s',num(health*p.ownerAndPetHealthRegenPctPer5s/100));
    if(p.damagePct)row('Pet Damage Multiplier','×'+(1+p.damagePct/100).toFixed(3));
    if(petRows.length)group('Calculated Pet Contributions',petRows);
@@ -231,5 +236,5 @@ export function characterStats(build,talentData,gear={}){
   const pending=[...new Map(audit.pending.map(x=>[x.name,x])).values()];
   if(pending.length)group('Awaiting Simulation',pending.map(e=>[e.name,'Not calculated',e.note]));
  }
- return {groups,abilityEstimates:abilities,talentAudit:audit.active?{classId:c,selected:auditedTalentSummary(audit)}:null,sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Reviewed static talent bonuses are included where scoped. Ability bonuses and temporary effects require combat validation; published OctoWoW tooltips do not prove live server mechanics. A dash means unavailable, not zero.'};
+ return {groups,abilityEstimates:abilities,talentAudit:audit.active?{classId:c,selected:auditedTalentSummary(audit)}:null,sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Reviewed static and relative ability talent calculations are included where scoped; damage/cost/timing baselines, stacking, and live server mechanics remain unverified. Temporary effects require combat validation; published OctoWoW tooltips do not prove live server mechanics. A dash means unavailable, not zero.'};
 }
