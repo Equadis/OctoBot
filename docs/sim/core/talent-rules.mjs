@@ -9,6 +9,14 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "57": [
+    {
+      "kind": "scoped",
+      "scope": "Stance switching",
+      "stat": "rageRetained",
+      "param": 0
+    }
+  ],
   "58": [
     {
       "kind": "scoped",
@@ -46,12 +54,24 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "62": [
+    {
+      "kind": "pending",
+      "note": "Master Strike is an activated weapon-dependent ability: damage and mace/sword/axe/polearm outcomes require an attack and target-state model"
+    }
+  ],
   "63": [
     {
       "kind": "scoped",
       "scope": "Overpower",
       "stat": "criticalChance",
       "param": 0
+    }
+  ],
+  "64": [
+    {
+      "kind": "pending",
+      "note": "Critical hits trigger Deep Wounds over time based on weapon average damage; uptime, tick and crit modelling pending"
     }
   ],
   "65": [
@@ -95,6 +115,12 @@ export const TALENT_RULES={
       "note": "Sword extra-attack proc and polearm range require combat/range support"
     }
   ],
+  "68": [
+    {
+      "kind": "pending",
+      "note": "Sweeping Strikes is a five-charge on-use multi-target effect; requires target count and charge consumption"
+    }
+  ],
   "69": [
     {
       "kind": "special",
@@ -130,6 +156,12 @@ export const TALENT_RULES={
       "scope": "Execute per extra Rage",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "73": [
+    {
+      "kind": "pending",
+      "note": "Mortal Strike active weapon strike plus target-healing reduction; no attack table or target healing model yet"
     }
   ],
   "74": [
@@ -181,6 +213,18 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "79": [
+    {
+      "kind": "pending",
+      "note": "Last Stand temporarily increases maximum health and later removes it; cannot count as baseline health"
+    }
+  ],
+  "80": [
+    {
+      "kind": "pending",
+      "note": "Temporary movement-impairment immunity follows active Intervene use"
+    }
+  ],
   "81": [
     {
       "kind": "scoped",
@@ -203,6 +247,20 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "83": [
+    {
+      "kind": "pending",
+      "note": "Shield Slam dispel and Shield Bash silence require successful active attacks and target auras"
+    }
+  ],
+  "84": [
+    {
+      "kind": "scoped",
+      "scope": "Disarm",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
   "85": [
     {
       "kind": "scoped",
@@ -220,6 +278,12 @@ export const TALENT_RULES={
       "weapon": "onehand",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "87": [
+    {
+      "kind": "pending",
+      "note": "Shield Slam is an active damage/threat/dispel ability; requires shield block value and ability attack resolution"
     }
   ],
   "88": [
@@ -260,6 +324,27 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "91": [
+    {
+      "kind": "scoped",
+      "scope": "Non-Defensive stance with shield",
+      "stat": "retainedDefensiveThreatPct",
+      "param": 0,
+      "when": {
+        "shield": true,
+        "stance": [
+          "Battle",
+          "Berserker"
+        ]
+      }
+    }
+  ],
+  "92": [
+    {
+      "kind": "pending",
+      "note": "Concussion Blow is an active shield-related strike with stun, threat, full armour penetration and rage generation"
+    }
+  ],
   "93": [
     {
       "kind": "scoped",
@@ -293,6 +378,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "96": [
+    {
+      "kind": "pending",
+      "note": "Chance-based rage generated on weapon hits, doubled for two-handed weapons; requires attack event timing"
+    }
+  ],
   "97": [
     {
       "kind": "pending",
@@ -318,6 +409,18 @@ export const TALENT_RULES={
       "note": "Only the selected battle-shout buff is enhanced; unrelated buffs are unchanged"
     }
   ],
+  "98": [
+    {
+      "kind": "pending",
+      "note": "Piercing Howl is an active nearby-area snare; no target movement or area combat engine"
+    }
+  ],
+  "99": [
+    {
+      "kind": "pending",
+      "note": "Blood Craze heals after receiving a critical strike; needs incoming combat events"
+    }
+  ],
   "100": [
     {
       "kind": "scoped",
@@ -330,6 +433,12 @@ export const TALENT_RULES={
       "scope": "Charge",
       "stat": "cooldownReductionSeconds",
       "param": 1
+    }
+  ],
+  "101": [
+    {
+      "kind": "pending",
+      "note": "Enrage 8-second melee-damage proc requires received critical-hit events and uptime"
     }
   ],
   "102": [
@@ -358,6 +467,12 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "104": [
+    {
+      "kind": "pending",
+      "note": "Death Wish on-use temporary damage/fear/armour/resistance trade-off; must not count permanently"
+    }
+  ],
   "105": [
     {
       "kind": "scoped",
@@ -366,10 +481,34 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "106": [
+    {
+      "kind": "scoped",
+      "scope": "Berserker Rage activation",
+      "stat": "rageGenerated",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Movement impairment break occurs when Berserker Rage is activated"
+    }
+  ],
   "107": [
     {
       "kind": "pending",
       "note": "Flurry is a three-swing proc, not permanent attack speed"
+    }
+  ],
+  "108": [
+    {
+      "kind": "pending",
+      "note": "Blood Drinker restores health per melee strike only while Enrage/Death Wish/Recklessness is active; requires aura and attack events"
+    }
+  ],
+  "109": [
+    {
+      "kind": "pending",
+      "note": "Bloodthirst active physical strike and 6-second movement buff require attack and aura models"
     }
   ]
 };
@@ -379,8 +518,8 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "57": {
-    "status": "proc-or-conditional",
-    "note": "You retain up to 25 of your rage points when you change stances."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "58": {
     "status": "partial",
@@ -400,15 +539,15 @@ export const TALENT_COVERAGE={
   },
   "62": {
     "status": "proc-or-conditional",
-    "note": "Performs a skillful attack, dealing 35% weapon damage and causing an additional effect depending on your main hand weapon. Mace: Disorients the target for 3 sec. Any damage ca"
+    "note": "Master Strike is an activated weapon-dependent ability: damage and mace/sword/axe/polearm outcomes require an attack and target-state model"
   },
   "63": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "64": {
-    "status": "ability-specific",
-    "note": "Your critical strikes cause the opponent to bleed, dealing 60% of your melee weapon's average damage over 6 sec."
+    "status": "proc-or-conditional",
+    "note": "Critical hits trigger Deep Wounds over time based on weapon average damage; uptime, tick and crit modelling pending"
   },
   "65": {
     "status": "sheet",
@@ -424,7 +563,7 @@ export const TALENT_COVERAGE={
   },
   "68": {
     "status": "proc-or-conditional",
-    "note": "Your next 5 abilities and main-hand melee attacks strike an additional nearby opponent."
+    "note": "Sweeping Strikes is a five-charge on-use multi-target effect; requires target count and charge consumption"
   },
   "69": {
     "status": "sheet",
@@ -444,7 +583,7 @@ export const TALENT_COVERAGE={
   },
   "73": {
     "status": "proc-or-conditional",
-    "note": "A vicious strike that deals 115% weapon damage and wounds the target, reducing the effectiveness of any healing by 50% for 10 sec."
+    "note": "Mortal Strike active weapon strike plus target-healing reduction; no attack table or target healing model yet"
   },
   "74": {
     "status": "partial",
@@ -468,11 +607,11 @@ export const TALENT_COVERAGE={
   },
   "79": {
     "status": "proc-or-conditional",
-    "note": "When activated, this ability temporarily grants you 30% of your maximum hit points for 20 seconds. After the effect expires, the hit points are lost."
+    "note": "Last Stand temporarily increases maximum health and later removes it; cannot count as baseline health"
   },
   "80": {
     "status": "proc-or-conditional",
-    "note": "Grants a 100% chance to gain immunity to movement impairing effects for 3 sec after using Intervene."
+    "note": "Temporary movement-impairment immunity follows active Intervene use"
   },
   "81": {
     "status": "partial",
@@ -484,11 +623,11 @@ export const TALENT_COVERAGE={
   },
   "83": {
     "status": "proc-or-conditional",
-    "note": "Your Shield Slam has an additional 100% chance to dispel 1 magic effect on the target and your Shield Bash ability has a 100% chance to silence the target for 3 sec."
+    "note": "Shield Slam dispel and Shield Bash silence require successful active attacks and target auras"
   },
   "84": {
-    "status": "ability-specific",
-    "note": "Decreases the cooldown of your Disarm ability by 20 secs."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "85": {
     "status": "partial",
@@ -500,7 +639,7 @@ export const TALENT_COVERAGE={
   },
   "87": {
     "status": "proc-or-conditional",
-    "note": "Slam the target with your shield, causing 174 to 184 damage, modified by your shield block value and attack power. This attack causes a high amount of threat, and has a 50% ch"
+    "note": "Shield Slam is an active damage/threat/dispel ability; requires shield block value and ability attack resolution"
   },
   "88": {
     "status": "partial",
@@ -515,12 +654,12 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "91": {
-    "status": "proc-or-conditional",
-    "note": "While wearing a shield, you retain 180% of the increased threat generation from Defensive Stance in other stances."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "92": {
     "status": "proc-or-conditional",
-    "note": "Deals 115 damage and stuns the opponent for 3 sec. This ability deals a high amount of threat and penetrates 100% of the enemy's armor. Instantly generates 10 rage."
+    "note": "Concussion Blow is an active shield-related strike with stun, threat, full armour penetration and rage generation"
   },
   "93": {
     "status": "partial",
@@ -536,7 +675,7 @@ export const TALENT_COVERAGE={
   },
   "96": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 75% chance to generate an additional Rage point when you deal melee damage with a weapon. The effect is doubled for two-handed weapons."
+    "note": "Chance-based rage generated on weapon hits, doubled for two-handed weapons; requires attack event timing"
   },
   "97": {
     "status": "partial",
@@ -544,11 +683,11 @@ export const TALENT_COVERAGE={
   },
   "98": {
     "status": "proc-or-conditional",
-    "note": "Causes all enemies near the warrior to be dazed, reducing movement speed by 50% for 6 sec."
+    "note": "Piercing Howl is an active nearby-area snare; no target movement or area combat engine"
   },
   "99": {
     "status": "proc-or-conditional",
-    "note": "Regenerates 6% of your total Health over 6 sec after being the victim of a critical strike."
+    "note": "Blood Craze heals after receiving a critical strike; needs incoming combat events"
   },
   "100": {
     "status": "partial",
@@ -556,7 +695,7 @@ export const TALENT_COVERAGE={
   },
   "101": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 20% melee damage bonus for 8 sec after being the victim of a critical strike."
+    "note": "Enrage 8-second melee-damage proc requires received critical-hit events and uptime"
   },
   "102": {
     "status": "partial",
@@ -568,15 +707,15 @@ export const TALENT_COVERAGE={
   },
   "104": {
     "status": "proc-or-conditional",
-    "note": "When activated, increases your physical damage by 20% and makes you immune to Fear effects, but lowers your armor and all resistances by 20%. Lasts 30 sec."
+    "note": "Death Wish on-use temporary damage/fear/armour/resistance trade-off; must not count permanently"
   },
   "105": {
     "status": "partial",
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "106": {
-    "status": "proc-or-conditional",
-    "note": "Using Berserker Rage generates 10 Rage and grants a 100% chance to break free from movement impairing effects when activated."
+    "status": "partial",
+    "note": "Movement impairment break occurs when Berserker Rage is activated"
   },
   "107": {
     "status": "partial",
@@ -584,10 +723,10 @@ export const TALENT_COVERAGE={
   },
   "108": {
     "status": "proc-or-conditional",
-    "note": "While affected by Enrage, Death Wish, or Recklessness, your melee attacks and abilities restore 2% of your maximum health."
+    "note": "Blood Drinker restores health per melee strike only while Enrage/Death Wish/Recklessness is active; requires aura and attack events"
   },
   "109": {
     "status": "proc-or-conditional",
-    "note": "Instantly perform a reckless attack, dealing 100 damage plus 35% of your Attack Power and increasing your movement speed by 10% for 6 sec."
+    "note": "Bloodthirst active physical strike and 6-second movement buff require attack and aura models"
   }
 };
