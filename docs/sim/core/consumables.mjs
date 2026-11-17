@@ -1,4 +1,4 @@
-import {consumableEffectAudit} from './consumable-effects.mjs?v=20261117-buff-audit1';
+import {consumableEffectAudit} from './consumable-effects.mjs?v=20261117-buff-audit4';
 import {CONSUMABLE_DATA} from './consumable-data.mjs?v=20261112-consumes1';
 import {classDefinition} from './classes.mjs?v=20261112-audit1';
 import {isManaClass,validRace,RACE_MASKS,CLASS_RESOURCES} from './class-rules.mjs?v=20261112-audit1';

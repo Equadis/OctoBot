@@ -1,5 +1,5 @@
-import {BUFF_STATS,normaliseBuffs,worldBuffRestriction} from './buffs.mjs?v=20261117-buff-audit3';
-import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit3';
+import {BUFF_STATS,normaliseBuffs,worldBuffRestriction} from './buffs.mjs?v=20261117-buff-audit4';
+import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit4';
 // Match source items by exact IDs through audited aliases. Missing items and
 // static raid assumptions remain reference values, never called source-verified.
 const sourceItems=new Map(CONSUMABLES.filter(i=>i.buffId&&i.verified).map(i=>[i.buffId,i]));

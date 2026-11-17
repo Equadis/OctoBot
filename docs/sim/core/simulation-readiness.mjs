@@ -1,10 +1,10 @@
-import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit3';
+import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
 import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
 import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
-import {validateBuild} from './builds.mjs?v=20261117-buff-audit3';
+import {validateBuild} from './builds.mjs?v=20261117-buff-audit4';
 import {equipmentErrors} from './items.mjs?v=20261114-ammo2';
-import {consumableEngineErrors} from './consumables.mjs?v=20261117-buff-audit3';
+import {consumableEngineErrors} from './consumables.mjs?v=20261117-buff-audit4';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */

@@ -1,11 +1,11 @@
-import {buffDefinition} from './core/buff-effect-audit.mjs?v=20261117-buff-audit3';
+import {buffDefinition} from './core/buff-effect-audit.mjs?v=20261117-buff-audit4';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-item-audit3';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
-import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261117-buff-audit3';
-import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261117-buff-audit3';
-import { BUFF_OPTIONS, buffScenarioRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261117-buff-audit3';
+import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261117-buff-audit4';
+import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261117-buff-audit4';
+import { BUFF_OPTIONS, buffScenarioRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261117-buff-audit4';
 import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
