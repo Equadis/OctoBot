@@ -25,7 +25,7 @@ const hunterMelee=(name,...tags)=>melee(name,'Traps and melee abilities',...tags
 const feral=(name,...tags)=>melee(name,'Feral abilities',...tags);
 const ABILITIES={
  warrior:[
-  war('Heroic Strike'),war('Rend','Rend bleed'),war('Overpower'),war('Thunder Clap'),
+  war('Heroic Strike'),profile('Rend','periodic','Rend bleed','Battle/Defensive/Berserker abilities','All physical attacks'),war('Overpower'),war('Thunder Clap'),
   war('Slam'),war('Execute'),war('Mortal Strike'),war('Bloodthirst'),war('Whirlwind'),
   war('Cleave'),war('Shield Slam'),war('Revenge'),utility('Charge'),utility('Intercept','Intercept/Intervene'),
   utility('Intervene','Intercept/Intervene'),utility('Pummel','Pummel school lockout'),
@@ -43,7 +43,7 @@ const ABILITIES={
   profile('Judgement of Righteousness','unknown','Seal/Judgement of Righteousness','Judgement/Seals','Judgement'),
   profile('Seal of Righteousness','unknown','Seal/Judgement of Righteousness','Judgement/Seals'),
   ...many(['Seal of Command','Seal of the Crusader','Seal of Wisdom','Seal of Light'],'utility','Judgement/Seals'),
-  utility('Judgement','Judgement/Seals'),utility('Hand of Reckoning'),utility('Lay on Hands'),
+  utility('Judgement','Judgement/Seals'),utility('Hand of Reckoning'),utility('Lay on Hands'),utility('Devotion Aura'),utility('Concentration Aura'),
   ...many(['Hand of Protection','Hand of Freedom','Hammer of Justice'],'utility')
  ],
  rogue:[
@@ -104,7 +104,7 @@ const ABILITIES={
   utility('Frost Trap','Frost/Freezing Trap','Traps and melee abilities'),
   profile('Immolation Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities'),
   profile('Explosive Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities'),
-  utility('Revive Pet'),utility('Mend Pet'),utility('Feign Death')
+  utility('Revive Pet'),profile('Mend Pet','heal-periodic'),utility('Feign Death')
  ].map(p=>['melee','ranged','periodic','unknown'].includes(p.type)?allDmg(allDmg(allDmg(p,'All damage when no pet'),'Beast/Giant/Dragonkin/Humanoid targets'),'These targets'):p),
  mage:[
   spell('Fireball','Fire'),spell('Fire Blast','Fire'),spell('Scorch','Fire'),
@@ -116,10 +116,10 @@ const ABILITIES={
   spell('Arcane Explosion','Arcane'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor')
  ],
  warlock:[
-  aff('Corruption'),aff('Curse of Agony'),aff('Drain Soul','Drain Soul/Life/Mana','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
+  profile('Corruption','periodic','Shadow','Affliction','Affliction spells','Affliction spell casting','All spells','Spell casting','Spells','Offensive spells'),profile('Curse of Agony','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),aff('Drain Soul','Drain Soul/Life/Mana','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
   aff('Drain Life','Drain Soul/Life/Mana'),aff('Drain Mana','Drain Soul/Life/Mana'),
   aff('Dark Harvest','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),aff('Death Coil','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
-  aff('Siphon Life'),dest('Shadow Bolt','Shadow','Shadow Bolt/Searing Pain/Immolate'),
+  profile('Siphon Life','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),dest('Shadow Bolt','Shadow','Shadow Bolt/Searing Pain/Immolate'),
   dest('Searing Pain','Fire','Shadow Bolt/Searing Pain/Immolate'),
   dest('Immolate','Fire','Shadow Bolt/Searing Pain/Immolate'),
   dest('Soul Fire','Fire'),dest('Shadowburn','Shadow'),dest('Conflagrate','Fire'),
@@ -165,7 +165,7 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
   const stat=statAlias[effect.stat]||effect.stat;
   // A damaging-spell talent must not turn a heal into damage. The same
   // selected talent is counted at most once even if two scope tags match.
-  if(stat==='damagePct'&&!isDamage(profile.type))continue;
+  if((stat==='damagePct'||stat==='criticalDamagePct')&&!isDamage(profile.type))continue;
   if((stat==='healingPct'||stat==='periodicHealingPct')&&!isHealing(profile.type))continue;
   plus(modifiers,stat,effect.amount);matched.push({talent:effect.name,stat,value:effect.amount});
  }
@@ -177,6 +177,7 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
  const cooldownReduction=get('cooldownReductionSeconds')+get('cooldownReductionMinutes')*60;
  const value=(key,fn)=>finite(baseline[key])?fn(baseline[key]):null;
  const values={
+  absorbFactor:rel(get('absorbPct')),absorb:value('absorb',n=>noNegative(n)*rel(get('absorbPct'))),
   damageFactor:rel(damagePct),healingFactor:rel(healingPct),manaFactor,castFactor,
   criticalBonusFactor:rel(get('criticalDamagePct')),
   castTimeReductionSeconds:get('castTimeReductionSeconds'),
@@ -197,6 +198,7 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
  };
  return {profile,modifiers,matched,values};
 }
-export function abilityEstimates(classId,audit,baselines={}){
- return abilityProfiles(classId).map(p=>calculateAbilityTalentEffects(audit,p,baselines[p.type]||{})).filter(p=>p.matched.length);
+export function abilityEstimates(classId,audit,baselines={},build={}){
+ const shadowform=classId==='priest'&&build.classOptions?.form==='Shadowform'&&audit?.details?.some(d=>d.name==='Shadowform'&&d.status==='calculated');
+ return abilityProfiles(classId).filter(p=>!shadowform||!p.tags.includes('Holy')||p.name==='Holy Nova').map(p=>calculateAbilityTalentEffects(audit,p,baselines[p.type]||{})).filter(p=>p.matched.length);
 }
