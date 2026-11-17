@@ -37,7 +37,7 @@ const uploadUrl=new URL(endpoint);
 if(uploadUrl.protocol!=="https:"||!uploadUrl.pathname.endsWith("/api/auction/scan")||
  uploadUrl.username||uploadUrl.password)throw new Error("AUCTION_PUSH_URL must be an HTTPS /api/auction/scan endpoint");
 class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
-async function publish(action:"start"|"page"|"complete"|"fail",payload:Record<string,unknown>):Promise<void>{
+async function publish(action:"start"|"page"|"complete"|"fail"|"metadata",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
  for(let attempt=0;attempt<3;attempt++){
   try{
@@ -59,14 +59,29 @@ let metadataLoadedAt=0;
 let lastCatalogue:ReadonlyMap<number,AuctionItemMetadata>=new Map();
 const recoveredMetadata=new Map<number,AuctionItemMetadata>();
 const lookupAfter=new Map<number,number>();
-async function resolveMissingMetadata(ids:Set<number>,log:Logger):Promise<void>{
+async function resolveMissingMetadata(scanId:string,ids:Set<number>,log:Logger):Promise<void>{
+ // The Worker remembers resolved IDs across restarts. Fall back to local observations
+ // if its read endpoint is unavailable, without disrupting the scan.
+ try{
+  const url=new URL(uploadUrl.toString().replace(/\/scan\/?$/,"/missing-metadata"));
+  const response=await fetch(url,{signal:AbortSignal.timeout(6000)});
+  if(response.ok){
+   const result=await response.json() as {scan_id?:string;items?:{item_id:number}[]};
+   if(result.scan_id===scanId&&Array.isArray(result.items))ids=new Set(result.items.map(row=>row.item_id));
+  }
+ }catch{/* metadata recovery must not fail a completed scan */}
  const pending=[...ids].filter(id=>!recoveredMetadata.has(id)&&(lookupAfter.get(id)??0)<=Date.now()).slice(0,15);
+ const resolved:({item_id:number}&AuctionItemMetadata)[]=[];
  for(let i=0;i<pending.length;i+=3){
   await Promise.all(pending.slice(i,i+3).map(async id=>{
    const item=await fetchAuctionItem(id);
-   if(item)recoveredMetadata.set(id,item);
+   if(item){recoveredMetadata.set(id,item);resolved.push({item_id:id,...item});}
    else lookupAfter.set(id,Date.now()+30*60_000);
   }));
+ }
+ if(resolved.length)try{await publish('metadata',{scan_id:scanId,items:resolved});}catch(error){
+  for(const item of resolved)recoveredMetadata.delete(item.item_id);
+  log.warn('Auction metadata persistence failed; will retry: '+String(error));
  }
  if(pending.length)log.info('Auction metadata lookups: '+pending.length+' attempted; '+recoveredMetadata.size+' resolved in this process; '+ids.size+' missing in scan');
 }
@@ -169,7 +184,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
     if(!cursor.complete)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES or ended early");
     await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     succeeded=true;
-    await resolveMissingMetadata(missingIds,log);
+    await resolveMissingMetadata(scanId,missingIds,log);
     log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
