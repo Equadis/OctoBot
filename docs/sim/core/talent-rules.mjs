@@ -1,6 +1,14 @@
 /* All 49 shaman talents reviewed against https://octowow.st/talents/shaman/; snapshot SHA256 8340d1af2ba89a41d8c28c5e9829f7cf5679b11864f6a7d00307fa1e2a02d2ac. */
 export const AUDITED_CLASS="shaman";
 export const TALENT_RULES={
+  "218": [
+    {
+      "kind": "scoped",
+      "scope": "Offensive Fire/Frost/Nature",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    }
+  ],
   "219": [
     {
       "kind": "spell",
@@ -10,6 +18,28 @@ export const TALENT_RULES={
         "Nature"
       ],
       "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "220": [
+    {
+      "kind": "scoped",
+      "scope": "Stoneclaw Totem",
+      "stat": "healthPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Earthbind Totem",
+      "stat": "radiusIncreasePct",
+      "param": 1
+    }
+  ],
+  "221": [
+    {
+      "kind": "scoped",
+      "scope": "Incoming Fire/Frost/Nature",
+      "stat": "damageReductionPct",
       "param": 0
     }
   ],
@@ -29,6 +59,14 @@ export const TALENT_RULES={
       "note": "Melee-crit-triggered additional spell hit is a 10-second proc: rank 1/2/3 gives +3/+6/+9%, not passive"
     }
   ],
+  "224": [
+    {
+      "kind": "scoped",
+      "scope": "Shock spells",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
   "225": [
     {
       "kind": "spell",
@@ -40,11 +78,41 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "227": [
+    {
+      "kind": "scoped",
+      "scope": "Fire Nova Totem",
+      "stat": "activationDelayReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Magma Totem",
+      "stat": "threatReductionPct",
+      "param": 1
+    }
+  ],
+  "228": [
+    {
+      "kind": "scoped",
+      "scope": "Earth Shield",
+      "stat": "maximumCharges",
+      "param": 0
+    }
+  ],
   "229": [
     {
       "kind": "spell",
       "scope": "Fire",
       "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "230": [
+    {
+      "kind": "scoped",
+      "scope": "Lightning Bolt/Chain Lightning",
+      "stat": "rangeIncreaseYards",
       "param": 0
     }
   ],
@@ -64,6 +132,34 @@ export const TALENT_RULES={
       "note": "Totem critical-damage effects remain combat-engine scoped"
     }
   ],
+  "233": [
+    {
+      "kind": "scoped",
+      "scope": "Lightning Bolt/Chain Lightning",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "235": [
+    {
+      "kind": "pending",
+      "note": "Official calculator alternates 15 / 0.3 / 45 / 0.6 / 75 sec reductions across ranks; malformed data cannot be trusted"
+    }
+  ],
+  "236": [
+    {
+      "kind": "scoped",
+      "scope": "Healing spells",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Totems",
+      "stat": "manaCostReductionPct",
+      "param": 1
+    }
+  ],
   "239": [
     {
       "kind": "spell",
@@ -75,10 +171,60 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "242": [
+    {
+      "kind": "scoped",
+      "scope": "Helpful Totems",
+      "stat": "durationPct",
+      "param": 0,
+      "values": [
+        20
+      ]
+    },
+    {
+      "kind": "scoped",
+      "scope": "Totemic Recall",
+      "stat": "manaRefundPct",
+      "param": 0,
+      "values": [
+        15
+      ]
+    }
+  ],
+  "243": [
+    {
+      "kind": "scoped",
+      "scope": "Nature spells",
+      "stat": "threatReductionPct",
+      "param": 0
+    }
+  ],
+  "244": [
+    {
+      "kind": "scoped",
+      "scope": "Mana Spring Totem",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Healing Stream Totem",
+      "stat": "effectivenessPct",
+      "param": 1
+    }
+  ],
   "245": [
     {
       "kind": "pending",
       "note": "Water Shield conditional mana/5 requires an actual shield-state control"
+    }
+  ],
+  "249": [
+    {
+      "kind": "scoped",
+      "scope": "Chain Heal",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
     }
   ],
   "251": [
@@ -112,7 +258,10 @@ export const TALENT_RULES={
     {
       "kind": "special",
       "stat": "blockChance",
-      "param": 0
+      "param": 0,
+      "when": {
+        "shield": true
+      }
     },
     {
       "kind": "special",
@@ -124,6 +273,30 @@ export const TALENT_RULES={
     {
       "kind": "global",
       "stat": "crit",
+      "param": 0
+    }
+  ],
+  "255": [
+    {
+      "kind": "scoped",
+      "scope": "Shield spells",
+      "stat": "maximumCharges",
+      "param": 0
+    }
+  ],
+  "256": [
+    {
+      "kind": "scoped",
+      "scope": "Ghost Wolf",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "257": [
+    {
+      "kind": "scoped",
+      "scope": "Physical/imbue attacks",
+      "stat": "threatReductionPct",
       "param": 0
     }
   ],
@@ -164,6 +337,26 @@ export const TALENT_RULES={
       }
     }
   ],
+  "262": [
+    {
+      "kind": "scoped",
+      "scope": "Strength of Earth/Grace of Air Totems",
+      "stat": "effectivenessPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Grounding Totem",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
+  "263": [
+    {
+      "kind": "pending",
+      "note": "Weapon imbue effects are different per imbue and often triggered; an imbue-specific stat/aura model is required"
+    }
+  ],
   "265": [
     {
       "kind": "scoped",
@@ -181,20 +374,20 @@ export const TALENT_RULES={
 };
 export const TALENT_COVERAGE={
   "218": {
-    "status": "ability-specific",
-    "note": "Reduces the mana cost of your offensive Fire, Frost, and Nature spells by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "219": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "220": {
-    "status": "active-or-non-stat",
-    "note": "Increases the health of your Stoneclaw Totem by 50% and the radius of your Earthbind Totem by 20%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "221": {
-    "status": "ability-specific",
-    "note": "Reduces damage taken from Fire, Frost and Nature effects by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "222": {
     "status": "partial",
@@ -205,8 +398,8 @@ export const TALENT_COVERAGE={
     "note": "After landing a critical strike with a Fire, Frost, or Nature damage spell or melee attack, you enter a Clearcasting state. The Clearcasting state reduces the mana cost of you"
   },
   "224": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Shock spells by 1 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "225": {
     "status": "partial",
@@ -217,20 +410,20 @@ export const TALENT_COVERAGE={
     "note": "Refreshing Flame Shock with Molten Blast deals damage equal to 60% of the refreshed duration."
   },
   "227": {
-    "status": "ability-specific",
-    "note": "Reduces the delay before your Fire Nova Totem activates by 2 sec, decreases the threat generated by your Magma Totem by 50%, and increases your Searing Totem's attack speed by"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "228": {
-    "status": "proc-or-conditional",
-    "note": "Increases the maximum charges of your Earth Shield by 4. While Earth Shield is active, increases your chance to avoid interruption caused by damage while casting damaging spel"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "229": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "230": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Lightning Bolt and Chain Lightning spells by 6 yards."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "231": {
     "status": "proc-or-conditional",
@@ -241,20 +434,20 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "233": {
-    "status": "ability-specific",
-    "note": "Reduces the cast time of your Lightning Bolt and Chain Lightning spells by 1 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "234": {
     "status": "proc-or-conditional",
     "note": "Breaks the earth beneath the target, dealing 262 to 291 Nature damage to the target and an additional 35% of that damage as Nature damage to other enemies within 10 yards. Cre"
   },
   "235": {
-    "status": "ability-specific",
-    "note": "Reduces the casting time of your Healing Wave spell by 75 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "236": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of your healing spells by 5% and your totems by 25%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "237": {
     "status": "ability-specific",
@@ -277,16 +470,16 @@ export const TALENT_COVERAGE={
     "note": "Gives you a 70% chance to avoid interruption caused by damage while casting any healing spell."
   },
   "242": {
-    "status": "active-or-non-stat",
-    "note": "Increases the duration of your helpful totems by 20% and the amount of mana refunded by Totemic Recall by an additional 15%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "243": {
-    "status": "ability-specific",
-    "note": "Reduces the threat generated by your Nature spells by 15%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "244": {
-    "status": "ability-specific",
-    "note": "Reduces mana cost of your Mana Spring Totem by 50% and increases the effect of your Healing Stream Totem by 25%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "245": {
     "status": "partial",
@@ -305,8 +498,8 @@ export const TALENT_COVERAGE={
     "note": "Your Healing Wave and Lesser Healing Wave spells have a 50% chance to restore a charge of your active Water Shield. When your Water Shield is at maximum charges, this effect c"
   },
   "249": {
-    "status": "ability-specific",
-    "note": "Reduces the cast time of your Chain Heal spell by 1 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "250": {
     "status": "proc-or-conditional",
@@ -329,16 +522,16 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "255": {
-    "status": "ability-specific",
-    "note": "Increases the number of charges of your shield spells by 6, but increases the cooldown between activations by 1 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "256": {
-    "status": "ability-specific",
-    "note": "Reduces the cast time of your Ghost Wolf spell by 2 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "257": {
-    "status": "proc-or-conditional",
-    "note": "Reduces threat generated by your physical attacks, weapon imbue effects, and your Lightning Strike and Stormstrike abilities by 25%. This effect does not apply while Rockbiter"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "258": {
     "status": "proc-or-conditional",
@@ -357,12 +550,12 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "262": {
-    "status": "ability-specific",
-    "note": "Increases the effect of your Strength of Earth and Grace of Air Totems by 25% and reduces the cooldown of your Grounding Totem by 2 sec. Stoneskin Totem's damage reduction is "
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "263": {
-    "status": "proc-or-conditional",
-    "note": "Imbuing your weapon grants a special benefit based on the imbue: Flametongue: Hitting enemies with your attacks increases damage done by Fire Totems and Fire spells by 30% for"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "264": {
     "status": "proc-or-conditional",
