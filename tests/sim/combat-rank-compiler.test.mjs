@@ -31,7 +31,7 @@ test('rank compiler refuses missing knowledge, conflicting ranks, missing coeffi
 });
 test('school-specific power and mana cost are not read from rounded display strings',()=>{
  const a=scenario('mage');a.sheet.combatSnapshot.schools.frost=123.45;const c=compileReferenceRank(a);
- assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,99);assert.equal(referenceRanks('priest').length,11);
+ assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,103);assert.equal(referenceRanks('priest').length,11);
 });
 
 test('external-only ranks require acknowledgement and unknown live sting cost requires explicit input',()=>{
