@@ -233,7 +233,8 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Drain Soul/Dark Harvest/Death Coil per Affliction effect",
       "stat": "damagePct",
-      "param": 0
+      "param": 0,
+      "perOption": "afflictionEffects"
     }
   ],
   "349": [
@@ -436,6 +437,11 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Pet inheritance of owner spell hit and critical strike requires pet calculation"
+    },
+    {
+      "kind": "pet",
+      "stat": "ownerHitCritInheritancePct",
+      "param": 1
     }
   ],
   "370": [
@@ -513,6 +519,38 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Greater Demon spell-crit category and pet aura duplication require explicit live pet type verification"
+    },
+    {
+      "kind": "pet",
+      "stat": "spellCostReductionPct",
+      "param": 0,
+      "when": {
+        "pet": "Imp"
+      }
+    },
+    {
+      "kind": "pet",
+      "stat": "physicalDamageReductionPct",
+      "param": 1,
+      "when": {
+        "pet": "Voidwalker"
+      }
+    },
+    {
+      "kind": "pet",
+      "stat": "damagePct",
+      "param": 2,
+      "when": {
+        "pet": "Succubus"
+      }
+    },
+    {
+      "kind": "pet",
+      "stat": "allRes",
+      "param": 3,
+      "when": {
+        "pet": "Felhunter"
+      }
     }
   ],
   "371": [
@@ -544,6 +582,24 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Soul Link shares incoming owner damage with an active demon and requires unit health/timing mechanics"
+    },
+    {
+      "kind": "pet",
+      "stat": "damagePct",
+      "param": 0,
+      "values": [
+        5
+      ],
+      "when": {
+        "pet": [
+          "Imp",
+          "Voidwalker",
+          "Succubus",
+          "Felhunter",
+          "Felguard",
+          "Doomguard"
+        ]
+      }
     }
   ]
 };
