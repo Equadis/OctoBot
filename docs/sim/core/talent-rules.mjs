@@ -1,6 +1,14 @@
 /* All 56 rogue talents reviewed against https://octowow.st/talents/rogue/; snapshot SHA256 865b889058c29c8485d457a3817094b4c289fd588ead58d9ec7d1a295b5fbf65. */
 export const AUDITED_CLASS="rogue";
 export const TALENT_RULES={
+  "110": [
+    {
+      "kind": "scoped",
+      "scope": "Backstab/Garrote/Ambush from behind",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
   "111": [
     {
       "kind": "global",
@@ -76,6 +84,14 @@ export const TALENT_RULES={
       "note": "Agility-based Energy tick reduction requires a resource model"
     }
   ],
+  "126": [
+    {
+      "kind": "scoped",
+      "scope": "Sinister Strike/Eviscerate/Riposte/Surprise Attack",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
   "128": [
     {
       "kind": "scoped",
@@ -91,6 +107,30 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "132": [
+    {
+      "kind": "scoped",
+      "scope": "Humanoid/Giant/Beast/Dragonkin targets",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "133": [
+    {
+      "kind": "scoped",
+      "scope": "Slice and Dice/Flourish",
+      "stat": "durationPct",
+      "param": 0
+    }
+  ],
+  "135": [
+    {
+      "kind": "scoped",
+      "scope": "Throw/Deadly Throw",
+      "stat": "rangeIncreaseYards",
+      "param": 0
+    }
+  ],
   "136": [
     {
       "kind": "scoped",
@@ -99,11 +139,49 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "137": [
+    {
+      "kind": "scoped",
+      "scope": "Rupture",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Melee damage bonus per combo point is a temporary Rupture aura"
+    }
+  ],
+  "138": [
+    {
+      "kind": "scoped",
+      "scope": "Poisons",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Poison dispels",
+      "stat": "resistChancePct",
+      "param": 1
+    }
+  ],
   "139": [
     {
       "kind": "global",
       "stat": "poisonChance",
       "param": 0
+    }
+  ],
+  "140": [
+    {
+      "kind": "scoped",
+      "scope": "Poison application",
+      "stat": "resistReductionPct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Chance not to consume poison charges is event-driven"
     }
   ],
   "143": [
@@ -115,6 +193,36 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Energy on poison application is event-driven"
+    }
+  ],
+  "146": [
+    {
+      "kind": "scoped",
+      "scope": "Stealth movement",
+      "stat": "movementSpeedPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Stealth",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
+  "147": [
+    {
+      "kind": "scoped",
+      "scope": "Expose Armor",
+      "stat": "armourReductionPct",
+      "param": 0
+    }
+  ],
+  "148": [
+    {
+      "kind": "scoped",
+      "scope": "Gouge",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
     }
   ],
   "149": [
@@ -137,12 +245,46 @@ export const TALENT_RULES={
       "stat": "damagePct",
       "param": 0
     }
+  ],
+  "158": [
+    {
+      "kind": "scoped",
+      "scope": "Distract",
+      "stat": "energyCostReduction",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Hit reduction debuff requires a target-aura model"
+    }
+  ],
+  "159": [
+    {
+      "kind": "scoped",
+      "scope": "Cheap Shot/Garrote",
+      "stat": "energyCostReduction",
+      "param": 0
+    }
+  ],
+  "162": [
+    {
+      "kind": "scoped",
+      "scope": "Hemorrhage",
+      "stat": "energyCostReduction",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Hemorrhage physical vulnerability",
+      "stat": "damageBonusPct",
+      "param": 1
+    }
   ]
 };
 export const TALENT_COVERAGE={
   "110": {
-    "status": "proc-or-conditional",
-    "note": "Increases the damage dealt when striking from behind with your Backstab, Garrote, or Ambush abilities by 15%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "111": {
     "status": "sheet",
@@ -205,8 +347,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "126": {
-    "status": "ability-specific",
-    "note": "Increases the damage of your Sinister Strike, Eviscerate, Riposte and Surprise Attack abilities by 10%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "127": {
     "status": "proc-or-conditional",
@@ -229,40 +371,40 @@ export const TALENT_COVERAGE={
     "note": "Gives your finishing moves a 100% chance to add a combo point to your target."
   },
   "132": {
-    "status": "ability-specific",
-    "note": "Increases all damage caused against Humanoid, Giant, Beast and Dragonkin targets by 2%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "133": {
-    "status": "active-or-non-stat",
-    "note": "Increases the duration of your Slice and Dice and Flourish abilities by 45%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "134": {
     "status": "proc-or-conditional",
     "note": "Your finishing moves have a 20% chance per combo point to restore 20 energy and increase the damage of your finishing moves by 5% for 30 sec. Stacks up to 5 times."
   },
   "135": {
-    "status": "proc-or-conditional",
-    "note": "Increases the range of Throw and Deadly Throw by 6 yards and gives your Deadly Throw a 100% chance to apply your off-hand weapon poison."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "136": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "137": {
-    "status": "ability-specific",
-    "note": "Increases the duration of your Rupture by 6 sec. Each time you use Rupture, your melee damage is increased by 2% per combo point for its full duration, regardless of successfu"
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "138": {
-    "status": "proc-or-conditional",
-    "note": "Increases the damage dealt by your poisons by 30% and gives your poisons an additional 40% chance to resist dispel effects."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "139": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "140": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the chance your poisons will be resisted by 12% and gives your poison applications a 45% chance to not consume a charge."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "141": {
     "status": "proc-or-conditional",
@@ -285,16 +427,16 @@ export const TALENT_COVERAGE={
     "note": "Strikes with both weapons, dealing 30 damage plus 30% of your Attack Power and applies poisons from both weapons. Awards 1 combo point."
   },
   "146": {
-    "status": "proc-or-conditional",
-    "note": "Increases your speed while stealthed by 15% and reduces the cooldown of your Stealth ability by 5 sec. In addition, reduces the chance enemies have to detect you while in Stea"
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "147": {
-    "status": "ability-specific",
-    "note": "Increases the armor reduced by your Expose Armor ability by 50%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "148": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effect duration of your Gouge ability by 1.5 sec."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "149": {
     "status": "partial",
@@ -333,12 +475,12 @@ export const TALENT_COVERAGE={
     "note": "Your Sap and Blind abilities reduce the target's damage dealt by 10% for 8 sec when their effect ends or fails to apply. In addition, you have a 100% chance to return to steal"
   },
   "158": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the Energy cost of your Distract by 15. In addition, targets hit by your Distract have their chance to hit reduced by 6% for 6 sec. This effect is guaranteed to be app"
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "159": {
-    "status": "ability-specific",
-    "note": "Reduces the Energy cost of your Cheap Shot and Garrote abilities by 20."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "160": {
     "status": "proc-or-conditional",
@@ -349,8 +491,8 @@ export const TALENT_COVERAGE={
     "note": "A finishing move that etches a sigil onto the target for 6 sec. The sigil accumulates damage equal to a percentage of all damage the target takes during its duration, up to a "
   },
   "162": {
-    "status": "ability-specific",
-    "note": "Reduces the Energy cost of your Hemorrhage by 5 and increases the Physical damage dealt bonus of your Hemorrhage by 100%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "163": {
     "status": "ability-specific",
