@@ -29,7 +29,7 @@ test('build imports enforce explicit exclusivity, and clear all preserves other 
  const after={...before,consumableIds:[]};assert.deepEqual(after.buffIds,before.buffIds);assert.equal(after.teaThreshold,12);assert.deepEqual(before.consumableIds,[20079]);
 });
 test('reset uses the existing current-class defaults for all nine classes',()=>{
- for(const cls of CLASS_DEFINITIONS){const data=JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${cls.id}.json`,import.meta.url)));const build=validateBuild(newBuild(cls.id),data);assert.equal(build.classId,cls.id);assert.deepEqual(build.gear,{});assert.deepEqual(build.talents,{});assert.deepEqual(build.controls.buffIds,['skill-book']);assert.deepEqual(build.controls.consumableIds,[]);}
+ for(const cls of CLASS_DEFINITIONS){const data=JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${cls.id}.json`,import.meta.url)));const build=validateBuild(newBuild(cls.id),data);assert.equal(build.classId,cls.id);assert.deepEqual(build.gear,{});assert.deepEqual(build.talents,{});assert.deepEqual(build.controls.buffIds,[]);assert.deepEqual(build.controls.consumableIds,[]);}
 });
 test('recipe records and unresolved source facts are not advertised as combat consumables',()=>{
  const recipe=CONSUMABLE_BY_ID.get(55057);assert.match(consumableRestriction(recipe,newBuild('warrior')),/recipes/);

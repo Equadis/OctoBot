@@ -34,7 +34,7 @@ test('gear, flat enchants, talent ranks, weapon types and target settings change
  const b=newBuild('rogue');b.gear.mainhand={id:25,label:'Test weapon',enchantId:'enchant_mh_agi'};
  const gear={mainhand:{id:25,name:'Test weapon',classs:2,subclass:7,speed:2,attributes:{Agility:10},effects:['Equip: +40 Attack Power.'],tooltipText:'10 - 20 Damage\nSpeed 2.00'}};
  const base=rows(b),equipped=rows(b,gear);assert.equal(equipped['Base Stats'].Agility,'155');assert.notEqual(equipped.Melee.Power,base.Melee.Power);assert.equal(equipped.Melee['Wep Skill'],'303 | 300');assert.notEqual(equipped.Melee.Damage,'0-0 | 0-0');
- const t=data('rogue').talents.find(t=>t.name==='Malice');b.talents[t.id]=5;assert.match(rows(b,gear).Melee['Crit Chance'],/10\.26%/);
+ const t=data('rogue').talents.find(t=>t.name==='Malice');b.talents[t.id]=5;assert.match(rows(b,gear).Melee['Crit Chance'],/10\.46%/);
  b.controls.buffIds=['sunder'];assert.equal(rows(b,gear)['Melee vs Target'].Armour,'1961');
  b.planning.targetArmour=100;assert.equal(rows(b,gear)['Melee vs Target'].Armour,'0');
 });

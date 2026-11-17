@@ -78,7 +78,7 @@ export function characterStats(build,talentData,gear={}){
  const wsCrit=skills.map(skill=>(skill-level*5)*.04);
  const crit=skills.map((_,i)=>level===60&&base?baseCrit+s.agi*critAgi+s.crit+wsCrit[i]+(c==='warrior'&&build.classOptions.stance==='Berserker'?3:0)+(c==='rogue'&&[4,15,13].includes(gear[i?'offhand':'mainhand']?.subclass)?value('Close Quarters Combat'):0):null);
  const dual=Boolean(gear.offhand?.classs===2),miss=delta.map(d=>clamp(5+d*.2+(dual?19:0)-s.hit));
- const yellow=clamp(5+delta[0]*.2-s.hit),dodgeTarget=delta.map(d=>clamp(5+d*.1)),glance=delta.map(d=>clamp(95-Math.max(0,d)*2,0,95));
+ const yellow=clamp(5+delta[0]*.2-s.hit),dodgeTarget=delta.map(d=>clamp(5+Math.max(0,d)*.1)),glance=delta.map(d=>clamp(95-Math.max(0,d)*2,0,95));
  // Developer-confirmed miss formula: 5 - 0.2 * (skill - target defence). Other attack-table formulas remain reference only.
  const glanceChance=clamp(10+Math.max(0,target.targetLevel-level)*10,0,40);
  const cap=miss.map((m,i)=>clamp(100-m-dodgeTarget[i]-glanceChance));
