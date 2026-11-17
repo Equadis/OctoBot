@@ -59,6 +59,12 @@ export const TALENT_RULES={
       "note": "Melee-crit-triggered additional spell hit is a 10-second proc: rank 1/2/3 gives +3/+6/+9%, not passive"
     }
   ],
+  "223": [
+    {
+      "kind": "pending",
+      "note": "Elemental Focus triggers two Clearcasting charges on an eligible elemental spell or melee critical strike"
+    }
+  ],
   "224": [
     {
       "kind": "scoped",
@@ -76,6 +82,12 @@ export const TALENT_RULES={
       ],
       "stat": "crit",
       "param": 0
+    }
+  ],
+  "226": [
+    {
+      "kind": "pending",
+      "note": "Improved Molten Blast deals extra damage only when Molten Blast refreshes Flame Shock; requires target aura state"
     }
   ],
   "227": [
@@ -116,6 +128,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "231": [
+    {
+      "kind": "pending",
+      "note": "Elemental Mastery grants temporary +15% elemental damage and offensive spell cost reduction for 10 seconds; not passive"
+    }
+  ],
   "232": [
     {
       "kind": "spell",
@@ -140,6 +158,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "234": [
+    {
+      "kind": "pending",
+      "note": "Earthquake is an activated multi-target Nature spell that spawns a slowing zone"
+    }
+  ],
   "235": [
     {
       "kind": "pending",
@@ -160,6 +184,26 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "237": [
+    {
+      "kind": "scoped",
+      "scope": "Reincarnation",
+      "stat": "cooldownReductionMinutes",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Reincarnation",
+      "stat": "returnedHealthManaPct",
+      "param": 1
+    }
+  ],
+  "238": [
+    {
+      "kind": "pending",
+      "note": "Ancestral Healing grants a temporary armour buff to a healed target after a critical heal, not to the caster"
+    }
+  ],
   "239": [
     {
       "kind": "spell",
@@ -168,6 +212,20 @@ export const TALENT_RULES={
         "Lightning spells"
       ],
       "stat": "crit",
+      "param": 0
+    }
+  ],
+  "240": [
+    {
+      "kind": "pending",
+      "note": "Healing Way creates or consumes stacks of a target healing increase following qualifying heals"
+    }
+  ],
+  "241": [
+    {
+      "kind": "scoped",
+      "scope": "Healing spells",
+      "stat": "pushbackAvoidancePct",
       "param": 0
     }
   ],
@@ -219,12 +277,36 @@ export const TALENT_RULES={
       "note": "Water Shield conditional mana/5 requires an actual shield-state control"
     }
   ],
+  "246": [
+    {
+      "kind": "pending",
+      "note": "Tidal Surge refunds mana probabilistically only after healing a target with Healing Way"
+    }
+  ],
+  "247": [
+    {
+      "kind": "pending",
+      "note": "Ancestral Swiftness is an on-use next Nature spell instant cast with an offensive penalty"
+    }
+  ],
+  "248": [
+    {
+      "kind": "pending",
+      "note": "Undertow restores/consumes Water Shield charges after a qualifying heal; requires shield state and target events"
+    }
+  ],
   "249": [
     {
       "kind": "scoped",
       "scope": "Chain Heal",
       "stat": "castTimeReductionSeconds",
       "param": 0
+    }
+  ],
+  "250": [
+    {
+      "kind": "pending",
+      "note": "Spirit Link temporarily redistributes damage between party targets, requiring group health and damage timelines"
     }
   ],
   "251": [
@@ -269,6 +351,14 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "253": [
+    {
+      "kind": "scoped",
+      "scope": "Totem threat",
+      "stat": "transferredToOwnerPct",
+      "param": 0
+    }
+  ],
   "254": [
     {
       "kind": "global",
@@ -298,6 +388,12 @@ export const TALENT_RULES={
       "scope": "Physical/imbue attacks",
       "stat": "threatReductionPct",
       "param": 0
+    }
+  ],
+  "258": [
+    {
+      "kind": "pending",
+      "note": "Lightning Strike is an active weapon strike with empowered active-shield charge effects"
     }
   ],
   "259": [
@@ -371,6 +467,12 @@ export const TALENT_RULES={
       "note": "Weapon imbue effects are different per imbue and often triggered; an imbue-specific stat/aura model is required"
     }
   ],
+  "264": [
+    {
+      "kind": "pending",
+      "note": "Stormstrike is an active extra-attack ability with two Nature-damage charge bonuses"
+    }
+  ],
   "265": [
     {
       "kind": "scoped",
@@ -383,6 +485,12 @@ export const TALENT_RULES={
       "scope": "Instant spells",
       "stat": "crit",
       "param": 1
+    }
+  ],
+  "266": [
+    {
+      "kind": "pending",
+      "note": "Bloodlust applies temporary attack/cast-speed buffs and party crit-triggered haste effects"
     }
   ]
 };
@@ -409,7 +517,7 @@ export const TALENT_COVERAGE={
   },
   "223": {
     "status": "proc-or-conditional",
-    "note": "After landing a critical strike with a Fire, Frost, or Nature damage spell or melee attack, you enter a Clearcasting state. The Clearcasting state reduces the mana cost of you"
+    "note": "Elemental Focus triggers two Clearcasting charges on an eligible elemental spell or melee critical strike"
   },
   "224": {
     "status": "partial",
@@ -420,8 +528,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "226": {
-    "status": "ability-specific",
-    "note": "Refreshing Flame Shock with Molten Blast deals damage equal to 60% of the refreshed duration."
+    "status": "proc-or-conditional",
+    "note": "Improved Molten Blast deals extra damage only when Molten Blast refreshes Flame Shock; requires target aura state"
   },
   "227": {
     "status": "partial",
@@ -441,7 +549,7 @@ export const TALENT_COVERAGE={
   },
   "231": {
     "status": "proc-or-conditional",
-    "note": "Increases your Fire, Frost, and Nature damage by 15% and reduces the mana cost of your offensive spells by 20% for 10 sec."
+    "note": "Elemental Mastery grants temporary +15% elemental damage and offensive spell cost reduction for 10 seconds; not passive"
   },
   "232": {
     "status": "partial",
@@ -453,7 +561,7 @@ export const TALENT_COVERAGE={
   },
   "234": {
     "status": "proc-or-conditional",
-    "note": "Breaks the earth beneath the target, dealing 262 to 291 Nature damage to the target and an additional 35% of that damage as Nature damage to other enemies within 10 yards. Cre"
+    "note": "Earthquake is an activated multi-target Nature spell that spawns a slowing zone"
   },
   "235": {
     "status": "partial",
@@ -464,12 +572,12 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "237": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Reincarnation spell by 20 min and increases the amount of health and mana you reincarnate with by an additional 20%."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "238": {
     "status": "proc-or-conditional",
-    "note": "Increases your target's armor value by 25% for 15 sec after getting a critical effect from one of your healing spells."
+    "note": "Ancestral Healing grants a temporary armour buff to a healed target after a critical heal, not to the caster"
   },
   "239": {
     "status": "partial",
@@ -477,11 +585,11 @@ export const TALENT_COVERAGE={
   },
   "240": {
     "status": "proc-or-conditional",
-    "note": "Your Healing Wave and Lesser Healing Wave spells each have a 100% chance, and your Chain Heal spell has a 33% chance to increase the healing of your next Healing Wave or Chain"
+    "note": "Healing Way creates or consumes stacks of a target healing increase following qualifying heals"
   },
   "241": {
-    "status": "proc-or-conditional",
-    "note": "Gives you a 70% chance to avoid interruption caused by damage while casting any healing spell."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "242": {
     "status": "partial",
@@ -501,15 +609,15 @@ export const TALENT_COVERAGE={
   },
   "246": {
     "status": "proc-or-conditional",
-    "note": "After healing a target affected by your Healing Way effect, you have a 30% chance to regain mana equal to 15% of the base cost of the spell."
+    "note": "Tidal Surge refunds mana probabilistically only after healing a target with Healing Way"
   },
   "247": {
     "status": "proc-or-conditional",
-    "note": "When activated, your next Nature spell with a casting time less than 10 sec becomes an instant cast spell. Affected damaging spells have 25% reduced effectiveness."
+    "note": "Ancestral Swiftness is an on-use next Nature spell instant cast with an offensive penalty"
   },
   "248": {
     "status": "proc-or-conditional",
-    "note": "Your Healing Wave and Lesser Healing Wave spells have a 50% chance to restore a charge of your active Water Shield. When your Water Shield is at maximum charges, this effect c"
+    "note": "Undertow restores/consumes Water Shield charges after a qualifying heal; requires shield state and target events"
   },
   "249": {
     "status": "partial",
@@ -517,7 +625,7 @@ export const TALENT_COVERAGE={
   },
   "250": {
     "status": "proc-or-conditional",
-    "note": "Links the spirit of an ally to that of other group members within 35 yards. When the target takes damage, 30% is distributed among nearby allies. Lasts 20 sec."
+    "note": "Spirit Link temporarily redistributes damage between party targets, requiring group health and damage timelines"
   },
   "251": {
     "status": "sheet",
@@ -528,8 +636,8 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "253": {
-    "status": "ability-specific",
-    "note": "90% of the threat generated by your totems is transferred to you."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "254": {
     "status": "sheet",
@@ -549,7 +657,7 @@ export const TALENT_COVERAGE={
   },
   "258": {
     "status": "proc-or-conditional",
-    "note": "Instantly strikes your target, causing 20% weapon damage and an additional 10% as Nature damage. This strike also triggers an empowered version of your active shield, consumin"
+    "note": "Lightning Strike is an active weapon strike with empowered active-shield charge effects"
   },
   "259": {
     "status": "sheet",
@@ -573,7 +681,7 @@ export const TALENT_COVERAGE={
   },
   "264": {
     "status": "proc-or-conditional",
-    "note": "Gives you an extra attack for 100% weapon damage and increases the next 2 sources of Nature damage you deal by 25%. Lasts 12 sec."
+    "note": "Stormstrike is an active extra-attack ability with two Nature-damage charge bonuses"
   },
   "265": {
     "status": "partial",
@@ -581,6 +689,6 @@ export const TALENT_COVERAGE={
   },
   "266": {
     "status": "proc-or-conditional",
-    "note": "Fly into a frenzy, increasing your attack speed by 20% and spell casting speed by 20% for 30 sec. While under this effect, your melee critical strikes increase the attack and "
+    "note": "Bloodlust applies temporary attack/cast-speed buffs and party crit-triggered haste effects"
   }
 };
