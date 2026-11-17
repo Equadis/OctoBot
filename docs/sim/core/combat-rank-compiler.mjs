@@ -33,9 +33,9 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  const mv=models(build.classId,abilityName,audit,{manaCost:cost,energyCost:cost,rageCost:cost,castSeconds:rank.castMs/1000,gcdSeconds:gcd/1000,cooldownSeconds:cooldown/1000,rangeYards:rank.maxRange});
  const v=mv.values;
  const stats={attackPower:snap.attackPower,healingPower:snap.healingPower,...snap.schools};
- const physical=rank.components.some(x=>['weapon','combo'].includes(x.kind));
+ const physical=rank.components.some(x=>['weapon','combo','execute','physical-ap'].includes(x.kind)),usesWeapon=rank.components.some(x=>x.kind==='weapon');
  const weapon=snap.melee.mainhand;
- if(physical){
+ if(usesWeapon){
   const wp=policy.weaponPolicy;
   if(!['actual-swing','normalised'].includes(wp))throw new Error('Explicit weapon scaling policy required');
   if(kind==='queued-melee'&&wp!=='actual-swing')throw new Error('Queued strikes require actual swing damage');
@@ -47,17 +47,18 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  }
  const effects=[];
  for(const [index,component] of rank.components.entries()){
-  const isWeapon=component.kind==='weapon',isCombo=component.kind==='combo',periodic=component.kind.startsWith('periodic-'),heal=component.kind.endsWith('heal');
+  const isWeapon=component.kind==='weapon',isCombo=component.kind==='combo',isExecute=component.kind==='execute',isAP=component.kind==='physical-ap',isPhysical=isWeapon||isCombo||isExecute||isAP,periodic=component.kind.startsWith('periodic-'),heal=component.kind.endsWith('heal');
   const componentName=periodic&&rank.components.length>1?abilityName+' (periodic)':abilityName;
   const m=models(build.classId,componentName,audit,{durationSeconds:periodic?component.durationMs/1000:undefined});
   const mods=m.modifiers,values=m.values;
+  if(component.kind==='combo-aura'){if(!['preserve-progress','reset','next-swing'].includes(policy.swingHastePolicy))throw new Error('Explicit combo haste swing policy required');const durations=component.durations.map(ms=>roundMs((ms/1000+(mods.durationIncreaseSeconds||0))*(1+(mods.durationPct||0)/100)));effects.push({kind:'aura',when:'always',auraTarget:'actor',durationByCombo:durations,aura:{id:rank.abilityId,name:abilityName,kind:'buff',durationMs:durations[0],maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'meleeHasteFactor',mode:'multiplyPct',value:component.hastePct}]}});continue;}
   const baseMultiplier=heal?values.healingFactor:values.damageFactor;
   // Matching scoped effects are applied only to this component. The snapshot
   // already contains global and weapon-specific sheet contributions.
-  const coefficient=isCombo?finite(policy.apPerComboPoint,'AP per combo point'):component.coefficient===null?finite(policy.componentCoefficients?.[index],'component coefficient'):component.coefficient;
-  const formula=isWeapon?{min:component.flat,max:component.flat,terms:[],weapon:{minStat:'weaponMin',maxStat:'weaponMax',coefficient},multiplier:baseMultiplier}:isCombo?{comboRanges:component.ranges,terms:[{stat:'attackPower',coefficient,perComboPoint:true}],multiplier:baseMultiplier}:{min:component.min,max:component.max,terms:[{stat:component.stat,coefficient}],multiplier:baseMultiplier};
+  const coefficient=isExecute?0:isAP?finite(policy.physicalAPModel?.coefficient,'physical AP coefficient'):isCombo?finite(policy.apPerComboPoint,'AP per combo point'):component.coefficient===null?finite(policy.componentCoefficients?.[index],'component coefficient'):component.coefficient;
+  const formula=isExecute?{min:finite(policy.executeModel?.baseDamage,'execute base damage'),max:finite(policy.executeModel?.baseDamage,'execute base damage'),terms:[],multiplier:baseMultiplier}:isAP?{min:finite(policy.physicalAPModel?.flatDamage,'physical AP flat damage'),max:finite(policy.physicalAPModel?.flatDamage,'physical AP flat damage'),terms:[{stat:'attackPower',coefficient}],multiplier:baseMultiplier}:isWeapon?{min:component.flat,max:component.flat,terms:[],weapon:{minStat:'weaponMin',maxStat:'weaponMax',coefficient},multiplier:baseMultiplier}:isCombo?{comboRanges:component.ranges,terms:[{stat:'attackPower',coefficient,perComboPoint:true}],multiplier:baseMultiplier}:{min:component.min,max:component.max,terms:[{stat:component.stat,coefficient}],multiplier:baseMultiplier};
   let outcomes,applicationOutcomes,mitigation=0;
-  if(isWeapon||isCombo){
+  if(isPhysical){
    const p=policy.physical;
    if(!p)throw new Error('Explicit physical table policy required');
    const t=physicalAttackTable({type:'melee-special',weaponSkill:weapon.skill,targetDefense:snap.target.defense,hitPct:snap.melee.hitPct+(mods.hit||0),dualWieldWhite:false,dualWieldPenaltyPct:finite(p.dualWieldPenaltyPct,'dual-wield penalty'),avoidance:{dodgePct:weapon.targetDodgePct,parryPct:finite(p.parryPct,'parry probability'),blockPct:finite(p.blockPct,'block probability')},glancePct:0,glanceMultiplier:1,critPct:clamp(finite(weapon.critPct,'melee crit')+(mods.crit||0)),critSuppressionPct:finite(p.critSuppressionPct,'critical suppression'),critMultiplier:1+(finite(p.criticalMultiplier,'melee critical multiplier',1)-1)*values.criticalBonusFactor,blockValue:finite(p.blockValue,'block value'),order:p.order,position:p.position,provenance});
@@ -76,11 +77,11 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
   const threatPolicy=policy.threat;
   const threat=threatPolicy===null?null:{coefficient:finite(heal?threatPolicy?.heal:threatPolicy?.damage,'threat coefficient'),flat:rank.requiredPolicy?.includes('flatThreat')?finite(policy.flatThreat,'flat threat'):0,multipliers:[values.threatFactor],distribution:heal?'split':'each'};
   // A null model means threat is unknown, not zero.
-  effects.push({kind:isWeapon||isCombo?'damage':component.kind,when:component.reusePreviousHit?'landed':'always',school:isWeapon||isCombo?'physical':heal?rank.record.fields.school:component.stat,formula,outcomes,mitigation,flatReduction:0,threat,...(periodic?{durationMs:roundMs(values.durationSeconds),intervalMs:component.intervalMs,refresh:policy.refresh,tickAtExpiry:explicitBool(policy.tickAtExpiry,'tick-at-expiry policy'),snapshot:policy.snapshot,applicationOutcomes,auraName:abilityName,reusePreviousHit:component.reusePreviousHit===true}:{})});
+  effects.push({kind:isPhysical?'damage':component.kind,when:component.reusePreviousHit?'landed':'always',school:isPhysical?'physical':heal?rank.record.fields.school:component.stat,formula,outcomes,mitigation,flatReduction:0,threat,...(isExecute?{additionalResource:{resource:'rage',coefficient:finite(policy.executeModel?.extraRageCoefficient,'execute extra rage coefficient'),cap:finite(policy.executeModel?.extraRageCap,'execute extra rage cap'),payment:policy.executeModel?.payment}}:{}),...(periodic?{durationMs:roundMs(values.durationSeconds),intervalMs:component.intervalMs,refresh:policy.refresh,tickAtExpiry:explicitBool(policy.tickAtExpiry,'tick-at-expiry policy'),snapshot:policy.snapshot,applicationOutcomes,auraName:abilityName,reusePreviousHit:component.reusePreviousHit===true}:{})});
  }
  if(rank.comboGain)effects.push({kind:'combo-gain',when:'landed',points:rank.comboGain});
- if(rank.comboSpend)effects.push({kind:'combo-spend',when:explicitBool(policy.spendOnMiss,'finisher spend on miss')?'always':'landed',points:'all'});
- const action={abilityId:rank.abilityId,spellId,rank:rank.rank,learnLevel:rank.learnLevel,source:rank.source,evidenceStatus:'reference',actorId,kind,castMs:roundMs(v.castSeconds),gcdMs:roundMs(v.gcdSeconds),cooldownMs:roundMs(v.cooldownSeconds),sharedCooldown:null,costs:[{resource:rank.resource,amount:rank.resource==='mana'?v.manaCost:rank.resource==='rage'?v.rageCost:v.energyCost}],targets:[rank.components.every(c=>c.kind.endsWith('heal'))?'ally':'enemy'],minRangeYards:rank.minRange,maxRangeYards:v.rangeYards,position:rank.position??null,comboRequired:rank.comboSpend?1:null,requiredContext:null,effects,...(kind==='queued-melee'?{swingId:'mainhand'}:{})};
+ if(rank.comboSpend)effects.push({kind:'combo-spend',when:rank.refreshStrategy==='actor-buff'?'always':explicitBool(policy.spendOnMiss,'finisher spend on miss')?'always':'landed',points:'all'});
+ const action={abilityId:rank.abilityId,spellId,rank:rank.rank,learnLevel:rank.learnLevel,source:rank.source,evidenceStatus:'reference',actorId,kind,castMs:roundMs(v.castSeconds),gcdMs:roundMs(v.gcdSeconds),cooldownMs:roundMs(v.cooldownSeconds),sharedCooldown:null,costs:[{resource:rank.resource,amount:rank.resource==='mana'?v.manaCost:rank.resource==='rage'?v.rageCost:v.energyCost}],targets:[rank.components.every(c=>c.kind.endsWith('heal'))?'ally':'enemy'],minRangeYards:rank.minRange,maxRangeYards:v.rangeYards,position:rank.position??null,comboRequired:rank.comboSpend?1:null,requiredContext:null,effects,...(rank.targetHealthMaxPct!==undefined?{targetHealthMaxPct:rank.targetHealthMaxPct}:{}),...(kind==='channel'?{tickMs:rank.tickMs,tickAtEnd:explicitBool(policy.channelTickAtEnd,'channel final tick')}:{}),...(rank.refreshStrategy==='actor-buff'?{refreshGate:{kind:'buff',name:abilityName,remainingMs:0,onActor:true}}:{}),...(kind==='queued-melee'?{swingId:'mainhand'}:{})};
  if(action.kind==='cast'&&action.castMs===0)action.kind='instant';
  if(rank.sharedCooldownGroup)action.sharedCooldown={id:rank.sharedCooldownGroup,durationMs:finite(action.cooldownMs,'shared cooldown duration',1)};
  if(build.classId==='priest'&&build.classOptions?.form==='Shadowform'&&(action.targets[0]==='ally'||rank.record.fields.school==='holy'))throw new Error('Holy healing unavailable in Shadowform');

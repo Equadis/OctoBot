@@ -26,7 +26,7 @@ export class CombatEncounter{
   this.manageAuras=manageAuras===true;
   if(comboPoints&&Object.hasOwn(pools,'comboPoints'))throw new Error('Target-banked combo points must not share a global resource pool');
   this.comboPoints=comboPoints===null?null:new ComboPointBank({...comboPoints,validateTarget:id=>this.#targets.includes(id)});
-  this.auras=new CombatAuras(this.timeline,{validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active())this.#record(e.type,e);}});
+  this.auras=new CombatAuras(this.timeline,{validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active()){this.#record(e.type,e);this.#updateSwingHaste(e.targetId);}}});
   this.threat=new ThreatLedger(this.timeline,{enemyIds:this.#targets,actorIds:[...new Set([this.#player,...this.#allies,...(this.#pet?[this.#pet]:[])])],onChange:e=>{if(this.#active())this.#record('threat',e);}});
   for(const a of actions){
    key(a.id);key(a.name);if(this.#actions.has(a.id)||[...this.#actions.values()].some(x=>x.name===a.name))throw new Error('Duplicate action');
@@ -132,10 +132,12 @@ export class CombatEncounter{
    this.#scheduleDecision(this.timeline.now);
   });this.#cast={ticket,action:a,targetId,completeAt};
  }
- addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve}){
+ addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve,actorId=null,hasteStat=null,hastePolicy=null}){
   if(this.#started)throw new Error('Configure auto-attacks before run');key(id);integer(intervalMs,'auto interval',1);integer(firstAtMs,'first auto');fn(resolve,'auto resolver');if(!['continue','skip-during-cast'].includes(castPolicy)||this.#swings.has(id))throw new Error('Invalid auto policy or duplicate hand');
-  const s={id,intervalMs,nextAt:firstAtMs,lastAt:null,castPolicy,resolve,ticket:null,firing:false};this.#swings.set(id,s);this.#scheduleSwing(s);
+  if(hasteStat!==null){key(hasteStat);if(!this.#units.has(actorId)||!['preserve-progress','reset','next-swing'].includes(hastePolicy))throw new Error('Explicit dynamic haste policy required');}
+  const s={id,intervalMs,baseIntervalMs:intervalMs,actorId,hasteStat,hastePolicy,nextAt:firstAtMs,lastAt:null,castPolicy,resolve,ticket:null,firing:false};this.#swings.set(id,s);this.#scheduleSwing(s);
  }
+ #updateSwingHaste(actorId){for(const s of this.#swings.values()){if(s.actorId!==actorId||s.hasteStat===null)continue;const haste=this.auras.stat(actorId,s.hasteStat,1);positive(haste,'dynamic haste factor');const ms=Math.max(1,Math.round(s.baseIntervalMs/haste));if(ms!==s.intervalMs)this.setSwingInterval(s.id,ms,s.hastePolicy);}}
  #scheduleSwing(s){
   if(s.nextAt>this.#duration||!this.#active())return;
   s.ticket=this.timeline.schedule(s.nextAt,P.tick,()=>{
