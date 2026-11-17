@@ -22,5 +22,5 @@ test('duration variation, target presets and resistances survive sharing and leg
  assert.equal(build.planning.targetNatureRes,210);
  const legacy={...newBuild(),planning:{duration:90,iterations:2000,targetLevel:62,targetArmour:4000}};
  const migrated=validateBuild(legacy,data);assert.equal(migrated.planning.duration,90);assert.equal(migrated.planning.durationVary,false);assert.equal(migrated.planning.targetFireRes,0);
- for(const patch of [{durationVariation:101},{durationVary:'yes'},{targetNatureRes:-1},{targetArcaneRes:NaN},{targetPreset:'missing'}])assert.throws(()=>validateBuild({...newBuild(),planning:{...newBuild().planning,...patch}},data));
+ for(const patch of [{durationVariation:101},{durationVary:'yes'},{targetNatureRes:-1},{targetArcaneRes:NaN},{targetPreset:'missing'},{customRaid:'yes'}])assert.throws(()=>validateBuild({...newBuild(),planning:{...newBuild().planning,...patch}},data));
 });

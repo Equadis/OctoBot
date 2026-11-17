@@ -131,3 +131,9 @@ test('new spirit and shadow resistance modifiers preserve recipient and target s
  assert.equal(after.Defence['Shadow Res'],before.Defence['Shadow Res']);
  assert.equal(after['Target Debuff Contributions'].targetShadowRes,'-75');
 });
+
+test('custom raid target preserves world buff suppression when a raid preset is customised',()=>{
+ const b=newBuild('mage');b.controls.buffIds=['fengus','slipkik','fortitude'];b.planning=applyTarget(applyTarget(b.planning,'bwl'),'custom');
+ assert.equal(b.planning.customRaid,true);assert.deepEqual(effectiveBuffIds(b.controls.buffIds,b.planning),['fortitude']);
+ b.planning.customRaid=false;assert.deepEqual(effectiveBuffIds(b.controls.buffIds,b.planning),b.controls.buffIds);
+});
