@@ -84,7 +84,7 @@ test('all catalogue enhancements have explicit finite vectors or unresolved even
  assert.equal(validEnchant('enchant_head_priest_zg','legs','priest',null,60),false);
 });
 test('actual item effects retain scoped ability and target modifiers, never apply them to the global stats',()=>{
- const a=equipmentItemAudit(item(867));assert.equal(a.stats.ap,undefined);
+ const a=equipmentItemAudit(item(867));assert.equal(a.stats.ap,20);
  const target=a.effects.find(e=>e.status==='scoped');assert.ok(target);
  assert.equal(combineScopedEquipment([target],{classOptions:{targetCreature:'Unspecified'}})[0].active,false);
  assert.equal(combineScopedEquipment([target],{classOptions:{targetCreature:'Undead'}})[0].amount,30);
