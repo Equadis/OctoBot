@@ -1,7 +1,7 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs?v=3";
 import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
-import {installItemPopup} from "./item-popup.mjs?v=1";
+import {installItemPopup} from "./item-popup.mjs?v=2";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=3";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);

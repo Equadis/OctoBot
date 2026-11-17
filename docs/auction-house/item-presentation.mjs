@@ -53,13 +53,44 @@ export function itemTooltip(item){
    known?"Name and rarity from the OctoWoW catalogue snapshot.":"Item details not found in the available catalogue."
  ].join("\n");
 }
-const baseCache=new Map();
-let referencePromise;
+const baseCache=new Map(),catalogues=new Map();
+// Load once on demand, using the module URL rather than the page location.
+// Retry failed downloads instead of permanently caching a transient network error.
+function dataFile(path){
+ if(!catalogues.has(path)){
+  const pending=Promise.resolve().then(()=>fetch(new URL(path,import.meta.url),{cache:"force-cache"}))
+   .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json();})
+   .catch(()=>{catalogues.delete(path);return null;});
+  catalogues.set(path,pending);
+ }
+ return catalogues.get(path);
+}
+let consumableIndex=null,catalogueIndex=null;
+async function verifiedFor(id){
+ const [equipment,supplement,consumables]=await Promise.all([
+  dataFile("../sim/data/items/details.json"),dataFile("../sim/data/items/details-supplement.json"),
+  dataFile("../sim/data/consumables/catalogue.json")
+ ]);
+ if(Array.isArray(consumables)&&!consumableIndex)consumableIndex=new Map(consumables.filter(x=>x.verified===true).map(x=>[x.id,x]));
+ for(const record of [supplement?.[id],equipment?.[id],consumableIndex?.get(id)]){
+  if(typeof record?.tooltipText==="string"&&record.tooltipText.trim())return {...record,source:"OctoWoW DB snapshot"};
+ }
+ return null;
+}
 async function referenceFor(id){
- if(!referencePromise)referencePromise=fetch("../sim/data/items/reference-tooltips.json",{cache:"force-cache"})
-  .then(r=>r.ok?r.json():null).catch(()=>null);
- const ref=await referencePromise;
- return ref?.items?.[id]||null;
+ const reference=await dataFile("../sim/data/items/reference-tooltips.json");
+ return reference?.items?.[id]||null;
+}
+async function catalogueFor(id){
+ const catalogue=await dataFile("../sim/data/items/catalogue.json");
+ if(Array.isArray(catalogue)&&!catalogueIndex)catalogueIndex=new Map(catalogue.map(x=>[x.id,x]));
+ return catalogueIndex?.get(id)||null;
+}
+async function loadBase(id){
+ const verified=await verifiedFor(id);
+ if(verified)return verified;
+ // Live DB is a best-effort fallback, since browser CORS can prevent reading it.
+ return await officialFor(id)||await referenceFor(id);
 }
 async function officialFor(id){
  try{
@@ -80,20 +111,29 @@ export async function richItemTooltip(item){
  const id=Number(item?.item_id),v=variantDetails(item),title=displayItemName(item);
  let base=null;
  if(Number.isSafeInteger(id)&&id>0){
-  if(!baseCache.has(id))baseCache.set(id,(async()=>await officialFor(id)||await referenceFor(id))());
+  if(!baseCache.has(id)){
+   const pending=loadBase(id).then(result=>{if(!result)baseCache.delete(id);return result;}).catch(()=>{baseCache.delete(id);return null;});
+   baseCache.set(id,pending);
+  }
   base=await baseCache.get(id);
  }
  const raw=typeof base?.tooltipText==='string'?base.tooltipText.trim():'';
- const lines=raw?raw.split("\n").map(x=>x.trim()).filter(Boolean).filter((x,i)=>i!==0||x!==clean(item?.item_name)):[];
+ const listed=!raw&&Number.isSafeInteger(id)&&id>0?await catalogueFor(id):null;
+ const lines=raw?raw.split("\n").map(x=>x.trim()).filter(Boolean).filter((x,i)=>i!==0||![clean(item?.item_name),clean(base?.name)].includes(x)):[];
  const details=variantLines(item),notes=[];
- if(item?.item_level!=null&&!raw)lines.push("Item level "+item.item_level);
- if(item?.req_level!=null&&!raw)lines.push("Requires level "+item.req_level);
+ if(!raw){
+  const level=item?.item_level??listed?.level,required=item?.req_level??listed?.reqlevel;
+  if(level!=null)lines.push("Item level "+level);
+  if(required!=null&&required>0)lines.push("Requires level "+required);
+  if(listed?.quality!=null)lines.push("Rarity: "+rarity({quality:listed.quality}));
+ }
  const rollStats=details.filter(line=>!line.startsWith("Unmapped random enchantment"));
  if(rollStats.length)lines.push("Variant effects",...rollStats);
  notes.push(...details.filter(line=>line.startsWith("Unmapped random enchantment")));
  if(v.hasVariant&&v.bonuses.length)notes.push("Standard Classic DBC reference; custom values may differ.");
- if(!lines.length)notes.push("Full item attributes are not available in the catalogue.");
+ if(!raw)notes.push(listed?"Catalogue listing only. Full tooltip not verified.":"No verified item tooltip available yet. See OctoWoW DB.");
  if(base?.source==="OctoWoW DB")notes.push("Base stats: OctoWoW DB.");
+ else if(base?.source==="OctoWoW DB snapshot")notes.push("Base stats: OctoWoW DB snapshot.");
  else if(raw)notes.push("Base stats: Gear Planner reference.");
  return {title,lines,notes};
 }
