@@ -51,3 +51,23 @@ test('healing power, scope stats and quiver haste remain separate from generic s
  b.gear.ranged={id:10,label:'Bow',enchantId:'scope_18283'};
  const a=sheet(b,g);assert.equal(a.Melee['Haste'],'0.0%');assert.equal(a.Melee['Hit Rating'],'0%');assert.equal(a.Spell['Spell Power'],'0');assert.equal(a.Spell['Healing Power'],'24');assert.equal(a['Ranged Equipment Contributions']['Ranged-only Hit Bonus'],'3.0%');assert.equal(a['Ranged Equipment Contributions']['Ranged-only Haste'],'10.0%');
 });
+
+test('crafted set bonuses require profession rank, while ordinary item stats do not',()=>{
+ const gear={chest:item(19682),legs:item(19683),feet:item(19684)};
+ const b=newBuild('mage');
+ assert.equal(equipmentSetAudit(gear,b).stats.spellCrit,undefined);
+ assert.equal(equipmentSetAudit(gear,{...b,skills:{Tailoring:299}}).stats.spellCrit,undefined);
+ assert.equal(equipmentSetAudit(gear,{...b,skills:{Tailoring:300}}).stats.spellCrit,2);
+ assert.equal(equipmentItemAudit(gear.chest,b).stats.spellHit,1);
+});
+test('the twin Hakkari blades have the same name but unique IDs and give the bonus only when both are equipped',()=>{
+ const a=item(19865),b=item(19866);
+ assert.ok(parseItemSet(a));assert.equal(parseItemSet(a).key,parseItemSet(b).key);
+ assert.deepEqual(equipmentSetAudit({mainhand:a}).stats,{});
+ assert.deepEqual(equipmentSetAudit({mainhand:a,offhand:a}).stats,{});
+ assert.equal(equipmentSetAudit({mainhand:a,offhand:b}).stats['weaponSkill:7'],6);
+});
+test('damage-only and healing-only vectors do not cross-inflate each other',()=>{
+ const b=newBuild('mage'),a=sheet(b,{chest:{effects:['Equip: Increases your spell damage by up to 120 and your healing by up to 300.','Equip: Increases damage and healing done by magical spells and effects by up to 10.']}});
+ assert.equal(a.Spell['Spell Power'],'130');assert.equal(a.Spell['Healing Power'],'310');
+});
