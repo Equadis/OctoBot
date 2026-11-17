@@ -21,13 +21,13 @@ function playerButton(name,cls,key=playerKey(name)){
  const button=node("button",cls,name);button.type="button";button.dataset.player=key;
  button.setAttribute("aria-label","Highlight "+name);return button;
 }
-function appendMessage(parent,row){
- appendChatMessage(parent,row,{interactiveItems:true,appendText:(target,text)=>{
+function appendMessage(parent,row,interactiveMentions=false){
+ appendChatMessage(parent,row,{interactiveItems:true,appendText:interactiveMentions?(target,text)=>{
   for(const part of mentionParts(text,knownPlayers)){
    if(part.player)target.append(playerButton(part.text,"chat-mention",part.player));
    else target.append(document.createTextNode(part.text));
   }
- }});
+ }:undefined});
 }
 function refreshKnownPlayers(){
  const next=new Set();
@@ -56,7 +56,7 @@ function appendChatLine(parent,row,withTime=true){
   content.append(author);
   if(row.guild)content.append(node("span","chat-guild"," <"+row.guild+">"));
   content.append(document.createTextNode(": "));
-  appendMessage(content,row);
+  appendMessage(content,row,withTime);
   parent.append(content);
 }
 const feeds=["world","gm"],history={};
