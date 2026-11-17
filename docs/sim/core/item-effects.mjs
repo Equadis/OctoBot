@@ -50,7 +50,7 @@ export function equipmentItemAudit(item,build={}){
  for(const [k,v] of Object.entries(item.attributes||{}))if(attrs[k]&&Number.isFinite(v))add(stats,attrs[k],v);
  // Recover signed primary attributes missing from the original importer.
  // Read only the primary tooltip block, never named set bonuses or use text.
- const primary=String(item.tooltipText||'').split(/\n[^\n]*\(\d+\/\d+\)\s*(?:\n|$)/)[0];
+ const primary=String(item.tooltipText||'').split(/\n[^\n]*\(\d+\/\d+\)(?:\s*Requires [A-Za-z ]+ \(\d+\))?\s*(?:\n|$)/)[0];
  for(const l of primary.split('\n')){
   const m=l.trim().match(/^([+-]\d+)\s+(Strength|Agility|Stamina|Intellect|Spirit|Health|Mana|Fortune|(?:Arcane|Fire|Nature|Frost|Shadow) Resistance)$/i);
   if(m){const attr=Object.keys(attrs).find(k=>k.toLowerCase()===m[2].toLowerCase());if(!Object.hasOwn(item.attributes||{},attr))add(stats,attrs[attr],+m[1]);}
@@ -63,34 +63,36 @@ export function equipmentItemAudit(item,build={}){
 }
 export function parseItemSet(item){
  const lines=String(item.tooltipText||'').split('\n').map(s=>s.trim()).filter(Boolean);
- const i=lines.findIndex(l=>/^.+ \(\d+\/\d+\)$/.test(l));
+ const i=lines.findIndex(l=>/^.+ \(\d+\/\d+\)(?:\s*Requires [A-Za-z ]+ \(\d+\))?$/.test(l));
  if(i<0)return null;
- const m=lines[i].match(/^(.+) \((\d+)\/(\d+)\)$/),size=+m[3];
+ const m=lines[i].match(/^(.+) \((\d+)\/(\d+)\)(?:\s*Requires ([A-Za-z ]+) \((\d+)\))?$/),size=+m[3];
+ const name=m[1].replace(/^"[^"\n]*"\s*/,''),requirement=m[4]?{skill:m[4],rank:+m[5]}:null;
  const members=lines.slice(i+1,i+1+size);
- if(size<2||members.length!==size||new Set(members).size!==size||!members.includes(item.name))return null;
+ if(size<2||members.length!==size||!members.includes(item.name))return null;
  const bonuses=lines.slice(i+1+size).map(l=>l.match(/^\((\d+)\) Set:\s*(.+)$/i)).filter(Boolean).map(([,n,effect])=>({pieces:+n,effect}));
  if(!bonuses.length||bonuses.some(x=>x.pieces<1||x.pieces>size))return null;
  // Full roster identity prevents same-name PvP variants from cross-counting.
- return {key:JSON.stringify([m[1],[...members].sort()]),name:m[1],members,bonuses};
+ return {key:JSON.stringify([name,[...members].sort(),requirement]),name,members,bonuses,requirement};
 }
-export function equipmentSetAudit(gear){
+export function equipmentSetAudit(gear,build={}){
  const sets=new Map(),stats={},active=[],unresolved=[],seenIds=new Set();
  for(const item of Object.values(gear)){
   if(!item||!Number.isInteger(item.id)||seenIds.has(item.id))continue;seenIds.add(item.id);
   const set=parseItemSet(item);if(!set){if(/\(\d+\/\d+\)/.test(item.tooltipText||''))unresolved.push({item:item.name,reason:'Unverified set roster'});continue;}
-  const old=sets.get(set.key)||{...set,pieces:new Set(),conflict:false};
+  const old=sets.get(set.key)||{...set,pieces:new Map(),conflict:false};
   const signature=s=>JSON.stringify(s.bonuses.map(b=>[b.pieces,b.effect]).sort());
   if(signature(set)!==signature(old))old.conflict=true;
-  old.pieces.add(item.name);sets.set(set.key,old);
+  const allowed=set.members.filter(n=>n===item.name).length;old.pieces.set(item.name,Math.min(allowed,(old.pieces.get(item.name)||0)+1));sets.set(set.key,old);
  }
  for(const s of sets.values()){
   if(s.conflict){unresolved.push({set:s.name,reason:'Conflicting member tooltip bonuses'});continue;}
-  const seen=new Set();
+  const seen=new Set(),count=[...s.pieces.values()].reduce((a,b)=>a+b,0);
   for(const bonus of s.bonuses){
    const key=JSON.stringify(bonus);if(seen.has(key))continue;seen.add(key);
-   if(s.pieces.size<bonus.pieces)continue;
+   if(count<bonus.pieces)continue;
+   if(s.requirement&&(build.skills?.[s.requirement.skill]||0)<s.requirement.rank){unresolved.push({set:s.name,reason:'Set bonus requires '+s.requirement.skill+' ('+s.requirement.rank+')'});continue;}
    const result=classifyEquipmentEffect(bonus.effect);
-   active.push({set:s.name,count:s.pieces.size,...bonus,...result});
+   active.push({set:s.name,count,...bonus,...result});
    if(result.status==='passive')for(const [k,v] of Object.entries(result.stats))add(stats,k,v);
   }
  }
