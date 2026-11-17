@@ -22,6 +22,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(build.level<rank.learnLevel)throw new Error('Rank unavailable at character level');
  if(snap.level!==60)throw new Error('Only level-60 reference coefficients supported');
  if(rank.record.conflicts.length&&policy?.acceptSourceConflict!==true)throw new Error('Explicit source conflict acknowledgement required');
+ if(rank.referenceAvailableFromPhase&&policy?.phase<rank.referenceAvailableFromPhase&&policy?.allowFutureRank!==true)throw new Error('Reference book rank not available in selected phase');
  const provenance=string(policy?.provenance,'ruleset provenance');
  const kind=rank.mode,abilityName=ROTATION_REGISTRY[build.classId].abilityRegistry[rank.abilityId]?.name;
  if(!abilityName)throw new Error('Unregistered rank');

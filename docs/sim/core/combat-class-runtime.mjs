@@ -138,6 +138,7 @@ export function createExplicitClassEncounter(input){
   const castMs=int(a.castMs,'cast time'),gcdMs=int(a.gcdMs,'GCD'),cooldownMs=int(a.cooldownMs,'ability cooldown');
   if(a.kind==='channel'){int(a.tickMs,'channel interval',1);bool(a.tickAtEnd,'final channel tick');}
   if(a.kind==='queued-melee')id(a.swingId,'swing identity');
+  if(a.refreshGate){choose(a.refreshGate.kind,['buff','debuff'],'refresh gate kind');id(a.refreshGate.name,'refresh aura name');int(a.refreshGate.remainingMs,'refresh threshold');}
   const min=finite(a.minRangeYards,'minimum range',0),max=finite(a.maxRangeYards,'maximum range',min);
   if(a.position!==null)choose(a.position,['front','behind','side','self'],'position restriction');
   if(a.comboRequired!==null){if(!sc.comboPoints)throw new Error('Combo requirement without bank');int(a.comboRequired,'combo requirement',1);}
@@ -146,7 +147,7 @@ export function createExplicitClassEncounter(input){
   const apply=(e,t)=>executeEffects(e,a.actorId,t,ability.name,a.effects,ctx.stats,sc.targetIds,0,classState);
   const cooldowns=[...(gcdMs?[{id:'gcd',duration:gcdMs}]:[]),...(cooldownMs?[{id:a.abilityId,duration:cooldownMs}]:[])];
   if(a.sharedCooldown!==null){id(a.sharedCooldown?.id,'shared cooldown id');int(a.sharedCooldown?.durationMs,'shared cooldown duration',1);cooldowns.push({id:'shared:'+a.sharedCooldown.id,duration:a.sharedCooldown.durationMs});}
-  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:apply}),rank,spellId};
+  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired)&&(!a.refreshGate||(e.auras.frame(t,a.refreshGate.kind,a.actorId)[a.refreshGate.name]?.remaining??0)*1000<=a.refreshGate.remainingMs);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:apply}),rank,spellId};
  });
  const knownAbilities=Object.fromEntries(sc.actions.map(a=>[profile.abilityRegistry[a.abilityId].name,a.rank]));
  const e=new CombatEncounter({durationMs:sc.durationMs,decisionIntervalMs:sc.decisionIntervalMs,seed:sc.seed,pools:sc.pools,units:sc.units,playerId:sc.playerId,primaryId:sc.primaryId,targetIds:sc.targetIds,allyIds:sc.allyIds,petId:sc.petId??null,comboPoints:sc.comboPoints??null,rows:sc.rows,actions,manageAuras:true,context:()=>({...classState,knownAbilities,abilityRanks:knownAbilities})});
