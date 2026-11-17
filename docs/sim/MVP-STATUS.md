@@ -2,7 +2,7 @@
 Development branch only; production remains gated. The planner's public Run Simulation stays disabled.
 
 ## Research execution
-38 executable rank definitions across nine classes, 27 distinct abilities, including 19 external-only rank definitions. The actual build compiler uses unrounded sheet values, rank identity and explicit rules. The opt-in reference lab runs one learned spell using a worker; the CLI and adapter run explicitly configured supported rotations. Unsupported actions are rejected, not removed. The phase filter prevents known AQ-book ranks from being selected during BWL. Reference-only phase and learnability still require confirmation on OctoWoW.
+54 executable rank definitions across nine classes, 42 distinct abilities, including 26 external-only rank definitions. The actual build compiler uses unrounded sheet values, rank identity and explicit rules. The opt-in reference lab runs one learned spell using a worker; the CLI, adapter and configured-rotation lab run explicitly configured supported rotations. Unsupported actions are rejected, not removed. The phase filter prevents known AQ-book ranks from being selected during BWL. Reference-only phase and learnability still require confirmation on OctoWoW.
 
 External source provenance is attached to each rank. ClassicDB healing rows and a pinned WoWSims Turtle commit are reference values, not live OctoWoW evidence. The Fireball, sting, Backstab and Eviscerate conflicts must be acknowledged. Unknown coefficients and observed costs must be supplied rather than silently imputed.
 
@@ -17,6 +17,6 @@ The JSON contains build, exact gearById, learnedSpellIds, rankByAbility, policie
 - Complete rank/effect implementation for all registered abilities and actual learnability.
 - Live capture verification for cast, damage, resource, hit, crit, cooldown, tick timing and procs.
 - Verified missing race/class and companion base data.
-- Dynamic class talents, weapon imbues, poisons, pet abilities, trinket swaps, item/set procs, raid aura behaviour, resource regeneration, absorb/tank mechanics and resistances still require complete implementation and verification.
+- Dynamic class talents, weapon imbues, poisons, pet abilities, trinket swaps, item/set procs, raid aura behaviour, complete tank mechanics, automatic resource regeneration and resistances still require implementation and verification. Scripted incoming damage, shields, dynamic swing haste, chained targets, ammunition, combo bleeds, health conversion and periodic consumption now have research runtime support.
 - Browser integration is branch-only and needs real-browser smoke testing.
 No claim of full simulator completion or validated DPS.
