@@ -57,7 +57,8 @@ export function resolveTalentEffects(build,talentData,gear={}){
     output.details.push({name:talent.name,stat:rule.stat,scope:rule.scope||rule.source||'',status:'inactive',note:rule.note||'Condition is not active'});
     continue;
    }
-   const optionFactor=rule.perOption?build.classOptions?.[rule.perOption]:1;
+   const scenarioValue=rule.perOption?build.classOptions?.[rule.perOption]:1;
+   const optionFactor=Number.isFinite(rule.maxOption)?Math.min(scenarioValue,rule.maxOption):scenarioValue;
    if(!Number.isFinite(optionFactor)||optionFactor<0||optionFactor===0){output.details.push({name:talent.name,stat:rule.stat,status:'inactive',note:'Requires an explicitly selected applicable scenario'});continue;}
    const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1)*optionFactor;
    if(rule.kind==='global')add(output.flat,rule.stat,amount);
