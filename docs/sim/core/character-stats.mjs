@@ -2,7 +2,7 @@ import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
-import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
+import {ENCHANTS,enchantAvailable} from './equipment-options.mjs?v=20261117-picker2';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
@@ -37,6 +37,7 @@ export function passiveItemStats(item){
  return result;
 }
 function enchantStats(id){
+ if(!enchantAvailable(ENCHANTS.find(e=>e.id===id)))return {};
  const scope=ENCHANTS.find(e=>e.id===id)?.rangedEffects;if(scope)return {...scope};
  const name=ENCHANTS.find(e=>e.id===id)?.name||'',result={};
  // School-specific power must not inflate general Spell Power.

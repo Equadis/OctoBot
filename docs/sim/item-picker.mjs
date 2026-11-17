@@ -1,8 +1,8 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
-import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-requirements1';
-import {SLOTS} from './core/builds.mjs?v=20261113-swaps1';
+import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
+import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261113-swaps1';
+import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker2';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
@@ -18,7 +18,7 @@ const shortStats=item=>{
 
 export function itemPicker({getBuild,onEquip,onClear}) {
  const $=id=>document.getElementById(id);
- let items=null,details={},references={},referenceSelection=false,slot=null,loading=null,selected=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),selectedDetail=null;
+ let items=null,details={},references={},slot=null,loading=null,previewed=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),equipVersion=0,session=0;
  let selectionContext={};
  const selectionBuild=()=>selectionContext.getBuild?.()||getBuild();
  const CACHE_KEY='octosim.item-details.v2',pending=new Map();
@@ -46,8 +46,9 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  }
  function error(message=''){$('item-error').textContent=message;}
  function updateEnchants(){
-  const current=$('item-enchant').value;
-  const options=enchantsForSlot(slot,selectionBuild().classId,selected,selectionBuild().level);
+  const build=selectionBuild(), equipped=build.gear[slot], item=equipped&&items?.find(item=>item.id===equipped.id);
+  const current=equipped?.enchantId||'';
+  const options=item?enchantsForSlot(slot,build.classId,item,build.level):[];
   const empty=node('option','— None —');empty.value='';$('item-enchant').replaceChildren(empty);
   for(const enchant of options){const option=node('option',enchant.name);option.value=enchant.id;$('item-enchant').append(option);}
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
@@ -67,63 +68,74 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  }
  async function previewItem(item){
   if(!item)return;
-  clearTimeout(previewTimer);const version=++previewVersion;selected=item;selectedDetail=null;referenceSelection=false;error();$('select-item').textContent='Select';$('select-item').disabled=true;
-  for(const [id,row] of rowElements){const active=id===item.id;row.classList.toggle('previewed',active);row.setAttribute('aria-selected',String(active));row.tabIndex=active?0:-1;}
-  updateEnchants();paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
+  clearTimeout(previewTimer);const version=++previewVersion;previewed=item;error();
+  for(const [id,row] of rowElements){const active=id===item.id;row.classList.toggle('previewed',active);row.setAttribute('aria-selected',String(selectionBuild().gear[slot]?.id===id));row.tabIndex=active?0:-1;}
+  paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
   try{
    const source=await detail(item);if(version!==previewVersion || !$('item-dialog').open)return;
-   const reason=detailRestriction(item,source,selectionBuild(),slot);selectedDetail=reason?null:source;
-   paintPreview(item,source);$('select-item').disabled=Boolean(reason);if(reason)error(reason);
+   const reason=detailRestriction(item,source,selectionBuild(),slot); 
+   paintPreview(item,source);if(reason)error(reason);
    const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
-  }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return;referenceSelection=false;$('select-item').disabled=true;$('select-item').textContent='Select';paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
+  }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return; paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
   if(!items)return;
+  clearTimeout(previewTimer);++previewVersion;
   const build=selectionBuild();
   candidates=sortEquipment(filterItems(items,{build,slot,search:$('item-reference').value,quality:$('item-quality').value}).filter(item=>(!details[item.id] || !detailRestriction(item,details[item.id],listingBuild(build,item,slot),slot)) && (details[item.id] || !references[item.id]?.classes || references[item.id].classes.toLowerCase().split(/[^a-z]+/).includes(build.classId))),$('item-sort').value,direction,details,references);
   $('item-count').textContent=`${candidates.length.toLocaleString()} ${candidates.length===1?'item':'items'}`;
   const fragment=document.createDocumentFragment();rowElements=new Map();
   for(const [index,item] of candidates.entries()){
-   const row=node('div',undefined,'item-row');row.setAttribute('role','option');row.setAttribute('aria-selected','false');row.tabIndex=-1;
+   const row=node('div',undefined,'item-row');row.setAttribute('role','option');row.setAttribute('aria-selected',String(build.gear[slot]?.id===item.id));row.tabIndex=-1;
    row.classList.toggle('equipped',build.gear[slot]?.id===item.id);
    const image=node('img');image.src=iconUrl(item.icon);image.alt='';image.loading='lazy';
    const copy=node('div',undefined,'item-row-copy'),name=node('div',undefined,'item-row-name');name.append(node('span',item.name,`q${item.quality}`),node('span',`[${item.level || 0}]`,'item-level'));
    copy.append(name,node('div',shortStats({...item,...references[item.id],...details[item.id]}),'item-description'));
    const link=node('a','Octo DB','item-db-link');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',event=>event.stopPropagation());
    row.append(image,copy,link);
-   row.addEventListener('click',()=>previewItem(item));
-   row.addEventListener('mouseenter',()=>{clearTimeout(previewTimer);previewTimer=setTimeout(()=>{if(selected?.id!==item.id)previewItem(item);},220);});
+   row.addEventListener('click',()=>selectItem(item));
+   row.addEventListener('mouseenter',()=>{clearTimeout(previewTimer);previewTimer=setTimeout(()=>{if(previewed?.id!==item.id)previewItem(item);},220);});
    row.addEventListener('mouseleave',()=>clearTimeout(previewTimer));
-   row.addEventListener('focus',()=>{if(selected?.id!==item.id)previewItem(item);});
+   row.addEventListener('focus',()=>{if(previewed?.id!==item.id)previewItem(item);});
    row.addEventListener('keydown',event=>{
     if(event.target!==row)return;
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?candidates.length-1:Math.max(0,Math.min(candidates.length-1,index+(event.key==='ArrowDown'?1:-1)));rowElements.get(candidates[next].id)?.focus();}
-    else if(event.key==='Enter'){event.preventDefault();selectItem();}
+    else if(event.key==='Enter'||event.key===' '){event.preventDefault();selectItem(item);}
    });
    rowElements.set(item.id,row);fragment.append(row);
   }
   $('item-results').replaceChildren(fragment);$('item-results').scrollTop=0;
-  const item=candidates.find(item=>item.id===selected?.id) || candidates.find(item=>item.id===build.gear[slot]?.id) || candidates[0];
+  const item=candidates.find(item=>item.id===previewed?.id) || candidates.find(item=>item.id===build.gear[slot]?.id) || candidates[0];
   if(item)previewItem(item);
-  else{++previewVersion;selected=null;selectedDetail=null;$('select-item').disabled=true;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
+  else{++previewVersion;previewed=null;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
  }
- function selectItem(){
-  if(!selected || !selectedDetail)return;
-  const reason=selectedDetail?detailRestriction(selected,selectedDetail,selectionBuild(),slot):listingRestriction(selected,selectionBuild(),slot);if(reason){error(reason);return;}
-  const enchantId=$('item-enchant').value;
-  if(enchantId && !enchantsForSlot(slot,selectionBuild().classId,selected,selectionBuild().level).some(enchant=>enchant.id===enchantId)){error('This enchant cannot be used in this slot.');return;}
-  (selectionContext.onEquip||onEquip)(slot,{id:selected.id,label:(selectedDetail?.name||selected.name).slice(0,80),enchantId,twoHanded:(selectedDetail?.slot||selected.slot)===17});$('item-dialog').close();
+ async function selectItem(item,explicitEnchant,close=true){
+  if(!item||!$('item-dialog').open)return;
+  clearTimeout(previewTimer);
+  const request=++equipVersion, activeSession=session, targetSlot=slot, context=selectionContext;
+  const current=()=>request===equipVersion&&activeSession===session&&$('item-dialog').open;
+  try{
+   const source=await detail(item);if(!current())return;
+   const build=selectionBuild(), reason=detailRestriction(item,source,build,targetSlot);
+   if(reason){error(reason);updateEnchants();return;}
+   const options=enchantsForSlot(targetSlot,build.classId,item,build.level);
+   const wanted=explicitEnchant===undefined?build.gear[targetSlot]?.enchantId:explicitEnchant;
+   const enchantId=options.some(enchant=>enchant.id===wanted)?wanted:'';
+   if(explicitEnchant&&enchantId!==explicitEnchant){error('This enchant cannot be used in this slot.');updateEnchants();return;}
+   (context.onEquip||onEquip)(targetSlot,{id:item.id,label:(source.name||item.name).slice(0,80),enchantId,twoHanded:(source.slot||item.slot)===17});
+   if(close)$('item-dialog').close();else{updateEnchants();error();}
+  }catch(failure){if(current()){error('Official item restrictions could not be verified. '+failure.message);updateEnchants();}}
  }
  $('item-form').addEventListener('submit',event=>{event.preventDefault();clearTimeout(searchTimer);search();});
  let searchTimer;$('item-reference').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(search,180);});
  for(const id of ['item-quality','item-sort'])$(id).addEventListener('change',search);
  $('item-direction').addEventListener('click',()=>{direction=direction==='desc'?'asc':'desc';$('item-direction').textContent=direction==='desc'?'Descending ▼':'Ascending ▲';search();});
- $('select-item').addEventListener('click',selectItem);
+ $('item-enchant').addEventListener('change',()=>{const equipped=selectionBuild().gear[slot],item=equipped&&items?.find(item=>item.id===equipped.id);if(item)selectItem(item,$('item-enchant').value,false);});
  $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);$('item-dialog').close();});
- $('item-dialog').addEventListener('close',()=>{++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);});
+ $('item-dialog').addEventListener('close',()=>{if($('item-dialog').open)return;++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);});
  return {
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;selected=null;selectedDetail=null;$('item-reference').value='';$('item-dialog-heading').textContent=options.heading||SLOTS[slot];error();$('select-item').disabled=true;$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('clear-item').disabled=!selectionBuild().gear[slot];$('item-dialog').showModal();try{await load();search();const enchantId=selectionBuild().gear[slot]?.enchantId;if(enchantId && [...$('item-enchant').options].some(option=>option.value===enchantId))$('item-enchant').value=enchantId;}catch(failure){error(failure.message);}},
+  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';$('item-dialog-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];$('item-dialog').showModal();try{await load();if(activeSession!==session||!$('item-dialog').open)return;updateEnchants();search();}catch(failure){if(activeSession===session&&$('item-dialog').open)error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
   async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},
