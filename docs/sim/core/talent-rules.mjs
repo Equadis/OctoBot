@@ -80,6 +80,12 @@ export const TALENT_RULES={
       "note": "Outdoor Cat Form movement speed is not a permanent combat stat"
     }
   ],
+  "274": [
+    {
+      "kind": "pending",
+      "note": "Feral Charge is an active charge/interrupt/immobilise ability with range and target context"
+    }
+  ],
   "275": [
     {
       "kind": "global",
@@ -91,6 +97,12 @@ export const TALENT_RULES={
           "Bear"
         ]
       }
+    }
+  ],
+  "276": [
+    {
+      "kind": "pending",
+      "note": "Primal Fury generates Rage after Bear critical hits or extra combo points after Cat critical builders"
     }
   ],
   "277": [
@@ -144,6 +156,18 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "280": [
+    {
+      "kind": "pending",
+      "note": "Ancient Brutality triggers Rage on Bear dodge and modifies Cat periodic-bleed mechanics; event and aura modelling pending"
+    }
+  ],
+  "281": [
+    {
+      "kind": "pending",
+      "note": "Berserk is a temporary form-specific on-use buff; Cat Energy regeneration or Bear maximum health must not be permanently inflated"
+    }
+  ],
   "282": [
     {
       "kind": "percent",
@@ -165,6 +189,12 @@ export const TALENT_RULES={
       "when": {
         "form": "Cat"
       }
+    }
+  ],
+  "283": [
+    {
+      "kind": "pending",
+      "note": "Carnage returns ability damage as healing and conditionally refreshes bleeds from Ferocious Bite; needs target and attack events"
     }
   ],
   "284": [
@@ -217,11 +247,25 @@ export const TALENT_RULES={
       "note": "Only the selected wild buff is enhanced; unrelated buffs are unchanged"
     }
   ],
+  "286": [
+    {
+      "kind": "pending",
+      "note": "Furor gains Rage/Energy on changing to Bear/Cat forms, rather than adding a passive resource cap"
+    }
+  ],
   "287": [
     {
       "kind": "scoped",
       "scope": "Healing Touch",
       "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "288": [
+    {
+      "kind": "scoped",
+      "scope": "Healing Touch/Regrowth/Tranquility",
+      "stat": "pushbackAvoidancePct",
       "param": 0
     }
   ],
@@ -231,6 +275,12 @@ export const TALENT_RULES={
       "scope": "Spells",
       "stat": "threatReductionPct",
       "param": 0
+    }
+  ],
+  "290": [
+    {
+      "kind": "pending",
+      "note": "Swiftmend consumes existing Rejuvenation/Regrowth on the chosen target; needs a target HoT model"
     }
   ],
   "291": [
@@ -263,6 +313,18 @@ export const TALENT_RULES={
       "scope": "Healing Touch/Regrowth/Tranquility",
       "stat": "manaCostReductionPct",
       "param": 0
+    }
+  ],
+  "295": [
+    {
+      "kind": "pending",
+      "note": "Aessina's Bloom requires a target with Regrowth/Rejuvenation and grants a temporary Healing Touch cast-cost effect"
+    }
+  ],
+  "296": [
+    {
+      "kind": "pending",
+      "note": "Nature's Swiftness is an on-use next-Nature-spell instant cast"
     }
   ],
   "297": [
@@ -309,6 +371,32 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "302": [
+    {
+      "kind": "pending",
+      "note": "Nature's Grasp is an outdoor active one-charge reactive root; requires incoming attack and outdoor context"
+    }
+  ],
+  "303": [
+    {
+      "kind": "pending",
+      "note": "Improved Nature's Grasp increases chance of root application from active Nature's Grasp charges, not passive dodge"
+    }
+  ],
+  "304": [
+    {
+      "kind": "pending",
+      "note": "Sylvan Blessing triggers full while-casting mana regeneration only after killing an eligible target"
+    }
+  ],
+  "305": [
+    {
+      "kind": "scoped",
+      "scope": "Balance spell casting",
+      "stat": "pushbackAvoidancePct",
+      "param": 0
+    }
+  ],
   "306": [
     {
       "kind": "spell",
@@ -351,6 +439,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "310": [
+    {
+      "kind": "pending",
+      "note": "Omen of Clarity triggers Clearcasting from melee hits/spell casts and consumes a later ability cost"
+    }
+  ],
   "311": [
     {
       "kind": "scoped",
@@ -375,10 +469,22 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "314": [
+    {
+      "kind": "pending",
+      "note": "Owlkin Frenzy can trigger only after taking damage in Moonkin form; mana regeneration and pushback aura require incoming events"
+    }
+  ],
   "315": [
     {
       "kind": "pending",
       "note": "The Moonkin form armour multiplier is implemented by the existing form calculator. Remaining spell mana/damage effects need modelling."
+    }
+  ],
+  "316": [
+    {
+      "kind": "pending",
+      "note": "Nature's Grace shortens only the next cast following a spell critical"
     }
   ],
   "317": [
@@ -393,6 +499,12 @@ export const TALENT_RULES={
       "note": "Starfire stun chance requires hit/event resolution"
     }
   ],
+  "318": [
+    {
+      "kind": "pending",
+      "note": "Balance of All Things refunds mana only for Wrath against Insect Swarm targets and raises Starfire crit only against Moonfire targets"
+    }
+  ],
   "319": [
     {
       "kind": "scoped",
@@ -405,6 +517,12 @@ export const TALENT_RULES={
       "scope": "Hurricane target slow",
       "stat": "attackSpeedReductionPct",
       "param": 1
+    }
+  ],
+  "320": [
+    {
+      "kind": "pending",
+      "note": "Eclipse is two triggered Arcane/Nature damage auras from Wrath/Starfire; proc and spell-family modelling pending"
     }
   ]
 };
@@ -439,7 +557,7 @@ export const TALENT_COVERAGE={
   },
   "274": {
     "status": "proc-or-conditional",
-    "note": "Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec."
+    "note": "Feral Charge is an active charge/interrupt/immobilise ability with range and target context"
   },
   "275": {
     "status": "sheet",
@@ -447,7 +565,7 @@ export const TALENT_COVERAGE={
   },
   "276": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 100% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form and your critical strikes from Cat Form abilities that "
+    "note": "Primal Fury generates Rage after Bear critical hits or extra combo points after Cat critical builders"
   },
   "277": {
     "status": "partial",
@@ -463,11 +581,11 @@ export const TALENT_COVERAGE={
   },
   "280": {
     "status": "proc-or-conditional",
-    "note": "Dodging an attack while in Bear or Dire Bear Form imbues you with the spirit of the Ancients, generating 4 Rage per second for 5 sec. This effect can only occur once every 9 s"
+    "note": "Ancient Brutality triggers Rage on Bear dodge and modifies Cat periodic-bleed mechanics; event and aura modelling pending"
   },
   "281": {
     "status": "proc-or-conditional",
-    "note": "Removes all Fear effects and increases your energy regeneration rate by 100% while in Cat form, and increases your total health by 20% while in Bear form. After the effect end"
+    "note": "Berserk is a temporary form-specific on-use buff; Cat Energy regeneration or Bear maximum health must not be permanently inflated"
   },
   "282": {
     "status": "sheet",
@@ -475,7 +593,7 @@ export const TALENT_COVERAGE={
   },
   "283": {
     "status": "proc-or-conditional",
-    "note": "Your Maul, Swipe, and Savage Bite abilities return 10% of their damage as healing to you. In addition, gives your Ferocious Bite a 20% chance per combo point spent to refresh "
+    "note": "Carnage returns ability damage as healing and conditionally refreshes bleeds from Ferocious Bite; needs target and attack events"
   },
   "284": {
     "status": "partial",
@@ -487,23 +605,23 @@ export const TALENT_COVERAGE={
   },
   "286": {
     "status": "proc-or-conditional",
-    "note": "Gives you 100% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form."
+    "note": "Furor gains Rage/Energy on changing to Bear/Cat forms, rather than adding a passive resource cap"
   },
   "287": {
     "status": "partial",
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "288": {
-    "status": "proc-or-conditional",
-    "note": "Gives you a 70% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth, and Tranquility spells."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "289": {
     "status": "partial",
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "290": {
-    "status": "active-or-non-stat",
-    "note": "Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation or 18 sec. of Regrowth."
+    "status": "proc-or-conditional",
+    "note": "Swiftmend consumes existing Rejuvenation/Regrowth on the chosen target; needs a target HoT model"
   },
   "291": {
     "status": "partial",
@@ -522,12 +640,12 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "295": {
-    "status": "ability-specific",
-    "note": "Healing a target affected by Regrowth or Rejuvenation with your Healing Touch spells reduces the casting time of your next Healing Touch spell by 0.30 sec and refunds 10% of i"
+    "status": "proc-or-conditional",
+    "note": "Aessina's Bloom requires a target with Regrowth/Rejuvenation and grants a temporary Healing Touch cast-cost effect"
   },
   "296": {
     "status": "proc-or-conditional",
-    "note": "When activated, your next Nature spell becomes an instant cast spell."
+    "note": "Nature's Swiftness is an on-use next-Nature-spell instant cast"
   },
   "297": {
     "status": "partial",
@@ -551,19 +669,19 @@ export const TALENT_COVERAGE={
   },
   "302": {
     "status": "proc-or-conditional",
-    "note": "While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1). Only useable outdoors. 1 charge. Lasts 45 sec."
+    "note": "Nature's Grasp is an outdoor active one-charge reactive root; requires incoming attack and outdoor context"
   },
   "303": {
     "status": "proc-or-conditional",
-    "note": "Increases the chance for your Nature's Grasp to entangle an enemy by 65%."
+    "note": "Improved Nature's Grasp increases chance of root application from active Nature's Grasp charges, not passive dodge"
   },
   "304": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 100% chance after killing a target that yields experience or honor to allow your Mana to regenerate at a 100% rate while casting. Lasts 15 sec."
+    "note": "Sylvan Blessing triggers full while-casting mana regeneration only after killing an eligible target"
   },
   "305": {
-    "status": "proc-or-conditional",
-    "note": "Gives you a 70% chance to avoid interruption caused by damage while casting your Balance spells."
+    "status": "partial",
+    "note": "Scoped rank data; exact combat calculation pending"
   },
   "306": {
     "status": "partial",
@@ -583,7 +701,7 @@ export const TALENT_COVERAGE={
   },
   "310": {
     "status": "proc-or-conditional",
-    "note": "Imbues the Druid with natural energy. Each of the Druid's melee attacks or offensive spell casts has a chance of causing the caster to enter a Clearcasting state. The Clearcas"
+    "note": "Omen of Clarity triggers Clearcasting from melee hits/spell casts and consumes a later ability cost"
   },
   "311": {
     "status": "partial",
@@ -599,15 +717,15 @@ export const TALENT_COVERAGE={
   },
   "314": {
     "status": "proc-or-conditional",
-    "note": "Damage taken while in Moonkin Form has a 10% chance to enrage you, granting a 30% chance to avoid interruption caused by damage while casting and regenerating 1% of your maxim"
+    "note": "Owlkin Frenzy can trigger only after taking damage in Moonkin form; mana regeneration and pushback aura require incoming events"
   },
   "315": {
     "status": "partial",
     "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "316": {
-    "status": "ability-specific",
-    "note": "All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec."
+    "status": "proc-or-conditional",
+    "note": "Nature's Grace shortens only the next cast following a spell critical"
   },
   "317": {
     "status": "partial",
@@ -615,7 +733,7 @@ export const TALENT_COVERAGE={
   },
   "318": {
     "status": "proc-or-conditional",
-    "note": "Damaging a target afflicted by Insect Swarm with Wrath refunds 30% of its mana cost. Starfire has a 9% increased chance to critically strike against targets affected by Moonfi"
+    "note": "Balance of All Things refunds mana only for Wrath against Insect Swarm targets and raises Starfire crit only against Moonfire targets"
   },
   "319": {
     "status": "partial",
@@ -623,6 +741,6 @@ export const TALENT_COVERAGE={
   },
   "320": {
     "status": "proc-or-conditional",
-    "note": "Aligns natural and astral energies. Damage from Wrath has a 40% chance to grant Arcane Eclipse, increasing Arcane damage dealt. Damage from Starfire has a 60% chance to grant "
+    "note": "Eclipse is two triggered Arcane/Nature damage auras from Wrath/Starfire; proc and spell-family modelling pending"
   }
 };
