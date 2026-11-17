@@ -6,7 +6,10 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Backstab/Garrote/Ambush from behind",
       "stat": "damagePct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "attackPosition": "Behind"
+      }
     }
   ],
   "111": [
@@ -25,10 +28,14 @@ export const TALENT_RULES={
   ],
   "113": [
     {
-      "kind": "spell",
+      "kind": "scoped",
       "scope": "Backstab",
       "stat": "crit",
       "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Backstab also has a chance to add a combo point; no proc/event model"
     }
   ],
   "114": [
@@ -172,7 +179,15 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Humanoid/Giant/Beast/Dragonkin targets",
       "stat": "damagePct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "targetCreature": [
+          "Humanoid",
+          "Giant",
+          "Beast",
+          "Dragonkin"
+        ]
+      }
     }
   ],
   "133": [
@@ -317,10 +332,14 @@ export const TALENT_RULES={
   ],
   "149": [
     {
-      "kind": "spell",
+      "kind": "scoped",
       "scope": "Ambush",
       "stat": "crit",
       "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Noncritical Ambush refunds Energy; no event model"
     }
   ],
   "150": [
