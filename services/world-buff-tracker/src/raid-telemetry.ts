@@ -68,6 +68,7 @@ export function sessionWire(s: RaidSessionSnapshot): Record<string, unknown> {
     ...(s.clearSource !== undefined ? { clearSource: s.clearSource } : {}),
     trusted: s.trusted,
     resumed: s.resumed,
+    ...(s.resumedAt !== undefined ? { resumedAt: iso(s.resumedAt) } : {}),
   };
 }
 

@@ -53,6 +53,7 @@ export interface RaidSessionSnapshot {
   readonly trusted: boolean;
   /** The session resumed after a wipe read as a clear. */
   readonly resumed: boolean;
+  readonly resumedAt?: number;
 }
 
 /** Zone activity that could not be resolved into separate sessions. Never a confirmed raid. */

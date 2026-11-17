@@ -119,6 +119,7 @@ interface LiveSession {
   players: number;
   confidence: SessionConfidence;
   resumed: boolean;
+  resumedAt?: number;
   /** Evidence quality was compromised during its life (an ambiguous overlap was observed). */
   tainted: boolean;
   guild: ReturnType<typeof classifyGuilds>;
@@ -266,7 +267,7 @@ export class RaidTracker {
         const [revived] = this.#ended.splice(back, 1);
         if (revived) {
           const { endedAt: _e, confirmedAt: _a, endReason: _r, clearSource: _c, ...live } = revived;
-          slot.live = { ...live, resumed: true };
+          slot.live = { ...live, resumed: true, resumedAt: at };
         }
       }
     }
@@ -514,6 +515,7 @@ export class RaidTracker {
         guild: s.guild,
         trusted,
         resumed: s.resumed,
+        ...(s.resumedAt !== undefined ? { resumedAt: s.resumedAt } : {}),
         ...(ended !== undefined ? { endedAt: ended.endedAt, confirmedAt: ended.confirmedAt, endReason: ended.endReason, clearSource: ended.clearSource } : {}),
       };
     };

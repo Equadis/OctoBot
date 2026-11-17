@@ -120,7 +120,7 @@ async function darkmoonSummary(env,realm){
 async function summary(env,realm){
   // Restrict scans by (realm,type,id) index. A successful who can supply population even if
   // the custom `.server info` format has not yet been confirmed by a live capture.
-  const [populationRows,raidRows,buffRows,sessionRows,snapshotRows,endedRows,healthRows]=await Promise.all([
+  const [populationRows,raidRows,buffRows,sessionRows,snapshotRows,endedRows,healthRows,revisionRows]=await Promise.all([
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type IN ('server_info','raid_who') ORDER BY id DESC LIMIT 80").bind(realm).all(),
     env.DB.prepare("SELECT type,account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_who' ORDER BY id DESC LIMIT 50").bind(realm).all(),
     env.DB.prepare("SELECT id,type,account,role,observed_at,received_at,payload_json FROM metric_events WHERE realm=? AND type='world_buff_drop' ORDER BY id DESC LIMIT 200").bind(realm).all(),
@@ -128,6 +128,7 @@ async function summary(env,realm){
     env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_sessions' ORDER BY id DESC LIMIT 300").bind(realm).all(),
     env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_session_ended' ORDER BY id DESC LIMIT 300").bind(realm).all(),
     env.DB.prepare("SELECT account,role,observed_at,payload_json FROM metric_events WHERE realm=? AND type='listener_health' ORDER BY id DESC LIMIT 12").bind(realm).all(),
+    env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='raid_session_revision' ORDER BY id DESC LIMIT 1000").bind(realm).all(),
   ]);
   const populationEvent=populationRows.results.map(decode).find(x=>isFresh(x.observed_at,180) && Number.isInteger(x.type==="server_info"?x.payload.population:x.payload.serverWhoOnline));
   const population=populationEvent?{
@@ -168,7 +169,7 @@ async function summary(env,realm){
     const snapshot=latestSnapshots(snapshotRows.results,now)[zone]||null;
     if(snapshot){
       // The tracker's own lifecycle is authoritative. Never fall back to the merged headcount estimate once it has reported.
-      const reconciled=endedEvents(endedRows.results,zone,snapshot);
+      const reconciled=endedEvents(endedRows.results,zone,snapshot,revisionRows.results);
       const authLearned=learnAuthoritative(reconciled,raid);
       const auth=buildAuthoritative({snapshot,endedRows:reconciled,learned:authLearned,raid,now});
       head.authoritative=auth;head.sessions=auth.sessions;
@@ -219,7 +220,16 @@ export default {
           if(old&&old.eventId===clean.eventId)return json({ok:true,duplicate:true},200,request);
           if(e.type==="raid_sessions"&&old&&old.zone===clean.zone&&typeof old.seq==="number"&&old.seq>=clean.seq)return json({ok:true,superseded:true},409,request);
         }
-        await env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,JSON.stringify(clean)).run();
+        const insert=env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) VALUES (?,?,?,?,?,?)").bind(e.type,e.realm,e.account,e.role,e.time,JSON.stringify(clean));
+        // Snapshot and lifecycle revisions commit in one D1 transaction. The internal event type is
+        // not accepted from external clients. Repeated snapshots do not duplicate revisions.
+        const revisions=e.type==="raid_sessions"?clean.sessions.filter(s=>s.status==="ended"||s.resumed===true).map(s=>{
+          const revision=s.status==="ended"?(s.confirmedAt||s.endedAt):(s.resumedAt||s.lastConfirmedAt);
+          const eventId=[clean.zone,s.key,s.status==="ended"?"end":"resume",revision].join("|");
+          const payload={schema:clean.schema,zone:clean.zone,eventId,session:s,...(s.status==="ended"?{durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)}:{})};
+          return env.DB.prepare("INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM metric_events WHERE realm=? AND type='raid_session_revision' AND json_extract(payload_json,'$.eventId')=?)").bind("raid_session_revision",e.realm,e.account,e.role,e.time,JSON.stringify(payload),e.realm,eventId);
+        }):[];
+        if(revisions.length)await env.DB.batch([insert,...revisions]);else await insert.run();
         return json({ok:true},202,request);
       }
       const clean=sanitise(e);
@@ -256,7 +266,7 @@ export default {
     await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days') AND id NOT IN (SELECT MAX(id) FROM metric_events WHERE type='raid_sessions' GROUP BY realm,json_extract(payload_json,'$.zone'))").run();
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
-    await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
+    await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended','raid_session_revision') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
     await auctionCleanup(env);
   }
 };

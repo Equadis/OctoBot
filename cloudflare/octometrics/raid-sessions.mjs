@@ -51,6 +51,7 @@ export function cleanSession(s,now=Date.now()){
   if(typeof s.trusted!=='boolean'||typeof s.resumed!=='boolean')return null;
   const out={id:s.id,key:s.key,status:s.status,confidence:s.confidence,formedAt:s.formedAt,lastConfirmedAt:s.lastConfirmedAt,
     players:s.players,peak:s.peak,rosterSize:s.rosterSize,continuity:s.continuity,guild,trusted:s.trusted,resumed:s.resumed};
+  if(s.resumedAt!==undefined){const resumed=ts(s.resumedAt,now);if(resumed===null||resumed<formedAt)return null;out.resumedAt=s.resumedAt;}
   if(s.status==='ended'){
     const endedAt=ts(s.endedAt,now);
     // An end before the start is an impossible duration, never stored.
@@ -110,7 +111,7 @@ export function latestSnapshots(rows,now=Date.now()){
 }
 
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
-export function endedEvents(rows,zone,snapshot=null){
+export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   const byKey=new Map();
   for(const row of rows.map(parse)){
     const p=row.payload;
@@ -119,11 +120,25 @@ export function endedEvents(rows,zone,snapshot=null){
     const candidate={...p,confirmedAt:p.session.confirmedAt||row.observed_at||p.session.endedAt};
     if(!prev||Date.parse(candidate.session.endedAt)>Date.parse(prev.session.endedAt)||Date.parse(candidate.session.endedAt)===Date.parse(prev.session.endedAt)&&Date.parse(candidate.confirmedAt)<Date.parse(prev.confirmedAt))byKey.set(p.session.key,candidate);
   }
+  // Only snapshots create durable revisions. A resumed raid supersedes an earlier finish even
+  // after it leaves the latest snapshot; a delayed standalone end cannot undo that revision.
+  const latest=new Map();
+  for(const row of revisions.map(parse)){
+    const p=row.payload,s=p?.session;if(p?.zone!==zone||!s)continue;
+    const at=s.status==='ended'?(s.confirmedAt||s.endedAt):(s.resumedAt||s.lastConfirmedAt);
+    const old=latest.get(s.key);
+    if(!old||Date.parse(at)>Date.parse(old.at))latest.set(s.key,{p,at,row});
+  }
+  for(const [key,{p,at,row}] of latest){
+    if(p.session.status!=='ended'){byKey.delete(key);continue;}
+    const confirmedAt=p.session.confirmedAt||byKey.get(key)?.confirmedAt||row.observed_at||at;
+    byKey.set(key,{...p,confirmedAt});
+  }
   // The snapshot is the atomic current lifecycle: standalone events cannot contradict it.
   for(const s of snapshot?.payload.sessions||[]){
     if(s.status!=='ended'){byKey.delete(s.key);continue;}
     const previous=byKey.get(s.key);
-    const confirmedAt=s.confirmedAt||previous?.confirmedAt||snapshot.observedAt;
+    const confirmedAt=s.confirmedAt||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
     byKey.set(s.key,{session:s,confirmedAt,durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)});
   }
   return [...byKey.values()].filter(p=>['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));

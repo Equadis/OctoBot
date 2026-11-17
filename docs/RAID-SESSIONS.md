@@ -91,7 +91,7 @@ Two event types on the existing `/api/ingest` (role `rt`, account `bufftracker`,
 
 Validation rejects: wrong schema/zone/role/account, future or pre-2024 timestamps, `endedAt < formedAt`, a kill claimed without Chronicle, malformed guild data, more than 12 sessions. Unknown fields (including any character name) are dropped. **No character names leave the tracker**: only aggregate guild counts (top 5 per raid). The game account name is never published (`account` is the constant `bufftracker`).
 
-Retention: `raid_sessions` 3 days; `raid_session_ended` 30 days (the existing nightly cron).
+Retention: superseded `raid_sessions` snapshots 3 days; the latest snapshot for each zone and the `raid_session_ended` and internal `raid_session_revision` lifecycle records are retained. The Worker reads bounded recent history; a full historical migration/audit is still required.
 
 ### `/api/summary` additions (existing fields unchanged)
 
@@ -101,7 +101,7 @@ Per head (`heads.onyxia`, `heads.nefarian`): `sessions[]` (id, key, status, conf
 
 * ≤ 3 min since the last snapshot: fresh.
 * 3 min – 6 h: **stale** — same ids and start times, labelled STALE, estimates replaced by `stale`; nothing is called cleared.
-* > 6 h: expired — live sessions are dropped (not turned into a clear); the card falls back to aggregate activity.
+* > 6 h: expired — live sessions are dropped (not turned into a clear); the card reports stale/unavailable activity and preserves the latest valid completion; it does not fall back to aggregate completion timestamps.
 
 ### Estimates
 
@@ -159,3 +159,8 @@ node --test tests/world-info-raids.test.mjs tests/world-info-heads.test.mjs   # 
 ```
 
 `cloudflare/octometrics/tests/fixtures/tracker-wire.json` is generated from the real tracker by `raid-telemetry.test.ts` (`UPDATE_FIXTURES=1 npx vitest run src/raid-telemetry.test.ts`); the same file feeds the Worker and page tests, so tracker, Worker and website are compared on identical data.
+
+
+### Lifecycle audit branch
+
+`endedAt` remains the first sustained-departure boundary for historical duration; `confirmedAt` is the confirmation timestamp used by Last Raid Finished. Snapshot lifecycle revisions are written atomically with the snapshot using D1 batch. The old standalone end event is retained for compatibility. The current snapshot wins over a conflicting historical event; a recorded resume supersedes its original completion. Player count is the raw zone observation, not the largest faction or the sum of inferred raid groups. Both roster caps default to 40; detection thresholds remain 15/20 until calibrated against actual observations. A class-sliced view is not an atomic census; known churn makes the result incomplete. Live packet and database validation is required before deployment.

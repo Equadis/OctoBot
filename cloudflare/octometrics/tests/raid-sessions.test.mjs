@@ -204,3 +204,16 @@ test('snapshot finishes atomically, then a resumed session retracts its prior fi
   const rows=[{observed_at:e.time,payload_json:JSON.stringify(e)}];
   assert.deepEqual(endedEvents(rows,'onyxia',resumed),[]);
 });
+
+
+test('durable resume revision excludes old completion after session leaves the snapshot',async()=>{
+  const {endedEvents}=await import('../raid-sessions.mjs');
+  const r=rebase('onyxia-back-to-back'),e=r.events.find(x=>x.type==='raid_session_ended');
+  const resumedAt=iso(Date.parse(e.time)+MIN);
+  const rows=[{observed_at:e.time,payload_json:JSON.stringify(e)}];
+  const revisions=[{observed_at:resumedAt,payload_json:JSON.stringify({schema:1,zone:e.zone,session:{...e.session,status:'in_progress',resumed:true,resumedAt}})}];
+  assert.deepEqual(endedEvents(rows,e.zone,null,revisions),[]);
+  const later=iso(Date.parse(resumedAt)+MIN);
+  revisions.push({observed_at:later,payload_json:JSON.stringify({...e,session:{...e.session,endedAt:later,confirmedAt:later},durationMs:Date.parse(later)-Date.parse(e.session.formedAt)})});
+  assert.equal(endedEvents(rows,e.zone,null,revisions).length,1);
+});
