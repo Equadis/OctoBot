@@ -1,3 +1,4 @@
+import {petEngineErrors} from './pet-audit.mjs?v=20261117-pet-audit1';
 import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
 import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
@@ -13,6 +14,7 @@ export function prepareSimulation(input,talents,{lookup=()=>null,engine=null}={}
  const baseAudit=baseStatProfile(build.race,build.classId,build.level);if(!baseAudit.row||baseAudit.status==='reference-anomaly')errors.push('Base attributes for this race/class/level are missing or anomalous.');
  if(!engine||engine.classId!==build.classId||!['implemented-unverified','validated'].includes(engine.status))errors.push(`The ${build.classId} combat engine is not implemented.`);
  errors.push(...trinketSwapEngineErrors(build,engine));
+ errors.push(...petEngineErrors(build,engine,talents));
  if(build.trinketSwap?.enabled)errors.push(...equipmentErrors(postSwapBuild(build),lookup).map(e=>`Swap ${e.slot}: ${e.reason}`));
  for(const ref of Object.values(build.gear)){const enchant=ENCHANTS.find(e=>e.id===ref.enchantId);if(enchant?.rangedEffects&&!engine?.supportedEnchantIds?.includes(enchant.id))errors.push(`${enchant.name} is not implemented by the combat engine.`);}
  errors.push(...rotationEngineErrors(build,engine,{talents,lookup}));
