@@ -1,0 +1,43 @@
+import {expectedOutcome} from './combat-math.mjs';
+import {sampleAttack} from './combat-attack-tables.mjs';
+import {attemptProc,REFERENCE_PRIORITIES as P} from './combat-timeline.mjs';
+const types=['water','earth','lightning'];
+const num=(x,n,min=0,max=Infinity)=>{if(!Number.isFinite(x)||x<min||x>max)throw new Error('Explicit elemental shield '+n+' required');return x;};
+const integer=(x,n,min=0,max=Infinity)=>{if(!Number.isSafeInteger(x)||x<min||x>max)throw new Error('Explicit elemental shield '+n+' required');return x;};
+const school=['physical','arcane','fire','frost','holy','nature','shadow'];
+export function elementalShieldTemplate(rank){const kind=rank.abilityId.split(':')[1].split('-')[0];return {kind,durationMs:600000,charges:3,internalCooldownMs:null,triggerSchools:null,damageBasis:null,chance:null,amount:null,apCoefficient:null,spellPowerCoefficient:null,outcomes:kind==='water'?null:null,mitigation:kind==='lightning'?null:0,flatReduction:kind==='lightning'?null:0,threat:null,consume:'activation',...(kind==='earth'?{earthRestorePolicy:null}:{}),...(kind==='water'?{undertowPolicy:null}:{} )};}
+export function validateElementalShield(m,kind){
+ if(!m||!types.includes(kind)||m.kind!==kind)throw new Error('Explicit matching elemental shield model required');
+ integer(m.durationMs,'duration',1);integer(m.charges,'charges',1,40);integer(m.internalCooldownMs,'internal cooldown');num(m.chance,'activation chance',0,1);
+ if(!Array.isArray(m.triggerSchools)||!m.triggerSchools.length||new Set(m.triggerSchools).size!==m.triggerSchools.length||m.triggerSchools.some(x=>!school.includes(x)))throw new Error('Explicit elemental shield triggering schools required');
+ if(!['post-mitigation','effective'].includes(m.damageBasis)||!['activation','landed'].includes(m.consume))throw new Error('Explicit elemental shield damage basis and consumption required');
+ num(m.amount,'base amount');num(m.apCoefficient,'AP coefficient');num(m.spellPowerCoefficient,'spell power coefficient');num(m.mitigation,'mitigation',0,1);num(m.flatReduction,'flat reduction');
+ if(kind==='water'){if(m.outcomes!==null||m.threat!==null||m.consume!=='activation'||m.mitigation!==0||m.flatReduction!==0)throw new Error('Water Shield must return mana without invented damage, attack outcomes or threat');}
+ else {expectedOutcome({min:0,max:0,outcomes:m.outcomes});if(m.outcomes.some(o=>typeof o.landed!=='boolean'))throw new Error('Explicit elemental shield landed outcomes required');if(m.threat!==null){num(m.threat?.coefficient,'threat coefficient');num(m.threat?.flat,'flat threat');}}
+ if(kind==='earth'){if(m.mitigation!==0||m.flatReduction!==0)throw new Error('Earth Shield healing does not use enemy mitigation');integer(m.callOfEarthRank??0,'Call of Earth rank',0,2);if(m.callOfEarthRank>0&&!['landed-direct','cast-direct'].includes(m.earthRestorePolicy))throw new Error('Explicit Call of Earth trigger policy required');}
+ if(kind==='water'){integer(m.improvedWaterRank??0,'Improved Water Shield rank',0,3);integer(m.undertowRank??0,'Undertow rank',0,2);if(m.undertowRank>0&&!['consume-only','consume-and-restore-mana'].includes(m.undertowPolicy))throw new Error('Explicit Undertow maximum-charge policy required');}
+ return m;
+}
+export function compileElementalShield(build,rank,model){
+ const kind=rank.abilityId.split(':')[1].split('-')[0];let m={...model};
+ if(kind==='earth'){m.callOfEarthRank=Number(build.talents?.['228']??0);m.charges=num(model?.charges,'charges',1,40)+2*m.callOfEarthRank;}
+ if(kind==='water'){m.improvedWaterRank=Number(build.talents?.['245']??0);m.undertowRank=Number(build.talents?.['248']??0);}
+ return validateElementalShield(m,kind);
+}
+export function createElementalShieldRuntime(models,actor,stats,enemyIds,durationMs){
+ const active=e=>e.auras.active(actor,'buff').find(a=>a.ownerId===actor&&models.has(a.id));
+ const amount=(e,m)=>m.amount+m.apCoefficient*e.auras.stat(actor,'attackPower',stats.attackPower)+m.spellPowerCoefficient*e.auras.stat(actor,m.kind==='earth'?'healingPower':'nature',stats[m.kind==='earth'?'healingPower':'nature']);
+ const mana=(e,value,source)=>{if(value<=0)return;const q=e.resources.change([{resource:'mana',delta:value}]);if(!q.ok)throw new Error('Shield mana gain failed');e.recordMechanic('resource-change',{actorId:actor,source,resource:'mana',delta:value,overflow:q.overflow.mana??0});};
+ const charge=(e,a,delta)=>{if(delta<0)e.auras.consume(a,-delta);else if(a.stacks<a.maxStacks)e.auras.apply({...a,durationMs:a.expiresAt-e.timeline.now,stacks:Math.min(a.maxStacks,a.stacks+delta),stackPolicy:'replace',refreshPolicy:'preserve'});};
+ const activate=(e,id)=>{const m=models.get(id);if(!m)throw new Error('Unconfigured elemental shield');const name=m.kind[0].toUpperCase()+m.kind.slice(1)+' Shield';const a=e.auras.apply({id,name,targetId:actor,ownerId:actor,kind:'buff',durationMs:m.durationMs,maxStacks:m.charges,stacks:m.charges,stackPolicy:'replace',refreshPolicy:'refresh',exclusiveGroup:'shaman-elemental-shield',modifiers:[]});if(m.kind==='water'&&m.improvedWaterRank>0){const token=a.appliedAt;const tick=()=>{const cur=active(e);if(!cur||cur.id!==id||cur.appliedAt!==token&&!e.auras.active(actor,'buff').some(x=>x.id===id&&x.expiresAt===a.expiresAt)||cur.expiresAt!==a.expiresAt||!e.unit(actor).alive)return;mana(e,3*m.improvedWaterRank,'Improved Water Shield');if(e.timeline.now+5000<cur.expiresAt&&e.timeline.now+5000<=durationMs)e.timeline.schedule(e.timeline.now+5000,P.resource,tick);};if(e.timeline.now+5000<a.expiresAt&&e.timeline.now+5000<=durationMs)e.timeline.schedule(e.timeline.now+5000,P.resource,tick);}return a;};
+ const fire=(e,a,m,enemy,source)=>{const value=Math.max(0,amount(e,m));let landed=true;
+  if(m.kind==='water')mana(e,value,source);
+  else {const h=sampleAttack({min:value,max:value,outcomes:m.outcomes,mitigation:m.mitigation,flatReduction:m.flatReduction,random:e.random});landed=h.landed;const target=m.kind==='earth'?actor:enemy;e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:'nature',...h});if(h.landed){const threat=m.threat===null?null:{actorId:actor,...m.threat,multipliers:[],distribution:m.kind==='earth'?'split':'each'};if(m.kind==='earth'){const living=enemyIds.filter(id=>e.unit(id).alive);e.heal({targetId:actor,actorId:actor,value:h.raw,source,threat:threat&&living.length?{...threat,enemyIds:living}:null});}else if(e.unit(enemy).alive)e.damage({targetId:enemy,actorId:actor,value:h.raw,school:'nature',source,threat});}}
+  if(m.consume==='activation'||landed)charge(e,a,-1);
+ };
+ const incoming=(e,attack,d)=>{const a=active(e);if(!a||attack.targetId!==actor||!e.unit(actor).alive||!e.unit(attack.actorId).alive)return;const m=models.get(a.id);if(!m.triggerSchools.includes(attack.school)||(m.damageBasis==='effective'?d.effective:attack.amount)<=0)return;if(!attemptProc(e.resources.cooldowns,{id:'elemental-shield:'+actor+':'+a.id,chance:m.chance,internalCooldownMs:m.internalCooldownMs},e.random).triggered)return;e.recordMechanic('proc',{actorId:actor,targetId:attack.actorId,source:a.name,procId:'elemental-shield:'+a.id});fire(e,a,m,attack.actorId,a.name+' (charge)');};
+ const onAction=(e,abilityId,effects,landed)=>{const a=active(e);if(!a)return;const m=models.get(a.id);if(m.kind==='earth'&&m.callOfEarthRank>0&&effects.some(x=>x.kind==='damage'&&x.school!=='physical')&&(landed||m.earthRestorePolicy==='cast-direct'))charge(e,a,1);
+  if(m.kind==='water'&&m.undertowRank>0&&['shaman:healing-wave','shaman:lesser-healing-wave'].includes(abilityId)&&landed&&e.random()<.25*m.undertowRank){e.recordMechanic('proc',{actorId:actor,source:'Undertow',procId:'undertow'});if(a.stacks<a.maxStacks)charge(e,a,1);else {if(m.undertowPolicy==='consume-and-restore-mana')mana(e,Math.max(0,amount(e,m)),'Undertow');charge(e,a,-1);}}};
+ const manaRegen=(e,base)=>{const a=active(e),m=a&&models.get(a.id);if(m?.kind==='water'&&m.improvedWaterRank>0&&base>0)mana(e,base*[0,.01,.015,.02][m.improvedWaterRank]*a.stacks,'Improved Water Shield (regeneration)');};
+ return {activate,incoming,onAction,manaRegen};
+}
