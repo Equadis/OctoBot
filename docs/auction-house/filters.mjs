@@ -7,8 +7,22 @@ export const DEFAULTS=Object.freeze({
   min_quantity:'',stack:'',max_unit_buyout:'',max_unit_bid:'',has_buyout:false,time_left:'',owner:'',min_market_pct:'',max_market_pct:'',favourites_only:false
 });
 export const SORTS=Object.freeze([
-  ['market_pct','Most underpriced (market %)'],['name','Item name'],['unit_buyout','Unit price'],['historical_avg','Historical average'],
-  ['quantity','Available quantity'],['listings','Number of listings'],['trend_pct','Price movement'],['level','Required level']]);
+  ['market_pct','Most underpriced (market %)'],['name','Item name'],['unit_buyout','Unit price'],['stack_buyout','Stack price'],
+  ['current_bid','Current bid'],['historical_avg','Historical average'],['quantity','Available quantity'],
+  ['listings','Number of listings'],['trend_pct','Price movement'],['time_left','Time left (estimated)'],['level','Required level']]);
+// Matches the default ordering in cloudflare/octometrics/auction-query.mjs.
+export const SORT_DEFAULT_DIR=Object.freeze({name:'asc',unit_buyout:'asc',stack_buyout:'asc',current_bid:'asc',
+ historical_avg:'asc',quantity:'desc',listings:'desc',trend_pct:'asc',market_pct:'asc',time_left:'asc',level:'asc'});
+// The star is an action, not a sortable data column. Every displayed metric is sortable.
+export const COLUMN_SORTS=Object.freeze([
+  ['Item','name'],['Available','quantity'],['Listings','listings'],['Unit price','unit_buyout'],
+  ['Stack price','stack_buyout'],['Current bid','current_bid'],['Historical avg.','historical_avg'],
+  ['Market %','market_pct'],['Trend','trend_pct'],['Time left','time_left']]);
+export function nextColumnSort(current,key){
+ if(!SORT_DEFAULT_DIR[key])throw new Error('Unknown Auction House sort column');
+ const dir=current.sort===key ? (current.dir||SORT_DEFAULT_DIR[key])==='asc'?'desc':'asc' : SORT_DEFAULT_DIR[key];
+ return {sort:key,dir};
+}
 /** Fields that narrow the results (everything except sorting). */
 const NARROWING=['q','quality','item_class','item_subclass','slot','min_level','max_level','gear','exact','min_quantity','stack','max_unit_buyout','max_unit_bid','has_buyout','time_left','owner','min_market_pct','max_market_pct','favourites_only'];
 const LABELS={q:'Name',quality:'Rarity',item_class:'Category',item_subclass:'Subcategory',slot:'Slot',min_level:'Min level',max_level:'Max level',gear:'Equipment only',exact:'Exact name',
