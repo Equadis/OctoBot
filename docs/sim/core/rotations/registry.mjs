@@ -20,7 +20,7 @@ for(const [classId,legacy] of Object.entries(LEGACY_PROFILES)){
  const names=[...legacy.abilities,...extras[classId].flatMap(p=>p.rows.map(r=>r.ability))];
  const canonical=new Map();for(const name of names)if(!canonical.has(abilityKey(classId,name)))canonical.set(abilityKey(classId,name),name);
  const abilities=[...canonical.values()],abilityRegistry=Object.fromEntries(abilities.map(name=>{
-  const id=abilityKey(classId,name),fact=ABILITY_DATA[classId]?.[id]||{};
+  const id=abilityKey(classId,name),fact=ABILITY_DATA[classId]?.[id]||(id==='paladin:seal-of-wisdom'?{candidateSpells:[{id:51746,rank:'Rank 5',publishedLevel:58}],spellIds:[51746],source:'https://forge.octowow.st/database/?spell=51746',rankAvailabilityVerified:false,verification:'published-database-identity'}:{});
   return [id,{id,name,classId,spellIds:[],minLevel:null,verification:'unverified',actionKind:'unverified',...fact}];
  }));
  const legacyPresets=legacy.presets.filter(p=>p.id!=='custom').map(p=>({...structuredClone(p),legacy:true}));
