@@ -23,3 +23,49 @@ test("GM flag is packet metadata, not message text",()=>{
  assert.equal(decodeWorldPacket("guild",42n,text,body),null);assert.equal(decodeWorldPacket("world",43n,text,body),null);
  body.writeUInt32LE(0xffffffff,1);assert.equal(decodeWorldPacket("world",42n,text,body),null);
 });
+
+import {readFileSync} from "node:fs";
+import {patchCollector} from "../collector/apply-world-chat.mjs";
+import {DatabaseSync} from "node:sqlite";
+import {worldChatRoute,worldChatCleanup} from "../world-chat.mjs";
+test("safe incremental collector patch, idempotence and refusal on mismatch",()=>{
+ const patched=readFileSync(new URL("../collector/dist-metrics/metrics/index.js",import.meta.url),"utf8");
+ const original=patched.split("\n").filter(line=>!line.includes("worldChat")&&!line.includes("createWorldChat")).join("\n");
+ assert.equal(patchCollector(original),patched);
+ assert.equal(patchCollector(patched),patched);
+ assert.throws(()=>patchCollector(original.replace("whisperResponder.stop();","unknown();")));
+ assert.throws(()=>patchCollector(original+"\nonChannelMessage: existing"));
+});
+function dbAdapter(){
+ const sql=new DatabaseSync(":memory:");
+ sql.exec(readFileSync(new URL("../migrations/0004_world_chat.sql",import.meta.url),"utf8"));
+ return {sql,prepare(query){return {bind(...args){return {query,args}}}},async batch(statements){
+   sql.exec("BEGIN");try{const out=statements.map(({query,args})=>{
+     const stmt=sql.prepare(query);
+     return /^SELECT/i.test(query)?{results:stmt.all(...args)}:stmt.run(...args);
+   });sql.exec("COMMIT");return out;}catch(e){sql.exec("ROLLBACK");throw e;}
+ }};
+}
+test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, expiry and GM separation",async()=>{
+ const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
+ let now=Date.now();const actual=Date.now;Date.now=()=>now;
+ try{
+  const line=(id,authorKey,message,gm=false,time=now)=>({id:"12345678-1234-1234-1234-"+String(id).padStart(12,"0"),authorKey,author:"Player"+authorKey,message,gm,time});
+  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only")=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages})}),env);
+  const read=async(realm="N'Zoth")=>(await worldChatRoute(new Request(base+"?realm="+encodeURIComponent(realm)),env)).json();
+  assert.equal((await read()).status,"waiting");
+  assert.equal((await send([], "N'Zoth","OBPVESW","Bearer no")).status,401);
+  assert.equal((await send([], "N'Zoth","OBPVPORG")).status,400);
+  const first=line(1,"1","LFM WC");
+  assert.equal((await send([first,line(2,"2","LFG WC"),line(3,"3","<GM> fake"),line(4,"4","announcement",true),line(5,"5","WTB linen")])).status,202);
+  await send([first]);
+  let data=await read();assert.equal(data.world.length,4);assert.equal(data.gm.length,1);assert.equal(data.lfg.length,2);assert.equal(data.wtb.length,1);
+  assert.ok(data.world.some(x=>x.message==="<GM> fake"));
+  assert.equal((await read("Y'Shaarj")).world.length,0);
+  now+=180000;await send([line(6,"1","LF2M WC")]);data=await read();assert.equal(data.lfg.length,2);
+  assert.equal(data.lfg.find(x=>x.author==="Player1").expiresAt,now+300000);
+  now+=120000;data=await read();assert.equal(data.lfg.length,1);assert.equal(data.wtb.length,0);assert.equal(data.status,"stale");
+  await worldChatCleanup(env);assert.equal(DB.sql.prepare("SELECT COUNT(*) AS n FROM world_chat_listings WHERE observed_ms<?").get(now-300000).n,0);
+  now+=180000;assert.equal((await read()).lfg.length,0);
+ }finally{Date.now=actual;DB.sql.close();}
+});

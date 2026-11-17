@@ -14,7 +14,7 @@ export function decodeWorldPacket(channel,sender,text,raw){
 }
 export function createWorldChat({account,config,log,getWorld}){
   const enabled=process.env.WORLD_CHAT_ENABLED==="true"&&account.role==="sw"&&!!config.pushUrl&&!!config.pushToken;
-  let queue=[],timer=null,busy=false,seen=false,stopped=false,lookupCount=0;
+  let queue=[],timer=null,busy=false,seen=false,stopped=false,lookupCount=0,lastWarn=0;
   const names=new Map(),pending=new Map();
   async function nameFor(guid){
     if(names.has(guid))return names.get(guid);
@@ -32,11 +32,11 @@ export function createWorldChat({account,config,log,getWorld}){
   async function flush(){
     if(!seen||busy||stopped)return;
     busy=true;const now=Date.now();queue=queue.filter(x=>x.time>=now-100000);
-    const messages=queue.splice(0,25);
+    const messages=queue.splice(0,20);
     try{
       const url=new URL(config.pushUrl);url.pathname="/api/world-chat/ingest";url.search="";url.hash="";
       const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+config.pushToken},body:JSON.stringify({realm:account.realmName,account:account.account,channel:"world",messages}),signal:AbortSignal.timeout(7000)});
-      if(!response.ok){if(response.status>=500||response.status===429)queue=[...messages,...queue].slice(-250);}
+      if(!response.ok){if(response.status>=500||response.status===429)queue=[...messages,...queue].slice(-250);if(now-lastWarn>60000){lastWarn=now;log.warn("World Chat alpha: ingest HTTP "+response.status);}}
     }catch{queue=[...messages,...queue].slice(-250);}
     finally{busy=false;}
   }
@@ -45,13 +45,14 @@ export function createWorldChat({account,config,log,getWorld}){
       if(!enabled)return;
       const world=getWorld();
       if(typeof world?.joinChannel!=="function"){log.warn("World Chat alpha: client has no joinChannel support; feed disabled");return;}
-      try{world.joinChannel("world");timer=setInterval(()=>void flush(),5000);}
+      try{world.joinChannel("world");log.info("World Chat alpha: joined requested public channel; awaiting valid packet");timer=setInterval(()=>void flush(),5000);}
       catch{log.warn("World Chat alpha: could not join world");}
     },
     receive(channel,guid,text,raw){
       if(!enabled||stopped||!timer)return;
       const packet=decodeWorldPacket(channel,guid,text,raw);
       if(!packet||!packet.text||packet.text.length>1200)return;
+      if(!seen)log.info("World Chat alpha: first valid public channel packet received");
       seen=true;const time=Date.now(),id=randomUUID();
       void nameFor(guid).then(author=>{if(stopped)return;queue.push({id,time,authorKey:guid.toString(),author,message:packet.text,gm:packet.gm});if(queue.length>250)queue.shift();});
     },
