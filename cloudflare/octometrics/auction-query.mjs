@@ -39,7 +39,7 @@ const SORTS={
   listings:{expr:'listings',dir:'DESC'},
   trend_pct:{expr:'trend_pct',dir:'ASC',nullable:true},
   market_pct:{expr:'market_pct',dir:'ASC',nullable:true},
-  time_left:{expr:"(CASE WHEN time_left_ms IS NOT NULL AND captured_at IS NOT NULL THEN julianday(captured_at)+time_left_ms/86400000.0 END)",dir:'ASC',nullable:true},
+  time_left:{expr:"(CASE WHEN time_left_ms IS NOT NULL AND captured_at IS NOT NULL AND julianday(captured_at)+time_left_ms/86400000.0 > julianday('now') THEN julianday(captured_at)+time_left_ms/86400000.0 END)",dir:'ASC',nullable:true},
   level:{expr:'req_level',dir:'ASC',nullable:true}
 };
 export const SORT_NAMES=Object.keys(SORTS);
