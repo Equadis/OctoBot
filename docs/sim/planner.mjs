@@ -5,7 +5,7 @@ import {equipmentErrors} from './core/items.mjs?v=20261117-item-audit3';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {setupRacePicker} from './race-picker.mjs?v=2';
 let racePicker = null;
-import {characterStats} from './core/character-stats.mjs?v=20261117-racial-audit2';
+import {characterStats} from './core/character-stats.mjs?v=20261117-stacking-audit1';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-item-audit3';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
@@ -14,7 +14,7 @@ import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacy
 import { itemPicker } from './item-picker.mjs?v=20261117-item-audit3';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261117-item-audit3';
 import { settings } from './settings.mjs?v=20261117-buff-audit4';
-import { configuration } from './configuration.mjs?v=20261117-buff-audit4';
+import { configuration } from './configuration.mjs?v=20261117-stacking-audit1';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 

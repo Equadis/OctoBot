@@ -15,6 +15,11 @@ jobs:
           node-version: '22'
       - run: node tools/sim/audit-buff-consumables.mjs
       - run: node tools/sim/audit-base-stats.mjs
+      - run: node tools/sim/audit-stacking.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stacking-audit
+          path: stacking-audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: base-stat-audit

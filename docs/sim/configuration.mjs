@@ -3,7 +3,7 @@ import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-item-audit3';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
-import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261117-buff-audit4';
+import {CONSUMABLES,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables,sharedConsumableConflict} from './core/consumables.mjs?v=20261117-stacking-audit1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261117-buff-audit4';
 import { BUFF_OPTIONS, buffScenarioRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261117-buff-audit4';
 import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
@@ -73,7 +73,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
    const row=node('label',undefined,'buff-row'),input=node('input');input.type='checkbox';input.checked=selected.includes(item.id);input.value=String(item.id);
    const text=node('span',item.name,'buff-name'),effect=node('span',item.requiredLevel?`Lv ${item.requiredLevel}`:'','buff-effect');row.append(input,text,effect);
    input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderChecks();});
-   attachTooltip(row,()=>({title:item.name,lines:[...item.effects,stackingNote(item),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]}));list.append(row);
+   attachTooltip(row,()=>({title:item.name,lines:[...item.effects,stackingNote(item),...getBuild().controls.buffIds.flatMap(id=>{const conflict=sharedConsumableConflict(id,item);return conflict?[`Replaces ${BUFF_OPTIONS.find(b=>b.id===id)?.name||id} (${conflict.evidence}).`]:[]}),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]}));list.append(row);
   }
   if(focusedId)list.querySelector(`input[value="${focusedId}"]`)?.focus({preventScroll:true});
   list.scrollTop=scrollTop;

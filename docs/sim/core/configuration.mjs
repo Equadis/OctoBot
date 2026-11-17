@@ -1,4 +1,4 @@
-import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261117-buff-audit4';
+import {validateConsumables,CONSUMABLES,consumableRestriction,crossConsumableErrors} from './consumables.mjs?v=20261117-stacking-audit1';
 import {classDefinition} from './classes.mjs?v=20261112-audit1';
 import {normaliseBuffs,worldBuffRestriction,WEAPON_MASTERY} from './buffs.mjs?v=20261117-buff-audit4';
 import {rotationProfileData} from './rotations/registry.mjs?v=20261112-rotations1';

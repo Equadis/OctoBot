@@ -1,5 +1,5 @@
 import {BUFF_STATS,normaliseBuffs,worldBuffRestriction,WEAPON_MASTERY,weaponMasteryStats} from './buffs.mjs?v=20261117-buff-audit4';
-import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-buff-audit4';
+import {CONSUMABLES,CONSUMABLE_BY_ID,consumableRestriction,resolveConsumableSelection} from './consumables.mjs?v=20261117-stacking-audit1';
 // Match source items by exact IDs through audited aliases. Missing items and
 // static raid assumptions remain reference values, never called source-verified.
 const sourceItems=new Map(CONSUMABLES.filter(i=>i.buffId&&i.verified).map(i=>[i.buffId,i]));
@@ -77,7 +77,8 @@ export function buffDefinition(id){
  return {...base,status:'unmapped',reason:'No numerical effect mapped.'};
 }
 export function resolveBuffEffects(build,gear={}){
- const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[])},'buffs');
+ // Reject ineligible catalogue entries before they can displace a valid buff.
+ const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[]),consumableIds:(build.controls.consumableIds||[]).filter(id=>!consumableRestriction(CONSUMABLE_BY_ID.get(id),build))},'buffs');
  const entries=controls.buffIds.map(id=>{
   const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};
   if(e.status==='community-scoped')return {...e,active:build.level>=60,reason:build.level<60?'Requires level 60.':e.reason};
