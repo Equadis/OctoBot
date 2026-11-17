@@ -397,6 +397,12 @@ export const TALENT_RULES={
       "scope": "Immolation/Explosive Trap",
       "stat": "damagePct",
       "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Trap effects",
+      "stat": "resistReductionPct",
+      "param": 2
     }
   ],
   "408": [
