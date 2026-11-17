@@ -1,4 +1,4 @@
-import {scopedEquipmentEffect} from './equipment-scopes.mjs?v=20261117-item-audit2';
+import {scopedEquipmentEffect} from './equipment-scopes.mjs?v=20261117-item-audit3';
 // Conservative equipment effects: exact permanent lines only; classify every
 // other line for review. Percentages are percentage points, not ratings.
 const attrs={Strength:'str',Agility:'agi',Stamina:'sta',Intellect:'int',Spirit:'spi',Armor:'armour',Armour:'armour',Health:'health',Mana:'mana',Fortune:'fortune','Arcane Resistance':'arcaneRes','Fire Resistance':'fireRes','Nature Resistance':'natureRes','Frost Resistance':'frostRes','Shadow Resistance':'shadowRes'};
@@ -26,6 +26,9 @@ export function classifyEquipmentEffect(raw){
  else if((m=match('(?:Increases|Improves) your chance to (hit|get a critical strike) with (?:missile weapons|ranged weapons|ranged attacks) by '+number+'%')))put(/critical/i.test(m[1])?'rangedCrit':'rangedHit',m[2]);
  else if((m=match('(?:Increases|Improves) your chance to (hit|get a critical strike|dodge|parry) by '+number+'%')))put(({hit:'hit','get a critical strike':'crit',dodge:'dodge',parry:'parry'})[m[1].toLowerCase()],m[2]);
  else if((m=match('Increases your chance to (dodge|parry) an attack by '+number+'%')))put(m[1].toLowerCase(),m[2]);
+ else if((m=match('Increases Defense by '+number+', Shadow resistance by '+number+' and your normal health regeneration by '+number))){put('defense',m[1]);put('shadowRes',m[2]);return {status:'scoped',stats,modifiers:[{scope:'Natural health regeneration',stat:'flatRegenBonus',amount:+m[3]}]};}
+ else if((m=match('Improves your chance to hit and get a critical strike with spells by '+number+'%\\. Increases damage done by magical spells and effects by up to '+number))){put('spellHit',m[1]);put('spellCrit',m[1]);put('damageOnlySp',m[2]);}
+ else if((m=match('\\+'+number+' Weapon Damage')))put('weaponDamage',m[1]);
  else if((m=match('Decreases your chance to parry an attack by '+number+'%')))put('parry',-Number(m[1]));
  else if((m=match('Increases your chance to block attacks with a shield by '+number+'%')))put('blockChance',m[1]);
  else if((m=match('Increases the block value of your shield by '+number)))put('blockValue',m[1]);
@@ -53,7 +56,7 @@ export function classifyEquipmentEffect(raw){
  else if((m=match('Allows '+number+'% of your Mana regeneration to continue while casting')))put('castingRegenPct',m[1]);
  else if((m=match('Reduces damage taken from critical hits by '+number+'%')))put('critDamageTakenReductionPct',m[1]);
  else if((m=match('Reduces damage taken from damage over time effects by '+number+'%')))put('dotDamageTakenReductionPct',m[1]);
- else if((m=match('\\+'+number+' Attack Power in Cat, Bear, Dire Bear, and Moonkin forms only')))return {status:'conditional',stats:{formAP:+m[1]},condition:'druid-form'};
+ else if((m=match('\\+'+number+' Attack Power in Cat, Bear, (?:and Dire Bear|Dire Bear, and Moonkin) forms only')))return {status:'scoped',stats:{},modifiers:[{scope:'Feral/form Attack Power',stat:'attackPower',amount:+m[1],condition:{forms:/Moonkin/.test(t)?['Cat','Bear','Moonkin']:['Cat','Bear']}}]};
  else {const scoped=scopedEquipmentEffect(raw);if(scoped)return scoped;
   if(/chance|when|while|for \d+ sec|only|against|your pet|your [A-Z][a-z]+ ability|your [A-Z][a-z]+ spell|in combat|per attack|on hit|on use|returned as healing|melee attacks|nearby party/i.test(t))return {status:'conditional',stats:{}};
   return {status:'unmapped',stats:{}};
@@ -71,8 +74,8 @@ export function equipmentItemAudit(item,build={}){
   if(m){const attr=Object.keys(attrs).find(k=>k.toLowerCase()===m[2].toLowerCase());if(!Object.hasOwn(item.attributes||{},attr))add(stats,attrs[attr],+m[1]);}
  }
  for(const raw of item.effects||[]){const result=classifyEquipmentEffect(raw);effects.push({raw,...result});
-  if(result.status==='passive')merge(result.stats);
-  if(result.condition==='druid-form'&&build.classId==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form))add(stats,'ap',result.stats.formAP);
+  if(result.status==='passive'||result.status==='scoped')merge(result.stats);
+  if(build.classId==='druid')for(const m of result.modifiers||[])if(m.scope==='Feral/form Attack Power'&&m.condition.forms.includes(build.classOptions?.form))add(stats,'ap',m.amount);
  }
  return {stats,effects};
 }
@@ -108,7 +111,7 @@ export function equipmentSetAudit(gear,build={}){
    if(s.requirement&&(build.skills?.[s.requirement.skill]||0)<s.requirement.rank){unresolved.push({set:s.name,reason:'Set bonus requires '+s.requirement.skill+' ('+s.requirement.rank+')'});continue;}
    const result=classifyEquipmentEffect(bonus.effect);
    active.push({set:s.name,count,...bonus,...result});
-   if(result.status==='passive')for(const [k,v] of Object.entries(result.stats))add(stats,k,v);
+   if(result.status==='passive'||result.status==='scoped')for(const [k,v] of Object.entries(result.stats))add(stats,k,v);
   }
  }
  return {stats,active,unresolved};
