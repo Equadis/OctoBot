@@ -73,3 +73,7 @@
 4. Expand the explicit mapping for any remaining genuinely permanent character-sheet effects.
 
 The class-specific registry is `docs/sim/core/talent-rules.mjs`; `tests/sim/talent-effects-audit.test.mjs` verifies rank vectors, class coverage and key regressions. **Merging note:** each class branch uses the same registry filename; consolidate the per-class exports before merging multiple branches, rather than allowing later changes to overwrite earlier class rules.
+
+### Source anomaly requiring live confirmation
+
+`Elusiveness` rank 1 says **45 minutes** cooldown reduction in the official calculator snapshot, while rank 2 says **1.5 minutes**. Do not interpret these mixed units automatically; both ranks remain outside the numerical cooldown model pending in-game confirmation.
