@@ -2,7 +2,8 @@ import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
-import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
+import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261113-swaps1';
+import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit1';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
@@ -13,30 +14,8 @@ const pct=(n,d=1)=>Number.isFinite(n)?`${n.toFixed(d)}%`:'—';
 const num=n=>Number.isFinite(n)?String(Math.round(n)):'—';
 const pair=values=>values.join(' | ');
 const sameOrPair=values=>values.every(v=>v===values[0])?values[0]:pair(values);
-const ATTRIBUTES={Strength:'str',Agility:'agi',Stamina:'sta',Intellect:'int',Spirit:'spi',Armour:'armour','Arcane Resistance':'arcaneRes','Fire Resistance':'fireRes','Nature Resistance':'natureRes','Frost Resistance':'frostRes','Shadow Resistance':'shadowRes',Fortune:'fortune'};
-export function passiveItemStats(item){
- const result={};const add=(key,value)=>{result[key]=(result[key]||0)+value;};
- for(const [key,value] of Object.entries(item.attributes||{}))if(ATTRIBUTES[key]&&Number.isFinite(value))add(ATTRIBUTES[key],value);
- for(const raw of item.effects||[]){
-  const text=raw.replace(/^Equip:\s*/,'');if(/chance on hit|when|after|for \d+ sec|every|on hit/i.test(text))continue;
-  let m;
-  if((m=text.match(/^\+(\d+) Attack Power\.?$/i)))add('ap',+m[1]);
-  else if((m=text.match(/Increases (?:your )?attack power by (\d+)\.?$/i)))add('ap',+m[1]);
-  else if((m=text.match(/(?:chance to hit|chance to get a critical strike) with spells by (\d+(?:\.\d+)?)%/i)))add(/critical/i.test(text)?'spellCrit':'spellHit',+m[1]);
-  else if((m=text.match(/(?:chance to hit|chance to get a critical strike|chance to dodge|chance to parry) by (\d+(?:\.\d+)?)%/i)))add(/dodge/i.test(text)?'dodge':/parry/i.test(text)?'parry':/critical/i.test(text)?'crit':'hit',+m[1]);
-  else if((m=text.match(/Increased Defense \+(\d+)/i)))add('defense',+m[1]);
-  else if((m=text.match(/^Increases your chance to (dodge|parry) an attack by (\d+(?:\.\d+)?)%\.?$/i)))add(m[1].toLowerCase()==='dodge'?'dodge':'parry',+m[2]);
-  else if((m=text.match(/^Restores (\d+) mana per 5 sec\.?$/i)))add('mp5',+m[1]);
-  else if((m=text.match(/^\+(\d+) All Resistances\.?$/i)))for(const key of ['arcaneRes','fireRes','natureRes','frostRes','shadowRes'])add(key,+m[1]);
-  else if((m=text.match(/damage and healing done by magical spells and effects by up to (\d+)/i)))add('sp',+m[1]);
-  else if((m=text.match(/damage done by (Fire|Frost|Nature|Shadow|Arcane) spells and effects by up to (\d+)/i)))add(m[1].toLowerCase()+'Sp',+m[2]);
-  else if((m=text.match(/(?:attack speed|haste) by (\d+(?:\.\d+)?)%/i)))add('haste',+m[1]);
-  else if((m=text.match(/(?:ignore|ignores|reduces).*?(\d+) (?:of.*? )?(?:armor|armour)/i)))add('armorPen',+m[1]);
-  else if((m=text.match(/(?:decreases|reduces).*?magical resistances.*?(\d+)/i)))add('spellPen',+m[1]);
- }
- return result;
-}
-function enchantStats(id){
+export const passiveItemStats=(item,build={})=>equipmentItemAudit(item,build).stats;
+export function enchantStats(id){
  const scope=ENCHANTS.find(e=>e.id===id)?.rangedEffects;if(scope)return {...scope};
  const name=ENCHANTS.find(e=>e.id===id)?.name||'',result={};
  // School-specific power must not inflate general Spell Power.
@@ -52,10 +31,11 @@ export function characterStats(build,talentData,gear={}){
  if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
  const racial=racialPassives(build.race);
  const c=build.classId,level=build.level,base=BASE_STATS[`${build.race}:${c}`]?.[level-1];
- const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0};
- let haste=1;
- const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key in s&&s[key]!==null)s[key]+=value;}};
- for(const [slot,item] of Object.entries(gear)){add(passiveItemStats(item));add(enchantStats(build.gear[slot]?.enchantId));}
+ const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0,holySp:0,healingPower:0,hp5:0,blockValue:0,blockChance:0,rangedAP:0,rangedHit:0,rangedCrit:0,rangedDamage:0,rangedHaste:0,castingRegenPct:0,critDamageTakenReductionPct:0,dotDamageTakenReductionPct:0};
+ let haste=1,rangedHaste=1;const skillBonuses={};const unresolvedEquipment=[];
+ const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key==='rangedHaste')rangedHaste*=1+value/100;else if(key.startsWith('weaponSkill:'))skillBonuses[key]=(skillBonuses[key]||0)+value;else if(key in s&&s[key]!==null)s[key]+=value;}};
+ for(const [slot,item] of Object.entries(gear)){const audit=equipmentItemAudit(item,build);add(audit.stats);for(const effect of audit.effects)if(!['passive','empty'].includes(effect.status)&&!(effect.condition==='druid-form'&&c==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)))unresolvedEquipment.push({item:item.name||slot,...effect});const id=build.gear[slot]?.enchantId;if(id&&validEnchant(id,slot,c,item,level)){add(enchantStats(id));if(!Object.keys(enchantStats(id)).length&&!/weapon damage/i.test(ENCHANTS.find(e=>e.id===id)?.name||''))unresolvedEquipment.push({item:item.name||slot,raw:ENCHANTS.find(e=>e.id===id)?.name,status:'unmapped enchant'});}}
+ const setAudit=equipmentSetAudit(gear);add(setAudit.stats);
  const buffs=normaliseBuffs(build.controls.buffIds);for(const id of buffs)add(BUFF_STATS[id]||{});
  const has=id=>buffs.includes(id);
  for(const id of build.controls.consumableIds||[]){const item=CONSUMABLE_BY_ID.get(id);if(!consumableRestriction(item,build))add(consumablePassiveStats(item));}
@@ -97,7 +77,7 @@ export function characterStats(build,talentData,gear={}){
  const parry=parryClasses.includes(c)?5+s.parry+s.defense*.04:0;
  const dodge=level===60&&base?baseCrit+s.agi*dodgeAgi+s.dodge+s.defense*.04+(racial.dodge||0):null;
  const target=build.planning,targetDefense=target.targetLevel*5;
- const weaponSkill=slot=>{const weapon=gear[slot];const bonus=racial.meleeSkills?.[weapon?.subclass]||0;return level*5+s.weaponSkill+bonus;};
+ const weaponSkill=slot=>{const weapon=gear[slot];const bonus=racial.meleeSkills?.[weapon?.subclass]||0;return level*5+s.weaponSkill+bonus+weaponSkillBonus(skillBonuses,weapon);};
  const skills=['mainhand','offhand'].map(weaponSkill),delta=skills.map(skill=>Math.max(0,targetDefense-skill));
  const wsCrit=skills.map(skill=>(skill-level*5)*.04);
  const crit=skills.map((_,i)=>level===60&&base?baseCrit+s.agi*critAgi+s.crit+wsCrit[i]+(c==='warrior'&&build.classOptions.stance==='Berserker'?3:0)+(c==='rogue'&&[4,15,13].includes(gear[i?'offhand':'mainhand']?.subclass)?value('Close Quarters Combat'):0):null);
@@ -110,7 +90,7 @@ export function characterStats(build,talentData,gear={}){
  const spellMiss=clamp(baseSpellMiss-s.spellHit,1,99);
  const targetArmour=Math.max(0,target.targetArmour+buffs.reduce((n,id)=>n+(BUFF_STATS[id]?.targetArmour||0),0)-s.armorPen);
  const mitigation=100*targetArmour/(targetArmour+400+85*level);
- const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const extra=Number(ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId)?.name.match(/^\+(\d+) Weapon Damage/)?.[1]||0);const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
+ const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=validEnchant(enchantId,slot,c,weapon,level)?Number(ENCHANTS.find(e=>e.id===enchantId)?.name.match(/^\+(\d+) Weapon Damage/)?.[1]||0):0;const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
  group('Base Stats',[['Strength',num(s.str)],['Agility',num(s.agi)],['Stamina',num(s.sta)],...(!['warrior','rogue'].includes(c)?[['Intellect',num(s.int)],['Spirit',num(s.spi)]]:[])]);
@@ -123,8 +103,18 @@ export function characterStats(build,talentData,gear={}){
  group('Defence',[
  ['Health',num(health)],...(!['warrior','rogue'].includes(c)?[['Mana',num(base?base[6]+s.mana+Math.min(20,s.int)+Math.max(0,s.int-20)*15:null)],['Mana / 5s',num(s.mp5)]]:[]),['Parry %',pct(parry)],['Dodge %',pct(dodge)],['Armour',num(armour)],...['Arcane','Fire','Nature','Frost','Shadow'].map(name=>[name+' Res',num(s[name.toLowerCase()+'Res'])])
  ]);
+ const extraDef=[];
+ if(s.hp5)extraDef.push(['Health / 5s',num(s.hp5)]);
+ const shield=gear.offhand?.classs===4&&gear.offhand?.subclass===6?gear.offhand:null;
+ if(shield){const block=Number(shield.block??shield.attributes?.Block??shield.tooltipText?.match(/(?:^|\n)\s*(\d+)\s+Block\b/i)?.[1]);extraDef.push(['Shield Block Value',num(Number.isFinite(block)?block+s.blockValue:null),'Item block only; strength and ruleset-dependent base block formulas not verified.'],['Equipment Block Chance',pct(s.blockChance,1)]);}
+ if(s.critDamageTakenReductionPct)extraDef.push(['Item Critical Damage Reduction',pct(s.critDamageTakenReductionPct,1)]);
+ if(s.dotDamageTakenReductionPct)extraDef.push(['Item Periodic Damage Reduction',pct(s.dotDamageTakenReductionPct,1)]);
+ if(extraDef.length)group('Equipment Defence',extraDef);
+ if(c==='hunter'||s.rangedAP||s.rangedHit||s.rangedCrit||s.rangedDamage||rangedHaste!==1){const rows=[['Item Ranged AP Bonus',num(s.rangedAP)],['Ranged-only Hit Bonus',pct(s.rangedHit,1)],['Ranged-only Crit Bonus',pct(s.rangedCrit,1)],['Ranged-only Haste',pct((rangedHaste-1)*100,1)],['Scope Damage',num(s.rangedDamage)]];const ammo=gear.ammo;const ranged=gear.ranged;if(ammo&&ranged?.classs===2&&[2,3,18].includes(ranged.subclass)&&ammo.subclass===(ranged.subclass===3?3:2)){const dps=Number(ammo.ammunitionDps??ammo.tooltipText?.match(/Adds ([0-9.]+) damage per second/)?.[1]);rows.push(['Ammunition DPS',Number.isFinite(dps)?String(dps):'—']);}group('Ranged Equipment Contributions',rows);}
  group('Spell',[
- ['Spell Power',num(s.sp)],['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s[name.toLowerCase()+'Sp'])])
+ ['Spell Power',num(s.sp)],...(s.healingPower?[['Healing Power',num(s.sp+s.healingPower)]]:[]),...(s.castingRegenPct?[['Natural Mana Regen While Casting (items)',pct(s.castingRegenPct,1)]]:[]),['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane','Holy'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s[name.toLowerCase()+'Sp'])])
  ]);
- return {groups,sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Passive supported effects only; temporary procs and unimplemented set effects are excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
+ if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':'Not simulated',x.effect]));
+ if(unresolvedEquipment.length||setAudit.unresolved.length)group('Uncalculated Equipment Effects',[...unresolvedEquipment.map(x=>[x.item,x.status,x.raw]),...setAudit.unresolved.map(x=>[x.set||x.item,'Unverified set',x.reason])]);
+ return {groups,equipmentAudit:{unresolved:unresolvedEquipment,setAudit},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Only recognised exact passive equipment/set effects are applied; conditional and unrecognised effects remain visible and excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }
