@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {moneyParts,timeClass,bidAmount,money,scanStatus,lastScanClass,IDLE_SECONDS,clock} from '../docs/auction-house/format.mjs';
+import {moneyParts,timeClass,bidAmount,money,scanStatus,lastScanClass} from '../docs/auction-house/format.mjs';
 import {validateBuild,newBuild,encodeBuild,decodeBuild} from '../docs/sim/core/builds.mjs';
 const docs=new URL('../docs/',import.meta.url);
 const read=p=>readFileSync(new URL(p,docs),'utf8');
@@ -94,7 +94,7 @@ test('Race and Level are the same height, and Race is a narrow control',()=>{
   const css=read('sim/combat-layout.css');
   assert.match(css,/\.rp-button\{[^}]*height:36px/);
   assert.match(css,/\.character-controls input\[type=number\]\{[^}]*height:36px/);
-  assert.match(css,/grid-template-columns:132px 58px/);
+  assert.match(css,/grid-template-columns:132px minmax\(0,1fr\) 58px/);
 });
 
 test('the button row is Save, Load, Share, Export, Import',()=>{
@@ -129,30 +129,25 @@ test('character names are optional, trimmed, cleaned and limited to 24 character
 });
 
 /* ---------- scan status, last scan, collector ---------- */
-test('the scan status counts down from 5:00 after a scan finishes, then shows a running In Progress timer',()=>{
+test('the scan status shows elapsed scanning time or the latest completed scan',()=>{
   const done='2026-11-01T10:00:00.000Z',t=Date.parse(done),sec=n=>t+n*1000;
-  assert.equal(IDLE_SECONDS,300);
-  assert.deepEqual(scanStatus({completedAt:done},sec(0)),{text:'Idle - 5:00',className:'ah-time-yellow'});
-  assert.equal(scanStatus({completedAt:done},sec(28)).text,'Idle - 4:32','28s after a scan the display reads 4:32');
-  assert.equal(scanStatus({completedAt:done},sec(299)).text,'Idle - 0:01');
-  assert.equal(scanStatus({completedAt:done},sec(300)).text,'Idle','after 5:00 with no scan running it just says Idle');
-  assert.equal(scanStatus({completedAt:done},sec(4000)).className,'ah-time-yellow');
+  assert.deepEqual(scanStatus({completedAt:done},sec(0)),{text:'Last scan · just now',className:'ah-time-yellow'});
+  assert.equal(scanStatus({completedAt:done},sec(60)).text,'Last scan · 1m ago');
   const start='2026-11-01T10:05:00.000Z',s0=Date.parse(start);
-  assert.deepEqual(scanStatus({completedAt:done,scanning:true,startedAt:start},s0+192000),{text:'In Progress 3m:12s',className:'ah-time-green'});
-  assert.equal(scanStatus({scanning:true,startedAt:start},s0+5000).text,'In Progress 0m:05s');
-  assert.equal(scanStatus({scanning:true,startedAt:null},s0).text,'In Progress','an unknown start time is not invented');
-  assert.equal(scanStatus({scanning:true,startedAt:start,completedAt:done},s0-9000).text,'In Progress 0m:00s','a clock slightly behind never shows a negative time');
-  assert.equal(scanStatus({},Date.now()).text,'Idle','no scan data at all');
-  assert.equal(clock(272),'4:32');assert.equal(clock(5),'0:05');
+  assert.deepEqual(scanStatus({completedAt:done,scanning:true,startedAt:start},s0+192000),{text:'Scanning · 3m 12s',className:'ah-time-green'});
+  assert.equal(scanStatus({scanning:true,startedAt:null},s0).text,'Scanning');
+  assert.equal(scanStatus({},t).text,'No completed scan');
 });
 
-test('the last complete scan is green under 2 hours, yellow under 24 hours, red after that, and uncoloured with no data',()=>{
+test('the last complete scan is green under 1 hour, yellow under 24 hours, red thereafter',()=>{
   const done='2026-11-01T00:00:00.000Z',t=Date.parse(done),H=3600000;
-  assert.equal(lastScanClass(done,t+H),'ah-time-green');assert.equal(lastScanClass(done,t+2*H-1),'ah-time-green');
-  assert.equal(lastScanClass(done,t+2*H),'ah-time-yellow');assert.equal(lastScanClass(done,t+24*H-1),'ah-time-yellow');
-  assert.equal(lastScanClass(done,t+24*H),'ah-time-red');assert.equal(lastScanClass(done,t+500*H),'ah-time-red');
-  assert.equal(lastScanClass(null),null);assert.equal(lastScanClass('garbage'),null);
-  assert.equal(lastScanClass(done,t-5000),'ah-time-green','a slightly early client clock stays green');
+  assert.equal(lastScanClass(done,t+H-1),'ah-time-green');
+  assert.equal(lastScanClass(done,t+H),'ah-time-yellow');
+  assert.equal(lastScanClass(done,t+24*H-1),'ah-time-yellow');
+  assert.equal(lastScanClass(done,t+24*H),'ah-time-red');
+  assert.equal(lastScanClass(null),null);
+  assert.equal(lastScanClass('garbage'),null);
+  assert.equal(lastScanClass(done,t-5000),'ah-time-green');
 });
 
 test('the Collector card is gone and the scan card is wired to the timers',()=>{
