@@ -52,11 +52,11 @@ export function resolveTalentEffects(build,talentData,gear={}){
   let applied=0;
   for(const rule of rules){
    if(rule.kind==='pending'){output.pending.push({name:talent.name,note:rule.note||'Requires combat simulation'});continue;}
-   if(!satisfies(rule.when,build,gear)){
+   if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)){
     output.details.push({name:talent.name,stat:rule.stat,scope:rule.scope||'',status:'inactive',note:rule.note||'Condition is not active'});
     continue;
    }
-   const amount=numberFor(talent,rule,rank);
+   const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1);
    if(rule.kind==='global')add(output.flat,rule.stat,amount);
    else if(rule.kind==='percent')add(output.percent,rule.stat,amount);
    else if(rule.kind==='special')add(output.special,rule.stat,amount);
