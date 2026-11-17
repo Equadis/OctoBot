@@ -33,6 +33,17 @@ export function classifyEquipmentEffect(raw){
  else if((m=match('Increases damage and healing done by magical spells and effects by up to '+number)))put('sp',m[1]);
  else if((m=match('Increases healing done by spells and effects by up to '+number)))put('healingPower',m[1]);
  else if((m=match('Increases damage done by (Fire|Frost|Nature|Shadow|Arcane|Holy) spells and effects by up to '+number)))put(m[1].toLowerCase()+'Sp',m[2]);
+ else if((m=match('Increases your spell damage by up to '+number+' and your healing by up to '+number))){put('damageOnlySp',m[1]);put('healingPower',m[2]);}
+ else if((m=match('Increases the damage you do with all spells by '+number)))put('damageOnlySp',m[1]);
+ else if((m=match('Increases melee and ranged attack power by '+number)))put('ap',m[1]);
+ else if((m=match('Increases your casting speed by '+number+'%')))put('castSpeedPct',m[1]);
+ else if((m=match('Reduces all spell damage taken by '+number+'%')))put('spellDamageTakenReductionPct',m[1]);
+ else if((m=match('Spell Damage received is reduced by '+number)))put('spellDamageTakenReductionFlat',m[1]);
+ else if((m=match('Reduces damage taken from area of effect spells and abilities by '+number+'%')))put('aoeDamageTakenReductionPct',m[1]);
+ else if((m=match('Reduces damage taken from critical hits and damage over time effects by '+number+'%'))){put('critDamageTakenReductionPct',m[1]);put('dotDamageTakenReductionPct',m[1]);}
+ else if((m=match('Increases your resistance to silence(?: effects)? by '+number+'%')))put('silenceResistPct',m[1]);
+ else if((m=match('Reduces the duration of interrupt effects used against you by '+number+'%')))put('interruptDurationReductionPct',m[1]);
+ else if((m=match('Increases (?:your )?(run|swim|mount) speed by '+number+'%')))put(m[1].toLowerCase()+'SpeedPct',m[2]);
  else if((m=match('Increases (?:your )?(?:ranged attack speed|ranged haste) by '+number+'%')))put('rangedHaste',m[1]);
  else if((m=match('Increases (?:your )?(?:attack speed|haste) by '+number+'%')))put('haste',m[1]);
  else if((m=match("Your attacks ignore "+number+" of the target's armor"))||(m=match("Your attacks ignore "+number+" of the target's armour")))put('armorPen',m[1]);
