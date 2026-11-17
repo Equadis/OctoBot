@@ -1,3 +1,4 @@
+import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -29,23 +30,95 @@ function drawFeed(key,rows){
   }
   byId(key+"-count").textContent=String(rows.length);
 }
+const defaultFilters={kind:"all",intent:"all",role:"all",tag:"all",query:"",blacklist:"",sort:"latest",alerts:false};
+let filters={...defaultFilters},collapsed=new Set(),known=new Set(),primed=false,audio=null,lastLfgKey="";
+try{const s=JSON.parse(localStorage.getItem("octobot-lfg-v2")||"{}");for(const k of Object.keys(defaultFilters))if(typeof s.filters?.[k]===typeof defaultFilters[k])filters[k]=s.filters[k];collapsed=new Set(Array.isArray(s.collapsed)?s.collapsed:[]);}catch{}
+const save=()=>{try{localStorage.setItem("octobot-lfg-v2",JSON.stringify({filters,collapsed:[...collapsed]}));}catch{}};
+function copyWhisper(author){
+ if(!author||author==="Unknown player")return;
+ const command="/w "+author+" ";
+ navigator.clipboard?.writeText(command).then(()=>byId("lfg-notice").textContent="Copied "+command.trim()).catch(()=>byId("lfg-notice").textContent=command);
+ if(!navigator.clipboard)byId("lfg-notice").textContent=command;
+}
+function signalNew(){
+ try{if(audio?.state!=="running")return;const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=660;g.gain.value=.045;o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.16);}catch{}
+}
+const tagSelect=byId("lfg-tag");
+for(const meta of catalog){const option=node("option","",meta.name);option.value=meta.tag;tagSelect.append(option);}
+for(const key of ["kind","intent","role","tag","query","blacklist","sort","alerts"]){
+ const control=byId("lfg-"+key);
+ if(key==="alerts")control.checked=filters.alerts;else control.value=filters[key];
+ control.addEventListener(key==="query"||key==="blacklist"?"input":"change",()=>{
+  filters[key]=key==="alerts"?control.checked:control.value;
+  if(key==="alerts"&&control.checked){try{audio??=new AudioContext();void audio.resume();}catch{}}
+  save();lastLfgKey="";drawListings();
+ });
+}
+byId("lfg-reset").addEventListener("click",()=>{filters={...defaultFilters};collapsed.clear();for(const key of Object.keys(defaultFilters)){const control=byId("lfg-"+key);if(key==="alerts")control.checked=false;else control.value=filters[key];}save();lastLfgKey="";drawListings();});
+function updateTimers(parent,now){
+ for(const e of parent.querySelectorAll("[data-expires]")){const seconds=Math.max(0,Math.ceil((Number(e.dataset.expires)-now)/1000));e.textContent=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");e.classList.toggle("critical",seconds<=30);e.classList.toggle("soon",seconds>30&&seconds<=60);}
+}
+function drawLfg(now){
+ const parent=byId("lfg"),all=current.lfg.filter(r=>r.expiresAt>now),rows=filterListings(all,filters,now);
+ byId("lfg-count").textContent=rows.length+" / "+all.length;
+ const ids=new Set(rows.map(r=>r.listingId??JSON.stringify([r.tag,r.author])));
+ if(primed&&filters.alerts&&[...ids].some(x=>!known.has(x)))signalNew();
+ known=ids;primed=true;
+ const signature=JSON.stringify([rows,filters.sort,[...collapsed]]);
+ if(lastLfgKey===signature){updateTimers(parent,now);return;}
+ lastLfgKey=signature;
+ const groups=new Map();for(const r of rows){if(!groups.has(r.tag))groups.set(r.tag,[]);groups.get(r.tag).push(r);}
+ const order=new Map(catalog.map((c,i)=>[c.tag,i]));
+ const tags=[...groups.keys()].sort((a,b)=>(order.get(a)??999)-(order.get(b)??999)||a.localeCompare(b));
+ if(!tags.length){empty(parent,all.length?"No listings match your filters.":"No active listings.");return;}
+ const frag=document.createDocumentFragment();
+ for(const tag of tags){
+  const meta=byTag.get(tag),entries=groups.get(tag),section=node("section","lfg-group"),header=node("button","lfg-group-header");header.type="button";header.dataset.tag=tag;header.setAttribute("aria-expanded",String(!collapsed.has(tag)));
+  const arrow=node("span","lfg-arrow",collapsed.has(tag)?"▸":"▾"),icon=node("img","lfg-icon");icon.alt="";icon.loading="lazy";icon.src="https://wow.zamimg.com/images/wow/icons/small/"+(meta?.icon??"inv_misc_questionmark")+".jpg";
+  const label=node("span","lfg-group-label");label.append(node("strong","",meta?.name??tag));
+  if(meta?.min)label.append(node("span","lfg-meta",(meta.min===meta.max?meta.min:meta.min+"–"+meta.max)+(meta.size?" · "+meta.size+" players":"")+(meta.kind==="worldboss"?" · World boss":"")));
+  header.append(arrow,icon,label,node("span","lfg-group-count",String(entries.length)));
+  header.addEventListener("click",()=>{if(collapsed.has(tag))collapsed.delete(tag);else collapsed.add(tag);save();lastLfgKey="";drawLfg(Date.now());parent.querySelectorAll(".lfg-group-header").forEach(b=>{if(b.dataset.tag===tag)b.focus({preventScroll:true});});});
+  section.append(header);
+  if(!collapsed.has(tag)){
+   entries.sort((a,b)=>filters.sort==="oldest"?a.time-b.time:b.time-a.time);
+   for(const row of entries){
+    const info=analyseRecruitment(row.message),line=node("div","lfg-row"),body=node("div","lfg-body"),author=node("button","lfg-player",row.author);author.type="button";author.disabled=row.author==="Unknown player";author.title="Copy /w "+row.author;author.addEventListener("click",()=>copyWhisper(row.author));
+    const cls=classInfo[row.classId];if(cls)author.style.color=cls[1];
+    const who=node("div","lfg-who");who.append(author);
+    if(row.guild)who.append(node("span","lfg-guild"," <"+row.guild+">"));
+    if(row.level||cls)who.append(node("span","lfg-meta"," · "+[row.level&&"Lvl "+row.level,cls?.[0]].filter(Boolean).join(" ")));
+    const badges=node("div","lfg-badges");
+    if(info.intent!=="Unspecified")badges.append(node("span","lfg-chip",info.intent));
+    for(const role of info.roles)badges.append(node("span","lfg-chip role-"+role.toLowerCase(),role));
+    if(info.needed)badges.append(node("span","lfg-chip","LF"+info.needed));
+    body.append(who,badges,node("div","lfg-message",row.message));
+    const expiry=node("span","list-expiry");expiry.dataset.expires=row.expiresAt;
+    line.append(body,expiry);section.append(line);
+   }
+  }
+  frag.append(section);
+ }
+ parent.replaceChildren(frag);updateTimers(parent,now);
+}
 function drawListings(){
   if(!current)return;
   const now=Date.now();
-  for(const key of ["lfg","wtb","wts"]){
+  drawLfg(now);
+  for(const key of ["wtb","wts"]){
     const parent=byId(key),rows=current[key].filter(r=>r.expiresAt>now);
     byId(key+"-count").textContent=String(rows.length);
     const frag=document.createDocumentFragment();
     for(const row of rows){
       const remaining=Math.max(0,Math.ceil((row.expiresAt-now)/1000)),line=node("div","list-row");
-      if(key==="lfg")line.append(node("span","list-tag",row.tag));
+
       const body=node("div");appendChatLine(body,row,false);line.append(body);
       line.append(node("span","list-expiry"+(remaining<=30?" critical":remaining<=60?" soon":""),Math.floor(remaining/60)+":"+String(remaining%60).padStart(2,"0")));frag.append(line);
     }
     if(rows.length)parent.replaceChildren(frag);else empty(parent,"No active listings.");
   }
 }
-function reset(){current=null;for(const key of ["world","gm","lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
+function reset(){current=null;primed=false;known.clear();lastLfgKey="";for(const key of ["world","gm","lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
   if(requesting)return;requesting=true;
   const token=generation, realm=select.value;controller=new AbortController();

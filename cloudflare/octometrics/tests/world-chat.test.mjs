@@ -41,6 +41,7 @@ function dbAdapter(){
  const sql=new DatabaseSync(":memory:");
  sql.exec(readFileSync(new URL("../migrations/0004_world_chat.sql",import.meta.url),"utf8"));
  sql.exec(readFileSync(new URL("../migrations/0005_world_chat_guilds.sql",import.meta.url),"utf8"));
+ sql.exec(readFileSync(new URL("../migrations/0006_world_chat_profiles.sql",import.meta.url),"utf8"));
  return {sql,prepare(query){return {bind(...args){return {query,args}}}},async batch(statements){
    sql.exec("BEGIN");try{const out=statements.map(({query,args})=>{
      const stmt=sql.prepare(query);
@@ -64,8 +65,8 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
   let data=await read();assert.equal(data.world.length,4);assert.equal(data.gm.length,1);assert.equal(data.lfg.length,2);assert.equal(data.wtb.length,1);
   assert.ok(data.world.some(x=>x.message==="<GM> fake"));
   assert.equal(data.world.find(x=>x.author==="Player1").guild,null);
-  await send([], "N'Zoth","OBPVESW","Bearer test-only",[{authorKey:"1",guild:"Raiders",time:now}]);
-  data=await read();assert.equal(data.world.find(x=>x.author==="Player1").guild,"Raiders");assert.equal(data.lfg.find(x=>x.author==="Player1").guild,"Raiders");
+  await send([], "N'Zoth","OBPVESW","Bearer test-only",[{authorKey:"1",guild:"Raiders",time:now,level:60,classId:4}]);
+  data=await read();assert.equal(data.world.find(x=>x.author==="Player1").guild,"Raiders");assert.equal(data.lfg.find(x=>x.author==="Player1").guild,"Raiders");assert.equal(data.lfg.find(x=>x.author==="Player1").classId,4);assert.equal(data.lfg.find(x=>x.author==="Player1").level,60);
   assert.equal(data.world.find(x=>x.author==="Player2").guild,null);
   await send([line(7,"1","LFG WC")],"Y'Shaarj","OBPVPSW");assert.equal((await read("Y'Shaarj")).world[0].guild,null);
   assert.equal((await read("Y'Shaarj")).world.length,1);

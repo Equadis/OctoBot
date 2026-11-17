@@ -1,9 +1,10 @@
 import {cleanText,listingKinds} from "./world-chat-classify.mjs";
+import {analyseRecruitment,classInfo} from "../../docs/world-chat/lfg-catalog.mjs";
 const REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
 const SOURCES={"N'Zoth":"OBPVESW","Y'Shaarj":"OBPVPSW","C'Thun":"OBHCSW"};
 const TTL=300000, HISTORY=1800000;
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
-const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,message:r.message,gm:!!r.gm,time:r.observed_ms});
+const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,message:r.message,gm:!!r.gm,time:r.observed_ms});
 export function validLine(line,now){
   if(!line||typeof line!=="object"||typeof line.id!=="string"||!/^[a-f0-9-]{36}$/i.test(line.id)||
     typeof line.authorKey!=="string"||!/^[0-9]{1,20}$/.test(line.authorKey)||line.authorKey==="0"||
@@ -30,7 +31,9 @@ export async function worldChatRoute(request,env){
       if(!g||typeof g.authorKey!=="string"||!/^[0-9]{1,20}$/.test(g.authorKey)||g.authorKey==="0"||
         typeof g.guild!=="string"||g.guild.length>100||!Number.isSafeInteger(g.time)||g.time<now-120000||g.time>now+5000)
         return reply({error:"invalid guild observation"},400);
-      statements.push(db.prepare("INSERT INTO world_chat_guilds(realm,author_key,guild,observed_ms) VALUES(?,?,?,?) ON CONFLICT(realm,author_key) DO UPDATE SET guild=excluded.guild,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_guilds.observed_ms").bind(payload.realm,g.authorKey,cleanText(g.guild),g.time));
+      const level=Number.isInteger(g.level)&&g.level>=1&&g.level<=60?g.level:null;
+      const classId=Number.isInteger(g.classId)&&Object.hasOwn(classInfo,g.classId)?g.classId:null;
+      statements.push(db.prepare("INSERT INTO world_chat_profiles(realm,author_key,guild,level,class_id,observed_ms) VALUES(?,?,?,?,?,?) ON CONFLICT(realm,author_key) DO UPDATE SET guild=excluded.guild,level=COALESCE(excluded.level,world_chat_profiles.level),class_id=COALESCE(excluded.class_id,world_chat_profiles.class_id),observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_profiles.observed_ms").bind(payload.realm,g.authorKey,cleanText(g.guild),level,classId,g.time));
     }
     for(const raw of payload.messages){
       const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
@@ -48,13 +51,13 @@ export async function worldChatRoute(request,env){
     const realm=url.searchParams.get("realm")||"N'Zoth";
     if(!REALMS.has(realm))return reply({error:"invalid realm"},400);
     const [world,gm,lfg,wtb,wts,heartbeat]=await db.batch([
-      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,g.guild FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key WHERE m.realm=? AND m.gm=0 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 150").bind(realm,now-HISTORY),
-      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,g.guild FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key WHERE m.realm=? AND m.gm=1 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 100").bind(realm,now-HISTORY),
-      ...["lfg","wtb","wts"].map(kind=>db.prepare("SELECT l.tag,l.author,l.message,l.observed_ms,g.guild FROM world_chat_listings l LEFT JOIN world_chat_guilds g ON g.realm=l.realm AND g.author_key=l.author_key WHERE l.realm=? AND l.kind=? AND l.observed_ms>? ORDER BY l.observed_ms DESC LIMIT 300").bind(realm,kind,now-TTL)),
+      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=0 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 150").bind(realm,now-HISTORY),
+      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=1 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 100").bind(realm,now-HISTORY),
+      ...["lfg","wtb","wts"].map(kind=>db.prepare("SELECT l.tag,l.author,l.message,l.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_listings l LEFT JOIN world_chat_guilds g ON g.realm=l.realm AND g.author_key=l.author_key LEFT JOIN world_chat_profiles p ON p.realm=l.realm AND p.author_key=l.author_key WHERE l.realm=? AND l.kind=? AND l.observed_ms>? ORDER BY l.observed_ms DESC LIMIT 300").bind(realm,kind,now-TTL)),
       db.prepare("SELECT observed_ms FROM world_chat_heartbeat WHERE realm=?").bind(realm)
     ]);
     const last=heartbeat.results[0]?.observed_ms??null;
-    const listings=r=>r.results.map(x=>({tag:x.tag,author:x.author,guild:x.guild??null,message:x.message,time:x.observed_ms,expiresAt:x.observed_ms+TTL}));
+    const listings=r=>r.results.map(x=>({tag:x.tag,author:x.author,guild:x.guild??null,level:x.level??null,classId:x.class_id??null,message:x.message,time:x.observed_ms,expiresAt:x.observed_ms+TTL}));
     return reply({realm,generatedAt:now,lastCollectorAt:last,status:last===null?"waiting":now-last>45000?"stale":"live",world:world.results.map(publicLine).reverse(),gm:gm.results.map(publicLine).reverse(),lfg:listings(lfg),wtb:listings(wtb),wts:listings(wts)});
   }
   return reply({error:"method not allowed"},405);
@@ -63,6 +66,7 @@ export async function worldChatCleanup(env){
   await env.DB.batch([
     env.DB.prepare("DELETE FROM world_chat_messages WHERE observed_ms<?").bind(Date.now()-86400000),
     env.DB.prepare("DELETE FROM world_chat_listings WHERE observed_ms<?").bind(Date.now()-TTL),
-    env.DB.prepare("DELETE FROM world_chat_guilds WHERE observed_ms<?").bind(Date.now()-86400000)
+    env.DB.prepare("DELETE FROM world_chat_guilds WHERE observed_ms<?").bind(Date.now()-86400000),
+    env.DB.prepare("DELETE FROM world_chat_profiles WHERE observed_ms<?").bind(Date.now()-86400000)
   ]);
 }
