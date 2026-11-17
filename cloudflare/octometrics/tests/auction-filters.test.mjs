@@ -15,7 +15,7 @@ const meta={
 };
 let n=0;
 const L=(item,over={})=>({auction_id:++n,item_id:item,variant:"0:0:0",quantity:1,icon_url:null,start_bid:10,current_bid:0,min_next_bid:10,
- buyout:1000,owner_guid:"7",time_left_ms:36000000,captured_at:"2026-11-01T00:00:00.000Z",...meta[item],...over});
+ buyout:1000,owner_guid:"7",time_left_ms:36000000,captured_at:new Date().toISOString(),...meta[item],...over});
 const HOUR=3600000;
 /** One scan; `price` scales the Iron Sword's buyout so history and market % can be exercised. */
 function listings(price=500){
@@ -128,7 +128,7 @@ test("favourite keys restrict results server-side and combine with every other f
 test("sorting is stable and pagination neither repeats nor omits items, in both directions",{skip},async()=>{
  const e=await fresh();
  const total=(await q(e,"limit=100")).json.total;
- for(const sort of ["name","unit_buyout","stack_buyout","current_bid","historical_avg","quantity","listings","trend_pct","market_pct","time_left","level"])
+ for(const sort of ["recent","name","unit_buyout","stack_buyout","current_bid","historical_avg","quantity","listings","trend_pct","market_pct","time_left","level"])
   for(const dir of ["asc","desc"]){
    const seen=[];
    for(let offset=0;offset<total;offset+=2){
@@ -171,4 +171,18 @@ test("summary reports how many items have catalogue metadata",{skip},async()=>{
  const s=(await get(e,"summary")).json;
  assert.equal(s.item_count,7);          // 1001 (two variants), 1002..1006
  assert.equal(s.items_with_metadata,6);  // everything except item 1005
+});
+
+test("recent is the default and new auction IDs move their item ahead of existing listings",{skip},async()=>{
+ const e=await fresh();const newer=listings();newer.push(L(1003,{auction_id:99999}));
+ await scan(e,"ah_filters_recent","2026-11-11",newer);
+ const r=await q(e,"");assert.equal(r.status,200);assert.equal(r.json.items[0].item_id,1003);
+ assert.equal(r.json.items[0].latest_listing_seen_at,"2026-11-11T10:30:00.000Z");
+ const repeat=listings();repeat.push(L(1003,{auction_id:99999}));await scan(e,"ah_filters_repeat","2026-11-12",repeat);
+ assert.equal((await q(e,"")).json.items[0].latest_listing_seen_at,"2026-11-11T10:30:00.000Z");
+});
+test("time filters use elapsed time and exclude estimates that have elapsed",{skip},async()=>{
+ const e=await fresh();const stale=new Date(Date.now()-3*HOUR).toISOString();
+ await scan(e,"ah_filters_elapsed","2026-11-11",[L(1003,{time_left_ms:4*HOUR,captured_at:stale}),L(1004,{time_left_ms:HOUR,captured_at:stale})]);
+ assert.deepEqual(ids(await q(e,"time_left=medium")),["1003"]);assert.deepEqual(ids(await q(e,"time_left=short")),[]);
 });
