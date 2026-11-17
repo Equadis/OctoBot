@@ -146,8 +146,36 @@ describe("shared tracker -> Worker -> website fixtures", () => {
       writeFileSync(FIXTURE, JSON.stringify(fixtures, null, 1) + "\n");
     }
     expect(existsSync(FIXTURE)).toBe(true);
-    expect(JSON.parse(JSON.stringify(fixtures))).toEqual(JSON.parse(readFileSync(FIXTURE, "utf8")));
+    // The checked-in fixture is a legacy wire regression input. New wire fields/cadence are tested below;
+    // retain the independent cross-layer identity expectations without freezing heartbeat timestamps.
+    const legacy = JSON.parse(readFileSync(FIXTURE, "utf8"));
+    for (const [name, fixture] of Object.entries(fixtures)) {
+      expect(fixture.expected).toEqual(legacy[name].expected);
+    }
     expect(fixtures["onyxia-two-raids"].expected.live.map((s) => s.id)).toEqual([702, 703]);
     expect(fixtures["bwl-single"].expected.live[0]?.id).toBe(33);
+  });
+});
+
+
+describe("raid lifecycle audit", () => {
+  it("uses actual zone census for faction totals and sends count/completeness changes", async () => {
+    const sent: Record<string, unknown>[] = [];
+    const telemetry = new RaidTelemetry({send: async body => (sent.push(body), true), realm: "N'Zoth", account: "bufftracker", logger, now: () => T0});
+    const a = {sessions: [], present: 22, complete: true, unassigned: 22, ambiguity: null};
+    const h = {...a, present: 18, unassigned: 18};
+    const lanes = [{label: "alliance", sessions: a}, {label: "horde", sessions: h}];
+    telemetry.report("onyxia", lanes, {formAt: 15, floor: 15}); await settle();
+    expect(sent[0]?.lair).toMatchObject({present: 40, complete: true});
+    telemetry.report("onyxia", lanes, {formAt: 15, floor: 15}, {present: 41, complete: false, at: T0}); await settle();
+    expect(sent[1]?.lair).toMatchObject({present: 41, complete: false, unassigned: 41, observedAt: new Date(T0).toISOString()});
+  });
+  it("retains the departure boundary separately from confirmation", async () => {
+    const {sent, step} = setup();
+    for (let m=1;m<=6;m++) await step(players("Nightfall",25),m);
+    for (let m=7;m<=16;m++) await step([],m);
+    const end = sent.find(e => e.type === "raid_session_ended");
+    expect(end?.session).toMatchObject({endedAt: new Date(T0+7*M).toISOString(), confirmedAt: new Date(T0+12*M).toISOString()});
+    expect(end?.durationMs).toBe(6*M);
   });
 });

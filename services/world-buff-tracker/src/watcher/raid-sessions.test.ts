@@ -241,3 +241,68 @@ describe("concurrent raids", () => {
     expect(live(t2).map((s) => s.id)).toEqual([701, 702]);
   });
 });
+
+describe("durable independent raid recovery", () => {
+  const a = group("Nightfall", 40);
+  const b = group("Stormguard", 40);
+  it("restores a secondary after an extended wipe and restart while the primary remains active", () => {
+    const t = make({ rosterCap: 40 });
+    feed(t, a, 1, 10);
+    feed(t, [...a, ...b], 11, 18);
+    const before = live(t).find(s => s.id === 702)!;
+    feed(t, a, 19, 25);
+    expect(ended(t).find(s => s.id === 702)).toBeDefined();
+    const restored = make({ rosterCap: 40 }, 702);
+    restored.restoreCheckpoint(JSON.parse(JSON.stringify(t.checkpoint())));
+    restored.observe(view(a, 26));
+    const obs = restored.observe(view([...a, ...b], 27));
+    expect(obs.events).toContainEqual(expect.objectContaining({kind:"resumed", number:702}));
+    expect(live(restored).find(s => s.id === 702)).toMatchObject({key:before.key, formedAt:before.formedAt, guild:before.guild, resumed:true, players:40});
+    expect(live(restored).map(s=>s.players).reduce((x,y)=>x+y,0)).toBe(80);
+    expect(ended(restored).some(s=>s.id===702)).toBe(false);
+  });
+  it("does not turn a missing cohort across restart into a departure; can recover it later", () => {
+    const t = make({ rosterCap: 40 });
+    feed(t, a, 1, 10);
+    const restored = make({ rosterCap: 40 }, 701);
+    restored.restoreCheckpoint(t.checkpoint());
+    expect(restored.observe(view([], 30)).events).toEqual([]);
+    expect(ended(restored)[0]).toMatchObject({ id:701, endReason:"interrupted", trusted:false });
+    restored.observe(view(a, 31, false));
+    expect(live(restored)).toHaveLength(0);
+    restored.observe(view(a, 32));
+    expect(live(restored)[0]).toMatchObject({id:701, formedAt:T0+M, resumed:true});
+  });
+  it("never resurrects a proven kill after restart", () => {
+    const t=make({rosterCap:40});
+    feed(t,a,1,10); feed(t,[],11,12);
+    expect(t.confirmClearNow(T0+12*M)).not.toBeNull();
+    const restored=make({rosterCap:40},701);
+    restored.restoreCheckpoint(t.checkpoint());
+    feed(restored,a,13,17);
+    expect(live(restored)).toHaveLength(0);
+    expect(ended(restored)[0]).toMatchObject({id:701,endReason:"kill_confirmed"});
+  });
+});
+
+it("a resumed raid keeps its identity even when its original slot has been reused",()=>{
+  const t=make({rosterCap:40,maxConcurrentRaids:3});
+  const a=group("A",40),b=group("B",40),c=group("C",40);
+  feed(t,a,1,10);feed(t,[...a,...b],11,17);feed(t,b,18,24);
+  expect(ended(t).some(s=>s.id===701)).toBe(true);
+  feed(t,[...b,...c],25,30);
+  const obs=t.observe(view([...a,...b,...c],31));
+  expect(obs.events).toContainEqual(expect.objectContaining({kind:"resumed",number:701}));
+  expect(live(t).map(s=>s.id).sort()).toEqual([701,702,703]);
+  expect(live(t).reduce((total,s)=>total+s.players,0)).toBe(120);
+});
+it("confirms the specified pending raid, not just the first pending slot",()=>{
+  const t=make({rosterCap:40});
+  const a=group("A",40),b=group("B",40);
+  feed(t,a,1,10);feed(t,[...a,...b],11,17);feed(t,[],18,19);
+  const target=t.pendingClears().find(p=>p.number===702);
+  expect(target).toBeDefined();
+  expect(t.confirmClearNow(T0+19*M,target)?.number).toBe(702);
+  expect(t.pendingClear()?.number).toBe(701);
+  expect(ended(t).find(s=>s.id===702)?.endReason).toBe("kill_confirmed");
+});

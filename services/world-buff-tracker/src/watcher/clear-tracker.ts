@@ -251,9 +251,12 @@ export class ClearTracker {
     this.#number = state.number;
     this.#roster = new Set(state.roster);
     this.#peak = state.peak;
-    this.#belowSince = state.belowSince;
+    this.#belowSince = null; // restart requires fresh departure evidence
     this.#confirmed = true; // only confirmed raids are ever snapshotted
   }
+
+  /** The lane owns recovery across concurrent slots. */
+  forgetCleared(): void { this.#cleared = null; }
 
   /** The lockout ledger (name -> locked-at ms) as a plain object, to persist across a restart — so a
    *  redeploy doesn't clear the locks and let a just-cleared raid's members re-form a phantom. */
@@ -332,6 +335,7 @@ export class ClearTracker {
           else this.#stableSince = now; // a disconnect interrupts a forming raid — restart the confirm count
           return NO_CHANGE;
         }
+        if (!complete) { this.#belowSince = null; return NO_CHANGE; }
         this.#reset(); // the raid we were tracking is gone across the gap
       }
       return NO_CHANGE;

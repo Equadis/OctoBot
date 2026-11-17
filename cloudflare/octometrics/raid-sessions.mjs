@@ -51,6 +51,7 @@ export function cleanSession(s,now=Date.now()){
   if(typeof s.trusted!=='boolean'||typeof s.resumed!=='boolean')return null;
   const out={id:s.id,key:s.key,status:s.status,confidence:s.confidence,formedAt:s.formedAt,lastConfirmedAt:s.lastConfirmedAt,
     players:s.players,peak:s.peak,rosterSize:s.rosterSize,continuity:s.continuity,guild,trusted:s.trusted,resumed:s.resumed};
+  if(s.resumedAt!==undefined){const resumed=ts(s.resumedAt,now);if(resumed===null||resumed<formedAt)return null;out.resumedAt=s.resumedAt;}
   if(s.status==='ended'){
     const endedAt=ts(s.endedAt,now);
     // An end before the start is an impossible duration, never stored.
@@ -58,6 +59,7 @@ export function cleanSession(s,now=Date.now()){
     // Only a Chronicle kill may claim a kill.
     if(s.endReason==='kill_confirmed'&&s.clearSource!=='chronicle_kill')return null;
     if(s.clearSource==='chronicle_kill'&&s.endReason!=='kill_confirmed')return null;
+    if(s.confirmedAt!==undefined){const confirmed=ts(s.confirmedAt,now);if(confirmed===null||confirmed<endedAt)return null;out.confirmedAt=s.confirmedAt;}
     out.endedAt=s.endedAt;out.endReason=s.endReason;out.clearSource=s.clearSource;
   }else if(s.endedAt!==undefined||s.endReason!==undefined)return null;
   return out;
@@ -80,7 +82,7 @@ export function validateRaidSessions(e,now=Date.now()){
   const sessions=[];
   for(const s of e.sessions){const c=cleanSession(s,now);if(!c)return null;sessions.push(c);}
   return {schema:SCHEMA,eventId:e.eventId,seq:e.seq,zone:e.zone,thresholds:{formAt:e.thresholds.formAt,floor:e.thresholds.floor},
-    lair:{present:lair.present,complete:lair.complete,unassigned:lair.unassigned,ambiguity},sessions};
+    lair:{present:lair.present,complete:lair.complete,unassigned:lair.unassigned,ambiguity,...(ts(lair.observedAt,now)!==null?{observedAt:lair.observedAt}:{})},sessions};
 }
 
 /** A `raid_session_ended` event -> the stored payload, or null. */
@@ -109,15 +111,46 @@ export function latestSnapshots(rows,now=Date.now()){
 }
 
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
-export function endedEvents(rows,zone){
+export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   const byKey=new Map();
+  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
+  const cutoff=snapshot?Date.parse(snapshot.observedAt):Infinity;
+  const apply=(p,observed,priority)=>{
+    const s=p?.session;
+    if(p?.schema!==SCHEMA||p.zone!==zone||!s||!str(s.key,48))return;
+    const at=stamp(s,observed),time=Date.parse(at);
+    if(!Number.isFinite(time))return;
+    if(s.status==='ended'){
+      const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
+      if(!Number.isFinite(durationMs)||durationMs<0||!END_REASON.has(s.endReason)||!CLEAR_SOURCE.has(s.clearSource))return;
+      if((s.endReason==='kill_confirmed')!==(s.clearSource==='chronicle_kill'))return;
+      if(p.durationMs!==undefined&&p.durationMs!==durationMs)return;
+      p={...p,durationMs,confirmedAt:at};
+    }
+    const prev=byKey.get(s.key);
+    if(!prev||time>prev.time||(time===prev.time&&priority>prev.priority))byKey.set(s.key,{p,time,priority});
+  };
+  // Standalone events are historical only. A completion newer than the last atomic snapshot
+  // must wait for that snapshot; it cannot advance Last Raid Finished on its own.
   for(const row of rows.map(parse)){
-    const p=row.payload;
-    if(!p||p.schema!==SCHEMA||p.zone!==zone||!p.session||p.session.status!=='ended')continue;
-    const prev=byKey.get(p.session.key);
-    if(!prev||Date.parse(p.session.endedAt)>Date.parse(prev.session.endedAt))byKey.set(p.session.key,p);
+    const p=row.payload,s=p?.session;
+    if(s?.status==='ended'&&Date.parse(stamp(s,row.observed_at))<=cutoff)apply(p,row.observed_at,1);
   }
-  return [...byKey.values()].sort((a,b)=>Date.parse(b.session.endedAt)-Date.parse(a.session.endedAt));
+  // Snapshot-derived revisions persist past the short snapshot retention. Compare actual
+  // transition times: an earlier resume cannot erase a later end, and vice versa.
+  for(const row of revisions.map(parse)){
+    const p=row.payload,s=p?.session;
+    if(s&&Date.parse(stamp(s,row.observed_at))<=cutoff)apply(p,row.observed_at,2);
+  }
+  // The current snapshot is decisive for every session explicitly included in it.
+  for(const s of snapshot?.payload.sessions||[]){
+    if(s.status!=='ended'){byKey.delete(s.key);continue;}
+    const previous=byKey.get(s.key)?.p;
+    const confirmedAt=s.confirmedAt||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
+    const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
+    byKey.set(s.key,{p:{session:s,confirmedAt,durationMs},time:Date.parse(confirmedAt),priority:3});
+  }
+  return [...byKey.values()].map(x=>x.p).filter(p=>p.session.status==='ended'&&['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));
 }
 
 /**
@@ -157,13 +190,14 @@ export function buildAuthoritative({snapshot,endedRows,learned,raid,now}){
   const fresh=ageMs<=FRESH_MS,expired=ageMs>EXPIRE_MS;
   const p=snapshot.payload;
   const live=expired?[]:p.sessions.filter(s=>s.status!=='ended').map(s=>liveView(s,{now,fresh,learned,raid}));
-  const lastEnded=endedRows[0]||null;
+  const liveKeys=new Set(p.sessions.filter(s=>s.status!=='ended').map(s=>s.key));
+  const lastEnded=endedRows.find(e=>!liveKeys.has(e.session.key)&&['kill_confirmed','departed'].includes(e.session.endReason))||null;
   return {
     source:'bufftracker',schema:SCHEMA,observedAt:snapshot.observedAt,ageMs,fresh,stale:!fresh,expired,
     thresholds:p.thresholds,
-    lair:{present:p.lair.present,complete:p.lair.complete,unassigned:p.lair.unassigned,ambiguity:p.lair.ambiguity},
+    lair:{present:p.lair.present,complete:p.lair.complete,unassigned:p.lair.unassigned,ambiguity:p.lair.ambiguity,observedAt:p.lair.observedAt||snapshot.observedAt},
     sessions:live,
-    lastFinished:lastEnded?{at:lastEnded.session.endedAt,id:lastEnded.session.id,durationMs:lastEnded.durationMs,
+    lastFinished:lastEnded?{at:lastEnded.confirmedAt||lastEnded.session.confirmedAt||lastEnded.session.endedAt,departedAt:lastEnded.session.endedAt,id:lastEnded.session.id,durationMs:lastEnded.durationMs,
       endReason:lastEnded.session.endReason,clearSource:lastEnded.session.clearSource,
       killConfirmed:lastEnded.session.clearSource==='chronicle_kill',trusted:lastEnded.session.trusted}:null,
   };

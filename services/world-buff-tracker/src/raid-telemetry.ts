@@ -63,17 +63,19 @@ export function sessionWire(s: RaidSessionSnapshot): Record<string, unknown> {
       guilds: s.guild.guilds.slice(0, MAX_GUILDS).map((g) => ({ name: g.name, count: g.count })),
     },
     ...(s.endedAt !== undefined ? { endedAt: iso(s.endedAt) } : {}),
+    ...(s.confirmedAt !== undefined ? { confirmedAt: iso(s.confirmedAt) } : {}),
     ...(s.endReason !== undefined ? { endReason: s.endReason } : {}),
     ...(s.clearSource !== undefined ? { clearSource: s.clearSource } : {}),
     trusted: s.trusted,
     resumed: s.resumed,
+    ...(s.resumedAt !== undefined ? { resumedAt: iso(s.resumedAt) } : {}),
   };
 }
 
 /** Merge a lair's lanes (one on a crossfaction realm) into one lair view. */
 function mergeLanes(lanes: readonly LaneSessions[]): LairSessions {
   const sessions = lanes.flatMap((lane) => lane.sessions.sessions);
-  const present = lanes.reduce((sum, lane) => Math.max(sum, lane.sessions.present), 0);
+  const present = lanes.reduce((sum, lane) => sum + lane.sessions.present, 0);
   const first = lanes[0]?.sessions;
   return {
     sessions,
@@ -109,20 +111,24 @@ export class RaidTelemetry {
    * Report a lair's current sessions. Sends when the session set changed, else at the heartbeat
    * interval. Never throws and never blocks the poll loop; a failed send is retried on the next poll.
    */
-  report(zone: RaidZoneId, lanes: readonly LaneSessions[], thresholds: LairThresholds): void {
+  report(zone: RaidZoneId, lanes: readonly LaneSessions[], thresholds: LairThresholds, observation?: { present: number; complete: boolean; at: number }): void {
     if (lanes.length === 0) return;
     const now = this.#now();
-    const lair = mergeLanes(lanes);
-    void this.#reportEnded(zone, lair, now);
-    const shown = lair.sessions.filter((s) => s.status !== "ended" || (s.endedAt ?? 0) >= now - ENDED_IN_SNAPSHOT_MS).slice(0, 12);
-    const live = shown.filter((s) => s.status !== "ended");
-    const recent = shown.filter((s) => s.status === "ended").slice(0, ENDED_IN_SNAPSHOT_MAX);
+    const merged = mergeLanes(lanes);
+    const lair = observation ? { ...merged, present: observation.present, complete: observation.complete, unassigned: merged.unassigned + Math.max(0, observation.present - merged.present) } : merged;
+    // Live sessions must not be truncated by earlier lanes' historical rows.
+    const live = lair.sessions.filter(s => s.status !== "ended").slice(0, 12);
+    const recent = lair.sessions.filter(s => s.status === "ended" && (s.confirmedAt ?? s.endedAt ?? 0) >= now - ENDED_IN_SNAPSHOT_MS)
+      .sort((a,b) => (b.confirmedAt ?? b.endedAt ?? 0) - (a.confirmedAt ?? a.endedAt ?? 0))
+      .slice(0, Math.min(ENDED_IN_SNAPSHOT_MAX, 12-live.length));
     const sig = JSON.stringify([
-      [...live, ...recent].map((s) => [s.key, s.status, s.confidence, s.guild.label, s.endReason ?? null]),
+      [...live, ...recent].map((s) => [s.key, s.status, s.confidence, s.guild.label, s.endReason ?? null, s.players, s.resumed, s.resumedAt, s.confirmedAt]),
+      lair.present, lair.complete, lair.unassigned,
       lair.ambiguity?.kind ?? null,
     ]);
     const due = sig !== this.#lastSig.get(zone) || now - (this.#lastAt.get(zone) ?? 0) >= HEARTBEAT_MS;
-    if (!due || this.#inFlight.has(zone)) return;
+    if (this.#inFlight.has(zone)) return;
+    if (!due) { void this.#reportEnded(zone, lair, now); return; }
     this.#seq = Math.max(this.#seq + 1, now);
     const body = {
       type: "raid_sessions",
@@ -137,6 +143,7 @@ export class RaidTelemetry {
       thresholds: { formAt: thresholds.formAt, floor: thresholds.floor },
       lair: {
         present: lair.present,
+        ...(observation ? { observedAt: iso(observation.at) } : {}),
         complete: lair.complete,
         unassigned: lair.unassigned,
         ambiguity: lair.ambiguity,
@@ -149,6 +156,8 @@ export class RaidTelemetry {
         if (ok) {
           this.#lastSig.set(zone, sig);
           this.#lastAt.set(zone, now);
+          // Standalone history is published only AFTER the atomic lifecycle snapshot is acknowledged.
+          void this.#reportEnded(zone, lair, now);
         }
       })
       .catch((error) => this.#warn(error))
@@ -159,7 +168,7 @@ export class RaidTelemetry {
   async #reportEnded(zone: RaidZoneId, lair: LairSessions, now: number): Promise<void> {
     for (const s of lair.sessions) {
       if (s.status !== "ended" || s.endedAt === undefined) continue;
-      const id = `${this.#realm}|${zone}|${s.key}|${s.endedAt}`;
+      const id = `${this.#realm}|${zone}|${s.key}|${s.endedAt}|${s.confirmedAt ?? 0}|${s.endReason}`;
       if (this.#sentEnded.has(id)) continue;
       this.#sentEnded.add(id); // claim first so overlapping reports never double-send
       try {
