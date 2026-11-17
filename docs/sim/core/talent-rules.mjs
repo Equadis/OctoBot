@@ -36,6 +36,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Backstab also has a chance to add a combo point; no proc/event model"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Backstab",
+      "stat": "extraComboPointChancePct",
+      "param": 1
     }
   ],
   "114": [
@@ -340,6 +346,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Noncritical Ambush refunds Energy; no event model"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Ambush",
+      "stat": "energyRefundOnNonCrit",
+      "param": 1
     }
   ],
   "150": [
