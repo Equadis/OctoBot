@@ -1,5 +1,7 @@
 # Read-only export of all retained raid history from production D1, with pagination.
+param([string]$BackfillSqlPath)
 $ErrorActionPreference = 'Stop'
+if ($BackfillSqlPath) { $BackfillSqlPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($BackfillSqlPath) }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ('octo-raid-audit-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tmp | Out-Null
@@ -27,6 +29,12 @@ try {
   if ($files.Count -eq 0) { Write-Output '[]'; return }
   & node cloudflare/octometrics/audit-raid-history.mjs @files
   if ($LASTEXITCODE -ne 0) { throw 'History reconciliation failed' }
+  if ($BackfillSqlPath) {
+    $sqlText = & node cloudflare/octometrics/audit-raid-history.mjs --backfill-sql @files
+    if ($LASTEXITCODE -ne 0) { throw 'History backfill generation failed' }
+    [IO.File]::WriteAllText($BackfillSqlPath, ($sqlText -join "`n"), (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host "Generated append-only backfill SQL: $BackfillSqlPath (not applied)"
+  }
 } finally {
   Pop-Location
   Remove-Item -Path $tmp -Recurse -Force
