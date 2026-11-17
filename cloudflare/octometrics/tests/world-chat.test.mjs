@@ -8,7 +8,7 @@ test("recruitment aliases, boundaries, multiple raids and trade exclusion",()=>{
   assert.equal(listingKinds("WTS MC boost")[0].kind,"wts");
   assert.equal(listingKinds("WTB [Arcane Crystal]")[0].kind,"wtb");
   assert.equal(listingKinds("LF2M WC")[0].tag,"WC");
-  assert.equal(listingKinds("LFG DM north")[0].tag,"Dire Maul");
+  assert.equal(listingKinds("LFG DM north")[0].tag,"DM North");
   assert.equal(cleanText("|cffa335ee|Hitem:1|h[Item]|h|r"),"[Item]");
 });
 test("fresh event validation",()=>{
@@ -75,4 +75,14 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
   await worldChatCleanup(env);assert.equal(DB.sql.prepare("SELECT COUNT(*) AS n FROM world_chat_listings WHERE observed_ms<?").get(now-300000).n,0);
   now+=180000;assert.equal((await read()).lfg.length,0);
  }finally{Date.now=actual;DB.sql.close();}
+});
+
+import {catalog,analyseRecruitment,filterListings} from "../../../docs/world-chat/lfg-catalog.mjs";
+test("catalogue, distinct wings, Octo instances and ambiguous shorthand",()=>{
+ assert.equal(new Set(catalog.map(x=>x.tag)).size,catalog.length);
+ for(const [message,expected] of [["LF2M dme heals",["DM East"]],["LFG sm cath",["SM Cath"]],["LFG strat UD",["Strat UD"]],["LF1M gnomer",["Gnomer"]],["LF3M LKH",["Kara"]],["LFG Emerald Sanctum",["ES"]],["LFM dark reaver of karazhan",["Dark Reaver"]],["LFG DM",["DM"]],["LFG Kara crypt",["Kara Crypt"]],["WTS ZG boost",[]],["guild recruiting for MC",[]]])assert.deepEqual(analyseRecruitment(message).tags,expected,message);
+ assert.equal(analyseRecruitment("LF2M tank and healer WC").needed,2);assert.deepEqual(analyseRecruitment("LF2M tank and healer WC").roles,["Tank","Healer"]);assert.equal(analyseRecruitment("LFG WC").intent,"LFG");
+ const rows=[{tag:"WC",message:"LF2M tank WC",author:"A",expiresAt:100},{tag:"ZG",message:"LFG ZG dps",author:"B",expiresAt:100},{tag:"WC",message:"LFG WC",author:"C",expiresAt:1}];
+ assert.deepEqual(filterListings(rows,{kind:"dungeon",role:"Tank",query:"wailing",blacklist:"boost"},10).map(x=>x.author),["A"]);
+ assert.deepEqual(filterListings(rows,{kind:"raid",intent:"LFG",blacklist:"dps"},10),[]);
 });
