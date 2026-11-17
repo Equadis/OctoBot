@@ -29,15 +29,15 @@ function validateFormula(f,stats,comboEnabled){
  if(f.weapon){checkStat(f.weapon.minStat);checkStat(f.weapon.maxStat);bounds(stats[f.weapon.minStat],stats[f.weapon.maxStat]);finite(f.weapon.coefficient,'weapon coefficient',0);}
  finite(f.multiplier,'formula multiplier',0);
 }
-function range(e,target,actor,f,stats){
+function range(e,target,actor,f,stats,baseFactor=1){
  const requiresPoints=!!f.comboRanges||f.terms.some(t=>t.perComboPoint||t.comboCoefficients);const points=requiresPoints?e.comboPoints.points(target):0;
  const base=f.comboRanges?f.comboRanges[points-1]:[f.min,f.max];
  if(!base)throw new Error('Explicit combo-point rank range unavailable');
  const stat=k=>e.auras.stat(actor,k,finite(stats[k],k));
  let extra=0;for(const t of f.terms)extra+=stat(t.stat)*(t.comboCoefficients?(t.comboCoefficients[points-1]??(()=>{throw new Error('Missing combo coefficient');})()):t.coefficient)*(t.perComboPoint?points:1);
  const wm=f.weapon?f.weapon.coefficient:0;
- const a=(base[0]+extra+(f.weapon?stat(f.weapon.minStat)*wm:0))*f.multiplier;
- const b=(base[1]+extra+(f.weapon?stat(f.weapon.maxStat)*wm:0))*f.multiplier;
+ const a=(base[0]*baseFactor+extra+(f.weapon?stat(f.weapon.minStat)*wm:0))*f.multiplier;
+ const b=(base[1]*baseFactor+extra+(f.weapon?stat(f.weapon.maxStat)*wm:0))*f.multiplier;
  if(b<a)throw new Error('Dynamic damage range is reversed');
  return {min:Math.max(0,a),max:Math.max(0,b)};
 }
@@ -56,7 +56,7 @@ function validateEffects(effects,ctx,depth=0){
    finite(x.mitigation,'mitigation',0);if(x.mitigation>1)throw new Error('Invalid mitigation');finite(x.flatReduction,'flat reduction',0);
    if(x.additionalResource){if(x.kind!=='damage'||!has(ctx.pools,x.additionalResource.resource))throw new Error('Additional spend requires damage and known resource');finite(x.additionalResource.coefficient,'additional resource coefficient',0);finite(x.additionalResource.cap,'additional resource cap',0);choose(x.additionalResource.payment,['always','landed'],'additional spend policy');}
    if(x.kind.startsWith('periodic')){if((x.formula.comboRanges||x.formula.terms.some(t=>t.perComboPoint||t.comboCoefficients))&&x.snapshot!=='snapshot')throw new Error('Periodic combo scaling requires an application snapshot');int(x.durationMs,'periodic duration',1);if(x.durationByCombo){if(!ctx.comboEnabled||!Array.isArray(x.durationByCombo))throw new Error('Combo duration requires bank');for(const ms of x.durationByCombo)int(ms,'combo duration',1);}
-   int(x.intervalMs,'tick interval',1);if(x.tickMultipliers!==undefined&&(!Array.isArray(x.tickMultipliers)||x.tickMultipliers.length!==Math.floor(x.durationMs/x.intervalMs)||x.tickMultipliers.some(n=>!Number.isFinite(n)||n<0)))throw new Error('Explicit periodic tick multipliers must match tick count');choose(x.refresh,['restart','preserve-next-tick'],'refresh');bool(x.tickAtExpiry,'expiry tick');choose(x.snapshot,['snapshot','dynamic'],'snapshot policy');validateOutcomes(x.applicationOutcomes);id(x.auraName,'aura name');}
+   int(x.intervalMs,'tick interval',1);if(x.baseTickMultipliers!==undefined&&(!Array.isArray(x.baseTickMultipliers)||x.baseTickMultipliers.length!==Math.floor(x.durationMs/x.intervalMs)||x.baseTickMultipliers.some(n=>!Number.isFinite(n)||n<0)))throw new Error('Explicit periodic base multipliers must match tick count');if(x.replacePeriodicAuras!==undefined&&(!Array.isArray(x.replacePeriodicAuras)||x.replacePeriodicAuras.some(n=>typeof n!=='string'||!n)))throw new Error('Invalid periodic replacement set');if(x.tickMultipliers!==undefined&&(!Array.isArray(x.tickMultipliers)||x.tickMultipliers.length!==Math.floor(x.durationMs/x.intervalMs)||x.tickMultipliers.some(n=>!Number.isFinite(n)||n<0)))throw new Error('Explicit periodic tick multipliers must match tick count');choose(x.refresh,['restart','preserve-next-tick'],'refresh');bool(x.tickAtExpiry,'expiry tick');choose(x.snapshot,['snapshot','dynamic'],'snapshot policy');validateOutcomes(x.applicationOutcomes);id(x.auraName,'aura name');}
   }else if(x.kind==='consume-periodic'){
    id(x.auraName,'periodic source name');int(x.durationMs,'periodic consumption',1);
   }else if(x.kind==='health-to-resource'){
@@ -92,7 +92,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   let threat=x.threat===null?null:{actorId:actor,...x.threat};const isHeal=x.kind.endsWith('heal');
   if(threat&&isHeal){const alive=enemyIds.filter(id=>e.unit(id).alive);threat=alive.length?{...threat,enemyIds:alive}:null;}
   const value=hit.raw;
-  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));if(x.leech&&!damage.ignored&&e.unit(actor).alive){const basis=x.leech.basis==='effective'?damage.effective:hit.raw;e.heal({actorId:actor,targetId:actor,source:source+' (leech)',value:basis*x.leech.fraction,threat:null});}}
+  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null,leech:x.leech??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));}
   return hit;
  };
  for(const [index,x] of effects.entries()){
@@ -104,11 +104,12 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
    const application=x.reusePreviousHit===true?(last===null?(()=>{throw new Error('No previous attack outcome to reuse');})():last):sampleAttack({min:0,max:0,outcomes:x.applicationOutcomes,random:e.random});last=application;if(x.reusePreviousHit!==true)e.recordMechanic('attack-result',{actorId:actor,targetId:target,source:source+' (apply)',school:x.school??null,...application});
    if(!last.landed)continue;
    const periodicId=JSON.stringify([actor,target,source,index,depth]),kind=x.kind.endsWith('heal')?'buff':'debuff';
-   const snap=x.snapshot==='snapshot'?range(e,target,actor,x.formula,stats):null;const durationMs=x.durationByCombo?x.durationByCombo[e.comboPoints.points(target)-1]:x.durationMs;if(!durationMs)throw new Error('Missing combo periodic duration');
+   for(const other of e.auras.active(target,'debuff'))if(other.ownerId===actor&&x.replacePeriodicAuras?.includes(other.name)){e.periodic.remove(other.id);e.auras.remove(other,'replaced');}
+   const snap=x.snapshot==='snapshot'?(x.baseTickMultipliers?{ticks:x.baseTickMultipliers.map(v=>range(e,target,actor,x.formula,stats,v))}:range(e,target,actor,x.formula,stats)):null;const durationMs=x.durationByCombo?x.durationByCombo[e.comboPoints.points(target)-1]:x.durationMs;if(!durationMs)throw new Error('Missing combo periodic duration');
    e.auras.apply({id:periodicId,name:x.auraName,targetId:target,ownerId:actor,kind,durationMs,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh'});
    e.periodic.apply({id:periodicId,durationMs,intervalMs:x.intervalMs,refresh:x.refresh,tickAtExpiry:x.tickAtExpiry,tickPriority:P.tick,expirePriority:P.expire,snapshot:snap,onTick:p=>{
     if(!e.unit(actor).alive||!e.unit(target).alive){e.periodic.remove(periodicId);e.auras.remove({id:periodicId,targetId:target,ownerId:actor,kind},'unit-dead');return;}
-    const r=p.snapshot??range(e,target,actor,x.formula,stats),factor=x.tickMultipliers?.[p.tickIndex-1]??1;resolve(x,{min:r.min*factor,max:r.max*factor});
+    const r=p.snapshot?.ticks?.[p.tickIndex-1]??p.snapshot??range(e,target,actor,x.formula,stats,x.baseTickMultipliers?.[p.tickIndex-1]??1),factor=x.tickMultipliers?.[p.tickIndex-1]??1;resolve(x,{min:r.min*factor,max:r.max*factor});
    }});
   }else if(x.kind==='consume-periodic'){for(const a of e.auras.active(target,'debuff'))if(a.ownerId===actor&&a.name===x.auraName&&e.periodic.has(a.id)){e.periodic.shorten(a.id,x.durationMs);e.auras.shorten(a,x.durationMs);}}
   else if(x.kind==='health-to-resource'){const r=range(e,target,actor,x.formula,stats),cost=r.min===r.max?r.min:r.min+(r.max-r.min)*e.random();if(!e.spendHealth({actorId:actor,amount:cost,source}))throw new Error('Insufficient health for conversion');const delta=cost*x.factor,change=e.resources.change([{resource:x.resource,delta}]);if(!change.ok)throw new Error('Health conversion failed');e.recordMechanic('resource-change',{actorId:actor,source,resource:x.resource,delta,overflow:change.overflow[x.resource]??0});}
@@ -155,6 +156,7 @@ export function createExplicitClassEncounter(input){
   const castMs=int(a.castMs,'cast time'),gcdMs=int(a.gcdMs,'GCD'),cooldownMs=int(a.cooldownMs,'ability cooldown');
   if(a.kind==='channel'){int(a.tickMs,'channel interval',1);bool(a.tickAtEnd,'final channel tick');}
   if(a.kind==='queued-melee')id(a.swingId,'swing identity');
+  if(a.blockingAura!==undefined)id(a.blockingAura,'blocking target aura');
   if(a.requiresOwnedAura){id(a.requiresOwnedAura.name,'required aura name');int(a.requiresOwnedAura.minRemainingMs,'required aura time');}
   if(a.refreshGate){choose(a.refreshGate.kind,['buff','debuff'],'refresh gate kind');id(a.refreshGate.name,'refresh aura name');int(a.refreshGate.remainingMs,'refresh threshold');}
   const min=finite(a.minRangeYards,'minimum range',0),max=finite(a.maxRangeYards,'maximum range',min);
@@ -174,7 +176,7 @@ export function createExplicitClassEncounter(input){
   };
   const cooldowns=[...(gcdMs?[{id:'gcd',duration:gcdMs}]:[]),...(cooldownMs?[{id:a.abilityId,duration:cooldownMs}]:[])];
   if(a.sharedCooldown!==null){id(a.sharedCooldown?.id,'shared cooldown id');int(a.sharedCooldown?.durationMs,'shared cooldown duration',1);cooldowns.push({id:'shared:'+a.sharedCooldown.id,duration:a.sharedCooldown.durationMs});}
-  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,requiresGcdReady:a.requiresGcdReady??(gcdMs>0),costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired)&&(a.targetHealthMaxPct===undefined||e.unit(t).healthPercent<=a.targetHealthMaxPct)&&(!a.requiresOwnedAura||(e.auras.frame(t,'debuff',a.actorId)[a.requiresOwnedAura.name]?.remaining??0)*1000>=a.requiresOwnedAura.minRemainingMs)&&a.effects.filter(x=>x.kind==='health-to-resource').every(x=>e.unit(a.actorId).health>range(e,t,a.actorId,x.formula,ctx.stats).max)&&(!a.refreshGate||(e.auras.frame(a.refreshGate.onActor?a.actorId:t,a.refreshGate.kind,a.actorId)[a.refreshGate.name]?.remaining??0)*1000<=a.refreshGate.remainingMs);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:apply}),rank,spellId};
+  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,requiresGcdReady:a.requiresGcdReady??(gcdMs>0),costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired)&&(a.targetHealthMaxPct===undefined||e.unit(t).healthPercent<=a.targetHealthMaxPct)&&(!a.blockingAura||!(e.auras.frame(t,'debuff')[a.blockingAura]?.remaining>0))&&(!a.requiresOwnedAura||(e.auras.frame(t,'debuff',a.actorId)[a.requiresOwnedAura.name]?.remaining??0)*1000>=a.requiresOwnedAura.minRemainingMs)&&a.effects.filter(x=>x.kind==='health-to-resource').every(x=>e.unit(a.actorId).health>range(e,t,a.actorId,x.formula,ctx.stats).max)&&(!a.refreshGate||(e.auras.frame(a.refreshGate.onActor?a.actorId:t,a.refreshGate.kind,a.actorId)[a.refreshGate.name]?.remaining??0)*1000<=a.refreshGate.remainingMs);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:apply}),rank,spellId};
  });
  const knownAbilities=Object.fromEntries(sc.actions.map(a=>[profile.abilityRegistry[a.abilityId].name,a.rank]));
  const e=new CombatEncounter({durationMs:sc.durationMs,decisionIntervalMs:sc.decisionIntervalMs,seed:sc.seed,pools:sc.pools,units:sc.units,playerId:sc.playerId,primaryId:sc.primaryId,targetIds:sc.targetIds,allyIds:sc.allyIds,petId:sc.petId??null,comboPoints:sc.comboPoints??null,rows:sc.rows,actions,manageAuras:true,context:()=>({...classState,knownAbilities,abilityRanks:knownAbilities})});

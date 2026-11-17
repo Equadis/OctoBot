@@ -25,6 +25,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='costOverride')policy.costOverride=null;
   if(field==='castOverrideMs')policy.castOverrideMs=null;
+  if(field==='shieldModel')policy.shieldModel={base:null,coefficient:null,stat:null,durationMs:null,lockoutMs:null};
   if(field==='leechModel')policy.leechModel={fraction:null,basis:null};
   if(field==='channelApplicationPolicy')policy.channelApplicationPolicy=null;
   if(field==='holyShockModel')policy.holyShockModel={role:null,coefficient:null,resetChance:null,resetTrigger:null};

@@ -1,5 +1,5 @@
-import {wireReferenceLab} from './reference-lab.mjs?v=20261117-mvp7';
-import {wireReferenceRotation} from './reference-rotation.mjs?v=20261117-mvp7';
+import {wireReferenceLab} from './reference-lab.mjs?v=20261117-mvp8';
+import {wireReferenceRotation} from './reference-rotation.mjs?v=20261117-mvp8';
 import {classReleaseReadiness} from './core/combat-release-readiness.mjs?v=20261117-mvp1';
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';

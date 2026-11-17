@@ -1667,5 +1667,53 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/smite.go",
       "liveVerified": false
     }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:power-word-shield",
+    "spellId": 10901,
+    "rank": 10,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 500,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "absorb",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 942,
+        "max": 942
+      }
+    ],
+    "source": "https://classic.warcraftdb.com/data/spell/10901",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:power-word-shield",
+      "spellId": 10901,
+      "rank": 10,
+      "level": 60,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "live shield amount, cooldown, stat scaling, duration, Weakened Soul and break proc"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classic.warcraftdb.com/data/spell/10901",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 4000,
+    "requiredPolicy": [
+      "shieldModel"
+    ]
   }
 ]);

@@ -3,6 +3,9 @@
 // fields separate. In particular, DB "mana" on Rage/Energy records is not trusted.
 const db=(classId,ability,spellId,rank,level,fields,unknown=[],conflicts=[])=>({classId,abilityId:classId+':'+ability,spellId,rank,level,fields,unknown,conflicts,status:'database-observed',source:'https://octowow.st/db/?spell='+spellId,guide:'https://octowow.st/'+classId,liveVerified:false});
 export const RANK_EVIDENCE=Object.freeze([
+ db('warlock','curse-of-agony',11713,6,58,{school:'shadow',manaCost:215,rangeYards:30,baseTick:87,durationMs:24000,tickMs:2000,ramp:true},['live coefficients','ramp','talent-linked secondary curses'],[{field:'curseExclusivity',database:'one curse',guide:'Agony can coexist with other curses except Doom'}]),
+ db('warlock','curse-of-doom',603,1,60,{school:'shadow',manaCost:300,rangeYards:30,baseTick:3200,durationMs:60000,tickMs:60000,cooldownMs:60000},['live coefficient','summon on kill','live threat']),
+
  db('mage','arcane-explosion',10202,6,54,{school:'arcane',manaCost:390,castMs:0,radiusYards:10,baseMin:243,baseMax:264},['live coefficient','AoE cap','rewind proc'],[{field:'baseDamage',database:'243–264',externalReference:'249–270'}]),
  db('mage','flamestrike',10216,6,56,{school:'fire',manaCost:990,castMs:3000,rangeYards:30,radiusYards:5,baseMin:375,baseMax:460,baseTick:85,durationMs:8000,tickMs:2000},['ground occupancy','live coefficients','rewind proc'],[{field:'manaCost',database:990,archivedChanges:680},{field:'castMs',database:3000,archivedChanges:2500},{field:'baseDamage',database:'375–460',externalReference:'381–466'}]),
  db('mage','blast-wave',13021,5,60,{school:'fire',manaCost:545,castMs:0,radiusYards:10,baseMin:462,baseMax:545,slowDurationMs:6000},['live coefficient','cooldown','slow/rewind'],[{field:'maxDamage',database:545,externalReference:544}]),

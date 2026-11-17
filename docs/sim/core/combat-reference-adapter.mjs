@@ -99,9 +99,9 @@ export function runReferenceScenario(prepared,{seed,iterations}){
  if(!prepared||prepared.liveVerified!==false||prepared.scenario.mode!=='research')throw new Error('Prepared reference scenario required');
  const create=s=>createExplicitClassEncounter({...prepared.scenario,seed:s});
  const sample=create(seed).run(),report=combatReport(sample);
- const healing=prepared.scenario.actions.some(a=>a.targets.includes('ally')),damaging=prepared.scenario.actions.some(a=>a.targets.includes('enemy'))||prepared.scenario.autos.length>0;
- const type=healing&&!damaging?'hps':'dps';
- const metric=r=>{const t=r.attribution.actors[actor].totals;return (type==='hps'?t.allyHealing:t.enemyDamage)/(r.durationMs/1000);};
- const stats=runIterations({seed,iterations,createEncounter:create,metrics:{[type]:metric,...(healing&&damaging?{hps:r=>r.attribution.actors[actor].totals.allyHealing/(r.durationMs/1000)}:{})}});
+ const healing=prepared.scenario.actions.some(a=>a.effects.some(e=>e.kind==='heal'||e.kind==='periodic-heal'||e.leech)),absorbing=prepared.scenario.actions.some(a=>a.effects.some(e=>e.kind==='absorb')),damaging=prepared.scenario.actions.some(a=>a.targets.includes('enemy'))||prepared.scenario.autos.length>0;
+ const type=absorbing&&!healing&&!damaging?'aps':healing&&!damaging?'hps':'dps';const aps=r=>r.events.filter(e=>e.type==='absorb'&&e.actorId===actor).reduce((n,e)=>n+e.amount,0)/(r.durationMs/1000);
+ const metric=r=>{if(type==='aps')return aps(r);const t=r.attribution.actors[actor].totals;return (type==='hps'?t.allyHealing:t.enemyDamage)/(r.durationMs/1000);};
+ const stats=runIterations({seed,iterations,createEncounter:create,metrics:{[type]:metric,...(healing&&damaging?{hps:r=>r.attribution.actors[actor].totals.allyHealing/(r.durationMs/1000)}:{}),...(absorbing&&type!=='aps'?{aps}:{} )}});
  return {kind:'reference-only',metric:type,rankRows:prepared.rankRows,limitations:prepared.limitations,statistics:stats.metrics[type],allStatistics:stats.metrics,example:report,exampleEvents:sample.events,liveVerified:false};
 }
