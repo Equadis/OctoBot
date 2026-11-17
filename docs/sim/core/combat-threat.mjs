@@ -36,5 +36,5 @@ export class ThreatLedger{
   for(const a of ranked){if(a.id===currentActorId)continue;const threshold=thresholdByActor?.[a.id];if(!Number.isFinite(threshold)||threshold<1)throw new Error('Explicit aggro threshold required');if(a.threat>current*threshold)return a.id;}
   return currentActorId;
  }
- snapshot(){return {enemies:Object.fromEntries([...this.#tables].map(([id,t])=>[id,Object.fromEntries(t)])),generated:Object.fromEntries(this.#generated),forced:Object.fromEntries([...this.#forced].filter(([,v])=>v.until>this.timeline.now).map(([k,v])=>[k,{...v}]))};}
+ snapshot(){return {actors:[...this.actors],enemies:Object.fromEntries([...this.#tables].map(([id,t])=>[id,Object.fromEntries(t)])),generated:Object.fromEntries(this.#generated),forced:Object.fromEntries([...this.#forced].filter(([,v])=>v.until>this.timeline.now).map(([k,v])=>[k,{...v}]))};}
 }

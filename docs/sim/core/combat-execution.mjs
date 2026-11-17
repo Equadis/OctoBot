@@ -162,7 +162,7 @@ export class CombatEncounter{
  swing(id){const s=this.#swings.get(id);return s?{nextAt:s.nextAt,lastAt:s.lastAt}:null;}
  run({maxEvents=100000}={}){
   if(this.#started)throw new Error('Encounter instances are single-use');for(const a of this.#actions.values())if(a.kind==='queued-melee'&&!this.#swings.has(a.swingId))throw new Error('Queued action requires configured swing: '+a.swingId);this.#started=true;this.#checkFinish();this.#scheduleDecision(0);
-  this.timeline.runUntil(this.#duration,{maxEvents});if(this.#cast)this.interrupt('time limit');this.#done=true;
+  this.timeline.runUntil(this.#duration,{maxEvents,stopWhen:()=>this.#finishedAt!==null});if(this.#cast)this.interrupt('time limit');this.#done=true;
   const durationMs=this.#finishedAt??this.#duration;const totals={damage:0,overkill:0,healing:0,overheal:0,enemyDamage:0,allyHealing:0};
   for(const e of this.#log){if(e.type==='damage'){totals.damage+=e.effective;totals.overkill+=e.overkill;if(this.#targets.includes(e.targetId))totals.enemyDamage+=e.effective;}if(e.type==='heal'){totals.healing+=e.effective;totals.overheal+=e.overheal;if(!this.#targets.includes(e.targetId))totals.allyHealing+=e.effective;}}
   return {revision:EXECUTION_REVISION,durationMs,finished:this.#finishedAt!==null,units:[...this.#units.keys()].map(id=>this.unit(id)),resources:this.resources.snapshot(),totals,events:copy(this.#log),auras:this.auras.uptime(durationMs),threat:this.threat.snapshot(),engineValidated:false};

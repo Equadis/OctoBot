@@ -23,7 +23,7 @@ export function encounterRates(result,actorId){
  if(!Number.isFinite(result.durationMs)||result.durationMs<=0)throw new Error('Positive actual encounter duration required');const seconds=result.durationMs/1000;const d=finite(result.totals.enemyDamage,'Enemy damage'),h=finite(result.totals.allyHealing,'Ally healing');
  // Damage/healing are encounter-wide, not necessarily player-only. TPS is
  // gross generated threat for this explicit actor across all enemies.
- if(typeof actorId!=='string'||!actorId||!result.threat?.generated)throw new Error('Explicit threat actor and ledger required');
+ if(typeof actorId!=='string'||!actorId||!result.threat?.generated||!result.threat.actors?.includes(actorId))throw new Error('Explicit threat actor and ledger required');
  return {encounterDps:d/seconds,encounterHps:h/seconds,actorGrossTps:(result.threat.generated[actorId]??0)/seconds};
 }
 export function pairedDifference(a,b){if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length||!a.length)throw new Error('Equal paired sample counts required');return summarizeSamples(a.map((x,i)=>finite(b[i],'B')-finite(x,'A')));}

@@ -23,11 +23,11 @@ export class CombatTimeline{
  }
  after(delay,priority,fn){return this.schedule(addTime(this.#now,int(delay,'delay')),priority,fn);}
  cancel(ticket){const removed=this.#pending.delete(ticket);if(removed&&this.#queue.length>this.#pending.size*2+64){const live=this.#queue.filter(e=>this.#pending.has(e.seq));this.#queue=[];for(const e of live)this.#push(e);}return removed;}
- runUntil(end,{maxEvents=100000}={}){
-  int(end,'end time');int(maxEvents,'event limit',1);if(end<this.#now)throw new RangeError('Cannot rewind time');if(this.#running)throw new Error('Nested runUntil is not supported');
+ runUntil(end,{maxEvents=100000,stopWhen=()=>false}={}){
+  int(end,'end time');int(maxEvents,'event limit',1);callable(stopWhen,'stop predicate');if(end<this.#now)throw new RangeError('Cannot rewind time');if(this.#running)throw new Error('Nested runUntil is not supported');
   let processed=0;this.#running=true;
   try{
-   while(true){this.#prune();const next=this.#queue[0];if(!next||next.at>end)break;if(processed>=maxEvents)throw new Error('Event limit exceeded');const e=this.#pop();this.#pending.delete(e.seq);this.#now=e.at;this.#dispatch=e;processed++;try{e.fn({time:this.#now,timeline:this});}finally{this.#dispatch=null;}}
+   while(true){if(stopWhen())return {time:this.#now,processed,pending:this.pending,stopped:true};this.#prune();const next=this.#queue[0];if(!next||next.at>end)break;if(processed>=maxEvents)throw new Error('Event limit exceeded');const e=this.#pop();this.#pending.delete(e.seq);this.#now=e.at;this.#dispatch=e;processed++;try{e.fn({time:this.#now,timeline:this});}finally{this.#dispatch=null;}}
    this.#now=end;return {time:this.#now,processed,pending:this.pending};
   }finally{this.#running=false;}
  }
