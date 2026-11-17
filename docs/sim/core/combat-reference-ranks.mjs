@@ -12,6 +12,11 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ row('hunter','aimed-shot',20904,'mana','cast',[c('ranged-weapon','ranged',1,{flat:600})],{cost:205,castMs:3000,minRange:8,maxRange:35,referenceCooldownMs:26000,referenceSource:'https://octowow.st/index.php/hunter',requiredPolicy:['rangedModel','acceptSourceConflict']}),
+ row('hunter','multi-shot',25294,'mana','instant',[c('ranged-weapon','ranged',1,{flat:150})],{cost:230,castMs:0,minRange:8,maxRange:35,referenceCooldownMs:10000,referenceAvailableFromPhase:3,referenceSource:'https://octowow.st/db/?spell=25294',multiTarget:{cap:3,falloff:1},requiredPolicy:['rangedModel','targetPolicy']}),
+ row('shaman','chain-lightning',10605,'mana','cast',[c('damage','nature',.714,{min:493,max:552})],{cost:605,castMs:2500,minRange:0,maxRange:30,referenceCooldownMs:6000,multiTarget:{cap:3,falloff:.7},referenceSource:'https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/chain_lightning.go',requiredPolicy:['targetPolicy','acceptSourceConflict']}),
+ row('shaman','chain-heal',10623,'mana','cast',[c('heal','healingPower',null,{min:551,max:630})],{cost:405,castMs:2500,minRange:0,maxRange:40,multiTarget:{cap:3,falloff:.5},referenceSource:coefficientSource,requiredPolicy:['targetPolicy','componentCoefficients']}),
+
  row('warrior','execute',20662,'rage','instant',[c('execute','attackPower',null,{min:600,max:600})],{cost:15,castMs:0,minRange:0,maxRange:5,referenceSource:'https://octowow.st/forum/viewtopic.php?t=2329',requiredPolicy:['executeModel','acceptSourceConflict'],targetHealthMaxPct:20}),
  row('warrior','bloodthirst',23894,'rage','instant',[c('physical-ap','attackPower',null,{min:0,max:0})],{cost:30,castMs:0,minRange:0,maxRange:5,referenceCooldownMs:6000,referenceSource:'https://octowow.st/index.php/warrior',requiredPolicy:['physicalAPModel','acceptSourceConflict']}),
  row('rogue','slice-and-dice',6774,'energy','instant',[c('combo-aura','meleeHasteFactor',null,{hastePct:30,durations:[9000,12000,15000,18000,21000]})],{cost:20,castMs:0,minRange:0,maxRange:100,referenceSource:'https://octowow.st/index.php/rogue',comboSpend:true,requiredPolicy:['acceptSourceConflict','swingHastePolicy'],refreshStrategy:'actor-buff'}),

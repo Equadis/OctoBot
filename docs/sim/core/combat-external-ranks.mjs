@@ -945,5 +945,59 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "source": "https://classicdb.ch/?spell=10929",
       "liveVerified": false
     }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:multi-shot",
+    "spellId": 14290,
+    "rank": 4,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 210,
+    "castMs": 500,
+    "minRange": 8,
+    "maxRange": 35,
+    "components": [
+      {
+        "kind": "ranged-weapon",
+        "stat": "ranged",
+        "coefficient": 1,
+        "flat": 120
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/multi_shot.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/multi_shot.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:multi-shot",
+      "spellId": 14290,
+      "rank": 4,
+      "level": 54,
+      "fields": {
+        "school": "ranged"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/hunter/multi_shot.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 10000,
+    "multiTarget": {
+      "cap": 3,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "rangedModel",
+      "targetPolicy"
+    ]
   }
 ]);

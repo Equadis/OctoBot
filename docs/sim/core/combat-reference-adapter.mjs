@@ -1,3 +1,4 @@
+import {rangedWeaponModel} from './combat-ranged-reference.mjs';
 import {characterStats} from './character-stats.mjs';
 import {validateBuild} from './builds.mjs';
 import {equipmentErrors} from './items.mjs';
@@ -73,6 +74,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  if(build.classId==='warrior')pools.rage={current:Math.min(snap.maxRage,build.classOptions.startingRage),max:snap.maxRage};
  else if(build.classId==='rogue')pools.energy={current:Math.min(snap.maxEnergy,build.classOptions.startingEnergy),max:snap.maxEnergy};
  else pools.mana={current:finite(snap.mana,'mana pool')*build.classOptions.startingMana/100,max:snap.mana};
+ if(encounter.ammoCount!==undefined)pools.ammo={current:int(encounter.ammoCount,'ammunition count'),max:int(encounter.ammoCount,'ammunition count',1)};
  for(const x of encounter.regeneration||[])if(!Object.hasOwn(pools,x.resource))throw new Error('Regeneration references unavailable resource');
  const autos=[];
  if(bool(encounter.includeMelee,'auto-attack choice')){
@@ -80,16 +82,17 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
    if(!p||!['immediate','after-interval'].includes(p.firstSwing)||!['continue','skip-during-cast'].includes(p.autoCastPolicy)||p.physical?.position!==position)throw new Error('Explicit matching auto-attack timing and position required');
    for(const hand of ['mainhand','offhand'])if(gear[hand]?.classs===2)autos.push(whiteAttack(snap,hand,p));
  }
+ if(encounter.includeRanged===true){if(build.classId!=='hunter')throw new Error('Ranged auto adapter currently supports Hunter');const p=encounter.rangedAutoPolicy,r=rangedWeaponModel(snap,p);autos.push({id:'ranged',actorId:actor,source:'Auto Shot',intervalMs:r.intervalMs,firstAtMs:r.intervalMs,castPolicy:p.autoCastPolicy,minRangeYards:8,maxRangeYards:35,costs:r.ammoCost?[{resource:'ammo',amount:r.ammoCost}]:[],effects:[{kind:'damage',when:'always',school:'physical',formula:{min:r.stats.rangedMin,max:r.stats.rangedMax,terms:[],multiplier:1},outcomes:r.outcomes,mitigation:r.mitigation,flatReduction:0,threat:null}]});}
  if(actions.some(a=>a.kind==='queued-melee')&&!autos.some(a=>a.id==='mainhand'))throw new Error('Queued strike requires enabled main-hand swings');
  const durationMs=int(encounter.durationMs,'encounter duration',1);
  if(durationMs>3600000)throw new Error('Encounter exceeds maximum duration');
  const enemyHealth=finite(encounter.enemyHealth,'enemy health',1),allyMax=finite(encounter.allyMaxHealth,'ally maximum health',1),allyHealth=finite(encounter.allyHealth,'ally health',1);
  if(allyHealth>allyMax)throw new Error('Ally health exceeds cap');
- const hasHealing=actions.some(a=>a.targets.includes('ally'));
+ const hasHealing=actions.some(a=>a.targets.includes('ally'));const extraEnemies=encounter.additionalEnemies??[],extraAllies=encounter.additionalAllies??[];if(!Array.isArray(extraEnemies)||!Array.isArray(extraAllies)||extraEnemies.length>39||extraAllies.length>39)throw new Error('Invalid explicit encounter units');
  const enemyCurrentHealth=encounter.enemyCurrentHealth===undefined?enemyHealth:finite(encounter.enemyCurrentHealth,'starting enemy health',1);if(enemyCurrentHealth>enemyHealth)throw new Error('Enemy health exceeds cap');
- const units=[{id:actor,maxHealth:snap.health},{id:boss,maxHealth:enemyHealth,health:enemyCurrentHealth},...(hasHealing?[{id:ally,maxHealth:allyMax,health:allyHealth}]:[])];
+ const units=[{id:actor,maxHealth:snap.health},{id:boss,maxHealth:enemyHealth,health:enemyCurrentHealth},...(hasHealing?[{id:ally,maxHealth:allyMax,health:allyHealth}]:[]),...extraEnemies,...extraAllies];
  const classContext={...build.classOptions};
- const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss],allyIds:hasHealing?[ally]:[],stats:{[actor]:stats},classContext,geometry:{[actor]:{[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{})}},rows:normalized,actions,autos,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],...(build.classId==='rogue'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classOptions.comboPoints}}:{})};
+ const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss,...extraEnemies.map(x=>x.id)],allyIds:hasHealing?[ally,...extraAllies.map(x=>x.id)]:[],nearbyTargets:encounter.nearbyTargets??{[boss]:[],[ally]:[]},stats:{[actor]:stats},classContext,geometry:{[actor]:{[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{}),...encounter.additionalGeometry}},rows:normalized,actions,autos,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],...(build.classId==='rogue'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classOptions.comboPoints}}:{})};
  return {scenario:sc,rankRows,sourceNote:sheet.sourceNote,limitations:['Reference base stats, hit tables and coefficients are not live verified.','Only selected compiled ranks, static sheet effects, explicit regeneration and optional melee swings are executed.','Unimplemented proc talents, racials, poisons, set effects, item use, dynamic buffs and debuffs, school vulnerabilities, mana rules and threat policies may change actual results.',encounter.incomingDamage?.length?'Healing uses explicit scripted incoming damage.':'Healing uses a fixed explicit ally deficit; no incoming damage is assumed.'],liveVerified:false};
 }
 export function runReferenceScenario(prepared,{seed,iterations}){
