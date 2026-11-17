@@ -1,88 +1,85 @@
-# Warrior — talent effects audit
+# Warrior: talent calculation audit and implementation ledger
 
-**Branch:** `audit/talent-effects-warrior` (isolated, no changes to main).
+**Repository:** [Equadis/OctoBot](https://github.com/Equadis/OctoBot) · **branch:** `audit/talent-effects-warrior` · **source:** [OctoWoW published talent calculator](https://octowow.st/talents/warrior/) (2026-11-11T23:29:44.088091+00:00, SHA-256 `b8b800af1b9e2927d3fc7647a155fcf7fc87f216f520b8bf3d2782d2bf2879a2`).
 
-**Source:** [https://octowow.st/talents/warrior/](https://octowow.st/talents/warrior/) · snapshot 2026-11-11T23:29:44.088091+00:00 · SHA256 `b8b800af1b9e2927d3fc7647a155fcf7fc87f216f520b8bf3d2782d2bf2879a2`.
-
-### Coverage status
+## Coverage summary
 
 | Measure | Count |
 |---|---:|
-| Imported talent definitions | 54 |
-| Explicitly mapped/reviewed rules | 34 |
-| Talents with an applied static/weapon effect | 10 |
-| Additional talents with scoped tooltip contributions only | 23 |
-| Talents without numeric rules (recorded but pending) | 20 |
+| Imported talents | 54 |
+| Talents with individual reviewed registry entries | 54 |
+| At least one character-sheet or weapon-derived effect | 11 |
+| Scoped reference contributions only | 26 |
+| Simulation/event-only records | 17 |
 
-Status labels: `partial`: 26; `proc-or-conditional`: 18; `sheet`: 8; `ability-specific`: 2.
+**Important:** The second and third categories are not completed DPS/TPS/HPS mechanics. A school, attack type or pet effect may be described numerically without being incorporated into a full combat outcome. The planner uses unverified base coefficients and must not be represented as a validated OctoWoW simulator.
 
-**Interpretation:** Static and weapon effects may alter the character sheet. Scoped entries describe where published bonuses apply, but do not imply functioning ability damage, mana, cast-time, pet or DPS mechanics. Temporary and conditional effects are not automatically added to permanent totals. The existing calculator still relies on partially unverified Vanilla base coefficients.
+## Exact classification of all 54 talents
 
-### Talent-by-talent ledger
-
-| ID | Talent | Ranks | Coverage | Mapped effects or outstanding mechanic |
+| ID | Talent | Ranks | Status | Effect / precise unresolved dependency |
 |---:|---|---:|---|---|
-| 56 | Improved Heroic Strike | 3 | `partial` | scoped Heroic Strike rageCostReduction (vector 0) |
-| 57 | Tactical Mastery | 5 | `proc-or-conditional` | Pending: You retain up to 25 of your rage points when you change stances. |
-| 58 | Improved Rend | 2 | `partial` | scoped Rend bleed damagePct (vector 0) |
-| 59 | Improved Charge | 2 | `partial` | scoped Charge rageGained (vector 0) |
-| 60 | Deflection | 5 | `sheet` | global  parry (vector 0) |
-| 61 | Improved Thunder Clap | 3 | `partial` | scoped Thunder Clap rageCostReduction (vector 0); scoped Thunder Clap damagePct (vector 1) |
-| 62 | Master Strike | 1 | `proc-or-conditional` | Pending: Performs a skillful attack, dealing 35% weapon damage and causing an additional effect depending on your main hand weapon. Mace: Disorients the t |
-| 63 | Improved Overpower | 2 | `partial` | scoped Overpower criticalChance (vector 0) |
-| 64 | Deep Wounds | 3 | `ability-specific` | Pending: Your critical strikes cause the opponent to bleed, dealing 60% of your melee weapon's average damage over 6 sec. |
-| 65 | Two-Handed Weapon Specialization | 3 | `sheet` | weapon twohand damagePct (vector 0); weapon twohand skill (vector 1) |
-| 66 | Impale | 2 | `partial` | scoped Battle/Defensive/Berserker abilities criticalDamage (vector 0) |
-| 67 | Master of Arms | 5 | `partial` | weapon axe crit (vector 0); weapon mace armorPen (vector 1, × level); Pending: Sword extra-attack proc and polearm range require combat/range support |
-| 68 | Sweeping Strikes | 1 | `proc-or-conditional` | Pending: Your next 5 abilities and main-hand melee attacks strike an additional nearby opponent. |
-| 69 | Boundless Anger | 3 | `sheet` | special  maxRage (vector 0) |
-| 70 | Improved Disciplines | 3 | `partial` | scoped Retaliation/Recklessness/Shield Wall cooldownReductionMinutes (vector 0) |
-| 71 | Improved Slam | 2 | `partial` | scoped Slam castTimeReductionSeconds (vector 0); scoped Slam globalCooldownReductionSeconds (vector 0) |
-| 72 | Precision Cut | 3 | `partial` | scoped Execute per extra Rage damagePct (vector 0) |
-| 73 | Mortal Strike | 1 | `proc-or-conditional` | Pending: A vicious strike that deals 115% weapon damage and wounds the target, reducing the effectiveness of any healing by 50% for 10 sec. |
-| 93 | Booming Voice | 5 | `partial` | scoped Shouts areaOfEffectPct (vector 0); scoped Battle/Demoralizing Shout durationPct (vector 1) |
-| 94 | Cruelty | 5 | `sheet` | global  crit (vector 0) |
-| 95 | Dual Wield Specialization | 5 | `sheet` | offhand  damagePct (vector 0); offhand  hit (vector 0) |
-| 96 | Unbridled Wrath | 5 | `proc-or-conditional` | Pending: Gives you a 75% chance to generate an additional Rage point when you deal melee damage with a weapon. The effect is doubled for two-handed weapon |
-| 97 | Improved Shouts | 5 | `partial` | Pending: Increases the strength of selected shouts; buff source/stacking verification needed; scoped Battle Shout attackPowerBonusPct (vector 0); scoped Demoralizing Shout attackPowerReductionPct (vector 1) |
-| 98 | Piercing Howl | 1 | `proc-or-conditional` | Pending: Causes all enemies near the warrior to be dazed, reducing movement speed by 50% for 6 sec. |
-| 99 | Blood Craze | 3 | `proc-or-conditional` | Pending: Regenerates 6% of your total Health over 6 sec after being the victim of a critical strike. |
-| 100 | Battlefield Mobility | 2 | `partial` | scoped Intercept/Intervene cooldownReductionSeconds (vector 0); scoped Charge cooldownReductionSeconds (vector 1) |
-| 101 | Enrage | 5 | `proc-or-conditional` | Pending: Gives you a 20% melee damage bonus for 8 sec after being the victim of a critical strike. |
-| 102 | Improved Pummel | 2 | `partial` | scoped Pummel school lockout durationIncreaseSeconds (vector 1); Pending: Pummel slow is proc/ability-specific |
-| 103 | Ravager | 3 | `partial` | scoped Whirlwind cooldownReductionSeconds (vector 0); scoped Cleave rageCostReduction (vector 1) |
-| 104 | Death Wish | 1 | `proc-or-conditional` | Pending: When activated, increases your physical damage by 20% and makes you immune to Fear effects, but lowers your armor and all resistances by 20%. Las |
-| 105 | Improved Execute | 2 | `partial` | scoped Execute rageCostReduction (vector 0) |
-| 106 | Improved Berserker Rage | 2 | `proc-or-conditional` | Pending: Using Berserker Rage generates 10 Rage and grants a 100% chance to break free from movement impairing effects when activated. |
-| 107 | Flurry | 5 | `partial` | Pending: Flurry is a three-swing proc, not permanent attack speed |
-| 108 | Blood Drinker | 3 | `proc-or-conditional` | Pending: While affected by Enrage, Death Wish, or Recklessness, your melee attacks and abilities restore 2% of your maximum health. |
-| 109 | Bloodthirst | 1 | `proc-or-conditional` | Pending: Instantly perform a reckless attack, dealing 100 damage plus 35% of your Attack Power and increasing your movement speed by 10% for 6 sec. |
-| 74 | Improved Bloodrage | 2 | `partial` | scoped Bloodrage instantRageGained (vector 0) |
-| 75 | Shield Specialization | 5 | `partial` | special  blockChance (vector 0), conditional on {"shield":true}; Pending: Rage generated after a successful block requires combat simulation |
-| 76 | Anticipation | 3 | `sheet` | global  defense (vector 0) |
-| 77 | Iron Will | 5 | `partial` | scoped Stun/Charm resistChancePct (vector 0) |
-| 78 | Toughness | 5 | `sheet` | special  itemArmourPct (vector 0); special  shieldBlockValuePct (vector 1) |
-| 79 | Last Stand | 1 | `proc-or-conditional` | Pending: When activated, this ability temporarily grants you 30% of your maximum hit points for 20 seconds. After the effect expires, the hit points are l |
-| 80 | Improved Intervene | 2 | `proc-or-conditional` | Pending: Grants a 100% chance to gain immunity to movement impairing effects for 3 sec after using Intervene. |
-| 81 | Improved Taunt | 2 | `partial` | scoped Taunt cooldownReductionSeconds (vector 0) |
-| 82 | Improved Revenge | 3 | `partial` | scoped Revenge stunChancePct (vector 0); scoped Revenge cooldownReductionSeconds (vector 1) |
-| 83 | Gag Order | 2 | `proc-or-conditional` | Pending: Your Shield Slam has an additional 100% chance to dispel 1 magic effect on the target and your Shield Bash ability has a 100% chance to silence t |
-| 84 | Improved Disarm | 2 | `ability-specific` | Pending: Decreases the cooldown of your Disarm ability by 20 secs. |
-| 85 | Defiance | 5 | `partial` | scoped Defensive Stance threatPct (vector 0), conditional on {"stance":"Defensive"} |
-| 86 | One-Handed Weapon Specialization | 5 | `sheet` | weapon onehand damagePct (vector 0) |
-| 87 | Shield Slam | 1 | `proc-or-conditional` | Pending: Slam the target with your shield, causing 174 to 184 damage, modified by your shield block value and attack power. This attack causes a high amou |
-| 88 | Improved Shield Slam | 2 | `partial` | scoped Shield Slam cooldownReductionSeconds (vector 0); Pending: Temporary next-attack block chance requires an event model |
-| 89 | Reprisal | 2 | `partial` | scoped Revenge damagePct (vector 0); Pending: Refund Rage on hit is event-dependent |
-| 90 | Improved Shield Wall | 2 | `partial` | scoped Shield Wall durationIncreaseSeconds (vector 0); scoped Shield Wall cooldownReductionMinutes (vector 1) |
-| 91 | Defensive Tactics | 3 | `proc-or-conditional` | Pending: While wearing a shield, you retain 180% of the increased threat generation from Defensive Stance in other stances. |
-| 92 | Concussion Blow | 1 | `proc-or-conditional` | Pending: Deals 115 damage and stuns the opponent for 3 sec. This ability deals a high amount of threat and penetrates 100% of the enemy's armor. Instantly |
+| 56 | Improved Heroic Strike | 3 | Scoped/pending | SCOPED ONLY scoped Heroic Strike rageCostReduction (rank vector 0) |
+| 57 | Tactical Mastery | 5 | Scoped/pending | SCOPED ONLY scoped Stance switching rageRetained (rank vector 0) |
+| 58 | Improved Rend | 2 | Scoped/pending | SCOPED ONLY scoped Rend bleed damagePct (rank vector 0) |
+| 59 | Improved Charge | 2 | Scoped/pending | SCOPED ONLY scoped Charge rageGained (rank vector 0) |
+| 60 | Deflection | 5 | Sheet contribution | CHARACTER-SHEET global  parry (rank vector 0) |
+| 61 | Improved Thunder Clap | 3 | Scoped/pending | SCOPED ONLY scoped Thunder Clap rageCostReduction (rank vector 0); SCOPED ONLY scoped Thunder Clap damagePct (rank vector 1) |
+| 62 | Master Strike | 1 | Event pending | SIMULATION PENDING — Master Strike is an activated weapon-dependent ability: damage and mace/sword/axe/polearm outcomes require an attack and target-state model |
+| 63 | Improved Overpower | 2 | Scoped/pending | SCOPED ONLY scoped Overpower criticalChance (rank vector 0) |
+| 64 | Deep Wounds | 3 | Event pending | SIMULATION PENDING — Critical hits trigger Deep Wounds over time based on weapon average damage; uptime, tick and crit modelling pending |
+| 65 | Two-Handed Weapon Specialization | 3 | Sheet contribution | CHARACTER-SHEET weapon twohand damagePct (rank vector 0); CHARACTER-SHEET weapon twohand skill (rank vector 1) |
+| 66 | Impale | 2 | Scoped/pending | SCOPED ONLY scoped Battle/Defensive/Berserker abilities criticalDamage (rank vector 0) |
+| 67 | Master of Arms | 5 | Sheet contribution | CHARACTER-SHEET weapon axe crit (rank vector 0); CHARACTER-SHEET weapon mace armorPen (rank vector 1; multiplied by character level); SIMULATION PENDING — Sword extra-attack proc and polearm range require combat/range support |
+| 68 | Sweeping Strikes | 1 | Event pending | SIMULATION PENDING — Sweeping Strikes is a five-charge on-use multi-target effect; requires target count and charge consumption |
+| 69 | Boundless Anger | 3 | Sheet contribution | CHARACTER-SHEET special  maxRage (rank vector 0) |
+| 70 | Improved Disciplines | 3 | Scoped/pending | SCOPED ONLY scoped Retaliation/Recklessness/Shield Wall cooldownReductionMinutes (rank vector 0) |
+| 71 | Improved Slam | 2 | Scoped/pending | SCOPED ONLY scoped Slam castTimeReductionSeconds (rank vector 0); SCOPED ONLY scoped Slam globalCooldownReductionSeconds (rank vector 0) |
+| 72 | Precision Cut | 3 | Scoped/pending | SCOPED ONLY scoped Execute per extra Rage damagePct (rank vector 0) |
+| 73 | Mortal Strike | 1 | Event pending | SIMULATION PENDING — Mortal Strike active weapon strike plus target-healing reduction; no attack table or target healing model yet |
+| 93 | Booming Voice | 5 | Scoped/pending | SCOPED ONLY scoped Shouts areaOfEffectPct (rank vector 0); SCOPED ONLY scoped Battle/Demoralizing Shout durationPct (rank vector 1) |
+| 94 | Cruelty | 5 | Sheet contribution | CHARACTER-SHEET global  crit (rank vector 0) |
+| 95 | Dual Wield Specialization | 5 | Sheet contribution | CHARACTER-SHEET offhand  damagePct (rank vector 0); CHARACTER-SHEET offhand  hit (rank vector 0) |
+| 96 | Unbridled Wrath | 5 | Event pending | SIMULATION PENDING — Chance-based rage generated on weapon hits, doubled for two-handed weapons; requires attack event timing |
+| 97 | Improved Shouts | 5 | Sheet contribution | SIMULATION PENDING — Increases the strength of selected shouts; buff source/stacking verification needed; SCOPED ONLY scoped Battle Shout attackPowerBonusPct (rank vector 0); SCOPED ONLY scoped Demoralizing Shout attackPowerReductionPct (rank vector 1); CHARACTER-SHEET buff battle-shout ap (rank vector 0) |
+| 98 | Piercing Howl | 1 | Event pending | SIMULATION PENDING — Piercing Howl is an active nearby-area snare; no target movement or area combat engine |
+| 99 | Blood Craze | 3 | Event pending | SIMULATION PENDING — Blood Craze heals after receiving a critical strike; needs incoming combat events |
+| 100 | Battlefield Mobility | 2 | Scoped/pending | SCOPED ONLY scoped Intercept/Intervene cooldownReductionSeconds (rank vector 0); SCOPED ONLY scoped Charge cooldownReductionSeconds (rank vector 1) |
+| 101 | Enrage | 5 | Event pending | SIMULATION PENDING — Enrage 8-second melee-damage proc requires received critical-hit events and uptime |
+| 102 | Improved Pummel | 2 | Scoped/pending | SCOPED ONLY scoped Pummel school lockout durationIncreaseSeconds (rank vector 1); SIMULATION PENDING — Pummel slow is proc/ability-specific |
+| 103 | Ravager | 3 | Scoped/pending | SCOPED ONLY scoped Whirlwind cooldownReductionSeconds (rank vector 0); SCOPED ONLY scoped Cleave rageCostReduction (rank vector 1) |
+| 104 | Death Wish | 1 | Event pending | SIMULATION PENDING — Death Wish on-use temporary damage/fear/armour/resistance trade-off; must not count permanently |
+| 105 | Improved Execute | 2 | Scoped/pending | SCOPED ONLY scoped Execute rageCostReduction (rank vector 0) |
+| 106 | Improved Berserker Rage | 2 | Scoped/pending | SCOPED ONLY scoped Berserker Rage activation rageGenerated (rank vector 0); SIMULATION PENDING — Movement impairment break occurs when Berserker Rage is activated |
+| 107 | Flurry | 5 | Event pending | SIMULATION PENDING — Flurry is a three-swing proc, not permanent attack speed |
+| 108 | Blood Drinker | 3 | Event pending | SIMULATION PENDING — Blood Drinker restores health per melee strike only while Enrage/Death Wish/Recklessness is active; requires aura and attack events |
+| 109 | Bloodthirst | 1 | Event pending | SIMULATION PENDING — Bloodthirst active physical strike and 6-second movement buff require attack and aura models |
+| 74 | Improved Bloodrage | 2 | Scoped/pending | SCOPED ONLY scoped Bloodrage instantRageGained (rank vector 0) |
+| 75 | Shield Specialization | 5 | Sheet contribution | CHARACTER-SHEET special  blockChance (rank vector 0); only if {"shield":true}; SIMULATION PENDING — Rage generated after a successful block requires combat simulation |
+| 76 | Anticipation | 3 | Sheet contribution | CHARACTER-SHEET global  defense (rank vector 0) |
+| 77 | Iron Will | 5 | Scoped/pending | SCOPED ONLY scoped Stun/Charm resistChancePct (rank vector 0) |
+| 78 | Toughness | 5 | Sheet contribution | CHARACTER-SHEET special  itemArmourPct (rank vector 0); CHARACTER-SHEET special  shieldBlockValuePct (rank vector 1) |
+| 79 | Last Stand | 1 | Event pending | SIMULATION PENDING — Last Stand temporarily increases maximum health and later removes it; cannot count as baseline health |
+| 80 | Improved Intervene | 2 | Event pending | SIMULATION PENDING — Temporary movement-impairment immunity follows active Intervene use |
+| 81 | Improved Taunt | 2 | Scoped/pending | SCOPED ONLY scoped Taunt cooldownReductionSeconds (rank vector 0) |
+| 82 | Improved Revenge | 3 | Scoped/pending | SCOPED ONLY scoped Revenge stunChancePct (rank vector 0); SCOPED ONLY scoped Revenge cooldownReductionSeconds (rank vector 1) |
+| 83 | Gag Order | 2 | Event pending | SIMULATION PENDING — Shield Slam dispel and Shield Bash silence require successful active attacks and target auras |
+| 84 | Improved Disarm | 2 | Scoped/pending | SCOPED ONLY scoped Disarm cooldownReductionSeconds (rank vector 0) |
+| 85 | Defiance | 5 | Scoped/pending | SCOPED ONLY scoped Defensive Stance threatPct (rank vector 0); only if {"stance":"Defensive"} |
+| 86 | One-Handed Weapon Specialization | 5 | Sheet contribution | CHARACTER-SHEET weapon onehand damagePct (rank vector 0) |
+| 87 | Shield Slam | 1 | Event pending | SIMULATION PENDING — Shield Slam is an active damage/threat/dispel ability; requires shield block value and ability attack resolution |
+| 88 | Improved Shield Slam | 2 | Scoped/pending | SCOPED ONLY scoped Shield Slam cooldownReductionSeconds (rank vector 0); SIMULATION PENDING — Temporary next-attack block chance requires an event model |
+| 89 | Reprisal | 2 | Scoped/pending | SCOPED ONLY scoped Revenge damagePct (rank vector 0); SIMULATION PENDING — Refund Rage on hit is event-dependent |
+| 90 | Improved Shield Wall | 2 | Scoped/pending | SCOPED ONLY scoped Shield Wall durationIncreaseSeconds (rank vector 0); SCOPED ONLY scoped Shield Wall cooldownReductionMinutes (rank vector 1) |
+| 91 | Defensive Tactics | 3 | Scoped/pending | SCOPED ONLY scoped Non-Defensive stance with shield retainedDefensiveThreatPct (rank vector 0); only if {"shield":true,"stance":["Battle","Berserker"]} |
+| 92 | Concussion Blow | 1 | Event pending | SIMULATION PENDING — Concussion Blow is an active shield-related strike with stun, threat, full armour penetration and rage generation |
 
-### Verification blockers
+## Known source and validation limitations
 
-1. Compare all passive/weapon numbers and rounding with controlled OctoWoW client observations.
-2. Verify stance, shield, form, aspect, pet, active buff and equipment eligibility.
-3. Verify spell-family, ranged and individual-ability hit/crit tables, proc uptime and cast/resource timing before using DPS, TPS or HPS comparisons.
-4. Complete mappings of remaining talents if the source indicates a permanent, testable sheet effect.
-5. Re-run the branch Actions workflow and the baseline simulator regression suite after changes.
+- **Master of Arms:** Axe crit is weapon-specific, while mace armour penetration scales with level. Sword extra-attacks and polearm range are deliberately separated from static crit/armour penetration.
+- **Dual Wield Specialization:** Additional hit is for the equipped off-hand alone; main-hand hit must remain unchanged.
+- The published calculator is a definition source, not a demonstration that the live server uses precisely the same mechanics.
+- Abilities requiring attack outcomes, time, procs, cast resolution, cooldown reset, movement, party state or target debuffs must be validated in a combat engine.
+- Gear, buffs, forms/stances and weapon choices require controlled in-game stacking and rounding comparisons.
+- All existing and new regression tests are run by `.github/workflows/talent-branch-tests.yml` on this branch.
 
-**Integration caution:** all class branches currently use `core/talent-rules.mjs`; their per-class registries need consolidation before multiple branches are merged. Never merge one registry over another.
+**Do not merge this branch directly together with another class branch without consolidating their separate `docs/sim/core/talent-rules.mjs` exports.** Each branch is isolated intentionally so independent class verification remains possible; `main` has not been altered by this audit.
