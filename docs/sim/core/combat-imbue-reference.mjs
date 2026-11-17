@@ -13,7 +13,7 @@ export function validateImbueModel(m,abilityIds){
  if(!m||!names.includes(m.name)||typeof m.provenance!=='string'||!m.provenance.trim())throw new Error('Explicit imbue identity and provenance required');
  integer(m.durationMs,'duration',1);if(typeof m.white!=='boolean'||!Array.isArray(m.eligibleAbilityIds)||new Set(m.eligibleAbilityIds).size!==m.eligibleAbilityIds.length||m.eligibleAbilityIds.some(a=>!abilityIds.has(a)))throw new Error('Explicit imbue contact eligibility required');
  if(m.elementalWeapons!==undefined){const t=m.elementalWeapons;integer(t.rank,'Elemental Weapons rank',0,3);if(t.rank>0&&m.name==='Frostbrand Weapon'){if(!['relative','percentage-points'].includes(t.chanceMode)||!['owner','any'].includes(t.frostShockScope))throw new Error('Explicit Frostbrand talent chance and Frost Shock scope required');finite(t.criticalMultiplier,'Frostbrand guaranteed critical multiplier',1);}}
- if(m.name==='Rockbiter Weapon'){finite(m.damageBonus,'Rockbiter per-contact base damage');finite(m.threatMultiplier,'Rockbiter threat multiplier');return m;}
+ if(m.name==='Rockbiter Weapon'){finite(m.damageBonus,'Rockbiter per-contact base damage');finite(m.threatMultiplier,'Rockbiter threat multiplier');if((m.elementalWeapons?.rank??0)>0){const t=m.elementalWeapons;if(!['effective','post-mitigation'].includes(t.bulwarkBasis)||typeof t.shieldEquipped!=='boolean')throw new Error('Explicit Rockbiter bulwark damage basis and shield status required');}return m;}
  if(!['chance','ppm'].includes(m.rateType)||typeof m.oncePerAction!=='boolean')throw new Error('Explicit imbue proc rate and once-per-action policy required');
  finite(m.rate,'proc rate',0,m.rateType==='chance'?1:Infinity);finite(m.weaponSeconds,'unhasted weapon seconds',.01);integer(m.internalCooldownMs,'internal cooldown');integer(m.attacks,'bonus attacks',1,m.name==='Windfury Weapon'?8:1);
  const d=m.damage;if(!d)throw new Error('Explicit imbue damage formula required');
@@ -27,7 +27,7 @@ export function buildImbueConfig(build,gear,policy,abilityIds){
  if(gear.mainhand?.classs!==2)throw new Error('Weapon imbue requires an equipped main-hand weapon');
  if(policy?.name!==build.classOptions.mhImbue)throw new Error('Explicit selected weapon imbue model required');
  const rank=Number(build.talents?.['263']??0);
- return validateImbueModel({...policy,elementalWeapons:{...policy.elementalWeapons,rank}},abilityIds);
+ return validateImbueModel({...policy,elementalWeapons:{...policy.elementalWeapons,rank,shieldEquipped:gear.offhand?.classs===4&&gear.offhand?.subclass===6}},abilityIds);
 }
 export function createImbueRuntime(model,abilityIds){
  if(model===null)return null;const m=validateImbueModel(model,abilityIds);
@@ -46,5 +46,6 @@ export function createImbueRuntime(model,abilityIds){
   if(rank>0&&m.name==='Frostbrand Weapon'&&e.auras.active(contact.target,'debuff').some(a=>a.name==='Frost Shock'&&(m.elementalWeapons.frostShockScope==='any'||a.ownerId===contact.actor))){effect.outcomes=effect.outcomes.map(o=>o.landed?{...o,name:'crit',critical:true,multiplier:o.critical===true||o.name==='crit'?o.multiplier:o.multiplier*m.elementalWeapons.criticalMultiplier}:o);}
   return {name:m.name,attacks:m.attacks,effect,slow:m.name==='Frostbrand Weapon'?m.slow:null};
  };
- return {rockbiter,attempt,flameBuff,windBuff};
+ const bulwark=(e,actor,raw,effective)=>{if(m.name!=='Rockbiter Weapon'||rank===0||e.timeline.now>=m.durationMs||!e.unit(actor).alive)return;const t=m.elementalWeapons,basis=t.bulwarkBasis==='effective'?effective:raw,capacity=basis*.2*(t.shieldEquipped?3:1);if(capacity>0)e.applyAbsorb({id:'elemental-weapons-bulwark',targetId:actor,actorId:actor,source:'Elemental Weapons (Rockbiter)',amount:capacity,durationMs:8000,fraction:.05*rank,capacityCap:e.unit(actor).maxHealth*.2,refresh:'add-capped'});};
+ return {rockbiter,attempt,flameBuff,windBuff,bulwark};
 }
