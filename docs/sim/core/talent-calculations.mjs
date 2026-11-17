@@ -110,7 +110,7 @@ const ABILITIES={
  ].map(p=>['melee','ranged','periodic','unknown'].includes(p.type)?allDmg(allDmg(allDmg(p,'All damage when no pet'),'Beast/Giant/Dragonkin/Humanoid targets'),'These targets'):p),
  mage:[
   spell('Fireball','Fire'),profile('Fireball (periodic)','periodic','Fireball','Fire','All spells','Spells','Offensive spells','Fire spells','Periodic magic'),spell('Fire Blast','Fire'),spell('Scorch','Fire'),
-  spell('Pyroblast','Fire'),spell('Flamestrike','Fire'),spell('Blast Wave','Fire'),
+  spell('Pyroblast','Fire'),profile('Pyroblast (periodic)','periodic','Pyroblast','Fire','All spells','Spells','Offensive spells','Fire spells','Periodic magic'),spell('Flamestrike','Fire'),profile('Flamestrike (periodic)','periodic','Flamestrike','Fire','All spells','Spells','Offensive spells','Fire spells','Periodic magic'),spell('Blast Wave','Fire'),
   spell('Frostbolt','Frost','Frostbolt/Icicles/Blizzard'),spell('Icicles','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Blizzard','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Frost Nova','Frost','Frost Nova/Cone of Cold'),spell('Cone of Cold','Frost','Frost Nova/Cone of Cold'),
@@ -131,7 +131,7 @@ const ABILITIES={
  ].map(p=>['spell','periodic'].includes(p.type)?allDmg(allDmg(allDmg(allDmg(p,'All damage when no pet'),'All damage while Soul Link demon active'),'Succubus'),'Imp'):p),
  priest:[
   spell('Smite','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
-  spell('Holy Fire','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
+  spell('Holy Fire','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),profile('Holy Fire (periodic)','periodic','Holy Fire','Holy','All spells','Spells','Offensive spells','Holy spells','Periodic magic'),
   spell('Chastise','Holy','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
   spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),

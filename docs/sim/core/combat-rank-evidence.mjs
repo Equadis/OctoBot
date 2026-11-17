@@ -3,6 +3,14 @@
 // fields separate. In particular, DB "mana" on Rage/Energy records is not trusted.
 const db=(classId,ability,spellId,rank,level,fields,unknown=[],conflicts=[])=>({classId,abilityId:classId+':'+ability,spellId,rank,level,fields,unknown,conflicts,status:'database-observed',source:'https://octowow.st/db/?spell='+spellId,guide:'https://octowow.st/'+classId,liveVerified:false});
 export const RANK_EVIDENCE=Object.freeze([
+ db('mage','arcane-explosion',10202,6,54,{school:'arcane',manaCost:390,castMs:0,radiusYards:10,baseMin:243,baseMax:264},['live coefficient','AoE cap','rewind proc'],[{field:'baseDamage',database:'243–264',externalReference:'249–270'}]),
+ db('mage','flamestrike',10216,6,56,{school:'fire',manaCost:990,castMs:3000,rangeYards:30,radiusYards:5,baseMin:375,baseMax:460,baseTick:85,durationMs:8000,tickMs:2000},['ground occupancy','live coefficients','rewind proc'],[{field:'manaCost',database:990,archivedChanges:680},{field:'castMs',database:3000,archivedChanges:2500},{field:'baseDamage',database:'375–460',externalReference:'381–466'}]),
+ db('mage','blast-wave',13021,5,60,{school:'fire',manaCost:545,castMs:0,radiusYards:10,baseMin:462,baseMax:545,slowDurationMs:6000},['live coefficient','cooldown','slow/rewind'],[{field:'maxDamage',database:545,externalReference:544}]),
+ db('priest','holy-fire',15261,8,60,{school:'holy',manaCost:255,castMs:3500,rangeYards:30,baseMin:355,baseMax:450,baseTick:29,durationMs:10000,tickMs:2000},['live coefficient','holy damage proc','live cast time'],[{field:'directCoefficient',externalReference:.75,archivedRevisions:'0.857, 1.0'}]),
+ db('warlock','drain-life',11700,6,54,{school:'shadow',manaCost:300,rangeYards:20,durationMs:5000,tickMs:1000,baseTick:71},['live coefficient','channel interruption and hit treatment','Nightfall','leech basis']),
+ db('warlock','death-coil',17926,3,58,{school:'shadow',manaCost:565,castMs:0,rangeYards:30,cooldownMs:120000,baseDamage:470,leechPct:100},['live coefficient','travel time','fear','Soul Siphon'],[{field:'baseDamage',database:470,externalReference:476}]),
+ db('warlock','siphon-life',18881,4,58,{school:'shadow',manaCost:365,castMs:0,rangeYards:30,baseTick:45,durationMs:30000,tickMs:3000},['live coefficient','leech basis','set proc']),
+
  db('warrior','whirlwind',1680,1,36,{school:'physical',castMs:0,cooldownMs:10000,maxTargets:4,radiusYards:8,reportedResource:{unit:'mana',amount:250}},['live rage cost','weapon normalisation','stance','target selection']),
  db('warrior','cleave',20569,5,60,{school:'physical',castMs:0,rangeYards:5,flatWeaponDamage:50,maxTargets:2,reportedResource:{unit:'mana',amount:200}},['live rage cost','queue behaviour','weapon scaling','flat threat']),
 

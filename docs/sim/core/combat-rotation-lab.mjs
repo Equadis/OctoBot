@@ -16,7 +16,7 @@ function availableRanks(b){return referenceRanks(b.classId).filter(r=>rankPhase(
 function distinctActions(b){return [...new Map(rowsFor(b).map(row=>[abilityKey(b.classId,row.ability),row.ability])).entries()];}
 function defaults(rank,position,normalisedSpeed){
  const policy={provenance,phase:CURRENT_ENCHANT_PHASE,acceptExternalReference:false,acceptSourceConflict:false,
- gcdMs:rank.mode==='queued-melee'?0:rank.resource==='energy'?1000:1500,cooldownMs:rank.referenceCooldownMs??0,
+ gcdMs:rank.referenceGcdMs??(rank.mode==='queued-melee'?0:rank.resource==='energy'?1000:1500),cooldownMs:rank.referenceCooldownMs??0,
  weaponPolicy:rank.mode==='queued-melee'?'actual-swing':'normalised',normalisedSpeed,physical:physical(position),
  periodicCanCrit:false,healCriticalMultiplier:1.5,spellCriticalMultiplier:1.5,resistance:resistance(),
  refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',threat:null,spendOnMiss:false,
@@ -24,6 +24,9 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='costOverride')policy.costOverride=null;
+  if(field==='castOverrideMs')policy.castOverrideMs=null;
+  if(field==='leechModel')policy.leechModel={fraction:null,basis:null};
+  if(field==='channelApplicationPolicy')policy.channelApplicationPolicy=null;
   if(field==='holyShockModel')policy.holyShockModel={role:null,coefficient:null,resetChance:null,resetTrigger:null};
   if(field==='weaponDamageModel')policy.weaponDamageModel={coefficient:null,flatDamage:null};
   if(field==='stancePolicy')policy.stancePolicy=null;
@@ -51,7 +54,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  }
  if(unsupported.length)return {unsupported,config:null,rankChoices};
  const melee=selected.some(isMelee),ranged=selected.some(isRanged);
- const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=8)?3:20,allyDistanceYards:20,
+ const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[]};

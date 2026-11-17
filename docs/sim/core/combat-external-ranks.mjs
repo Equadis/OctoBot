@@ -1512,5 +1512,160 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
     "requiredPolicy": [
       "holyShockModel"
     ]
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:pyroblast",
+    "spellId": 18809,
+    "rank": 8,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 440,
+    "castMs": 6000,
+    "minRange": 0,
+    "maxRange": 35,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": 1,
+        "min": 716,
+        "max": 890
+      },
+      {
+        "kind": "periodic-damage",
+        "stat": "fire",
+        "coefficient": 0.15,
+        "min": 67,
+        "max": 67,
+        "durationMs": 12000,
+        "intervalMs": 3000,
+        "reusePreviousHit": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/pyroblast.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/pyroblast.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:pyroblast",
+      "spellId": 18809,
+      "rank": 8,
+      "level": 60,
+      "fields": {
+        "school": "fire"
+      },
+      "unknown": [
+        "live rank, effects, coefficient and cost"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/pyroblast.go",
+      "liveVerified": false
+    },
+    "refreshStrategy": "do-not-gate",
+    "referenceGcdMs": 1000
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blizzard",
+    "spellId": 10187,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 1400,
+    "castMs": 8000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "frost",
+        "coefficient": 0.042,
+        "min": 149,
+        "max": 149,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/blizzard.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/blizzard.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blizzard",
+      "spellId": 10187,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "frost"
+      },
+      "unknown": [
+        "live rank, effects, coefficient and cost"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/mage/blizzard.go",
+      "liveVerified": false
+    },
+    "tickMs": 1000,
+    "multiTarget": {
+      "cap": 40,
+      "falloff": 1
+    },
+    "requiredPolicy": [
+      "targetPolicy",
+      "channelTickAtEnd",
+      "channelApplicationPolicy"
+    ]
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:smite",
+    "spellId": 10934,
+    "rank": 8,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 280,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "holy",
+        "coefficient": 0.714,
+        "min": 384,
+        "max": 429
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/smite.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/smite.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:smite",
+      "spellId": 10934,
+      "rank": 8,
+      "level": 54,
+      "fields": {
+        "school": "holy"
+      },
+      "unknown": [
+        "live rank, effects, coefficient and cost"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/smite.go",
+      "liveVerified": false
+    }
   }
 ]);

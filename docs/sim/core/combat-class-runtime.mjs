@@ -52,7 +52,7 @@ function validateEffects(effects,ctx,depth=0){
  for(const x of effects){
   choose(x.when,['always','landed','missed','critical','noncritical'],'effect trigger');
   if(['damage','heal','periodic-damage','periodic-heal'].includes(x.kind)){
-   validateFormula(x.formula,ctx.stats,ctx.comboEnabled);validateOutcomes(x.outcomes);validateThreat(x.threat);if(x.swingRage){if(x.kind!=='damage'||!has(ctx.pools,'rage'))throw new Error('Swing rage requires rage pool and direct damage');validateSwingRage(x.swingRage);}
+   validateFormula(x.formula,ctx.stats,ctx.comboEnabled);validateOutcomes(x.outcomes);validateThreat(x.threat);if(x.leech){if(!['damage','periodic-damage'].includes(x.kind))throw new Error('Leech requires damage');finite(x.leech.fraction,'leech fraction',0);choose(x.leech.basis,['effective','post-mitigation'],'leech basis');}if(x.channelApplicationOutcomes)validateOutcomes(x.channelApplicationOutcomes);if(x.swingRage){if(x.kind!=='damage'||!has(ctx.pools,'rage'))throw new Error('Swing rage requires rage pool and direct damage');validateSwingRage(x.swingRage);}
    finite(x.mitigation,'mitigation',0);if(x.mitigation>1)throw new Error('Invalid mitigation');finite(x.flatReduction,'flat reduction',0);
    if(x.additionalResource){if(x.kind!=='damage'||!has(ctx.pools,x.additionalResource.resource))throw new Error('Additional spend requires damage and known resource');finite(x.additionalResource.coefficient,'additional resource coefficient',0);finite(x.additionalResource.cap,'additional resource cap',0);choose(x.additionalResource.payment,['always','landed'],'additional spend policy');}
    if(x.kind.startsWith('periodic')){if((x.formula.comboRanges||x.formula.terms.some(t=>t.perComboPoint||t.comboCoefficients))&&x.snapshot!=='snapshot')throw new Error('Periodic combo scaling requires an application snapshot');int(x.durationMs,'periodic duration',1);if(x.durationByCombo){if(!ctx.comboEnabled||!Array.isArray(x.durationByCombo))throw new Error('Combo duration requires bank');for(const ms of x.durationByCombo)int(ms,'combo duration',1);}
@@ -92,7 +92,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   let threat=x.threat===null?null:{actorId:actor,...x.threat};const isHeal=x.kind.endsWith('heal');
   if(threat&&isHeal){const alive=enemyIds.filter(id=>e.unit(id).alive);threat=alive.length?{...threat,enemyIds:alive}:null;}
   const value=hit.raw;
-  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));}
+  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));if(x.leech&&!damage.ignored&&e.unit(actor).alive){const basis=x.leech.basis==='effective'?damage.effective:hit.raw;e.heal({actorId:actor,targetId:actor,source:source+' (leech)',value:basis*x.leech.fraction,threat:null});}}
   return hit;
  };
  for(const [index,x] of effects.entries()){
@@ -164,12 +164,13 @@ export function createExplicitClassEncounter(input){
   if(a.requiredContext!==null&&(!a.requiredContext||typeof a.requiredContext!=='object'||Array.isArray(a.requiredContext)))throw new Error('Explicit context restriction required');
   if(a.requiredContext)for(const [k,v] of Object.entries(a.requiredContext))if(!has(sc.classContext,k))throw new Error('Required class context missing: '+k);
   if(a.multiTarget){int(a.multiTarget.cap,'multi-target cap',1);finite(a.multiTarget.falloff,'multi-target falloff',0);if(a.multiTarget.falloff>1)throw new Error('Invalid falloff');choose(a.multiTarget.policy,['ordered-nearby'],'multi-target policy');if(!sc.nearbyTargets||typeof sc.nearbyTargets!=='object')throw new Error('Explicit nearby target ordering required');}
-  const apply=(e,t)=>{
-   if(!a.multiTarget)return executeEffects(e,a.actorId,t,ability.name,a.effects,ctx.stats,sc.targetIds,0,classState);
+  const channelGate=new Map();const execute=(e,t,effects,tickIndex)=>{const eligible=effects.filter(x=>{if(!x.channelApplicationOutcomes)return true;const k=t+'|'+effects.indexOf(x);if(tickIndex===1){const v=sampleAttack({min:0,max:0,outcomes:x.channelApplicationOutcomes,random:e.random});channelGate.set(k,v.landed);e.recordMechanic('attack-result',{actorId:a.actorId,targetId:t,source:ability.name+' (channel apply)',school:x.school??null,...v});}return channelGate.get(k)===true;});if(eligible.length)executeEffects(e,a.actorId,t,ability.name,eligible,ctx.stats,sc.targetIds,0,classState);};
+  const apply=(e,t,tickIndex)=>{
+   if(!a.multiTarget)return execute(e,t,a.effects,tickIndex);
    const group=a.targets.includes('enemy')?sc.targetIds:sc.allyIds;const list=sc.nearbyTargets[t];
    if(!Array.isArray(list)||list.some(x=>!group.includes(x)||x===t)||new Set(list).size!==list.length)throw new Error('Invalid explicit nearby targets for '+t);
    const targets=[t,...list.filter(x=>e.unit(x).alive)].slice(0,a.multiTarget.cap);
-   for(const [i,target] of targets.entries()){if(!e.unit(target).alive)continue;const effects=a.effects.map(x=>x.formula?{...x,formula:{...x.formula,multiplier:x.formula.multiplier*Math.pow(a.multiTarget.falloff,i)}}:x);executeEffects(e,a.actorId,target,ability.name,effects,ctx.stats,sc.targetIds,0,classState);}
+   for(const [i,target] of targets.entries()){if(!e.unit(target).alive)continue;const effects=a.effects.map(x=>x.formula?{...x,formula:{...x.formula,multiplier:x.formula.multiplier*Math.pow(a.multiTarget.falloff,i)}}:x);execute(e,target,effects,tickIndex);}
   };
   const cooldowns=[...(gcdMs?[{id:'gcd',duration:gcdMs}]:[]),...(cooldownMs?[{id:a.abilityId,duration:cooldownMs}]:[])];
   if(a.sharedCooldown!==null){id(a.sharedCooldown?.id,'shared cooldown id');int(a.sharedCooldown?.durationMs,'shared cooldown duration',1);cooldowns.push({id:'shared:'+a.sharedCooldown.id,duration:a.sharedCooldown.durationMs});}
