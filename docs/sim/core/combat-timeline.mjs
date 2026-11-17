@@ -83,6 +83,7 @@ export class PeriodicEffects{
  remove(id){keyOf(id);const e=this.#effects.get(id);if(!e)return false;this.#cancel(e);this.#effects.delete(id);return true;}
  #public(e){return {id:e.id,appliedAt:e.appliedAt,expiresAt:e.expiresAt,nextTick:e.nextTick,tickIndex:e.tickIndex,snapshot:structuredClone(e.snapshot)};}
  get(id){const e=this.#effects.get(keyOf(id));return e?this.#public(e):null;}
+ shorten(id,ms){keyOf(id);int(ms,'periodic shortening',1);const e=this.#effects.get(id);if(!e)return false;const now=this.timeline.now;e.expiresAt=Math.max(now,e.expiresAt-ms);if(e.expiryTicket!==null)this.timeline.cancel(e.expiryTicket);if(e.tickTicket!==null&&(e.nextTick>e.expiresAt||e.nextTick===e.expiresAt&&!e.tickAtExpiry)){this.timeline.cancel(e.tickTicket);e.tickTicket=null;}const expire=()=>{if(this.#effects.get(id)!==e)return;this.#effects.delete(id);e.expiryTicket=null;if(e.tickTicket!==null)this.timeline.cancel(e.tickTicket);e.onExpire({...this.#public(e),time:this.timeline.now});};if(e.expiresAt===now)expire();else e.expiryTicket=this.timeline.schedule(e.expiresAt,e.expirePriority,expire);return true;}
  apply({id,durationMs,intervalMs,refresh,tickAtExpiry,tickPriority,expirePriority,snapshot,onTick,onExpire=()=>{}}){
   keyOf(id);int(durationMs,'duration',1);int(intervalMs,'interval',1);int(tickPriority,'tick priority');int(expirePriority,'expiry priority');
   if(!['restart','preserve-next-tick'].includes(refresh))throw new Error('Explicit refresh policy required');

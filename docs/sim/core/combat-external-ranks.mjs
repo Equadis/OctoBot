@@ -999,5 +999,346 @@ export const EXTERNAL_REFERENCE_RANKS=Object.freeze([
       "rangedModel",
       "targetPolicy"
     ]
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:conflagrate",
+    "spellId": 18932,
+    "rank": 4,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 255,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": 0.429,
+        "min": 447,
+        "max": 557
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/conflagrate.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/conflagrate.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:conflagrate",
+      "spellId": 18932,
+      "rank": 4,
+      "level": 60,
+      "fields": {
+        "school": "fire"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/conflagrate.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 10000,
+    "requiresOwnedAura": {
+      "name": "Immolate",
+      "minRemainingMs": 1
+    },
+    "consumePeriodic": {
+      "auraName": "Immolate",
+      "durationMs": 3000
+    },
+    "guideSource": "https://octowow.st/index.php/warlock",
+    "requiredPolicy": [
+      "consumeOnMiss"
+    ]
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:life-tap",
+    "spellId": 11689,
+    "rank": 6,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "health-to-resource",
+        "stat": "shadow",
+        "coefficient": 0.8,
+        "min": 424,
+        "max": 424
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/lifetap.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/lifetap.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:life-tap",
+      "spellId": 11689,
+      "rank": 6,
+      "level": 56,
+      "fields": {
+        "school": "shadow"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/warlock/lifetap.go",
+      "liveVerified": false
+    },
+    "requiredPolicy": [
+      "lifeTapFactor"
+    ]
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:insect-swarm",
+    "spellId": 24977,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 160,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "nature",
+        "coefficient": 0.158,
+        "min": 54,
+        "max": 54,
+        "durationMs": 12000,
+        "intervalMs": 2000
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/insect_swarm.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/insect_swarm.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:insect-swarm",
+      "spellId": 24977,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "nature"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/druid/insect_swarm.go",
+      "liveVerified": false
+    },
+    "guideSource": "https://octowow.st/index.php/druid"
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:mind-flay",
+    "spellId": 18807,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 205,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": 0.15,
+        "min": 142,
+        "max": 142
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/mind_flay.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/mind_flay.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:mind-flay",
+      "spellId": 18807,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "shadow"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/priest/mind_flay.go",
+      "liveVerified": false
+    },
+    "tickMs": 1000,
+    "requiredPolicy": [
+      "channelTickAtEnd"
+    ]
+  },
+  {
+    "classId": "rogue",
+    "abilityId": "rogue:rupture",
+    "spellId": 11275,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "energy",
+    "mode": "instant",
+    "cost": 20,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "combo-bleed",
+        "stat": "attackPower",
+        "coefficient": 0,
+        "ranges": [
+          [
+            68,
+            68
+          ],
+          [
+            76,
+            76
+          ],
+          [
+            84,
+            84
+          ],
+          [
+            92,
+            92
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "comboCoefficients": [
+          0.01,
+          0.02,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "durations": [
+          8000,
+          10000,
+          12000,
+          14000,
+          16000
+        ],
+        "intervalMs": 2000
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/rogue/rupture.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/rogue/rupture.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "rogue",
+      "abilityId": "rogue:rupture",
+      "spellId": 11275,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "attackPower"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/rogue/rupture.go",
+      "liveVerified": false
+    },
+    "comboSpend": true,
+    "guideSource": "https://octowow.st/index.php/rogue",
+    "requiredPolicy": [
+      "spendOnMiss"
+    ]
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:frost-shock",
+    "spellId": 10473,
+    "rank": 4,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 430,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "frost",
+        "coefficient": 0.386,
+        "min": 492,
+        "max": 520
+      }
+    ],
+    "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/frost_shock.go",
+    "referenceSource": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/frost_shock.go",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "trainer-reference",
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:frost-shock",
+      "spellId": 10473,
+      "rank": 4,
+      "level": 58,
+      "fields": {
+        "school": "frost"
+      },
+      "unknown": [
+        "OctoWoW current rank effects",
+        "live coefficient and cost",
+        "live timing"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://github.com/isfir/wowsims-turtle/blob/64cfa6ae2777b20bc95f3573dd9b2572634dddd7/sim/shaman/frost_shock.go",
+      "liveVerified": false
+    },
+    "referenceCooldownMs": 6000,
+    "sharedCooldownGroup": "shaman:shock"
   }
 ]);

@@ -51,7 +51,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  const normalized=rows.map(row=>{
   const aid=abilityKey(build.classId,row.ability);
   if(!Number.isSafeInteger(rankByAbility?.[aid]))throw new Error('No explicitly selected reference rank for '+row.ability);
-  if(!['primary','cycle','ally'].includes(row.target??'primary'))throw new Error('Unsupported reference rotation target: '+row.target);
+  if(!['primary','cycle','ally','self'].includes(row.target??'primary'))throw new Error('Unsupported reference rotation target: '+row.target);
   for(const c of row.conditions||[])if(!supportedConditions.has(c.metric))throw new Error('Unsupported reference rotation condition: '+c.metric);
   return {...row,abilityId:aid,target:row.target??'primary',conditions:row.conditions||[]};
  });
@@ -65,7 +65,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
   if(compiled.action.abilityId!==aid)throw new Error('Selected rank belongs to a different ability');
   for(const [k,v] of Object.entries(compiled.stats)){if(Number.isFinite(v)&&Object.hasOwn(stats,k)&&stats[k]!==v)throw new Error('Conflicting stat representations: '+k);if(Number.isFinite(v))stats[k]=v;}
   const myRows=normalized.filter(r=>r.abilityId===aid);
-  if(myRows.some(r=>(r.target==='ally')!==compiled.action.targets.includes('ally')))throw new Error('Rotation target role mismatch for '+aid);
+  if(myRows.some(r=>!compiled.action.targets.includes(r.target==='ally'?'ally':r.target==='self'?'self':'enemy')))throw new Error('Rotation target role mismatch for '+aid);
   if(encounter.recastPeriodic==='after-expiry'&&compiled.rank.refreshStrategy!=='do-not-gate'&&compiled.action.effects.some(e=>e.kind.startsWith('periodic')))compiled.action.refreshGate={kind:compiled.action.targets[0]==='ally'?'buff':'debuff',name:ROTATION_REGISTRY[build.classId].abilityRegistry[aid].name,remainingMs:0};
   actions.push(compiled.action);rankRows.push({abilityId:aid,spellId,rank:compiled.rank.rank,source:compiled.rank.source,referenceSource:compiled.rank.referenceSource,provenance:compiled.provenance});
  }
@@ -92,7 +92,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  const enemyCurrentHealth=encounter.enemyCurrentHealth===undefined?enemyHealth:finite(encounter.enemyCurrentHealth,'starting enemy health',1);if(enemyCurrentHealth>enemyHealth)throw new Error('Enemy health exceeds cap');
  const units=[{id:actor,maxHealth:snap.health},{id:boss,maxHealth:enemyHealth,health:enemyCurrentHealth},...(hasHealing?[{id:ally,maxHealth:allyMax,health:allyHealth}]:[]),...extraEnemies,...extraAllies];
  const classContext={...build.classOptions};
- const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss,...extraEnemies.map(x=>x.id)],allyIds:hasHealing?[ally,...extraAllies.map(x=>x.id)]:[],nearbyTargets:encounter.nearbyTargets??{[boss]:[],[ally]:[]},stats:{[actor]:stats},classContext,geometry:{[actor]:{[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{}),...encounter.additionalGeometry}},rows:normalized,actions,autos,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],...(build.classId==='rogue'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classOptions.comboPoints}}:{})};
+ const sc={mode:'research',provenance:'Build-based reference mechanics; not live verified',classId:build.classId,level:build.level,durationMs,decisionIntervalMs:int(encounter.decisionIntervalMs,'decision interval',1),pools,units,playerId:actor,primaryId:boss,targetIds:[boss,...extraEnemies.map(x=>x.id)],allyIds:hasHealing?[ally,...extraAllies.map(x=>x.id)]:[],nearbyTargets:encounter.nearbyTargets??{[boss]:[],[ally]:[]},stats:{[actor]:stats},classContext,geometry:{[actor]:{[actor]:{distance:0,position:'self'},[boss]:{distance,position},...(hasHealing?{[ally]:{distance:allyDistance,position:'front'}}:{}),...encounter.additionalGeometry}},rows:normalized,actions,autos,regeneration:encounter.regeneration||[],incomingDamage:encounter.incomingDamage||[],...(build.classId==='rogue'?{comboPoints:{cap:5,initialTarget:boss,initialPoints:build.classOptions.comboPoints}}:{})};
  return {scenario:sc,rankRows,sourceNote:sheet.sourceNote,limitations:['Reference base stats, hit tables and coefficients are not live verified.','Only selected compiled ranks, static sheet effects, explicit regeneration and optional melee swings are executed.','Unimplemented proc talents, racials, poisons, set effects, item use, dynamic buffs and debuffs, school vulnerabilities, mana rules and threat policies may change actual results.',encounter.incomingDamage?.length?'Healing uses explicit scripted incoming damage.':'Healing uses a fixed explicit ally deficit; no incoming damage is assumed.'],liveVerified:false};
 }
 export function runReferenceScenario(prepared,{seed,iterations}){
