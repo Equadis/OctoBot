@@ -1,4 +1,4 @@
-import {petEngineErrors} from './pet-audit.mjs?v=20261117-pet-audit2';
+import {petEngineErrors} from './pet-audit.mjs?v=20261117-pet-audit3';
 import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
 import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
 import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';

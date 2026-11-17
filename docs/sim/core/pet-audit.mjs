@@ -1,6 +1,6 @@
 // Planning-only pet contributions. No imported Vanilla pet baselines or fabricated DPS.
 import {HUNTER_FAMILIES,petAbilityCandidates,familyEvidence,trainingInventory} from './pet-training-audit.mjs?v=20261117-pet-audit2';
-export const PET_RULESET_REVISION='octo-pet-audit-20261117-2';
+export const PET_RULESET_REVISION='octo-pet-audit-20261117-3';
 const hunterGuide='https://octowow.st/index.php/hunter',warlockGuide='https://octowow.st/index.php/warlock';
 const hunterBug='https://octowow.st/bug-report?id=320',unleashedPatch='https://octowow.st/forum/viewtopic.php?p=17845',unleashedFollowup='https://octowow.st/forum/viewtopic.php?p=18613';
 export const PET_CATALOGUE=Object.freeze({

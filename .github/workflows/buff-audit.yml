@@ -20,7 +20,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: pet-audit
-          path: pet-audit.json
+          path: |
+            pet-audit.json
+            pet-equipment-audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: stacking-audit
