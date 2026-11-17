@@ -66,7 +66,7 @@ const ABILITIES={
  druid:[
   balance('Wrath','Nature','Starfire/Moonfire/Wrath','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
   balance('Starfire','Arcane','Starfire/Moonfire/Wrath','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
-  balance('Moonfire','Arcane','Starfire/Moonfire/Wrath','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
+  balance('Moonfire','Arcane','Starfire/Moonfire/Wrath','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),profile('Moonfire (periodic)','periodic','Moonfire','Arcane','Periodic magic','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
   balance('Hurricane','Nature','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
   profile('Insect Swarm','periodic','Nature','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath','Balance and healing spells','Balance spells','Balance/utility spells','Spells','Periodic magic'),
   heal('Healing Touch','Nature','Healing Touch/Regrowth/Tranquility','Balance and healing spells'),
@@ -115,7 +115,7 @@ const ABILITIES={
   spell('Blizzard','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Frost Nova','Frost','Frost Nova/Cone of Cold'),spell('Cone of Cold','Frost','Frost Nova/Cone of Cold'),
   spell('Arcane Missiles','Arcane','Arcane Missiles channel'),spell('Arcane Rupture','Arcane'),
-  spell('Arcane Explosion','Arcane'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor')
+  spell('Arcane Explosion','Arcane'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor'),utility('Frost Ward')
  ],
  warlock:[
   profile('Corruption','periodic','Shadow','Affliction','Affliction spells','Affliction spell casting','All spells','Spell casting','Spells','Offensive spells'),profile('Curse of Agony','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),aff('Drain Soul','Drain Soul/Life/Mana','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
@@ -134,7 +134,7 @@ const ABILITIES={
   spell('Holy Fire','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Chastise','Holy','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
-  spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Shadow Word: Death','Shadow','Instant/Holy/Discipline spells'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
+  spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
   profile('Shadow Word: Pain','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
   holyHeal('Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
   holyHeal('Greater Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
