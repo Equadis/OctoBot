@@ -77,7 +77,7 @@
 @media(prefers-reduced-motion:reduce){.ah-name-clip.ah-scroll-name .ah-name-text{animation:none}}
 .ah-entry-name{display:flex;align-items:center;gap:3px;min-width:0;max-width:100%}
 .ah-variant-stats,.ah-variant-unresolved{display:block;font-size:10px;line-height:1.35;color:#9fb8ce;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.ah-variant-unresolved{color:#e3bd57}
+.ah-variant-unresolved{color:#8995a6;font-size:10px;font-weight:400}
 .ah-variant{font-size:11px;color:#98a6b8}
 /* Rarity colours match the Dressing Room item names and the quality dropdowns (docs/quality-select.css). */
 .ah-q0 .ah-name-text,.ah-q1 .ah-name-text,.ah-q2 .ah-name-text,.ah-q3 .ah-name-text,.ah-q4 .ah-name-text,.ah-q5 .ah-name-text,.ah-q6 .ah-name-text{color:var(--item-quality)}
@@ -158,12 +158,14 @@
 .ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#1f2b3b;border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
 .ah-roll-detail strong{color:#efce47}
 .ah-roll-detail span{color:#9fe0bd}
-.ah-roll-detail small{color:#98a6b8;width:100%}
+.ah-roll-detail small{color:#8995a6;font-size:10px;font-weight:400;line-height:1.4;width:100%}
+.ah-roll-detail span.ah-note{color:#8995a6;font-size:10px;font-weight:400;line-height:1.4}
 /* Same compact item-tooltip treatment as the Gear Planner. */
 .planner-tooltip{position:fixed;z-index:1000;width:max-content;max-width:min(370px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;background:#0d1420f7;border:1px solid #827547;border-radius:4px;padding:12px 14px;box-shadow:0 8px 25px #0009;pointer-events:none;line-height:1.5;font-size:12px;color:#e1e7ef;white-space:pre-line}
 .planner-tooltip>strong{display:block;color:#f0d576;font-size:14px}
 .planner-tooltip p{line-height:1.5;margin:8px 0 0}
 .planner-tooltip p:first-of-type{color:#9aafc9}
+.planner-tooltip p.tooltip-note{color:#8995a6;font-size:10px;font-weight:400;line-height:1.4;margin:5px 0 0}
 /* On narrower screens, present all columns as labelled cells in each row. */
 @media(max-width:1060px){
  .ah-scroll>table{display:block;width:100%;white-space:normal}
