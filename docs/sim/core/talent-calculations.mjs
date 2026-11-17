@@ -118,6 +118,7 @@ const ABILITIES={
   spell('Arcane Explosion','Arcane'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor'),utility('Frost Ward')
  ],
  warlock:[
+  ...['Curse of the Elements','Curse of Shadow','Curse of Recklessness'].map(name=>spellUtility(name,'Shadow','Affliction','Affliction spells','Affliction spell casting')),
   profile('Corruption','periodic','Shadow','Affliction','Affliction spells','Affliction spell casting','All spells','Spell casting','Spells','Offensive spells'),profile('Curse of Agony','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),profile('Curse of Doom','periodic','Shadow','Affliction','Affliction spells','All spells','Spell casting','Spells','Offensive spells'),aff('Drain Soul','Drain Soul/Life/Mana','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
   aff('Drain Life','Drain Soul/Life/Mana'),spellUtility('Drain Mana','Shadow','Affliction','Affliction spells','Drain Soul/Life/Mana'),
   aff('Dark Harvest','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),aff('Death Coil','Drain Soul/Dark Harvest/Death Coil per Affliction effect'),
