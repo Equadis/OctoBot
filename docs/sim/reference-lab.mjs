@@ -2,6 +2,7 @@ import {labRanks} from './core/combat-reference-lab.mjs';
 export function wireReferenceLab({classId,getBuild,getTalents,lookupGear,document:doc=document}){
  const $=id=>doc.getElementById(id),select=$('reference-rank'),run=$('run-reference'),confirm=$('reference-confirm'),status=$('reference-status'),output=$('reference-output');
  const ranks=labRanks(classId);for(const r of ranks){const o=doc.createElement('option');o.value=r.spellId;o.disabled=!r.available;o.textContent=r.name+' (Rank '+r.rank+')'+(r.available?'':' — future phase');select.append(o);}
+ const first=ranks.find(r=>r.available);if(first)select.value=String(first.spellId);
  let worker=null,token=0;
  const chosen=()=>ranks.find(r=>r.spellId===Number(select.value));
  function reset(){token++;worker?.terminate();worker=null;run.disabled=false;status.textContent='';output.replaceChildren();}

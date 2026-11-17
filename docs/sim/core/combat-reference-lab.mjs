@@ -9,6 +9,7 @@ export function prepareLab({build,talents,gearById,spellId,confirmed,seed=42,cos
  const rank=referenceRank(build.classId,spellId),name=ROTATION_REGISTRY[build.classId].abilityRegistry[rank.abilityId]?.name;
  if(!name)throw new Error('Reference rank identity is not registered');
  if((rank.referenceAvailableFromPhase??1)>CURRENT_ENCHANT_PHASE)throw new Error('Rank unavailable in the current reference phase');
+ if(build.classOptions.moving==='Yes')throw new Error('Moving casts are not modelled in the reference lab');
  if(build.planning.durationVary)throw new Error('The reference lab requires a fixed fight duration');
  if(build.planning.iterations>10000)throw new Error('The reference lab supports up to 10,000 iterations');
  if(!Number.isSafeInteger(seed)||seed<0||seed>4294967295)throw new Error('Invalid seed');
