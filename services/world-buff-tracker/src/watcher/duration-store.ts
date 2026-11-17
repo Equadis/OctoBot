@@ -14,10 +14,14 @@ import { releaseSharedClient } from "../mongo-connection.js";
 export interface RaidDuration {
   readonly ms: number;
   readonly ts: Date;
+  readonly sessionKey?: string;
+  readonly valid?: boolean;
 }
 
 export interface DurationStore {
   record(duration: RaidDuration): Promise<void>;
+  /** Retract a previous inferred completion without deleting historical evidence. */
+  invalidate?(sessionKey: string): Promise<void>;
   /** Median clear time (ms) once at least `minSamples` are recorded, else null. */
   median(minSamples: number): Promise<number | null>;
   /** The most recent durations, up to `limit`, in CHRONOLOGICAL order (oldest first) —
@@ -49,31 +53,35 @@ export class InMemoryDurationStore implements DurationStore {
   readonly #durations: RaidDuration[] = [];
 
   async record(duration: RaidDuration): Promise<void> {
-    this.#durations.push(duration);
+    const ix = duration.sessionKey ? this.#durations.findIndex(d => d.sessionKey === duration.sessionKey) : -1;
+    if (ix >= 0) this.#durations[ix] = duration; else this.#durations.push(duration);
+  }
+  async invalidate(key: string): Promise<void> {
+    const ix = this.#durations.findIndex(d => d.sessionKey === key);
+    const old = this.#durations[ix]; if (old) this.#durations[ix] = {...old, valid: false};
   }
   async median(minSamples: number): Promise<number | null> {
-    if (this.#durations.length < minSamples) return null;
-    return medianOf(this.#durations.map((d) => d.ms));
+    const valid = this.#durations.filter(d => d.valid !== false);
+    if (valid.length < minSamples) return null;
+    return medianOf(valid.map(d => d.ms));
   }
   async recent(limit: number): Promise<RaidDuration[]> {
-    return this.#durations.slice(-limit);
+    return this.#durations.filter(d => d.valid !== false).slice(-limit);
   }
   async count(): Promise<number> {
-    return this.#durations.length;
+    return this.#durations.filter(d => d.valid !== false).length;
   }
   async close(): Promise<void> {
     // nothing to release
   }
 }
 
-interface DurationDoc {
-  readonly ms: number;
-  readonly ts: Date;
-}
+interface DurationDoc extends RaidDuration {}
 
 /** Narrow port over a Mongo collection, so the store's logic is unit-tested with a fake. */
 export interface DurationDb {
   insert(doc: DurationDoc): Promise<void>;
+  invalidate?(sessionKey: string): Promise<void>;
   /** Most recent durations, up to `limit`. */
   recent(limit: number): Promise<DurationDoc[]>;
   count(): Promise<number>;
@@ -101,17 +109,20 @@ export class MongoDurationStore implements DurationStore {
     const collection = database.collection<DurationDoc>(collectionName);
     await collection.createIndex({ ts: 1 }, { expireAfterSeconds: ttlDays * 86_400 });
     const db: DurationDb = {
-      insert: (doc) => collection.insertOne(doc).then(() => undefined),
-      recent: (limit) => collection.find().sort({ ts: -1 }).limit(limit).toArray(),
-      count: () => collection.countDocuments(),
+      insert: (doc) => doc.sessionKey ? collection.updateOne({sessionKey:doc.sessionKey},{$set:doc},{upsert:true}).then(()=>undefined) : collection.insertOne(doc).then(() => undefined),
+      invalidate: (sessionKey) => collection.updateMany({sessionKey},{$set:{valid:false}}).then(()=>undefined),
+      recent: (limit) => collection.find({valid:{$ne:false}}).sort({ ts: -1 }).limit(limit).toArray(),
+      count: () => collection.countDocuments({valid:{$ne:false}}),
       close: releaseSharedClient,
     };
     return new MongoDurationStore(db);
   }
 
   async record(duration: RaidDuration): Promise<void> {
-    await this.#db.insert({ ms: duration.ms, ts: duration.ts });
+    await this.#db.insert({ ...duration });
   }
+
+  async invalidate(key: string): Promise<void> { await this.#db.invalidate?.(key); }
 
   async median(minSamples: number): Promise<number | null> {
     const docs = await this.#db.recent(MEDIAN_WINDOW);

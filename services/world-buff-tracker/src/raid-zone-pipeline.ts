@@ -263,6 +263,7 @@ export function createRaidZonePipeline(
     for (const event of events) {
       if (event.kind === "formed") await gateAndAnnounce(formedRaidEvent(event.peak, event.number));
       else if (event.kind === "resumed") {
+        if (event.number !== null) await durationStore.invalidate?.(`n${event.number}`).catch(error => logger.debug(`duration invalidation: ${describeError(error)}`));
         logger.info(
           `${lane.label}: raid #${event.number ?? "?"} resumed — its members are back after ~${mins(event.awayMs)}m, ` +
             `so its clear was a wipe; the timer runs on at ~${mins(event.elapsedMs)}m`,
@@ -321,27 +322,25 @@ export function createRaidZonePipeline(
     // park-now alert, the recap, and the duration sample. The plausibility floor/ceiling guard both.
     const handleConfirmedClear = async (clear: ConfirmedClear, killConfirmed: boolean): Promise<void> => {
       const ms = clear.durationMs;
-      if (!isPlausibleClear(ms, watch.raidMinClearMs)) {
+      if (!killConfirmed && ms < watch.raidDisbandMs) { await handleDisband(clear); return; }
+      if (!killConfirmed && !isPlausibleClear(ms, watch.raidMinClearMs)) {
         lane.watch.annotateEnd(clear.number, "interrupted"); // churn, not a session worth learning from
         logger.info(
           `${lane.label}: raid clear ignored: ~${mins(ms)}m is below the ${mins(watch.raidMinClearMs)}m floor — churn, not a real clear`,
         );
         return;
       }
-      if (ms > watch.raidMaxClearMs) {
+      if (!killConfirmed && ms > watch.raidMaxClearMs) {
         lane.watch.annotateEnd(clear.number, "interrupted"); // likely a merge: excluded from training
         logger.info(`${lane.label}: raid clear ignored: ~${mins(ms)}m exceeds the ${mins(watch.raidMaxClearMs)}m ceiling — likely a merge`);
         return;
       }
-      // Too short to be a real clear (unless Chronicle proved the kill) → a disband.
-      if (!killConfirmed && ms < watch.raidDisbandMs) {
-        await handleDisband(clear);
-        return;
-      }
       // One "raid has ended" alert per cycle (deduped) — the recap AND the park CTA in one post.
       await gateAndAnnounce(clearedRaidEvent(clear.peak, killConfirmed, clear.number, ms));
-      void (async () => {
-        await durationStore.record({ ms, ts: new Date(now) });
+      const session = lane.watch.sessions().sessions.find(s=>s.id===clear.number && s.status==='ended');
+      if (!session?.trusted || !isPlausibleClear(ms, watch.raidMinClearMs) || ms > watch.raidMaxClearMs) return;
+      await (async () => {
+        await durationStore.record({ ms, ts: new Date(now), sessionKey: session.key, valid: true });
         const [learned, samples] = await Promise.all([durationStore.median(watch.raidLearnMinSamples), durationStore.count()]);
         logger.info(
           `${zone.raidName} raid clear recorded: ~${mins(ms)}m (peak ${clear.peak}, ${samples} samples; ` +

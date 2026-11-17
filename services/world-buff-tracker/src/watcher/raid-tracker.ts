@@ -191,7 +191,7 @@ export class RaidTracker {
   }
 
   observe(view: LairView): RaidObservation {
-    const names = view.present.map((player) => player.name);
+    const names = [...new Set(view.present.map((player) => player.name))];
     for (const player of view.present) this.#seen.set(player.name, player);
     const census = this.#presence.observe(names, view.at, view.complete);
     this.#presentNames = new Set(names);
