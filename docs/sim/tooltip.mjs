@@ -16,6 +16,8 @@ function paint(content){
  tooltip.replaceChildren();
  const name=document.createElement('strong');name.textContent=content.title;tooltip.append(name);
  for(const line of content.lines || []){const p=document.createElement('p');p.textContent=line;tooltip.append(p);}
+ // Optional lower-priority source and accuracy notes sit below the item attributes.
+ for(const note of content.notes || []){const p=document.createElement('p');p.className='tooltip-note';p.textContent=note;tooltip.append(p);}
  tooltip.hidden=false;position();
 }
 function hide(){generation++;if(anchor)anchor.removeAttribute('aria-describedby');anchor=null;point=null;activeContent=null;tooltip.hidden=true;}
