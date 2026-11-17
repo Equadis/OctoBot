@@ -230,6 +230,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Target receives a temporary item armour buff after Lay on Hands; not a personal permanent armour stat"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Lay on Hands",
+      "stat": "targetItemArmourPct",
+      "param": 0
     }
   ],
   "452": [
@@ -377,7 +383,10 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Righteous Fury",
       "stat": "threatPct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "righteousFury": "On"
+      }
     }
   ],
   "467": [
