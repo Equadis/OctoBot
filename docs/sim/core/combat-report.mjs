@@ -1,14 +1,14 @@
 import {attributedActorRates} from './combat-attribution.mjs';
 import {encounterRates,runIterations,pairedDifference} from './combat-statistics.mjs';
 const finite=(x,n)=>{if(!Number.isFinite(x))throw new Error('Invalid '+n);return x;};
-const entry=()=>({damage:0,healing:0,overkill:0,overheal:0,absorbed:0,grossThreat:0,unknownThreatEvents:0,attacks:0,landed:0,crits:0,outcomes:{},procs:0,resourceChanges:{}});
+const entry=()=>({damage:0,healing:0,overkill:0,overheal:0,absorbed:0,grossThreat:0,threatReduction:0,unknownThreatEvents:0,attacks:0,landed:0,crits:0,outcomes:{},procs:0,resourceChanges:{}});
 const add=(map,k,n)=>{if(!Object.hasOwn(map,k))map[k]=0;map[k]+=n;};
 export function combatReport(result){
  if(!result?.attribution||!Array.isArray(result.events)||!Number.isFinite(result.durationMs)||result.durationMs<=0)throw new Error('Complete positive-duration encounter required');
  const byActor=new Map(),unattributed=entry(),seconds=result.durationMs/1000;
  const row=(actor,source)=>{if(actor==null)return unattributed;if(!Object.hasOwn(result.attribution.actors,actor))throw new Error('Unknown result actor');if(!byActor.has(actor))byActor.set(actor,new Map());const a=byActor.get(actor);if(!a.has(source))a.set(source,entry());return a.get(source);};
  for(const e of result.events){
-  if(!['damage','heal','attack-result','proc','resource-change','absorb'].includes(e.type))continue;
+  if(!['damage','heal','attack-result','proc','resource-change','absorb','companion-threat'].includes(e.type))continue;
   const s=e.source;if(typeof s!=='string'||!s)throw new Error('Missing result source');const r=row(e.actorId,s);
   if(e.type==='damage'||e.type==='heal'){
    if(e.type==='damage'){r.damage+=finite(e.effective,'effective damage');r.overkill+=finite(e.overkill,'overkill');}
@@ -17,6 +17,7 @@ export function combatReport(result){
   }else if(e.type==='attack-result'){
    r.attacks++;if(e.landed===true)r.landed++;if(e.critical===true&&e.landed===true)r.crits++;add(r.outcomes,e.outcome,1);
   }else if(e.type==='absorb')r.absorbed+=finite(e.amount,'absorbed damage');
+  else if(e.type==='companion-threat'){const d=finite(e.delta,'companion threat delta');if(d>=0)r.grossThreat+=d;else r.threatReduction-=d;}
   else if(e.type==='proc')r.procs++;
   else if(e.type==='resource-change'){
    if(!Object.hasOwn(r.resourceChanges,e.resource))r.resourceChanges[e.resource]={gain:0,spent:0,overflow:0};
