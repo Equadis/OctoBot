@@ -1,6 +1,42 @@
 /* All 55 mage talents reviewed against https://octowow.st/talents/mage/; snapshot SHA256 7ad369269087cf74092696a5f10e3115d660a8b0fdbf36af0009fc9815de6ad1. */
 export const AUDITED_CLASS="mage";
 export const TALENT_RULES={
+  "1": [
+    {
+      "kind": "scoped",
+      "scope": "Fireball",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "4": [
+    {
+      "kind": "scoped",
+      "scope": "Fire spells",
+      "stat": "rangeIncreaseYards",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Blast Wave",
+      "stat": "radiusIncreasePct",
+      "param": 1
+    }
+  ],
+  "5": [
+    {
+      "kind": "scoped",
+      "scope": "Fire Blast",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Fire Blast",
+      "stat": "globalCooldownReductionSeconds",
+      "param": 1
+    }
+  ],
   "6": [
     {
       "kind": "spell",
@@ -20,6 +56,26 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "9": [
+    {
+      "kind": "scoped",
+      "scope": "Fire spells",
+      "stat": "pushbackResistancePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Fire spells",
+      "stat": "threatReductionPct",
+      "param": 1
+    }
+  ],
+  "10": [
+    {
+      "kind": "pending",
+      "note": "Fire Vulnerability debuff application and duration are target-state mechanics, not permanent personal Fire damage"
+    }
+  ],
   "14": [
     {
       "kind": "spell",
@@ -33,6 +89,32 @@ export const TALENT_RULES={
       "kind": "spell",
       "scope": "Fire",
       "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "18": [
+    {
+      "kind": "scoped",
+      "scope": "Frost/Ice Armor",
+      "stat": "effectivenessPct",
+      "param": 0,
+      "when": {
+        "armour": [
+          "Frost Armor",
+          "Ice Armor"
+        ]
+      }
+    },
+    {
+      "kind": "pending",
+      "note": "Frost Ward reflection chance requires event simulation"
+    }
+  ],
+  "19": [
+    {
+      "kind": "scoped",
+      "scope": "Frostbolt",
+      "stat": "castTimeReductionSeconds",
       "param": 0
     }
   ],
@@ -55,6 +137,28 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "23": [
+    {
+      "kind": "scoped",
+      "scope": "Frost Nova",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "24": [
+    {
+      "kind": "scoped",
+      "scope": "Chill effects",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Chill effects",
+      "stat": "slowIncreasePct",
+      "param": 1
+    }
+  ],
   "25": [
     {
       "kind": "spell",
@@ -63,10 +167,52 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "28": [
+    {
+      "kind": "scoped",
+      "scope": "Frostbolt/Icicles/Blizzard",
+      "stat": "rangeIncreasePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Frost Nova/Cone of Cold",
+      "stat": "radiusIncreasePct",
+      "param": 0
+    }
+  ],
+  "29": [
+    {
+      "kind": "scoped",
+      "scope": "Frost spells",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Frost spells",
+      "stat": "threatReductionPct",
+      "param": 1
+    }
+  ],
   "30": [
     {
       "kind": "pending",
       "note": "Shatter's critical bonus only applies to frozen targets"
+    }
+  ],
+  "33": [
+    {
+      "kind": "scoped",
+      "scope": "Cone of Cold",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "34": [
+    {
+      "kind": "pending",
+      "note": "Winter's Chill adds a stackable target debuff and is not player passive critical strike chance"
     }
   ],
   "37": [
@@ -133,6 +279,18 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "49": [
+    {
+      "kind": "scoped",
+      "scope": "Mana regeneration while casting",
+      "stat": "regenPct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Regeneration is tripled below 35% mana and requires a resource model"
+    }
+  ],
   "52": [
     {
       "kind": "spell",
@@ -155,8 +313,8 @@ export const TALENT_RULES={
 };
 export const TALENT_COVERAGE={
   "1": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Fireball spell by 0.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "2": {
     "status": "proc-or-conditional",
@@ -167,12 +325,12 @@ export const TALENT_COVERAGE={
     "note": "Your critical strikes from Fire damage spells cause the target to burn for an additional 40% of your spell's damage over 4 sec."
   },
   "4": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Fire spells by 6 yards and the radius of your Blast Wave by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "5": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Fire Blast spell by 1.5 sec and its global cooldown by 1 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "6": {
     "status": "partial",
@@ -187,12 +345,12 @@ export const TALENT_COVERAGE={
     "note": "Hurls an immense fiery boulder that causes 148 to 194 Fire damage and an additional 56 Fire damage over 12 sec."
   },
   "9": {
-    "status": "proc-or-conditional",
-    "note": "Gives your Fire spells a 70% chance to not lose casting time when you take damage and reduces the threat caused by your Fire spells by 30%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "10": {
-    "status": "proc-or-conditional",
-    "note": "Your Scorch and Fire Blast spells have a 100% chance to cause your target to be vulnerable to Fire damage. This vulnerability increases the Fire damage dealt to your target by"
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "11": {
     "status": "proc-or-conditional",
@@ -223,12 +381,12 @@ export const TALENT_COVERAGE={
     "note": "When activated, this spell causes each of your Fire damage spell hits to increase your critical strike chance with Fire damage spells by 10%. This effect lasts until you have "
   },
   "18": {
-    "status": "proc-or-conditional",
-    "note": "Increases the armor and resistances given by your Frost Armor and Ice Armor spells by 30%. In addition, gives your Frost Ward a 20% chance to reflect Frost spells and effects "
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "19": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Frostbolt spell by 0.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "20": {
     "status": "partial",
@@ -243,12 +401,12 @@ export const TALENT_COVERAGE={
     "note": "Gives your Chill effects a 15% chance to freeze the target for 5 sec."
   },
   "23": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Frost Nova spell by 4 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "24": {
-    "status": "ability-specific",
-    "note": "Increases the duration of your Chill effects by 3 sec and reduces the target's speed by an additional 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "25": {
     "status": "partial",
@@ -263,12 +421,12 @@ export const TALENT_COVERAGE={
     "note": "Adds a chill effect to your Blizzard spell. This effect lowers the target's movement speed by 40%. Lasts 1.5 sec."
   },
   "28": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Frostbolt, Icicles and Blizzard spells and the radius of your Frost Nova and Cone of Cold spells by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "29": {
-    "status": "ability-specific",
-    "note": "Reduces the mana cost of your Frost spells by 15% and reduces the threat caused by your Frost spells by 30%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "30": {
     "status": "partial",
@@ -283,12 +441,12 @@ export const TALENT_COVERAGE={
     "note": "Draw upon frost leylines, becoming frozen in place, and launch icicles at the enemy, dealing 101 Frost damage every 1 sec for 5 sec. Damage taken has a high chance to shatter "
   },
   "33": {
-    "status": "ability-specific",
-    "note": "Increases the damage dealt by your Cone of Cold spell by 35%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "34": {
-    "status": "proc-or-conditional",
-    "note": "Gives your Frost damage spells a 100% chance to apply the Winter's Chill effect, which increases the chance a Frost spell will critically hit the target by 2% for 15 sec. Stac"
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "35": {
     "status": "proc-or-conditional",
@@ -347,8 +505,8 @@ export const TALENT_COVERAGE={
     "note": "Your Arcane Missiles have a chance of 15% to reset the cooldown of Arcane Rupture and cause it to return its base mana cost on its next cast. This effect can occur once every "
   },
   "49": {
-    "status": "proc-or-conditional",
-    "note": "Allows 20% of your Mana regeneration to continue while casting. This effect is tripled while below 35% total mana."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "50": {
     "status": "proc-or-conditional",
