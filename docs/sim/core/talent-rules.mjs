@@ -552,6 +552,30 @@ export const TALENT_RULES={
       "when": {
         "pet": "Felhunter"
       }
+    },
+    {
+      "kind": "global",
+      "stat": "spellCrit",
+      "param": 4,
+      "when": {
+        "pet": [
+          "Felguard",
+          "Doomguard"
+        ]
+      },
+      "note": "Greater demon eligibility uses planner's named greater-demon choices; verify client demon categories."
+    },
+    {
+      "kind": "pet",
+      "stat": "spellCrit",
+      "param": 4,
+      "when": {
+        "pet": [
+          "Felguard",
+          "Doomguard"
+        ]
+      },
+      "note": "Greater demon spell critical strike, not melee crit."
     }
   ],
   "371": [
@@ -591,6 +615,26 @@ export const TALENT_RULES={
       "param": 0,
       "values": [
         5
+      ],
+      "when": {
+        "pet": [
+          "Imp",
+          "Voidwalker",
+          "Succubus",
+          "Felhunter",
+          "Felguard",
+          "Doomguard"
+        ],
+        "soulLink": "On"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Soul Link",
+      "stat": "transferredDamagePct",
+      "param": 0,
+      "values": [
+        20
       ],
       "when": {
         "pet": [
