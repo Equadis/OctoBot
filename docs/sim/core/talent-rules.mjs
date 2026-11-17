@@ -234,7 +234,8 @@ export const TALENT_RULES={
       "scope": "Drain Soul/Dark Harvest/Death Coil per Affliction effect",
       "stat": "damagePct",
       "param": 0,
-      "perOption": "afflictionEffects"
+      "perOption": "afflictionEffects",
+      "maxOption": 4
     }
   ],
   "349": [
@@ -576,7 +577,8 @@ export const TALENT_RULES={
           "Felhunter",
           "Felguard",
           "Doomguard"
-        ]
+        ],
+        "soulLink": "On"
       }
     },
     {
@@ -598,7 +600,8 @@ export const TALENT_RULES={
           "Felhunter",
           "Felguard",
           "Doomguard"
-        ]
+        ],
+        "soulLink": "On"
       }
     }
   ]
