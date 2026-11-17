@@ -1,4 +1,5 @@
 import {sealTemplate} from './combat-seal-reference.mjs';
+import {imbueTemplate} from './combat-imbue-reference.mjs';
 import {poisonTemplate} from './combat-poison-reference.mjs';
 import {feralTemplate} from './combat-feral-reference.mjs';
 import {referenceRanks,referenceRank} from './combat-reference-ranks.mjs';
@@ -73,6 +74,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
  if(build.classId==='paladin'&&selected.some(r=>r.components.some(c=>c.kind==='seal-aura')))encounter.sealTwist=null; // Optional explicit {windowMs,swingPolicy,pairs}; no assumed live window.
+ if(build.classId==='shaman'&&build.classOptions.mhImbue&&build.classOptions.mhImbue!=='None')encounter.imbueModel=imbueTemplate(build.classOptions.mhImbue,selected.filter(r=>r.components.some(c=>['weapon','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId));
  if(build.classId==='rogue'){const eligible=selected.filter(r=>r.components.some(c=>['weapon','combo','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId);encounter.poisonModel={};for(const [hand,key] of [['mainhand','mhPoison'],['offhand','ohPoison']]){const name=build.classOptions[key];if(name&&name!=='None')encounter.poisonModel[hand]=poisonTemplate(name,eligible);}}
  if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}
  if(build.classId==='warrior'||build.classId==='druid'&&build.classOptions.form==='Bear')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
