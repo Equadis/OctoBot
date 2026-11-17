@@ -3,7 +3,7 @@ const choice=(key,label,values,value=values[0])=>({key,label,values,value});
 const number=(key,label,value,min,max)=>({key,label,value,min,max});
 const mana=()=>number('startingMana','Starting Mana %',100,0,100);
 const poison=['None','Instant Poison VI','Deadly Poison V','Wound Poison IV','Crippling Poison II','Mind-numbing Poison III'];
-export const CLASS_OPTIONS=Object.freeze({
+const BASE_CLASS_OPTIONS={
  warrior:[choice('stance','Stance',['Battle','Berserker','Defensive']),number('startingRage','Starting Rage',0,0,100)],
  rogue:[choice('mhPoison','MH Poison',poison),choice('ohPoison','OH Poison',poison),number('startingEnergy','Starting Energy',100,0,100),number('comboPoints','Starting Combo Points',0,0,5)],
  paladin:[choice('seal','Seal',['None','Seal of Command','Seal of Righteousness','Seal of the Crusader','Seal of Wisdom','Seal of Light']),choice('aura','Aura',['None','Retribution Aura','Sanctity Aura','Devotion Aura']),mana()],
@@ -13,7 +13,8 @@ export const CLASS_OPTIONS=Object.freeze({
  mage:[choice('armour','Armour',['None','Mage Armor','Ice Armor','Frost Armor']),mana()],
  warlock:[choice('pet','Demon',['None','Imp','Voidwalker','Succubus','Felhunter','Felguard','Doomguard']),choice('curse','Assigned Curse',['Curse of Agony','Curse of the Elements','Curse of Shadow','Curse of Recklessness','None']),mana(),number('soulShards','Soul Shards',10,0,100)],
  priest:[choice('form','Form',['Humanoid','Shadowform']),choice('useVampiricEmbrace','Vampiric Embrace',['Off','On']),mana()],
-});
+};
+export const CLASS_OPTIONS=Object.freeze(Object.fromEntries(Object.entries(BASE_CLASS_OPTIONS).map(([id,options])=>[id,[...options,choice('targetCreature','Scenario: Target Creature',['Unspecified','Undead','Demon','Beast','Dragonkin','Elemental','Humanoid','Giant','Mechanical','Player'])]])));
 export function defaultClassOptions(classId){return Object.fromEntries(CLASS_OPTIONS[classId].map(option=>[option.key,option.value]));}
 export function validateClassOptions(input,classId){
  const options=CLASS_OPTIONS[classId],result=defaultClassOptions(classId);if(input===undefined)return result;
