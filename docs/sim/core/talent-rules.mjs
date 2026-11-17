@@ -434,6 +434,16 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Regeneration is tripled below 35% mana and requires a resource model"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Mana regeneration while casting",
+      "stat": "extraRegenPct",
+      "param": 0,
+      "factor": 2,
+      "when": {
+        "lowMana": "Yes"
+      }
     }
   ],
   "50": [
