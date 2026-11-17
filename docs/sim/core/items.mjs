@@ -1,4 +1,4 @@
-import {validEnchant} from './equipment-options.mjs?v=20261113-swaps1';
+import {validEnchant} from './equipment-options.mjs?v=20261117-picker2';
 import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
 import { classDefinition } from './classes.mjs?v=20261112-audit1';
 // Database listing filters are preliminary. Equipping requires the source detail masks.

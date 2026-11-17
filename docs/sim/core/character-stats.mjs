@@ -2,7 +2,7 @@ import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
-import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
+import {ENCHANTS,enchantAvailable} from './equipment-options.mjs?v=20261117-picker2';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
@@ -37,12 +37,13 @@ export function passiveItemStats(item){
  return result;
 }
 function enchantStats(id){
+ if(!enchantAvailable(ENCHANTS.find(e=>e.id===id)))return {};
  const scope=ENCHANTS.find(e=>e.id===id)?.rangedEffects;if(scope)return {...scope};
  const name=ENCHANTS.find(e=>e.id===id)?.name||'',result={};
  // School-specific power must not inflate general Spell Power.
  const school=id?.match(/_(shadow|fire|frost|nature)_power$/)?.[1];
- const keys={Agi:'agi',Agility:'agi',Str:'str',Strength:'str',SP:school?school+'Sp':'sp',AP:'ap',Dodge:'dodge',Crit:'crit',Haste:'haste',ArPen:'armorPen',Defense:'defense','Spell Crit':'spellCrit'};
- for(const m of name.matchAll(/\+(\d+(?:\.\d+)?)%?\s+(All Stats|All|Spell Crit|Weapon Damage|Agility|Strength|Agi|Str|SP|AP|Dodge|Crit|Haste|ArPen|Defense)\b/g)){
+ const keys={Sta:'sta',Stamina:'sta',Spirit:'spi',Agi:'agi',Agility:'agi',Str:'str',Strength:'str',SP:school?school+'Sp':'sp',AP:'ap',Dodge:'dodge',Crit:'crit',Haste:'haste',ArPen:'armorPen',Defense:'defense','Spell Crit':'spellCrit'};
+ for(const m of name.matchAll(/\+(\d+(?:\.\d+)?)%?\s+(All Stats|All|Spell Crit|Weapon Damage|Agility|Strength|Stamina|Spirit|Sta|Agi|Str|SP|AP|Dodge|Crit|Haste|ArPen|Defense)\b/g)){
   if(m[2].startsWith('All'))for(const key of ['str','agi','sta','int','spi'])result[key]=+m[1];
   else if(keys[m[2]])result[keys[m[2]]]=+m[1];
  }
