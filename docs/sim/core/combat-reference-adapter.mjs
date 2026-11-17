@@ -84,7 +84,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
  if(encounter.ammoCount!==undefined)pools.ammo={current:int(encounter.ammoCount,'ammunition count'),max:int(encounter.ammoCount,'ammunition count',1)};
  for(const x of encounter.regeneration||[])if(!Object.hasOwn(pools,x.resource))throw new Error('Regeneration references unavailable resource');
  if(actions.some(a=>a.requiresSeal)&&!actions.some(a=>a.sealModel))throw new Error('Judgement requires a configured Seal of Command or Seal of Righteousness action');
- const imbueModel=buildImbueConfig(build,gear,encounter.imbueModel,new Set(actions.map(a=>a.abilityId)));const poisonConfig=buildPoisonConfig(build,gear,encounter.poisonModel,new Set(actions.map(a=>a.abilityId)));const autos=[];
+ const imbueModel=buildImbueConfig(build,gear,encounter.imbueModel,new Set(actions.map(a=>a.abilityId)));if(imbueModel?.name==='Frostbrand Weapon'&&imbueModel.elementalWeapons.rank>0&&actions.some(a=>a.abilityId==='shaman:frost-shock'&&!a.effects.some(x=>x.kind==='aura'&&x.aura.id==='frost-shock')))throw new Error('Frostbrand Elemental Weapons requires an explicit Frost Shock debuff model');const poisonConfig=buildPoisonConfig(build,gear,encounter.poisonModel,new Set(actions.map(a=>a.abilityId)));const autos=[];
  if(bool(encounter.includeMelee,'auto-attack choice')){
    const p=encounter.autoPolicy;
    if(!p||!['immediate','after-interval'].includes(p.firstSwing)||!['continue','skip-during-cast'].includes(p.autoCastPolicy)||p.physical?.position!==position)throw new Error('Explicit matching auto-attack timing and position required');
