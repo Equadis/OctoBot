@@ -39,7 +39,7 @@ test('selected independent client rank vectors agree with current imported calcu
 test('all numeric rules resolve every rank with matching explicit conditions, gear and buff sources',()=>{
  let checks=0;
  for(const talent of data.talents){
-  for(const rule of rules[talent.id]){
+  for(const [ruleIndex,rule] of rules[talent.id].entries()){ 
    if(rule.kind==='pending')continue;
    for(let rank=1;rank<=talent.maxRanks;rank++){
     const b=build(talent.name,rank),g={};
@@ -55,11 +55,23 @@ test('all numeric rules resolve every rank with matching explicit conditions, ge
     }
     const amount=(rule.values?.[rank-1]??talent.rankParameters[rule.param??0][rank-1])*(rule.factor??1)*(rule.perLevel?60:1)*(rule.perOption?2:1);
     const a=rec(b,g);
-    assert.ok(a.details.some(d=>d.name===talent.name&&d.stat===rule.stat&&d.status==='calculated'&&Math.abs(d.amount-amount)<1e-7),talent.name+' rank '+rank+' '+rule.stat);
+    assert.ok(a.details.some(d=>d.talentId===talent.id&&d.ruleIndex===ruleIndex&&d.status==='calculated'&&Math.abs(d.amount-amount)<1e-7),talent.name+' rank '+rank+' '+rule.stat);
     // In case a scope has no named ability, keep it mapped but explicitly
     // measure its application status rather than inventing a damage result.
     assert.ok(Number.isFinite(amount));checks++;
-    if(rule.perOption){b.classOptions[rule.perOption]=0;assert.ok(rec(b,g).details.some(d=>d.name===talent.name&&d.stat===rule.stat&&d.status==='inactive'),talent.name+' zero count');}
+    const inactive=(build,gear,reason)=>assert.ok(rec(build,gear).details.some(d=>d.talentId===talent.id&&d.ruleIndex===ruleIndex&&d.status==='inactive'),talent.name+' '+ruleIndex+' '+reason);
+    for(const [k,expected] of Object.entries(rule.when||{})){
+     const neg=structuredClone(b),ng={...g};
+     if(k==='shield'){if(expected)delete ng.offhand;else ng.offhand=shield;}
+     else if(k==='dualWield'){if(expected)delete ng.offhand;else {ng.mainhand=weapon(7);ng.offhand=weapon(7);}}
+     else neg.classOptions[k]='__not_matching__';
+     inactive(neg,ng,'mismatched condition '+k);
+    }
+    if(rule.kind==='weapon')inactive(b,{},'wrong weapon');
+    if(rule.kind==='offhand')inactive(b,{offhand:weapon(7)},'no main hand');
+    if(rule.kind==='buff'){const neg=structuredClone(b);neg.controls.buffIds=[];inactive(neg,g,'buff absent');}
+    if(rule.kind==='pet'){const neg=structuredClone(b);neg.classOptions.pet='None';inactive(neg,g,'pet absent');}
+    if(rule.perOption){const neg=structuredClone(b);neg.classOptions[rule.perOption]=0;inactive(neg,g,'zero count');}
    }
   }
   const b=build(talent.name,0),zero=rec(b);
@@ -138,9 +150,9 @@ if(cls==='warlock'){
  });
 }
 if(cls==='priest'){
- test('Mental Agility applies to instant Shadow Word: Death, Psychic Scream and Fade, not Shadow cast spells',()=>{
+ test('Mental Agility applies to instant Shadow Word: Pain, Psychic Scream and Fade, not Shadow cast spells',()=>{
   const b=build('Mental Agility',5);
-  for(const name of ['Shadow Word: Death','Psychic Scream','Fade'])near(calc(b,name,{manaCost:100}).values.manaCost,90);
+  for(const name of ['Shadow Word: Pain','Psychic Scream','Fade'])near(calc(b,name,{manaCost:100}).values.manaCost,90);
   near(calc(b,'Mind Blast',{manaCost:100}).values.manaCost,100);
  });
 }
