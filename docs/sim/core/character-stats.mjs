@@ -2,8 +2,9 @@ import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
-import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261113-swaps1';
-import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit1';
+import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit2';
+import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit2';
+import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit2';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
@@ -15,27 +16,18 @@ const num=n=>Number.isFinite(n)?String(Math.round(n)):'—';
 const pair=values=>values.join(' | ');
 const sameOrPair=values=>values.every(v=>v===values[0])?values[0]:pair(values);
 export const passiveItemStats=(item,build={})=>equipmentItemAudit(item,build).stats;
-export function enchantStats(id){
- const scope=ENCHANTS.find(e=>e.id===id)?.rangedEffects;if(scope)return {...scope};
- const name=ENCHANTS.find(e=>e.id===id)?.name||'',result={};
- // School-specific power must not inflate general Spell Power.
- const school=id?.match(/_(shadow|fire|frost|nature)_power$/)?.[1];
- const keys={Agi:'agi',Agility:'agi',Str:'str',Strength:'str',SP:school?school+'Sp':'sp',AP:'ap',Dodge:'dodge',Crit:'crit',Haste:'haste',ArPen:'armorPen',Defense:'defense','Spell Crit':'spellCrit'};
- for(const m of name.matchAll(/\+(\d+(?:\.\d+)?)%?\s+(All Stats|All|Spell Crit|Weapon Damage|Agility|Strength|Agi|Str|SP|AP|Dodge|Crit|Haste|ArPen|Defense)\b/g)){
-  if(m[2].startsWith('All'))for(const key of ['str','agi','sta','int','spi'])result[key]=+m[1];
-  else if(keys[m[2]])result[keys[m[2]]]=+m[1];
- }
- return result;
-}
+export function enchantStats(id){return {...(ENCHANTS.find(e=>e.id===id)?.effects||{})};}
 export function characterStats(build,talentData,gear={}){
  if(!validRace(build.classId,build.race))throw new Error('Invalid class/race combination.');
  const racial=racialPassives(build.race);
  const c=build.classId,level=build.level,base=BASE_STATS[`${build.race}:${c}`]?.[level-1];
  const s={str:base?.[0]??null,agi:base?.[1]??null,sta:base?.[2]??null,int:base?.[3]??null,spi:base?.[4]??null,health:0,mana:0,mp5:0,ap:0,sp:0,hit:0,crit:0,haste:0,spellHit:0,spellCrit:0,armorPen:0,spellPen:0,armour:0,defense:0,dodge:0,parry:0,weaponSkill:0,poisonChance:0,arcaneRes:0,fireRes:0,natureRes:0,frostRes:0,shadowRes:0,fortune:0,natureSp:0,fireSp:0,frostSp:0,shadowSp:0,arcaneSp:0,holySp:0,healingPower:0,hp5:0,blockValue:0,blockChance:0,rangedAP:0,rangedHit:0,rangedCrit:0,rangedDamage:0,rangedHaste:0,castingRegenPct:0,critDamageTakenReductionPct:0,dotDamageTakenReductionPct:0,damageOnlySp:0,castSpeedPct:0,spellDamageTakenReductionPct:0,spellDamageTakenReductionFlat:0,aoeDamageTakenReductionPct:0,silenceResistPct:0,interruptDurationReductionPct:0,runSpeedPct:0,swimSpeedPct:0,mountSpeedPct:0};
- let haste=1,rangedHaste=1;const skillBonuses={};const unresolvedEquipment=[];
+ let haste=1,rangedHaste=1;const skillBonuses={};const unresolvedEquipment=[],scopedEquipment=[];
  const add=values=>{for(const [key,value] of Object.entries(values)){if(key==='haste')haste*=1+value/100;else if(key==='rangedHaste')rangedHaste*=1+value/100;else if(key.startsWith('weaponSkill:'))skillBonuses[key]=(skillBonuses[key]||0)+value;else if(key in s&&s[key]!==null)s[key]+=value;}};
- for(const [slot,item] of Object.entries(gear)){const audit=equipmentItemAudit(item,build);add(audit.stats);for(const effect of audit.effects)if(!['passive','empty'].includes(effect.status)&&!(effect.condition==='druid-form'&&c==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)))unresolvedEquipment.push({item:item.name||slot,...effect});const id=build.gear[slot]?.enchantId;if(id&&validEnchant(id,slot,c,item,level)){add(enchantStats(id));if(!Object.keys(enchantStats(id)).length&&!/weapon damage/i.test(ENCHANTS.find(e=>e.id===id)?.name||''))unresolvedEquipment.push({item:item.name||slot,raw:ENCHANTS.find(e=>e.id===id)?.name,status:'unmapped enchant'});}}
+ for(const [slot,item] of Object.entries(gear)){const audit=equipmentItemAudit(item,build);add(audit.stats);for(const effect of audit.effects)if(effect.status==='scoped')scopedEquipment.push({...effect,source:item.name||slot});else if(!['passive','empty'].includes(effect.status)&&!(effect.condition==='druid-form'&&c==='druid'&&['Cat','Bear','Moonkin'].includes(build.classOptions?.form)))unresolvedEquipment.push({item:item.name||slot,...effect});const id=build.gear[slot]?.enchantId;if(id&&validEnchant(id,slot,c,item,level)){add(enchantStats(id));if(!Object.keys(enchantStats(id)).length&&!/weapon damage/i.test(ENCHANTS.find(e=>e.id===id)?.name||''))unresolvedEquipment.push({item:item.name||slot,raw:ENCHANTS.find(e=>e.id===id)?.name,status:'unmapped enchant'});}}
  const setAudit=equipmentSetAudit(gear,build);add(setAudit.stats);
+ for(const e of setAudit.active)if(e.status==='scoped')scopedEquipment.push({...e,source:e.set+' ('+e.pieces+'pc)'});
+ const scoped=combineScopedEquipment(scopedEquipment,build);
  const buffs=normaliseBuffs(build.controls.buffIds);for(const id of buffs)add(BUFF_STATS[id]||{});
  const has=id=>buffs.includes(id);
  for(const id of build.controls.consumableIds||[]){const item=CONSUMABLE_BY_ID.get(id);if(!consumableRestriction(item,build))add(consumablePassiveStats(item));}
@@ -90,7 +82,7 @@ export function characterStats(build,talentData,gear={}){
  const spellMiss=clamp(baseSpellMiss-s.spellHit,1,99);
  const targetArmour=Math.max(0,target.targetArmour+buffs.reduce((n,id)=>n+(BUFF_STATS[id]?.targetArmour||0),0)-s.armorPen);
  const mitigation=100*targetArmour/(targetArmour+400+85*level);
- const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=validEnchant(enchantId,slot,c,weapon,level)?Number(ENCHANTS.find(e=>e.id===enchantId)?.name.match(/^\+(\d+) Weapon Damage/)?.[1]||0):0;const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
+ const damage=slot=>{const weapon=gear[slot];if(!weapon||weapon.classs!==2)return {damage:'0-0',speed:'0.00'};const m=weapon.tooltipText?.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+Damage/i);const speed=Number(weapon.speed||weapon.tooltipText?.match(/Speed\s+(\d+(?:\.\d+)?)/)?.[1]);if(!m||!speed||ap===null)return {damage:'—',speed:'—'};const enchantId=build.gear[slot]?.enchantId;const extra=validEnchant(enchantId,slot,c,weapon,level)?(enchantStats(enchantId).weaponDamage||0):0;const scale=slot==='offhand'?.5*(1+(c==='rogue'?value('Dual Wield Specialization')/100:0)):1;return {damage:`${Math.round((+m[1]+ap/14*speed+extra)*scale)}-${Math.round((+m[2]+ap/14*speed+extra)*scale)}`,speed:(speed/haste).toFixed(2)};};
  const weapons=['mainhand','offhand'].map(damage);
  const groups=[];const group=(name,rows)=>groups.push({name,rows:rows.map(([label,value,note])=>({label,value,note}))});
  group('Base Stats',[['Strength',num(s.str)],['Agility',num(s.agi)],['Stamina',num(s.sta)],...(!['warrior','rogue'].includes(c)?[['Intellect',num(s.int)],['Spirit',num(s.spi)]]:[])]);
@@ -117,7 +109,8 @@ export function characterStats(build,talentData,gear={}){
  group('Spell',[
  ['Spell Power',num(s.sp+s.damageOnlySp)],...(s.healingPower||s.damageOnlySp?[['Healing Power',num(s.sp+s.healingPower)]]:[]),...(s.castSpeedPct?[['Item Casting Speed',pct(s.castSpeedPct,1)]]:[]),...(s.castingRegenPct?[['Natural Mana Regen While Casting (items)',pct(s.castingRegenPct,1)]]:[]),['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane','Holy'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s.damageOnlySp+s[name.toLowerCase()+'Sp'])])
  ]);
- if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':'Not simulated',x.effect]));
+ if(setAudit.active.length)group('Active Set Bonuses',setAudit.active.map(x=>[x.set+' ('+x.pieces+' pc)',x.status==='passive'?'Applied':x.status==='scoped'?'Scoped contribution':'Not simulated',x.effect]));
+ if(scoped.length)group('Scoped Equipment Modifiers',scoped.map(x=>[x.scope+' — '+x.stat+(x.condition?.target?' ('+x.condition.target+')':''),String(Number(x.amount.toFixed(3)))+(x.stat.endsWith('Pct')?'%':'')+(x.active?'':' (inactive)'),[...new Set(x.sources)].join(', ')+'; relative contribution only.']));
  if(unresolvedEquipment.length||setAudit.unresolved.length)group('Uncalculated Equipment Effects',[...unresolvedEquipment.map(x=>[x.item,x.status,x.raw]),...setAudit.unresolved.map(x=>[x.set||x.item,'Unverified set',x.reason])]);
- return {groups,equipmentAudit:{unresolved:unresolvedEquipment,setAudit},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Only recognised exact passive equipment/set effects are applied; conditional and unrecognised effects remain visible and excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
+ return {groups,equipmentAudit:{unresolved:unresolvedEquipment,setAudit,scoped},sourceNote:'Planning estimates: Vanilla base attributes and level-60 coefficients; Combat Gum reference buffs and target table. Recognised passive effects enter the sheet; scoped modifiers remain separate, with unknown combat baselines and event-dependent effects excluded. OctoWoW server formulas are not yet verified. A dash means unavailable, not zero.'};
 }
