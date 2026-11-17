@@ -1,6 +1,7 @@
 /* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
-import {itemTooltip} from './item-presentation.mjs?v=1';
+import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261117-variant1';
+import {attachTooltip} from '../sim/tooltip.mjs';
 import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261116-scanage1';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs';
@@ -45,8 +46,18 @@ async function request(path){
   return r.json();
 }
 const qualityClass=q=>{const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';};
-const itemName=item=>item.item_name||('Item #'+item.item_id);
-const variantLabel=v=>v&&v!=='0:0:0'?v:null;
+const itemName=item=>displayItemName(item);
+const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'];
+function measureNames(root){
+ for(const clip of root.querySelectorAll('.ah-name-clip')){
+  const text=clip.firstElementChild,overflow=Math.max(0,text.scrollWidth-clip.clientWidth);
+  clip.classList.toggle('ah-scroll-name',overflow>2);
+  clip.style.setProperty('--name-distance',overflow+'px');
+  clip.style.setProperty('--name-duration',Math.max(7,Math.min(24,5+overflow/22))+'s');
+ }
+}
+function scheduleNames(root){if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>measureNames(root));}
+window.addEventListener('resize',()=>measureNames(document));
 
 /* ---------- favourites ---------- */
 const stars=new Map(); // star button -> item snapshot
@@ -69,7 +80,8 @@ function starButton(item){
   const snapshot={item_id:item.item_id,variant:item.variant??'',item_name:item.item_name??null,quality:item.quality??null,icon_url:item.icon_url??null};
   stars.set(button,snapshot);
   syncStar(button,snapshot);
-  button.addEventListener('click',()=>{
+  button.addEventListener('click',event=>{
+    event.stopPropagation();
     const result=toggleFavourite(state.fav,snapshot);
     if(result.full){note('You can track up to '+MAX_FAVOURITES+' favourite items. Remove one to add another.');return;}
     state.fav=result.list;
@@ -83,27 +95,29 @@ function starButton(item){
 
 /* ---------- rows ---------- */
 function itemCell(item){
-  const wrapper=el('div',null,'ah-item '+qualityClass(item.quality));
-  const icon=el('span');
-  if(item.icon_url&&/^https:\/\//.test(item.icon_url)){const image=document.createElement('img');image.className='ah-icon';image.alt='';image.src=item.icon_url;image.loading='lazy';icon.append(image);}
-  else{icon.className='ah-icon';icon.setAttribute('aria-hidden','true');}
-  const link=el('a',itemName(item));
-  link.href='https://octowow.st/db/?item='+encodeURIComponent(item.item_id);
-  link.target='_blank';link.rel='noopener noreferrer';
-  link.title=itemTooltip(item);
-  wrapper.append(icon,link);
-  const variant=variantLabel(item.variant);
-  if(variant){const v=el('span','variant '+variant,'ah-variant');v.title='Enchant, random property and suffix factor. Variants are priced separately.';wrapper.append(v);}
-  return wrapper;
+ const wrapper=el('div',null,'ah-item '+qualityClass(item.quality));
+ const icon=el('span');
+ if(item.icon_url&&/^https:\/\//.test(item.icon_url)){
+  const image=document.createElement('img');image.className='ah-icon';image.alt='';image.src=item.icon_url;image.loading='lazy';icon.append(image);
+ }else{icon.className='ah-icon';icon.setAttribute('aria-hidden','true');}
+ const label=el('div',null,'ah-item-label'),clip=el('span',null,'ah-name-clip');
+ const name=el('span',itemName(item),'ah-name-text');clip.append(name);label.append(clip);
+ const effects=variantLines(item);
+ if(effects.length)label.append(el('span',effects.join(' · '),'ah-variant-stats'));
+ else if(variantDetails(item).unresolved)label.append(el('span','Random bonus unavailable','ah-variant-unresolved'));
+ wrapper.append(icon,label);
+ attachTooltip(wrapper,()=>richItemTooltip(item));
+ return wrapper;
 }
+
 /** One table row (plus an expandable detail row), used by both the results table and the favourites overview. */
 function appendItemRow(body,item,{unavailable=false,error=false}={}){
-  const tr=el('tr');
+  const tr=el('tr',null,'ah-entry');tr.tabIndex=0;tr.setAttribute('role','button');
+  tr.setAttribute('aria-expanded','false');
+  tr.setAttribute('aria-label','Show details for '+itemName(item));
   td(tr).append(starButton(item));
-  const cell=el('td'),wrap=el('div',null,'ah-item');
-  const expand=el('button','▸','ah-expand');
-  expand.type='button';expand.title='Show auction listings and price history';expand.setAttribute('aria-expanded','false');
-  expand.setAttribute('aria-label','Show details for '+itemName(item));
+  const cell=el('td'),wrap=el('div',null,'ah-entry-name');
+  const expand=el('span','▸','ah-expand');expand.setAttribute('aria-hidden','true');
   wrap.append(expand,itemCell(item));cell.append(wrap);tr.append(cell);
   if(unavailable){
     td(tr,error?'Latest data is unavailable, so this item’s current prices cannot be shown.':'Not listed in the latest completed scan. It stays in your favourites.','ah-unavailable').colSpan=COLS-2;
@@ -117,14 +131,19 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
     tc.title=item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct));
     td(tr).append(timeNode(item.time_left_ms,item.captured_at));
   }
-  body.append(tr);
-  expand.addEventListener('click',()=>toggleDetail(tr,item,expand,unavailable));
+  for(const [index,c] of Array.from(tr.children).entries())c.dataset.label=unavailable&&index===2?'Status':COLUMNS[index];
+  body.append(tr);scheduleNames(tr);
+  tr.addEventListener('click',event=>{if(event.target.closest('button,a,input,select,textarea'))return;toggleDetail(tr,item,expand,unavailable);});
+  tr.addEventListener('keydown',event=>{
+   if(event.target!==tr||!['Enter',' '].includes(event.key))return;
+   event.preventDefault();toggleDetail(tr,item,expand,unavailable);
+  });
 }
 function toggleDetail(tr,item,expand,unavailable){
   const next=tr.nextElementSibling;
-  if(next&&next.classList.contains('ah-detail')){next.remove();expand.setAttribute('aria-expanded','false');expand.textContent='▸';return;}
+  if(next&&next.classList.contains('ah-detail')){next.remove();tr.setAttribute('aria-expanded','false');expand.textContent='▸';return;}
   const detail=el('tr',null,'ah-detail'),cell=el('td','Loading listings…');cell.colSpan=COLS;detail.append(cell);tr.after(detail);
-  expand.setAttribute('aria-expanded','true');expand.textContent='▾';
+  tr.setAttribute('aria-expanded','true');expand.textContent='▾';
   void fillDetail(cell,item,unavailable);
 }
 function stat(label,value,small){
@@ -138,7 +157,7 @@ function simpleTable(headings,rows){
   headings.forEach(h=>head.append(el('th',h)));
   const thead=el('thead');thead.append(head);table.append(thead);
   const body=el('tbody');
-  for(const r of rows){const line=el('tr');r.forEach(v=>td(line,v));body.append(line);}
+  for(const r of rows){const line=el('tr');r.forEach((v,i)=>{const c=td(line,v);c.dataset.label=headings[i];});body.append(line);}
   table.append(body);return table;
 }
 async function fillDetail(cell,item,unavailable){
@@ -158,7 +177,20 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':t.label+' '+pct(item.trend_pct),item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
       stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
     }else stats.append(stat('Current status','Not listed','No auctions in the latest completed scan'));
-    const parts=[stats];
+    const parts=[stats],variant=variantDetails(item),bonuses=variantLines(item);
+    if(variant.hasVariant){
+      const vbox=el('section',null,'ah-roll-detail');
+      vbox.append(el('strong','Item variant'));
+      if(bonuses.length)for(const bonus of bonuses)vbox.append(el('span',bonus));
+      else vbox.append(el('span','Random stats unavailable for this variant.'));
+      if(variant.unresolved)vbox.append(el('small','Unrecognised custom or suffix variant; stats not estimated.'));
+      else vbox.append(el('small','Standard Classic DBC reference; OctoWoW custom changes may differ.'));
+      parts.unshift(vbox);
+    }
+    const dbLink=el('a','View in OctoWoW database','ah-db-link');
+    dbLink.href='https://octowow.st/db/?item='+encodeURIComponent(item.item_id);
+    dbLink.target='_blank';dbLink.rel='noopener noreferrer';
+    parts.push(dbLink);
     if(state.listingFiltered&&!unavailable)parts.push(el('p','Totals above reflect your active price, stack and time filters. The listings below are every auction for this item.','ah-muted'));
     // price history
     const hist=section('Price history',true);
