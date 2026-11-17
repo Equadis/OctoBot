@@ -18,6 +18,8 @@ const near=(actual,expected,epsilon=.07)=>assert.ok(Math.abs(actual-expected)<=e
 test('every imported talent has an explicit audit record, including non-sheet mechanics',()=>{
  assert.equal(Object.keys(coverage).length,data.talents.length);
  assert.deepEqual(Object.keys(coverage).map(Number).sort((a,b)=>a-b),data.talents.map(t=>t.id).sort((a,b)=>a-b));
+ assert.deepEqual(Object.keys(rules).map(Number).sort((a,b)=>a-b),data.talents.map(t=>t.id).sort((a,b)=>a-b),'Every published talent must have an explicit effect or pending rule');
+ for(const t of data.talents)assert.ok(Array.isArray(rules[t.id])&&rules[t.id].length>0,'No unreviewed talent '+t.name);
  for(const t of data.talents){
   assert.ok(coverage[t.id].status,'unclassified '+t.name);
   assert.ok(coverage[t.id].note,'missing rationale '+t.name);
