@@ -1,10 +1,14 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs";
+import {historyPageSize,matchesChat,compareChat,mergeChat,cursorFor,HISTORY_MS} from "./chat-history.mjs";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
 const initial=new URL(location.href).searchParams.get("realm");if(realms.includes(initial))select.value=initial;
 let generation=0,controller=null,current=null,requesting=false;
+let showGuilds=true;try{showGuilds=localStorage.getItem("octobot-chat-guilds")!=="hide";}catch{}
+const guildToggle=byId("chat-show-guilds");guildToggle.checked=showGuilds;document.body.classList.toggle("hide-chat-guilds",!showGuilds);
+guildToggle.addEventListener("change",()=>{showGuilds=guildToggle.checked;document.body.classList.toggle("hide-chat-guilds",!showGuilds);try{localStorage.setItem("octobot-chat-guilds",showGuilds?"show":"hide");}catch{}});
 function node(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e;}
 function status(state,text){const e=byId("feed-state");e.dataset.state=state;e.textContent=text;}
 function empty(parent,message){parent.replaceChildren(node("div","chat-empty",message));}
@@ -12,26 +16,82 @@ function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
   if(row.gm)content.append(node("span","chat-gm-tag","<GM> "));
-  content.append(node("span","chat-author",row.author+(row.guild?" <"+row.guild+">":"")),document.createTextNode(": "));
+  const author=node("span","chat-author",row.author);
+  if(row.guild)author.append(node("span","chat-guild"," <"+row.guild+">"));
+  content.append(author,document.createTextNode(": "));
   appendChatMessage(content,row);
   parent.append(content);
 }
-function drawFeed(key,rows){
-  const parent=byId(key),atBottom=parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
-  const existing=parent.firstElementChild?.dataset.id, first=rows[0]?.id;
-  const before=parent.scrollTop,oldHeight=parent.scrollHeight;
-  if(!rows.length)empty(parent,key==="gm"?"No recent verified GM messages.":"No recent public messages.");
-  else {
-    const frag=document.createDocumentFragment();
-    for(const row of rows){
-      const line=node("div","chat-line");line.dataset.id=row.id;
-      appendChatLine(line,row);frag.append(line);
-    }
-    parent.replaceChildren(frag);
-    parent.scrollTop=atBottom?parent.scrollHeight:Math.max(0,existing===first?before:before+parent.scrollHeight-oldHeight);
-  }
-  byId(key+"-count").textContent=String(rows.length);
+const feeds=["world","gm"],history={};
+let historyGeneration=0,historyQuery="",searchTimer=null;
+function freshFeed(){return {rows:[],ready:false,loading:false,more:false,capacity:historyPageSize(historyQuery),error:"",controller:null,signature:""};}
+function syncHistoryButton(key){
+ const state=history[key],button=byId(key+"-older");
+ button.hidden=!state.more&&!state.error;button.disabled=state.loading;
+ button.textContent=state.loading?"Loading…":state.error?"Retry loading messages":historyQuery?"Load 100 more matching messages":"Load 1,000 older messages";
+ byId(key+"-history-state").textContent=state.error||(state.ready?historyQuery?state.rows.length+" matching messages":state.rows.length+" messages loaded":"Loading history…");
 }
+function drawHistory(key,{forceBottom=false}={}){
+ const parent=byId(key),state=history[key],rows=state.rows;
+ syncHistoryButton(key);
+ const signature=JSON.stringify([state.ready,state.error,rows]);
+ if(!forceBottom&&state.signature===signature)return;state.signature=signature;
+ const atBottom=forceBottom||parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
+ const top=parent.getBoundingClientRect().top;
+ // Record the first visible row rather than relying on total height differences.
+ const anchor=[...parent.children].find(e=>e.dataset.id&&e.getBoundingClientRect().bottom>top);
+ const anchorId=anchor?.dataset.id,offset=anchor?anchor.getBoundingClientRect().top-top:0,before=parent.scrollTop;
+ if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":historyQuery?"No messages match your search.":key==="gm"?"No recent verified GM messages.":"No recent public messages."));
+ else{
+  const frag=document.createDocumentFragment();
+  for(const row of rows){const line=node("div","chat-line");line.dataset.id=row.id;appendChatLine(line,row);frag.append(line);}
+  parent.replaceChildren(frag);
+  if(atBottom)parent.scrollTop=parent.scrollHeight;
+  else{const replacement=anchorId&&[...parent.children].find(e=>e.dataset.id===anchorId);
+   parent.scrollTop=replacement?parent.scrollTop+replacement.getBoundingClientRect().top-parent.getBoundingClientRect().top-offset:before;}
+ }
+ byId(key+"-count").textContent=String(rows.length);
+}
+async function fetchHistory(key,older=false){
+ const state=history[key],token=historyGeneration,realm=select.value,q=historyQuery;
+ if(!state||state.loading||older&&!state.ready)return;
+ state.loading=true;state.error="";state.controller=new AbortController();syncHistoryButton(key);
+ const params=new URLSearchParams({realm,feed:key,q});
+ const cursor=older&&cursorFor(state.rows);
+ if(cursor)for(const [k,v] of Object.entries(cursor))params.set(k,v);
+ const timeout=setTimeout(()=>state.controller.abort(),20000);
+ try{
+  const response=await fetch(API+"/history?"+params,{signal:state.controller.signal,cache:"no-store"});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const data=await response.json();
+  if(token!==historyGeneration||history[key]!==state)return;
+  if(data.realm!==realm||data.feed!==key||data.query!==q||!Array.isArray(data.items)||data.pageSize!==historyPageSize(q))throw Error("Invalid history");
+  state.rows=older?mergeChat(data.items,state.rows):mergeChat(data.items,[]);
+  state.ready=true;state.more=Boolean(data.hasMore);state.capacity=Math.max(state.capacity,older?state.rows.length:historyPageSize(q));
+  // Merge a live poll that may have completed while the initial archive loaded.
+  if(current?.realm===realm)mergeLiveHistory(key,current[key],false);
+  drawHistory(key,{forceBottom:!older});
+ }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error="Could not load history. Retry.";drawHistory(key);}
+ finally{clearTimeout(timeout);if(token===historyGeneration&&history[key]===state){state.loading=false;syncHistoryButton(key);}}
+}
+function mergeLiveHistory(key,incoming,render=true){
+ const state=history[key];if(!state?.ready)return;
+ const oldest=state.rows[0],cutoff=Date.now()-HISTORY_MS;
+ const eligible=incoming.filter(r=>r.time>=cutoff&&matchesChat(r,historyQuery)&&(!oldest||compareChat(r,oldest)>=0));
+ let rows=mergeChat(state.rows.filter(r=>r.time>=cutoff&&matchesChat(r,historyQuery)),eligible);
+ if(rows.length>state.capacity&&!state.loading){rows=rows.slice(-state.capacity);state.more=true;}
+ state.rows=rows;
+ if(render)drawHistory(key);
+}
+function resetHistory(query=historyQuery,load=true){
+ historyGeneration++;historyQuery=query;
+ for(const key of feeds){history[key]?.controller?.abort();history[key]=freshFeed();drawHistory(key);if(load)void fetchHistory(key);}
+}
+for(const key of feeds)byId(key+"-older").addEventListener("click",()=>void fetchHistory(key,history[key].ready));
+byId("chat-search").addEventListener("input",()=>{
+ clearTimeout(searchTimer);const q=byId("chat-search").value.trim().slice(0,160);
+ resetHistory(q,false);searchTimer=setTimeout(()=>{for(const key of feeds)void fetchHistory(key);},350);
+});
 const defaultFilters={kind:"all",intent:"all",role:"all",tag:"all",query:"",blacklist:"",sort:"latest",alerts:false};
 let filters={...defaultFilters},collapsed=new Set(),known=new Set(),primed=false,audio=null,lastLfgKey="";
 try{const s=JSON.parse(localStorage.getItem("octobot-lfg-v2")||"{}");for(const k of Object.keys(defaultFilters))if(typeof s.filters?.[k]===typeof defaultFilters[k])filters[k]=s.filters[k];collapsed=new Set(Array.isArray(s.collapsed)?s.collapsed:[]);}catch{}
@@ -120,7 +180,7 @@ function drawListings(){
     if(rows.length)parent.replaceChildren(frag);else empty(parent,"No active listings.");
   }
 }
-function reset(){current=null;primed=false;known.clear();lastLfgKey="";for(const key of ["world","gm","lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
+function reset(){current=null;primed=false;known.clear();lastLfgKey="";for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
   if(requesting)return;requesting=true;
   const token=generation, realm=select.value;controller=new AbortController();
@@ -133,9 +193,9 @@ async function poll(){
     for(const key of ["world","gm","lfg","wtb","wts"])if(!Array.isArray(data[key]))throw Error("Invalid feed");
     current=data;status(data.status,data.status==="live"?"Live · collector connected":data.status==="stale"?"Collector stale · last known messages":"Waiting for collector");
     byId("last-updated").textContent="Updated "+new Date(data.generatedAt).toISOString().slice(11,19)+" UTC";
-    drawFeed("world",data.world);drawFeed("gm",data.gm);drawListings();
+    mergeLiveHistory("world",data.world);mergeLiveHistory("gm",data.gm);drawListings();
   }catch{if(token===generation)status("error","Feed unavailable · retrying");}
   finally{clearTimeout(timeout);requesting=false;if(token!==generation)void poll();}
 }
-select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);history.replaceState(null,"",u);reset();status("waiting","Connecting…");void poll();});
-reset();void poll();setInterval(()=>void poll(),5000);setInterval(drawListings,1000);
+select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);window.history.replaceState(null,"",u);clearTimeout(searchTimer);reset();resetHistory(historyQuery);status("waiting","Connecting…");void poll();});
+reset();resetHistory();void poll();setInterval(()=>void poll(),5000);setInterval(drawListings,1000);

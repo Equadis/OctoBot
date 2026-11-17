@@ -42,6 +42,7 @@ function dbAdapter(){
  sql.exec(readFileSync(new URL("../migrations/0004_world_chat.sql",import.meta.url),"utf8"));
  sql.exec(readFileSync(new URL("../migrations/0005_world_chat_guilds.sql",import.meta.url),"utf8"));
  sql.exec(readFileSync(new URL("../migrations/0006_world_chat_profiles.sql",import.meta.url),"utf8"));
+ sql.exec(readFileSync(new URL("../migrations/0007_world_chat_history.sql",import.meta.url),"utf8"));
  return {sql,prepare(query){return {bind(...args){return {query,args}}}},async batch(statements){
    sql.exec("BEGIN");try{const out=statements.map(({query,args})=>{
      const stmt=sql.prepare(query);
@@ -119,5 +120,54 @@ test("item markup survives real SQL storage and listing refresh; legacy plain te
   const data=await (await worldChatRoute(new Request(base),env)).json();
   assert.equal(data.world.length,2);assert.equal(data.world[0].parts,undefined);assert.equal(data.world[1].parts[1].itemId,16712);
   assert.equal(data.wtb.length,1);assert.equal(data.wtb[0].parts[1].colour,"#0070dd");assert.equal(data.wtb[0].message,"WTB [Shadowcraft Gloves]");
+ }finally{DB.sql.close();}
+});
+
+import {splitWebLinks} from "../../../docs/world-chat/chat-links.mjs";
+import {historyPageSize,matchesChat,mergeChat,cursorFor,HISTORY_MS} from "../../../docs/world-chat/chat-history.mjs";
+test("ordinary links are safe, clickable, preserve punctuation and remember clicks",()=>{
+ const parts=splitWebLinks("See (https://example.com/a_(b)), www.example.org and discord.gg/abc. javascript:alert(1)");
+ assert.deepEqual(parts.filter(p=>p.href).map(p=>p.href),["https://example.com/a_(b)","https://www.example.org/","https://discord.gg/abc"]);
+ assert.equal(parts.map(p=>p.text).join(""),"See (https://example.com/a_(b)), www.example.org and discord.gg/abc. javascript:alert(1)");
+ assert.equal(splitWebLinks("https://trusted.example@evil.example").some(p=>p.href),false);
+ const doc={createTextNode:text=>({text}),createElement:tag=>({tag,style:{},handlers:{},addEventListener(k,f){this.handlers[k]=f},classList:{add(){}}})},parent={ownerDocument:doc,children:[],append(x){this.children.push(x)}};
+ appendChatMessage(parent,{message:"https://example.com/visited-test"});const a=parent.children[0];assert.equal(a.href,"https://example.com/visited-test");assert.equal(a.rel,"noopener noreferrer");a.handlers.click();
+ appendChatMessage(parent,{message:"https://example.com/visited-test"});assert.match(parent.children[1].className,/is-visited/);
+});
+test("history paging and literal search across thousands of rows, realms, guilds and item captions",async()=>{
+ const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},now=Date.now(),base="https://worker.example/api/world-chat/history";
+ const id=i=>"12345678-1234-1234-1234-"+String(i).padStart(12,"0");
+ const insert=DB.sql.prepare("INSERT INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)");
+ const insertSearch=DB.sql.prepare("INSERT INTO world_chat_search_text(realm,id,message,observed_ms) VALUES(?,?,?,?)");
+ try{
+  DB.sql.exec("BEGIN");
+  for(let i=1;i<=2405;i++){const time=now-10000+Math.floor(i/3),raw=i%10===0?"WTS |cff0070dd|Hitem:16712:0:0:0|h[Shadowcraft Gloves]|h|r":"ordinary "+i;
+   insert.run("N'Zoth",id(i),time,"1","Testplayer",raw,0);
+   insertSearch.run("N'Zoth",id(i),publicChatMessage(raw).message.toLowerCase(),time);
+  }
+  insert.run("N'Zoth",id(4001),now-1,"2","GM","Shadowcraft notice",1);
+  insert.run("Y'Shaarj",id(4002),now-1,"1","Testplayer","Shadowcraft",0);
+  insert.run("N'Zoth",id(4003),now-HISTORY_MS-10000,"1","Testplayer","Shadowcraft old",0);
+  DB.sql.prepare("INSERT INTO world_chat_guilds VALUES(?,?,?,?)").run("N'Zoth","1","Test Guild",now);
+  DB.sql.exec("COMMIT");
+  const read=async params=>(await worldChatRoute(new Request(base+"?"+new URLSearchParams(params)),env)).json();
+  const first=await read({}),second=await read(first.nextCursor),third=await read(second.nextCursor);
+  assert.equal(first.items.length,1000);assert.equal(second.items.length,1000);assert.equal(third.items.length,405);assert.equal(third.hasMore,false);
+  assert.equal(new Set([...first.items,...second.items,...third.items].map(r=>r.id)).size,2405);
+  assert.ok(second.items.at(-1).time<=first.items[0].time);
+  const q="testplayer Shadowcraft gloves test guild";
+  const search=await read({q}),search2=await read({q,...search.nextCursor}),search3=await read({q,...search2.nextCursor});
+  assert.equal(search.items.length,100);assert.equal(search2.items.length,100);assert.equal(search3.items.length,40);
+  assert.ok([...search.items,...search2.items,...search3.items].every(r=>matchesChat(r,q)&&!r.gm));
+  assert.equal((await read({q:"16712"})).items.length,0);
+  assert.equal((await read({q:"Shadowcraft",feed:"gm"})).items.length,1);
+  assert.equal((await read({q:"Shadowcraft",realm:"Y'Shaarj"})).items.length,1);
+  assert.equal((await read({q:"%_"})).items.length,0);
+  assert.equal((await worldChatRoute(new Request(base+"?before=invalid"),env)).status,400);
+  assert.equal(historyPageSize(q),100);assert.equal(historyPageSize(""),1000);
+  assert.equal(mergeChat(first.items,first.items).length,1000);assert.deepEqual(cursorFor(first.items),first.nextCursor);
+  await worldChatCleanup(env);
+  assert.equal(DB.sql.prepare("SELECT count(*) AS n FROM world_chat_messages WHERE id=?").get(id(4003)).n,0);
+  assert.equal(DB.sql.prepare("SELECT count(*) AS n FROM world_chat_messages WHERE realm=? AND gm=0").get("N'Zoth").n,2405);
  }finally{DB.sql.close();}
 });

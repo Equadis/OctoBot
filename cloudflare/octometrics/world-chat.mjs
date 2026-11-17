@@ -1,9 +1,10 @@
 import {cleanText,listingKinds} from "./world-chat-classify.mjs";
 import {publicChatMessage} from "../../docs/world-chat/chat-links.mjs";
+import {HISTORY_MS,historyPageSize,matchesChat,searchTerms} from "../../docs/world-chat/chat-history.mjs";
 import {analyseRecruitment,classInfo} from "../../docs/world-chat/lfg-catalog.mjs";
 const REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
 const SOURCES={"N'Zoth":"OBPVESW","Y'Shaarj":"OBPVPSW","C'Thun":"OBHCSW"};
-const TTL=300000, HISTORY=1800000;
+const TTL=300000, HISTORY=1800000; // Live poll only; archive retention is separate.
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
 const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
 export function validLine(line,now){
@@ -18,8 +19,9 @@ export function validLine(line,now){
 }
 export async function worldChatRoute(request,env){
   const url=new URL(request.url);
-  if(url.pathname!=="/api/world-chat"&&url.pathname!=="/api/world-chat/ingest")return null;
+  if(!["/api/world-chat","/api/world-chat/ingest","/api/world-chat/history"].includes(url.pathname))return null;
   const now=Date.now(), db=env.DB;
+  if(url.pathname==="/api/world-chat/history"&&request.method==="GET")return readHistory(url,db,now);
   if(url.pathname.endsWith("/ingest")&&request.method==="POST"){
     if(!env.METRICS_PUSH_TOKEN)return reply({error:"ingest unavailable"},503);
     if(request.headers.get("authorization")!=="Bearer "+env.METRICS_PUSH_TOKEN)return reply({error:"unauthorised"},401);
@@ -37,13 +39,17 @@ export async function worldChatRoute(request,env){
       const classId=Number.isInteger(g.classId)&&Object.hasOwn(classInfo,g.classId)?g.classId:null;
       statements.push(db.prepare("INSERT INTO world_chat_profiles(realm,author_key,guild,level,class_id,observed_ms) VALUES(?,?,?,?,?,?) ON CONFLICT(realm,author_key) DO UPDATE SET guild=excluded.guild,level=COALESCE(excluded.level,world_chat_profiles.level),class_id=COALESCE(excluded.class_id,world_chat_profiles.class_id),observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_profiles.observed_ms").bind(payload.realm,g.authorKey,cleanText(g.guild),level,classId,g.time));
     }
+    const searchRows=[];
     for(const raw of payload.messages){
       const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
       statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.storedMessage,Number(l.gm)));
+      searchRows.push([payload.realm,l.id,l.message.toLowerCase(),l.time]);
       if(!l.gm)for(const {kind,tag} of listingKinds(l.message).slice(0,3)){
         statements.push(db.prepare("INSERT INTO world_chat_listings(realm,kind,author_key,tag,author,message,observed_ms) VALUES(?,?,?,?,?,?,?) ON CONFLICT(realm,kind,author_key,tag) DO UPDATE SET author=excluded.author,message=excluded.message,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_listings.observed_ms").bind(payload.realm,kind,l.authorKey,tag,l.author,l.storedMessage,l.time));
       }
     }
+    // One bounded multi-row write keeps the statement/parameter count within D1 limits.
+    if(searchRows.length)statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_search_text(realm,id,message,observed_ms) VALUES "+searchRows.map(()=>"(?,?,?,?)").join(",")).bind(...searchRows.flat()));
     // Heartbeat is sent only after a valid World packet was seen on this connection.
     statements.push(db.prepare("INSERT INTO world_chat_heartbeat(realm,observed_ms) VALUES(?,?) ON CONFLICT(realm) DO UPDATE SET observed_ms=MAX(observed_ms,excluded.observed_ms)").bind(payload.realm,now));
     await db.batch(statements);
@@ -64,11 +70,45 @@ export async function worldChatRoute(request,env){
   }
   return reply({error:"method not allowed"},405);
 }
+// Keyset pagination, stable even when messages share timestamps or arrive during a read.
+export async function readHistory(url,db,now){
+ const realm=url.searchParams.get("realm")||"N'Zoth",feed=url.searchParams.get("feed")||"world";
+ const q=(url.searchParams.get("q")||"").trim(),before=url.searchParams.get("before"),beforeId=url.searchParams.get("beforeId");
+ const terms=searchTerms(q);
+ if(!REALMS.has(realm)||!["world","gm"].includes(feed)||q.length>160||terms.length>24)return reply({error:"invalid history query"},400);
+ if((before===null)!==(beforeId===null)||before!==null&&(!/^\d{1,16}$/.test(before)||!Number.isSafeInteger(Number(before))||!/^[a-f0-9-]{36}$/i.test(beforeId)))return reply({error:"invalid history cursor"},400);
+ const size=historyPageSize(q),cutoff=now-HISTORY_MS;
+ const from=" FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key"+(terms.length?" LEFT JOIN world_chat_search_text s ON s.realm=m.realm AND s.id=m.id":"");
+ const select="SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id";
+ const rows=[];let cursor=before===null?null:{time:Number(before),id:beforeId};
+ // Legacy data may still contain raw item markup. SQL narrows candidate rows, and
+ // visible-text verification removes matches in invisible protocol metadata.
+ let exhausted=false;
+ while(rows.length<=size&&!exhausted){
+  const where=["m.realm=?","m.gm=?","m.observed_ms>=?","m.observed_ms<=?"],params=[realm,Number(feed==="gm"),cutoff,now+5000];
+  if(cursor){where.push("(m.observed_ms,m.id)<(?,?)");params.push(cursor.time,cursor.id);}
+  for(const term of terms){where.push("instr(lower(m.author||' '||COALESCE(p.guild,g.guild,'')||' '||COALESCE(s.message,m.message)),?)>0");params.push(term);}
+  const limit=terms.length?Math.min(250,Math.max(101,size+1-rows.length)):size+1;
+  const [result]=await db.batch([db.prepare(select+from+" WHERE "+where.join(" AND ")+" ORDER BY m.observed_ms DESC,m.id DESC LIMIT ?").bind(...params,limit)]);
+  const candidates=result.results;
+  for(const row of candidates){
+   const line=publicLine(row);
+   if(!terms.length||matchesChat(line,q))rows.push(line);
+   if(rows.length>size)break;
+  }
+  exhausted=candidates.length<limit;
+  if(!exhausted){const last=candidates.at(-1);cursor={time:last.observed_ms,id:last.id};}
+ }
+ const hasMore=rows.length>size,items=rows.slice(0,size).reverse();
+ const oldest=items[0];
+ return reply({realm,feed,query:q,items,hasMore,nextCursor:hasMore&&oldest?{before:String(oldest.time),beforeId:oldest.id}:null,pageSize:size,retentionDays:HISTORY_MS/86400000});
+}
 export async function worldChatCleanup(env){
   await env.DB.batch([
-    env.DB.prepare("DELETE FROM world_chat_messages WHERE observed_ms<?").bind(Date.now()-86400000),
+    env.DB.prepare("DELETE FROM world_chat_messages WHERE observed_ms<?").bind(Date.now()-HISTORY_MS),
+    env.DB.prepare("DELETE FROM world_chat_search_text WHERE observed_ms<?").bind(Date.now()-HISTORY_MS),
     env.DB.prepare("DELETE FROM world_chat_listings WHERE observed_ms<?").bind(Date.now()-TTL),
-    env.DB.prepare("DELETE FROM world_chat_guilds WHERE observed_ms<?").bind(Date.now()-86400000),
-    env.DB.prepare("DELETE FROM world_chat_profiles WHERE observed_ms<?").bind(Date.now()-86400000)
+    env.DB.prepare("DELETE FROM world_chat_guilds WHERE observed_ms<?").bind(Date.now()-HISTORY_MS),
+    env.DB.prepare("DELETE FROM world_chat_profiles WHERE observed_ms<?").bind(Date.now()-HISTORY_MS)
   ]);
 }
