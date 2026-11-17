@@ -137,3 +137,16 @@ test('custom raid target preserves world buff suppression when a raid preset is 
  assert.equal(b.planning.customRaid,true);assert.deepEqual(effectiveBuffIds(b.controls.buffIds,b.planning),['fortitude']);
  b.planning.customRaid=false;assert.deepEqual(effectiveBuffIds(b.controls.buffIds,b.planning),b.controls.buffIds);
 });
+
+test('verified earth totem and wisdom add the correct stats; resistance adjustments are target-only',()=>{
+ assert.equal(buffDefinition('earth').stats.str,96);assert.equal(buffDefinition('earth').status,'source-spell');
+ assert.equal(buffDefinition('wisdom').stats.mp5,33);
+ const b=newBuild('mage');b.controls.buffIds=['wisdom','curse-shadow'];b.planning.targetShadowRes=100;
+ const a=sheet(b);assert.equal(a.Defence['Mana / 5s'],'33');assert.equal(a['Target Resistance Estimates']['Shadow Resistance (raw)'],'25');
+});
+test('additional defence, health regeneration and school-elixir replacement groups retain only one rank',()=>{
+ assert.deepEqual(selectConsumable([3389,8951],13445),[13445]);assert.deepEqual(selectConsumable([3382,3388],20004),[20004]);
+ assert.deepEqual(resolveConsumableSelection({buffIds:['firepower'],consumableIds:[6373]},'consumables').buffIds,[]);
+ assert.deepEqual(resolveConsumableSelection({buffIds:['firepower'],consumableIds:[6373]},'buffs').consumableIds,[]);
+ assert.deepEqual(selectConsumable([17708],55046),[55046]);
+});

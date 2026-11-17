@@ -8,6 +8,8 @@ const scoped={
 };
 // Spell tooltips checked against the public OctoWoW DB, 2026-11-17.
 const spellSources={
+ earth:{stats:{str:96},sources:['https://octowow.st/db/?spell=25361','docs/sim/data/talents/shaman.json#262'],duration:120,assumption:'Rank 5 gives 77 strength. Assumed imported talent +25%, rounded down; provider talent/rounding disputed by community patch notes.'},
+ wisdom:{stats:{mp5:33},sources:['https://octowow.st/db/?spell=25290'],duration:300,assumption:'Rank 6 unmodified; selecting other blessings assumes additional paladins.'},
  'divine-spirit':{stats:{spi:40},sources:['https://octowow.st/db/?spell=27841'],duration:1800,assumption:'Rank 4 active buff from provider.'},
  'curse-shadow':{stats:{targetShadowRes:-75,targetArcaneRes:-75,targetShadowDamageTakenPct:10,targetArcaneDamageTakenPct:10},sources:['https://octowow.st/db/?spell=17937'],duration:300,assumption:'Rank 2; another Warlock required for each other selected curse.'},
  'wind-serpent':{stats:{targetArmour:-400},sources:['https://octowow.st/db/?item=12462'],assumption:'Active post-stack decay state after 55 stacks; no uptime or siphon damage inferred.'},
@@ -53,13 +55,18 @@ export function buffDefinition(id){
  }
  if(spellSources[id]){const f=spellSources[id];return {...base,status:f.conflict?'source-conflict':'source-spell',stats:{...f.stats},recipientLevel:f.recipientLevel,sources:f.sources,source:f.sources[0],durationSeconds:f.duration,reason:'Published tooltip values; '+f.assumption+' Assumes active encounter state, not verified uptime.'};}
  if(scoped[id])return {...base,status:'reference-scoped',stats:{...scoped[id]},reason:'Combat Gum reference value; server behaviour not independently verified.'};
- if(BUFF_STATS[id]&&Object.keys(BUFF_STATS[id]).length)return {...base,status:'reference-static',stats:{...BUFF_STATS[id]},reason:'Combat Gum reference value; spell rank, source and stacking need server confirmation.'};
+ if(BUFF_STATS[id]&&Object.keys(BUFF_STATS[id]).length){const evidence={
+ 'skill-book':{source:'https://octowow.st/forum/viewtopic.php?t=1666',reason:'Community guide describes distinct +5 skill quests. Global toggle assumes every relevant quest is completed; skill cap and weapon-specific ownership unverified.'},
+ eskhandar:{source:'https://octowow.st/db/?item=18203',reason:'Set tooltip confirms a summoned spirit, not the -1200 armour debuff. Reference-only value; actual ability and uptime unresolved.'},
+ ripper:{source:'https://octowow.st/db/?spell=3396',reason:'Database lists a Ripper-associated poison at -60 armour, not the reference -163. Multiple same-name items exist; intended effect unverified.'}
+ }[id];return {...base,status:'reference-static',stats:{...BUFF_STATS[id]},reason:'Combat Gum reference value; spell rank, source and stacking need server confirmation.',...evidence};}
  return {...base,status:'unmapped',reason:'No numerical effect mapped.'};
 }
 export function resolveBuffEffects(build,gear={}){
  const controls=resolveConsumableSelection({...build.controls,buffIds:normaliseBuffs(build.controls.buffIds||[])},'buffs');
  const entries=controls.buffIds.map(id=>{
   const e=buffDefinition(id);const raidReason=worldBuffRestriction(id,build.planning);if(raidReason)return {...e,active:false,reason:raidReason};let active=['source-prepull','source-spell','source-conflict','reference-static','reference-scoped'].includes(e.status);
+  if(id==='wisdom'&&['warrior','rogue'].includes(build.classId))return {...e,active:false,reason:'Requires a Mana-using class.'};
   if(e.recipientLevel&&build.level<e.recipientLevel)return {...e,active:false,reason:'Requires level '+e.recipientLevel+'.'};
   const item=sourceItems.get(id);if(item&&consumableRestriction(item,build))return {...e,active:false,reason:consumableRestriction(item,build)};
   if(id.startsWith('wizard-oil-')){

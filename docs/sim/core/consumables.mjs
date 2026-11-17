@@ -44,6 +44,9 @@ export function consumableGroup(item){
  if(/^Elixir of (?:Minor |Lesser |Greater )?Agility$|^Elixir of the Mongoose$/i.test(item.name))return 'agility-elixir';
  if(/^Elixir of (?:Giants|Lion's Strength|Ogre's Strength)$/i.test(item.name))return 'strength-elixir';
  if(/^(?:Greater )?Arcane Elixir$/i.test(item.name))return 'arcane-elixir';
+ if(/^Elixir of (?:Minor |Greater |Superior )?Defense$/i.test(item.name))return 'defence-elixir';
+ if(/^(?:Weak |Strong |Mighty |Major )?Troll's Blood Potion$/i.test(item.name))return 'troll-blood';
+ const school=item.name?.match(/^Elixir of (?:Greater )?(Firepower|Frost Power|Nature Power|Arcane Power|Shadow Power)$/i);if(school)return 'school-elixir-'+school[1].toLowerCase();
  return null;
 }
 export function selectConsumable(ids,id){
@@ -63,7 +66,7 @@ export function consumablePassiveStats(item){const audit=item?.effectAudit||cons
 // cooldown. Displaying an item is not counted as simulation support.
 export function consumableEngineErrors(build,supportedIds=[]){return (build.controls.consumableIds||[]).flatMap(id=>{const item=CONSUMABLE_BY_ID.get(id);return [...(!supportedIds.includes(id)?[`Consumable ${id} is not implemented by the combat engine.`]:[]),...(item?.sharedCooldown&&!item.cooldownVerified?[`Consumable ${id}: server cooldown is unresolved.`]:[])];});}
 
-const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],drink:['merlot','rum'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
+const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],'school-elixir-firepower':['firepower'],'school-elixir-nature power':['nature-power'],drink:['merlot','rum'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
 export function resolveConsumableSelection(controls,prefer='consumables'){
  let buffIds=[...new Set(controls.buffIds)],consumableIds=[];
  for(const id of controls.consumableIds||[])if(CONSUMABLE_BY_ID.has(id))consumableIds=selectConsumable(consumableIds,id);
