@@ -4,6 +4,7 @@ import {
   MongoDurationStore,
   isPlausibleClear,
   medianOf,
+  durationLearningPipeline,
   type DurationDb,
   type RaidDuration,
 } from "./duration-store.js";
@@ -75,4 +76,13 @@ it("retracts a resumed raid sample and replaces it on the next valid completion"
   await store.invalidate("n7"); expect(await store.count()).toBe(0);
   await store.record({ms:40*MIN,ts:new Date(),sessionKey:"n7",valid:true});
   expect(await store.count()).toBe(1);expect(await store.median(1)).toBe(40*MIN);
+});
+
+it("Mongo selects the newest keyed revision before filtering valid samples",()=>{
+  const pipeline=durationLearningPipeline();
+  const group=pipeline.findIndex(p=>"$group" in p);
+  const valid=pipeline.findIndex(p=>Boolean((p.$match as {valid?:boolean}|undefined)?.valid));
+  expect(group).toBeGreaterThan(0);
+  expect(valid).toBeGreaterThan(group);
+  expect(pipeline[group]).toMatchObject({$group:{_id:"$sessionKey",valid:{$first:"$valid"},ms:{$first:"$ms"}}});
 });

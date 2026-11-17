@@ -18,3 +18,19 @@ For more rows, rerun the same SELECT with `AND id > <last exported id>` before O
 MongoDB: inspect both zone duration collections for unkeyed legacy records, duplicate sessionKey values and valid=false records. Unkeyed records are retained but excluded from authoritative Mongo-backed learning; use the original roster snapshots to establish identity before migrating any legacy sample. Do not mark an unlinked record valid simply because the duration is plausible.
 
 No production history is changed by this procedure.
+
+## Optional durable backfill (review before applying)
+
+The ordinary audit remains read-only. To prepare an idempotent SQL file from all retained snapshots:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\cloudflare\octometrics\audit-production-raid-history.ps1 -BackfillSqlPath .\raid-history-backfill.sql
+```
+
+Review the SQL: every statement inserts a compact derived lifecycle revision only when its event ID is absent. It does not update or delete raw events. Once approved, apply using authenticated Wrangler:
+
+```powershell
+npx wrangler d1 execute octometrics --remote --config .\wrangler.metrics.toml --file .\raid-history-backfill.sql
+```
+
+Then rerun the read-only audit and compare retained sessions, sample counts, excluded keys and confirmation times with the pre-apply output. Do not commit the generated SQL. Old timestamps remain estimated if absent from original telemetry. Lost/pruned source snapshots cannot be reconstructed. No MongoDB changes are part of this backfill.

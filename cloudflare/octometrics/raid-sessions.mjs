@@ -110,10 +110,66 @@ export function latestSnapshots(rows,now=Date.now()){
   return out;
 }
 
+/**
+ * Compact retained snapshots into actual observed lifecycle transitions. Historical heartbeats
+ * are not transitions: an old resume without resumedAt is anchored to its first observed return.
+ * The original rows remain intact. Used by the production audit and its optional durable backfill.
+ */
+export function snapshotHistoryRevisions(rows,zone,now=Date.now()){
+  const sorted=rows.map(parse).filter(r=>r.payload?.schema===SCHEMA&&r.payload.zone===zone&&Array.isArray(r.payload.sessions)&&Number.isFinite(r.payload.seq))
+    .sort((a,b)=>a.payload.seq-b.payload.seq||Date.parse(a.observed_at)-Date.parse(b.observed_at));
+  const state=new Map(),out=new Map();
+  for(const row of sorted){
+    for(const raw of row.payload.sessions){
+      const s=cleanSession(raw,now);
+      if(!s)continue;
+      const key=JSON.stringify([s.key,s.formedAt]),old=state.get(key);
+      const kind=s.status==='ended'?'end':'resume';
+      if(kind==='resume'&&!s.resumed&&old?.kind!=='end'){
+        if(old?.kind!=='resume')state.set(key,{kind:'active'});
+        continue;
+      }
+      // A fresh active sighting after an observed end is a retraction even if a legacy
+      // publisher omitted the resumed flag. Without a prior end, require that flag.
+      if(kind==='resume'&&!s.resumed&&old?.kind==='resume')continue;
+      let observed=kind==='end'?(s.confirmedAt||row.observed_at):(s.resumedAt||row.observed_at);
+      if(!Number.isFinite(Date.parse(observed)))continue;
+      const boundary=kind==='end'?s.endedAt:(s.resumedAt||old?.endBoundary||'first');
+      const identity=JSON.stringify([key,kind,boundary]);
+      const prior=out.get(identity);
+      if(prior){const exact=kind==='end'?s.confirmedAt:s.resumedAt;const prev=JSON.parse(prior.payload_json).session;
+        const wasExact=kind==='end'?prev.confirmedAt:prev.resumedAt;
+        if(!exact||wasExact)observed=prior.observed_at;
+      }
+      const earlier=prior?JSON.parse(prior.payload_json).session:null;
+      const session=kind==='resume'?{...s,resumed:true,...(!s.resumedAt&&earlier?.resumedAt?{resumedAt:earlier.resumedAt}:{})}:{...s,...(!s.confirmedAt&&earlier?.confirmedAt?{confirmedAt:earlier.confirmedAt}:{})};
+      const eventId=['history-v1',zone,encodeURIComponent(s.key),encodeURIComponent(s.formedAt),kind,encodeURIComponent(boundary)].join('|');
+      const payload={schema:SCHEMA,zone,eventId,session,historyBackfill:true,...(kind==='end'?{durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)}:{})};
+      // Keep the latest classification but the first observed confirmation.
+      out.set(identity,{type:'raid_session_revision',realm:row.realm,account:RT_ACCOUNT,role:RT_ROLE,observed_at:observed,payload_json:JSON.stringify(payload)});
+      state.set(key,{kind,endBoundary:kind==='end'?s.endedAt:old?.endBoundary});
+    }
+  }
+  return [...out.values()];
+}
+
 /** Ended-session events for a zone, one per session key (a resumed raid's latest end wins). */
 export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   const byKey=new Map();
-  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
+  // Legacy snapshots repeat the same completed raid at every heartbeat but have no confirmedAt.
+  // Use the earliest retained report of that exact departure, not its most recent heartbeat.
+  const firstEnd=new Map();
+  const identity=s=>JSON.stringify([s.key,s.formedAt,s.endedAt]);
+  const note=(s,observed)=>{
+    if(s?.status!=='ended'||!s.key)return;
+    const explicit=Boolean(s.confirmedAt),at=s.confirmedAt||observed,ms=Date.parse(at);
+    if(!Number.isFinite(ms)||ms<Date.parse(s.endedAt))return;
+    const key=identity(s),prev=firstEnd.get(key);
+    if(!prev||(explicit&&!prev.explicit)||(explicit===prev.explicit&&ms<prev.ms))firstEnd.set(key,{at,ms,explicit});
+  };
+  for(const row of [...rows,...revisions].map(parse))if(row.payload?.zone===zone)note(row.payload.session,row.observed_at);
+  for(const s of snapshot?.payload.sessions||[])note(s,snapshot.observedAt);
+  const stamp=(s,observed)=>s.status==='ended'?(s.confirmedAt||firstEnd.get(identity(s))?.at||observed||s.endedAt):(s.resumedAt||observed||s.lastConfirmedAt);
   const cutoff=snapshot?Date.parse(snapshot.observedAt):Infinity;
   const apply=(p,observed,priority)=>{
     const s=p?.session;
@@ -128,7 +184,7 @@ export function endedEvents(rows,zone,snapshot=null,revisions=[]){
       p={...p,durationMs,confirmedAt:at};
     }
     const prev=byKey.get(s.key);
-    if(!prev||time>prev.time||(time===prev.time&&priority>prev.priority))byKey.set(s.key,{p,time,priority});
+    if(!prev||time>prev.time||(time===prev.time&&(priority>prev.priority||(priority===prev.priority&&Date.parse(observed)>=(prev.observed??0)))))byKey.set(s.key,{p,time,priority,observed:Date.parse(observed)});
   };
   // Standalone events are historical only. A completion newer than the last atomic snapshot
   // must wait for that snapshot; it cannot advance Last Raid Finished on its own.
@@ -146,9 +202,10 @@ export function endedEvents(rows,zone,snapshot=null,revisions=[]){
   for(const s of snapshot?.payload.sessions||[]){
     if(s.status!=='ended'){byKey.delete(s.key);continue;}
     const previous=byKey.get(s.key)?.p;
-    const confirmedAt=s.confirmedAt||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
+    const confirmedAt=s.confirmedAt||firstEnd.get(identity(s))?.at||(previous?.session.endedAt===s.endedAt?previous.confirmedAt:null)||snapshot.observedAt;
     const durationMs=Date.parse(s.endedAt)-Date.parse(s.formedAt);
-    byKey.set(s.key,{p:{session:s,confirmedAt,durationMs},time:Date.parse(confirmedAt),priority:3});
+    const exact=Boolean(s.confirmedAt||firstEnd.get(identity(s))?.explicit);
+    byKey.set(s.key,{p:{session:exact?{...s,confirmedAt}:s,confirmedAt,durationMs},time:Date.parse(confirmedAt),priority:3});
   }
   return [...byKey.values()].map(x=>x.p).filter(p=>p.session.status==='ended'&&['kill_confirmed','departed'].includes(p.session.endReason)).sort((a,b)=>Date.parse(b.confirmedAt)-Date.parse(a.confirmedAt));
 }

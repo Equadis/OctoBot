@@ -78,6 +78,20 @@ export class InMemoryDurationStore implements DurationStore {
 
 interface DurationDoc extends RaidDuration {}
 
+/** Pick the latest revision per numbered or unnumbered session before testing eligibility.
+ * Do not let a superseded valid duplicate escape an invalidation. Use explicit fields
+ * instead of replacing the root with a special Mongo aggregation variable.
+ */
+export function durationLearningPipeline(): Record<string, unknown>[] {
+  return [
+    { $match: { sessionKey: { $type: "string", $ne: "" } } },
+    { $sort: { ts: -1, _id: -1 } },
+    { $group: { _id: "$sessionKey", ms: { $first: "$ms" }, ts: { $first: "$ts" }, valid: { $first: "$valid" } } },
+    { $match: { valid: true, ms: { $type: "number", $gt: 0 } } },
+    { $project: { _id: 0, sessionKey: "$_id", ms: 1, ts: 1, valid: 1 } },
+  ];
+}
+
 /** Narrow port over a Mongo collection, so the store's logic is unit-tested with a fake. */
 export interface DurationDb {
   insert(doc: DurationDoc): Promise<void>;
@@ -110,10 +124,9 @@ export class MongoDurationStore implements DurationStore {
     await collection.createIndex({ ts: 1 }, { expireAfterSeconds: ttlDays * 86_400 });
     // Legacy unkeyed observations cannot be linked to a raid or a later retraction.
     // Retain them in Mongo for audit, but do not use them for authoritative predictions.
-    const verified = { valid: true, sessionKey: { $type: "string" as const } };
-    const unique = [{ $match: verified }, { $sort: { ts: -1, _id: -1 } }, { $group: { _id: "$sessionKey", doc: { $first: "$ROOT" } } }, { $replaceRoot: { newRoot: "$doc" } }];
+    const unique = durationLearningPipeline();
     const db: DurationDb = {
-      insert: (doc) => doc.sessionKey ? collection.updateOne({sessionKey:doc.sessionKey},{$set:doc},{upsert:true}).then(()=>undefined) : collection.insertOne(doc).then(() => undefined),
+      insert: (doc) => doc.sessionKey ? collection.updateMany({sessionKey:doc.sessionKey},{$set:doc},{upsert:true}).then(()=>undefined) : collection.insertOne(doc).then(() => undefined),
       invalidate: (sessionKey) => collection.updateMany({sessionKey},{$set:{valid:false}}).then(()=>undefined),
       recent: (limit) => collection.aggregate<DurationDoc>([...unique, { $sort: { ts: -1 } }, { $limit: limit }]).toArray(),
       count: async () => (await collection.aggregate<{ count:number }>([...unique, { $count: "count" }]).next())?.count ?? 0,
