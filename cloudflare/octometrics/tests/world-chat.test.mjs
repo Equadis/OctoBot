@@ -180,3 +180,16 @@ test("live merging keeps the last search page and preserves older messages while
  const reading=mergeHistoryWindow(rows,[next],{query:"zg",now,capacity:100,preserveOlder:true});assert.equal(reading.rows.length,101);assert.equal(reading.rows[0].id,"0000");assert.equal(reading.capacity,101);
  const updated=mergeHistoryWindow(rows,[{...rows[0],guild:"New"}],{query:"old",now,capacity:100});assert.equal(updated.rows.length,99);assert.equal(updated.rows[0].id,"0001");
 });
+
+import {historyErrorMessage,liveFallback} from "../../../docs/world-chat/chat-history.mjs";
+test("history errors retain live fallback and distinguish incompatible API and schema",async()=>{
+ const now=Date.now(),rows=[{time:now,id:"a",author:"A",message:"hello"},{time:now,id:"b",author:"B",message:"LFG WC"}];
+ assert.equal(liveFallback(rows,"wc",now).length,1);
+ assert.match(historyErrorMessage(404),/not deployed/);
+ assert.match(historyErrorMessage(503,"history_schema_missing"),/migration missing/);
+ const DB={prepare(){throw Error("D1_ERROR: no such table: world_chat_messages")}};
+ const resp=await worldChatRoute(new Request("https://worker.example/api/world-chat/history"),{DB});
+ assert.equal(resp.status,503);
+ assert.equal(resp.headers.get("Access-Control-Allow-Origin"),"https://equadis.github.io");
+ assert.equal((await resp.json()).code,"history_schema_missing");
+});

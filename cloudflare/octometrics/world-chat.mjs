@@ -21,7 +21,16 @@ export async function worldChatRoute(request,env){
   const url=new URL(request.url);
   if(!["/api/world-chat","/api/world-chat/ingest","/api/world-chat/history"].includes(url.pathname))return null;
   const now=Date.now(), db=env.DB;
-  if(url.pathname==="/api/world-chat/history"&&request.method==="GET")return readHistory(url,db,now);
+  
+  if(url.pathname==="/api/world-chat/history"&&request.method==="GET"){
+    try{return await readHistory(url,db,now);}
+    catch(error){
+      const detail=String(error?.message??error);
+      const missing=/no such table|no such column/i.test(detail);
+      console.warn("World Chat history query failed",detail.slice(0,300));
+      return reply({error:missing?"History schema missing":"History database unavailable",code:missing?"history_schema_missing":"history_database_error"},503);
+    }
+  }
   if(url.pathname.endsWith("/ingest")&&request.method==="POST"){
     if(!env.METRICS_PUSH_TOKEN)return reply({error:"ingest unavailable"},503);
     if(request.headers.get("authorization")!=="Bearer "+env.METRICS_PUSH_TOKEN)return reply({error:"unauthorised"},401);

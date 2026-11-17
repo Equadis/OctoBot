@@ -21,3 +21,15 @@ export function mergeHistoryWindow(existing,incoming,{query="",now=Date.now(),ca
  }
  return {rows,capacity,hasMore};
 }
+
+export function historyErrorMessage(status,code){
+ if(status===404||status===405)return "History API is not deployed. Live chat only.";
+ if(code==="history_schema_missing")return "History database migration missing. Live chat only.";
+ if(status===503)return "History database temporarily unavailable. Live chat only.";
+ if(status===400)return "History request invalid. Clear the search or retry.";
+ if(status)return "History unavailable (HTTP "+status+"). Live chat only.";
+ return "History connection failed. Live chat only.";
+}
+export function liveFallback(rows,query,now=Date.now()){
+ return mergeChat([],rows).filter(r=>r.time>=now-HISTORY_MS&&matchesChat(r,query)).slice(-historyPageSize(query));
+}

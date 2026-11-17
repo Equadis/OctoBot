@@ -1,6 +1,6 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs?v=2";
-import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow} from "./chat-history.mjs?v=2";
+import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=3";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -28,7 +28,7 @@ function freshFeed(){return {rows:[],ready:false,loading:false,more:false,capaci
 function syncHistoryButton(key){
  const state=history[key],button=byId(key+"-older");
  button.hidden=!state.more&&!state.error;button.disabled=state.loading;
- button.textContent=state.loading?"Loading…":state.error?"Retry loading messages":historyQuery?"Load 100 more matching messages":"Load 1,000 older messages";
+ button.textContent=state.loading?"Loading…":state.error?"Retry history":historyQuery?"Load 100 more matching messages":"Load 1,000 older messages";
  byId(key+"-history-state").textContent=state.error||(state.ready?historyQuery?state.rows.length+" matching messages":state.rows.length+" messages loaded":"Loading history…");
 }
 function drawHistory(key,{forceBottom=false}={}){
@@ -62,20 +62,27 @@ async function fetchHistory(key,older=false){
  const timeout=setTimeout(()=>state.controller.abort(),20000);
  try{
   const response=await fetch(API+"/history?"+params,{signal:state.controller.signal,cache:"no-store"});
-  if(!response.ok)throw Error("HTTP "+response.status);
+  if(!response.ok){let code;try{code=(await response.json()).code;}catch{}throw Object.assign(Error(historyErrorMessage(response.status,code)),{historyFailure:true});}
   const data=await response.json();
   if(token!==historyGeneration||history[key]!==state)return;
-  if(data.realm!==realm||data.feed!==key||data.query!==q||!Array.isArray(data.items)||data.pageSize!==historyPageSize(q))throw Error("Invalid history");
+  if(data.realm!==realm||data.feed!==key||data.query!==q||!Array.isArray(data.items)||data.pageSize!==historyPageSize(q))throw Object.assign(Error("History API response is incompatible. Live chat only."),{historyFailure:true});
   state.rows=older?mergeChat(data.items,state.rows):mergeChat(data.items,[]);
   state.ready=true;state.more=Boolean(data.hasMore);state.capacity=Math.max(state.capacity,older?state.rows.length:historyPageSize(q));
   // Merge a live poll that may have completed while the initial archive loaded.
   if(current?.realm===realm)mergeLiveHistory(key,current[key],false,older);
   drawHistory(key,{forceBottom:!older});
- }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error="Could not load history. Retry.";drawHistory(key);}
+ }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error=e.historyFailure?e.message:historyErrorMessage();
+  if(!state.ready&&current?.realm===realm)state.rows=liveFallback(current[key],q);
+  drawHistory(key);}
  finally{clearTimeout(timeout);if(token===historyGeneration&&history[key]===state){state.loading=false;syncHistoryButton(key);}}
 }
 function mergeLiveHistory(key,incoming,render=true,preserveOverride){
- const state=history[key];if(!state?.ready)return;
+ const state=history[key];if(!state)return;
+ if(!state.ready){
+  state.rows=liveFallback(incoming,historyQuery);
+  if(render)drawHistory(key);
+  return;
+ }
  const parent=byId(key),readingOlder=parent.scrollHeight-parent.scrollTop-parent.clientHeight>=45;
  const preserveOlder=preserveOverride??(state.loading||readingOlder);
  const next=mergeHistoryWindow(state.rows,incoming,{query:historyQuery,capacity:state.capacity,preserveOlder,hasMore:state.more});
