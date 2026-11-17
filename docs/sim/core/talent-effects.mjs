@@ -7,7 +7,7 @@
  * Combat effects not represented on the character sheet stay in coverage as
  * pending, instead of being treated as permanent or silently dropped.
  */
-import {AUDITED_CLASS,TALENT_RULES,TALENT_COVERAGE} from './talent-rules.mjs?v=20261117-talent-audit2';
+import {AUDITED_CLASS,TALENT_RULES,TALENT_COVERAGE} from './talent-rules.mjs?v=20261117-talent-audit3';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 
 const WEAPONS={
