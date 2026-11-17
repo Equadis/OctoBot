@@ -1,20 +1,20 @@
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
-import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
+import {resetPlannerSection} from './core/panel-resets.mjs?v=20261117-talent-audit2';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261114-ammo2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {setupRacePicker} from './race-picker.mjs?v=2';
 let racePicker = null;
-import {characterStats} from './core/character-stats.mjs?v=20261117-talent-audit1';
-import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
+import {characterStats} from './core/character-stats.mjs?v=20261117-talent-audit2';
+import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-talent-audit2';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261113-swaps1';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-talent-audit2';
 import { itemPicker } from './item-picker.mjs?v=20261117-requirements1';
 import { ENCHANTS } from './core/equipment-options.mjs?v=20261113-swaps1';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261114-groups1';
+import { configuration } from './configuration.mjs?v=20261117-talent-audit2';
 import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
