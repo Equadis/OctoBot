@@ -4,7 +4,7 @@ import {displayItemName,variantDetails,variantLines,richItemTooltip} from './ite
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
 import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261116-scanage1';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
-import {DEFAULTS,SORTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs';
+import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-columns1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs';
 
@@ -48,6 +48,40 @@ async function request(path){
 const qualityClass=q=>{const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';};
 const itemName=item=>displayItemName(item);
 const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'];
+
+/** Keyboard-accessible headers for full-result (server-side) ordering. */
+function updateSortHeaders(){
+ for(const th of document.querySelectorAll('th[data-sort-key]')){
+  const key=th.dataset.sortKey,active=state.filters.sort===key;
+  const dir=active?(state.filters.dir||SORT_DEFAULT_DIR[key]):null;
+  th.setAttribute('aria-sort',dir==='asc'?'ascending':dir==='desc'?'descending':'none');
+  const arrow=th.querySelector('.ah-sort-arrow');
+  if(arrow)arrow.textContent=dir==='asc'?'↑':dir==='desc'?'↓':'⇅';
+  th.classList.toggle('ah-sort-active',active);
+  const next=nextColumnSort(state.filters,key);
+  const button=th.querySelector('button');
+  if(button){const action='Sort '+th.dataset.sortLabel+' '+(next.dir==='asc'?'ascending':'descending');button.title=action;button.setAttribute('aria-label',action);}
+ }
+}
+function prepareSortHeaders(table){
+ const headers=Array.from(table.querySelectorAll('thead th'));
+ for(const [i,[label,key]] of COLUMN_SORTS.entries()){
+  const th=headers[i+1];if(!th)continue;
+  th.dataset.sortKey=key;th.dataset.sortLabel=label;
+  const button=el('button',null,'ah-sort-header');button.type='button';
+  button.append(el('span',label,'ah-sort-title'),el('span','⇅','ah-sort-arrow'));
+  button.addEventListener('click',()=>{
+   const next=nextColumnSort(state.filters,key);
+   Object.assign(state.filters,next);
+   state.sortTouched=true;state.page=0;
+   $('sort').value=key;syncDirection();updateSortHeaders();
+   void refreshItems();void refreshFavourites();
+  });
+  th.replaceChildren(button);
+ }
+ updateSortHeaders();
+}
+
 function measureNames(root){
  for(const clip of root.querySelectorAll('.ah-name-clip')){
   const text=clip.firstElementChild,overflow=Math.max(0,text.scrollWidth-clip.clientWidth);
@@ -259,7 +293,7 @@ async function refreshFavourites(){
   }
   let data=null;
   state.favFailed=false;
-  try{data=await request('/api/auction/items?'+buildParams({...DEFAULTS,sort:'name'},{limit:100,keys:apiKeys(state.fav)}));}catch{state.favFailed=true;}
+  try{data=await request('/api/auction/items?'+buildParams({...DEFAULTS,sort:state.filters.sort,dir:state.filters.dir},{limit:100,keys:apiKeys(state.fav)}));}catch{state.favFailed=true;}
   if(id!==state.favId)return;
   const wasFiltered=state.listingFiltered;
   state.listingFiltered=false;
@@ -269,14 +303,17 @@ async function refreshFavourites(){
   ['','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'].forEach((h,i)=>{const th=el('th',h);if(i===0){th.className='ah-col-star';th.append(el('span','Favourite','sr-only'));}head.append(th);});
   const thead=el('thead');thead.append(head);table.append(thead);
   const tbody=el('tbody');
-  const ordered=[...state.fav].sort((a,b)=>itemName(a).localeCompare(itemName(b),'en-GB'));
+  // The API orders all listed favourites by the selected metric; unavailable ones follow by name.
+  const ordered=[...(data?.items||[]),...state.fav.filter(f=>!found.has(keyOf(f))).sort((a,b)=>itemName(a).localeCompare(itemName(b),'en-GB'))];
   for(const f of ordered){
     const live=found.get(keyOf(f));
     if(live)appendItemRow(tbody,live);else appendItemRow(tbody,f,{unavailable:true,error:state.favFailed});
   }
   table.append(tbody);
+  prepareSortHeaders(table);
   const scroll=el('div',null,'ah-scroll');scroll.append(table);
   body.replaceChildren(scroll);
+  updateSortHeaders();
   state.listingFiltered=wasFiltered;
 }
 
@@ -351,7 +388,7 @@ function writeFilters(){
   for(const k of CHECK_FIELDS)$(k).checked=f[k];
   $('sort').value=f.sort;
   const fav=$('fav-only');fav.setAttribute('aria-pressed',String(f.favourites_only));
-  syncDirection();updateBadges();syncAllStars();
+  syncDirection();updateBadges();syncAllStars();updateSortHeaders();
 }
 function syncDirection(){
   const d=state.filters.dir,b=$('dir');
@@ -382,16 +419,17 @@ function changed(immediate){
   debounce=setTimeout(refreshItems,immediate?0:250);
 }
 function bind(){
+  prepareSortHeaders($('items').closest('table'));
   for(const id of [...TEXT_FIELDS.map(k=>DOM_ID[k]||k),...CHECK_FIELDS,'sort']){
     const node=$(id);
     node.addEventListener(node.tagName==='INPUT'&&node.type!=='checkbox'?'input':'change',()=>{
       if(id==='item_class'){$('item_subclass').value='';fillSubclasses();}
-      if(id==='sort')state.sortTouched=true;
+      if(id==='sort'){state.sortTouched=true;state.filters.sort=$('sort').value;state.filters.dir='';syncDirection();updateSortHeaders();}
       changed(node.tagName==='SELECT'||node.type==='checkbox');
     });
   }
   $('filters').addEventListener('submit',e=>e.preventDefault());
-  $('dir').addEventListener('click',()=>{state.filters.dir=state.filters.dir===''?'asc':state.filters.dir==='asc'?'desc':'';state.sortTouched=true;syncDirection();state.page=0;void refreshItems();});
+  $('dir').addEventListener('click',()=>{state.filters.dir=state.filters.dir===''?'asc':state.filters.dir==='asc'?'desc':'';state.sortTouched=true;syncDirection();updateSortHeaders();state.page=0;void refreshItems();void refreshFavourites();});
   $('fav-only').addEventListener('click',()=>{state.filters.favourites_only=!state.filters.favourites_only;$('fav-only').setAttribute('aria-pressed',String(state.filters.favourites_only));state.page=0;syncAllStars();void refreshItems();});
   $('adv-toggle').addEventListener('click',()=>{const open=$('advanced').hidden;$('advanced').hidden=!open;$('adv-toggle').setAttribute('aria-expanded',String(open));});
   $('reset').addEventListener('click',()=>{state.filters=reset(state.filters);state.page=0;writeFilters();void refreshItems();});
