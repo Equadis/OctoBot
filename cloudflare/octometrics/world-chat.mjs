@@ -75,7 +75,7 @@ export async function readHistory(url,db,now){
  const realm=url.searchParams.get("realm")||"N'Zoth",feed=url.searchParams.get("feed")||"world";
  const q=(url.searchParams.get("q")||"").trim(),before=url.searchParams.get("before"),beforeId=url.searchParams.get("beforeId");
  const terms=searchTerms(q);
- if(!REALMS.has(realm)||!["world","gm"].includes(feed)||q.length>160||terms.length>24)return reply({error:"invalid history query"},400);
+ if(!REALMS.has(realm)||!["world","gm"].includes(feed)||q.length>160||terms.length>80)return reply({error:"invalid history query"},400);
  if((before===null)!==(beforeId===null)||before!==null&&(!/^\d{1,16}$/.test(before)||!Number.isSafeInteger(Number(before))||!/^[a-f0-9-]{36}$/i.test(beforeId)))return reply({error:"invalid history cursor"},400);
  const size=historyPageSize(q),cutoff=now-HISTORY_MS;
  const from=" FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key"+(terms.length?" LEFT JOIN world_chat_search_text s ON s.realm=m.realm AND s.id=m.id":"");

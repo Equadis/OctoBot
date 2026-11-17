@@ -8,3 +8,16 @@ export function matchesChat(row,query){
 export function compareChat(a,b){return a.time-b.time||(a.id<b.id?-1:a.id>b.id?1:0);}
 export function mergeChat(existing,incoming){const map=new Map(existing.map(r=>[r.id,r]));for(const r of incoming)map.set(r.id,r);return [...map.values()].sort(compareChat);}
 export function cursorFor(rows){const first=rows[0];return first?{before:String(first.time),beforeId:first.id}:null;}
+
+export function mergeHistoryWindow(existing,incoming,{query="",now=Date.now(),capacity=historyPageSize(query),preserveOlder=false,hasMore=false}={}){
+ const oldest=existing[0],cutoff=now-HISTORY_MS;
+ // Update known IDs before filtering, so new profile information cannot leave a stale matching row.
+ const knownIds=new Set(existing.map(r=>r.id));
+ const eligible=incoming.filter(r=>r.time>=cutoff&&(knownIds.has(r.id)||!oldest||compareChat(r,oldest)>=0));
+ let rows=mergeChat(existing,eligible).filter(r=>r.time>=cutoff&&matchesChat(r,query));
+ if(rows.length>capacity){
+  if(preserveOlder)capacity=rows.length;
+  else{rows=rows.slice(-capacity);hasMore=true;}
+ }
+ return {rows,capacity,hasMore};
+}

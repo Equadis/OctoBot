@@ -124,12 +124,13 @@ test("item markup survives real SQL storage and listing refresh; legacy plain te
 });
 
 import {splitWebLinks} from "../../../docs/world-chat/chat-links.mjs";
-import {historyPageSize,matchesChat,mergeChat,cursorFor,HISTORY_MS} from "../../../docs/world-chat/chat-history.mjs";
+import {historyPageSize,matchesChat,mergeChat,cursorFor,HISTORY_MS,mergeHistoryWindow} from "../../../docs/world-chat/chat-history.mjs";
 test("ordinary links are safe, clickable, preserve punctuation and remember clicks",()=>{
  const parts=splitWebLinks("See (https://example.com/a_(b)), www.example.org and discord.gg/abc. javascript:alert(1)");
  assert.deepEqual(parts.filter(p=>p.href).map(p=>p.href),["https://example.com/a_(b)","https://www.example.org/","https://discord.gg/abc"]);
  assert.equal(parts.map(p=>p.text).join(""),"See (https://example.com/a_(b)), www.example.org and discord.gg/abc. javascript:alert(1)");
  assert.equal(splitWebLinks("https://trusted.example@evil.example").some(p=>p.href),false);
+ assert.deepEqual(splitWebLinks("octowow.st/db/?item=16712 and mail@example.com").filter(p=>p.href).map(p=>p.href),["https://octowow.st/db/?item=16712"]);
  const doc={createTextNode:text=>({text}),createElement:tag=>({tag,style:{},handlers:{},addEventListener(k,f){this.handlers[k]=f},classList:{add(){}}})},parent={ownerDocument:doc,children:[],append(x){this.children.push(x)}};
  appendChatMessage(parent,{message:"https://example.com/visited-test"});const a=parent.children[0];assert.equal(a.href,"https://example.com/visited-test");assert.equal(a.rel,"noopener noreferrer");a.handlers.click();
  appendChatMessage(parent,{message:"https://example.com/visited-test"});assert.match(parent.children[1].className,/is-visited/);
@@ -170,4 +171,12 @@ test("history paging and literal search across thousands of rows, realms, guilds
   assert.equal(DB.sql.prepare("SELECT count(*) AS n FROM world_chat_messages WHERE id=?").get(id(4003)).n,0);
   assert.equal(DB.sql.prepare("SELECT count(*) AS n FROM world_chat_messages WHERE realm=? AND gm=0").get("N'Zoth").n,2405);
  }finally{DB.sql.close();}
+});
+
+test("live merging keeps the last search page and preserves older messages while reading",()=>{
+ const now=Date.now(),rows=Array.from({length:100},(_,i)=>({id:String(i).padStart(4,"0"),time:now-1000+i,author:"Raidlead",message:"LFM ZG",guild:"Old"}));
+ const next={id:"0100",time:now,author:"Raidlead",message:"LFM ZG",guild:"Old"};
+ const latest=mergeHistoryWindow(rows,[next],{query:"zg",now,capacity:100});assert.equal(latest.rows.length,100);assert.equal(latest.rows[0].id,"0001");assert.equal(latest.hasMore,true);
+ const reading=mergeHistoryWindow(rows,[next],{query:"zg",now,capacity:100,preserveOlder:true});assert.equal(reading.rows.length,101);assert.equal(reading.rows[0].id,"0000");assert.equal(reading.capacity,101);
+ const updated=mergeHistoryWindow(rows,[{...rows[0],guild:"New"}],{query:"old",now,capacity:100});assert.equal(updated.rows.length,99);assert.equal(updated.rows[0].id,"0001");
 });

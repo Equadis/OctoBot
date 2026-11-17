@@ -37,8 +37,8 @@ try{for(const url of JSON.parse(globalThis.localStorage?.getItem(visitedKey)||"[
 function markVisited(url){visited.delete(url);visited.add(url);while(visited.size>1000)visited.delete(visited.values().next().value);try{globalThis.localStorage?.setItem(visitedKey,JSON.stringify([...visited]));}catch{}}
 export function splitWebLinks(value){
  const text=String(value??""),parts=[];let last=0;
- // Explicit URLs, www links, and commonly pasted Discord invite links.
- const re=/(?:https?:\/\/|www\.|discord\.gg\/|discord\.com\/invite\/)[^\s<>"'|]+/gi;
+ // Explicit URLs, www links and common bare domains (including OctoWoW and Discord).
+ const re=/(?:https?:\/\/|www\.)[^\s<>"'|]+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:co\.uk|com|org|net|gg|st|io|dev|eu|uk|me|tv|info|app|xyz)\b(?::\d{1,5})?(?:[/?#][^\s<>"'|]*)?/gi;
  for(const m of text.matchAll(re)){
   const start=m.index;
   if(start>0&&/[a-z0-9_:@/]/i.test(text[start-1]))continue;

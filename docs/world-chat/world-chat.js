@@ -1,6 +1,6 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
-import {appendChatMessage} from "./chat-links.mjs";
-import {historyPageSize,matchesChat,compareChat,mergeChat,cursorFor,HISTORY_MS} from "./chat-history.mjs";
+import {appendChatMessage} from "./chat-links.mjs?v=2";
+import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow} from "./chat-history.mjs?v=2";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -69,18 +69,17 @@ async function fetchHistory(key,older=false){
   state.rows=older?mergeChat(data.items,state.rows):mergeChat(data.items,[]);
   state.ready=true;state.more=Boolean(data.hasMore);state.capacity=Math.max(state.capacity,older?state.rows.length:historyPageSize(q));
   // Merge a live poll that may have completed while the initial archive loaded.
-  if(current?.realm===realm)mergeLiveHistory(key,current[key],false);
+  if(current?.realm===realm)mergeLiveHistory(key,current[key],false,older);
   drawHistory(key,{forceBottom:!older});
  }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error="Could not load history. Retry.";drawHistory(key);}
  finally{clearTimeout(timeout);if(token===historyGeneration&&history[key]===state){state.loading=false;syncHistoryButton(key);}}
 }
-function mergeLiveHistory(key,incoming,render=true){
+function mergeLiveHistory(key,incoming,render=true,preserveOverride){
  const state=history[key];if(!state?.ready)return;
- const oldest=state.rows[0],cutoff=Date.now()-HISTORY_MS;
- const eligible=incoming.filter(r=>r.time>=cutoff&&matchesChat(r,historyQuery)&&(!oldest||compareChat(r,oldest)>=0));
- let rows=mergeChat(state.rows.filter(r=>r.time>=cutoff&&matchesChat(r,historyQuery)),eligible);
- if(rows.length>state.capacity&&!state.loading){rows=rows.slice(-state.capacity);state.more=true;}
- state.rows=rows;
+ const parent=byId(key),readingOlder=parent.scrollHeight-parent.scrollTop-parent.clientHeight>=45;
+ const preserveOlder=preserveOverride??(state.loading||readingOlder);
+ const next=mergeHistoryWindow(state.rows,incoming,{query:historyQuery,capacity:state.capacity,preserveOlder,hasMore:state.more});
+ state.rows=next.rows;state.capacity=next.capacity;state.more=next.hasMore;
  if(render)drawHistory(key);
 }
 function resetHistory(query=historyQuery,load=true){
