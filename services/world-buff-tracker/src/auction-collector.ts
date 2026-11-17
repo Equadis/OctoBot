@@ -72,7 +72,7 @@ async function resolveMissingMetadata(scanId:string,ids:Set<number>,log:Logger,g
    if(result.scan_id===scanId&&Array.isArray(result.items))ids=new Set(result.items.map(row=>row.item_id));
   }
  }catch{/* metadata recovery must not fail a completed scan */}
- const pending=[...ids].filter(id=>(lookupAfter.get(id)??0)<=Date.now()).slice(0,15);
+ const pending=[...ids].filter(id=>(lookupAfter.get(id)??0)<=Date.now()).slice(0,gameLookup?15:50);
  const resolved:({item_id:number}&AuctionItemMetadata)[]=[];
  // Game queries are serialised and matched by item ID; HTTP remains a fallback for icons.
  const recover=async(id:number)=>{
@@ -93,12 +93,16 @@ async function resolveMissingMetadata(scanId:string,ids:Set<number>,log:Logger,g
   lookupAfter.set(id,Date.now()+30*60_000);
  };
  if(gameLookup){for(const id of pending)await recover(id);}
- else for(let i=0;i<pending.length;i+=3)await Promise.all(pending.slice(i,i+3).map(recover));
- if(resolved.length)try{await publish('metadata',{scan_id:scanId,items:resolved});}catch(error){
+ else for(let i=0;i<pending.length;i+=3){
+  if(i>0)await sleep(500);
+  await Promise.all(pending.slice(i,i+3).map(recover));
+ }
+ let persisted=0;
+ if(resolved.length)try{await publish('metadata',{scan_id:scanId,items:resolved});persisted=resolved.length;}catch(error){
   for(const item of resolved)recoveredMetadata.delete(item.item_id);
   log.warn('Auction metadata persistence failed; will retry: '+String(error));
  }
- if(pending.length)log.info('Auction metadata lookups: '+pending.length+' attempted; '+recoveredMetadata.size+' resolved in this process; '+ids.size+' missing in scan');
+ if(pending.length)log.info('Auction metadata lookups: '+pending.length+' attempted; '+resolved.length+' resolved in batch; '+persisted+' persisted; '+ids.size+' unresolved candidates before recovery');
 }
 async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItemMetadata>>{
  try{

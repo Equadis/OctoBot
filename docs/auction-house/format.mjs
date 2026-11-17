@@ -54,12 +54,12 @@ export function moneyParts(n){
   if(b||(!g&&!s))out.push({unit:'c',amount:b,number:String(b),text:b+'c'});
   return out;
 }
-/** Colour remaining auction time by duration: <2h red, <8h orange, <24h yellow, <72h green, 72h+ blue. */
+/** Colour by upper duration band: up to 30m red, 2h orange, 8h yellow, 24h green, above 24h blue. */
 export function timeClass(ms,capturedAt,now=Date.now()){
   const r=remaining(ms,capturedAt,now);
   if(r===null)return null;
   const hours=r/3600000;
-  return hours<2?'ah-time-red':hours<8?'ah-time-orange':hours<24?'ah-time-yellow':hours<72?'ah-time-green':'ah-time-blue';
+  return hours<=0.5?'ah-time-red':hours<=2?'ah-time-orange':hours<=8?'ah-time-yellow':hours<=24?'ah-time-green':'ah-time-blue';
 }
 /** The amount to show in a bid column, or null (shown as a hyphen) when it merely repeats the stack or unit buyout. */
 export function bidAmount(current,start,stackBuyout,unitBuyout){

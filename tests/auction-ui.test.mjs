@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,trend,remaining,left,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -278,4 +278,15 @@ test('the full Auction House row expands on click and keyboard without navigatio
  assert.match(css,/@media\(max-width:1060px\)/,'rows become cards at narrower widths');
  assert.match(css,/@keyframes ah-name-pan/,'long names glide then return');
  assert.match(css,/prefers-reduced-motion:reduce/);
+});
+
+test("auction countdown colours use upper duration bands and 72h remains blue as time elapses",()=>{
+ const seen="2026-11-01T00:00:00.000Z",now=Date.parse(seen),H=3600000;
+ for(const [hours,colour] of [[0.1,"red"],[0.5,"red"],[0.51,"orange"],[2,"orange"],[2.01,"yellow"],[8,"yellow"],[8.01,"green"],[24,"green"],[24.01,"blue"],[71.99,"blue"],[72,"blue"]])
+  assert.equal(timeClass(hours*H,seen,now),"ah-time-"+colour);
+ assert.equal(timeClass(72*H,seen,now+1000),"ah-time-blue");
+ assert.equal(timeClass(null,seen,now),null);
+ assert.equal(timeClass(H,seen,now+2*H),null);
+ for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff9218",yellow:"#ffff00",green:"#1eff00",blue:"#2992ff"}))
+  assert.ok(read("auction-house/auction.css").includes(".ah-auction-time.ah-time-"+colour+"{color:"+hex+"}"));
 });
