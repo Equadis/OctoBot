@@ -158,6 +158,10 @@ async function readApi(url,env){
    if(url.pathname==='/api/auction/items')return respond({items:[],total:0,has_more:false});
    return respond({listings:[],history:[],error:'no complete scan'});
  }
+ if(url.pathname==='/api/auction/incomplete-metadata'){
+   const rows=await all(db,"SELECT l.item_id,COUNT(*) listings,MAX(CASE WHEN COALESCE(l.item_name,m.item_name) IS NULL THEN 1 ELSE 0 END) missing_name FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND (COALESCE(l.item_name,m.item_name) IS NULL OR COALESCE(l.quality,m.quality) IS NULL OR COALESCE(l.class_id,m.class_id) IS NULL OR COALESCE(l.subclass_id,m.subclass_id) IS NULL OR COALESCE(l.item_level,m.item_level) IS NULL OR COALESCE(l.req_level,m.req_level) IS NULL OR COALESCE(l.icon_url,m.icon_url) IS NULL) AND (m.resolved_at IS NULL OR julianday(m.resolved_at)<julianday('now','-30 minutes')) GROUP BY l.item_id ORDER BY missing_name DESC,listings DESC,l.item_id LIMIT 1000",scan.scan_id);
+   return respond({items:rows,scan_id:scan.scan_id});
+ }
  if(url.pathname==='/api/auction/missing-metadata'){
    const rows=await all(db,"SELECT l.item_id,COUNT(*) listings FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND COALESCE(l.item_name,m.item_name) IS NULL GROUP BY l.item_id ORDER BY listings DESC,l.item_id LIMIT 1000",scan.scan_id);
    return respond({items:rows,scan_id:scan.scan_id});
