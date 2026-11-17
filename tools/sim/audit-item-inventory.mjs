@@ -33,3 +33,5 @@ console.log('ITEM_REVIEW_BEGIN'+JSON.stringify({unresolvedEffectSamples,setExcep
 
 console.log('ITEM_SET_PATTERNS_BEGIN'+JSON.stringify([...setLines].filter(([k])=>/^\(#\) Set:/i.test(k)).map(([k,v])=>[v.count,v.examples[0].line,v.examples[0].id]))+'ITEM_SET_PATTERNS_END');
 console.log('ITEM_CONDITIONAL_PATTERNS_BEGIN'+JSON.stringify([...effects].filter(([,v])=>classifyEquipmentEffect(v.examples[0].raw).status==='conditional').map(([k,v])=>[v.count,v.examples[0].raw,v.examples[0].id]))+'ITEM_CONDITIONAL_PATTERNS_END');
+
+console.log('AUDIT_FIXTURE_BEGIN'+JSON.stringify([33632,55505,21189,19358,8345].map(id=>({id,...details[id]})))+'AUDIT_FIXTURE_END');
