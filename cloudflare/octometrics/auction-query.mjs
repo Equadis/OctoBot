@@ -31,11 +31,14 @@ export function parseKeys(raw){
 const SORTS={
   name:{expr:"COALESCE(item_name,'Item #'||item_id) COLLATE NOCASE",dir:'ASC'},
   unit_buyout:{expr:'unit_buyout',dir:'ASC',nullable:true},
+  stack_buyout:{expr:'(CASE WHEN stack_buyout>0 THEN stack_buyout END)',dir:'ASC',nullable:true},
+  current_bid:{expr:'(CASE WHEN current_bid>0 THEN current_bid WHEN start_bid>0 THEN start_bid END)',dir:'ASC',nullable:true},
   historical_avg:{expr:'(CASE WHEN days>=4 THEN avg_unit END)',dir:'ASC',nullable:true},
   quantity:{expr:'quantity',dir:'DESC'},
   listings:{expr:'listings',dir:'DESC'},
   trend_pct:{expr:'trend_pct',dir:'ASC',nullable:true},
   market_pct:{expr:'market_pct',dir:'ASC',nullable:true},
+  time_left:{expr:"(CASE WHEN time_left_ms IS NOT NULL AND captured_at IS NOT NULL THEN julianday(captured_at)+time_left_ms/86400000.0 END)",dir:'ASC',nullable:true},
   level:{expr:'req_level',dir:'ASC',nullable:true}
 };
 export const SORT_NAMES=Object.keys(SORTS);
