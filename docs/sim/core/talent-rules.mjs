@@ -40,6 +40,10 @@ export const TALENT_RULES={
       "scope": "Bash/Pounce",
       "stat": "stunDurationIncreaseSeconds",
       "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Stun duration preview is not a full target crowd-control calculation; diminishing returns unverified"
     }
   ],
   "271": [
