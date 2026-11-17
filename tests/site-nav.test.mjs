@@ -104,3 +104,5 @@ test('the header box model is fixed in the shared theme, so every tab has the sa
   assert.match(css,/\.site-header,\.planner-view \.site-header\{box-sizing:border-box\}/);
   assert.match(css,/min-height:74px/);
 });
+
+test('World Chat alone has the alpha marker',()=>{const nav=el('nav');nav.attrs['data-current']='world-chat';render(nav,'../');const tagged=nav.children.flatMap(g=>g.children).filter(a=>a.children.some(c=>c.textContent==='ALPHA'));assert.deepEqual(tagged.map(a=>a.textContent),['World Chat']);});

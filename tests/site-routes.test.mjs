@@ -4,7 +4,7 @@ import {readFileSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 
 const BASE='https://equadis.github.io/OctoBot/';
-const PAGES=['population/','status/','world-info/','sim/','auction-house/','outfitter/'];
+const PAGES=['population/','status/','world-info/','sim/','auction-house/','outfitter/','world-chat/'];
 const docs=new URL('../docs/',import.meta.url);
 const markup=route=>readFileSync(new URL(route+'index.html',docs),'utf8');
 

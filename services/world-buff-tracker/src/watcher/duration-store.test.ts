@@ -67,3 +67,12 @@ describe("MongoDurationStore", () => {
     expect(await store.median(5)).toBe(51);
   });
 });
+
+
+it("retracts a resumed raid sample and replaces it on the next valid completion", async () => {
+  const store = new InMemoryDurationStore();
+  await store.record({ms:20*MIN,ts:new Date(),sessionKey:"n7",valid:true});
+  await store.invalidate("n7"); expect(await store.count()).toBe(0);
+  await store.record({ms:40*MIN,ts:new Date(),sessionKey:"n7",valid:true});
+  expect(await store.count()).toBe(1);expect(await store.median(1)).toBe(40*MIN);
+});

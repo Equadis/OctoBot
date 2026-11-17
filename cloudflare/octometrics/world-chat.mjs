@@ -22,12 +22,12 @@ export async function worldChatRoute(request,env){
     if(request.headers.get("authorization")!=="Bearer "+env.METRICS_PUSH_TOKEN)return reply({error:"unauthorised"},401);
     let payload;try{const raw=await request.text();if(raw.length>64000)return reply({error:"payload too large"},413);payload=JSON.parse(raw);}catch{return reply({error:"invalid JSON"},400);}
     if(!payload||!REALMS.has(payload.realm)||payload.account!==SOURCES[payload.realm]||payload.channel!=="world"||
-       !Array.isArray(payload.messages)||payload.messages.length>25)return reply({error:"invalid public channel batch"},400);
+       !Array.isArray(payload.messages)||payload.messages.length>20)return reply({error:"invalid public channel batch"},400);
     const statements=[];
     for(const raw of payload.messages){
       const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
       statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.message,Number(l.gm)));
-      if(!l.gm)for(const {kind,tag} of listingKinds(l.message)){
+      if(!l.gm)for(const {kind,tag} of listingKinds(l.message).slice(0,3)){
         statements.push(db.prepare("INSERT INTO world_chat_listings(realm,kind,author_key,tag,author,message,observed_ms) VALUES(?,?,?,?,?,?,?) ON CONFLICT(realm,kind,author_key,tag) DO UPDATE SET author=excluded.author,message=excluded.message,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_listings.observed_ms").bind(payload.realm,kind,l.authorKey,tag,l.author,l.message,l.time));
       }
     }

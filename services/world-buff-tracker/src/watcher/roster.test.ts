@@ -74,3 +74,13 @@ describe("fetchRoster", () => {
     expect(r.complete).toBe(false);
   });
 });
+
+
+it("marks a class-sliced observation incomplete if a base player disappears during a successful bucket", async () => {
+  const all = roster60();
+  const who = vi.fn<WhoFn>(async q => {
+    if (q.classMask == null) return {players: all.slice(0,49), onlineCount: 2000};
+    return {players: all.slice(1).filter(p => classesInMask(q.classMask).includes(p.classId)), onlineCount: 2000};
+  });
+  expect((await fetchRoster(who,2159)).complete).toBe(false);
+});

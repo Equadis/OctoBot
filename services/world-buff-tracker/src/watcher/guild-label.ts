@@ -119,6 +119,11 @@ export class GuildLabelStabilizer {
     this.#rules = rules;
   }
 
+  /** Restore the already committed label, without changing classification rules. */
+  restore(reading: GuildComposition): void {
+    this.#committed = reading; this.#candidateLabel = null; this.#streak = 0;
+  }
+
   update(reading: GuildComposition): GuildComposition {
     if (this.#committed !== null && reading.label === this.#committed.label) {
       this.#candidateLabel = null;

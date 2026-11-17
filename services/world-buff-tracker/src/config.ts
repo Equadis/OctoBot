@@ -508,7 +508,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
   const raidLearnMinSamples = intWithDefault("WOW_RAID_LEARN_MIN_SAMPLES", 15, 1);
   const raidEndingLeadMs = intWithDefault("WOW_RAID_ENDING_LEAD_MINUTES", 20, 1) * 60_000;
   const raidFillWindowMs = intWithDefault("WOW_RAID_FILL_WINDOW_MINUTES", 5, 1) * 60_000;
-  const raidRosterCap = intWithDefault("WOW_RAID_ROSTER_CAP", 30, 1);
+  const raidRosterCap = intWithDefault("WOW_RAID_ROSTER_CAP", 40, 1);
   const raidMinClearMs = intWithDefault("WOW_RAID_MIN_CLEAR_MINUTES", 10, 1) * 60_000;
   const raidDisbandMs = intWithDefault("WOW_RAID_DISBAND_MINUTES", 20, 1) * 60_000;
   const raidFreshWindowMs = intWithDefault("WOW_DROP_FRESH_WINDOW_MINUTES", 40, 1) * 60_000;
@@ -548,7 +548,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): BotConfig {
       raidLearnMinSamples: intWithDefault("WOW_BWL_RAID_LEARN_MIN_SAMPLES", 10, 1),
       raidEndingLeadMs: minutes("WOW_BWL_RAID_ENDING_LEAD_MINUTES", 20, 1),
       raidFillWindowMs: minutes("WOW_BWL_RAID_FILL_WINDOW_MINUTES", 15, 1),
-      raidRosterCap: intWithDefault("WOW_BWL_RAID_ROSTER_CAP", 45, 1),
+      raidRosterCap: intWithDefault("WOW_BWL_RAID_ROSTER_CAP", 40, 1),
       raidMinClearMs: bwlMinClearMs,
       raidDisbandMs: bwlDisbandMs,
       raidFreshWindowMs: minutes("WOW_BWL_DROP_FRESH_WINDOW_MINUTES", 40, 1),
