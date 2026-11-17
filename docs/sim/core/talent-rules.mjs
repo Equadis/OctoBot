@@ -24,6 +24,14 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "430": [
+    {
+      "kind": "scoped",
+      "scope": "Judgement",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
   "431": [
     {
       "kind": "scoped",
@@ -66,6 +74,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "435": [
+    {
+      "kind": "pending",
+      "note": "Blessing of Kings talent grants the castable Blessing; stats only apply if the Kings buff is actually selected"
+    }
+  ],
   "436": [
     {
       "kind": "scoped",
@@ -88,6 +102,30 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "438": [
+    {
+      "kind": "pending",
+      "note": "Vindication chance on damaging melee attack applies a limited-level target damage debuff for 10 seconds"
+    }
+  ],
+  "439": [
+    {
+      "kind": "pending",
+      "note": "Eye for an Eye reflects incoming spell-critical damage with a health-based cap"
+    }
+  ],
+  "440": [
+    {
+      "kind": "pending",
+      "note": "Vengeance damage/threat modifiers stack on critical effects for 30 seconds; proc uptime is not permanent"
+    }
+  ],
+  "441": [
+    {
+      "kind": "pending",
+      "note": "Seal of Command requires selecting the seal, resolving procs and Judgement; no always-on flat damage bonus"
+    }
+  ],
   "442": [
     {
       "kind": "scoped",
@@ -106,6 +144,12 @@ export const TALENT_RULES={
       "note": "Zeal stack generation/duration requires an aura engine"
     }
   ],
+  "443": [
+    {
+      "kind": "pending",
+      "note": "Repentance crowd control or immunity fallback damage requires a target/ability model"
+    }
+  ],
   "444": [
     {
       "kind": "percent",
@@ -117,6 +161,20 @@ export const TALENT_RULES={
     {
       "kind": "percent",
       "stat": "int",
+      "param": 0
+    }
+  ],
+  "446": [
+    {
+      "kind": "pending",
+      "note": "Holy Judgement only modifies the next Holy Light after casting Judgement; needs triggered spell state"
+    }
+  ],
+  "447": [
+    {
+      "kind": "scoped",
+      "scope": "Flash of Light/Holy Light",
+      "stat": "pushbackResistancePct",
       "param": 0
     }
   ],
@@ -150,6 +208,18 @@ export const TALENT_RULES={
       }
     }
   ],
+  "451": [
+    {
+      "kind": "scoped",
+      "scope": "Lay on Hands",
+      "stat": "cooldownReductionMinutes",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "Target receives a temporary item armour buff after Lay on Hands; not a personal permanent armour stat"
+    }
+  ],
   "452": [
     {
       "kind": "scoped",
@@ -176,6 +246,12 @@ export const TALENT_RULES={
       "note": "The planner does not offer Concentration Aura as a selectable aura"
     }
   ],
+  "454": [
+    {
+      "kind": "pending",
+      "note": "Illumination refunds mana on healing crits; requires spell cast and resource events"
+    }
+  ],
   "455": [
     {
       "kind": "special",
@@ -191,6 +267,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "457": [
+    {
+      "kind": "pending",
+      "note": "Holy Shock is an active damage/healing spell whose cooldown may reset after a cast"
+    }
+  ],
   "458": [
     {
       "kind": "spell",
@@ -202,12 +284,42 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "459": [
+    {
+      "kind": "pending",
+      "note": "Crusader Strike can reset Holy Shock cooldown"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Holy Strike healing",
+      "stat": "healingPct",
+      "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Holy Strike healing power",
+      "stat": "coefficientBonusPct",
+      "param": 2
+    }
+  ],
+  "460": [
+    {
+      "kind": "pending",
+      "note": "Daybreak applies on critical heal and is consumed on later target damage"
+    }
+  ],
   "461": [
     {
       "kind": "scoped",
       "scope": "Devotion Aura",
       "stat": "armourBonusPct",
       "param": 0
+    }
+  ],
+  "462": [
+    {
+      "kind": "pending",
+      "note": "Redoubt grants temporary block chance after receiving an attack, ending after time or block charges"
     }
   ],
   "463": [
@@ -220,6 +332,20 @@ export const TALENT_RULES={
       "kind": "global",
       "stat": "spellHit",
       "param": 0
+    }
+  ],
+  "464": [
+    {
+      "kind": "scoped",
+      "scope": "Hand of Protection",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Hand of Freedom",
+      "stat": "durationIncreaseSeconds",
+      "param": 1
     }
   ],
   "465": [
@@ -235,6 +361,12 @@ export const TALENT_RULES={
       "scope": "Righteous Fury",
       "stat": "threatPct",
       "param": 0
+    }
+  ],
+  "467": [
+    {
+      "kind": "pending",
+      "note": "Blessing of Sanctuary must be cast/selected; target damage reduction and block retaliation are not a permanent player bonus"
     }
   ],
   "468": [
@@ -266,6 +398,56 @@ export const TALENT_RULES={
       "stat": "hit",
       "param": 0
     }
+  ],
+  "471": [
+    {
+      "kind": "scoped",
+      "scope": "Hammer of Justice",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    }
+  ],
+  "472": [
+    {
+      "kind": "pending",
+      "note": "Damage reduction only while Righteous Fury is active; no Righteous Fury state control"
+    }
+  ],
+  "473": [
+    {
+      "kind": "pending",
+      "note": "Holy Shield temporary block charges/threat/damage need an on-use ability and attack engine"
+    }
+  ],
+  "474": [
+    {
+      "kind": "pending",
+      "note": "Reckoning grants an extra attack after blocking; cannot increase always-on weapon speed"
+    }
+  ],
+  "475": [
+    {
+      "kind": "scoped",
+      "scope": "Holy Strike",
+      "stat": "threatPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Holy Strike",
+      "stat": "damagePct",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "Zealous Defense temporarily reduces next blocked attack after Crusader Strike"
+    }
+  ],
+  "476": [
+    {
+      "kind": "pending",
+      "note": "Bulwark of the Righteous shield bash and 12-second damage reduction require an active ability model"
+    }
   ]
 };
 export const TALENT_COVERAGE={
@@ -278,8 +460,8 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "430": {
-    "status": "ability-specific",
-    "note": "Decreases the cooldown of your Judgement spell by 2 sec."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "431": {
     "status": "partial",
@@ -298,8 +480,8 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "435": {
-    "status": "active-or-non-stat",
-    "note": "Places a Blessing on the friendly target, increasing total stats by 10% for 10 min. Players may only have one Blessing on them per Paladin at any one time."
+    "status": "proc-or-conditional",
+    "note": "Blessing of Kings talent grants the castable Blessing; stats only apply if the Kings buff is actually selected"
   },
   "436": {
     "status": "partial",
@@ -311,19 +493,19 @@ export const TALENT_COVERAGE={
   },
   "438": {
     "status": "proc-or-conditional",
-    "note": "Gives the Paladin's damaging melee attacks a chance to reduce the target's damage dealt by 9% for 10 sec. Only affects targets of level 62 or lower."
+    "note": "Vindication chance on damaging melee attack applies a limited-level target damage debuff for 10 seconds"
   },
   "439": {
-    "status": "ability-specific",
-    "note": "All spell criticals against you cause 30% of the damage taken to the caster as well. The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health."
+    "status": "proc-or-conditional",
+    "note": "Eye for an Eye reflects incoming spell-critical damage with a health-based cap"
   },
   "440": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 5% bonus to all damage you deal and decreases threat you generate by 10% for 30 sec after dealing a critical strike from a weapon swing, spell, or ability. This ef"
+    "note": "Vengeance damage/threat modifiers stack on critical effects for 30 seconds; proc uptime is not permanent"
   },
   "441": {
     "status": "proc-or-conditional",
-    "note": "Gives the Paladin a chance to deal additional Holy damage equal to 70% of melee damage. Only one Seal can be active on the Paladin at any one time. Lasts 30 sec. Unleashing th"
+    "note": "Seal of Command requires selecting the seal, resolving procs and Judgement; no always-on flat damage bonus"
   },
   "442": {
     "status": "partial",
@@ -331,7 +513,7 @@ export const TALENT_COVERAGE={
   },
   "443": {
     "status": "proc-or-conditional",
-    "note": "Puts the enemy target in a state of meditation, incapacitating them for up to 6 sec. Any damage caused will awaken the target. If the target is immune to the effect, they repe"
+    "note": "Repentance crowd control or immunity fallback damage requires a target/ability model"
   },
   "444": {
     "status": "sheet",
@@ -342,12 +524,12 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "446": {
-    "status": "active-or-non-stat",
-    "note": "Casting Judgement reduces the casting time of your next Holy Light by 1 sec."
+    "status": "proc-or-conditional",
+    "note": "Holy Judgement only modifies the next Holy Light after casting Judgement; needs triggered spell state"
   },
   "447": {
-    "status": "proc-or-conditional",
-    "note": "Gives your Flash of Light and Holy Light spells a 70% chance to not lose casting time when you take damage."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "448": {
     "status": "partial",
@@ -362,8 +544,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "451": {
-    "status": "ability-specific",
-    "note": "Gives the target of your Lay on Hands spell a 30% bonus to their armor value from items for 2 min. In addition, the cooldown for your Lay on Hands spell is reduced by 20 min."
+    "status": "partial",
+    "note": "Target receives a temporary item armour buff after Lay on Hands; not a personal permanent armour stat"
   },
   "452": {
     "status": "partial",
@@ -375,7 +557,7 @@ export const TALENT_COVERAGE={
   },
   "454": {
     "status": "proc-or-conditional",
-    "note": "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, you regain Mana equal to 60% of the base cost of the spell."
+    "note": "Illumination refunds mana on healing crits; requires spell cast and resource events"
   },
   "455": {
     "status": "sheet",
@@ -387,19 +569,19 @@ export const TALENT_COVERAGE={
   },
   "457": {
     "status": "proc-or-conditional",
-    "note": "Blasts the target with Holy energy, causing 97 to 104 Holy damage to an enemy, or 311 to 320 healing to an ally. Casting Holy Shock has a chance to have no cooldown for its ne"
+    "note": "Holy Shock is an active damage/healing spell whose cooldown may reset after a cast"
   },
   "458": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "459": {
-    "status": "proc-or-conditional",
-    "note": "Crusader Strike has a 100% chance to reset the cooldown of your Holy Shock. In addition, the healing effect of your Holy Strike is increased by 100% and benefits from an addit"
+    "status": "partial",
+    "note": "Crusader Strike can reset Holy Shock cooldown"
   },
   "460": {
     "status": "proc-or-conditional",
-    "note": "Critically healing an ally applies Daybreak for 30 sec. When the ally takes damage, Daybreak is consumed to heal them for 248 to 289."
+    "note": "Daybreak applies on critical heal and is consumed on later target damage"
   },
   "461": {
     "status": "partial",
@@ -407,15 +589,15 @@ export const TALENT_COVERAGE={
   },
   "462": {
     "status": "proc-or-conditional",
-    "note": "Successful melee and ranged attacks against you have a 10% chance to increase your chance to block by 15%. Lasts 10 sec or 5 blocks."
+    "note": "Redoubt grants temporary block chance after receiving an attack, ending after time or block charges"
   },
   "463": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "464": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Hand of Protection by 120 sec and increases the duration of your Hand of Freedom by 6 sec."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "465": {
     "status": "sheet",
@@ -427,7 +609,7 @@ export const TALENT_COVERAGE={
   },
   "467": {
     "status": "proc-or-conditional",
-    "note": "Places a Blessing on the friendly target, reducing damage taken from all sources by up to 10 for 10 min. In addition, when the target blocks a melee attack, the attacker takes"
+    "note": "Blessing of Sanctuary must be cast/selected; target damage reduction and block retaliation are not a permanent player bonus"
   },
   "468": {
     "status": "partial",
@@ -442,27 +624,27 @@ export const TALENT_COVERAGE={
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "471": {
-    "status": "ability-specific",
-    "note": "Decreases the cooldown of your Hammer of Justice spell by 15 sec."
+    "status": "partial",
+    "note": "Active/ability-scoped contribution only; numerical combat validation pending."
   },
   "472": {
     "status": "proc-or-conditional",
-    "note": "While Righteous Fury is active, your damage taken is reduced by 10%."
+    "note": "Damage reduction only while Righteous Fury is active; no Righteous Fury state control"
   },
   "473": {
     "status": "proc-or-conditional",
-    "note": "Increases chance to block by 45% for 10 sec. While active, each blocked attack deals 35 Holy damage to the attacker. Damage caused by Holy Shield generates 50% additional thre"
+    "note": "Holy Shield temporary block charges/threat/damage need an on-use ability and attack engine"
   },
   "474": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 50% chance after blocking an attack to generate an additional attack."
+    "note": "Reckoning grants an extra attack after blocking; cannot increase always-on weapon speed"
   },
   "475": {
-    "status": "ability-specific",
-    "note": "Increases the threat generated by your Holy Strike by 25% and its damage by 25%. In addition, Crusader Strike grants Zealous Defense, reducing the damage of the next blocked a"
+    "status": "partial",
+    "note": "Zealous Defense temporarily reduces next blocked attack after Crusader Strike"
   },
   "476": {
     "status": "proc-or-conditional",
-    "note": "Bash the target with your shield, dealing 274 to 301 Holy damage and reducing the damage you take by 30% for 12 sec."
+    "note": "Bulwark of the Righteous shield bash and 12-second damage reduction require an active ability model"
   }
 };
