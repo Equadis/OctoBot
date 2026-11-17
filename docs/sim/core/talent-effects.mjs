@@ -8,7 +8,7 @@
  * pending, instead of being treated as permanent or silently dropped.
  */
 import {AUDITED_CLASS,TALENT_RULES,TALENT_COVERAGE} from './talent-rules.mjs';
-import {BUFF_STATS} from './buffs.mjs?v=20261112-stats1';
+import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
 
 const WEAPONS={
   axe:[0,1], mace:[4,5], sword:[7,8], dagger:[15], fist:[13],
@@ -37,7 +37,7 @@ const numberFor=(talent,rule,rank)=>{
 };
 export function resolveTalentEffects(build,talentData,gear={}){
  const blank=()=>({flat:{},percent:{},special:{},weapon:{mainhand:{},offhand:{}},
-   offhand:{},ranged:{},spell:{},pet:{},scoped:{},pending:[],details:[],active:false});
+   offhand:{},ranged:{},spell:{},pet:{},scoped:{},abilityEffects:[],pending:[],details:[],active:false});
  const output=blank();
  if(build.classId!==AUDITED_CLASS)return output;
  output.active=true;
@@ -46,18 +46,20 @@ export function resolveTalentEffects(build,talentData,gear={}){
  for(const talent of talentData.talents){
   const rank=build.talents[talent.id]||0;
   if(!rank)continue;
-  if(rank>talent.maxRanks||!Number.isInteger(rank))throw new Error('Invalid rank for '+talent.name);
+  if(rank<0||rank>talent.maxRanks||!Number.isInteger(rank))throw new Error('Invalid rank for '+talent.name);
   const audit=TALENT_COVERAGE[talent.id];
   if(!audit)throw new Error('Talent is missing its audit record: '+talent.name);
   const rules=TALENT_RULES[talent.id]||[];
   let applied=0;
   for(const rule of rules){
    if(rule.kind==='pending'){output.pending.push({name:talent.name,note:rule.note||'Requires combat simulation'});continue;}
-   if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)||(rule.kind==='buff'&&!build.controls?.buffIds?.includes(rule.source))){
+   if((rule.kind==='pet'&&build.classOptions?.pet==='None')||!satisfies(rule.when,build,gear)||(rule.kind==='buff'&&!normaliseBuffs(build.controls?.buffIds||[]).includes(rule.source))){
     output.details.push({name:talent.name,stat:rule.stat,scope:rule.scope||rule.source||'',status:'inactive',note:rule.note||'Condition is not active'});
     continue;
    }
-   const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1);
+   const optionFactor=rule.perOption?build.classOptions?.[rule.perOption]:1;
+   if(!Number.isFinite(optionFactor)||optionFactor<0||optionFactor===0){output.details.push({name:talent.name,stat:rule.stat,status:'inactive',note:'Requires an explicitly selected applicable scenario'});continue;}
+   const amount=numberFor(talent,rule,rank)*(rule.perLevel?build.level:1)*optionFactor;
    if(rule.kind==='global')add(output.flat,rule.stat,amount);
    else if(rule.kind==='buff'){
     const base=BUFF_STATS[rule.source]?.[rule.stat];
@@ -86,6 +88,7 @@ export function resolveTalentEffects(build,talentData,gear={}){
    }else if(rule.kind==='pet')add(output.pet,rule.stat,amount);
    else if(rule.kind==='scoped')add(output.scoped,rule.scope+' '+rule.stat,amount);
    else throw new Error('Unrecognised talent effect kind for '+talent.name);
+   if(['spell','scoped','ranged'].includes(rule.kind))output.abilityEffects.push({name:talent.name,kind:rule.kind,scope:rule.scope,stat:rule.stat,amount});
    applied++;
    output.details.push({name:talent.name,stat:rule.stat,amount,scope:rule.scope||rule.weapon||rule.kind,status:'calculated',note:rule.note||'Published rank effect; server mechanics not independently validated'});
   }
