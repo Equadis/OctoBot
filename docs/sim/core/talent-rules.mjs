@@ -1,6 +1,54 @@
 /* All 52 warlock talents reviewed against https://octowow.st/talents/warlock/; snapshot SHA256 d468b1c035cfcbb2572a508d84e37d184e17c009bcfe5db399db175a4c6ced81. */
 export const AUDITED_CLASS="warlock";
 export const TALENT_RULES={
+  "322": [
+    {
+      "kind": "scoped",
+      "scope": "Destruction spells",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    }
+  ],
+  "323": [
+    {
+      "kind": "scoped",
+      "scope": "Imp Firebolt",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Succubus Lash of Pain",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
+  "324": [
+    {
+      "kind": "scoped",
+      "scope": "Shadow Bolt/Searing Pain/Immolate",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Soul Fire",
+      "stat": "castTimeReductionSeconds",
+      "param": 1
+    }
+  ],
+  "325": [
+    {
+      "kind": "scoped",
+      "scope": "Immolate periodic",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Destruction slow trigger requires combat event handling"
+    }
+  ],
   "328": [
     {
       "kind": "spell",
@@ -9,11 +57,33 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "330": [
+    {
+      "kind": "scoped",
+      "scope": "Destruction spells",
+      "stat": "rangeIncreasePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Hellfire",
+      "stat": "radiusIncreasePct",
+      "param": 1
+    }
+  ],
   "331": [
     {
       "kind": "spell",
       "scope": "Searing Pain",
       "stat": "crit",
+      "param": 0
+    }
+  ],
+  "333": [
+    {
+      "kind": "scoped",
+      "scope": "Immolate",
+      "stat": "damagePct",
       "param": 0
     }
   ],
@@ -44,11 +114,67 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "338": [
+    {
+      "kind": "scoped",
+      "scope": "Corruption",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    }
+  ],
+  "339": [
+    {
+      "kind": "scoped",
+      "scope": "Curse of Weakness",
+      "stat": "attackSpeedReductionPct",
+      "param": 0
+    }
+  ],
+  "340": [
+    {
+      "kind": "scoped",
+      "scope": "Affliction dispel resistance",
+      "stat": "chancePct",
+      "param": 0
+    }
+  ],
+  "341": [
+    {
+      "kind": "scoped",
+      "scope": "Life Tap",
+      "stat": "manaGainedPct",
+      "param": 0
+    }
+  ],
   "342": [
     {
       "kind": "scoped",
       "scope": "Drain Soul/Life/Mana",
       "stat": "effectivenessPct",
+      "param": 0
+    }
+  ],
+  "343": [
+    {
+      "kind": "scoped",
+      "scope": "Curse of Agony",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "346": [
+    {
+      "kind": "scoped",
+      "scope": "Affliction spells",
+      "stat": "rangeIncreasePct",
+      "param": 0
+    }
+  ],
+  "348": [
+    {
+      "kind": "scoped",
+      "scope": "Drain Soul/Dark Harvest/Death Coil per Affliction effect",
+      "stat": "damagePct",
       "param": 0
     }
   ],
@@ -68,11 +194,26 @@ export const TALENT_RULES={
       "note": "DoT/channeled tick-speed efficiency increases from 50% to 100% with talent rank; this is not a permanent extra 6% cast speed"
     }
   ],
+  "351": [
+    {
+      "kind": "scoped",
+      "scope": "Curse of Exhaustion",
+      "stat": "slowIncreasePct",
+      "param": 0
+    }
+  ],
   "353": [
     {
       "kind": "spell",
       "scope": "Shadow",
       "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "355": [
+    {
+      "kind": "pet",
+      "stat": "movementSpeedPct",
       "param": 0
     }
   ],
@@ -100,10 +241,71 @@ export const TALENT_RULES={
       }
     }
   ],
+  "358": [
+    {
+      "kind": "scoped",
+      "scope": "Health Funnel",
+      "stat": "healthTransferredPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Mana Funnel",
+      "stat": "manaTransferredPct",
+      "param": 1
+    }
+  ],
+  "359": [
+    {
+      "kind": "scoped",
+      "scope": "Demon Armor",
+      "stat": "effectivenessPct",
+      "param": 0
+    }
+  ],
+  "360": [
+    {
+      "kind": "pet",
+      "stat": "intellectFromOwnerPct",
+      "param": 0
+    },
+    {
+      "kind": "pet",
+      "stat": "manaRegenCastingPct",
+      "param": 1
+    }
+  ],
+  "362": [
+    {
+      "kind": "pet",
+      "stat": "staminaFromOwnerPct",
+      "param": 0
+    },
+    {
+      "kind": "pet",
+      "stat": "reducedCriticalHitTakenPct",
+      "param": 1
+    }
+  ],
   "364": [
     {
       "kind": "pending",
       "note": "Stone enhancement and Firestone bonuses require an equipped stone-state check"
+    }
+  ],
+  "366": [
+    {
+      "kind": "scoped",
+      "scope": "Pet seduction/taunt/buff spells",
+      "stat": "effectivenessPct",
+      "param": 0
+    }
+  ],
+  "367": [
+    {
+      "kind": "pet",
+      "stat": "damagePct",
+      "param": 0
     }
   ],
   "369": [
@@ -121,6 +323,12 @@ export const TALENT_RULES={
       "kind": "pending",
       "note": "Pet inheritance of owner spell hit and critical strike requires pet calculation"
     }
+  ],
+  "370": [
+    {
+      "kind": "pending",
+      "note": "Master Demonologist has five demon-specific rank vectors; bonuses need a controlled summon/active demon state and separate unit calculations"
+    }
   ]
 };
 export const TALENT_COVERAGE={
@@ -129,20 +337,20 @@ export const TALENT_COVERAGE={
     "note": "Your Shadow Bolt and Drain Soul have a 10% chance to increase Shadow damage dealt to the target by 20% for 10 sec, with a higher chance to trigger on critical hits."
   },
   "322": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of your Destruction spells by 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "323": {
-    "status": "ability-specific",
-    "note": "Reduces the casting time of your Imp's Firebolt spell by 0.5 sec and reduces the cooldown of your Succubus' Lash of Pain spell by 6 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "324": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Shadow Bolt, Searing Pain, and Immolate spells by 0.5 sec and your Soul Fire spell by 2 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "325": {
-    "status": "proc-or-conditional",
-    "note": "Increases the periodic damage of your Immolate spell by 6% and gives your Destruction spells a 10% chance to slow the target by 50% for 5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "326": {
     "status": "proc-or-conditional",
@@ -161,8 +369,8 @@ export const TALENT_COVERAGE={
     "note": "Gives your Rain of Fire, Hellfire, Conflagrate, and Soul Fire spells a 26% chance to stun the target for 3 sec."
   },
   "330": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Destruction spells by 20% and the radius of your Hellfire by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "331": {
     "status": "partial",
@@ -173,8 +381,8 @@ export const TALENT_COVERAGE={
     "note": "Your Soul Fire has a 100% chance to refund a Soul Shard and increase your Fire damage by 10% for 30 sec."
   },
   "333": {
-    "status": "ability-specific",
-    "note": "Increases the damage of your Immolate spell by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "334": {
     "status": "partial",
@@ -193,28 +401,28 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "338": {
-    "status": "active-or-non-stat",
-    "note": "Reduces the casting time of your Corruption spell by 1.5 sec."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "339": {
-    "status": "ability-specific",
-    "note": "Increases the attack speed reduction of your Curse of Weakness by 5%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "340": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the chance your Affliction spells will be dispelled by an additional 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "341": {
-    "status": "active-or-non-stat",
-    "note": "Increases the amount of Mana awarded by your Life Tap spell by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "342": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "343": {
-    "status": "ability-specific",
-    "note": "Increases the damage done by your Curse of Agony by 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "344": {
     "status": "proc-or-conditional",
@@ -225,16 +433,16 @@ export const TALENT_COVERAGE={
     "note": "Reduces the target's movement speed by 10% for 12 sec. Only one Curse per Warlock can be active on any one target."
   },
   "346": {
-    "status": "ability-specific",
-    "note": "Increases the range of your Affliction spells by 20%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "347": {
     "status": "proc-or-conditional",
     "note": "Gives your Corruption, Dark Harvest and Drain spells a 4% chance to cause you to enter a Shadow Trance state after damaging the opponent. The Shadow Trance state reduces the c"
   },
   "348": {
-    "status": "ability-specific",
-    "note": "Increases the damage of your Drain Soul, Dark Harvest and Death Coil by an additional 6% for each of your Affliction effects on the target, up to a maximum of 4 effects."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "349": {
     "status": "partial",
@@ -245,8 +453,8 @@ export const TALENT_COVERAGE={
     "note": "Transfers 150 Health from the target to the caster over 30 sec."
   },
   "351": {
-    "status": "ability-specific",
-    "note": "Increases the speed reduction of your Curse of Exhaustion by 30%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "352": {
     "status": "active-or-non-stat",
@@ -261,8 +469,8 @@ export const TALENT_COVERAGE={
     "note": "Reaps the target's life, dealing 704 Shadow damage over 8 sec. While channeling, the time between periodic ticks of your Affliction spells on the target is reduced by 30%. If "
   },
   "355": {
-    "status": "ability-specific",
-    "note": "Increases the movement speed of your demons by 10%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "356": {
     "status": "sheet",
@@ -273,24 +481,24 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "358": {
-    "status": "active-or-non-stat",
-    "note": "Increases the amount of Health transferred by your Health Funnel by 20% of your demon's missing Health and the Mana transferred by your Mana Funnel by 20% of your demon's miss"
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "359": {
-    "status": "ability-specific",
-    "note": "Increases the effectiveness of your Demon Armor spell by 60%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "360": {
-    "status": "proc-or-conditional",
-    "note": "Increases your demon's Intellect by 30% of your total Intellect and allows 15% of its Mana regeneration to continue while casting."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "361": {
     "status": "ability-specific",
     "note": "Your next Common demon summoning spell has its casting time reduced by 4.5 sec and its Mana cost reduced by 40%."
   },
   "362": {
-    "status": "proc-or-conditional",
-    "note": "Increases your demon's Stamina by 50% of your total Stamina and reduces its chance to be critically struck by 5%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "363": {
     "status": "proc-or-conditional",
@@ -305,12 +513,12 @@ export const TALENT_COVERAGE={
     "note": "Reduces the casting time of your Imp, Voidwalker, Succubus, and Felhunter summoning spells by 4 sec and their mana cost by 60%. In addition, reduces the cooldown of Inferno, R"
   },
   "366": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effect of your Succubus' Seduction, your Voidwalker's Torment, your Imp's Blood Pact, and your Felhunter's Tainted Blood spells by 45%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "367": {
-    "status": "ability-specific",
-    "note": "Increases the damage done by your demons by 15%."
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "368": {
     "status": "proc-or-conditional",
@@ -321,8 +529,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "370": {
-    "status": "proc-or-conditional",
-    "note": "Grants both the Warlock and the summoned demon an effect as long as that demon is active. Imp - Reduces spell costs by 15%. Voidwalker - Reduces physical damage taken by 10%. "
+    "status": "partial",
+    "note": "Rank-based ability or conditional effect is scoped; numerical combat impact remains unimplemented and needs live verification."
   },
   "371": {
     "status": "proc-or-conditional",
