@@ -1,6 +1,39 @@
 /* All 49 paladin talents reviewed against https://octowow.st/talents/paladin/; snapshot SHA256 16f76bfbdb4faba8636986e58db45a38ccc6ef84e83395d99ce7c7849de35ee4. */
 export const AUDITED_CLASS="paladin";
 export const TALENT_RULES={
+  "428": [
+    {
+      "kind": "scoped",
+      "scope": "Blessing of Might/Wisdom",
+      "stat": "effectivenessPct",
+      "param": 0
+    }
+  ],
+  "429": [
+    {
+      "kind": "scoped",
+      "scope": "Judgement/Seals",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    }
+  ],
+  "431": [
+    {
+      "kind": "scoped",
+      "scope": "Seal of the Crusader",
+      "stat": "attackPowerBonusPct",
+      "param": 0,
+      "when": {
+        "seal": "Seal of the Crusader"
+      }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Judgement of the Crusader",
+      "stat": "holyDamageIncreasePct",
+      "param": 0
+    }
+  ],
   "432": [
     {
       "kind": "global",
@@ -8,10 +41,29 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "433": [
+    {
+      "kind": "scoped",
+      "scope": "Retribution Aura",
+      "stat": "damagePct",
+      "param": 0,
+      "when": {
+        "aura": "Retribution Aura"
+      }
+    }
+  ],
   "434": [
     {
       "kind": "global",
       "stat": "crit",
+      "param": 0
+    }
+  ],
+  "436": [
+    {
+      "kind": "scoped",
+      "scope": "Movement/Mounted",
+      "stat": "movementSpeedPct",
       "param": 0
     }
   ],
@@ -27,6 +79,24 @@ export const TALENT_RULES={
       "weapon": "twohand",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "442": [
+    {
+      "kind": "scoped",
+      "scope": "Crusader Strike",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Zeal per stack",
+      "stat": "attackCastSpeedPct",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "Zeal stack generation/duration requires an aura engine"
     }
   ],
   "444": [
@@ -71,6 +141,32 @@ export const TALENT_RULES={
       "when": {
         "aura": "Sanctity Aura"
       }
+    }
+  ],
+  "452": [
+    {
+      "kind": "scoped",
+      "scope": "Fear/Disorient",
+      "stat": "resistChancePct",
+      "param": 0
+    }
+  ],
+  "453": [
+    {
+      "kind": "scoped",
+      "scope": "Concentration Aura",
+      "stat": "effectivenessPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Concentration Aura",
+      "stat": "resistSilenceInterruptPct",
+      "param": 1
+    },
+    {
+      "kind": "pending",
+      "note": "The planner does not offer Concentration Aura as a selectable aura"
     }
   ],
   "455": [
@@ -126,38 +222,69 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "466": [
+    {
+      "kind": "scoped",
+      "scope": "Righteous Fury",
+      "stat": "threatPct",
+      "param": 0
+    }
+  ],
+  "468": [
+    {
+      "kind": "scoped",
+      "scope": "Shield",
+      "stat": "blockValuePct",
+      "param": 0,
+      "when": {
+        "shield": true
+      }
+    },
+    {
+      "kind": "pending",
+      "note": "Mana restoration on blocking is conditional"
+    }
+  ],
   "469": [
     {
       "kind": "global",
       "stat": "defense",
       "param": 0
     }
+  ],
+  "470": [
+    {
+      "kind": "scoped",
+      "scope": "Hand of Reckoning",
+      "stat": "hit",
+      "param": 0
+    }
   ]
 };
 export const TALENT_COVERAGE={
   "428": {
-    "status": "active-or-non-stat",
-    "note": "Increases the effectiveness your Blessing of Might and Wisdom by 20%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "429": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of your Judgement and Seal spells by 15%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "430": {
     "status": "ability-specific",
     "note": "Decreases the cooldown of your Judgement spell by 2 sec."
   },
   "431": {
-    "status": "ability-specific",
-    "note": "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 15%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "432": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "433": {
-    "status": "ability-specific",
-    "note": "Increases the damage done by your Retribution Aura by 50%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "434": {
     "status": "sheet",
@@ -168,8 +295,8 @@ export const TALENT_COVERAGE={
     "note": "Places a Blessing on the friendly target, increasing total stats by 10% for 10 min. Players may only have one Blessing on them per Paladin at any one time."
   },
   "436": {
-    "status": "proc-or-conditional",
-    "note": "Increases movement and mounted movement speed by 8%. This does not stack with other movement speed increasing effects."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "437": {
     "status": "sheet",
@@ -192,8 +319,8 @@ export const TALENT_COVERAGE={
     "note": "Gives the Paladin a chance to deal additional Holy damage equal to 70% of melee damage. Only one Seal can be active on the Paladin at any one time. Lasts 30 sec. Unleashing th"
   },
   "442": {
-    "status": "proc-or-conditional",
-    "note": "Crusader Strike deals an additional 10% damage and Zeal increases your attack and casting speed by an additional 2% per stack. Holy Strike infuses you with Holy Might, increas"
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "443": {
     "status": "proc-or-conditional",
@@ -232,12 +359,12 @@ export const TALENT_COVERAGE={
     "note": "Gives the target of your Lay on Hands spell a 30% bonus to their armor value from items for 2 min. In addition, the cooldown for your Lay on Hands spell is reduced by 20 min."
   },
   "452": {
-    "status": "proc-or-conditional",
-    "note": "Increases your chance to resist Fear and Disorient effects by an additional 10%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "453": {
-    "status": "proc-or-conditional",
-    "note": "Increases the effect of your Concentration Aura by an additional 15% and gives all group members affected by the aura an additional 15% chance to resist Silence and Interrupt "
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "454": {
     "status": "proc-or-conditional",
@@ -288,24 +415,24 @@ export const TALENT_COVERAGE={
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "466": {
-    "status": "ability-specific",
-    "note": "Increases the amount of threat generated by your Righteous Fury spell by 75%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "467": {
     "status": "proc-or-conditional",
     "note": "Places a Blessing on the friendly target, reducing damage taken from all sources by up to 10 for 10 min. In addition, when the target blocks a melee attack, the attacker takes"
   },
   "468": {
-    "status": "proc-or-conditional",
-    "note": "Increases the amount of damage absorbed by your shield by 30% and has a 100% chance to restore 2% of maximum mana when a block occurs. This effect cannot occur more than once "
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "469": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "470": {
-    "status": "proc-or-conditional",
-    "note": "Improves your chance to hit with Hand of Reckoning by 8%."
+    "status": "partial",
+    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "471": {
     "status": "ability-specific",
