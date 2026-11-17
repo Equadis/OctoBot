@@ -22,3 +22,7 @@ const setStatus={};for(const [k,v] of setLines){for(const e of v.examples.slice(
 const summary={classification:{totalLines,statusCounts,fullyStatic,itemsWithUncalculated:affected.size,patternsByStatus:Object.fromEntries(Object.entries(patternsByStatus).map(([k,v])=>[k,v.size])),validSetKeys:validSetKeys.size,affectedSetItems,unparsedSetItems:unparsedSets.length,unparsedExamples:unparsedSets.slice(0,15),setStatus,listingDetailMismatches:mismatches.length,mismatchExamples:mismatches.slice(0,10)},equipment:eq.length,unique:ids.size,catalogue:cat.length,dressable:cats.length,missing,onlyCatalogue:cats.filter(x=>!ids.has(x.id)).map(x=>x.id),attributePatterns:top(attributes,99),effectPatterns:effects.size,topEffects:top(effects,100),setPatterns:setLines.size,topSetLines:top(setLines,35),samples,detailKeys:Object.keys(details[eq.find(x=>details[x.id]).id]),listingExample:eq[0]};
 console.log('ITEM_AUDIT_BEGIN'+JSON.stringify(summary)+'ITEM_AUDIT_END');
 fs.writeFileSync('item-inventory-audit.json',JSON.stringify({summary,effects:[...effects],setLines:[...setLines]},null,2));
+
+const unresolvedEffectSamples=[...effects].filter(([,v])=>classifyEquipmentEffect(v.examples[0].raw).status==='unmapped').sort((a,b)=>b[1].count-a[1].count).map(([pattern,v])=>({pattern,count:v.count,example:v.examples[0]}));
+const setExceptions=unparsedSets.map(x=>({...x,text:details[x.id].tooltipText}));
+console.log('ITEM_REVIEW_BEGIN'+JSON.stringify({unresolvedEffectSamples,setExceptions})+'ITEM_REVIEW_END');
