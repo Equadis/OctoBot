@@ -57,30 +57,41 @@
 .ah-errors{color:#ed8f8f;font-size:12px;margin-bottom:8px}
 .ah-errors:empty{display:none}
 
-.ah-scroll{overflow:auto;max-width:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ah-scroll{overflow:visible;max-width:100%;min-width:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .ah-favourites .ah-scroll{border-top:0}
-.ah-scroll table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px;min-width:1040px}
-.ah-scroll th{text-align:left;padding:12px 9px;background:#1a2737;color:#bdc7d5;font-weight:600}
-.ah-scroll td{padding:10px 9px;border-top:1px solid #384557;color:#dce3ed;font-variant-numeric:tabular-nums}
+.ah-scroll>table{width:100%;max-width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;white-space:nowrap;font-size:11px}
+.ah-scroll th{text-align:left;padding:10px 5px;background:#1a2737;color:#bdc7d5;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.ah-scroll td{padding:8px 5px;border-top:1px solid #384557;color:#dce3ed;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
 .ah-scroll tbody tr:hover{background:#253346}.ah-scroll tbody tr.ah-detail:hover{background:#162132}
 .ah-scroll .ah-empty{text-align:center;color:#94a4b8;padding:30px 36px;white-space:normal}
 .ah-col-star{width:34px}
 .ah-unavailable{color:#c9b56a;font-style:italic;white-space:normal}
-.ah-item{display:flex;align-items:center;gap:9px}/* Item icons match the Dressing Room and Gear Planner: a smooth 3px corner, and a border in the item's rarity colour with a soft glow. */
-.ah-icon{width:32px;height:32px;object-fit:cover;border:1px solid var(--item-quality,#536277);border-radius:3px;background:#162236;display:inline-block;flex:none;box-shadow:0 0 5px color-mix(in srgb,var(--item-quality,#536277) 60%,transparent)}
+ .ah-item{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;flex:1}/* Item icons match the Dressing Room and Gear Planner: a smooth 3px corner, and a border in the item's rarity colour with a soft glow. */
+ .ah-icon{width:26px;height:26px;object-fit:cover;border:1px solid var(--item-quality,#536277);border-radius:3px;background:#162236;display:inline-block;flex:none;box-shadow:0 0 5px color-mix(in srgb,var(--item-quality,#536277) 60%,transparent)}
 .ah-q0{--item-quality:var(--quality-0)}.ah-q1{--item-quality:var(--quality-1)}.ah-q2{--item-quality:var(--quality-2)}.ah-q3{--item-quality:var(--quality-3)}.ah-q4{--item-quality:var(--quality-4)}.ah-q5{--item-quality:var(--quality-5)}.ah-q6{--item-quality:var(--quality-6)}
-.ah-item a{color:#e5e9ef;text-decoration:none}.ah-item a:hover{text-decoration:underline}
+.ah-item-label{display:flex;flex-direction:column;min-width:0;max-width:100%;overflow:hidden;gap:3px}
+.ah-name-clip{display:block;min-width:0;width:100%;max-width:clamp(95px,18vw,230px);overflow:hidden;white-space:nowrap}
+.ah-name-text{display:inline-block;white-space:nowrap;will-change:transform}
+.ah-name-clip.ah-scroll-name .ah-name-text{animation:ah-name-pan var(--name-duration,10s) linear infinite}
+@keyframes ah-name-pan{0%,12%{transform:translateX(0)}88%,93%{transform:translateX(calc(-1 * var(--name-distance,0px)))}93.01%,100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.ah-name-clip.ah-scroll-name .ah-name-text{animation:none}}
+.ah-entry-name{display:flex;align-items:center;gap:3px;min-width:0;max-width:100%}
+.ah-variant-stats,.ah-variant-unresolved{display:block;font-size:10px;line-height:1.35;color:#9fb8ce;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ah-variant-unresolved{color:#e3bd57}
 .ah-variant{font-size:11px;color:#98a6b8}
 /* Rarity colours match the Dressing Room item names and the quality dropdowns (docs/quality-select.css). */
-.ah-q0 a,.ah-q1 a,.ah-q2 a,.ah-q3 a,.ah-q4 a,.ah-q5 a,.ah-q6 a{color:var(--item-quality)}
+.ah-q0 .ah-name-text,.ah-q1 .ah-name-text,.ah-q2 .ah-name-text,.ah-q3 .ah-name-text,.ah-q4 .ah-name-text,.ah-q5 .ah-name-text,.ah-q6 .ah-name-text{color:var(--item-quality)}
 /* Prices: white numbers, each followed by its coin. Zero amounts are not shown. */
-.ah-money{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.ah-num{color:#fff}.ah-coin{width:16px;height:16px;margin-right:4px;flex:none}.ah-money .ah-coin:last-child{margin-right:0}
+.ah-money{display:inline-flex;align-items:center;gap:1px;flex-wrap:wrap;white-space:normal}.ah-num{color:#fff}.ah-coin{width:11px;height:11px;margin-right:1px;flex:none}.ah-money .ah-coin:last-child{margin-right:0}
 .ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:var(--gold)}.ah-time-green{color:#4fdc7a}
 .ah-change-up{color:#f27c7e}.ah-change-down{color:#5bdb9d}.ah-change-neutral{color:#a8b7c7}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}
 .ah-star:hover,.ah-star[aria-pressed=true]{color:#f4d65c}
-.ah-expand{color:var(--gold);font-size:13px}
+.ah-expand{color:var(--gold);font-size:13px;flex:none}
+.ah-scroll tr.ah-entry{cursor:pointer}
+.ah-scroll tr.ah-entry:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.ah-scroll tr.ah-entry[aria-expanded=true]{background:#233343}
 
 .ah-detail>td{white-space:normal;background:#162132;padding:14px 16px}
 .ah-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 12px}
@@ -121,9 +132,65 @@
 #fav-body>.ah-muted{padding:16px}
 .ah-row .tool-btn{margin-bottom:4px}
 /* The detail row spans the whole (horizontally scrolling) table; keep its content within the visible width. */
-.ah-detail-inner{position:sticky;left:0;width:min(100%,calc(100vw - 100px));box-sizing:border-box}
+.ah-detail-inner{position:static;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 @media(max-width:560px){
  .ah-row>.ah-field-end{flex:0 0 auto}
  .ah-row>.ah-field-end:nth-last-child(2){flex:1 1 0}
  #fav-only{width:100%}
+}
+
+
+/* Fixed column proportions fit the eleven main metrics without horizontal scrolling. */
+.ah-scroll>table>thead th:nth-child(1){width:30px}
+.ah-scroll>table>thead th:nth-child(2){width:24%}
+.ah-scroll>table>thead th:nth-child(3){width:6%}
+.ah-scroll>table>thead th:nth-child(4){width:6%}
+.ah-scroll>table>thead th:nth-child(5){width:9%}
+.ah-scroll>table>thead th:nth-child(6){width:9%}
+.ah-scroll>table>thead th:nth-child(7){width:9%}
+.ah-scroll>table>thead th:nth-child(8){width:10%}
+.ah-scroll>table>thead th:nth-child(9){width:7%}
+.ah-scroll>table>thead th:nth-child(10){width:6%}
+.ah-scroll>table>thead th:nth-child(11){width:10%}
+.ah-scroll>table>tbody>tr.ah-entry>td{overflow:hidden;text-overflow:ellipsis}
+.ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){overflow:visible}
+.ah-detail-inner .ah-db-link{display:inline-block;margin:8px 0 4px;color:#e8c67c;font-size:12px}
+.ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#1f2b3b;border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
+.ah-roll-detail strong{color:#efce47}
+.ah-roll-detail span{color:#9fe0bd}
+.ah-roll-detail small{color:#98a6b8;width:100%}
+/* Same compact item-tooltip treatment as the Gear Planner. */
+.planner-tooltip{position:fixed;z-index:1000;width:max-content;max-width:min(370px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;background:#0d1420f7;border:1px solid #827547;border-radius:4px;padding:12px 14px;box-shadow:0 8px 25px #0009;pointer-events:none;line-height:1.5;font-size:12px;color:#e1e7ef;white-space:pre-line}
+.planner-tooltip>strong{display:block;color:#f0d576;font-size:14px}
+.planner-tooltip p{line-height:1.5;margin:8px 0 0}
+.planner-tooltip p:first-of-type{color:#9aafc9}
+/* On narrower screens, present all columns as labelled cells in each row. */
+@media(max-width:1060px){
+ .ah-scroll>table{display:block;width:100%;white-space:normal}
+ .ah-scroll>table>thead{display:none}
+ .ah-scroll>table>tbody{display:grid;gap:10px;padding:8px 0}
+ .ah-scroll>table>tbody>tr.ah-entry{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px 9px;border:1px solid #39465a;border-radius:4px;background:#1b2939;padding:8px}
+ .ah-scroll>table>tbody>tr.ah-entry>td{display:flex;flex-direction:column;gap:4px;white-space:normal;border:0;padding:3px 4px;min-width:0;overflow:hidden}
+ .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(1){grid-column:1;grid-row:1;justify-content:center}
+ .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){grid-column:2/-1;grid-row:1;overflow:visible}
+ .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(n+3)::before{content:attr(data-label);color:#9fadbf;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .ah-scroll>table>tbody>tr.ah-entry>td.ah-unavailable{grid-column:1/-1}
+ .ah-name-clip{max-width:min(100%,420px)}
+ .ah-scroll>table>tbody>tr.ah-detail{display:block;min-width:0}
+ .ah-scroll>table>tbody>tr.ah-detail>td{display:block;width:100%;max-width:100%;border:0}
+ .ah-scroll>table>tbody>tr:not(.ah-entry):not(.ah-detail){display:block}
+ .ah-scroll>table>tbody>tr:not(.ah-entry):not(.ah-detail)>td{display:block}
+ .ah-detail table{display:block;white-space:normal;min-width:0}
+ .ah-detail table thead{display:none}
+ .ah-detail table tbody{display:block}
+ .ah-detail table tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px 0;border-bottom:1px solid #39465a}
+ .ah-detail table tbody td{display:flex;flex-direction:column;gap:3px;min-width:0;overflow-wrap:anywhere;padding:3px 5px;border:0}
+ .ah-detail table tbody td::before{content:attr(data-label);color:#98a6b8;font-size:10px}
+ .ah-detail details>div{overflow:visible}
+}
+@media(max-width:560px){
+ .ah-scroll>table>tbody>tr.ah-entry{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){grid-column:2}
+ .ah-icon{width:24px;height:24px}
+ .ah-name-clip{max-width:min(100%,calc(100vw - 154px))}
 }
