@@ -26,14 +26,14 @@ export function createWorldChat({account,config,log,getWorld}){
   }
   function observeWho(players){
     if(!enabled||stopped||!Array.isArray(players))return;
-    const byName=new Map(players.filter(p=>typeof p.name==="string"&&typeof p.guild==="string").map(p=>[p.name.toLowerCase(),p.guild]));
+    const byName=new Map(players.filter(p=>typeof p.name==="string"&&typeof p.guild==="string").map(p=>[p.name.toLowerCase(),p]));
     for(const [guid,name] of guildRequests){
       if(!byName.has(name.toLowerCase()))continue;
-      const time=Date.now(),guild=byName.get(name.toLowerCase()).slice(0,100);
+      const time=Date.now(),profile=byName.get(name.toLowerCase()),guild=profile.guild.slice(0,100);
       if(guildCache.size>=3000)guildCache.delete(guildCache.keys().next().value);
       guildCache.set(guid,time);guildRequests.delete(guid);
       if(guildOut.size>=250)guildOut.delete(guildOut.keys().next().value);
-      guildOut.set(guid,{authorKey:guid.toString(),guild,time});
+      guildOut.set(guid,{authorKey:guid.toString(),guild,time,level:profile.level,classId:profile.classId});
     }
   }
   async function guildTick(){

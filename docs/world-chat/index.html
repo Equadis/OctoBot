@@ -2,16 +2,28 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OctoBot · World Chat</title><meta name="description" content="Public world chat, GM announcements, dungeon recruitment and player trade listings.">
 <meta property="og:title" content="OctoBot — World Chat (Alpha)"><meta property="og:description" content="Live World chat, GM messages, LFG and player trade.">
-<link rel="icon" href="../favicon.png"><link rel="stylesheet" href="../site-theme.css?v=20261116-q2"><link rel="stylesheet" href="world-chat.css?v=2">
-<script src="../site-tooltips.js?v=20261116-tips1" defer></script><script src="../viewer-presence.js?v=20261113-live" defer></script>
-<script src="world-chat.js?v=2" type="module"></script></head><body><main>
+<link rel="icon" href="../favicon.png"><link rel="stylesheet" href="../site-theme.css?v=20261116-q2"><link rel="stylesheet" href="world-chat.css?v=5">
+<script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script><script src="../viewer-presence.js?v=20261113-live" defer></script>
+<script src="world-chat.js?v=7" type="module"></script></head><body><main>
 <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>World Chat <span class="chat-alpha">ALPHA</span></h1></div></div>
 <div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">–</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
 <nav class="page-nav" aria-label="Dashboard pages" data-current="world-chat"></nav><script src="../site-nav.js?v=20261117-chat1"></script>
-<div class="chat-controls"><label>Realm <select id="realm"><option>N'Zoth</option><option>Y'Shaarj</option><option>C'Thun</option></select></label><span id="feed-state" role="status">Connecting…</span><span class="chat-muted" id="last-updated"></span></div>
-<div class="chat-feeds"><section class="chat-panel"><h2>World Chat <span id="world-count"></span></h2><div id="world" class="chat-scroll" role="log" aria-label="World chat messages"></div></section>
-<section class="chat-panel gm-panel"><h2>GM Messages <span id="gm-count"></span></h2><div id="gm" class="chat-scroll" role="log" aria-label="GM messages"></div></section></div>
-<section class="chat-panel listings"><h2>Looking for Group <span id="lfg-count"></span></h2><div id="lfg"></div></section>
+<div class="chat-controls"><label>Realm <select id="realm"><option>N'Zoth</option><option>Y'Shaarj</option><option>C'Thun</option></select></label><label class="chat-guild-toggle"><input type="checkbox" id="chat-show-guilds" checked> Show guild names</label><label class="chat-search-label">Search chat <input type="search" id="chat-search" maxlength="160" placeholder="Message, player or guild"></label><span id="feed-state" role="status">Connecting…</span><span class="chat-muted" id="last-updated"></span></div>
+<div class="chat-feeds"><section class="chat-panel"><h2>World Chat <span id="world-count"></span></h2><div class="chat-history-controls"><button type="button" id="world-older" hidden>Load 1,000 older messages</button><span id="world-history-state" class="chat-muted" role="status"></span></div><div id="world" class="chat-scroll" role="log" aria-live="off" aria-label="World chat messages"></div></section>
+<section class="chat-panel gm-panel"><h2>GM Messages <span id="gm-count"></span></h2><div class="chat-history-controls"><button type="button" id="gm-older" hidden>Load 1,000 older messages</button><span id="gm-history-state" class="chat-muted" role="status"></span></div><div id="gm" class="chat-scroll" role="log" aria-live="off" aria-label="GM messages"></div></section></div>
+<section class="chat-panel listings"><h2>Looking for Group <span id="lfg-count"></span></h2>
+<div class="lfg-controls">
+<label>Activity <select id="lfg-kind"><option value="all">All activities</option><option value="dungeon">Dungeons</option><option value="raid">Raids</option><option value="worldboss">World bosses</option></select></label>
+<label>Request <select id="lfg-intent"><option value="all">LFG &amp; LFM</option><option>LFG</option><option>LFM</option></select></label>
+<label>Role mentioned <select id="lfg-role"><option value="all">All roles</option><option>Tank</option><option>Healer</option><option>DPS</option></select></label>
+<label>Instance <select id="lfg-tag"><option value="all">All instances</option></select></label>
+<label>Order <select id="lfg-sort"><option value="latest">Recent first</option><option value="oldest">Oldest first</option></select></label>
+<label>Search <input id="lfg-query" type="search" placeholder="Player, dungeon, keyword"></label>
+<label>Hide keywords <input id="lfg-blacklist" type="text" placeholder="boost, gdkp"></label>
+<label class="lfg-alert-label"><input id="lfg-alerts" type="checkbox"> Sound alerts</label>
+<button id="lfg-reset" type="button">Reset</button>
+<span id="lfg-notice" role="status" class="chat-muted"></span>
+</div><div id="lfg"></div></section>
 <div class="chat-trade"><section class="chat-panel listings"><h2>Want to Buy <span id="wtb-count"></span></h2><div id="wtb"></div></section><section class="chat-panel listings"><h2>Want to Sell <span id="wts-count"></span></h2><div id="wts"></div></section></div>
-<p class="chat-muted">Public World channel only. Listings expire five minutes after their last message; repeated recruitment for the same dungeon refreshes the listing. Trade listings are player advertisements, not verified auctions. GM messages are identified by the server chat flag. Alpha: coverage and classification may be incomplete.</p>
+<p class="chat-muted">Public World channel only. Chat history is retained for seven days. Search matches messages, player and guild names. Listings expire five minutes after their last message; repeated recruitment for the same dungeon refreshes the listing. Trade listings are player advertisements, not verified auctions. GM messages are identified by the server chat flag. Alpha: coverage and classification may be incomplete.</p>
 <footer><span>Times shown in UTC</span><span>Community tools for OctoWoW</span></footer></main></body></html>

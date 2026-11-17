@@ -233,3 +233,20 @@ test("elapsed countdowns sort last, in either direction",{skip},async()=>{
  await scan(e,"ah_time_sort_1","2026-11-10",[L(1003,{time_left_ms:HOUR,captured_at:at}),L(1004,{time_left_ms:4*HOUR,captured_at:at}),L(1006,{time_left_ms:null,captured_at:at})]);
  for(const dir of ["asc","desc"])assert.equal(ids(await q(e,"sort=time_left&dir="+dir))[0],"1004");
 });
+
+test("deployed Worker entry point routes metadata reads and authenticated writes", {skip}, async()=>{
+ const e=await fresh();
+ const {default:worker}=await import("../worker.mjs");
+ const callWorker=(path,method="GET",body,auth=false)=>worker.fetch(new Request("https://octometrics.example/api/auction/"+path,{method,headers:{"content-type":"application/json",...(auth?{authorization:"Bearer "+e.AUCTION_PUSH_TOKEN}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})}),e);
+ const before=await callWorker("missing-metadata");
+ assert.equal(before.status,200);
+ assert.deepEqual((await before.json()).items,[{item_id:1005,listings:1}]);
+ const payload={scan_id:"ah_filters_01",items:[{item_id:1005,item_name:"Recovered Material"}]};
+ assert.equal((await callWorker("scan/metadata","POST",payload)).status,401);
+ assert.equal((await callWorker("scan/metadata","POST",payload,true)).status,200);
+ const after=await callWorker("missing-metadata");
+ assert.equal(after.status,200);assert.deepEqual((await after.json()).items,[]);
+ const items=await callWorker("items?q=Recovered+Material&sort=recent&dir=desc");
+ assert.equal(items.status,200);assert.equal((await items.json()).items[0].item_name,"Recovered Material");
+ assert.equal((await callWorker("expiry-diagnostics")).status,200);
+});
