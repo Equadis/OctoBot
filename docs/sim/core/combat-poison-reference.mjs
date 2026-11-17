@@ -41,7 +41,7 @@ export function createPoisonRuntime(config,abilityIds){
   if(e.random()>=chance)return;
   const spend=()=>{if(e.random()<t.freeChargeChance)return;charges[hand]--;e.recordMechanic('poison-charge',{actorId:actor,targetId:target,hand,name:p.name,remaining:charges[hand]});};
   if(p.chargeOn==='attempt')spend();
-  const dot=p.name==='Deadly Poison V',scale=()=>{const ap=finite(stats.attackPower??0,'attack power');const m=(1+t.damagePct/100)*e.auras.stat(actor,'poisonDamageFactor',1);return {min:(p.min+p.apCoefficient*ap)*m,max:(p.max+p.apCoefficient*ap)*m};};
+  const dot=p.name==='Deadly Poison V',scale=()=>{const ap=finite(e.auras.stat(actor,'attackPower',finite(stats.attackPower??0,'attack power')),'effective attack power');const m=(1+t.damagePct/100)*e.auras.stat(actor,'poisonDamageFactor',1);return {min:(p.min+p.apCoefficient*ap)*m,max:(p.max+p.apCoefficient*ap)*m};};
   const outcomes=spellAttackTable({missPct:Math.max(0,p.applicationMissPct-t.resistReductionPct),resistance:p.resistance.bins,resistancePolicy:p.resistance.policy,criticalPct:dot?0:p.critPct,criticalMultiplier:p.criticalMultiplier,provenance:p.provenance}).outcomes;
   const hit=sampleAttack({...dot?{min:0,max:0}:scale(),outcomes,random:e.random});
   e.recordMechanic('attack-result',{actorId:actor,targetId:target,source:p.name,school:'nature',hand,...hit});if(!hit.landed)return;
