@@ -38,6 +38,36 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "115": [
+    {
+      "kind": "pending",
+      "note": "Riposte is an attack enabled after a successful parry, with damage and target disarm"
+    }
+  ],
+  "116": [
+    {
+      "kind": "pending",
+      "note": "Improved Sprint breaks movement impairments only when Sprint is activated"
+    }
+  ],
+  "117": [
+    {
+      "kind": "pending",
+      "note": "Setup gives combo points after dodging a hit or resisting a spell"
+    }
+  ],
+  "118": [
+    {
+      "kind": "pending",
+      "note": "Improved Kick applies a target silence when Kick lands"
+    }
+  ],
+  "119": [
+    {
+      "kind": "pending",
+      "note": "Concussive Blows mace stuns are chance-on-hit effects; not permanent critical chance"
+    }
+  ],
   "120": [
     {
       "kind": "offhand",
@@ -63,6 +93,18 @@ export const TALENT_RULES={
       "weapon": "fist",
       "stat": "crit",
       "param": 0
+    }
+  ],
+  "122": [
+    {
+      "kind": "pending",
+      "note": "Surprise Attack only enables following an enemy dodge and must use an attack table"
+    }
+  ],
+  "123": [
+    {
+      "kind": "pending",
+      "note": "Hack and Slash extra sword/axe attack chance needs melee hit events"
     }
   ],
   "124": [
@@ -92,6 +134,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "127": [
+    {
+      "kind": "pending",
+      "note": "Adrenaline Rush doubles Energy regeneration only while the timed ability is active"
+    }
+  ],
   "128": [
     {
       "kind": "scoped",
@@ -100,11 +148,23 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "129": [
+    {
+      "kind": "pending",
+      "note": "Remorseless Attacks critical bonus activates after killing an eligible enemy and affects the next qualifying opener"
+    }
+  ],
   "130": [
     {
       "kind": "global",
       "stat": "crit",
       "param": 0
+    }
+  ],
+  "131": [
+    {
+      "kind": "pending",
+      "note": "Ruthlessness generates combo points probabilistically when finishing moves execute"
     }
   ],
   "132": [
@@ -121,6 +181,12 @@ export const TALENT_RULES={
       "scope": "Slice and Dice/Flourish",
       "stat": "durationPct",
       "param": 0
+    }
+  ],
+  "134": [
+    {
+      "kind": "pending",
+      "note": "Relentless Strikes provides finisher-triggered energy refund and temporary stacking damage effects"
     }
   ],
   "135": [
@@ -184,6 +250,18 @@ export const TALENT_RULES={
       "note": "Chance not to consume poison charges is event-driven"
     }
   ],
+  "141": [
+    {
+      "kind": "pending",
+      "note": "Envenom finisher duration/effectiveness varies by combo points and requires target poison state"
+    }
+  ],
+  "142": [
+    {
+      "kind": "pending",
+      "note": "Cold Blood on-use guarantees a critical on the next eligible ability; not permanent crit"
+    }
+  ],
   "143": [
     {
       "kind": "special",
@@ -193,6 +271,18 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Energy on poison application is event-driven"
+    }
+  ],
+  "144": [
+    {
+      "kind": "pending",
+      "note": "Seal Fate only grants an extra combo point after critical combo-point-builder attacks"
+    }
+  ],
+  "145": [
+    {
+      "kind": "pending",
+      "note": "Noxious Assault active dual-weapon strike triggers both poisons and awards a combo point"
     }
   ],
   "146": [
@@ -233,6 +323,12 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "150": [
+    {
+      "kind": "pending",
+      "note": "Official Elusiveness rank values have conflicting units: 45 min at rank 1 and 1.5 min at rank 2; live verification required"
+    }
+  ],
   "151": [
     {
       "kind": "global",
@@ -244,6 +340,48 @@ export const TALENT_RULES={
       "scope": "Rupture/Garrote",
       "stat": "damagePct",
       "param": 0
+    }
+  ],
+  "152": [
+    {
+      "kind": "pending",
+      "note": "Initiative awards extra combo points on successful opening abilities"
+    }
+  ],
+  "153": [
+    {
+      "kind": "scoped",
+      "scope": "Ghostly Strike",
+      "stat": "energyCostReduction",
+      "param": 2
+    },
+    {
+      "kind": "pending",
+      "note": "Ghostly Strike grants short-lived self/party movement speed effects after use"
+    }
+  ],
+  "154": [
+    {
+      "kind": "pending",
+      "note": "Smoke Bomb reduces hit chance inside its temporary area; requires target positioning and aura state"
+    }
+  ],
+  "155": [
+    {
+      "kind": "pending",
+      "note": "Hemorrhage active ability applies physical vulnerability charges with duration; not permanent global damage"
+    }
+  ],
+  "156": [
+    {
+      "kind": "pending",
+      "note": "Cloaked in Shadows only generates a temporary barrier after Vanish"
+    }
+  ],
+  "157": [
+    {
+      "kind": "pending",
+      "note": "Blackjack debuff and return-to-stealth only occur after Sap/Blind action outcomes"
     }
   ],
   "158": [
@@ -266,6 +404,18 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "160": [
+    {
+      "kind": "pending",
+      "note": "Preparation actively resets cooldowns and requires per-ability timers"
+    }
+  ],
+  "161": [
+    {
+      "kind": "pending",
+      "note": "Shadow of Death finishing move captures incoming damage then releases it based on target state"
+    }
+  ],
   "162": [
     {
       "kind": "scoped",
@@ -278,6 +428,24 @@ export const TALENT_RULES={
       "scope": "Hemorrhage physical vulnerability",
       "stat": "damageBonusPct",
       "param": 1
+    }
+  ],
+  "163": [
+    {
+      "kind": "pending",
+      "note": "Honor Among Thieves generates Energy after party critical hits; requires shared party events"
+    }
+  ],
+  "164": [
+    {
+      "kind": "pending",
+      "note": "Tricks of the Trade temporarily buffs party crit after openers/finishers and stacks; not a personal passive"
+    }
+  ],
+  "165": [
+    {
+      "kind": "pending",
+      "note": "Mark for Death is an active strike applying a party AP/SP vulnerability effect with duration"
     }
   ]
 };
@@ -304,23 +472,23 @@ export const TALENT_COVERAGE={
   },
   "115": {
     "status": "proc-or-conditional",
-    "note": "A strike that becomes active after parrying an opponent's attack. This attack deals 150% weapon damage and disarms the target for 6 sec."
+    "note": "Riposte is an attack enabled after a successful parry, with damage and target disarm"
   },
   "116": {
     "status": "proc-or-conditional",
-    "note": "Gives a 100% chance to remove all movement impairing effects when you activate your Sprint ability."
+    "note": "Improved Sprint breaks movement impairments only when Sprint is activated"
   },
   "117": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 45% chance to add a combo point to your target after dodging their attack or fully resisting one of their spells."
+    "note": "Setup gives combo points after dodging a hit or resisting a spell"
   },
   "118": {
     "status": "proc-or-conditional",
-    "note": "Gives your Kick ability a 100% chance to silence the target for 2 sec."
+    "note": "Improved Kick applies a target silence when Kick lands"
   },
   "119": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 6% chance to stun your target for 3 sec with a mace."
+    "note": "Concussive Blows mace stuns are chance-on-hit effects; not permanent critical chance"
   },
   "120": {
     "status": "sheet",
@@ -332,11 +500,11 @@ export const TALENT_COVERAGE={
   },
   "122": {
     "status": "proc-or-conditional",
-    "note": "A surprise strike that deals 25% of your Attack Power as damage. Only useable after the target dodges and cannot be blocked, dodged or parried by the target. Awards 1 combo po"
+    "note": "Surprise Attack only enables following an enemy dodge and must use an attack table"
   },
   "123": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 5% chance to get an extra attack on the same target after dealing damage with your Axe or Sword."
+    "note": "Hack and Slash extra sword/axe attack chance needs melee hit events"
   },
   "124": {
     "status": "sheet",
@@ -352,7 +520,7 @@ export const TALENT_COVERAGE={
   },
   "127": {
     "status": "proc-or-conditional",
-    "note": "Increases your Energy regeneration rate by 100% for 15 sec."
+    "note": "Adrenaline Rush doubles Energy regeneration only while the timed ability is active"
   },
   "128": {
     "status": "partial",
@@ -360,7 +528,7 @@ export const TALENT_COVERAGE={
   },
   "129": {
     "status": "proc-or-conditional",
-    "note": "After killing an opponent that yields experience or honor, gives you a 40% increased critical strike chance on your next Combo Point generating ability. Lasts 40 sec."
+    "note": "Remorseless Attacks critical bonus activates after killing an eligible enemy and affects the next qualifying opener"
   },
   "130": {
     "status": "sheet",
@@ -368,7 +536,7 @@ export const TALENT_COVERAGE={
   },
   "131": {
     "status": "proc-or-conditional",
-    "note": "Gives your finishing moves a 100% chance to add a combo point to your target."
+    "note": "Ruthlessness generates combo points probabilistically when finishing moves execute"
   },
   "132": {
     "status": "partial",
@@ -380,7 +548,7 @@ export const TALENT_COVERAGE={
   },
   "134": {
     "status": "proc-or-conditional",
-    "note": "Your finishing moves have a 20% chance per combo point to restore 20 energy and increase the damage of your finishing moves by 5% for 30 sec. Stacks up to 5 times."
+    "note": "Relentless Strikes provides finisher-triggered energy refund and temporary stacking damage effects"
   },
   "135": {
     "status": "partial",
@@ -408,11 +576,11 @@ export const TALENT_COVERAGE={
   },
   "141": {
     "status": "proc-or-conditional",
-    "note": "Finishing move that increases the effectiveness and the chance to apply poisons to your target by 30%. Lasts longer per combo point: 1 point : 12 seconds 2 points: 16 seconds "
+    "note": "Envenom finisher duration/effectiveness varies by combo points and requires target poison state"
   },
   "142": {
     "status": "proc-or-conditional",
-    "note": "When activated, increases the critical strike chance of your next Sinister Strike, Backstab, Ambush, Noxious Assault, or Eviscerate by 100%."
+    "note": "Cold Blood on-use guarantees a critical on the next eligible ability; not permanent crit"
   },
   "143": {
     "status": "partial",
@@ -420,11 +588,11 @@ export const TALENT_COVERAGE={
   },
   "144": {
     "status": "proc-or-conditional",
-    "note": "Your critical strikes from abilities that add combo points have a 100% chance to add an additional combo point."
+    "note": "Seal Fate only grants an extra combo point after critical combo-point-builder attacks"
   },
   "145": {
-    "status": "ability-specific",
-    "note": "Strikes with both weapons, dealing 30 damage plus 30% of your Attack Power and applies poisons from both weapons. Awards 1 combo point."
+    "status": "proc-or-conditional",
+    "note": "Noxious Assault active dual-weapon strike triggers both poisons and awards a combo point"
   },
   "146": {
     "status": "partial",
@@ -443,8 +611,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "150": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of your Vanish and Blind abilities by 1.5 min."
+    "status": "proc-or-conditional",
+    "note": "Official Elusiveness rank values have conflicting units: 45 min at rank 1 and 1.5 min at rank 2; live verification required"
   },
   "151": {
     "status": "partial",
@@ -452,27 +620,27 @@ export const TALENT_COVERAGE={
   },
   "152": {
     "status": "proc-or-conditional",
-    "note": "Gives you a 100% chance to add an additional combo point to your target when using your Ambush, Garrote, or Cheap Shot ability."
+    "note": "Initiative awards extra combo points on successful opening abilities"
   },
   "153": {
-    "status": "proc-or-conditional",
-    "note": "Your Ghostly Strike increases your movement speed by 15% and increases your party members' movement speed by 6% within 30 yards for 5 sec. In addition, reduces the Energy cost"
+    "status": "partial",
+    "note": "Ghostly Strike grants short-lived self/party movement speed effects after use"
   },
   "154": {
     "status": "proc-or-conditional",
-    "note": "Creates a cloud of thick smoke in 8 yards around you for 8 sec. All targets inside the smoke have a 20% reduced chance of being hit by attacks and spells for the duration."
+    "note": "Smoke Bomb reduces hit chance inside its temporary area; requires target positioning and aura state"
   },
   "155": {
-    "status": "ability-specific",
-    "note": "An instant strike that deals 110% weapon damage and causes the target to hemorrhage, increasing any Physical damage dealt to the target by 2%. Lasts 50 charges or 15 sec. Awar"
+    "status": "proc-or-conditional",
+    "note": "Hemorrhage active ability applies physical vulnerability charges with duration; not permanent global damage"
   },
   "156": {
     "status": "proc-or-conditional",
-    "note": "Whenever you Vanish, you and nearby party members within 20 yards are cloaked in shadows, gaining a barrier that absorbs up to 12% of your maximum health for 20 sec."
+    "note": "Cloaked in Shadows only generates a temporary barrier after Vanish"
   },
   "157": {
     "status": "proc-or-conditional",
-    "note": "Your Sap and Blind abilities reduce the target's damage dealt by 10% for 8 sec when their effect ends or fails to apply. In addition, you have a 100% chance to return to steal"
+    "note": "Blackjack debuff and return-to-stealth only occur after Sap/Blind action outcomes"
   },
   "158": {
     "status": "partial",
@@ -484,26 +652,26 @@ export const TALENT_COVERAGE={
   },
   "160": {
     "status": "proc-or-conditional",
-    "note": "When activated, this ability immediately finishes the cooldown on your other Rogue abilities."
+    "note": "Preparation actively resets cooldowns and requires per-ability timers"
   },
   "161": {
     "status": "proc-or-conditional",
-    "note": "A finishing move that etches a sigil onto the target for 6 sec. The sigil accumulates damage equal to a percentage of all damage the target takes during its duration, up to a "
+    "note": "Shadow of Death finishing move captures incoming damage then releases it based on target state"
   },
   "162": {
     "status": "partial",
     "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
   },
   "163": {
-    "status": "ability-specific",
-    "note": "Physical critical strikes by you or party members within 20 yards grant you 5 Energy."
+    "status": "proc-or-conditional",
+    "note": "Honor Among Thieves generates Energy after party critical hits; requires shared party events"
   },
   "164": {
     "status": "proc-or-conditional",
-    "note": "Your opening moves have a 100% chance and your finishing moves have a 20% chance per combo point to increase your party members' critical strike chance by 2% for 12 sec. This "
+    "note": "Tricks of the Trade temporarily buffs party crit after openers/finishers and stacks; not a personal passive"
   },
   "165": {
     "status": "proc-or-conditional",
-    "note": "A marking strike that deals 135% weapon damage and reveals the target’s vulnerabilities, increasing your party members' Attack Power by 30% and damage done by magical spells a"
+    "note": "Mark for Death is an active strike applying a party AP/SP vulnerability effect with duration"
   }
 };
