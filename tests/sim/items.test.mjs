@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {newBuild,validateBuild,encodeBuild,decodeBuild} from '../../docs/sim/core/builds.mjs';
-import {filterItems,listingRestriction,detailRestriction,equipmentTotals} from '../../docs/sim/core/items.mjs';
+import {filterItems,normaliseItemSearch,listingRestriction,detailRestriction,equipmentTotals} from '../../docs/sim/core/items.mjs';
 const build=newBuild();
 const axe={id:1,name:'Axe',classs:2,subclass:0,slot:13,reqlevel:20,quality:3,level:25};
 const detail={id:1,classMask:-1,raceMask:-1,slot:13,requiredLevel:20,requirements:[],unique:false};
@@ -30,6 +30,49 @@ test('source masks, conditional requirements, uniqueness and weapon conflicts ga
  assert.deepEqual(equipmentTotals({head:{attributes:{Strength:17}},chest:{attributes:{Strength:20,Stamina:10}}}),{Strength:37,Stamina:10});
 });
 
+
+test('reputation and specialisation requirements are shown, not used to hide otherwise valid gear',()=>{
+ const item={id:61010,name:'Wing of the Time-Lord',classs:4,subclass:1,slot:16,reqlevel:0,quality:4,level:65};
+ const back={id:item.id,classMask:-1,raceMask:-1,slot:16,requiredLevel:0,
+   requirements:['Requires  - Exalted'],unique:true};
+ const paladin=newBuild('paladin');
+ assert.equal(listingRestriction(item,paladin,'back'),null);
+ assert.equal(detailRestriction(item,back,paladin,'back'),null);
+ for(const requirement of ['Requires Silvermoon Remnant - Revered','Requires Goldsmith',
+   'Requires Gnomish Engineer','Requires Dragonscale Leatherworking']){
+  assert.equal(detailRestriction(item,{...back,requirements:[requirement]},paladin,'back'),null,requirement);
+ }
+ // Actual level, class, race and numeric profession requirements stay enforced.
+ assert.match(detailRestriction(item,{...back,requiredLevel:61},paladin,'back'),/Requires level 61/);
+ assert.match(detailRestriction(item,{...back,classMask:8},paladin,'back'),/another class/);
+ assert.match(detailRestriction(item,{...back,raceMask:2},paladin,'back'),/another race/);
+ assert.match(detailRestriction(item,{...back,requirements:['Requires Engineering (300)']},paladin,'back'),/Additional requirement/);
+});
+test('gear search recognises hyphenation and accidental duplicate words',()=>{
+ const paladin=newBuild('paladin');
+ const item={id:61010,name:'Wing of the Time-Lord',classs:4,subclass:1,slot:16,reqlevel:0,quality:4,level:65};
+ assert.equal(normaliseItemSearch('Wing of the the Time-Lord'),'wing of the time lord');
+ for(const query of ['Wing of the Time-Lord','wing of the time lord','Wing of the the Time Lord',
+   'https://octowow.st/db/?item=61010','61010']){
+  assert.deepEqual(filterItems([item],{build:paladin,slot:'back',search:query}).map(x=>x.id),[61010],query);
+ }
+ assert.deepEqual(filterItems([item],{build:paladin,slot:'head',search:'time lord'}),[]);
+});
+test('Dressing Room and Gear Planner catalogues contain the same equippable item IDs',async()=>{
+ const url=new URL('../../docs/sim/data/items/',import.meta.url);
+ const [catalogue,equipment,details]=await Promise.all(['catalogue.json','equipment.json','details.json']
+  .map(name=>readFile(new URL(name,url),'utf8').then(JSON.parse)));
+ const equipped=new Set(equipment.map(item=>item.id));
+ const dressable=catalogue.filter(item=>[2,4,6,11].includes(item.classs)&&item.slot>0);
+ assert.deepEqual([...equipped].sort((a,b)=>a-b),dressable.map(item=>item.id).sort((a,b)=>a-b));
+ const wing=equipment.find(item=>item.id===61010);
+ assert.ok(wing,'Wing of the Time-Lord is in the Gear Planner catalogue');
+ assert.equal(wing.name,'Wing of the Time-Lord');
+ assert.equal(details['61010'].slot,16);
+ assert.equal(detailRestriction(wing,details['61010'],newBuild('paladin'),'back'),null);
+ // The source requirement continues to be visible in the Gear Planner tooltip.
+ assert.ok(details['61010'].tooltipText.includes('Exalted'));
+});
 test('planning settings round trip and legacy builds gain safe defaults',async()=>{
  const data=JSON.parse(await readFile(new URL('../../docs/sim/data/talents/warrior.json',import.meta.url)));
  const configured={...build,planning:{...build.planning,buffs:'Raid notes',rotation:'Priority',iterations:2000}};
