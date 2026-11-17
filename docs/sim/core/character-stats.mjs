@@ -58,7 +58,7 @@ export function characterStats(build,talentData,gear={}){
  if(c==='druid'&&build.classOptions.form==='Cat'&&base)ap=2*level-20+s.str*2+s.agi+s.ap;
  if(c==='druid'&&build.classOptions.form==='Bear'&&base)ap=3*level-20+s.str*2+s.ap;
  if(c==='hunter'&&selected('Lightning Reflexes')&&base)ap+=s.agi*value('Lightning Reflexes')*10/100;
- if(buffAudit.entries.some(e=>e.id==='trueshot'&&e.active)&&ap!==null)ap*=1.03;
+ // Trueshot uses the explicitly selected database vector, not the conflicting reference multiplier.
  if(c==='priest'&&base)s.sp+=s.spi*value('Spiritual Guidance')/100;
  const health=base?(base[5]+s.health+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(racial.healthMultiplier||1):null;
  let armour=base?s.armour+s.agi*2:null;
@@ -109,7 +109,7 @@ export function characterStats(build,talentData,gear={}){
  if(s.spellDamageTakenReductionFlat)extraDef.push(['Flat Spell Damage Reduction',num(s.spellDamageTakenReductionFlat)]);
  if(extraDef.length)group('Equipment Defence',extraDef);
  const speedRows=[];for(const [label,key] of [['Run Speed','runSpeedPct'],['Swim Speed','swimSpeedPct'],['Mount Speed','mountSpeedPct']])if(s[key])speedRows.push([label,pct(s[key],1)]);if(speedRows.length)group('Equipment Movement Bonuses',speedRows);
- if(c==='hunter'||s.rangedAP||s.rangedHit||s.rangedCrit||s.rangedDamage||rangedHaste!==1){const rows=[['Item Ranged AP Bonus',num(s.rangedAP)],['Ranged-only Hit Bonus',pct(s.rangedHit,1)],['Ranged-only Crit Bonus',pct(s.rangedCrit,1)],['Ranged-only Haste',pct((rangedHaste-1)*100,1)],['Scope Damage',num(s.rangedDamage)]];const ammo=gear.ammo;const ranged=gear.ranged;if(ammo&&ranged?.classs===2&&[2,3,18].includes(ranged.subclass)&&ammo.subclass===(ranged.subclass===3?3:2)){const dps=Number(ammo.ammunitionDps??ammo.tooltipText?.match(/Adds ([0-9.]+) damage per second/)?.[1]);rows.push(['Ammunition DPS',Number.isFinite(dps)?String(dps):'—']);}group('Ranged Equipment Contributions',rows);}
+ if(c==='hunter'||s.rangedAP||s.rangedHit||s.rangedCrit||s.rangedDamage||rangedHaste!==1){const rows=[['Ranged-specific AP Bonus',num(s.rangedAP)],['Ranged-only Hit Bonus',pct(s.rangedHit,1)],['Ranged-only Crit Bonus',pct(s.rangedCrit,1)],['Ranged-only Haste',pct((rangedHaste-1)*100,1)],['Scope Damage',num(s.rangedDamage)]];const ammo=gear.ammo;const ranged=gear.ranged;if(ammo&&ranged?.classs===2&&[2,3,18].includes(ranged.subclass)&&ammo.subclass===(ranged.subclass===3?3:2)){const dps=Number(ammo.ammunitionDps??ammo.tooltipText?.match(/Adds ([0-9.]+) damage per second/)?.[1]);rows.push(['Ammunition DPS',Number.isFinite(dps)?String(dps):'—']);}group('Ranged Equipment Contributions',rows);}
  group('Spell',[
  ['Spell Power',num(s.sp+s.damageOnlySp)],...(s.healingPower||s.damageOnlySp?[['Healing Power',num(s.sp+s.healingPower)]]:[]),...(s.castSpeedPct?[['Item Casting Speed',pct(s.castSpeedPct,1)]]:[]),...(s.castingRegenPct?[['Natural Mana Regen While Casting (items)',pct(s.castingRegenPct,1)]]:[]),['Spell Hit',pct(s.spellHit,0)],['Spell Pen',num(s.spellPen)],['Spell Crit',pct(spellCrit,2)],['Fortune',pct(s.fortune,0),'Flat Fortune bonuses only. Proc and server-specific Fortune conversions have not been verified.'],...['Nature','Fire','Frost','Shadow','Arcane','Holy'].filter(name=>s[name.toLowerCase()+'Sp']).map(name=>[name+' Power',num(s.sp+s.damageOnlySp+s[name.toLowerCase()+'Sp'])])
  ]);

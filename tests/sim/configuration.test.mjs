@@ -10,7 +10,7 @@ test('buff selections, rotation priorities and conditions survive saved/shared b
  const build={...newBuild(),controls:{...defaultControls(),buffIds:['battle-shout','kings','sunder'],rotationPreset:preset.id,rotationRows:structuredClone(preset.rows),keyInterval:150,variabilityMs:20}};
  assert.deepEqual(decodeBuild(encodeBuild(build),data),build);
  assert.equal(new Set(BUFF_OPTIONS.map(b=>b.id)).size,BUFF_OPTIONS.length);
- assert.deepEqual(BUFF_GROUPS.map(g=>g.name),['Raid Buffs','Consumables','SP Consumables','Other Consumables','Food Buffs','Drink Buffs','Short Duration Consumables','Target Debuffs','Other']);
+ assert.deepEqual(BUFF_GROUPS.map(g=>g.name),['Raid Buffs','World Buffs','Consumables','SP Consumables','Other Consumables','Food Buffs','Drink Buffs','Short Duration Consumables','Target Debuffs','Other']);
 });
 
 test('configuration rejects malformed rows, unknown buffs, invalid timing and unsafe values',()=>{

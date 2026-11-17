@@ -62,3 +62,25 @@ test('additional long-duration stat effects and scoped effects preserve exact to
 });
 
 test('ambiguous speed unit remains unquantified instead of inventing a percentage',()=>{assert.equal(item(42162).effectAudit.status,'unquantified');assert.deepEqual(stats(42162),{});});
+
+test('confirmed spell and item sources correct previously assumed values',()=>{
+ assert.deepEqual(buffDefinition('trueshot').stats,{ap:100,rangedAP:100});assert.equal(buffDefinition('trueshot').status,'source-conflict');
+ assert.equal(buffDefinition('annihilator').stats.targetArmour,-600);assert.equal(buffDefinition('nightfall').stats.targetSpellDamageTakenPct,15);
+ assert.deepEqual(buffDefinition('wizard-oil-mh').stats,{damageOnlySp:36,spellCrit:1});assert.equal(buffDefinition('juju-might').durationSeconds,600);
+ assert.equal(buffDefinition('flurry').eventModifiers.meleeHastePct,3);assert.equal(buffDefinition('flurry').durationSeconds,20);
+ assert.deepEqual(buffDefinition('curse-elements').stats,{targetFireRes:-75,targetFrostRes:-75,targetFireDamageTakenPct:10,targetFrostDamageTakenPct:10});
+});
+test('new raid and world buffs reach the sheet independently across nine classes',()=>{
+ for(const c of ['warrior','paladin','rogue','druid','shaman','hunter','mage','warlock','priest']){
+  const b=newBuild(c);b.controls.buffIds=[];const base=sheet(b);b.controls.buffIds=['fortitude','fengus','slipkik','curse-elements','annihilator','nightfall'];const a=sheet(b);
+  assert.equal(Number(a['Base Stats'].Stamina)-Number(base['Base Stats'].Stamina),54,c);
+  assert.equal(Number(a.Melee.Power)-Number(base.Melee.Power),200,c);
+  assert.equal(Number(a['Melee vs Target'].Armour)-Number(base['Melee vs Target'].Armour),-600,c);
+  assert.equal(a['Target Debuff Contributions'].targetFireRes,'-75');assert.equal(a['Target Debuff Contributions'].targetSpellDamageTakenPct,'15%');
+  assert.equal(Number(a.Spell['Spell Power']),Number(base.Spell['Spell Power']));
+ }
+});
+test('oil level gate and imported consumable conflict handling',()=>{
+ const b=newBuild('rogue');b.level=44;b.controls.buffIds=['wizard-oil-mh'];assert.equal(resolveBuffEffects(b,{mainhand:{classs:2,subclass:15}}).entries[0].active,false);
+ b.level=60;b.controls.buffIds=[];b.controls.consumableIds=[13510,13511,13510];assert.deepEqual(resolveBuffEffects(b).consumables.map(c=>c.id),[13510]);
+});

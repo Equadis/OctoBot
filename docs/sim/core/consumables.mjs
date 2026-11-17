@@ -65,7 +65,8 @@ export function consumableEngineErrors(build,supportedIds=[]){return (build.cont
 
 const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],drink:['merlot','rum'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
 export function resolveConsumableSelection(controls,prefer='consumables'){
- let buffIds=[...new Set(controls.buffIds)],consumableIds=[...new Set(controls.consumableIds||[])];
+ let buffIds=[...new Set(controls.buffIds)],consumableIds=[];
+ for(const id of controls.consumableIds||[])if(CONSUMABLE_BY_ID.has(id))consumableIds=selectConsumable(consumableIds,id);
  for(const id of consumableIds){const group=consumableGroup(CONSUMABLE_BY_ID.get(id)||{}),old=LEGACY_GROUPS[group]||[];if(!old.some(id=>buffIds.includes(id)))continue;if(prefer==='consumables')buffIds=buffIds.filter(id=>!old.includes(id));else consumableIds=consumableIds.filter(other=>other!==id);}
  return {...controls,buffIds,consumableIds};
 }
