@@ -13,7 +13,7 @@ import {referenceRanks} from './combat-reference-ranks.mjs';
 import {createExplicitClassEncounter} from './combat-class-runtime.mjs';
 import {physicalAttackTable} from './combat-attack-tables.mjs';
 import {physicalArmourReduction} from './combat-math.mjs';
-import {runIterations} from './combat-statistics.mjs';
+import {runIterations,resourceThroughput} from './combat-statistics.mjs';
 import {combatReport} from './combat-report.mjs';
 import {abilityKey,ROTATION_REGISTRY} from './rotations/registry.mjs';
 const finite=(x,k,min=0)=>{if(!Number.isFinite(x)||x<min)throw new Error('Explicit valid '+k+' required');return x;};
@@ -110,8 +110,8 @@ export function runReferenceScenario(prepared,{seed,iterations}){
  const create=s=>createExplicitClassEncounter({...prepared.scenario,seed:s});
  const sample=create(seed).run(),report=combatReport(sample);
  const healing=prepared.scenario.actions.some(a=>a.sealModel?.kind==='light'||a.elementalShieldModel?.kind==='earth'||a.effects.some(e=>e.kind==='heal'||e.kind==='periodic-heal'||e.leech)),absorbing=prepared.scenario.actions.some(a=>a.effects.some(e=>e.kind==='absorb')),damaging=prepared.scenario.actions.some(a=>a.targets.includes('enemy')||a.elementalShieldModel?.kind==='lightning')||prepared.scenario.autos.length>0||!!prepared.scenario.companionPriority?.abilities.length;
- const type=absorbing&&!healing&&!damaging?'aps':healing&&!damaging?'hps':'dps';const aps=r=>r.events.filter(e=>e.type==='absorb'&&e.actorId===actor).reduce((n,e)=>n+e.amount,0)/(r.durationMs/1000);
- const metric=r=>{if(type==='aps')return aps(r);const t=r.attribution.actors[actor].totals;return (type==='hps'?t.allyHealing:t.enemyDamage)/(r.durationMs/1000);};
- const pet=prepared.scenario.petId;const petDps=r=>r.attribution.actors[pet].totals.enemyDamage/(r.durationMs/1000),playerDps=r=>r.attribution.actors[actor].totals.enemyDamage/(r.durationMs/1000);const stats=runIterations({seed,iterations,createEncounter:create,metrics:{[type]:metric,...(pet?{petDps,combinedDps:r=>playerDps(r)+petDps(r)}:{}),...(healing&&damaging?{hps:r=>r.attribution.actors[actor].totals.allyHealing/(r.durationMs/1000)}:{}),...(absorbing&&type!=='aps'?{aps}:{} )}});
+ const manaReturning=prepared.scenario.actions.some(a=>a.sealModel?.kind==='wisdom'||a.elementalShieldModel?.kind==='water'||a.effects.some(e=>e.kind==='health-to-resource'));const type=absorbing&&!healing&&!damaging?'aps':healing&&!damaging?'hps':manaReturning&&!damaging&&!healing?'manaPerSecond':'dps';const aps=r=>r.events.filter(e=>e.type==='absorb'&&e.actorId===actor).reduce((n,e)=>n+e.amount,0)/(r.durationMs/1000);
+ const metric=r=>{if(type==='aps')return aps(r);if(type==='manaPerSecond')return resourceThroughput(r,actor,'mana').perSecond.effectiveGain;const t=r.attribution.actors[actor].totals;return (type==='hps'?t.allyHealing:t.enemyDamage)/(r.durationMs/1000);};
+ const pet=prepared.scenario.petId;const petDps=r=>r.attribution.actors[pet].totals.enemyDamage/(r.durationMs/1000),playerDps=r=>r.attribution.actors[actor].totals.enemyDamage/(r.durationMs/1000);const stats=runIterations({seed,iterations,createEncounter:create,metrics:{[type]:metric,...(pet?{petDps,combinedDps:r=>playerDps(r)+petDps(r)}:{}),...(Object.hasOwn(prepared.scenario.pools,'mana')?{...(type==='manaPerSecond'?{}:{manaPerSecond:r=>resourceThroughput(r,actor,'mana').perSecond.effectiveGain}),manaOverflowPerSecond:r=>resourceThroughput(r,actor,'mana').perSecond.overflow,manaSpentPerSecond:r=>resourceThroughput(r,actor,'mana').perSecond.spent,netManaPerSecond:r=>resourceThroughput(r,actor,'mana').perSecond.net}:{}),...(healing&&damaging?{hps:r=>r.attribution.actors[actor].totals.allyHealing/(r.durationMs/1000)}:{}),...(absorbing&&type!=='aps'?{aps}:{} )}});
  return {kind:'reference-only',metric:type,rankRows:prepared.rankRows,limitations:prepared.limitations,statistics:stats.metrics[type],allStatistics:stats.metrics,example:report,exampleEvents:sample.events,liveVerified:false};
 }

@@ -27,3 +27,10 @@ export function encounterRates(result,actorId){
  return {encounterDps:d/seconds,encounterHps:h/seconds,actorGrossTps:(result.threat.generated[actorId]??0)/seconds};
 }
 export function pairedDifference(a,b){if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length||!a.length)throw new Error('Equal paired sample counts required');return summarizeSamples(a.map((x,i)=>finite(b[i],'B')-finite(x,'A')));}
+
+export function resourceThroughput(result,actorId,resource){
+ if(!Number.isFinite(result?.durationMs)||result.durationMs<=0||!Array.isArray(result.events)||!result.attribution?.actors?.[actorId]||typeof resource!=='string'||!resource)throw new Error('Explicit actor, resource and positive encounter duration required');
+ const totals={grossGain:0,effectiveGain:0,overflow:0,spent:0,net:0};
+ for(const e of result.events){if(e.type!=='resource-change'||e.actorId!==actorId||e.resource!==resource)continue;const d=finite(e.delta,'Resource delta'),o=finite(e.overflow??0,'Resource overflow');if(o<0||o>Math.max(0,d))throw new Error('Invalid resource overflow');if(d>0){totals.grossGain+=d;totals.overflow+=o;totals.effectiveGain+=d-o;}else totals.spent-=d;}
+ totals.net=totals.effectiveGain-totals.spent;const seconds=result.durationMs/1000;return {...totals,perSecond:Object.fromEntries(Object.entries(totals).map(([key,v])=>[key,v/seconds]))};
+}
