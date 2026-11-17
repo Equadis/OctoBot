@@ -22,3 +22,5 @@ The JSON contains build, exact gearById, learnedSpellIds, rankByAbility, policie
 No claim of full simulator completion or validated DPS.
 
 Warrior swings can now generate rage using explicit damage/speed/hand/critical/rounding policies. Incoming rage and single-outcome miss refunds accept explicit policies. Exact server coefficients are not assumed. The configured rotation template exposes rage inputs; the isolated benchmark remains a fixed starting-resource experiment.
+
+Timed casting proc research now consumes temporary buffs on a successful action start: Hot Streak (imported 2-rank, 5-stack version), Searing Light (60% mana discount), and Nightfall (instant guaranteed landed Shadow Bolt; duration explicitly supplied). Trigger eligibility comes from imported class talent descriptions, not older forum revisions; no live proc validation. Only compiled eligible trigger and consumer spells are included.

@@ -45,6 +45,7 @@ export class CombatEncounter{
   for(const r of rows){const a=this.#action(r.abilityId||r.ability);if(!a||a.name!==r.ability)throw new Error('Unsupported rotation ability: '+r.ability);if(!Array.isArray(r.conditions)||!['primary','cycle','ally','self','pet'].includes(r.target??'primary'))throw new Error('Invalid rotation row');}
  }
  #action(id){return this.#actions.get(id)||[...this.#actions.values()].find(a=>a.name===id);}
+ #effectiveAction(a){if(!a.castProc)return a;const p=a.castProc,buff=this.auras.active(this.#player,'buff').find(x=>x.id===p.id&&x.ownerId===this.#player);if(!buff)return a;if(!['instant','cast'].includes(a.kind))throw new Error('Cast proc cannot modify queued or channeled action');const castMs=p.instant?0:Math.max(0,a.castMs-p.castReductionMsPerStack*buff.stacks);return {...a,kind:castMs===0?'instant':'cast',castMs,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:c.delta*p.manaCostFactor}:c),procAura:buff,guaranteeHit:p.guaranteeHit};}
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
@@ -78,8 +79,8 @@ export class CombatEncounter{
   if(extra?.targets)state.targets=base.targets.map(t=>({...extra.targets.find(x=>x.id===t.id),...t}));
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
   if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));}
-  for(const a of this.#actions.values()){
-   const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)),...(a.requiresGcdReady?[this.resources.cooldowns.remaining('gcd')]:[]))/1000;
+  for(const original of this.#actions.values()){
+   const a=this.#effectiveAction(original);const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)),...(a.requiresGcdReady?[this.resources.cooldowns.remaining('gcd')]:[]))/1000;
    const available=resourceLedger(pool,a.costs).ok&&(a.kind!=='queued-melee'||this.#swings.has(a.swingId)&&!this.#queued.has(a.swingId))&&(!a.available||a.available(this,state)===true);
    cooldowns[a.name]=remaining;cooldowns[a.id]=remaining;actions[a.id]=actions[a.name]={kind:a.kind,ready:remaining===0,available};
   }
@@ -101,13 +102,13 @@ export class CombatEncounter{
    const result=evaluatePriority([row],context);if(result){chosen={a,targetId:result.targetId,state};break;}
   }
   if(!chosen){this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
-  const {a,targetId}=chosen;
+  const {targetId}=chosen,a=this.#effectiveAction(chosen.a);
   if(a.kind==='queued-melee'){
    this.#queued.set(a.swingId,{action:a,targetId});this.#record('attack-queued',{ability:a.name,targetId,swingId:a.swingId});this.#scheduleDecision(this.timeline.now+this.#cadence);return;
   }
   const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
-  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});this.#recordCosts(a,targetId);
-  if(a.kind==='instant'){a.resolve(this,targetId);this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
+  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});this.#recordCosts(a,targetId);if(a.procAura)this.auras.remove(a.procAura,'consumed');
+  if(a.kind==='instant'){a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true});this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
   const completeAt=this.timeline.now+a.castMs;
   if(a.kind==='channel'){
    const c={action:a,targetId,completeAt,tickets:[]};this.#cast=c;
@@ -129,7 +130,7 @@ export class CombatEncounter{
   }
   const ticket=this.timeline.schedule(completeAt,P.cast,()=>{
    this.#cast=null;
-   if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId);}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
+   if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true});}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
    this.#scheduleDecision(this.timeline.now);
   });this.#cast={ticket,action:a,targetId,completeAt};
  }

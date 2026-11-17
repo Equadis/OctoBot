@@ -58,7 +58,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
- enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[]};
+ enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
  if(build.classId==='warrior')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
  if(ranged){encounter.ammoCount=null;encounter.rangedAutoPolicy={...structuredClone(policies[selected.find(isRanged).abilityId]),autoCastPolicy:'skip-during-cast'};encounter.rangedAutoPolicy.rangedModel.weaponPolicy='actual-swing';}
  return {unsupported,rankChoices,config:{rankByAbility,policies,encounter,seed:42,iterations:build.planning.iterations}};

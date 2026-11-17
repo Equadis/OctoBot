@@ -1,3 +1,4 @@
+import {validateCastProc} from './combat-cast-procs.mjs';
 import {validateSwingRage,swingRage,validateIncomingRage,incomingRage} from './combat-rage-reference.mjs';
 import {CombatEncounter} from './combat-execution.mjs';
 import {expectedOutcome} from './combat-math.mjs';
@@ -82,17 +83,18 @@ function validateEffects(effects,ctx,depth=0){
  }
 }
 function gainRage(e,actor,source,delta){if(delta<=0)return;const q=e.resources.change([{resource:'rage',delta}]);if(!q.ok)throw new Error('Rage generation failed');e.recordMechanic('resource-change',{actorId:actor,source,resource:'rage',delta,overflow:q.overflow.rage??0});}
-function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,classState={}){
+function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,classState={},castContext={}){
  let last=null;
  const resolve=(x,amountRange)=>{
-  const hit=sampleAttack({...amountRange,outcomes:x.outcomes,mitigation:x.mitigation,flatReduction:x.flatReduction,random:e.random});
+  let outcomes=x.outcomes;if(castContext.guaranteeHit===true&&x.kind==='damage'){const landed=outcomes.filter(o=>o.landed),sum=landed.reduce((n,o)=>n+o.probability,0);if(sum<=0)throw new Error('Guaranteed cast has no landed outcome');outcomes=landed.map(o=>({...o,probability:o.probability/sum}));}
+  const hit=sampleAttack({...amountRange,outcomes,mitigation:x.mitigation,flatReduction:x.flatReduction,random:e.random});
   e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:x.school??null,...hit});
   // A miss does not generate hit-dependent flat threat; landed zero damage can.
   if(!hit.landed)return hit;
   let threat=x.threat===null?null:{actorId:actor,...x.threat};const isHeal=x.kind.endsWith('heal');
   if(threat&&isHeal){const alive=enemyIds.filter(id=>e.unit(id).alive);threat=alive.length?{...threat,enemyIds:alive}:null;}
   const value=hit.raw;
-  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null,leech:x.leech??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));}
+  if(isHeal)e.heal({actorId:actor,targetId:target,source,value,threat});else {const damage=e.damage({actorId:actor,targetId:target,source,value,threat,school:x.school??null,leech:x.leech??null});if(x.swingRage&&e.unit(target).alive)gainRage(e,actor,source+' (rage)',swingRage(x.swingRage,hit,damage));if(depth===0&&hit.raw>0&&!damage.ignored)for(const p of castContext.triggers??[]){if(!p.triggerKinds.includes(x.kind)||p.trigger==='critical'&&!hit.critical)continue;const roll=attemptProc(e.resources.cooldowns,{id:'cast-proc:'+actor+':'+p.id,chance:p.chance,internalCooldownMs:0},e.random);if(roll.triggered){e.recordMechanic('proc',{actorId:actor,targetId:target,source,procId:p.id});e.auras.apply({id:p.id,name:p.name,targetId:actor,ownerId:actor,kind:'buff',durationMs:p.durationMs,maxStacks:p.maxStacks,stacks:1,stackPolicy:'add',refreshPolicy:'refresh',modifiers:[]});}}}
   return hit;
  };
  for(const [index,x] of effects.entries()){
@@ -141,6 +143,7 @@ export function createExplicitClassEncounter(input){
  if(sc.comboPoints&&!['rogue','druid'].includes(classId))throw new Error('Combo bank unsupported for class');
  if(sc.petId&&!['hunter','warlock'].includes(classId))throw new Error('Companion engine unsupported for class');
  const actors=new Set([sc.playerId,...(sc.petId?[sc.petId]:[])]),statsFor=actor=>{const s=sc.stats[actor];if(!s)throw new Error('Explicit actor stats missing: '+actor);return s;};
+ const castProcs=sc.castProcs??[];if(!Array.isArray(castProcs))throw new Error('Explicit cast procs array required');const abilityIds=new Set(sc.actions.map(a=>a.abilityId));for(const p of castProcs)validateCastProc(p,abilityIds);if(new Set(castProcs.map(p=>p.id)).size!==castProcs.length||new Set(castProcs.map(p=>p.consumerId)).size!==castProcs.length)throw new Error('Duplicate cast proc or consumer');
  const classState={...sc.classContext};const contextFor=actor=>({stats:statsFor(actor),pools:sc.pools,comboEnabled:!!sc.comboPoints,classState,abilityIds:new Set(sc.actions.map(a=>a.abilityId))});
  const actions=sc.actions.map(a=>{
   const ability=profile.abilityRegistry[a.abilityId];if(!ability)throw new Error('Unregistered class ability '+a.abilityId);
@@ -166,17 +169,18 @@ export function createExplicitClassEncounter(input){
   if(a.requiredContext!==null&&(!a.requiredContext||typeof a.requiredContext!=='object'||Array.isArray(a.requiredContext)))throw new Error('Explicit context restriction required');
   if(a.requiredContext)for(const [k,v] of Object.entries(a.requiredContext))if(!has(sc.classContext,k))throw new Error('Required class context missing: '+k);
   if(a.multiTarget){int(a.multiTarget.cap,'multi-target cap',1);finite(a.multiTarget.falloff,'multi-target falloff',0);if(a.multiTarget.falloff>1)throw new Error('Invalid falloff');choose(a.multiTarget.policy,['ordered-nearby'],'multi-target policy');if(!sc.nearbyTargets||typeof sc.nearbyTargets!=='object')throw new Error('Explicit nearby target ordering required');}
-  const channelGate=new Map();const execute=(e,t,effects,tickIndex)=>{const eligible=effects.filter(x=>{if(!x.channelApplicationOutcomes)return true;const k=t+'|'+effects.indexOf(x);if(tickIndex===1){const v=sampleAttack({min:0,max:0,outcomes:x.channelApplicationOutcomes,random:e.random});channelGate.set(k,v.landed);e.recordMechanic('attack-result',{actorId:a.actorId,targetId:t,source:ability.name+' (channel apply)',school:x.school??null,...v});}return channelGate.get(k)===true;});if(eligible.length)executeEffects(e,a.actorId,t,ability.name,eligible,ctx.stats,sc.targetIds,0,classState);};
-  const apply=(e,t,tickIndex)=>{
-   if(!a.multiTarget)return execute(e,t,a.effects,tickIndex);
+  const castProc=castProcs.find(p=>p.consumerId===a.abilityId);if(castProc&&!['instant','cast'].includes(a.kind))throw new Error('Cast proc requires non-channel spell');const triggers=castProcs.filter(p=>p.triggerAbilityIds.includes(a.abilityId));
+  const channelGate=new Map();const execute=(e,t,effects,tickIndex,castContext)=>{const eligible=effects.filter(x=>{if(!x.channelApplicationOutcomes)return true;const k=t+'|'+effects.indexOf(x);if(tickIndex===1){const v=sampleAttack({min:0,max:0,outcomes:x.channelApplicationOutcomes,random:e.random});channelGate.set(k,v.landed);e.recordMechanic('attack-result',{actorId:a.actorId,targetId:t,source:ability.name+' (channel apply)',school:x.school??null,...v});}return channelGate.get(k)===true;});if(eligible.length)executeEffects(e,a.actorId,t,ability.name,eligible,ctx.stats,sc.targetIds,0,classState,{...castContext,triggers});};
+  const apply=(e,t,tickIndex,castContext)=>{
+   if(!a.multiTarget)return execute(e,t,a.effects,tickIndex,castContext);
    const group=a.targets.includes('enemy')?sc.targetIds:sc.allyIds;const list=sc.nearbyTargets[t];
    if(!Array.isArray(list)||list.some(x=>!group.includes(x)||x===t)||new Set(list).size!==list.length)throw new Error('Invalid explicit nearby targets for '+t);
    const targets=[t,...list.filter(x=>e.unit(x).alive)].slice(0,a.multiTarget.cap);
-   for(const [i,target] of targets.entries()){if(!e.unit(target).alive)continue;const effects=a.effects.map(x=>x.formula?{...x,formula:{...x.formula,multiplier:x.formula.multiplier*Math.pow(a.multiTarget.falloff,i)}}:x);execute(e,target,effects,tickIndex);}
+   for(const [i,target] of targets.entries()){if(!e.unit(target).alive)continue;const effects=a.effects.map(x=>x.formula?{...x,formula:{...x.formula,multiplier:x.formula.multiplier*Math.pow(a.multiTarget.falloff,i)}}:x);execute(e,target,effects,tickIndex,castContext);}
   };
   const cooldowns=[...(gcdMs?[{id:'gcd',duration:gcdMs}]:[]),...(cooldownMs?[{id:a.abilityId,duration:cooldownMs}]:[])];
   if(a.sharedCooldown!==null){id(a.sharedCooldown?.id,'shared cooldown id');int(a.sharedCooldown?.durationMs,'shared cooldown duration',1);cooldowns.push({id:'shared:'+a.sharedCooldown.id,duration:a.sharedCooldown.durationMs});}
-  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,requiresGcdReady:a.requiresGcdReady??(gcdMs>0),costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired)&&(a.targetHealthMaxPct===undefined||e.unit(t).healthPercent<=a.targetHealthMaxPct)&&(!a.blockingAura||!(e.auras.frame(t,'debuff')[a.blockingAura]?.remaining>0))&&(!a.requiresOwnedAura||(e.auras.frame(t,'debuff',a.actorId)[a.requiresOwnedAura.name]?.remaining??0)*1000>=a.requiresOwnedAura.minRemainingMs)&&a.effects.filter(x=>x.kind==='health-to-resource').every(x=>e.unit(a.actorId).health>range(e,t,a.actorId,x.formula,ctx.stats).max)&&(!a.refreshGate||(e.auras.frame(a.refreshGate.onActor?a.actorId:t,a.refreshGate.kind,a.actorId)[a.refreshGate.name]?.remaining??0)*1000<=a.refreshGate.remainingMs);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:apply}),rank,spellId};
+  return {id:a.abilityId,name:ability.name,kind:a.kind,castMs,...(castProc?{castProc}:{}),requiresGcdReady:a.requiresGcdReady??(gcdMs>0),costs:a.costs.map(x=>({resource:x.resource,delta:-x.amount})),cooldowns,targets:a.targets,available:()=>!a.requiredContext||Object.entries(a.requiredContext).every(([k,v])=>classState[k]===v),availableForTarget:(e,t)=>{const geo=geometry(sc,a.actorId,t);return geo.distance>=min&&geo.distance<=max&&(a.position===null||geo.position===a.position)&&(a.comboRequired===null||e.comboPoints.points(t)>=a.comboRequired)&&(a.targetHealthMaxPct===undefined||e.unit(t).healthPercent<=a.targetHealthMaxPct)&&(!a.blockingAura||!(e.auras.frame(t,'debuff')[a.blockingAura]?.remaining>0))&&(!a.requiresOwnedAura||(e.auras.frame(t,'debuff',a.actorId)[a.requiresOwnedAura.name]?.remaining??0)*1000>=a.requiresOwnedAura.minRemainingMs)&&a.effects.filter(x=>x.kind==='health-to-resource').every(x=>e.unit(a.actorId).health>range(e,t,a.actorId,x.formula,ctx.stats).max)&&(!a.refreshGate||(e.auras.frame(a.refreshGate.onActor?a.actorId:t,a.refreshGate.kind,a.actorId)[a.refreshGate.name]?.remaining??0)*1000<=a.refreshGate.remainingMs);},...(a.kind==='channel'?{tickMs:a.tickMs,tickAtEnd:a.tickAtEnd,onTick:apply}:a.kind==='queued-melee'?{swingId:a.swingId,resolve:apply}:{resolve:(e,t,context)=>apply(e,t,undefined,context)}),rank,spellId};
  });
  const knownAbilities=Object.fromEntries(sc.actions.map(a=>[profile.abilityRegistry[a.abilityId].name,a.rank]));
  const e=new CombatEncounter({durationMs:sc.durationMs,decisionIntervalMs:sc.decisionIntervalMs,seed:sc.seed,pools:sc.pools,units:sc.units,playerId:sc.playerId,primaryId:sc.primaryId,targetIds:sc.targetIds,allyIds:sc.allyIds,petId:sc.petId??null,comboPoints:sc.comboPoints??null,rows:sc.rows,actions,manageAuras:true,context:()=>({...classState,knownAbilities,abilityRanks:knownAbilities})});
