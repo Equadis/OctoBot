@@ -24,7 +24,7 @@ export function patchCollector(input){
     if(src.includes(line))continue;
     if(src.split(anchor).length!==2)throw Error("Expected exactly one collector anchor: "+anchor);
     const indent=src.slice(src.lastIndexOf("\n",src.indexOf(anchor)-1)+1,src.indexOf(anchor));
-    src=src.replace(anchor,position==="before"?line+"\n"+indent+anchor:anchor+"\n"+indent+line);
+    src=src.replace(anchor,position==="before"?line+"\n"+indent+anchor:anchor+"\n"+indent+(anchor.endsWith("{")?"    ":"")+line);
   }
   return src;
 }
