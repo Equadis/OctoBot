@@ -60,3 +60,5 @@ test('additional long-duration stat effects and scoped effects preserve exact to
  assert.equal(item(51932).effectAudit.status,'scoped');assert.deepEqual(stats(51932),{});
  assert.equal(item(23194).effectAudit.status,'unquantified');assert.equal(item(5996).effectAudit.status,'utility');
 });
+
+test('ambiguous speed unit remains unquantified instead of inventing a percentage',()=>{assert.equal(item(42162).effectAudit.status,'unquantified');assert.deepEqual(stats(42162),{});});

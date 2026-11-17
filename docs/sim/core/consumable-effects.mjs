@@ -25,7 +25,7 @@ export function consumableEffectAudit(item){
  if(duration<600)return result('timed',{},duration,'Requires timed activation; no assumed uptime.');
  const body=t.slice(0,d.index),stats={};let m;
  if(/^(?:Grants detect lesser invisibility|Allows the Imbiber to breathe water|Lets you walk on water|Shows the location of all nearby (?:undead|demons) on the minimap|Slightly increases your stealth detection|Disguise yourself as one of the Gordok ogres.*)$/i.test(body))return result('utility',{},duration,'Non-numeric utility; no permanent combat bonus.');
- if(/^(?:Food: Stamina and Spirit|Increases Stamina)$/i.test(body))return result('unquantified',{},duration,'Tooltip omits the numeric amount.');
+ if(/^(?:Food: Stamina and Spirit|Increases Stamina|Food: Attack and Casting Speed by \d+)$/i.test(body))return result('unquantified',{},duration,'Tooltip omits the numeric amount or unit.');
  const match=s=>body.match(rx(s));
  if((m=match("(?:Increases? (?:(?:your|the player\\x27s|the target\\x27s) )?|Food: )"+n+" (Strength|Agility|Stamina|Intellect|Spirit)(?: and (Strength|Agility|Stamina|Intellect|Spirit))?"))){add(stats,attrs[m[2].toLowerCase()],m[1]);if(m[3])add(stats,attrs[m[3].toLowerCase()],m[1]);}
  else if((m=match("(?:Increases? (?:(?:your|the player\\x27s|the target\\x27s) )?|Food: )(?:(Strength|Agility|Stamina|Intellect|Spirit|Armor|Armour)(?: and (Strength|Agility|Stamina|Intellect|Spirit))?) by "+n))){add(stats,attrs[m[1].toLowerCase()],m[3]);if(m[2])add(stats,attrs[m[2].toLowerCase()],m[3]);}
