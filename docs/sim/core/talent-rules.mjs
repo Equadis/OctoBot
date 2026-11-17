@@ -47,6 +47,15 @@ export const TALENT_RULES={
       "when": {
         "aspect": "Aspect of the Monkey"
       }
+    },
+    {
+      "kind": "scoped",
+      "scope": "Aspect of the Wolf",
+      "stat": "meleeDamageHealingPct",
+      "param": 1,
+      "when": {
+        "aspect": "Aspect of the Wolf"
+      }
     }
   ],
   "377": [
@@ -183,6 +192,11 @@ export const TALENT_RULES={
       "kind": "pet",
       "stat": "spellPowerFromOwnerRangedPct",
       "param": 1
+    },
+    {
+      "kind": "pet",
+      "stat": "ownerAndPetHealthRegenPctPer5s",
+      "param": 2
     }
   ],
   "390": [
@@ -202,13 +216,29 @@ export const TALENT_RULES={
       "kind": "scoped",
       "scope": "Beast/Giant/Dragonkin/Humanoid targets",
       "stat": "damagePct",
-      "param": 0
+      "param": 0,
+      "when": {
+        "targetCreature": [
+          "Humanoid",
+          "Giant",
+          "Beast",
+          "Dragonkin"
+        ]
+      }
     },
     {
       "kind": "scoped",
       "scope": "These targets",
       "stat": "criticalDamagePct",
-      "param": 1
+      "param": 1,
+      "when": {
+        "targetCreature": [
+          "Humanoid",
+          "Giant",
+          "Beast",
+          "Dragonkin"
+        ]
+      }
     }
   ],
   "393": [
@@ -229,6 +259,11 @@ export const TALENT_RULES={
       "kind": "special",
       "stat": "meleeHastePct",
       "param": 0
+    },
+    {
+      "kind": "ranged",
+      "stat": "hastePct",
+      "param": 0
     }
   ],
   "395": [
@@ -244,7 +279,7 @@ export const TALENT_RULES={
       "param": 0
     },
     {
-      "kind": "spell",
+      "kind": "scoped",
       "scope": [
         "Lacerate",
         "Raptor Strike",
@@ -311,8 +346,8 @@ export const TALENT_RULES={
       "param": 0
     },
     {
-      "kind": "global",
-      "stat": "hit",
+      "kind": "special",
+      "stat": "dualWieldHit",
       "param": 1,
       "when": {
         "dualWield": true
@@ -321,6 +356,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Movement-impairing resistance bonus is not a displayed combat stat"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Movement impairing effects",
+      "stat": "resistChancePct",
+      "param": 2
     }
   ],
   "405": [
@@ -338,15 +379,16 @@ export const TALENT_RULES={
       "param": 0
     },
     {
-      "kind": "ranged",
-      "stat": "crit",
-      "param": 0
-    },
-    {
       "kind": "scoped",
       "scope": "Melee attacks",
       "stat": "criticalDamagePct",
       "param": 1
+    },
+    {
+      "kind": "global",
+      "stat": "spellCrit",
+      "param": 0,
+      "note": "Published all-attacks critical strike increase; spell classification remains a planning estimate"
     }
   ],
   "407": [
