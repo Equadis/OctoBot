@@ -18,7 +18,7 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:1fr}.planner-view .left-column{display:contents}.planner-view .right-column{display:contents}.planner-view #equipment{order:0}.planner-view #talents{order:1}.planner-view #buffs{order:2}.planner-view #rotation{order:3}.planner-view #build-settings{order:4}.planner-view #simulation{order:5}.planner-view #combat-log{order:6}.planner-view .talent-trees{grid-template-columns:repeat(3,minmax(0,1fr))}.planner-view .talent-node{width:38px;height:38px}.planner-view .talent-icon{width:34px;height:34px}.planner-view .talent-grid{gap:20px 6px}.planner-view .paperdoll{grid-template-columns:1fr minmax(120px,1fr) 1fr}}
 @media(max-width:560px){.planner-view .talent-trees{grid-template-columns:1fr}.planner-view .talent-tree{border:1px solid #344253;padding:16px}.planner-view .talent-node{width:46px;height:46px}.planner-view .talent-icon{width:42px;height:42px}.simulation-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.item-filters{grid-template-columns:1fr 100px}.item-filters>button{grid-column:1/-1}.item-row{gap:8px;grid-template-columns:30px minmax(0,1fr) auto}.item-row a{font-size:12px}.planner-view .paperdoll{grid-template-columns:1fr minmax(100px,.9fr) 1fr}.planner-view .slot-name{font-size:8px}.planner-view .talent-detail{flex-wrap:wrap}}
 #item-dialog[open]{display:flex;flex-direction:column;height:min(780px,90vh)}#item-dialog .item-results{flex:1;min-height:120px;max-height:none}#item-dialog>p{flex:none;margin:8px 0}#item-dialog .card-heading{flex:none}.equipment-invalid .item-name{color:#e3a5a5!important}
-.character-controls{display:grid;grid-template-columns:132px 58px;gap:14px;align-items:end}.character-controls input[type=number]{padding-left:8px;padding-right:4px;height:36px;min-height:36px;box-sizing:border-box}.character-name-field{margin-bottom:10px}.character-name-field input{height:36px;box-sizing:border-box}
+.character-controls{display:grid;grid-template-columns:132px minmax(0,1fr) 58px;gap:14px;align-items:end}.character-controls input[type=number]{padding-left:8px;padding-right:4px;height:36px;min-height:36px;box-sizing:border-box}.character-name-field{margin-bottom:10px}.character-name-field input{height:36px;box-sizing:border-box}
 /* Race dropdown: portraits to the left of each race, styled like the Dressing Room's background picker */
 .rp-native{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.rp-picker{position:relative}
 .rp-button{display:flex;align-items:center;gap:8px;width:100%;height:36px;box-sizing:border-box;padding:0 10px;font-size:13px;text-align:left;cursor:pointer;background:#182333;color:#dce5ee;border:1px solid var(--line);border-radius:4px}
@@ -89,7 +89,7 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view .character-summary>strong,.planner-view #character-description{text-align:center;width:100%}
 .planner-view #gear-stats{width:100%;min-width:0;display:block;margin-top:2px}
 .planner-view .character-stat-group{margin:0 0 10px}
-.planner-view .character-stat-group h3{font-size:10px;line-height:1.4;color:var(--gold);margin:0 0 5px;padding-bottom:3px;border-bottom:1px solid #2c3b4f;text-align:left}
+.planner-view .character-stat-group>.character-stat-toggle{display:block;list-style:none;cursor:pointer;user-select:none;font-size:10px;line-height:1.4;font-weight:700;color:var(--gold);margin:0 0 5px;padding-bottom:3px;border-bottom:1px solid #2c3b4f;text-align:left}
 .planner-view .gear-stat{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:9px;line-height:1.65;white-space:nowrap}
 .planner-view .gear-stat>span{color:#92a8c0;min-width:0}
 .planner-view .gear-stat>strong{color:#e1e9f3;font-size:9px;font-weight:400;text-align:right;flex:none}
@@ -199,8 +199,8 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
  .planner-view .character-summary{grid-column:1/-1;grid-row:2}
 }
 
-/* Single two-column layout matching the width of the page header line on the other tabs */
-.planner-view .planner-grid{grid-template-columns:minmax(340px,.9fr) minmax(0,1.5fr);width:100%;margin-left:0;margin-right:0;gap:18px;align-items:start}
+/* Character and Buffs/ Debuffs use a wider left column; preserve existing control and icon dimensions. */
+.planner-view .planner-grid{grid-template-columns:minmax(400px,1.15fr) minmax(0,1.5fr);width:100%;margin-left:0;margin-right:0;gap:18px;align-items:start}
 .planner-view .left-column,.planner-view .right-column{min-width:0}
 .planner-view .left-column>section.card+section.card{margin-top:0}
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:minmax(0,1fr)}}
@@ -209,3 +209,16 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 
 /* Left rail: just outside the content column on wide screens (16px clear of the page edge of the content), 10px from the window edge otherwise */
 .planner-view .actions{left:max(10px,calc((100vw - 1180px)/2 - 148px))}
+
+/* Independent, accessible disclosure arrows for each character stat group. */
+.planner-view .character-stat-group>.character-stat-toggle::-webkit-details-marker{display:none}
+.planner-view .character-stat-group>.character-stat-toggle::before{content:'▸';display:inline-block;margin-right:5px;color:#9db1c9;transition:transform .15s ease}
+.planner-view .character-stat-group[open]>.character-stat-toggle::before{transform:rotate(90deg)}
+.planner-view .character-stat-group>.character-stat-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:560px){
+ /* At phone widths keep readable controls, with the name directly below the Race/Level pair. */
+ .planner-view .character-controls{grid-template-columns:minmax(0,1fr) 68px}
+ .planner-view .character-controls>.character-name-field{grid-column:1/-1;grid-row:2}
+ .planner-view .character-controls>.field:last-child{grid-column:2;grid-row:1}
+}
+@media(prefers-reduced-motion:reduce){.planner-view .character-stat-group>.character-stat-toggle::before{transition:none}}
