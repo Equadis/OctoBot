@@ -227,6 +227,20 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Aura self-application/party eligibility not independently validated"
+    },
+    {
+      "kind": "special",
+      "stat": "feralPackCrit",
+      "values": [
+        3
+      ],
+      "when": {
+        "form": [
+          "Cat",
+          "Bear"
+        ]
+      },
+      "note": "Self aura shown once; explicitly selected Leader of the Pack buff is not stacked again"
     }
   ],
   "285": [
@@ -441,6 +455,12 @@ export const TALENT_RULES={
       "scope": "All physical attacks",
       "stat": "damagePct",
       "param": 0
+    },
+    {
+      "kind": "special",
+      "stat": "weaponDamagePct",
+      "param": 0,
+      "note": "Applies to the displayed equipped weapon contribution, not verified feral auto-attack damage"
     }
   ],
   "308": [
