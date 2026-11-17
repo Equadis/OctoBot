@@ -216,3 +216,20 @@ test("partial and failed scans do not create first-seen records",{skip},async()=
  await scan(e,"ah_after_fail","2026-11-12",[item]);
  assert.equal((await q(e,"")).json.items[0].latest_listing_seen_at,"2026-11-12T10:30:00.000Z");
 });
+
+test("expiry diagnostics compare the same auction across two completed snapshots",{skip},async()=>{
+ const e=env(),older=new Date(Date.now()-600000).toISOString(),newer=new Date().toISOString();
+ const before=L(1003,{auction_id:100,time_left_ms:7200000,captured_at:older});
+ const after={...before,time_left_ms:6600000,captured_at:newer};
+ await scan(e,"ah_expiry_before","2026-11-10",[before]);
+ await scan(e,"ah_expiry_after","2026-11-11",[after,L(1004,{auction_id:101,captured_at:newer})]);
+ const r=await get(e,"expiry-diagnostics");
+ assert.equal(r.status,200);assert.equal(r.json.sample_size,1);
+ assert.equal(r.json.median_decrease_ms,600000);assert.ok(r.json.median_absolute_drift_ms<1000);
+ assert.equal(r.json.within_2s,1);
+});
+test("elapsed countdowns sort last, in either direction",{skip},async()=>{
+ const e=env(),at=new Date(Date.now()-3*HOUR).toISOString();
+ await scan(e,"ah_time_sort_1","2026-11-10",[L(1003,{time_left_ms:HOUR,captured_at:at}),L(1004,{time_left_ms:4*HOUR,captured_at:at}),L(1006,{time_left_ms:null,captured_at:at})]);
+ for(const dir of ["asc","desc"])assert.equal(ids(await q(e,"sort=time_left&dir="+dir))[0],"1004");
+});
