@@ -1,8 +1,8 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
-import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors,equipmentListingWithDetail} from './core/items.mjs?v=20261117-item-audit2';
-import {SLOTS} from './core/builds.mjs?v=20261117-item-audit2';
+import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors,equipmentListingWithDetail} from './core/items.mjs?v=20261117-item-audit3';
+import {SLOTS} from './core/builds.mjs?v=20261117-item-audit3';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-item-audit2';
+import {SORT_OPTIONS,enchantsForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-item-audit3';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{

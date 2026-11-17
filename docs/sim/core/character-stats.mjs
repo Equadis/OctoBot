@@ -2,9 +2,9 @@ import {racialPassives,validRace} from './class-rules.mjs?v=20261112-audit1';
 import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261112-consumes1';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261112-stats1';
-import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit2';
-import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit2';
-import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit2';
+import {ENCHANTS,validEnchant} from './equipment-options.mjs?v=20261117-item-audit3';
+import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit3';
+import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit3';
 // Original planner calculations. Vanilla coefficients are a reference baseline,
 // not an assertion that OctoWoW implements the same rules. See SOURCES.md.
 const COEFFICIENTS={
