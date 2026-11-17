@@ -7,7 +7,7 @@ const eq=load('items/equipment.json'),details={...load('items/details-supplement
 const item=id=>({...eq.find(x=>x.id===id),...details[id]});
 const stat=(raw,expected)=>assert.deepEqual(classifyEquipmentEffect(raw),{status:'passive',stats:expected});
 test('real equipment records: all items have finite, explicitly classified effects; no Use or Chance on hit contributes',()=>{
- let lines=0;for(const listing of eq){if(!details[listing.id])continue;const a=equipmentItemAudit(item(listing.id));for(const e of a.effects){lines++;assert.ok(['passive','scoped','conditional','unmapped','event','empty'].includes(e.status));assert.ok(Object.values(e.stats).every(Number.isFinite));if(/^(Use:|Chance on hit:)/i.test(e.raw)){assert.equal(e.status,'event');assert.deepEqual(e.stats,{});}}assert.ok(Object.values(a.stats).every(Number.isFinite));}assert.ok(lines>5000);
+ let lines=0;for(const listing of eq){if(!details[listing.id])continue;const a=equipmentItemAudit(item(listing.id));for(const e of a.effects){lines++;assert.ok(['passive','scoped','conditional','utility','unmapped','event','empty'].includes(e.status));assert.ok(Object.values(e.stats).every(Number.isFinite));if(/^(Use:|Chance on hit:)/i.test(e.raw)){assert.equal(e.status,'event');assert.deepEqual(e.stats,{});}}assert.ok(Object.values(a.stats).every(Number.isFinite));}assert.ok(lines>5000);
 });
 test('reference vectors cover healing-only, damage schools, ranged-only, negative attributes, penetration and weapon skills',()=>{
  stat('Equip: Increases healing done by spells and effects by up to 24.',{healingPower:24});
@@ -107,3 +107,39 @@ test('event gates and pet context do not manufacture permanent bonuses',()=>{
 });
 
 test('single pet damage bonus requires an explicitly selected pet',()=>{const e=classifyEquipmentEffect('Equip: Increases damage dealt by your pet by 4%.');assert.equal(e.status,'scoped');assert.equal(combineScopedEquipment([e],{classOptions:{pet:'None'}})[0].active,false);const p=combineScopedEquipment([e],{classOptions:{pet:'Cat'}})[0];assert.equal(p.active,true);assert.equal(p.amount,4);});
+
+test('compound item bonuses split static and scoped contributions without losing either',()=>{
+ const a=equipmentItemAudit(item(33632));
+ assert.equal(a.stats.spellCrit,1);
+ const scoped=combineScopedEquipment(a.effects);
+ const dot=applyScopedEquipment(scoped,{name:'Corruption',tags:['Shadow periodic damage']},{damage:100});
+ assert.equal(dot.damage,101);
+ assert.equal(applyScopedEquipment(scoped,{name:'Shadow Bolt',tags:['Shadow spells']},{damage:100}).damage,100);
+});
+test('item form gates distinguish Moonkin from feral-only gear',()=>{
+ const feral={effects:['Equip: +140 Attack Power in Cat, Bear, and Dire Bear forms only.']};
+ const both={effects:['Equip: +28 Attack Power in Cat, Bear, Dire Bear, and Moonkin forms only.']};
+ for(const form of ['Cat','Bear','Moonkin','Humanoid']){
+  const b={classId:'druid',classOptions:{form}};
+  assert.equal(equipmentItemAudit(feral,b).stats.ap,['Cat','Bear'].includes(form)?140:undefined);
+  assert.equal(equipmentItemAudit(both,b).stats.ap,form==='Humanoid'?undefined:28);
+ }
+});
+test('compound Mend Pet and later-target Chain Heal effects apply to exact scope only',()=>{
+ const effects=['Increases the range of your Mend Pet spell by 50% and the effect by 10%. Also reduces the cost by 30%.','Increases the amount healed by Chain Heal to targets beyond the first by 30%.'].map(classifyEquipmentEffect);
+ const a=combineScopedEquipment(effects);const pet=applyScopedEquipment(a,'Mend Pet',{rangeYards:20,healing:100,manaCost:100});
+ assert.equal(pet.rangeYards,30);assert.ok(Math.abs(pet.healing-110)<1e-8);assert.equal(pet.manaCost,70);
+ assert.equal(applyScopedEquipment(a,'Chain Heal',{healing:100}).healing,100);
+ assert.equal(applyScopedEquipment(a,'Chain Heal (subsequent targets)',{healing:100}).healing,130);
+});
+test('shield, movement and outdoor context is explicit',()=>{
+ const effects=['Water Shield grants an additional 8 mana per 5 sec while active. In addition, mana restored when Water Shield is triggered by attacks is increased by 10.','Increases your movement speed by 15% while in Bear, Cat, or Travel Form. Only active outdoors.','Increases damage and healing done by magical spells and effects by up to 40 while moving.'].map(classifyEquipmentEffect);
+ const inactive=combineScopedEquipment(effects,{classOptions:{form:'Cat',outdoors:'No',moving:'No',shield:'None'}});
+ assert.equal(inactive.length,5);assert.ok(inactive.every(x=>!x.active));
+ const active=combineScopedEquipment(effects,{classOptions:{form:'Cat',outdoors:'Yes',moving:'Yes',shield:'Water Shield'}});
+ assert.ok(active.every(x=>x.active));
+});
+test('unquantified utility and combat triggers cannot enter the permanent character stats',()=>{
+ for(const raw of ['Equip: Run speed increased slightly.','Equip: Allows underwater breathing.','Equip: Immune to Disarm.'])assert.equal(classifyEquipmentEffect(raw).status,'utility');
+ for(const raw of ['Equip: Chance to discharge electricity causing 100 to 151 Nature damage to your target.','Your Greater Heals now have a heal over time component equivalent to a rank 5 Renew.'])assert.equal(classifyEquipmentEffect(raw).status,'event');
+});
