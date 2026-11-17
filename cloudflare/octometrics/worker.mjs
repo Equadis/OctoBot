@@ -255,7 +255,7 @@ export default {
   async scheduled(_event,env){
     // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
-    // Preserve legacy lifecycle evidence until the operator has materialised it. Ordinary recent snapshots can expire.
+    // Conservatively retain legacy lifecycle evidence (even after manual backfill); ordinary recent snapshots can expire.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='raid_sessions' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days') AND id NOT IN (SELECT id FROM (SELECT id,ROW_NUMBER() OVER (PARTITION BY realm,json_extract(payload_json,'$.zone') ORDER BY json_extract(payload_json,'$.seq') DESC,id DESC) AS rn FROM metric_events WHERE type='raid_sessions') WHERE rn=1) AND NOT EXISTS (SELECT 1 FROM json_each(metric_events.payload_json,'$.sessions') AS s WHERE (json_extract(s.value,'$.status')='ended' AND json_extract(s.value,'$.confirmedAt') IS NULL) OR (json_extract(s.value,'$.status')!='ended' AND json_extract(s.value,'$.resumed')=1 AND json_extract(s.value,'$.resumedAt') IS NULL))").run();
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();

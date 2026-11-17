@@ -126,7 +126,8 @@ export function snapshotHistoryRevisions(rows,zone,now=Date.now()){
       const key=JSON.stringify([s.key,s.formedAt]),old=state.get(key);
       const kind=s.status==='ended'?'end':'resume';
       if(kind==='resume'&&!s.resumed&&old?.kind!=='end'){
-        state.set(key,{kind:'active'});continue;
+        if(old?.kind!=='resume')state.set(key,{kind:'active'});
+        continue;
       }
       // A fresh active sighting after an observed end is a retraction even if a legacy
       // publisher omitted the resumed flag. Without a prior end, require that flag.
@@ -140,7 +141,8 @@ export function snapshotHistoryRevisions(rows,zone,now=Date.now()){
         const wasExact=kind==='end'?prev.confirmedAt:prev.resumedAt;
         if(!exact||wasExact)observed=prior.observed_at;
       }
-      const session=kind==='resume'?{...s,resumed:true}:s;
+      const earlier=prior?JSON.parse(prior.payload_json).session:null;
+      const session=kind==='resume'?{...s,resumed:true,...(!s.resumedAt&&earlier?.resumedAt?{resumedAt:earlier.resumedAt}:{})}:{...s,...(!s.confirmedAt&&earlier?.confirmedAt?{confirmedAt:earlier.confirmedAt}:{})};
       const eventId=['history-v1',zone,encodeURIComponent(s.key),encodeURIComponent(s.formedAt),kind,encodeURIComponent(boundary)].join('|');
       const payload={schema:SCHEMA,zone,eventId,session,historyBackfill:true,...(kind==='end'?{durationMs:Date.parse(s.endedAt)-Date.parse(s.formedAt)}:{})};
       // Keep the latest classification but the first observed confirmation.

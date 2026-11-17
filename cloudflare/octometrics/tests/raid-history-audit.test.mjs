@@ -47,3 +47,22 @@ test('historical snapshot retraction survives even after current snapshot forget
   assert.equal(revisions.length,2);
   assert.deepEqual(endedEvents([],e.zone,{payload:{sessions:[]},observedAt:iso(base+5*MIN)},revisions),[]);
 });
+
+test('generated SQL can be applied twice without changing raw records',async()=>{
+  const {DatabaseSync}=await import('node:sqlite');
+  const {buildHistoryBackfillSql}=await import('../audit-raid-history.mjs');
+  const r=rebase('onyxia-back-to-back',MIN),e=r.events.find(x=>x.type==='raid_session_ended');
+  const s={...e.session};delete s.confirmedAt;
+  const row={type:'raid_sessions',realm:e.realm,observed_at:e.time,payload_json:JSON.stringify({schema:1,zone:e.zone,seq:1,sessions:[s]})};
+  const db=new DatabaseSync(':memory:');
+  try{
+    db.exec("CREATE TABLE metric_events(id INTEGER PRIMARY KEY,type TEXT,realm TEXT,account TEXT,role TEXT,observed_at TEXT,payload_json TEXT)");
+    db.prepare("INSERT INTO metric_events(type,realm,observed_at,payload_json) VALUES (?,?,?,?)").run(row.type,row.realm,row.observed_at,row.payload_json);
+    const sql=buildHistoryBackfillSql([row]);
+    db.exec(sql);db.exec(sql);
+    const stored=db.prepare("SELECT type,realm,observed_at,payload_json FROM metric_events ORDER BY id").all();
+    assert.equal(stored.length,2);
+    assert.equal(stored[0].payload_json,row.payload_json);
+    assert.equal(stored[1].type,'raid_session_revision');
+  }finally{db.close();}
+});
