@@ -112,6 +112,18 @@ export const TALENT_RULES={
       "scope": "Magma Totem",
       "stat": "threatReductionPct",
       "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Searing Totem",
+      "stat": "hastePct",
+      "param": 2
+    },
+    {
+      "kind": "scoped",
+      "scope": "Searing Totem",
+      "stat": "rangeIncreaseYards",
+      "param": 3
     }
   ],
   "228": [
