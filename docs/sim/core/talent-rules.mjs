@@ -156,6 +156,12 @@ export const TALENT_RULES={
     {
       "kind": "pending",
       "note": "Frost Ward reflection chance requires event simulation"
+    },
+    {
+      "kind": "scoped",
+      "scope": "Frost Ward",
+      "stat": "reflectChancePct",
+      "param": 1
     }
   ],
   "19": [
