@@ -65,12 +65,12 @@ def render(key, title, summary):
     draw = ImageDraw.Draw(image)
     draw.rounded_rectangle((30, 30, WIDTH-30, HEIGHT-30), radius=18, outline=(70, 78, 91), width=2)
     draw.rectangle((30, 30, 38, HEIGHT-30), fill=GOLD)
-    draw.rounded_rectangle((807, 132, 1124, 449), radius=30, fill=PANEL, outline=(96, 92, 65), width=2)
-
+    # The logo floats directly on the background, without a separate panel.
+    # Pillow's thumbnail() never enlarges a 64px source, so explicitly resize.
     logo = Image.open(DOCS / "favicon.png").convert("RGBA")
-    logo.thumbnail((276, 276), Image.Resampling.LANCZOS)
-    # Preserve the transparent favicon, keeping its original appearance.
-    image.paste(logo, (965-logo.width//2, 290-logo.height//2), logo)
+    logo = logo.resize((348, 348), Image.Resampling.LANCZOS)
+    # Keep the original design and its transparent edges; avoid drawing a box.
+    image.paste(logo, (966-logo.width//2, 305-logo.height//2), logo)
     draw = ImageDraw.Draw(image)
     draw.text((89, 91), "OCTOBOT", font=font(29, True), fill=GOLD)
     draw.text((89, 201), title, font=font(69 if len(title)<15 else 61, True), fill=WHITE)
