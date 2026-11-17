@@ -309,6 +309,13 @@ export const TALENT_RULES={
       "scope": "Demoralizing Shout",
       "stat": "attackPowerReductionPct",
       "param": 1
+    },
+    {
+      "kind": "buff",
+      "source": "battle-shout",
+      "stat": "ap",
+      "param": 0,
+      "note": "Only the selected battle-shout buff is enhanced; unrelated buffs are unchanged"
     }
   ],
   "100": [
@@ -533,7 +540,7 @@ export const TALENT_COVERAGE={
   },
   "97": {
     "status": "partial",
-    "note": "Published rank-based effect mapped to its ability or condition; the planner does not yet simulate its resulting casts, resource flows or damage."
+    "note": "Static enhancement is applied only when its specific buff or pet is selected; other ability effects remain scoped or require verification."
   },
   "98": {
     "status": "proc-or-conditional",
