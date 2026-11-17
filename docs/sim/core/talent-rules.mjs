@@ -13,6 +13,26 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "375": [
+    {
+      "kind": "scoped",
+      "scope": "Eyes of the Beast",
+      "stat": "durationIncreaseSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Eyes of the Beast pet",
+      "stat": "damagePct",
+      "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Eyes of the Beast pet",
+      "stat": "focusRegenPct",
+      "param": 2
+    }
+  ],
   "376": [
     {
       "kind": "global",
@@ -33,6 +53,70 @@ export const TALENT_RULES={
       "kind": "pet",
       "stat": "armourPct",
       "param": 1
+    }
+  ],
+  "378": [
+    {
+      "kind": "scoped",
+      "scope": "Revive Pet",
+      "stat": "castTimeReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Revive Pet",
+      "stat": "manaCostReductionPct",
+      "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Revived Pet",
+      "stat": "healthPct",
+      "param": 2
+    }
+  ],
+  "379": [
+    {
+      "kind": "scoped",
+      "scope": "Aspect of Cheetah/Pack",
+      "stat": "movementSpeedPct",
+      "param": 0
+    },
+    {
+      "kind": "pet",
+      "stat": "movementSpeedPct",
+      "param": 1
+    }
+  ],
+  "381": [
+    {
+      "kind": "pet",
+      "stat": "damagePct",
+      "param": 0
+    }
+  ],
+  "382": [
+    {
+      "kind": "pet",
+      "stat": "focusRegenPerTick",
+      "param": 0
+    },
+    {
+      "kind": "pet",
+      "stat": "specialCooldownReductionPct",
+      "param": 1
+    }
+  ],
+  "383": [
+    {
+      "kind": "scoped",
+      "scope": "Mend Pet",
+      "stat": "healingPct",
+      "param": 0
+    },
+    {
+      "kind": "pending",
+      "note": "Pet dispel effect is event-driven"
     }
   ],
   "384": [
@@ -69,6 +153,28 @@ export const TALENT_RULES={
       "kind": "pet",
       "stat": "spellPowerFromOwnerRangedPct",
       "param": 1
+    }
+  ],
+  "392": [
+    {
+      "kind": "scoped",
+      "scope": "Beast/Giant/Dragonkin/Humanoid targets",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "These targets",
+      "stat": "criticalDamagePct",
+      "param": 1
+    }
+  ],
+  "393": [
+    {
+      "kind": "scoped",
+      "scope": "Traps and melee abilities",
+      "stat": "manaCostReductionPct",
+      "param": 0
     }
   ],
   "394": [
@@ -139,6 +245,14 @@ export const TALENT_RULES={
       "note": "Movement-impairing resistance bonus is not a displayed combat stat"
     }
   ],
+  "405": [
+    {
+      "kind": "scoped",
+      "scope": "Feign Death",
+      "stat": "resistReductionPct",
+      "param": 0
+    }
+  ],
   "406": [
     {
       "kind": "global",
@@ -157,6 +271,34 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "407": [
+    {
+      "kind": "scoped",
+      "scope": "Frost/Freezing Trap",
+      "stat": "durationPct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Immolation/Explosive Trap",
+      "stat": "damagePct",
+      "param": 1
+    }
+  ],
+  "409": [
+    {
+      "kind": "scoped",
+      "scope": "Raptor Strike/Mongoose Bite",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Raptor Strike/Mongoose Bite",
+      "stat": "damagePct",
+      "param": 1
+    }
+  ],
   "410": [
     {
       "kind": "percent",
@@ -169,6 +311,40 @@ export const TALENT_RULES={
       "param": 1
     }
   ],
+  "411": [
+    {
+      "kind": "pending",
+      "note": "Untamed Trapper is a passive with several cross-ability coefficients absent from the rankParameters snapshot; verify the full tooltip and live effect before mapping"
+    }
+  ],
+  "413": [
+    {
+      "kind": "scoped",
+      "scope": "Shots and Stings",
+      "stat": "manaCostReductionPct",
+      "param": 0
+    }
+  ],
+  "414": [
+    {
+      "kind": "scoped",
+      "scope": "Serpent Sting",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Viper Sting",
+      "stat": "manaDrainPct",
+      "param": 1
+    },
+    {
+      "kind": "scoped",
+      "scope": "Scorpid Sting",
+      "stat": "attackSpeedReductionPct",
+      "param": 2
+    }
+  ],
   "415": [
     {
       "kind": "ranged",
@@ -176,10 +352,54 @@ export const TALENT_RULES={
       "param": 0
     }
   ],
+  "416": [
+    {
+      "kind": "scoped",
+      "scope": "Ranged weapons",
+      "stat": "rangeIncreaseYards",
+      "param": 0
+    }
+  ],
+  "418": [
+    {
+      "kind": "scoped",
+      "scope": "Arcane Shot",
+      "stat": "cooldownReductionSeconds",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Aimed Shot",
+      "stat": "cooldownReductionSeconds",
+      "param": 1
+    }
+  ],
   "420": [
     {
       "kind": "ranged",
       "stat": "criticalDamagePct",
+      "param": 0
+    }
+  ],
+  "424": [
+    {
+      "kind": "scoped",
+      "scope": "Multi-Shot/Volley",
+      "stat": "damagePct",
+      "param": 0
+    },
+    {
+      "kind": "scoped",
+      "scope": "Volley",
+      "stat": "castTimeReductionSeconds",
+      "param": 1
+    }
+  ],
+  "425": [
+    {
+      "kind": "scoped",
+      "scope": "Steady Shot/Aimed Shot",
+      "stat": "damagePct",
       "param": 0
     }
   ],
@@ -201,8 +421,8 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "375": {
-    "status": "proc-or-conditional",
-    "note": "Increases the duration of your Eyes of the Beast by 60 sec. While channeling Eyes of the Beast, your pet deals 30% additional damage and gains 30% increased Focus regeneration"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "376": {
     "status": "sheet",
@@ -213,28 +433,28 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "378": {
-    "status": "ability-specific",
-    "note": "Revive Pet's casting time is reduced by 6 sec, mana cost is reduced by 40%, and increases the health your pet returns with by an additional 30%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "379": {
-    "status": "ability-specific",
-    "note": "Increases the speed bonus of your Aspect of the Cheetah and Aspect of the Pack by 6% and increases your pet's movement speed by 30%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "380": {
     "status": "ability-specific",
     "note": "Hitting an enemy with Arcane Shot, Steady Shot, or Raptor Strike causes your pet's next attack within 6 sec to also strike for Physical damage equal to 20% of your Attack Powe"
   },
   "381": {
-    "status": "ability-specific",
-    "note": "Increases the damage done by your pets by 20%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "382": {
-    "status": "ability-specific",
-    "note": "Increases the Focus regeneration of your pets by 5 each tick and reduces the cooldown of your pets' special ability by 20%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "383": {
-    "status": "proc-or-conditional",
-    "note": "Increases amount you heal your pet with Mend Pet by 40% and gives the spell a 50% chance of cleansing 1 Curse, Disease, Magic or Poison effect from the pet each tick."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "384": {
     "status": "partial",
@@ -269,12 +489,12 @@ export const TALENT_COVERAGE={
     "note": "Commands your pet to instantly attack for 80% of its Attack Power. Can only be used after the Hunter lands a critical strike on the target."
   },
   "392": {
-    "status": "ability-specific",
-    "note": "Increases all damage caused against Beasts, Giants, Dragonkin, and Humanoid targets by 3% and increases critical damage caused against Beasts, Giants, Dragonkin, and Humanoid "
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "393": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of all traps and melee abilities by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "394": {
     "status": "sheet",
@@ -321,60 +541,60 @@ export const TALENT_COVERAGE={
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "405": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the chance your Feign Death ability will be resisted by 8%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "406": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "407": {
-    "status": "proc-or-conditional",
-    "note": "Increases the duration of Freezing and Frost Trap effects by 30% and the damage of Immolation and Explosive Trap effects by 30%. In addition, reduces the chance that enemies w"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "408": {
     "status": "proc-or-conditional",
     "note": "Deepens the target's open wound, dealing damage equal to 40% of melee Attack Power and causing the target to bleed for 20% of that damage over 8 sec. Can only be used after cr"
   },
   "409": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of Raptor Strike and Mongoose Bite by 1 sec and increases the damage they deal by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "410": {
     "status": "sheet",
     "note": "Passive stat or equipment-specific effect included in planning estimates."
   },
   "411": {
-    "status": "proc-or-conditional",
-    "note": "Reduces the mana cost of your Immolation Trap and Explosive Trap effects by 20% and increases their damage based on your melee Attack Power. In addition, all traps can be plac"
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "412": {
     "status": "proc-or-conditional",
     "note": "Gives your Concussive Shot a 20% chance to stun the target for 3 sec."
   },
   "413": {
-    "status": "ability-specific",
-    "note": "Reduces the Mana cost of your Shots and Stings by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "414": {
-    "status": "ability-specific",
-    "note": "Increases the damage of Serpent Sting by 30%, increases the mana drained by Viper Sting by 5%, and causes Scorpid Sting to reduce attack speed by an additional 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "415": {
     "status": "partial",
     "note": "The scoped bonus is tracked, but at least one combat/conditional effect still awaits verified modelling."
   },
   "416": {
-    "status": "ability-specific",
-    "note": "Increases the range of your ranged weapons by 6 yards."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "417": {
     "status": "ability-specific",
     "note": "An aimed shot that increases ranged damage by 70."
   },
   "418": {
-    "status": "ability-specific",
-    "note": "Reduces the cooldown of Arcane Shot by 1.5 sec and the cooldown of Aimed Shot by 6 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "419": {
     "status": "proc-or-conditional",
@@ -397,12 +617,12 @@ export const TALENT_COVERAGE={
     "note": "Your critical strikes from Multi-Shot, Steady Shot and Aimed Shot cause the target to bleed, dealing 30% of the damage over 8 sec. This damage generates no threat."
   },
   "424": {
-    "status": "ability-specific",
-    "note": "Increases the damage of Multi-Shot and Volley by 15% and reduces the cast time of Volley by 2 sec."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "425": {
-    "status": "ability-specific",
-    "note": "Increases the damage of Steady Shot and Aimed Shot by 10%."
+    "status": "partial",
+    "note": "Published rank-based ability or conditional effect recorded; live effects and combat contributions need independent verification."
   },
   "426": {
     "status": "partial",
