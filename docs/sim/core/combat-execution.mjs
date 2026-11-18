@@ -18,7 +18,7 @@ export class CombatEncounter{
  constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null,onDamage=()=>{}}){
   this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools);this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');this.#onDamage=fn(onDamage,'damage observer');
-  for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health});}
+  for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health,...(u.level===undefined?{}:{level:integer(u.level,'unit level',1)})});}
   const check=id=>{if(!this.#units.has(id))throw new Error('Unknown unit: '+id);return id;};
   this.#player=check(playerId);this.#primary=check(primaryId);this.#pet=petId===null?null:check(petId);
   this.#targets=targetIds.map(check);this.#allies=allyIds.map(check);
@@ -76,15 +76,15 @@ export class CombatEncounter{
   const primary=this.#alive(this.#primary)?this.#primary:this.#targets.find(id=>this.#alive(id));
   const pool=this.resources.snapshot();const resources=Object.fromEntries(Object.entries(pool).map(([k,v])=>[k,v.current]));if(pool.mana&&pool.mana.max>0)resources.manaPercent=pool.mana.current/pool.mana.max*100;
   if(this.comboPoints)resources.comboPoints=this.comboPoints.points(primary);
-  const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent,...(this.comboPoints&&this.#targets.includes(id)?{resources:{...resources,comboPoints:this.comboPoints.points(id)}}:{})};};
+  const cooldowns={},actions={},targetFrame=id=>{const u=this.unit(id);return {id,targetId:id,targetHealth:u.healthPercent,allyHealth:u.healthPercent,...(u.level===undefined?{}:{allyLevel:u.level}),...(this.comboPoints&&this.#targets.includes(id)?{resources:{...resources,comboPoints:this.comboPoints.points(id)}}:{})};};
   const aliveTargets=this.#targets.filter(id=>this.#alive(id)),aliveAllies=this.#allies.filter(id=>this.#alive(id));
-  const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:this.#cast?.action.kind==='cast',channeling:this.#cast?.action.kind==='channel',targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
+  const base={resources,targetId:primary,targetHealth:this.unit(primary).healthPercent,targetCount:aliveTargets.length,injuredAllies:aliveAllies.filter(id=>this.unit(id).healthPercent<100).length,healthPercent:this.unit(this.#player).healthPercent,combatTime:this.timeline.now/1000,casting:this.#cast?.action.kind==='cast',channeling:this.#cast?.action.kind==='channel',targets:aliveTargets.map(targetFrame),allies:aliveAllies.map(targetFrame),self:targetFrame(this.#player),...(this.#pet&&this.#alive(this.#pet)?{pet:targetFrame(this.#pet),petAlive:true}:this.#pet?{petAlive:false}:{}),cooldowns,actions};
   // Adapter may supply only missing mechanics (auras, reach, known ranks, etc.).
   // Built-in resource and health values cannot be overwritten.
   const extra=this.#context(this);const state={...extra,...base};
   if(extra?.targets)state.targets=base.targets.map(t=>({...extra.targets.find(x=>x.id===t.id),...t}));
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
-  if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));}
+  if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));state.allies=state.allies.map(t=>({...t,buffs:this.auras.frame(t.id,'buff',null),...debuffsFor(t.id)}));}
   state.castTimes={...state.castTimes,...Object.fromEntries([...this.#actions.values()].map(a=>[a.name,this.#effectiveAction(a).castMs/1000]))};
   for(const original of this.#actions.values()){
    const a=this.#effectiveAction(original);const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)),...(a.requiresGcdReady?[this.resources.cooldowns.remaining('gcd')]:[]))/1000;

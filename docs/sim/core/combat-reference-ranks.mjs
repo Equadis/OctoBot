@@ -15,6 +15,133 @@ export const REFERENCE_RANKS=Object.freeze([
  ...[
   {
     "classId": "priest",
+    "abilityId": "priest:chastise",
+    "spellId": 51478,
+    "rank": 1,
+    "learnLevel": 35,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 6,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 25,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "holy",
+        "coefficient": null,
+        "min": 139,
+        "max": 160
+      }
+    ],
+    "source": "https://octowow.st/talents/priest/",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "chastiseModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:chastise",
+      "spellId": 51478,
+      "rank": 1,
+      "level": 35,
+      "fields": {
+        "school": "holy",
+        "referenceDamage": [
+          139,
+          160
+        ],
+        "referenceHastePct": 13,
+        "referenceAllyMinLevel": 35,
+        "referenceBaseManaPct": 6
+      },
+      "unknown": [
+        "live rank timing, damage, haste, mana and range"
+      ],
+      "conflicts": [
+        {
+          "field": "rankValues",
+          "note": "Talent and archive differ; rank 3 haste is a research placeholder requiring explicit values."
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/priest/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:chastise",
+    "spellId": 51480,
+    "rank": 3,
+    "learnLevel": 55,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 6,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 25,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "holy",
+        "coefficient": null,
+        "min": 278,
+        "max": 322
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2325",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "chastiseModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:chastise",
+      "spellId": 51480,
+      "rank": 3,
+      "level": 55,
+      "fields": {
+        "school": "holy",
+        "referenceDamage": [
+          278,
+          322
+        ],
+        "referenceAllyMinLevel": 55,
+        "referenceBaseManaPct": 6
+      },
+      "unknown": [
+        "live rank timing, damage, haste, mana and range",
+        "rank 3 ally haste"
+      ],
+      "conflicts": [
+        {
+          "field": "rankValues",
+          "note": "Talent and archive differ; rank 3 haste is a research placeholder requiring explicit values."
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2325",
+      "liveVerified": false
+    }
+  }
+],
+ row('priest','chastise',51479,'mana','instant',[{kind:'damage',stat:'holy',coefficient:null,min:209,max:241}],{cost:6,castMs:0,minRange:0,maxRange:25,referenceCooldownMs:10000,referenceGcdMs:1500,requiredPolicy:['chastiseModel','acceptSourceConflict']}),
+ ...[
+  {
+    "classId": "priest",
     "abilityId": "priest:holy-nova",
     "spellId": 15237,
     "rank": 1,
