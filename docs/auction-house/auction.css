@@ -174,17 +174,10 @@
 
 
 /* Fixed column proportions fit the eleven main metrics without horizontal scrolling. */
-.ah-scroll>table>thead th:nth-child(1){width:30px}
-.ah-scroll>table>thead th:nth-child(2){width:24%}
-.ah-scroll>table>thead th:nth-child(3){width:6%}
-.ah-scroll>table>thead th:nth-child(4){width:6%}
-.ah-scroll>table>thead th:nth-child(5){width:9%}
-.ah-scroll>table>thead th:nth-child(6){width:9%}
-.ah-scroll>table>thead th:nth-child(7){width:9%}
-.ah-scroll>table>thead th:nth-child(8){width:10%}
-.ah-scroll>table>thead th:nth-child(9){width:7%}
-.ah-scroll>table>thead th:nth-child(10){width:6%}
-.ah-scroll>table>thead th:nth-child(11){width:10%}
+.ah-scroll>table>thead th:nth-child(1){width:30px;box-sizing:border-box}
+.ah-scroll>table>thead th:nth-child(2){width:20%;box-sizing:border-box}
+/* Fixed table layout divides the remaining space equally among the nine data columns. */
+.ah-scroll>table>thead th:nth-child(n+3){width:auto}
 .ah-scroll>table>tbody>tr.ah-entry>td{overflow:hidden;text-overflow:ellipsis}
 .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){overflow:visible}
 .ah-detail-inner .ah-db-link{display:inline-block;margin:8px 0 4px;color:#e8c67c;font-size:12px}
