@@ -1,4 +1,4 @@
-/** Auction-only hooks for the existing PvP metrics session; no AuthClient, no second login. */
+/** Auction hooks for one account-owned metrics session; no AuthClient or second login. */
 import {randomBytes} from "node:crypto";
 import type {WorldClient,WorldClientHandlers} from "./net/world-client.js";
 import {NpcWatch} from "./darkmoon/npc-watch.js";
@@ -26,7 +26,8 @@ const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
 const token=process.env.AUCTION_PUSH_TOKEN?.trim();
 const uploadUrl=new URL(endpoint);
-uploadUrl.searchParams.set("realm","Y\u0027Shaarj");
+const auctionRealm=process.env.COLLECTOR_PROFILE==="OBPVEAH"?"N\u0027Zoth":"Y\u0027Shaarj";
+uploadUrl.searchParams.set("realm",auctionRealm);
 if(uploadUrl.protocol!=="https:"||!uploadUrl.pathname.endsWith("/api/auction/scan")||
  uploadUrl.username||uploadUrl.password)throw new Error("AUCTION_PUSH_URL must be an HTTPS /api/auction/scan endpoint");
 function auctionUrl(suffix:string):URL {
@@ -116,8 +117,10 @@ let nextAttemptAt=0;
 export function pvpAuctionEligible(account:{account:string;realmName:string}, env:NodeJS.ProcessEnv=process.env):boolean {
  return account.account==="OBPVPSW"&&account.realmName==="Y'Shaarj"&&env.AUCTION_COLLECTOR_ENABLED==="true"&&env.AUCTION_RULES_APPROVED==="true"&&Boolean(env.AUCTION_PUSH_TOKEN?.trim());
 }
-export function createPvpAuction({account,log,getWorld}:{account:{account:string;realmName:string};log:Logger;getWorld:()=>WorldClient|null}):{start:()=>void;stop:()=>void;handlers:WorldClientHandlers}{
- if(!pvpAuctionEligible(account))return {start(){},stop(){},handlers:{}};
+export function createAuctionSession({account,log,getWorld}:{account:{account:string;realmName:string};log:Logger;getWorld:()=>WorldClient|null}):{start:()=>void;stop:()=>void;handlers:WorldClientHandlers}{
+ const approved=process.env.AUCTION_COLLECTOR_ENABLED==="true"&&process.env.AUCTION_RULES_APPROVED==="true"&&Boolean(token);
+ const allowed=auctionRealm==="N\u0027Zoth"?account.account==="OBPVEAH"&&account.realmName===auctionRealm:pvpAuctionEligible(account);
+ if(!approved||!allowed)return {start(){},stop(){},handlers:{}};
  const current=()=>{const w=getWorld();if(!w?.isReady)throw new Error("PvP world unavailable");return w;};
  // The existing socket is owned by the metrics supervisor. Only a page timeout
  // closes it, to prevent a delayed page response from being matched to another query.
@@ -164,7 +167,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
    started=false;
    const missingIds=new Set<number>();
    const startedAt=new Date().toISOString();
-   scanId="ahl_pvp_"+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
+   scanId=(auctionRealm==="N\u0027Zoth"?"ahl_":"ahl_pvp_")+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
    const cursor=new AuctionScanCursor(true);
    try{
     // Do not declare a scan started until the server actually replies to the first query.
@@ -216,7 +219,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
   try{current().auctionHello(guid);}catch(e){clearTimeout(pendingHello);pendingHello=null;busy=false;log.warn(String(e));}
  };
  return {
-  start(){if(finished||ticker)return;log.info("PvP AH enabled on existing OBPVPSW connection; waiting for Auctioneer Fitch");ticker=setInterval(attempt,15000);ticker.unref?.();},
+  start(){if(finished||ticker)return;log.info("AH enabled on "+account.account+" connection; waiting for Auctioneer Fitch");ticker=setInterval(attempt,15000);ticker.unref?.();},
   stop,
   handlers:{
    onWorldObjects(raw){if(finished||!getWorld()?.isReady)return;const w=current();const objects=parseUpdateObject(raw,w.selfGuid??undefined);
@@ -228,10 +231,13 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
    onObjectDestroyed(guid){if(auctioneerGuid===guid)auctioneerGuid=null;for(const [entry,value] of knownGuids)if(value===guid)knownGuids.delete(entry);},
    onAuctionHello(hello){if(!pendingHello||finished)return;clearTimeout(pendingHello);pendingHello=null;
     if(hello.guid!==auctioneerGuid||hello.houseId===0){busy=false;log.warn("PvP Auction House unavailable");return;}
-    void run(hello.guid).catch(e=>log.warn("PvP auction scan failed: "+String(e))).finally(()=>{busy=false;});
+    void run(hello.guid).catch(e=>log.warn("PvP auction scan failed: "+String(e))).finally(()=>{busy=false;nextAttemptAt=Date.now()+cooldownMs;});
    },
    onAuctionList(result){const p=pendingQuery;if(!p||finished)return;clearTimeout(p.timer);pendingQuery=null;p.resolve(result);},
    onItemTemplate(reply){const p=pendingItem;if(!p||p.id!==reply.item_id)return;clearTimeout(p.timer);pendingItem=null;p.resolve(reply);}
   }
  };
 }
+
+// Compatibility for existing production patch tooling.
+export const createPvpAuction=createAuctionSession;
