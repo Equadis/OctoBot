@@ -145,6 +145,61 @@ function createSlots() {
   }
 }
 
+// Draw prerequisite links from the same tree/position data used by allocation validation.
+const talentConnections = [];
+function createTalentConnections(grid, talents) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  Object.assign(grid.style, {position:'relative', isolation:'isolate'});
+  Object.assign(svg.style, {position:'absolute', inset:'0', width:'100%', height:'100%', overflow:'visible', pointerEvents:'none', zIndex:'0'});
+  const links = [];
+  for (const child of talents) {
+    if (child.requires == null) continue;
+    const parent = talents.find(t => t.position === child.requires);
+    if (!parent) continue;
+    const line = document.createElementNS(ns,'path');
+    line.setAttribute('fill','none');
+    line.setAttribute('stroke-width','2');
+    line.setAttribute('stroke-linejoin','round');
+    const tip = document.createElementNS(ns,'path');
+    svg.append(line,tip);
+    links.push({parent,child,line,tip});
+  }
+  grid.prepend(svg);
+  for (const t of talents) talentButtons.get(t.id).button.style.zIndex = '1';
+  function draw() {
+    const bounds = grid.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+    for (const {parent,child,line,tip} of links) {
+      const a = talentButtons.get(parent.id).button.getBoundingClientRect();
+      const b = talentButtons.get(child.id).button.getBoundingClientRect();
+      const ax = a.left + a.width/2 - bounds.left, ay = a.top + a.height/2 - bounds.top;
+      const bx = b.left + b.width/2 - bounds.left, by = b.top + b.height/2 - bounds.top;
+      let x,y,dx=0,dy=0,d;
+      if (child.row === parent.row) {
+        dx = Math.sign(bx-ax); x = bx-dx*(b.width/2+2); y = by;
+        d = `M ${ax+dx*(a.width/2+2)} ${ay} L ${x} ${y}`;
+      } else {
+        dy = Math.sign(by-ay); x=bx; y=by-dy*(b.height/2+2);
+        const start = ay+dy*(a.height/2+2);
+        const bend = Math.abs(ax-bx)<1 ? start : (start+y)/2;
+        d = `M ${ax} ${start} V ${bend} H ${x} V ${y}`;
+      }
+      line.setAttribute('d',d);
+      tip.setAttribute('d',`M ${x} ${y} L ${x-dx*7-dy*4} ${y-dy*7+dx*4} L ${x-dx*7+dy*4} ${y-dy*7-dx*4} Z`);
+      const met = (build.talents[parent.id] ?? 0) >= child.requiresRanks;
+      const color = met ? '#ffd100' : '#657184';
+      line.setAttribute('stroke',color); tip.setAttribute('fill',color);
+    }
+  }
+  talentConnections.push(draw);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(draw).observe(grid);
+  requestAnimationFrame(draw);
+}
+
 function createTalents() {
   for (const tree of data.trees) {
     const section = element('section', 'talent-tree');
@@ -181,6 +236,7 @@ function createTalents() {
       talentButtons.set(talent.id, { button, rank });
       grid.append(button);
     }
+    createTalentConnections(grid, data.talents.filter(t => t.tree === tree.index));
     section.append(heading, grid);
     $('talent-trees').append(section);
   }
@@ -231,6 +287,7 @@ function render() {
     button.classList.toggle('locked', rank === 0 && validateTalents(data,
       { ...build.talents, [talent.id]: 1 }, build.level).length > 0);
   }
+  for (const draw of talentConnections) draw();
   const verifiedGear=Object.fromEntries(Object.entries(build.gear).filter(([slot,item])=>picker?.usable(slot,item.id)).map(([slot,item])=>[slot,picker.lookup(item.id)]));
   const sheet=characterStats(build,data,verifiedGear);
   $('gear-stats').replaceChildren(...sheet.groups.map(group=>{
