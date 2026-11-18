@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,listingMarketPct,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -316,6 +316,17 @@ test('trend colours share the countdown palette and sorting has accessible label
 });
 test('expanded auction listings omit starting bid and minimum next bid columns and cells',()=>{
  const js=read('auction-house/auction.js');
- assert.ok(js.includes("simpleTable(['Seller (owner GUID)','Quantity','Current bid','Buyout','Unit buyout','Time left (est.)']"));
+ assert.ok(js.includes("simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Historical avg.','Market %','Time left']"));
  assert.doesNotMatch(js,/moneyNode\(r\.(?:start_bid|min_next_bid)\)/);
+});
+
+
+test('each auction listing uses its own unit buyout for market percent and missing bids show an en dash',()=>{
+ assert.equal(listingMarketPct(75,100),75);
+ assert.equal(listingMarketPct(150,100),150);
+ assert.equal(listingMarketPct(0.5,1),50);
+ for(const [unit,avg] of [[null,100],[100,null],[100,0],[0,100],[NaN,20],[30,Infinity]])assert.equal(listingMarketPct(unit,avg),null);
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes("bid===null?'–':moneyNode(bid)"));
+ assert.ok(js.includes('pct(listingMarketPct(r.unit_buyout,average))'));
 });
