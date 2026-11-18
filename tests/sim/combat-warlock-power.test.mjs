@@ -1,5 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createExplicitClassEncounter} from '../../docs/sim/core/combat-class-runtime.mjs';
+import {combatReport} from '../../docs/sim/core/combat-report.mjs';
+import {attributedActorRates} from '../../docs/sim/core/combat-attribution.mjs';
 import {validatePowerOverwhelming} from '../../docs/sim/core/combat-warlock-power.mjs';
 const hit=[{name:'hit',probability:1,multiplier:1,landed:true}],model={healthBasis:'base-health',activation:'instant',refresh:'replace',damagePct:20,drainFraction:.4,durationMs:10000,tickMs:1000,basePetHealth:500,ownerRangeYards:30,crowdControlNames:['Root'],tickAtExpiry:true};
 const action={abilityId:'warlock:power-overwhelming',spellId:51714,rank:1,learnLevel:30,source:'fixture',evidenceStatus:'synthetic',actorId:'p',kind:'instant',castMs:0,gcdMs:1500,cooldownMs:14000,sharedCooldown:null,costs:[{resource:'mana',amount:80}],targets:['pet'],minRangeYards:0,maxRangeYards:30,position:null,comboRequired:null,requiredContext:null,effects:[{kind:'power-overwhelming',when:'always',model}],powerOverwhelmingModel:model,requiresLivePet:true};
@@ -25,3 +27,5 @@ test('Power Overwhelming never guesses base health or control policies',()=>{
  assert.throws(()=>validatePowerOverwhelming({...model,tickMs:3000}),/complete tick schedule/);
  assert.throws(()=>validatePowerOverwhelming({...model,crowdControlNames:['Root','Root']}),/crowd control/);
 });
+
+test('Power Overwhelming health drain never inflates pet DPS or creates unknown threat',()=>{const r=createExplicitClassEncounter(base).run();const drained=r.events.filter(x=>x.type==='damage'&&x.source==='Power Overwhelming (health drain)').reduce((sum,x)=>sum+x.effective,0),p=r.attribution.actors.pet.totals,report=combatReport(r),self=report.actors.pet.bySource['Power Overwhelming (health drain)'];assert.equal(drained,200);assert.equal(p.damage,p.enemyDamage+drained);assert.equal(self.enemyDamage,0);assert.equal(self.nonEnemyDamage,drained);assert.equal(self.unknownThreatEvents,0);assert.equal(attributedActorRates(r,'pet').actorDps,p.enemyDamage/(r.durationMs/1000));});
