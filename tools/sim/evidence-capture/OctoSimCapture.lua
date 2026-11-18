@@ -4,8 +4,8 @@ OctoSimCaptures = OctoSimCaptures or {}
 local function capture()
  local race = UnitRace("player")
  local _, class = UnitClass("player")
- local build, _, date = GetBuildInfo()
- local row = {race=race,classId=string.lower(class or ""),level=UnitLevel("player"),realm=GetRealmName(),clientBuild=build,clientDate=date,capturedAt=time(),attributes={},equipment={},auras={},spellbook={},healthMax=UnitHealthMax("player"),powerMax=UnitManaMax("player"),powerType=UnitPowerType("player")}
+ local version, build, date = GetBuildInfo()
+ local row = {race=race,classId=string.lower(class or ""),level=UnitLevel("player"),realm=GetRealmName(),clientVersion=version,clientBuild=build,clientDate=date,capturedAt=time(),attributes={},equipment={},auras={},spellbook={},healthMax=UnitHealthMax("player"),powerMax=UnitManaMax("player"),powerType=UnitPowerType("player")}
  for i=1,5 do
   local base,effective,positive,negative=UnitStat("player",i)
   row.attributes[i]={base=base,effective=effective,positive=positive,negative=negative}
