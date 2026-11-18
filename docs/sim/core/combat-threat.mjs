@@ -22,6 +22,7 @@ export class ThreatLedger{
   for(const id of enemyIds)amount(this.current(id,actorId)+value,'Threat total');amount((this.#generated.get(actorId)||0)+value*enemyIds.length,'Generated threat');
   return enemyIds.map(enemyId=>({enemyId,value,after:this.add({enemyId,actorId,value})}));
  }
+ adjust({enemyId,actorId,delta}){if(!Number.isFinite(delta))throw new Error('Invalid threat adjustment');return this.#set(enemyId,actorId,Math.max(0,this.current(enemyId,actorId)+delta),'adjustment');}
  reduce({enemyId,actorId,fraction}){if(!Number.isFinite(fraction)||fraction<0||fraction>1)throw new Error('Threat reduction fraction must be in [0,1]');return this.#set(enemyId,actorId,this.current(enemyId,actorId)*(1-fraction),'reduction');}
  transfer({enemyId,from,to,fraction}){if(from===to||!Number.isFinite(fraction)||fraction<0||fraction>1)throw new Error('Invalid threat transfer');const a=this.current(enemyId,from),b=this.current(enemyId,to),v=a*fraction;amount(b+v,'Threat total');this.#set(enemyId,from,a-v,'transfer-out');this.#set(enemyId,to,b+v,'transfer-in');return v;}
  clear(enemyId,actorId){return this.#set(enemyId,actorId,0,'clear');}

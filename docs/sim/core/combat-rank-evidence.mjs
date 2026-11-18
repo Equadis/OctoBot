@@ -3,6 +3,8 @@
 // fields separate. In particular, DB "mana" on Rage/Energy records is not trusted.
 const db=(classId,ability,spellId,rank,level,fields,unknown=[],conflicts=[])=>({classId,abilityId:classId+':'+ability,spellId,rank,level,fields,unknown,conflicts,status:'database-observed',source:'https://octowow.st/db/?spell='+spellId,guide:'https://octowow.st/'+classId,liveVerified:false});
 export const RANK_EVIDENCE=Object.freeze([
+ db('priest','fade',9579,3,30,{school:'shadow',manaCost:125,castMs:0,rangeYards:0,durationMs:10000,flatThreatReduction:285},['live cooldown','percentage reduction and order','expiry restoration'],[{field:'percentageReduction',database:'not listed',archive:'15%'}]),
+ db('priest','fade',9592,4,40,{school:'shadow',manaCost:175,castMs:0,rangeYards:0,durationMs:10000,flatThreatReduction:440},['live cooldown','percentage reduction and order','expiry restoration'],[{field:'percentageReduction',database:'not listed',archive:'15%'}]),
  db('priest','devouring-plague',2944,1,20,{school:'shadow',manaCost:215,castMs:0,rangeYards:30,baseTick:19,durationMs:24000,tickMs:3000},['live cooldown','live spell coefficient','leech basis','threat'],[{field:'cooldown',database:'not listed',classicReferenceMs:180000}]),
  db('priest','devouring-plague',19278,4,44,{school:'shadow',manaCost:645,castMs:0,rangeYards:30,baseTick:68,durationMs:24000,tickMs:3000,categoryCooldownMs:180000},['live spell coefficient','leech basis','threat']),
  db('warlock','curse-of-agony',11713,6,58,{school:'shadow',manaCost:215,rangeYards:30,baseTick:87,durationMs:24000,tickMs:2000,ramp:true},['live coefficients','ramp','talent-linked secondary curses'],[{field:'curseExclusivity',database:'one curse',guide:'Agony can coexist with other curses except Doom'}]),

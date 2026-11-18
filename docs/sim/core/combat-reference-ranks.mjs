@@ -12,6 +12,230 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ ...[
+  {
+    "classId": "priest",
+    "abilityId": "priest:fade",
+    "spellId": 586,
+    "rank": 1,
+    "learnLevel": 8,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 40,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "priest-fade"
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=586",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "fadeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "actor-buff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:fade",
+      "spellId": 586,
+      "rank": 1,
+      "level": 8,
+      "fields": {
+        "school": "shadow",
+        "referenceFlat": 55,
+        "referenceDurationMs": 10000
+      },
+      "unknown": [
+        "live cooldown, cost, flat and percentage reduction, restoration order"
+      ],
+      "conflicts": [
+        {
+          "field": "percentageReduction",
+          "classic": "flat only",
+          "archive": "15% in addition to flat"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=586",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:fade",
+    "spellId": 9578,
+    "rank": 2,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 75,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "priest-fade"
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=9578",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "fadeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "actor-buff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:fade",
+      "spellId": 9578,
+      "rank": 2,
+      "level": 20,
+      "fields": {
+        "school": "shadow",
+        "referenceFlat": 155,
+        "referenceDurationMs": 10000
+      },
+      "unknown": [
+        "live cooldown, cost, flat and percentage reduction, restoration order"
+      ],
+      "conflicts": [
+        {
+          "field": "percentageReduction",
+          "classic": "flat only",
+          "archive": "15% in addition to flat"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=9578",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:fade",
+    "spellId": 10941,
+    "rank": 5,
+    "learnLevel": 50,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 225,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "priest-fade"
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=10941",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "fadeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "actor-buff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:fade",
+      "spellId": 10941,
+      "rank": 5,
+      "level": 50,
+      "fields": {
+        "school": "shadow",
+        "referenceFlat": 620,
+        "referenceDurationMs": 10000
+      },
+      "unknown": [
+        "live cooldown, cost, flat and percentage reduction, restoration order"
+      ],
+      "conflicts": [
+        {
+          "field": "percentageReduction",
+          "classic": "flat only",
+          "archive": "15% in addition to flat"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=10941",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:fade",
+    "spellId": 10942,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 275,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "priest-fade"
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=10942",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "fadeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "actor-buff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:fade",
+      "spellId": 10942,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "shadow",
+        "referenceFlat": 820,
+        "referenceDurationMs": 10000
+      },
+      "unknown": [
+        "live cooldown, cost, flat and percentage reduction, restoration order"
+      ],
+      "conflicts": [
+        {
+          "field": "percentageReduction",
+          "classic": "flat only",
+          "archive": "15% in addition to flat"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=10942",
+      "liveVerified": false
+    }
+  }
+],
+ row('priest','fade',9579,'mana','instant',[{kind:'priest-fade'}],{cost:125,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:30000,referenceGcdMs:1500,requiredPolicy:['fadeModel','acceptSourceConflict'],refreshStrategy:'actor-buff'}),
+ row('priest','fade',9592,'mana','instant',[{kind:'priest-fade'}],{cost:175,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:30000,referenceGcdMs:1500,requiredPolicy:['fadeModel','acceptSourceConflict'],refreshStrategy:'actor-buff'}),
  {
   "classId": "priest",
   "abilityId": "priest:vampiric-embrace",
