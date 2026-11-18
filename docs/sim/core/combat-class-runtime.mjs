@@ -367,7 +367,7 @@ export function createExplicitClassEncounter(input){
   const apply=(e,t,tickIndex,castContext)=>{
    if(a.arcaneSurgeModel?.mode==='archive-damage')consumeSurge(e,a.actorId,a.arcaneSurgeModel);if(tickIndex===undefined||tickIndex===1)stealthRuntime?.beforeAction(e,a);castContext={...castContext,actionState:{}};
    if(a.scatterShot)scatterAutoStop=a.scatterShot;else if(scatterAutoStop?.autoResume==='explicit-attack'&&scatterAutoStop.resumeAbilityIds.includes(a.abilityId))scatterAutoStop=null;
-   if(a.holyStrikePolicy){const p=a.holyStrikePolicy;executeHolyStrike(e,{owner:a.actorId,target:t,enemyIds:sc.targetIds,geometry:sc.geometry,recipients:p.recipients,manaPools:p.manaPools,model:p.model,outcomes:p.outcomes,roll:sampleAttack,refreshJudgements});return;}
+   if(a.holyStrikePolicy){const p=a.holyStrikePolicy;executeHolyStrike(e,{owner:a.actorId,target:t,enemyIds:sc.targetIds,geometry:sc.geometry,recipients:p.recipients,manaPools:p.manaPools,model:p.model,outcomes:p.outcomes,healThreat:p.healThreat,roll:sampleAttack,refreshJudgements});return;}
     if(a.felstormModel){const started=felstormRuntime.activate(e,a.felstormModel,{owner:ctx.stats.shadow??0,pet:statsFor(sc.petId).spellPower??0});if(started)companionCastingUntil=Math.max(companionCastingUntil,e.timeline.now+a.felstormModel.durationMs);return;}
     if(a.powerOverwhelmingModel){powerRuntime.activate(e,a.powerOverwhelmingModel);return;}
     if(a.fireTotem){fireRuntime.cast(e,{...a,name:ability.name});return;}
