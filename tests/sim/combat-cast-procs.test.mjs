@@ -35,7 +35,7 @@ test('Purifying Flames boosts subsequent Holy damage, does not consume on Smite,
  const fire=action('priest:holy-fire',15261,[effect(hit)],{kind:'instant',castMs:0,cooldownMs:60000,costs:[]});
  const smite=action('priest:smite',10934,[effect(hit)],{kind:'instant',castMs:0,costs:[]});
  const castProcs=buildCastProcs({classId:'priest',talents:{178:2}},[fire,smite]).procs;
- const r=createExplicitClassEncounter({...common,durationMs:12000,actions:[fire,smite],castProcs,rows:[{ability:'Holy Fire',target:'primary',conditions:[]},{ability:'Smite',target:'primary',conditions:[]}]}).run();
+ const r=createExplicitClassEncounter({...common,durationMs:12500,actions:[fire,smite],castProcs,rows:[{ability:'Holy Fire',target:'primary',conditions:[]},{ability:'Smite',target:'primary',conditions:[]}]}).run();
  const raw=r.events.filter(e=>e.type==='damage').map(e=>[e.time,e.source,Math.round(e.raw)]);
  assert.deepEqual(raw.slice(0,3),[[0,'Holy Fire',100],[1500,'Smite',112],[3000,'Smite',112]]);
  assert.deepEqual(raw.filter(e=>e[0]>=10000).map(e=>e[2]),[100,100]);
@@ -52,4 +52,16 @@ test('Missed Holy Fire does not activate Purifying Flames; shadow damage is unaf
   assert.equal(r.events.filter(e=>e.type==='proc'&&e.procId==='purifying-flames').length,outcomes===hit?1:0);
   assert.ok(r.events.filter(e=>e.type==='damage'&&e.source==='Mind Blast').every(e=>e.raw===100));
  }
+});
+
+test('Purifying Flames and Searing Light coexist; Smite consumes only its own proc',()=>{
+ const fire=action('priest:holy-fire',15261,[effect(crit)],{kind:'instant',castMs:0,cooldownMs:60000,costs:[]});
+ const smite=action('priest:smite',10934,[effect(hit)],{costs:[]});
+ const castProcs=buildCastProcs({classId:'priest',talents:{177:3,178:2}},[fire,smite]).procs;
+ assert.equal(castProcs.length,2);
+ const r=createExplicitClassEncounter({...common,durationMs:5000,actions:[fire,smite],castProcs,rows:[{ability:'Holy Fire',target:'primary',conditions:[]},{ability:'Smite',target:'primary',conditions:[]}]}).run();
+ assert.deepEqual(r.events.filter(e=>e.type==='action-start'&&e.ability==='Smite').map(e=>e.castMs),[0,2500]);
+ assert.equal(Math.round(r.events.find(e=>e.type==='damage'&&e.source==='Smite').raw),112);
+ assert.ok(r.events.some(e=>e.type==='aura-remove'&&e.id==='searing-light'&&e.reason==='consumed'));
+ assert.ok(!r.events.some(e=>e.type==='aura-remove'&&e.id==='purifying-flames'&&e.reason==='consumed'));
 });

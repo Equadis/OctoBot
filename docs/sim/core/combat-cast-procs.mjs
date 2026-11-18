@@ -12,7 +12,7 @@ export function validateCastProc(p,abilityIds){
  num(p.chance,'cast proc chance',0,1);integer(p.durationMs,'proc aura duration');integer(p.maxStacks,'proc stack cap');
  integer(p.castReductionMsPerStack,'per stack cast reduction',0);num(p.manaCostFactor,'mana cost factor',0,1);
  for(const field of ['instant','guaranteeHit'])if(typeof p[field]!=='boolean')throw new Error('Explicit '+field+' policy required');
- if(p.consumerId===null&&(p.id!=='purifying-flames'||p.name!=='Purifying Flames'||p.trigger!=='landed'||p.triggerKinds.length!==1||p.triggerKinds[0]!=='damage'||p.triggerAbilityIds.length!==1||p.triggerAbilityIds[0]!=='priest:holy-fire'||![.5,1].includes(p.chance)||p.durationMs!==10000||p.maxStacks!==1||p.castReductionMsPerStack!==0||p.manaCostFactor!==1||p.instant||p.guaranteeHit))throw new Error('Invalid Purifying Flames aura-only proc');
+ if((p.consumerId===null||p.id==='purifying-flames')&&(p.consumerId!==null||p.id!=='purifying-flames'||p.name!=='Purifying Flames'||p.trigger!=='landed'||p.triggerKinds.length!==1||p.triggerKinds[0]!=='damage'||p.triggerAbilityIds.length!==1||p.triggerAbilityIds[0]!=='priest:holy-fire'||![.5,1].includes(p.chance)||p.durationMs!==10000||p.maxStacks!==1||p.castReductionMsPerStack!==0||p.manaCostFactor!==1||p.instant||p.guaranteeHit))throw new Error('Invalid Purifying Flames aura-only proc');
  return p;
 }
 export function buildCastProcs(build,actions,policies,{requireComplete=false}={}){
