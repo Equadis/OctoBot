@@ -1,0 +1,41 @@
+name: Seven collector release checks
+on:
+  pull_request:
+    paths:
+      - 'services/world-buff-tracker/**'
+      - 'cloudflare/octometrics/**'
+      - '.github/workflows/seven-collector-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/world-buff-tracker/package-lock.json
+      - run: npm ci
+        working-directory: services/world-buff-tracker
+      - run: npm run typecheck
+        working-directory: services/world-buff-tracker
+      - run: npm test
+        working-directory: services/world-buff-tracker
+      - run: npm run build
+        working-directory: services/world-buff-tracker
+      - run: npm run test:collector
+        working-directory: services/world-buff-tracker
+      - name: Check collector runtime imports without game login
+        working-directory: services/world-buff-tracker
+        run: |
+          for profile in OBPVESW OBPVEORG OBPVEDMFA OBPVEDMFH OBPVEAH OBPVPSW OVHCSW; do
+            status=0
+            timeout 3s env COLLECTOR_PROFILE="$profile" WOW_PASSWORD=synthetic-only WOW_LOGIN_ENABLED=false node collector/run.mjs || status=$?
+            test "$status" -eq 124
+          done
+      - run: node --test cloudflare/octometrics/tests/*.test.mjs
+      - run: python3 -m unittest discover -s cloudflare/octometrics/tests -p 'test_auction_sql.py'

@@ -59,3 +59,16 @@ test("unseeded zones never start numbering at one",{skip},async()=>{
  assert.equal(r.status,409);assert.equal(r.json.error,"counter_not_seeded");
  assert.equal(db.sqlite.prepare("SELECT COUNT(*) n FROM raid_numbers").get().n,0);
 });
+
+test("encrypted checkpoint endpoints reject stale writes and preserve legacy state",{skip},async()=>{
+ const db=makeDb(),now=Date.now(),payload=Buffer.alloc(48,1).toString("base64");
+ assert.equal((await call(db,"checkpoint?zone=onyxia")).status,404);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now,payload})).status,200);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now-1,payload})).status,409);
+ assert.equal((await call(db,"checkpoint?zone=onyxia")).json.payload,payload);
+ assert.equal((await call(db,"checkpoint?zone=bwl")).status,404);
+ assert.equal((await call(db,"state?zone=onyxia")).status,404);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now,payload:"plaintext"})).status,400);
+});
+
+test("private raid preflight exposes counters and aggregate migration metadata only",{skip},async()=>{const db=makeDb(),now=Date.now();assert.equal((await call(db,"preflight?zone=onyxia","GET",undefined,"wrong")).status,401);const initial=(await call(db,"preflight?zone=onyxia")).json;assert.equal(initial.counterSeeded,false);assert.equal(initial.highestNumber,null);await call(db,"seed","POST",{zone:"onyxia",floor:700});await call(db,"number","POST",{zone:"onyxia",requestId:"onyxia-preflight-test"});assert.equal((await call(db,"state","PUT",{zone:"onyxia",state:{v:1,slots:[],lockouts:{"abcdef0123456789":now}}})).status,200);const report=(await call(db,"preflight?zone=onyxia")).json;assert.equal(report.highestNumber,701);assert.equal(report.legacy.activeSlots,0);assert.equal(report.legacy.lockoutCount,1);assert.equal(report.legacy.lastLockedAt,now);assert.ok(!JSON.stringify(report).includes("abcdef0123456789"));});

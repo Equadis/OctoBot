@@ -10,7 +10,8 @@ const REQUEST_ID=/^[a-z0-9:_-]{8,96}$/;
 const SCHEMA=[
  "CREATE TABLE IF NOT EXISTS raid_number_floor(zone TEXT PRIMARY KEY, floor INTEGER NOT NULL, seeded_at TEXT NOT NULL)",
  "CREATE TABLE IF NOT EXISTS raid_numbers(request_id TEXT PRIMARY KEY, zone TEXT NOT NULL, n INTEGER NOT NULL, granted_at TEXT NOT NULL, UNIQUE(zone,n))",
- "CREATE TABLE IF NOT EXISTS raid_tracker_state(zone TEXT PRIMARY KEY, state_json TEXT NOT NULL, saved_at TEXT NOT NULL)"
+ "CREATE TABLE IF NOT EXISTS raid_tracker_state(zone TEXT PRIMARY KEY, state_json TEXT NOT NULL, saved_at TEXT NOT NULL)",
+ "CREATE TABLE IF NOT EXISTS raid_checkpoint_v2(zone TEXT PRIMARY KEY, payload TEXT NOT NULL, observed_at INTEGER NOT NULL, saved_at TEXT NOT NULL)"
 ];
 const ready=new WeakSet();
 export async function ensureRaidSchema(db){
@@ -76,6 +77,36 @@ export async function handleRaidRoute(request,url,env,reply){
    if(!seeded)return reply({error:"counter_not_seeded",zone:b.zone},409);
   }
   return reply({error:"busy"},503);
+ }
+ if(request.method==="GET"&&url.pathname==="/api/raid/preflight"){
+  const zone=url.searchParams.get("zone");
+  if(!isZone(zone))return reply({error:"invalid zone"},400);
+  const floor=await env.DB.prepare("SELECT floor FROM raid_number_floor WHERE zone=?").bind(zone).first();
+  const highest=await env.DB.prepare("SELECT MAX(n) n FROM raid_numbers WHERE zone=?").bind(zone).first();
+  const legacy=await env.DB.prepare("SELECT state_json,saved_at FROM raid_tracker_state WHERE zone=?").bind(zone).first();
+  const checkpoint=await env.DB.prepare("SELECT observed_at,saved_at FROM raid_checkpoint_v2 WHERE zone=?").bind(zone).first();
+  let state=null;
+  if(legacy){try{state=validateTrackerState({zone,state:JSON.parse(legacy.state_json)})?.state??null;}catch{}}
+  const values=state?Object.values(state.lockouts):[];
+  return reply({zone,counterSeeded:!!floor,highestNumber:floor?Math.max(floor.floor,highest?.n??0):null,
+   legacy:legacy?{valid:!!state,savedAt:legacy.saved_at,activeSlots:state?.slots.length??null,lockoutCount:state?values.length:null,lastLockedAt:values.length?Math.max(...values):null}:null,
+   checkpoint:checkpoint?{observedAt:checkpoint.observed_at,savedAt:checkpoint.saved_at}:null},200);
+ }
+ if(url.pathname==="/api/raid/checkpoint"){
+  if(request.method==="GET"){
+   const zone=url.searchParams.get("zone");
+   if(!isZone(zone))return reply({error:"invalid zone"},400);
+   const row=await env.DB.prepare("SELECT payload,observed_at FROM raid_checkpoint_v2 WHERE zone=?").bind(zone).first();
+   return row?reply({zone,payload:row.payload,observedAt:row.observed_at},200):reply({error:"no checkpoint"},404);
+  }
+  if(request.method==="PUT"){
+   if(Number(request.headers.get("content-length")||0)>MAX_STATE_BYTES)return reply({error:"payload too large"},413);
+   const b=await read();
+   if(!b||!isZone(b.zone)||!int(b.observedAt,Date.UTC(2024,0,1),Date.now()+60000)||typeof b.payload!=="string"||b.payload.length<40||b.payload.length>MAX_STATE_BYTES-256||!/^[A-Za-z0-9+/]+={0,2}$/.test(b.payload))return reply({error:"invalid checkpoint"},400);
+   await env.DB.prepare("INSERT INTO raid_checkpoint_v2(zone,payload,observed_at,saved_at) VALUES (?,?,?,?) ON CONFLICT(zone) DO UPDATE SET payload=excluded.payload,observed_at=excluded.observed_at,saved_at=excluded.saved_at WHERE excluded.observed_at>=raid_checkpoint_v2.observed_at").bind(b.zone,b.payload,b.observedAt,nowIso).run();
+   const row=await env.DB.prepare("SELECT observed_at FROM raid_checkpoint_v2 WHERE zone=?").bind(b.zone).first();
+   return row?.observed_at===b.observedAt?reply({ok:true},200):reply({error:"stale checkpoint"},409);
+  }
  }
  if(url.pathname==="/api/raid/state"){
   if(request.method==="GET"){

@@ -226,6 +226,13 @@ export class ClearTracker {
   }
 
   /** The current raid's reference number, or null if none is tracked / numbering is off. */
+  /** Attach a remotely allocated number to an already confirmed, unnumbered raid. */
+  assignNumber(number: number): boolean {
+    if (!this.confirmed || this.#number !== null || !Number.isSafeInteger(number) || number < 1) return false;
+    this.#number = number;
+    return true;
+  }
+
   get number(): number | null {
     return this.#number;
   }

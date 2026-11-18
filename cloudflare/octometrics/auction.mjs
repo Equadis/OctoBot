@@ -79,13 +79,13 @@ async function upload(req,env,action){
        return respond({ok:true,duplicate:true,status:existing.status});
      return bad('scan ID already used or different scan header',409);
    }
-   await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 hours')").run();
+   await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND COALESCE((SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id),created_at)<strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 minutes')").run();
    const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' LIMIT 1");
    if(unfinished)return bad('another upload already in progress',409);
    // Partial unique D1 index also protects concurrent starts.
    try{
      await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,env.AUCTION_REALM??"N'Zoth",body.started_at,body.reported_total).run();
-   }catch{return bad('another upload already in progress or duplicate scan ID',409)}
+   }catch(error){if(/unique constraint/i.test(String(error)))return bad('another upload already in progress or duplicate scan ID',409);return bad('database temporarily unavailable',503)}
    return respond({ok:true},201);
  }
  const scan=await first(db,"SELECT * FROM ah_scans WHERE scan_id=?",body.scan_id);
@@ -110,12 +110,15 @@ async function upload(req,env,action){
    const rows=body.items.map(normalise);
    if(rows.some(r=>!r))return bad('invalid listing');
    if(new Set(rows.map(r=>r.auction_id)).size!==rows.length)return bad('duplicate auction on page');
-   // A retry replaces exactly one page. D1 batch is atomic, so transient failures cannot partially replace a page.
-   const ops=[db.prepare('DELETE FROM ah_listings WHERE scan_id=? AND page=?').bind(body.scan_id,body.page)];
-   for(const r of rows)ops.push(db.prepare(
-     (liveSnapshot?'INSERT OR REPLACE INTO':'INSERT INTO')+' ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-   ).bind(body.scan_id,r.auction_id,body.page,r.item_id,r.variant,r.item_name,r.quality,r.icon_url,r.quantity,r.start_bid,r.current_bid,r.min_next_bid,r.buyout,r.owner_guid,r.time_left_ms,r.captured_at,r.item_level,r.req_level,r.class_id,r.subclass_id,r.slot_id));
-   ops.push(db.prepare('INSERT INTO ah_pages(scan_id,page,count,response_ms) VALUES (?,?,?,?) ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')').bind(body.scan_id,body.page,rows.length,body.response_ms));
+   // Three statements rather than up to 52 per page. JSON uses one bound
+   // parameter, below D1's 100-variable limit; all rows were validated above.
+   // The status checks happen inside the atomic batch, not just before it.
+   const columns=['auction_id','item_id','variant','item_name','quality','icon_url','quantity','start_bid','current_bid','min_next_bid','buyout','owner_guid','time_left_ms','captured_at','item_level','req_level','class_id','subclass_id','slot_id'];
+   const ops=[
+     db.prepare("DELETE FROM ah_listings WHERE scan_id=? AND page=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.scan_id,body.page,body.scan_id),
+     db.prepare((liveSnapshot?'INSERT OR REPLACE INTO':'INSERT INTO')+' ah_listings(scan_id,page,'+columns.join(',')+') SELECT ?,?,'+columns.map(k=>"json_extract(value,'$."+k+"')").join(',')+" FROM json_each(?) WHERE EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.scan_id,body.page,JSON.stringify(rows),body.scan_id),
+     db.prepare("INSERT INTO ah_pages(scan_id,page,count,response_ms) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')").bind(body.scan_id,body.page,rows.length,body.response_ms,body.scan_id)
+   ];
    try{await db.batch(ops)}catch{return bad('page write failed (retry safely)',503)}
    return respond({ok:true,page:body.page,items:rows.length},202);
  }
@@ -139,13 +142,15 @@ async function upload(req,env,action){
    }
    const duration=Math.max(0,Date.parse(body.completed_at)-Date.parse(scan.started_at));
    const ops=[
-     db.prepare("INSERT OR IGNORE INTO ah_first_seen(auction_id,first_seen_at) SELECT auction_id,? FROM ah_listings WHERE scan_id=?").bind(body.completed_at,body.scan_id),
-     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
-     db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND 1=1 ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id").bind(body.completed_at,body.scan_id,body.scan_id),
+     db.prepare("INSERT OR IGNORE INTO ah_first_seen(auction_id,first_seen_at) SELECT auction_id,? FROM ah_listings WHERE scan_id=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.completed_at,body.scan_id,body.scan_id),
+     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id,body.scan_id),
+     db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id") .bind(body.completed_at,body.scan_id,body.scan_id,body.scan_id),
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
    ];
    try{await db.batch(ops)}catch{return bad('finalisation failed',503)}
-   return respond({ok:true,auction_count:count.n,duration_ms:duration,snapshot_quality:liveSnapshot?'live_estimate':'strict'},201);
+   const published=await first(db,"SELECT status,completed_at,expected_pages,reported_total,auction_count,duration_ms FROM ah_scans WHERE scan_id=?",body.scan_id);
+   if(published?.status!=='complete'||published.completed_at!==body.completed_at||published.expected_pages!==body.expected_pages||published.reported_total!==body.reported_total)return bad('scan no longer uploading or completion conflict',409);
+   return respond({ok:true,auction_count:published.auction_count,duration_ms:published.duration_ms,snapshot_quality:liveSnapshot?'live_estimate':'strict'},201);
  }
  return bad('unknown upload action',404);
 }
@@ -202,14 +207,14 @@ async function readApi(url,env){
    const prev=await previous(db,scan);
    const query=buildItemsQuery(url.searchParams,scan,prev?.scan_id);
    if(query.error)return bad(query.error);
-   const totalRow=await first(db,query.countSql,...query.binds);
-   const rows=await all(db,query.sql,...query.binds,query.limit,query.offset);
+   const rows=await all(db,query.pageSql,...query.binds,query.limit,query.offset);
+   const total=rows.length?rows[0].total_rows:query.offset>0?(await first(db,query.countSql,...query.binds)).n:0;
    return respond({items:rows.map(r=>({item_id:r.item_id,variant:r.variant,item_name:r.item_name,quality:r.quality,icon_url:r.icon_url,
      item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
      quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
      historical_avg:r.avg_unit??null,historical_days:r.days??0,average_samples:r.price_samples??0,average_excluded:r.price_excluded??0,average_source:r.average_source??null,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
      time_left_ms:r.time_left_ms,captured_at:r.captured_at,latest_listing_seen_at:r.latest_listing_seen_at})),
-     total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
+     total,has_more:query.offset+rows.length<total,limit:query.limit,offset:query.offset,
      listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
  }
  const detail=url.pathname.match(/^\/api\/auction\/(item|history)\/(\d+)$/);
@@ -240,11 +245,29 @@ export async function auctionRoute(request,env){
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
    if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata','seller-names'].includes(action))return bad('not found',404);
-   return upload(request,env,action);
+   try{return await upload(request,env,action);}catch(error){console.warn('Auction upload temporarily unavailable',String(error).slice(0,200));return new Response(JSON.stringify({error:'database temporarily unavailable'}),{status:503,headers:{'Content-Type':'application/json','Retry-After':'15','Cache-Control':'no-store',...CORS}});}
  }
  if(request.method==='GET'){
    if(url.pathname==='/api/auction/missing-sellers'&&(!env.AUCTION_PUSH_TOKEN||request.headers.get('authorization')!=='Bearer '+env.AUCTION_PUSH_TOKEN))return bad('unauthorised',401);
-   return readApi(url,env);
+   if(url.pathname==='/api/auction/missing-sellers'||url.pathname==='/api/auction/incomplete-metadata'||url.pathname==='/api/auction/missing-metadata')return readApi(url,env);
+   // Collapse repeated public browser reads at the edge. Never cache authenticated
+   // endpoints, failures, or writes. Keep live scan status on a shorter TTL.
+   const cache=globalThis.caches?.default;
+   if(!cache)return readApi(url,env);
+   const key=new Request(url.href,{method:'GET'});
+   try{const hit=await cache.match(key);if(hit)return hit;}catch{}
+   let result;
+   try{result=await readApi(url,env);}catch(error){
+     console.warn('Auction read temporarily unavailable',String(error).slice(0,200));
+     return new Response(JSON.stringify({error:'database temporarily unavailable'}),{status:503,headers:{'Content-Type':'application/json','Retry-After':'15','Cache-Control':'no-store',...CORS}});
+   }
+   if(result.ok){
+     const ttl=url.pathname.endsWith('/scan-status')?3:15;
+     const headers=new Headers(result.headers);headers.set('Cache-Control','public, max-age='+ttl);
+     result=new Response(result.body,{status:result.status,headers});
+     try{await cache.put(key,result.clone());}catch{}
+   }
+   return result;
  }
  return bad('method not allowed',405);
 }
@@ -254,11 +277,16 @@ export async function auctionCleanup(env){
  await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"));
 }
 async function cleanupRealm(db){
- // Retain the three latest complete scans for movement comparisons; historical prices are compact daily rows.
- await db.prepare("DELETE FROM ah_listings WHERE scan_id IN (SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')) OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
- await db.prepare("DELETE FROM ah_pages WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='uploading' OR (status='complete' AND scan_id IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
- await db.prepare("DELETE FROM ah_item_points WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
- await db.prepare("DELETE FROM ah_scans WHERE status='failed' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days')").run();
- await db.prepare("DELETE FROM ah_scans WHERE status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
- await db.prepare("DELETE FROM ah_daily WHERE day < date('now','-365 days')").run();
+ // The three latest complete scans and all compact price history remain readable.
+ // Limit write amplification per SQL statement; incomplete cleanup resumes on the next cron.
+ const expired="SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC,scan_id DESC LIMIT 3))";
+ await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND COALESCE((SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id),created_at)<strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 minutes')").run();
+ for(const table of ["ah_listings","ah_pages","ah_item_points"]){
+   for(let i=0;i<4;i++){
+     const result=await db.prepare("DELETE FROM "+table+" WHERE rowid IN (SELECT rowid FROM "+table+" WHERE scan_id IN ("+expired+") LIMIT 2000)").run();
+     if(result?.meta?.changes===0)break;
+   }
+ }
+ await db.prepare("DELETE FROM ah_scans WHERE (status='failed' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days') OR status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC,scan_id DESC LIMIT 3)) AND NOT EXISTS(SELECT 1 FROM ah_listings l WHERE l.scan_id=ah_scans.scan_id) AND NOT EXISTS(SELECT 1 FROM ah_pages p WHERE p.scan_id=ah_scans.scan_id) AND NOT EXISTS(SELECT 1 FROM ah_item_points i WHERE i.scan_id=ah_scans.scan_id)").run();
+ await db.prepare("DELETE FROM ah_daily WHERE rowid IN (SELECT rowid FROM ah_daily WHERE day < date('now','-365 days') LIMIT 2000)").run();
 }
