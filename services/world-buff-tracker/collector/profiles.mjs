@@ -31,3 +31,18 @@ export function schedule(job,settings,{now=Date.now,onError=console.error}={}){
  timer=setTimeout(tick,Math.max(1,nextSlotMs(now(),settings.period,settings.offset)-now()));
  return ()=>{closed=true;clearTimeout(timer);};
 }
+
+/** Refuse an apparently healthy service which has silently disabled its assigned job. */
+export function validateLiveProfile(profile,env=process.env){
+ const missing=[];
+ const required=key=>{if(!env[key]?.trim())missing.push(key);};
+ required("METRICS_PUSH_TOKEN");
+ if(profile.raid){if((env.RAID_STATE_KEY?.trim().length??0)<16)missing.push("RAID_STATE_KEY (at least 16 characters)");}
+ if(profile.chat&&env.WORLD_CHAT_ENABLED!=="true")missing.push("WORLD_CHAT_ENABLED=true");
+ if(profile.auction){
+  required("AUCTION_PUSH_TOKEN");
+  if(env.AUCTION_COLLECTOR_ENABLED!=="true")missing.push("AUCTION_COLLECTOR_ENABLED=true");
+  if(env.AUCTION_RULES_APPROVED!=="true")missing.push("AUCTION_RULES_APPROVED=true");
+ }
+ if(missing.length)throw Error("Incomplete "+profile.key+" configuration: "+missing.join(", "));
+}
