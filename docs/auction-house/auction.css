@@ -226,3 +226,7 @@
 .ah-history-layout{display:grid;grid-template-columns:minmax(0,640px) minmax(160px,1fr);gap:24px;align-items:center}.ah-history-summary{display:grid;gap:14px;padding:12px;min-width:0}.ah-history-stat{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;font-weight:400}.ah-history-summary small{font-weight:400;font-size:11px}@media(max-width:700px){.ah-history-layout{grid-template-columns:1fr;gap:6px}.ah-history-summary{padding:4px 0}}
 
 .ah-stats .ah-trend-prices{display:block;margin-top:4px;font-weight:400;color:#dce3ed;line-height:1.4}
+
+/* Keep the compact favourite cell from clipping the star into an ellipsis. */
+.ah-scroll>table>tbody>tr.ah-entry>td:first-child{padding:0;text-align:center;overflow:visible;text-overflow:clip;white-space:nowrap}
+.ah-scroll>table>tbody>tr.ah-entry>td:first-child .ah-star{display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;padding:0;box-sizing:border-box;overflow:visible}
