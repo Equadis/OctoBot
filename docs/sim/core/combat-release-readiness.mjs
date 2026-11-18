@@ -12,7 +12,7 @@ export function releaseReadiness(){
    const referenceRanks=REFERENCE_RANKS.filter(r=>r.abilityId===a.id),externalReferenceRanks=referenceRanks.filter(r=>r.status==='external-reference-only').map(r=>structuredClone(r.record));
    const candidateIds=[...new Set(a.candidateSpellIds||[])];
    const evidenceIds=new Set(ranks.map(r=>r.spellId));
-   const availability=a.id==='hunter:counterattack'?'removed':a.id==='hunter:trueshot-aura'?'conflicting-guide-and-archive':null;
+   const availability=['hunter:counterattack','priest:power-infusion'].includes(a.id)?'removed':a.id==='hunter:trueshot-aura'?'conflicting-guide-and-archive':null;
    const executableAdapter=['hunter:auto-shot','hunter:pet-attack'].includes(a.id)?'scheduler-command':null;
    return {id:a.id,name:a.name,availability,executableAdapter,status:[...ranks,...externalReferenceRanks].some(r=>r.conflicts.length)?'source-conflict':ranks.length||externalReferenceRanks.length||a.contract?'published-partial':'unresolved',candidateIds,unreviewedCandidateIds:candidateIds.filter(id=>!evidenceIds.has(id)),guideContract:a.contract,ranks,externalReferenceRanks,referenceRankIds:referenceRanks.map(r=>r.spellId),validated:false};
   });

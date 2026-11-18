@@ -4,6 +4,7 @@ import {compileDiscipline,compileMasterStrike,masterStrikeAura} from './combat-w
 import {validateReactive} from './combat-warrior-reactive.mjs';
 import {compileWarriorActivation} from './combat-warrior-activation.mjs';
 import {compileWarriorUtility} from './combat-warrior-utility.mjs';
+import {compileVampiricEmbrace} from './combat-vampiric-embrace.mjs';
 import {validateMarkForDeath} from './combat-mark-for-death.mjs';
 import {compileVanish} from './combat-stealth.mjs';
 import {validateBladeFlurry} from './combat-blade-flurry.mjs';
@@ -116,7 +117,8 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
   if(component.kind==='shadow-of-death'){if(Number(build.talents?.['161']??0)<1)throw new Error('Shadow of Death requires its talent');effects.push({kind:'shadow-of-death',when:'always',model:validateShadowOfDeath(policy.shadowOfDeathModel)});continue;}
   if(component.kind==='expose-armor'){effects.push(compileExposeArmor(build,component,policy));continue;}
   if(component.kind==='rogue-cooldown'){effects.push(compileRogueCooldown(build,rank,policy.rogueCooldownModel));continue;}
-  if(component.kind==='utility-curse'){effects.push(compileUtilityCurse(rank.abilityId,abilityName,policy.utilityCurseModel));continue;}
+  if(component.kind==='vampiric-embrace'){effects.push({kind:'vampiric-embrace',when:'always',model:compileVampiricEmbrace(build,policy.vampiricEmbraceModel)});continue;}
+   if(component.kind==='utility-curse'){effects.push(compileUtilityCurse(rank.abilityId,abilityName,policy.utilityCurseModel));continue;}
   if(component.kind==='elemental-shield'){elementalShieldModel=compileElementalShield(build,rank,policy.elementalShieldModel);effects.push({kind:'elemental-shield',when:'always',id:rank.abilityId});continue;}
   if(component.kind==='companion-command'){if(!command.mitigation&&command.mitigation!==0)throw new Error('Explicit command mitigation required');effects.push({kind:'companion-command',when:'always',damage:{kind:'damage',when:'always',school:'physical',formula:{min:0,max:0,terms:[{stat:'attackPower',coefficient:component.coefficient}],multiplier:1},outcomes:command.outcomes,mitigation:finite(command.mitigation,'command mitigation'),flatReduction:finite(command.flatReduction,'command flat reduction'),threat:command.threat===null?null:{coefficient:finite(command.threat?.coefficient,'command threat'),flat:finite(command.threat?.flat,'command flat threat'),multipliers:[],distribution:'each'}}});continue;}
   if(component.kind==='seal-aura'){if((rank.abilityId==='paladin:seal-of-wisdom')!==(policy.sealModel?.kind==='wisdom')||(rank.abilityId==='paladin:seal-of-light')!==(policy.sealModel?.kind==='light')||(rank.abilityId==='paladin:seal-of-the-crusader')!==(policy.sealModel?.kind==='crusader'))throw new Error('Seal model does not match selected seal identity');sealModel=compileSealModel(policy.sealModel);if(sealModel.kind==='crusader'){const talent=Number(build.talents?.['431']??0);if(!Number.isInteger(talent)||talent<0||talent>3)throw new Error('Invalid Improved Seal of the Crusader rank');const factor=1+.05*talent;sealModel={...sealModel,attackPower:sealModel.attackPower*factor,judgement:{...sealModel.judgement,holyBonus:sealModel.judgement.holyBonus*factor}};}effects.push({kind:'aura',when:'always',auraTarget:'actor',aura:{id:rank.abilityId,name:abilityName,kind:'buff',durationMs:sealModel.durationMs,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',exclusiveGroup:'paladin-seal',modifiers:crusaderSealModifiers(sealModel)}});continue;}

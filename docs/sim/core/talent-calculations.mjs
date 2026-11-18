@@ -144,6 +144,7 @@ const ABILITIES={
   holyHeal('Flash Heal','Healing target with Renew'),
   holyHeal('Prayer of Healing','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Prayer of Healing/Holy Nova','Healing target with Renew'),
   profile('Renew','heal-periodic','Holy','All spells','Spell casting','Spells','Healing spells','Healing target with Renew','Instant/Holy/Discipline spells'),
+  spellUtility('Vampiric Embrace','Shadow','Shadow spells','Instant/Holy/Discipline spells'),
   spellUtility('Power Word: Shield','Instant/Holy/Discipline spells'),spellUtility('Psychic Scream','Instant/Holy/Discipline spells'),spellUtility('Fade','Instant/Holy/Discipline spells'),profile('Wand attack','unknown','Wand/Bow'),profile('Bow attack','unknown','Wand/Bow')
  ]
 };

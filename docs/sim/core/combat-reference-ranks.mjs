@@ -12,6 +12,63 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ {
+  "classId": "priest",
+  "abilityId": "priest:vampiric-embrace",
+  "spellId": 15286,
+  "rank": 1,
+  "learnLevel": 30,
+  "resource": "mana",
+  "mode": "instant",
+  "cost": 0,
+  "castMs": 0,
+  "minRange": 0,
+  "maxRange": 30,
+  "components": [
+    {
+      "kind": "vampiric-embrace"
+    }
+  ],
+  "source": "https://octowow.st/talents/priest/",
+  "referenceSource": "https://octowow.st/index.php/priest",
+  "status": "external-reference-only",
+  "liveVerified": false,
+  "learnability": "talent-reference",
+  "requiredPolicy": [
+    "costOverride",
+    "castOverrideMs",
+    "vampiricEmbraceModel",
+    "acceptSourceConflict"
+  ],
+  "referenceGcdMs": 1500,
+  "referenceCooldownMs": 0,
+  "refreshStrategy": "target-debuff",
+  "record": {
+    "classId": "priest",
+    "abilityId": "priest:vampiric-embrace",
+    "spellId": 15286,
+    "rank": 1,
+    "level": 30,
+    "fields": {
+      "school": "shadow",
+      "durationMs": 60000,
+      "healPct": 20
+    },
+    "unknown": [
+      "live cost, range, GCD, cooldown, target eligibility, damage basis, threat"
+    ],
+    "conflicts": [
+      {
+        "field": "castMs",
+        "archive": "instant and 2-second versions",
+        "reference": "instant; explicit override required"
+      }
+    ],
+    "status": "external-reference-only",
+    "source": "https://octowow.st/talents/priest/",
+    "liveVerified": false
+  }
+},
  ...[[2944,215,19],[19278,645,68]].map(([id,cost,tick])=>row('priest','devouring-plague',id,'mana','instant',[c('periodic-damage','shadow',null,{min:tick,max:tick,durationMs:24000,intervalMs:3000,leech:true})],{cost,castMs:0,minRange:0,maxRange:30,referenceCooldownMs:180000,referenceGcdMs:1500,referenceSource:'https://octowow.st/index.php/priest',requiredPolicy:['componentCoefficients','leechModel',...(id===2944?['acceptSourceConflict']:[])],refreshStrategy:'target-debuff'})),
  ...[
   {
