@@ -35,6 +35,8 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'damage',min:+m[1],max:+m[1],requiresSchool:true,requiresLeech:true}};
  m=s.match(/^Chance on hit: Drains target for (\d+) Shadow damage every (\d+) sec and transfers it to the caster\. Lasts for (\d+) sec\.?$/i);
  if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'periodic-damage',school:'shadow',min:+m[1],max:+m[1],intervalMs:+m[2]*1000,durationMs:+m[3]*1000,requiresLeech:true}};
+ m=s.match(/^Equip: Gives a chance when your harmful spells land to deal (\d+) Shadow damage and restore (\d+) mana to you\.?$/i);
+ if(m)return {trigger:'landed',effect:{kind:'compound',effects:[{kind:'damage',school:'shadow',min:+m[1],max:+m[1]},{kind:'resource',resource:'mana',amount:+m[2]}]}};
  return null;
 }
 export function compileEquipmentTooltips(gear,build,requests=[]){
@@ -47,7 +49,7 @@ export function compileEquipmentTooltips(gear,build,requests=[]){
   const key=JSON.stringify(identity);if(seen.has(key))throw Error('Duplicate tooltip effect');seen.add(key);
   const parsed=parseTimedEquipmentTooltip(raw);if(!parsed)throw Error('Unmapped equipment tooltip: '+raw);
   if(r.acknowledgeUnverifiedTiming!==true)throw Error('Explicit research timing acknowledgement required');
-  const effect={...parsed.effect};if(['damage','periodic-damage'].includes(effect.kind)){if(effect.requiresSchool){effect.school=r.school;delete effect.requiresSchool;}if(effect.requiresLeech){if(!['effective','post-mitigation'].includes(r.leechBasis))throw Error('Explicit leech basis required');effect.leech={basis:r.leechBasis,fraction:1};delete effect.requiresLeech;}effect.outcomes=r.outcomes;effect.mitigation=r.mitigation;effect.threat=r.threat??null;if(effect.kind==='periodic-damage'){effect.refresh=r.refresh;effect.tickAtExpiry=r.tickAtExpiry;}}if(effect.kind==='extra-attack')effect.hand=r.hand;
+  const compileEffect=raw=>{const effect={...raw};if(effect.kind==='compound')return {...effect,effects:effect.effects.map(compileEffect)};if(['damage','periodic-damage'].includes(effect.kind)){if(effect.requiresSchool){effect.school=r.school;delete effect.requiresSchool;}if(effect.requiresLeech){if(!['effective','post-mitigation'].includes(r.leechBasis))throw Error('Explicit leech basis required');effect.leech={basis:r.leechBasis,fraction:1};delete effect.requiresLeech;}effect.outcomes=r.outcomes;effect.mitigation=r.mitigation;effect.threat=r.threat??null;if(effect.kind==='periodic-damage'){effect.refresh=r.refresh;effect.tickAtExpiry=r.tickAtExpiry;}}if(effect.kind==='extra-attack')effect.hand=r.hand;return effect;};const effect=compileEffect(parsed.effect);
   return {id:'tooltip:'+key,source:name,provenance:'Imported exact tooltip: '+raw,trigger:parsed.trigger,effect,cooldownMs:r.cooldownMs,...(parsed.trigger==='use'?{atMs:r.atMs}:{chance:parsed.chance??r.chance,sources:r.sources,...(parsed.eligibility?{eligibility:parsed.eligibility}:{})}),...(r.sharedGroup?{sharedGroup:r.sharedGroup,sharedCooldownMs:r.sharedCooldownMs}:{})};
  });
 }
