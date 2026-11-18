@@ -1,5 +1,5 @@
 import {connect} from "node:net";
-import {getProfile,schedule} from "./profiles.mjs";
+import {getProfile,schedule,validateLiveProfile} from "./profiles.mjs";
 import {loadConfig,parseAddress} from "../dist/config.js";
 import {AuthClient} from "../dist/net/auth-client.js";
 import {WorldClient} from "../dist/net/world-client.js";
@@ -23,6 +23,7 @@ const cfg=loadConfig({...process.env,WOW_ACCOUNT:profile.account,WOW_CHARACTER:p
 const log=prefixed(createLogger(cfg.logLevel),profile.key);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 if(!cfg.loginEnabled){log.info("Collector disabled");setInterval(()=>{},60000);await new Promise(()=>{});}
+validateLiveProfile(profile);
 const token=process.env.METRICS_PUSH_TOKEN?.trim();
 if(!token)throw Error("METRICS_PUSH_TOKEN required");
 const url=new URL(process.env.METRICS_PUSH_URL||"https://octometrics.eqvoice.workers.dev/api/ingest");
@@ -53,14 +54,14 @@ async function session(){
   const chat=profile.chat?createWorldChat({account:profile,config:{pushUrl:url.href,pushToken:token},log,getWorld:()=>world}):null;
   const ah=profile.auction?createAuctionSession({account:profile,log,getWorld:()=>world}):null;
   const timeout=setTimeout(()=>finish(Error("World login timeout")),30000);
-  function finish(error){if(ended)return;ended=true;clearTimeout(timeout);clearTimeout(infoTimer);for(const stop of stops)stop();chat?.stop();ah?.stop();if(ready&&profile.dmf)emit("dmf_status",{site:profile.dmf,connected:false,queries:watch.asked});if(ready&&profile.buffs){health.disconnected(Date.now(),String(error??"closed"));emit("listener_health",health.snapshot(Date.now(),publisher.stats()));}world?.close();s.destroy();error&&!stopping?reject(error):resolve();}
+  function finish(error){if(ended)return;ended=true;clearTimeout(timeout);clearTimeout(infoTimer);for(const stop of stops)stop();chat?.stop();ah?.stop();if(ready)emit("session_offline",{reason:String(error??"closed").slice(0,160)});if(ready&&profile.dmf)emit("dmf_status",{site:profile.dmf,connected:false,queries:watch.asked});if(ready&&profile.buffs){health.disconnected(Date.now(),String(error??"closed"));emit("listener_health",health.snapshot(Date.now(),publisher.stats()));}world?.close();s.destroy();error&&!stopping?reject(error):resolve();}
   function presence(){if(!ready||Date.now()-lastDmf<60000)return;for(const entry of nearby.values()){const npc=names.get(entry);if(npc&&isFaireNpc(npc)){lastDmf=Date.now();emit("dmf_sighting",{site:profile.dmf,npc,source:"onsite",confirmed:true});break;}}}
   function pollInfo(){if(!ready||info)return;info=[];world.say(".server info");infoTimer=setTimeout(()=>{const lines=info??[];info=null;const match=lines.join(" ").match(/Players online:\s*(\d+)/i);if(match)emit("server_info",{lines,population:Number(match[1]),source:"server_info",valid:true});else log.warn("No valid server info reply");},6000);}
   async function pollRaid(){if(!ready)return;const result=await world.whoOnce({zoneIds:[raid.zone]},8000),at=Date.now(),present=result.players.filter(p=>p.areaId===raid.zone),complete=result.players.length<49;tracker.observe({present,complete,at});await persistence.save(tracker);if(tracker.sessions().sessions.some(s=>s.id===null)){await persistence.number(tracker);await persistence.save(tracker);}const state=tracker.sessions();emit("raid_who",{zone:raid.zone,zoneName:raid.zoneName,playersListed:present.length,serverWhoOnline:result.onlineCount,listCapped:!complete,activity:state.sessions.some(x=>x.status!=="ended"),observationOnly:true,clearConfirmed:false});telemetry?.report(zone,[{label:"crossfaction",sessions:state}],{formAt:threshold,floor:raidConfig.raidLeftFloor},{present:present.length,complete,at});}
   const job=(fn,settings)=>stops.push(schedule(fn,settings,{onError:e=>log.warn(String(e))}));
   world=new WorldClient({socket:s,account:cfg.account,sessionKey:auth.sessionKey,characterName:cfg.characterName,build:cfg.worldBuild,logger:log,handlers:{
     ...ah?.handlers,
-    onReady(){ready=true;clearTimeout(timeout);log.info("Profile ready "+profile.key);health.connected(Date.now());if(profile.info)job(pollInfo,profile.info);if(raid)job(pollRaid,raid);if(profile.buffs){emit("listener_health",health.snapshot(Date.now(),publisher.stats()));job(()=>emit("listener_health",health.snapshot(Date.now(),publisher.stats())),{period:60,offset:profile.role==="org"?26:11});}if(profile.dmf){emit("dmf_status",{site:profile.dmf,connected:true,queries:watch.asked});job(()=>{emit("dmf_status",{site:profile.dmf,connected:true,queries:watch.asked});presence();},{period:60,offset:profile.role==="dmfa"?32:42});}if(chat){chat.start();job(()=>chat.flush(),profile.chat);job(()=>chat.guildTick(),{period:60,offset:profile.role==="dmfa"?17:47});}ah?.start();},
+    onReady(){ready=true;clearTimeout(timeout);log.info("Profile ready "+profile.key);health.connected(Date.now());emit("session_online",{});job(()=>emit("session_online",{}),{period:60,offset:({OBPVESW:3,OBPVEORG:13,OBPVEDMFA:23,OBPVEDMFH:33,OBPVEAH:43,OBPVPSW:53,OVHCSW:55})[profile.key]});if(profile.info)job(pollInfo,profile.info);if(raid)job(pollRaid,raid);if(profile.buffs){emit("listener_health",health.snapshot(Date.now(),publisher.stats()));job(()=>emit("listener_health",health.snapshot(Date.now(),publisher.stats())),{period:60,offset:profile.role==="org"?26:11});}if(profile.dmf){emit("dmf_status",{site:profile.dmf,connected:true,queries:watch.asked});job(()=>{emit("dmf_status",{site:profile.dmf,connected:true,queries:watch.asked});presence();},{period:60,offset:profile.role==="dmfa"?32:42});}if(chat){chat.start();job(()=>chat.flush(),profile.chat);job(()=>chat.guildTick(),{period:60,offset:profile.role==="dmfa"?17:47});}ah?.start();},
     onSystemMessage(line){if(info&&line)info.push(line);},
     onMonsterYell(sender,text){if(profile.buffs){health.heardYell(Date.now());drops.handleYell(profile,sender,text,health);}},
     onChannelMessage(...args){chat?.receive(...args);},
