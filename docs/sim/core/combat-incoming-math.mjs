@@ -27,6 +27,12 @@ export function resolveIncomingAttack(attack,compiled,random,defence=null,stats=
   const table=physicalAttackTable({...base,...(base.type==='ranged'?{}:{targetDefense:Math.max(0,base.targetDefense+delta('defense'))}),avoidance:{...base.avoidance,dodgePct:clamp(base.avoidance.dodgePct+delta('dodge')),parryPct:clamp(base.avoidance.parryPct+delta('parry')),blockPct:clamp(base.avoidance.blockPct+(defence?.blockBonusPct??0)+delta('block'))},critSuppressionPct:clamp(base.critSuppressionPct+delta('critSuppression')),blockValue:Math.max(0,base.blockValue+delta('blockValue'))*(defence?.blockValueFactor??1),provenance:model.provenance});
   compiled={...compiled,outcomes:table.outcomes,mitigation:physicalArmourReduction({...model.armourModel,armour:Math.max(0,model.armourModel.armour+delta('armour'))})};
  }
+ if(attack.school!=='physical'&&stats){
+  const rating=stats.resistance??0,suppression=stats.spellCritSuppression??0;if(!Number.isFinite(rating)||!Number.isFinite(suppression))throw Error('Invalid dynamic spell defence');
+  if(rating!==0||suppression!==0){const m=attack.attackModel,base=m.table;if(rating!==0&&!base.resistanceModel)throw Error('Dynamic resistance requires rating-based incoming model');
+   const table=spellAttackTable({...base,...(rating!==0?{resistanceModel:{...base.resistanceModel,rating:Math.max(0,base.resistanceModel.rating+rating)}}:{}),criticalPct:Math.max(0,Math.min(100,base.criticalPct-suppression)),provenance:m.provenance});compiled={...compiled,outcomes:table.outcomes};
+  }
+ }
  const hit=sampleAttack({...compiled,random});
  defence?.afterRoll?.(hit);
  return {attack:{...attack,amount:hit.raw,outcome:hit.outcome},hit};

@@ -32,3 +32,6 @@ Explicit eligible ability IDs use spellHasteFactor at action start; cast duratio
 
 ## Dynamic physical defence
 Calculated incoming physical attacks rebuild the supplied one-roll table from temporary armour, defence skill, dodge, parry, block chance, block value and crit suppression deltas. Class block charges continue to use the same selected outcome. Defence skill changes the reference miss formula; other avoidance and crit-suppression changes are explicit separate deltas, not inferred from defence conversion. Scripted pre-resolved damage is unchanged. Live validation and dynamic spell resistance remain outstanding.
+
+## Dynamic spell defence
+Incoming magical attacks with rating-based resistance inputs rebuild their distribution with temporary school-specific and all-resistance deltas. Spell crit suppression adjusts the conditional crit roll separately. Explicit fixed-bin models reject rating deltas rather than inventing a conversion. Exact armour and school-resistance on-use tooltip patterns compile into defensive auras. The rating reference approximation is not a live-verified probability table.
