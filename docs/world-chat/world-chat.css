@@ -25,3 +25,5 @@
 .chat-item-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;padding-top:8px;border-top:1px solid #40546c}
 .chat-item-actions a{color:#77b9ff;text-decoration:none}
 .chat-item-actions a:hover{text-decoration:underline}
+
+#chat-search::placeholder{color:var(--muted,#a1adbd);opacity:1}
