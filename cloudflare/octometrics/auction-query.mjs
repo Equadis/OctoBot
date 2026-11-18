@@ -156,6 +156,7 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
   const order=(sort.nullable?sort.expr+' IS NULL,':'')+sort.expr+' '+dir;
   return {
     sql:base+' ORDER BY '+order+',item_id ASC,variant ASC LIMIT ? OFFSET ?',
+    pageSql:'SELECT page_rows.*,COUNT(*) OVER() AS total_rows FROM ('+base+') page_rows ORDER BY '+order+',item_id ASC,variant ASC LIMIT ? OFFSET ?',
     countSql:'SELECT COUNT(*) n FROM ('+base+')',
     binds:[...allBinds,...ib],limit,offset,listingFiltered
   };
