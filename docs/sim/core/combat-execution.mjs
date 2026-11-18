@@ -186,6 +186,7 @@ export class CombatEncounter{
   s.nextAt=this.timeline.now+(policy==='reset'?intervalMs:Math.ceil(remaining*intervalMs/old));
   if(s.ticket!==null)this.timeline.cancel(s.ticket);s.ticket=null;this.#scheduleSwing(s);return this.swing(id);
  }
+ resetSwing(id){const s=this.#swings.get(key(id));if(!s)throw new Error('Unknown swing');return this.setSwingInterval(id,s.intervalMs,'reset');}
  cancelQueuedAttack(id){key(id);const q=this.#queued.get(id);if(!q)return false;this.#queued.delete(id);this.#record('queue-cancelled',{ability:q.action.name,targetId:q.targetId,swingId:id});return true;}
  swing(id){const s=this.#swings.get(id);return s?{nextAt:s.nextAt,lastAt:s.lastAt}:null;}
  run({maxEvents=100000}={}){
