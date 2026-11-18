@@ -14,3 +14,10 @@ test('invalid or contaminated observations are rejected, phases stay separate',(
  assert.equal(reviewBaseEvidence([{...a,naked:false},{...a,level:61},{...a,row:[1]},{...a,method:'displayed-max-health'}]).rejected.length,4);
  assert.equal(reviewBaseEvidence([a,{...b,phase:'other'}]).rows.length,2);
 });
+
+test('independence requires one pair distinct on every evidence dimension',()=>{
+ const c={...a,captureId:'b',rawEvidence:'a'};
+ const d={...a,observerId:'b',captureId:'a',rawEvidence:'a'};
+ const e={...a,observerId:'a',captureId:'a',rawEvidence:'b'};
+ assert.equal(reviewBaseEvidence([c,d,e,a]).rows[0].status,'single-observation');
+});

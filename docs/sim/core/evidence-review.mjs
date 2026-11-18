@@ -16,7 +16,7 @@ export function reviewBaseEvidence(records){
  const rows=[];
  for(const [key,rs] of groups){
   const values=new Set(rs.map(r=>JSON.stringify(r.row)));
-  const independent=new Set(rs.map(r=>r.observerId)).size>=2&&new Set(rs.map(r=>r.captureId)).size>=2&&new Set(rs.map(r=>r.rawEvidence)).size>=2;
+  const independent=rs.some(a=>rs.some(b=>a.observerId!==b.observerId&&a.captureId!==b.captureId&&a.rawEvidence!==b.rawEvidence));
   rows.push({coordinate:JSON.parse(key),status:values.size>1?'conflict':independent?'corroborated-candidate':'single-observation',row:values.size===1?[...rs[0].row]:null,captureIds:[...new Set(rs.map(r=>r.captureId))]});
  }
  return {rows,rejected,publicReady:false};
