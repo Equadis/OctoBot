@@ -5,6 +5,7 @@ import {NpcWatch} from "./darkmoon/npc-watch.js";
 import {parseUpdateObject} from "./protocol/update-object.js";
 import type {AuctionResult,AuctionRow} from "./protocol/auction.js";
 import type {ItemTemplateReply} from "./protocol/item-query.js";
+import {resolveAuctionSellers} from "./auction-sellers.js";
 import {AuctionScanCursor} from "./auction-scan.js";
 import {fetchAuctionCatalogue,fetchAuctionItem,type AuctionItemMetadata} from "./auction-metadata.js";
 import type {Logger} from "./logger.js";
@@ -31,7 +32,7 @@ function auctionUrl(suffix:string):URL {
  const url=new URL(uploadUrl);url.pathname=url.pathname.replace(/\/scan\/?$/,"")+suffix;return url;
 }
 class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
-async function publish(action:"start"|"page"|"complete"|"fail"|"metadata",payload:Record<string,unknown>):Promise<void>{
+async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
  for(let attempt=0;attempt<3;attempt++){
   try{
@@ -197,6 +198,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
     await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     
     await resolveMissingMetadata(scanId,missingIds,log,liveItemQueries?queryItem:undefined);
+    await resolveAuctionSellers({url:auctionUrl("/missing-sellers"),token,scanId,resolve:guid=>current().resolveName(guid,3000),publish:payload=>publish("seller-names",payload),log,active:()=>!finished&&Boolean(getWorld()?.isReady)});
     log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
