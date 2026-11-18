@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261118-trend7';
+import {money,moneyParts,pct,listingMarketPct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261118-listing-columns';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -264,8 +264,12 @@ async function fillDetail(cell,item,unavailable){
       const rows=listings.listings||[];
       const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
       if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
-      else auctions.body.append(simpleTable(['Seller (owner GUID)','Quantity','Current bid','Buyout','Unit buyout','Time left (est.)'],
-        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,r.current_bid>0?(bid===null?'–':moneyNode(r.current_bid)):'No bids',r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
+      else auctions.body.append(simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Historical avg.','Market %','Time left'],
+        rows.map(r=>{
+          const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
+          const average=item.historical_avg;
+          return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),pct(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
+        })));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }

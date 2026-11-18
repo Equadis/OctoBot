@@ -17,6 +17,12 @@ export function parseMoney(text){
   return Number.isSafeInteger(total)&&total<=4294967295?total:null;
 }
 export const pct=n=>n==null||!Number.isFinite(Number(n))?'No data':Number(n).toFixed(1)+'%';
+/** Compare this listing's own unit buyout against the item variant's verified historical unit average. */
+export function listingMarketPct(unitBuyout,historicalAverage){
+  const unit=Number(unitBuyout),avg=Number(historicalAverage);
+  if(!Number.isFinite(unit)||unit<=0||!Number.isFinite(avg)||avg<=0)return null;
+  return 100*unit/avg;
+}
 export function trend(n){
   if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-unknown',text:'No previous completed scan to compare'};
   n=Number(n);
@@ -61,7 +67,7 @@ export function timeClass(ms,capturedAt,now=Date.now()){
   const hours=r/3600000;
   return hours<=0.5?'ah-time-red':hours<=2?'ah-time-orange':hours<=8?'ah-time-yellow':hours<=24?'ah-time-green':'ah-time-blue';
 }
-/** The amount to show in a bid column, or null (shown as a hyphen) when it merely repeats the stack or unit buyout. */
+/** The amount to show in a bid column, or null (shown as an en dash) when it merely repeats the stack or unit buyout. */
 export function bidAmount(current,start,stackBuyout,unitBuyout){
   const value=Number(current)>0?Number(current):Number(start);
   if(!Number.isFinite(value))return null;
