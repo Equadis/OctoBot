@@ -38,6 +38,7 @@ function validateRecord(x){
     return x.confirmed===true&&x.source==="onsite"&&typeof x.npc==="string"&&
       x.npc.trim().length>0&&x.npc.length<=100?{ok:true}:no("invalid_sighting");
   }
+  if(x.type==="server_info"&&x.realm==="N\u0027Zoth"&&((x.role==="ah"&&x.account==="OBPVEAH")||DMF_ROLES[x.role]?.account===x.account))return {ok:true};
   if(!["sw","org","bb"].includes(x.role)||x.account!==ALLOWED_ACCOUNTS[x.realm][x.role])return no("account_role_mismatch");
   if(x.type==="listener_health")return typeof x.connected==="boolean"?{ok:true}:no("invalid_health");
   if(x.type==="world_buff_drop"){
@@ -193,9 +194,9 @@ export default {
       if(request.headers.get("authorization")!==`Bearer ${env.METRICS_PUSH_TOKEN}`)return json({error:"unauthorised"},401,request);
       return handleRaidRoute(request,url,env,(body,status)=>json(body,status,request));
     }
-    const chat=await worldChatRoute(request,env);
+    const chat=await worldChatRoute(request,{...env,DB:env.WORLD_CHAT_DB??env.DB});
     if(chat)return chat;
-    const auction=await auctionRoute(request,env);
+    const auction=await auctionRoute(request,{...env,DB:env.AUCTION_DB??env.DB});
     if(auction)return auction;
     if(url.pathname==="/health")return json({ok:true},200,request);
     if(request.method==="POST" && url.pathname==="/api/ingest"){
@@ -267,7 +268,7 @@ export default {
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended','raid_session_revision') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
     await pruneRaidState(env.DB);
-    await auctionCleanup(env);
-    await worldChatCleanup(env);
+    const outcomes=await Promise.allSettled([auctionCleanup({...env,DB:env.AUCTION_DB??env.DB}),worldChatCleanup({...env,DB:env.WORLD_CHAT_DB??env.DB})]);
+    for(const outcome of outcomes)if(outcome.status==="rejected")console.warn("Independent cleanup failed",String(outcome.reason).slice(0,200));
   }
 };
