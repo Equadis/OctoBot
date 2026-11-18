@@ -57,7 +57,7 @@ test('Auction House time-left colours follow 30m red, 2h orange, 8h yellow, 24h 
   assert.match(js,/cls\?'ah-auction-time '\+cls:'ah-auction-time'/,'all countdowns are styled without recolouring status indicators');
 });
 
-test('a bid that just repeats the stack or unit price shows a hyphen; the "(start)" label is gone',()=>{
+test('a bid that just repeats the stack or unit price shows an en dash; the "(start)" label is gone',()=>{
   assert.equal(bidAmount(0,500,500,500),null,'start bid equal to the stack price');
   assert.equal(bidAmount(0,50,500,50),null,'start bid equal to the unit price');
   assert.equal(bidAmount(300,50,500,50),300,'a real current bid is shown');
@@ -66,7 +66,7 @@ test('a bid that just repeats the stack or unit price shows a hyphen; the "(star
   assert.equal(bidAmount(0,40,null,null),40,'no buyout to compare with');
   assert.equal(bidAmount(0,0.5,1,0.5),null,'fractional unit prices compare exactly');
   assert.doesNotMatch(read('auction-house/auction.js'),/\(start\)/);
-  assert.match(read('auction-house/auction.js'),/if\(bid===null\)td\(tr,'-'\)/);
+  assert.match(read('auction-house/auction.js'),/if\(bid===null\)td\(tr,'–'\)/);
 });
 
 test('item icons have a rarity-coloured border and glow, like the Dressing Room and Gear Planner slots',()=>{
