@@ -12,6 +12,466 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Placed fire trap candidate ranks, with explicit trigger/expiry policies.
+ ...[
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:immolation-trap",
+    "spellId": 13795,
+    "rank": 1,
+    "learnLevel": 16,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 50,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:immolation-trap",
+      "spellId": 13795,
+      "rank": 1,
+      "level": 16,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 105,
+        "classicInitial": null,
+        "referenceDurationMs": 15000,
+        "referenceTickMs": 3000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": null,
+        "referenceMana": 50
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:immolation-trap",
+    "spellId": 14302,
+    "rank": 2,
+    "learnLevel": 26,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 90,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:immolation-trap",
+      "spellId": 14302,
+      "rank": 2,
+      "level": 26,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 215,
+        "classicInitial": null,
+        "referenceDurationMs": 15000,
+        "referenceTickMs": 3000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": null,
+        "referenceMana": 90
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:immolation-trap",
+    "spellId": 14303,
+    "rank": 3,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 135,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:immolation-trap",
+      "spellId": 14303,
+      "rank": 3,
+      "level": 36,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 340,
+        "classicInitial": null,
+        "referenceDurationMs": 15000,
+        "referenceTickMs": 3000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": null,
+        "referenceMana": 135
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:immolation-trap",
+    "spellId": 14304,
+    "rank": 4,
+    "learnLevel": 46,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 190,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:immolation-trap",
+      "spellId": 14304,
+      "rank": 4,
+      "level": 46,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 510,
+        "classicInitial": null,
+        "referenceDurationMs": 15000,
+        "referenceTickMs": 3000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": null,
+        "referenceMana": 190
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:immolation-trap",
+    "spellId": 14305,
+    "rank": 5,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 245,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:immolation-trap",
+      "spellId": 14305,
+      "rank": 5,
+      "level": 56,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 690,
+        "classicInitial": null,
+        "referenceDurationMs": 15000,
+        "referenceTickMs": 3000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": null,
+        "referenceMana": 245
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/immolation-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:explosive-trap",
+    "spellId": 13813,
+    "rank": 1,
+    "learnLevel": 34,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 275,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:explosive-trap",
+      "spellId": 13813,
+      "rank": 1,
+      "level": 34,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 150,
+        "classicInitial": [
+          104,
+          134
+        ],
+        "referenceDurationMs": 20000,
+        "referenceTickMs": 2000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": 10,
+        "referenceMana": 275
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:explosive-trap",
+    "spellId": 14316,
+    "rank": 2,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 395,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:explosive-trap",
+      "spellId": 14316,
+      "rank": 2,
+      "level": 44,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 240,
+        "classicInitial": [
+          145,
+          193
+        ],
+        "referenceDurationMs": 20000,
+        "referenceTickMs": 2000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": 10,
+        "referenceMana": 395
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:explosive-trap",
+    "spellId": 14317,
+    "rank": 3,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 520,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "hunter-fire-trap"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "fireTrapModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:explosive-trap",
+      "spellId": 14317,
+      "rank": 3,
+      "level": 54,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 330,
+        "classicInitial": [
+          208,
+          264
+        ],
+        "referenceDurationMs": 20000,
+        "referenceTickMs": 2000,
+        "referenceLifetimeMs": 60000,
+        "referenceRadius": 10,
+        "referenceMana": 520
+      },
+      "unknown": [
+        "current OctoWoW base damage and costs",
+        "live activation delay, shared cooldown, hit/crit outcomes and area membership",
+        "live AP coefficients and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/explosive-trap",
+      "liveVerified": false
+    }
+  }
+],
  // Current imported Hunter talent identities (not ambiguous effect ranks).
  ...[
   {
