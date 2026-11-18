@@ -3,3 +3,6 @@ Calculated incoming attacks are opt-in via incomingDamage[].attackModel in expli
 
 ## Resource regeneration
 An optional fiveSecondRule policy on a mana regeneration event accepts explicit windowMs and insideAmount; the ordinary amount is the outside rate. Paid action and channel tick costs record actual spend time; failed or free actions do not restart the window. Existing explicit regeneration remains unchanged. This models action expenditure only; non-action scripted drains are not assumed to restart the window. Server-specific spirit coefficients, MP5 decomposition and timing remain external evidence requirements.
+
+## Dynamic defence and resistance
+Calculated physical attacks now incorporate active Warrior Shield Block/Improved Shield Slam and Paladin Holy Shield/Redoubt before the original one-roll table is sampled, with block-value talent scaling and existing charge semantics. The older resolved-damage path is retained. A separate opt-in resistance reference helper converts rating/penetration into a capped mean and explicit binary or adjacent-bin approximation; it is not an empirically validated OctoWoW distribution and is not enabled automatically. The actual resistance distribution, resource coefficients and other server-specific numeric policies remain release evidence requirements.

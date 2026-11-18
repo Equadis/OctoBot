@@ -20,7 +20,13 @@ export function compileIncomingAttack(attack){
  expectedOutcome(input);
  return input;
 }
-export function resolveIncomingAttack(attack,compiled,random){
+export function resolveIncomingAttack(attack,compiled,random,defence=null){
+ if(defence&&attack.school==='physical'){
+  const model=attack.attackModel,base=model.table;
+  const table=physicalAttackTable({...base,avoidance:{...base.avoidance,blockPct:Math.min(100,base.avoidance.blockPct+defence.blockBonusPct)},blockValue:base.blockValue*defence.blockValueFactor,provenance:model.provenance});
+  compiled={...compiled,outcomes:table.outcomes};
+ }
  const hit=sampleAttack({...compiled,random});
+ defence?.afterRoll?.(hit);
  return {attack:{...attack,amount:hit.raw,outcome:hit.outcome},hit};
 }
