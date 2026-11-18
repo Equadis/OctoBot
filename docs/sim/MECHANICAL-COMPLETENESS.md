@@ -14,3 +14,6 @@ The restricted swap adapter now supports AP and school/healing power changes via
 
 ## Direct equipment damage
 Explicit equipment effects can roll an independent damage outcome with a supplied school, range and mitigation. Damage is scheduled after the triggering attack at the same timestamp, and equipment-generated attack events cannot recursively trigger equipment effects. On-use damage requires an explicit target. This is a research policy, not an automatic item mapping or live proc-rate claim.
+
+## Periodic damage and extra attacks
+Periodic equipment damage uses per-effect/per-target identity, explicit interval, duration, refresh and expiry tick policy. Existing ticks persist after unequipping; application requires an equipped effect. Extra attacks resolve the configured hand's white-swing effects without resetting swing timers; nested equipment/weapon triggers are disabled and range is checked. Proc rates, actual server extra-attack interactions and individual catalogue mappings remain unverified. No public gate changes.
