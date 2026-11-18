@@ -224,8 +224,10 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Avg. price',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg)));
       stats.append(stat('Market %',pct(item.market_pct)));
       const t=trend(item.trend_pct);
-      const movement=el('span',null,t.className);movement.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));
-      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':movement));
+      const movement=el('span');
+      const change=el('span',null,t.className);change.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));movement.append(change);
+      if(item.previous_unit!=null&&item.unit_buyout!=null){movement.append(' ・ ',moneyNode(item.previous_unit),' ',el('span','→'),' ',moneyNode(item.unit_buyout));}
+      stats.append(stat('Price Trend',item.trend_pct==null?'No comparison':movement));
       stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at)));
     }else stats.append(stat('Current status','Not listed'));
     const parts=[stats],variant=variantDetails(item),bonuses=variantLines(item);
