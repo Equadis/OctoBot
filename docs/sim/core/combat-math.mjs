@@ -25,7 +25,7 @@ export function weaponDamageRange({min,max,weaponSpeed,attackPower,flatDamage=0,
 // Classic reference only: attacker level, not target level. Armour ignores are
 // applied upstream; never permit a negative effective armour or >75% reduction.
 export function physicalArmourReduction({attackerLevel,armour,armourPenetration=0,cap=.75}){
- if(!Number.isInteger(attackerLevel)||attackerLevel<1||attackerLevel>60)throw new RangeError('Unsupported Classic attacker level');
+ if(!Number.isInteger(attackerLevel)||attackerLevel<1||attackerLevel>63)throw new RangeError('Unsupported Classic reference attacker level (1–63)');
  nonnegative(armour,'armour');nonnegative(armourPenetration,'armour penetration');probability(cap,'cap');
  const effective=Math.max(0,armour-armourPenetration);return Math.min(cap,effective/(effective+400+85*attackerLevel));
 }
