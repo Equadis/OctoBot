@@ -40,7 +40,7 @@ const token=process.env.AUCTION_PUSH_TOKEN?.trim();
 const uploadUrl=new URL(endpoint);
 if(uploadUrl.protocol!=="https:"||!uploadUrl.pathname.endsWith("/api/auction/scan")||
  uploadUrl.username||uploadUrl.password)throw new Error("AUCTION_PUSH_URL must be an HTTPS /api/auction/scan endpoint");
-class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
+class UploadError extends Error{constructor(message:string,readonly status:number,readonly retryAfterMs=0){super(message);}}
 async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
  for(let attempt=0;attempt<6;attempt++){
@@ -50,11 +50,11 @@ async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"selle
      body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)
    });
    if(response.ok)return;
-   throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status);
+   throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status,Math.min(30000,Math.max(0,Number(response.headers.get("retry-after"))*1000||0)));
   }catch(error){
-   if(error instanceof UploadError&&error.status!==429&&error.status<500)throw error;
+   if(error instanceof UploadError&&![408,425,429].includes(error.status)&&error.status<500)throw error;
    if(attempt===5)throw error;
-   await sleep(Math.min(30000,2000*2**attempt)+Math.floor(Math.random()*1000));
+   await sleep(Math.max(error instanceof UploadError?error.retryAfterMs:0,Math.min(30000,2000*2**attempt))+Math.floor(Math.random()*1000));
   }
  }
 }
