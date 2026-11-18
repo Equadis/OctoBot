@@ -19,10 +19,13 @@ jobs:
       - run: node tools/sim/audit-combat-systems.mjs
       - run: node tools/sim/audit-mvp-readiness.mjs
       - run: node tools/sim/audit-data-integrity.mjs
+      - run: node tools/sim/audit-base-reconciliation.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: octosim-data-integrity
-          path: data-integrity-queue.json
+          path: |
+            data-integrity-queue.json
+            base-reference-reconciliation.json
       - run: node --check docs/sim/reference-rotation.mjs && node --check docs/sim/reference-worker.mjs && node --check docs/sim/planner.mjs
       - name: Browser smoke (Chromium)
         run: |

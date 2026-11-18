@@ -1,0 +1,6 @@
+# Base reference reconciliation — 2026-11-18
+The imported 40 race/class combinations share identical class-only base health/mana values for every level across each class (zero disagreements). CMaNGOS ObjectMgr loads these fields from its class/level table independently of race: https://github.com/cmangos/mangos-classic/blob/master/src/game/Globals/ObjectMgr.cpp. This is reference structure, not evidence of current OctoWoW values.
+
+The audit derives 1,140 partial reference rows (2,280 fields) without guessing the five race-dependent attributes or filling the actual planner table. The three flagged anomalies retain adjacent same-race and same-class cross-race values for review. Human Warrior level 19 repeats level 18; Undead Mage level 1–2 has a discontinuity in intellect/spirit. No numerical correction is asserted.
+
+Public source research: https://octowow.st/player-census exposes population, not innate attributes; https://octowow.st/git/Relationship/RelationshipsDashboard/src/branch/main/RelationshipsDashboard.lua includes approximate level-60 race offsets, not a seven-field level table. The current official Mage guide https://octowow.st/mage and database https://octowow.st/db/?spell=10151 still disagree on Fireball rank 11 cost (275 vs 395 mana). Retain both; no silent change. Actual server rows and spell measurements remain blockers.
