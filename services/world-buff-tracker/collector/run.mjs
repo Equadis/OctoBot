@@ -16,6 +16,7 @@ import {createDropPipeline} from "./drop-pipeline.mjs";
 import {ListenerHealth} from "./listener-health.mjs";
 import {EventPublisher} from "./events.mjs";
 import {createWorldChat} from "./world-chat.mjs";
+import {createRaidPersistence} from "./raid-persistence.mjs";
 try{process.loadEnvFile();}catch{}
 const profile=getProfile();
 const cfg=loadConfig({...process.env,WOW_ACCOUNT:profile.account,WOW_CHARACTER:profile.character,WOW_REALM:profile.realmName,WOW_LISTENERS:"[]"});
@@ -32,9 +33,11 @@ const drops=createDropPipeline({publish:e=>publisher.publish(e)});
 const raid=profile.raid;
 const zone=profile.role==="org"?"bwl":"onyxia";
 const raidConfig=zone==="bwl"?cfg.blackwingLair??cfg:cfg;
-const threshold=raid?.minActivity;
-const tracker=raid?new RaidTracker({minRaidSize:threshold,grouping:"auto",clearSize:Math.floor(threshold/3),strengthSize:threshold,leftFloor:threshold,clearSustainedMs:zone==="bwl"?300000:180000,fillWindowMs:zone==="bwl"?900000:300000,lockoutMs:zone==="bwl"?14400000:7200000,maxConcurrentRaids:2,rosterCap:40}):null;
+const threshold=raidConfig.raidStrengthSize??raid?.minActivity;
+const tracker=raid?new RaidTracker({minRaidSize:raidConfig.minRaidSize??threshold,grouping:cfg.raidGrouping,clearSize:raidConfig.raidClearSize,strengthSize:threshold,leftFloor:raidConfig.raidLeftFloor,clearSustainedMs:raidConfig.raidClearSustainedMs,fillWindowMs:raidConfig.raidFillWindowMs,lockoutMs:raidConfig.raidLockoutMs,maxConcurrentRaids:raidConfig.raidMaxConcurrent,rosterCap:raidConfig.raidRosterCap,formConfirmMs:raidConfig.raidFormConfirmMs}):null;
 const telemetry=raid?createRaidTelemetryFromEnv(process.env,profile.realmName,log):null;
+const persistence=tracker?createRaidPersistence({url,token,secret:process.env.RAID_STATE_KEY,zone}):null;
+if(persistence)log.info("Raid checkpoint: "+await persistence.restore(tracker));
 let stopping=false,socket=null,build=cfg.build;
 for(const signal of ["SIGTERM","SIGINT"])process.once(signal,()=>{stopping=true;socket?.destroy();});
 function tcp(host,port){return new Promise((resolve,reject)=>{const s=connect({host,port});socket=s;const timer=setTimeout(()=>{s.destroy();reject(Error("TCP timeout"));},15000);s.once("error",e=>{clearTimeout(timer);reject(e);});s.once("connect",()=>{clearTimeout(timer);resolve(s);});});}
@@ -53,7 +56,7 @@ async function session(){
   function finish(error){if(ended)return;ended=true;clearTimeout(timeout);clearTimeout(infoTimer);for(const stop of stops)stop();chat?.stop();ah?.stop();if(ready&&profile.dmf)emit("dmf_status",{site:profile.dmf,connected:false,queries:watch.asked});if(ready&&profile.buffs){health.disconnected(Date.now(),String(error??"closed"));emit("listener_health",health.snapshot(Date.now(),publisher.stats()));}world?.close();s.destroy();error&&!stopping?reject(error):resolve();}
   function presence(){if(!ready||Date.now()-lastDmf<60000)return;for(const entry of nearby.values()){const npc=names.get(entry);if(npc&&isFaireNpc(npc)){lastDmf=Date.now();emit("dmf_sighting",{site:profile.dmf,npc,source:"onsite",confirmed:true});break;}}}
   function pollInfo(){if(!ready||info)return;info=[];world.say(".server info");infoTimer=setTimeout(()=>{const lines=info??[];info=null;const match=lines.join(" ").match(/Players online:\s*(\d+)/i);if(match)emit("server_info",{lines,population:Number(match[1]),source:"server_info",valid:true});else log.warn("No valid server info reply");},6000);}
-  async function pollRaid(){if(!ready)return;const result=await world.whoOnce({zoneIds:[raid.zone]},8000),at=Date.now(),present=result.players.filter(p=>p.areaId===raid.zone),complete=result.players.length<49;tracker.observe({present,complete,at});const state=tracker.sessions();emit("raid_who",{zone:raid.zone,zoneName:raid.zoneName,playersListed:present.length,serverWhoOnline:result.onlineCount,listCapped:!complete,activity:state.sessions.some(x=>x.status!=="ended"),observationOnly:true,clearConfirmed:false});telemetry?.report(zone,[{label:"crossfaction",sessions:state}],{formAt:threshold,floor:threshold},{present:present.length,complete,at});}
+  async function pollRaid(){if(!ready)return;const result=await world.whoOnce({zoneIds:[raid.zone]},8000),at=Date.now(),present=result.players.filter(p=>p.areaId===raid.zone),complete=result.players.length<49;tracker.observe({present,complete,at});await persistence.save(tracker);await persistence.number(tracker);await persistence.save(tracker);const state=tracker.sessions();emit("raid_who",{zone:raid.zone,zoneName:raid.zoneName,playersListed:present.length,serverWhoOnline:result.onlineCount,listCapped:!complete,activity:state.sessions.some(x=>x.status!=="ended"),observationOnly:true,clearConfirmed:false});telemetry?.report(zone,[{label:"crossfaction",sessions:state}],{formAt:threshold,floor:raidConfig.raidLeftFloor},{present:present.length,complete,at});}
   const job=(fn,settings)=>stops.push(schedule(fn,settings,{onError:e=>log.warn(String(e))}));
   world=new WorldClient({socket:s,account:cfg.account,sessionKey:auth.sessionKey,characterName:cfg.characterName,build:cfg.worldBuild,logger:log,handlers:{
     ...ah?.handlers,
