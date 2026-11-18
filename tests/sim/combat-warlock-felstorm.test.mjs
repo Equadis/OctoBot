@@ -12,7 +12,7 @@ test('Felstorm consumes only pet mana and pulses once per second for six seconds
  assert.equal(r.events.filter(x=>x.type==='damage'&&x.source==='Felstorm (physical)').length,12);
  assert.equal(r.events.filter(x=>x.type==='damage'&&x.source==='Felstorm (shadow)').length,12);
  assert.ok(!r.events.some(x=>x.type==='damage'&&x.targetId==='far'));
- assert.deepEqual(r.events.filter(x=>x.type==='damage'&&x.source==='Demon auto').map(x=>x.time),[7000,8000,9000,10000]);
+ assert.deepEqual(r.events.filter(x=>x.type==='damage'&&x.source==='Demon auto').map(x=>x.time),[6000,7000,8000,9000,10000]);
 });
 test('Felstorm never starts without a Felguard or enough demon mana',()=>{
  assert.throws(()=>createExplicitClassEncounter({...base,petKind:'Felhunter'}),/Felstorm requires selected Warlock demon/);
