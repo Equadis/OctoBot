@@ -115,7 +115,7 @@ const ABILITIES={
   spell('Blizzard','Frost','Frostbolt/Icicles/Blizzard'),
   spell('Frost Nova','Frost','Frost Nova/Cone of Cold'),spell('Cone of Cold','Frost','Frost Nova/Cone of Cold'),
   spell('Arcane Missiles','Arcane','Arcane Missiles channel'),spell('Arcane Rupture','Arcane'),
-  spell('Arcane Explosion','Arcane'),utility('Ice Barrier','Frost spells'),utility('Cold Snap'),utility('Presence of Mind'),utility('Evocation'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor'),utility('Frost Ward')
+  spell('Arcane Explosion','Arcane'),utility('Ice Barrier','Frost spells'),utility('Cold Snap'),utility('Presence of Mind'),utility('Arcane Power'),utility('Evocation'),profile('Wand attack','unknown','Wand'),utility('Mana Shield'),utility('Frost Armor','Frost/Ice Armor'),utility('Ice Armor','Frost/Ice Armor'),utility('Frost Ward')
  ],
  warlock:[
   ...['Curse of the Elements','Curse of Shadow','Curse of Recklessness'].map(name=>spellUtility(name,'Shadow','Affliction','Affliction spells','Affliction spell casting')),

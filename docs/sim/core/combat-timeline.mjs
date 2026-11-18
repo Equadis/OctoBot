@@ -54,13 +54,14 @@ export class Cooldowns{
 // Resource pools and cooldowns are committed atomically at action start.
 // Cast-end costs, refunds, GCD policies and generated resources belong to adapters.
 export class CombatResources{
- #pools;
- constructor(timeline,pools){this.timeline=timeline;this.cooldowns=new Cooldowns(timeline);this.#pools=resourceLedger(pools,[]).pools;}
+ #pools;#gainFactor;
+ constructor(timeline,pools,{gainFactor=()=>1}={}){this.#gainFactor=callable(gainFactor,'resource gain factor');this.timeline=timeline;this.cooldowns=new Cooldowns(timeline);this.#pools=resourceLedger(pools,[]).pools;}
  snapshot(){return structuredClone(this.#pools);}
- change(changes){const r=resourceLedger(this.#pools,changes);if(r.ok)this.#pools=r.pools;return structuredClone(r);}
+ #ledger(changes){const suppressed={};const scaled=changes.map(c=>{if(!(c.delta>0))return c;const factor=this.#gainFactor(c.resource);if(!Number.isFinite(factor)||factor<0||factor>1)throw new Error('Invalid resource gain factor');const delta=c.delta*factor;if(delta!==c.delta)suppressed[c.resource]=(suppressed[c.resource]??0)+c.delta-delta;return {...c,delta};});const r=resourceLedger(this.#pools,scaled);return Object.keys(suppressed).length?{...r,suppressed}:r;}
+ change(changes){const r=this.#ledger(changes);if(r.ok)this.#pools=r.pools;return structuredClone(r);}
  startAction({changes=[],cooldowns=[]}={}){
   if(!this.cooldowns.check(cooldowns))return {ok:false,reason:'Cooldown'};
-  const r=resourceLedger(this.#pools,changes);if(!r.ok)return structuredClone(r);
+  const r=this.#ledger(changes);if(!r.ok)return structuredClone(r);
   this.cooldowns.start(cooldowns);this.#pools=r.pools;return structuredClone(r);
  }
 }
