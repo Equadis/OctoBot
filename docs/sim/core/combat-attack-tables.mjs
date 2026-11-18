@@ -1,4 +1,5 @@
 import {meleeMissPct,expectedOutcome} from './combat-math.mjs';
+import {resistanceReference} from './combat-resistance-reference.mjs';
 export const ATTACK_TABLE_REVISION='octo-attack-tables-20261117-1';
 const finite=(x,name,min=0,max=Infinity)=>{if(!Number.isFinite(x)||x<min||x>max)throw new RangeError(name+' must be in ['+min+','+max+']');return x;};
 const pct=(x,n)=>finite(x,n,0,100)/100;
@@ -28,16 +29,17 @@ export function physicalAttackTable({type,weaponSkill,targetDefense,hitPct,dualW
 // Supplied conditional resistance distribution is independent of spell miss.
 // Crit is conditional on a landed, not fully resisted spell. Binary spells
 // accept only zero and full resistance; nonbinary spells require explicit bins.
-export function spellAttackTable({missPct,resistance,criticalPct,criticalMultiplier,resistancePolicy,provenance}){
+export function spellAttackTable({missPct,resistance,resistanceModel,criticalPct,criticalMultiplier,resistancePolicy,provenance}){
  if(!['binary','nonbinary','none'].includes(resistancePolicy)||!validId(provenance))throw new Error('Explicit spell resistance policy and provenance required');
  const miss=pct(missPct,'spell miss'),crit=pct(criticalPct,'conditional crit'),mult=nonnegative(criticalMultiplier,'critical multiplier');
+ if(resistanceModel!==undefined){if(resistance!==undefined)throw new Error('Choose explicit resistance bins or rating model, not both');resistance=resistanceReference({...resistanceModel,policy:resistancePolicy,provenance}).resistance;}
  if(!Array.isArray(resistance)||!resistance.length)throw new Error('Explicit resistance distribution required');
  const seen=new Set();let sum=0;
  for(const r of resistance){prob(r.fraction,'resistance fraction');prob(r.probability,'conditional resistance probability');if(seen.has(r.fraction))throw new Error('Duplicate resistance fraction');seen.add(r.fraction);sum+=r.probability;
  if(resistancePolicy==='binary'&&![0,1].includes(r.fraction)||resistancePolicy==='none'&&r.fraction!==0)throw new Error('Invalid resistance fraction for policy');}
  if(Math.abs(sum-1)>eps)throw new Error('Resistance probabilities must sum to 1');
  const outcomes=[{name:'miss',probability:miss,multiplier:0,flatReduction:0,landed:false}];
- for(const r of resistance){const p=(1-miss)*r.probability;if(r.fraction===1){outcomes.push({name:'resist',probability:p,multiplier:0,flatReduction:0,landed:false});continue;}
+ for(const r of resistance){const p=(1-miss)*r.probability;if(r.fraction===1){outcomes.push({name:'resist',probability:p,multiplier:0,flatReduction:0,landed:false,resistedFraction:1});continue;}
  for(const [name,chance,factor] of [['hit',1-crit,1],['crit',crit,mult]])outcomes.push({name:r.fraction===0?name:name+'-resist-'+r.fraction,probability:p*chance,multiplier:factor*(1-r.fraction),flatReduction:0,landed:true,critical:name==='crit',resistedFraction:r.fraction});}
  return {type:'spell',policy:resistancePolicy,provenance,outcomes,engineValidated:false};
 }
