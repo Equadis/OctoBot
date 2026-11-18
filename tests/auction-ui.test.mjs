@@ -330,3 +330,12 @@ test('each auction listing uses its own unit buyout for market percent and missi
  assert.ok(js.includes("bid===null?'–':moneyNode(bid)"));
  assert.ok(js.includes('pct(listingMarketPct(r.unit_buyout,average))'));
 });
+
+
+test('auction and favourites tables share equal metric column widths',()=>{
+ const css=read('auction-house/auction.css');
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(1){width:30px;box-sizing:border-box}'));
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(2){width:20%;box-sizing:border-box}'));
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(n+3){width:auto}'));
+ assert.doesNotMatch(css,/\.ah-scroll>table>thead th:nth-child\((?:[3-9]|10|11)\)\{width:/);
+});
