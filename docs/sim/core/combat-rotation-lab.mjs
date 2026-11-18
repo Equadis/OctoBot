@@ -32,6 +32,7 @@ function defaults(rank,position,normalisedSpeed){
  refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',threat:null,spendOnMiss:false,
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  for(const field of rank.requiredPolicy??[]){
+  if(field==='rapidFireModel')policy.rapidFireModel={castReductionPct:null};
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
   if(field==='paladinDefenseModel')policy.paladinDefenseModel=rank.abilityId==='paladin:righteous-fury'?{mode:'enable-only',threatBonusPct:null,improvedBasis:null}:{durationMs:10000,charges:4,blockBonusPct:45,baseDamage:rank.record.fields.referenceDamage,spellPowerCoefficient:null,mitigation:null,outcomes:null,additionalThreatPct:50,threat:null};

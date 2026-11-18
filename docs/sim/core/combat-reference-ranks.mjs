@@ -12,6 +12,7 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ {"classId":"hunter","abilityId":"hunter:rapid-fire","spellId":3045,"rank":1,"learnLevel":26,"resource":"mana","mode":"instant","cost":100,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"hunter-rapid-fire","stat":"arcane","coefficient":null}],"source":"https://octowow.st/db/?spell=3045","referenceSource":"https://octowow.st/hunter","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["rapidFireModel"],"referenceGcdMs":1500,"referenceCooldownMs":300000,"refreshStrategy":"actor-buff","record":{"classId":"hunter","abilityId":"hunter:rapid-fire","spellId":3045,"rank":1,"level":26,"fields":{"school":"arcane","durationMs":15000,"rangedHastePct":40,"referenceCost":100},"unknown":["live cooldown and GCD","Aimed Shot and Steady Shot cast reduction magnitude","live swing rescheduling policy"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/db/?spell=3045","liveVerified":false}},
  // Classic healing rank candidates; coefficients and mana cost must be explicitly acknowledged.
  ...[
   {
