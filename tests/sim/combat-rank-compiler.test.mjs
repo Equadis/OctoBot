@@ -31,7 +31,7 @@ test('rank compiler refuses missing knowledge, conflicting ranks, missing coeffi
 });
 test('school-specific power and mana cost are not read from rounded display strings',()=>{
  const a=scenario('mage');a.sheet.combatSnapshot.schools.frost=123.45;const c=compileReferenceRank(a);
- assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,240);assert.equal(referenceRanks('priest').length,11);
+ assert.equal(c.stats.frost,123.45);assert.equal(c.action.effects[0].formula.terms[0].stat,'frost');assert.equal(c.action.costs[0].amount,290);assert.equal(c.liveVerified,false);assert.equal(REFERENCE_RANKS.length,270);assert.equal(referenceRanks('priest').length,15);
 });
 
 test('external-only ranks require acknowledgement and unknown live sting cost requires explicit input',()=>{
@@ -81,3 +81,12 @@ test('Mongoose Bite resolves separately against each held weapon while charging 
 
 
 test('Noxious Assault ranks require explicit aggregate formula, talent, dual wield and acknowledgement',()=>{for(const [i,spellId] of [52714,52715,52716,52717].entries()){const a=scenario('rogue',spellId,{acceptExternalReference:true,costOverride:45,physicalAPModel:{coefficient:.30,flatDamage:[30,55,85,105][i]},noxiousModel:{attackModel:'aggregate',poisonTrigger:'landed'}});a.build.talents={...a.build.talents,'145':1};a.gear.offhand={...weapon,id:124};const {action}=compileReferenceRank(a);assert.equal(action.rank,i+1);assert.equal(action.effects[0].formula.terms[0].coefficient,.30);assert.deepEqual(action.effects.find(x=>x.kind==='force-poison').hands,['mainhand','offhand']);assert.equal(action.effects.find(x=>x.kind==='combo-gain').points,1);assert.throws(()=>compileReferenceRank({...a,gear:{mainhand:weapon}}),/two weapons/);assert.throws(()=>compileReferenceRank({...a,policy:{...a.policy,acceptSourceConflict:false}}),/source conflict/);if(i===3)assert.throws(()=>compileReferenceRank({...a,policy:{...a.policy,phase:2}}),/selected phase/);}});
+
+
+test('healing expansion preserves rank identity, explicit costs, separate Regrowth scaling and phase gate',()=>{
+ const a=scenario('druid',9858,{acceptExternalReference:true,costOverride:704,componentCoefficients:[.3,.07]});
+ const {action}=compileReferenceRank(a);assert.deepEqual(action.targets,['ally']);assert.equal(action.costs[0].amount,704);assert.deepEqual(action.effects.map(e=>e.kind),['heal','periodic-heal']);assert.equal(action.effects[0].formula.terms[0].coefficient,.3);assert.equal(action.effects[1].formula.terms[0].coefficient,.07);assert.equal(action.effects[1].formula.min,152);
+ assert.throws(()=>compileReferenceRank({...a,policy:{...a.policy,componentCoefficients:[.3,null]}}),/component coefficient/);assert.throws(()=>compileReferenceRank({...a,policy:{...a.policy,acceptSourceConflict:false}}),/source conflict/);
+ const b=scenario('druid',25297,{acceptExternalReference:true,phase:2,costOverride:800});assert.throws(()=>compileReferenceRank(b),/selected phase/);
+ const p=scenario('priest',6064,{acceptExternalReference:true,costOverride:305});assert.throws(()=>compileReferenceRank({...p,build:{...p.build,classOptions:{...p.build.classOptions,form:'Shadowform'}}}),/Shadowform/);
+});

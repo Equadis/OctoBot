@@ -12,6 +12,1922 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Classic healing rank candidates; coefficients and mana cost must be explicitly acknowledged.
+ ...[
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 5185,
+    "rank": 1,
+    "learnLevel": 1,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 25,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 40,
+        "max": 54
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 5185,
+      "rank": 1,
+      "level": 1,
+      "fields": {
+        "school": "nature",
+        "classicCost": 25,
+        "classicHealingRange": [
+          40,
+          54
+        ],
+        "referenceCost": 25
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 5186,
+    "rank": 2,
+    "learnLevel": 8,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 55,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 94,
+        "max": 118
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 5186,
+      "rank": 2,
+      "level": 8,
+      "fields": {
+        "school": "nature",
+        "classicCost": 55,
+        "classicHealingRange": [
+          94,
+          118
+        ],
+        "referenceCost": 55
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 5187,
+    "rank": 3,
+    "learnLevel": 14,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 110,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 204,
+        "max": 252
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 5187,
+      "rank": 3,
+      "level": 14,
+      "fields": {
+        "school": "nature",
+        "classicCost": 110,
+        "classicHealingRange": [
+          204,
+          252
+        ],
+        "referenceCost": 110
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 5188,
+    "rank": 4,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 185,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 376,
+        "max": 458
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 5188,
+      "rank": 4,
+      "level": 20,
+      "fields": {
+        "school": "nature",
+        "classicCost": 185,
+        "classicHealingRange": [
+          376,
+          458
+        ],
+        "referenceCost": 185
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 5189,
+    "rank": 5,
+    "learnLevel": 26,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 270,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 589,
+        "max": 711
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 5189,
+      "rank": 5,
+      "level": 26,
+      "fields": {
+        "school": "nature",
+        "classicCost": 270,
+        "classicHealingRange": [
+          589,
+          711
+        ],
+        "referenceCost": 270
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 6778,
+    "rank": 6,
+    "learnLevel": 32,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 335,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 762,
+        "max": 914
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 6778,
+      "rank": 6,
+      "level": 32,
+      "fields": {
+        "school": "nature",
+        "classicCost": 335,
+        "classicHealingRange": [
+          762,
+          914
+        ],
+        "referenceCost": 335
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 8903,
+    "rank": 7,
+    "learnLevel": 38,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 405,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 958,
+        "max": 1142
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 8903,
+      "rank": 7,
+      "level": 38,
+      "fields": {
+        "school": "nature",
+        "classicCost": 405,
+        "classicHealingRange": [
+          958,
+          1142
+        ],
+        "referenceCost": 405
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 9758,
+    "rank": 8,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 495,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 1224,
+        "max": 1452
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 9758,
+      "rank": 8,
+      "level": 44,
+      "fields": {
+        "school": "nature",
+        "classicCost": 495,
+        "classicHealingRange": [
+          1224,
+          1452
+        ],
+        "referenceCost": 495
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 9888,
+    "rank": 9,
+    "learnLevel": 50,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 600,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 1545,
+        "max": 1825
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 9888,
+      "rank": 9,
+      "level": 50,
+      "fields": {
+        "school": "nature",
+        "classicCost": 600,
+        "classicHealingRange": [
+          1545,
+          1825
+        ],
+        "referenceCost": 600
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 9889,
+    "rank": 10,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 720,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 1916,
+        "max": 2256
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 9889,
+      "rank": 10,
+      "level": 56,
+      "fields": {
+        "school": "nature",
+        "classicCost": 720,
+        "classicHealingRange": [
+          1916,
+          2256
+        ],
+        "referenceCost": 720
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:healing-touch",
+    "spellId": 25297,
+    "rank": 11,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 800,
+    "castMs": 3500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 2267,
+        "max": 2677
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "book-required-or-confirmed",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "referenceAvailableFromPhase": 3,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:healing-touch",
+      "spellId": 25297,
+      "rank": 11,
+      "level": 60,
+      "fields": {
+        "school": "nature",
+        "classicCost": 800,
+        "classicHealingRange": [
+          2267,
+          2677
+        ],
+        "referenceCost": 800
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/healing-touch",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 8936,
+    "rank": 1,
+    "learnLevel": 12,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 96,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 92,
+        "max": 106
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 14,
+        "max": 14,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 8936,
+      "rank": 1,
+      "level": 12,
+      "fields": {
+        "school": "nature",
+        "classicCost": 120,
+        "classicHealingRange": [
+          92,
+          106
+        ],
+        "referenceCost": 96,
+        "classicPeriodicTotal": 98
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 120,
+          "octoGuide": 96
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 8938,
+    "rank": 2,
+    "learnLevel": 18,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 164,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 176,
+        "max": 200
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 25,
+        "max": 25,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 8938,
+      "rank": 2,
+      "level": 18,
+      "fields": {
+        "school": "nature",
+        "classicCost": 205,
+        "classicHealingRange": [
+          176,
+          200
+        ],
+        "referenceCost": 164,
+        "classicPeriodicTotal": 175
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 205,
+          "octoGuide": 164
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 8939,
+    "rank": 3,
+    "learnLevel": 24,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 224,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 255,
+        "max": 289
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 37,
+        "max": 37,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 8939,
+      "rank": 3,
+      "level": 24,
+      "fields": {
+        "school": "nature",
+        "classicCost": 280,
+        "classicHealingRange": [
+          255,
+          289
+        ],
+        "referenceCost": 224,
+        "classicPeriodicTotal": 259
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 280,
+          "octoGuide": 224
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 8940,
+    "rank": 4,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 280,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 335,
+        "max": 377
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 49,
+        "max": 49,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 8940,
+      "rank": 4,
+      "level": 30,
+      "fields": {
+        "school": "nature",
+        "classicCost": 350,
+        "classicHealingRange": [
+          335,
+          377
+        ],
+        "referenceCost": 280,
+        "classicPeriodicTotal": 343
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 350,
+          "octoGuide": 280
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 8941,
+    "rank": 5,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 336,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 425,
+        "max": 477
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 61,
+        "max": 61,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 8941,
+      "rank": 5,
+      "level": 36,
+      "fields": {
+        "school": "nature",
+        "classicCost": 420,
+        "classicHealingRange": [
+          425,
+          477
+        ],
+        "referenceCost": 336,
+        "classicPeriodicTotal": 427
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 420,
+          "octoGuide": 336
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 9750,
+    "rank": 6,
+    "learnLevel": 42,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 408,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 534,
+        "max": 598
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 78,
+        "max": 78,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 9750,
+      "rank": 6,
+      "level": 42,
+      "fields": {
+        "school": "nature",
+        "classicCost": 510,
+        "classicHealingRange": [
+          534,
+          598
+        ],
+        "referenceCost": 408,
+        "classicPeriodicTotal": 546
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 510,
+          "octoGuide": 408
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 9856,
+    "rank": 7,
+    "learnLevel": 48,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 492,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 672,
+        "max": 750
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 98,
+        "max": 98,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 9856,
+      "rank": 7,
+      "level": 48,
+      "fields": {
+        "school": "nature",
+        "classicCost": 615,
+        "classicHealingRange": [
+          672,
+          750
+        ],
+        "referenceCost": 492,
+        "classicPeriodicTotal": 686
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 615,
+          "octoGuide": 492
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 9857,
+    "rank": 8,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 592,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 839,
+        "max": 935
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 123,
+        "max": 123,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 9857,
+      "rank": 8,
+      "level": 54,
+      "fields": {
+        "school": "nature",
+        "classicCost": 740,
+        "classicHealingRange": [
+          839,
+          935
+        ],
+        "referenceCost": 592,
+        "classicPeriodicTotal": 861
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 740,
+          "octoGuide": 592
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:regrowth",
+    "spellId": 9858,
+    "rank": 9,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 704,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 1003,
+        "max": 1119
+      },
+      {
+        "kind": "periodic-heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 152,
+        "max": 152,
+        "durationMs": 21000,
+        "intervalMs": 3000
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+    "referenceSource": "https://octowow.st/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "do-not-gate",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:regrowth",
+      "spellId": 9858,
+      "rank": 9,
+      "level": 60,
+      "fields": {
+        "school": "nature",
+        "classicCost": 880,
+        "classicHealingRange": [
+          1003,
+          1119
+        ],
+        "referenceCost": 704,
+        "classicPeriodicTotal": 1064
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana cost",
+          "classic": 880,
+          "octoGuide": 704
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/regrowth",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:heal",
+    "spellId": 2054,
+    "rank": 1,
+    "learnLevel": 16,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 155,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 307,
+        "max": 353
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+    "referenceSource": "https://octowow.st/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:heal",
+      "spellId": 2054,
+      "rank": 1,
+      "level": 16,
+      "fields": {
+        "school": "holy",
+        "classicCost": 155,
+        "classicHealingRange": [
+          307,
+          353
+        ],
+        "referenceCost": 155
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:heal",
+    "spellId": 2055,
+    "rank": 2,
+    "learnLevel": 22,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 205,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 445,
+        "max": 507
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+    "referenceSource": "https://octowow.st/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:heal",
+      "spellId": 2055,
+      "rank": 2,
+      "level": 22,
+      "fields": {
+        "school": "holy",
+        "classicCost": 205,
+        "classicHealingRange": [
+          445,
+          507
+        ],
+        "referenceCost": 205
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:heal",
+    "spellId": 6063,
+    "rank": 3,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 255,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 586,
+        "max": 662
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+    "referenceSource": "https://octowow.st/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:heal",
+      "spellId": 6063,
+      "rank": 3,
+      "level": 28,
+      "fields": {
+        "school": "holy",
+        "classicCost": 255,
+        "classicHealingRange": [
+          586,
+          662
+        ],
+        "referenceCost": 255
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:heal",
+    "spellId": 6064,
+    "rank": 4,
+    "learnLevel": 34,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 305,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 734,
+        "max": 826
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+    "referenceSource": "https://octowow.st/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:heal",
+      "spellId": 6064,
+      "rank": 4,
+      "level": 34,
+      "fields": {
+        "school": "holy",
+        "classicCost": 305,
+        "classicHealingRange": [
+          734,
+          826
+        ],
+        "referenceCost": 305
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "base healing and scaling",
+          "classic": [
+            734,
+            826
+          ],
+          "archive": "historical 15% reduction; current values unconfirmed"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/heal",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 8004,
+    "rank": 1,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 105,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 170,
+        "max": 194
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 8004,
+      "rank": 1,
+      "level": 20,
+      "fields": {
+        "school": "nature",
+        "classicCost": 105,
+        "classicHealingRange": [
+          170,
+          194
+        ],
+        "referenceCost": 105
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 8008,
+    "rank": 2,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 145,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 257,
+        "max": 291
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 8008,
+      "rank": 2,
+      "level": 28,
+      "fields": {
+        "school": "nature",
+        "classicCost": 145,
+        "classicHealingRange": [
+          257,
+          291
+        ],
+        "referenceCost": 145
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 8010,
+    "rank": 3,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 185,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 349,
+        "max": 393
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 8010,
+      "rank": 3,
+      "level": 36,
+      "fields": {
+        "school": "nature",
+        "classicCost": 185,
+        "classicHealingRange": [
+          349,
+          393
+        ],
+        "referenceCost": 185
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 10466,
+    "rank": 4,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 235,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 473,
+        "max": 529
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 10466,
+      "rank": 4,
+      "level": 44,
+      "fields": {
+        "school": "nature",
+        "classicCost": 235,
+        "classicHealingRange": [
+          473,
+          529
+        ],
+        "referenceCost": 235
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 10467,
+    "rank": 5,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 305,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 648,
+        "max": 722
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 10467,
+      "rank": 5,
+      "level": 52,
+      "fields": {
+        "school": "nature",
+        "classicCost": 305,
+        "classicHealingRange": [
+          648,
+          722
+        ],
+        "referenceCost": 305
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:lesser-healing-wave",
+    "spellId": 10468,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 380,
+    "castMs": 1500,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 832,
+        "max": 928
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "componentCoefficients"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:lesser-healing-wave",
+      "spellId": 10468,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "nature",
+        "classicCost": 380,
+        "classicHealingRange": [
+          832,
+          928
+        ],
+        "referenceCost": 380
+      },
+      "unknown": [
+        "live rank identity and learnability",
+        "live healing range, mana cost, cast time and coefficient",
+        "live periodic timing, spell-specific procs and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/shaman/lesser-healing-wave",
+      "liveVerified": false
+    }
+  }
+],
  ...[{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51949,"rank":1,"learnLevel":20,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51949,"rank":1,"level":20,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":[101,114]},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51950,"rank":2,"learnLevel":28,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51950,"rank":2,"level":28,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":null},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51951,"rank":3,"learnLevel":36,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51951,"rank":3,"level":36,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":null},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51952,"rank":4,"learnLevel":44,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51952,"rank":4,"level":44,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":null},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51953,"rank":5,"learnLevel":52,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51953,"rank":5,"level":52,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":null},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51954,"rank":6,"learnLevel":60,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":30,"components":[{"kind":"damage","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","arcaneRuptureModel"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"mage","abilityId":"mage:arcane-rupture","spellId":51954,"rank":6,"level":60,"fields":{"school":"arcane","referenceDurationMs":8000,"referenceMissileDamagePct":20,"referenceMissileCostPct":20,"classicDamageRange":null},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:cold-snap","spellId":12472,"rank":1,"learnLevel":20,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"mage-reset","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride"],"referenceGcdMs":1500,"referenceCooldownMs":600000,"record":{"classId":"mage","abilityId":"mage:cold-snap","spellId":12472,"rank":1,"level":20,"fields":{"school":"frost"},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}},{"classId":"mage","abilityId":"mage:evocation","spellId":12051,"rank":1,"learnLevel":20,"resource":"mana","mode":"channel","cost":null,"castMs":8000,"tickMs":2000,"minRange":0,"maxRange":0,"components":[{"kind":"evocation","stat":"arcane","coefficient":null,"min":0,"max":0}],"source":"https://octowow.st/talents/mage/","referenceSource":"https://octowow.st/mage","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","evocationModel"],"referenceGcdMs":1500,"referenceCooldownMs":480000,"record":{"classId":"mage","abilityId":"mage:evocation","spellId":12051,"rank":1,"level":20,"fields":{"school":"arcane"},"unknown":["Live rank identity, timings, cost, range, scaling, interrupt and cooldown behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/mage/","liveVerified":false}}],
  ...[{"classId":"mage","abilityId":"mage:frost-nova","spellId":122,"rank":1,"learnLevel":10,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=122","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":25000,"record":{"classId":"mage","abilityId":"mage:frost-nova","spellId":122,"rank":1,"level":10,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=122","liveVerified":false}},{"classId":"mage","abilityId":"mage:frost-nova","spellId":865,"rank":2,"learnLevel":26,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=865","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":25000,"record":{"classId":"mage","abilityId":"mage:frost-nova","spellId":865,"rank":2,"level":26,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=865","liveVerified":false}},{"classId":"mage","abilityId":"mage:frost-nova","spellId":6131,"rank":3,"learnLevel":40,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=6131","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":25000,"record":{"classId":"mage","abilityId":"mage:frost-nova","spellId":6131,"rank":3,"level":40,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=6131","liveVerified":false}},{"classId":"mage","abilityId":"mage:frost-nova","spellId":10230,"rank":4,"learnLevel":54,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=10230","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":25000,"record":{"classId":"mage","abilityId":"mage:frost-nova","spellId":10230,"rank":4,"level":54,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=10230","liveVerified":false}},{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":120,"rank":1,"learnLevel":26,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=120","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"record":{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":120,"rank":1,"level":26,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=120","liveVerified":false}},{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":8492,"rank":2,"learnLevel":34,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=8492","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"record":{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":8492,"rank":2,"level":34,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=8492","liveVerified":false}},{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10159,"rank":3,"learnLevel":42,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=10159","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"record":{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10159,"rank":3,"level":42,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=10159","liveVerified":false}},{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10160,"rank":4,"learnLevel":50,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=10160","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"record":{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10160,"rank":4,"level":50,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=10160","liveVerified":false}},{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10161,"rank":5,"learnLevel":58,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":10,"components":[{"kind":"damage","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=10161","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","frostControlModel","targetPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"record":{"classId":"mage","abilityId":"mage:cone-of-cold","spellId":10161,"rank":5,"level":58,"fields":{"school":"frost","referenceDurationMs":8000},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=10161","liveVerified":false}},{"classId":"mage","abilityId":"mage:ice-barrier","spellId":11426,"rank":1,"learnLevel":40,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"ice-barrier","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=11426","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","iceBarrierModel"],"referenceGcdMs":1500,"referenceCooldownMs":30000,"record":{"classId":"mage","abilityId":"mage:ice-barrier","spellId":11426,"rank":1,"level":40,"fields":{"school":"frost","referenceAbsorb":454,"referenceDurationMs":60000,"referenceDamagePct":10,"referenceShieldBonusPct":5},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=11426","liveVerified":false}},{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13031,"rank":2,"learnLevel":46,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"ice-barrier","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=13031","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","iceBarrierModel"],"referenceGcdMs":1500,"referenceCooldownMs":30000,"record":{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13031,"rank":2,"level":46,"fields":{"school":"frost","referenceAbsorb":null,"referenceDurationMs":60000,"referenceDamagePct":10,"referenceShieldBonusPct":5},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=13031","liveVerified":false}},{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13032,"rank":3,"learnLevel":52,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"ice-barrier","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=13032","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","iceBarrierModel"],"referenceGcdMs":1500,"referenceCooldownMs":30000,"record":{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13032,"rank":3,"level":52,"fields":{"school":"frost","referenceAbsorb":null,"referenceDurationMs":60000,"referenceDamagePct":10,"referenceShieldBonusPct":5},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=13032","liveVerified":false}},{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13033,"rank":4,"learnLevel":58,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"ice-barrier","stat":"frost","coefficient":null,"min":0,"max":0}],"source":"https://www.wowhead.com/classic/spell=13033","referenceSource":"https://octowow.st/talents/mage/","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","iceBarrierModel"],"referenceGcdMs":1500,"referenceCooldownMs":30000,"record":{"classId":"mage","abilityId":"mage:ice-barrier","spellId":13033,"rank":4,"level":58,"fields":{"school":"frost","referenceAbsorb":null,"referenceDurationMs":60000,"referenceDamagePct":10,"referenceShieldBonusPct":5},"unknown":["OctoWoW live rank identity, damage, cost, scaling, cooldown, eligibility and control behaviour"],"conflicts":[],"status":"external-reference-only","source":"https://www.wowhead.com/classic/spell=13033","liveVerified":false}}],
  ...[{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20925,"rank":1,"learnLevel":40,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"holy-shield","stat":"holy"}],"source":"https://octowow.st/index.php/paladin","referenceSource":"https://octowow.st/db/?spell=20925","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","paladinDefenseModel"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"refreshStrategy":"actor-buff","record":{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20925,"rank":1,"level":40,"fields":{"school":"holy","durationMs":10000,"charges":4,"blockBonusPct":45,"additionalThreatPct":50,"referenceDamage":35},"unknown":["live rank tooltip, cost, coefficients, block and retaliation hit rules, threat stacking"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/index.php/paladin","liveVerified":false}},{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20927,"rank":2,"learnLevel":50,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"holy-shield","stat":"holy"}],"source":"https://octowow.st/index.php/paladin","referenceSource":"https://octowow.st/db/?spell=20927","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","paladinDefenseModel"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"refreshStrategy":"actor-buff","record":{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20927,"rank":2,"level":50,"fields":{"school":"holy","durationMs":10000,"charges":4,"blockBonusPct":45,"additionalThreatPct":50,"referenceDamage":null},"unknown":["live rank tooltip, cost, coefficients, block and retaliation hit rules, threat stacking"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/index.php/paladin","liveVerified":false}},{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20928,"rank":3,"learnLevel":60,"resource":"mana","mode":"instant","cost":null,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"holy-shield","stat":"holy"}],"source":"https://octowow.st/index.php/paladin","referenceSource":"https://octowow.st/db/?spell=20928","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["costOverride","paladinDefenseModel"],"referenceGcdMs":1500,"referenceCooldownMs":10000,"refreshStrategy":"actor-buff","record":{"classId":"paladin","abilityId":"paladin:holy-shield","spellId":20928,"rank":3,"level":60,"fields":{"school":"holy","durationMs":10000,"charges":4,"blockBonusPct":45,"additionalThreatPct":50,"referenceDamage":null},"unknown":["live rank tooltip, cost, coefficients, block and retaliation hit rules, threat stacking"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/index.php/paladin","liveVerified":false}},{"classId":"paladin","abilityId":"paladin:righteous-fury","spellId":25780,"rank":1,"learnLevel":16,"resource":"mana","mode":"instant","cost":0,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"righteous-fury","stat":"holy"}],"source":"https://octowow.st/index.php/paladin","referenceSource":"https://octowow.st/db/?spell=25780","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["paladinDefenseModel"],"referenceGcdMs":0,"referenceCooldownMs":0,"record":{"classId":"paladin","abilityId":"paladin:righteous-fury","spellId":25780,"rank":1,"level":16,"fields":{"school":"holy","toggle":true,"cost":0},"unknown":["live rank tooltip, cost, coefficients, block and retaliation hit rules, threat stacking"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/index.php/paladin","liveVerified":false}}],
