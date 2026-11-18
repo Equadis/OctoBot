@@ -14,9 +14,9 @@ const key=(s)=>{if(typeof s!=='string'||!s.trim())throw new TypeError('Nonempty 
 const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must be a function');return v;};
 const copy=structuredClone;
 export class CombatEncounter{
- #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;#shields=new Map();#shieldSeq=0;#onDamage;#onResourceSpend;#lastSpent=new Map();
- constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null,onDamage=()=>{},resourceGainFactor=()=>1,onResourceSpend=()=>true}){
-  this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
+ #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;#shields=new Map();#shieldSeq=0;#onDamage;#onResourceSpend;#lastSpent=new Map();#onAttackResult;
+ constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null,onDamage=()=>{},resourceGainFactor=()=>1,onResourceSpend=()=>true,onAttackResult=()=>{}}){
+  this.#onAttackResult=fn(onAttackResult,'attack observer');this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools,{gainFactor:resource=>resourceGainFactor(this,resource)});this.#onResourceSpend=fn(onResourceSpend,'resource spending observer');this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');this.#onDamage=fn(onDamage,'damage observer');
   for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health,...(u.level===undefined?{}:{level:integer(u.level,'unit level',1)})});}
   const check=id=>{if(!this.#units.has(id))throw new Error('Unknown unit: '+id);return id;};
@@ -53,7 +53,7 @@ export class CombatEncounter{
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
- recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset','poison-charge','companion-action','companion-threat','utility-threat'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active())this.#record(type,copy(details));}
+ recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset','poison-charge','companion-action','companion-threat','utility-threat'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active()){this.#record(type,copy(details));if(type==='attack-result')this.#onAttackResult(this,details);}}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
  absorbRemaining(id,targetId,actorId){const s=this.#shields.get(JSON.stringify([actorId,targetId,id]));return s&&s.expiresAt>this.timeline.now?s.remaining:0;}
  applyAbsorb({id,targetId,actorId,source,amount:capacity,durationMs,schools=null,refresh='replace',fraction=1,capacityCap=null}){
