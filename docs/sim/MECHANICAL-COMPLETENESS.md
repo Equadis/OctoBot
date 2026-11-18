@@ -35,3 +35,6 @@ Calculated incoming physical attacks rebuild the supplied one-roll table from te
 
 ## Dynamic spell defence
 Incoming magical attacks with rating-based resistance inputs rebuild their distribution with temporary school-specific and all-resistance deltas. Spell crit suppression adjusts the conditional crit roll separately. Explicit fixed-bin models reject rating deltas rather than inventing a conversion. Exact armour and school-resistance on-use tooltip patterns compile into defensive auras. The rating reference approximation is not a live-verified probability table.
+
+## Dynamic capacities
+Explicit opt-in capacity policy supports player health, mana, energy and rage aura modifiers. Current resource can clamp, preserve deficit or preserve ratio; health cannot be reduced below one by capacity changes. Original base capacities remain immutable, refresh/replacement avoids transient expiration, and changes are logged. Exact server semantics and companion capacities remain unverified.

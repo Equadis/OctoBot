@@ -1,3 +1,4 @@
+import {resizeCapacity} from './combat-capacity.mjs';
 import {resourceLedger} from './combat-math.mjs';
 // Infrastructure, not server rules. Integer milliseconds; adapters choose
 // priorities, cooldown start timing, tick phase, proc triggers and coefficients.
@@ -57,6 +58,7 @@ export class CombatResources{
  #pools;#gainFactor;
  constructor(timeline,pools,{gainFactor=()=>1}={}){this.#gainFactor=callable(gainFactor,'resource gain factor');this.timeline=timeline;this.cooldowns=new Cooldowns(timeline);this.#pools=resourceLedger(pools,[]).pools;}
  snapshot(){return structuredClone(this.#pools);}
+ resize(resource,max,policy){if(!Object.hasOwn(this.#pools,resource))throw Error('Unknown resource '+resource);const old=this.#pools[resource],next=resizeCapacity(old.current,old.max,max,policy);this.#pools[resource]={...old,...next};return {...next,previousMax:old.max,previousCurrent:old.current};}
  #ledger(changes){const suppressed={};const scaled=changes.map(c=>{if(!(c.delta>0))return c;const factor=this.#gainFactor(c.resource);if(!Number.isFinite(factor)||factor<0||factor>1)throw new Error('Invalid resource gain factor');const delta=c.delta*factor;if(delta!==c.delta)suppressed[c.resource]=(suppressed[c.resource]??0)+c.delta-delta;return {...c,delta};});const r=resourceLedger(this.#pools,scaled);return Object.keys(suppressed).length?{...r,suppressed}:r;}
  change(changes){const r=this.#ledger(changes);if(r.ok)this.#pools=r.pools;return structuredClone(r);}
  startAction({changes=[],cooldowns=[]}={}){
