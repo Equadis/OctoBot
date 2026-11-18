@@ -197,9 +197,8 @@ function toggleDetail(tr,item,expand,unavailable){
   tr.setAttribute('aria-expanded','true');expand.textContent='▾';
   void fillDetail(cell,item,unavailable);
 }
-function stat(label,value,small){
+function stat(label,value){
   const box=el('div'),dt=el('dt',label),dd=el('dd',value);
-  if(small)dd.append(el('small',small));
   box.append(dt,dd);return box;
 }
 function section(title,open){const d=el('details');if(open)d.open=true;d.append(el('summary',title));const body=el('div');d.append(body);return {d,body};}
@@ -221,14 +220,14 @@ async function fillDetail(cell,item,unavailable){
     if(!unavailable){
       stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
       stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':moneyNode(item.stack_buyout)));
-      stats.append(stat('Available',count(item.quantity),count(item.listings)+' listing'+(item.listings===1?'':'s')));
-      stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
-      stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ historical average'));
+      stats.append(stat('Available',count(item.quantity)));
+      stats.append(stat('Avg. price',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg)));
+      stats.append(stat('Market %',pct(item.market_pct)));
       const t=trend(item.trend_pct);
       const movement=el('span',null,t.className);movement.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));
-      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':movement,item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
-      stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
-    }else stats.append(stat('Current status','Not listed','No auctions in the latest completed scan'));
+      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':movement));
+      stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at)));
+    }else stats.append(stat('Current status','Not listed'));
     const parts=[stats],variant=variantDetails(item),bonuses=variantLines(item);
     if(variant.hasVariant){
       const vbox=el('section',null,'ah-roll-detail');
