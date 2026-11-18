@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {parseTimedEquipmentTooltip,compileEquipmentTooltips} from '../../docs/sim/core/combat-item-tooltip-runtime.mjs';
+const tooltip='Use: Increases your attack power by 200 for 20 sec.';
+const gear={trinket1:{id:123,name:'Fixture',effects:[tooltip]}};
+const req={slot:'trinket1',itemId:123,tooltip,acknowledgeUnverifiedTiming:true,cooldownMs:120000,atMs:[0]};
+test('exact timed AP tooltip is compiled with source and supplied timing',()=>{const [x]=compileEquipmentTooltips(gear,{},[req]);assert.equal(x.effect.durationMs,20000);assert.equal(x.effect.modifiers[0].value,200);assert.equal(x.cooldownMs,120000);assert.throws(()=>compileEquipmentTooltips(gear,{},[{...req,itemId:124}]));assert.throws(()=>compileEquipmentTooltips(gear,{},[req,req]));assert.equal(parseTimedEquipmentTooltip(tooltip+' Also heals you.'),null);});
+test('damage and extra attack patterns preserve exact wording and reject ambiguous effects',()=>{assert.deepEqual(parseTimedEquipmentTooltip('Chance on hit: Blasts the target for 20 to 30 Fire damage.').effect,{kind:'damage',min:20,max:30,school:'fire'});assert.equal(parseTimedEquipmentTooltip('Chance on hit: Grants 2 extra attacks.').effect.count,2);assert.equal(parseTimedEquipmentTooltip('Chance on hit: deals some damage.'),null);});

@@ -17,3 +17,6 @@ Explicit equipment effects can roll an independent damage outcome with a supplie
 
 ## Periodic damage and extra attacks
 Periodic equipment damage uses per-effect/per-target identity, explicit interval, duration, refresh and expiry tick policy. Existing ticks persist after unequipping; application requires an equipped effect. Extra attacks resolve the configured hand's white-swing effects without resetting swing timers; nested equipment/weapon triggers are disabled and range is checked. Proc rates, actual server extra-attack interactions and individual catalogue mappings remain unverified. No public gate changes.
+
+## Tooltip-to-runtime mapping
+Exact complete timed AP, spell/healing power, simple direct damage and extra-attack tooltip patterns compile from selected equipped item effects or active set bonuses. Caller supplies unknown cooldowns, source eligibility and outcomes; composite/unrecognised effects are rejected. These patterns are not a full catalogue inventory or independently verified proc rates. Tooltip-derived effects are restricted to fixed loadouts until loadout-aware mapping is implemented.

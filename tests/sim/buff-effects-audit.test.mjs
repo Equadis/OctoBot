@@ -67,7 +67,7 @@ test('additional long-duration stat effects and scoped effects preserve exact to
 test('ambiguous speed unit remains unquantified instead of inventing a percentage',()=>{assert.equal(item(42162).effectAudit.status,'unquantified');assert.deepEqual(stats(42162),{});});
 
 test('confirmed spell and item sources correct previously assumed values',()=>{
- assert.deepEqual(buffDefinition('trueshot').stats,{ap:100,rangedAP:100});assert.equal(buffDefinition('trueshot').status,'source-conflict');
+ assert.deepEqual(buffDefinition('trueshot').stats,{});assert.equal(buffDefinition('trueshot').status,'source-conflict');
  assert.equal(buffDefinition('annihilator').stats.targetArmour,-600);assert.equal(buffDefinition('nightfall').stats.targetSpellDamageTakenPct,15);
  assert.deepEqual(buffDefinition('wizard-oil-mh').stats,{damageOnlySp:36,spellCrit:1});assert.equal(buffDefinition('juju-might').durationSeconds,600);
  assert.equal(buffDefinition('flurry').eventModifiers.meleeHastePct,3);assert.equal(buffDefinition('flurry').durationSeconds,20);
