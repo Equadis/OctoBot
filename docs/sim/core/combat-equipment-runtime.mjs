@@ -6,10 +6,11 @@ const validEffect=x=>x&&['aura','resource','heal'].includes(x.kind)&&(x.kind==='
 export function createEquipmentRuntime(config,owner,pools,duration){
  if(config==null)return null;
  if(!Array.isArray(config.effects))throw Error('Explicit equipment effect list required');
- const seen=new Set();
+ const seen=new Set();const swap=config.swap??null;let swapped=false;
+ if(swap&&(!Number.isSafeInteger(swap.atMs)||swap.atMs<0||swap.atMs>=duration||!['vanish','petless-feign-death'].includes(swap.mode)||swap.confirmedCombatDrop!==true||!Number.isSafeInteger(swap.equipLockMs)||swap.equipLockMs<0||!['retain','remove'].includes(swap.auraPolicy)))throw Error('Explicit research trinket swap policy required');
  for(const x of config.effects){
   if(!id(x.id)||seen.has(x.id)||!id(x.source)||!id(x.provenance)||!validEffect(x.effect)||!Number.isSafeInteger(x.cooldownMs)||x.cooldownMs<0)throw Error('Invalid explicit equipment effect');
-  seen.add(x.id);
+  seen.add(x.id);if(x.loadout!==undefined&&(!swap||!['before','after'].includes(x.loadout)))throw Error('Invalid equipment loadout');
   if(x.effect.kind==='resource'&&!Object.hasOwn(pools,x.effect.resource))throw Error('Unknown equipment resource');
   if(x.sharedGroup!==undefined&&(!id(x.sharedGroup)||!Number.isSafeInteger(x.sharedCooldownMs)||x.sharedCooldownMs<0))throw Error('Invalid equipment shared cooldown');
   if(x.trigger==='use'){if(!Array.isArray(x.atMs)||new Set(x.atMs).size!==x.atMs.length||x.atMs.some(t=>!Number.isSafeInteger(t)||t<0||t>=duration))throw Error('Invalid equipment use times');}
@@ -17,6 +18,7 @@ export function createEquipmentRuntime(config,owner,pools,duration){
  }
  function activate(e,x,target){
   const cd=e.resources.cooldowns,shared=x.sharedGroup?[{id:'equipment-group:'+x.sharedGroup,duration:x.sharedCooldownMs}]:[];
+  if(x.loadout==='before'&&swapped||x.loadout==='after'&&(!swapped||e.timeline.now<swap.atMs+swap.equipLockMs))return false;
   if(!e.unit(owner).alive||!cd.check(shared))return false;
   const p=attemptProc(cd,{id:'equipment:'+x.id,chance:x.trigger==='use'?1:x.chance,internalCooldownMs:x.cooldownMs},e.random);if(!p.triggered)return false;
   cd.start(shared);
@@ -26,5 +28,5 @@ export function createEquipmentRuntime(config,owner,pools,duration){
   else {const amount=f.amount??(f.min+(f.max-f.min)*e.random());const q=e.resources.change([{resource:f.resource,delta:amount}]);e.recordMechanic('resource-change',{actorId:owner,source:x.source,resource:f.resource,delta:amount-(q.suppressed?.[f.resource]??0),overflow:q.overflow[f.resource]??0});}
   e.recordMechanic('proc',{actorId:owner,targetId:target,source:x.source,procId:'equipment:'+x.id});return true;
  }
- return {install(e){for(const x of config.effects.filter(x=>x.trigger==='use'))for(const at of x.atMs)e.timeline.schedule(at,P.resource,()=>activate(e,x,owner));},attack(e,ev){if(ev.actorId!==owner||!ev.landed)return;for(const x of config.effects){if(x.trigger==='use'||!x.sources.includes(ev.source)||x.trigger==='critical'&&!ev.critical)continue;activate(e,x,ev.targetId);}}};
+ return {install(e){if(swap)e.timeline.schedule(swap.atMs,P.resource,()=>{if(!e.unit(owner).alive)return;swapped=true;if(swap.auraPolicy==='remove')for(const x of config.effects.filter(x=>x.loadout==='before'))e.auras.remove({id:'equipment:'+x.id,targetId:owner,ownerId:owner,kind:'buff'},'unequipped');e.recordMechanic('proc',{actorId:owner,targetId:owner,source:'Trinket swap',procId:swap.mode});});for(const x of config.effects.filter(x=>x.trigger==='use'))for(const at of x.atMs)e.timeline.schedule(at,P.resource,()=>activate(e,x,owner));},attack(e,ev){if(ev.actorId!==owner||!ev.landed)return;for(const x of config.effects){if(x.trigger==='use'||!x.sources.includes(ev.source)||x.trigger==='critical'&&!ev.critical)continue;activate(e,x,ev.targetId);}}};
 }

@@ -2,7 +2,7 @@ import {petAbilityCandidates} from './pet-training-audit.mjs';
 const n=(v,k)=>{if(!Number.isFinite(v)||v<0)throw Error('Invalid pet '+k);return v;};
 // All values are explicit observed/reference inputs; no automatic custom rates.
 export function resolvePetStats(build,m,ownerStats){
- const base={health:n(m.health,'health'),attackPower:n(m.attackPower,'AP'),spellPower:n(m.spellPower,'SP')};
+ const base={health:n(m.health,'health'),attackPower:n(m.attackPower,'attack power'),spellPower:n(m.spellPower,'spell power')};
  const p=m.statPolicy;if(p===undefined)return base;
  if(!p||!['included','apply'].includes(p.mode)||typeof p.provenance!=='string'||!p.provenance.trim())throw Error('Explicit pet stat policy required');
  if(p.mode==='included'){if(p.inheritance||p.training?.length)throw Error('Included pet stats cannot apply additional modifiers');return base;}
