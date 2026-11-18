@@ -137,6 +137,7 @@ const ABILITIES={
   spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
   spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
   profile('Shadow Word: Pain','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
+  profile('Devouring Plague','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
   holyHeal('Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
   holyHeal('Greater Heal','Smite/Holy Fire/Heal/Greater Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
   holyHeal('Lesser Heal','Lesser Heal/Heal/Greater Heal/Prayer of Healing','Healing target with Renew'),
