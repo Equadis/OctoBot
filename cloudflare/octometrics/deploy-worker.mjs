@@ -1,6 +1,7 @@
 // Existing OctoMetrics deployment only. Never create a Worker, D1 database or secret.
-import {readFile,readdir} from "node:fs/promises";
+import {readFile} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
+import {relative,resolve,dirname,sep} from "node:path";
 const token=process.env.CLOUDFLARE_API_TOKEN;
 if(!token)throw Error("CLOUDFLARE_API_TOKEN repository secret is missing");
 const root="https://api.cloudflare.com/client/v4";
@@ -10,7 +11,7 @@ async function api(path,options={}){
  const headers={Authorization:"Bearer "+token,...options.headers};
  const res=await fetch(root+path,{...options,headers,signal:AbortSignal.timeout(60000)});
  const data=await res.json();
- if(!res.ok||!data.success)throw Error("Cloudflare "+options.method+" "+path.split("?")[0]+" failed (HTTP "+res.status+"; error codes "+(data.errors??[]).map(e=>e.code).join(",")+")");
+ if(!res.ok||!data.success)throw Error("Cloudflare "+options.method+" "+path.split("?")[0]+" failed (HTTP "+res.status+"; error codes "+(data.errors??[]).map(e=>e.code).join(",")+")"+(options.method==="PUT"?": "+(data.errors??[]).map(e=>String(e.message??"").replaceAll(token,"[redacted]").slice(0,500)).join("; "):""));
  return data.result;
 }
 const configured=process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
@@ -42,13 +43,27 @@ const verified=await query("SELECT name FROM sqlite_master WHERE type='table' AN
 if(verified[0]?.results?.length!==2)throw Error("Seller schema not verified");
 console.log("Both realm seller caches exist.");
 // Inherit every existing binding by name. Strict mode rejects missing inheritance.
-const metadata={main_module:"worker.mjs",compatibility_date:settings.compatibility_date,compatibility_flags:settings.compatibility_flags??[],bindings:settings.bindings.map(b=>({type:"inherit",name:b.name})),annotations:{"workers/message":"OctoBot "+(process.env.GITHUB_SHA??"manual").slice(0,12)}};
+const metadata={main_module:"cloudflare/octometrics/worker.mjs",compatibility_date:settings.compatibility_date,compatibility_flags:settings.compatibility_flags??[],bindings:settings.bindings.map(b=>({type:"inherit",name:b.name})),annotations:{"workers/message":"OctoBot "+(process.env.GITHUB_SHA??"manual").slice(0,12)}};
 for(const key of ["limits","logpush","observability","placement","tags","tail_consumers","usage_model","cache_options"])if(settings[key]!=null)metadata[key]=settings[key];
-const parts=new FormData();
-parts.append("metadata",new Blob([JSON.stringify(metadata)],{type:"application/json"}));
-for(const name of (await readdir(folder)).filter(n=>n.endsWith(".mjs")&&!n.startsWith("deploy-")&&!n.startsWith("audit-"))){
- parts.append(name,new Blob([await readFile(new URL(name,folder))],{type:"application/javascript+module"}),name);
+// Preserve the repository-relative module names, including shared World Chat modules.
+const repoRoot=resolve(fileURLToPath(folder),"../..");
+const graph=new Map();
+async function addModule(filename){
+ const name=relative(repoRoot,filename).split(sep).join("/");
+ if(name.startsWith("../")||!name.endsWith(".mjs"))throw Error("Unexpected Worker dependency: "+name);
+ if(graph.has(name))return;
+ const source=await readFile(filename,"utf8");
+ graph.set(name,source);
+ for(const match of source.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.[^"']+\.mjs)["']/g)){
+  await addModule(resolve(dirname(filename),match[1]));
+ }
 }
+await addModule(resolve(repoRoot,metadata.main_module));
+await import(new URL("worker.mjs",folder));
+const parts=new FormData();
+parts.append("metadata",new Blob([JSON.stringify(metadata)],{type:"application/json"}),"metadata.json");
+for(const [name,source] of graph)parts.append(name,new Blob([source],{type:"application/javascript+module"}),name);
+console.log("Worker modules:",[...graph.keys()].join(", "));
 await api(path+"?bindings_inherit=strict",{method:"PUT",body:parts});
 const after=await api(path+"/settings");
 if(JSON.stringify(after.bindings.map(b=>b.name).sort())!==JSON.stringify(keepNames))throw Error("Post-deploy binding check failed");
