@@ -594,6 +594,21 @@ export class RaidTracker {
     };
   }
 
+  /** Attach an id without changing the stable session key used by historical telemetry. */
+  assignNumber(key: string, number: number): boolean {
+    if (!Number.isSafeInteger(number) || number < 1) return false;
+    for (const slot of this.#slots) {
+      if (slot.live?.key !== key || slot.live.id !== null) continue;
+      if (!slot.clears.assignNumber(number)) return false;
+      slot.live = { ...slot.live, id: number };
+      return true;
+    }
+    const index = this.#ended.findIndex(s => s.key === key && s.id === null);
+    if (index < 0) return false;
+    this.#ended[index] = { ...this.#ended[index]!, id: number };
+    return true;
+  }
+
   checkpoint(): RaidTrackerCheckpoint {
     const slots = this.#slots.flatMap(slot => {
       const state = slot.clears.snapshot();
