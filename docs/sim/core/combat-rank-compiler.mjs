@@ -5,6 +5,7 @@ import {validateTigersFury} from './combat-druid-feral.mjs';
 import {validateSwiftness,validateElementalMastery,cooldownAura} from './combat-nature-cooldowns.mjs';
 import {validateIcicles} from './combat-mage-icicles.mjs';
 import {validateArcaneSurge} from './combat-mage-surge.mjs';
+import {validatePowerOverwhelming} from './combat-warlock-power.mjs';
 import {compileFireTotem} from './combat-shaman-fire-totems.mjs';
 import {compileFireTrap} from './combat-hunter-traps.mjs';
 import {compilePaladinDefense} from './combat-paladin-defense.mjs';
@@ -116,7 +117,8 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(rank.requiredPolicy?.includes('rendStancePolicy')){const allowed=policy.rendStancePolicy;if(!Array.isArray(allowed)||!allowed.length||allowed.some(x=>!['Battle','Defensive','Berserker'].includes(x))||!allowed.includes(build.classOptions.stance))throw new Error('Explicit Rend stance eligibility required');}
  const effects=[];let sealModel=null,elementalShieldModel=null;
  for(const [index,component] of rank.components.entries()){
-  if(component.kind==='fire-totem'){effects.push({kind:'fire-totem',when:'always',model:compileFireTotem(build,rank.abilityId,policy.fireTotemModel)});continue;}
+  if(component.kind==='power-overwhelming'){if(Number(build.talents?.['368']??0)!==1||!Number.isSafeInteger(policy.cooldownMs)||policy.cooldownMs<10000||!Number.isFinite(policy.costOverride))throw new Error('Explicit Power Overwhelming talent, cost and cooldown required');effects.push({kind:'power-overwhelming',when:'always',model:validatePowerOverwhelming(policy.powerOverwhelmingModel)});continue;}
+   if(component.kind==='fire-totem'){effects.push({kind:'fire-totem',when:'always',model:compileFireTotem(build,rank.abilityId,policy.fireTotemModel)});continue;}
    if(component.kind==='hunter-fire-trap'){const damageFactor=trap.masteryRank&&!mv.matched.some(x=>x.talent==='Trap Mastery'&&x.stat==='damagePct')?1+.1*trap.masteryRank:1;for(const e of trap.effects)effects.push({...e,formula:{...e.formula,multiplier:e.formula.multiplier*v.damageFactor*damageFactor},threat:policy.threat===null?null:{coefficient:finite(policy.threat?.damage,'trap threat coefficient'),flat:0,multipliers:[v.threatFactor],distribution:'each'}});continue;}
   if(component.optional&&component.hand==='offhand'&&gear.offhand?.classs!==2)continue;
   const hand=component.hand??'mainhand',weapon=hand==='offhand'?snap.melee.offhand:mainWeapon,weaponMinKey=rank.abilityId+(hand==='offhand'?':offhandMin':':weaponMin'),weaponMaxKey=rank.abilityId+(hand==='offhand'?':offhandMax':':weaponMax');
@@ -244,6 +246,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(rank.abilityId==='druid:demoralizing-roar'){action.maxRangeYards=rank.multiTarget.radius;}
  if(quake)action.earthquake={cap:quake.cap,radius:quake.radius,delayMs:quake.delayMs,slowPct:quake.slowPct,splash:quake.splash,aftershock:quake.aftershock,targeting:quake.targeting,damageBasis:quake.damageBasis};
  if(harvest){action.darkHarvest={intervalFactor:harvest.intervalFactor,expiryPolicy:harvest.expiryPolicy,activation:harvest.activation,agonyOverflow:harvest.agonyOverflow,names:['Corruption','Siphon Life','Curse of Agony','Curse of Doom']};action.resetCooldownOnTargetDeath=true;}
+ if(rank.abilityId==='warlock:power-overwhelming'){action.targets=['pet'];action.requiresLivePet=true;action.maxRangeYards=effects[0].model.ownerRangeYards;action.powerOverwhelmingModel=effects[0].model;}
  if(rank.components.some(x=>x.kind==='fire-totem')){action.fireTotem=effects[0].model;action.minRangeYards=action.maxRangeYards=0;action.refreshGate={kind:'buff',name:abilityName,remainingMs:0,onActor:true};}
  if(drainMana)action.drainManaModel=drainMana;if(hellfire){action.hellfireModel=hellfire;action.targets=['self'];action.minRangeYards=action.maxRangeYards=0;action.channelTickCosts=[{resource:'mana',amount:hellfire.tickManaCost*finite(v.manaFactor,'Hellfire mana factor')}];}
  if(shardSpell){action.shardSpellModel=shardSpell;action.costs.push({resource:'soulShards',amount:1});}
