@@ -103,6 +103,11 @@ export function buildWhisper(target: string, message: string, language: number =
 }
 
 
+/** Build the original metrics collector's /say command without changing chat type. */
+export function buildSay(message: string, language: number = LANG_UNIVERSAL): Buffer {
+  return new PacketWriter().u32LE(ChatType.Say).u32LE(language).cString(escapeChatText(message)).toBuffer();
+}
+
 /** Build a CMSG_MESSAGECHAT /yell — heard by everyone nearby in the zone, no target. */
 export function buildYell(message: string, language: number = LANG_UNIVERSAL): Buffer {
   return new PacketWriter()
