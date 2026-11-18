@@ -19,7 +19,7 @@ export function compileWarriorUtility(build,rank,policy){const kind=rank.compone
 export function executeSunder(e,actor,target,x,source){
  const h=sampleAttack({min:0,max:0,outcomes:x.outcomes,random:e.random});e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:'physical',...h});if(!h.landed)return h;
  e.auras.apply({id:'warrior:sunder-armor',name:'Sunder Armor',targetId:target,ownerId:actor,kind:'debuff',durationMs:x.durationMs,maxStacks:x.maxStacks,stacks:1,stackPolicy:'add',refreshPolicy:'refresh',modifiers:[{stat:'majorArmourReduction',mode:'flat',value:x.amount}]});
- if(x.threat!==null){e.threat.add({enemyId:target,actorId:actor,value:x.threat});e.recordMechanic('companion-threat',{actorId:actor,targetId:target,source,delta:x.threat});}
+ if(x.threat!==null){e.threat.add({enemyId:target,actorId:actor,value:x.threat});e.recordMechanic('utility-threat',{actorId:actor,targetId:target,source,delta:x.threat});}
  return h;
 }
 export function executeBattleShout(e,actor,x,allies,geometry){
