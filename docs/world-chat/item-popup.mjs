@@ -1,4 +1,4 @@
-import {richItemTooltip} from "../auction-house/item-presentation.mjs?v=20261117-variant2";
+import {richItemTooltip} from "../auction-house/item-presentation.mjs?v=20261118-details1";
 import {itemAuctionHref} from "./chat-interactions.mjs?v=1";
 // A single viewport-clamped, pinned-or-hover item popup. No player-supplied HTML is rendered.
 export function installItemPopup(){
