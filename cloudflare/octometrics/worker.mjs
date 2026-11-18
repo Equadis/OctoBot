@@ -260,6 +260,10 @@ export default {
     return json({error:"not found"},404,request);
   },
   async scheduled(_event,env){
+    if(_event?.cron==="*/5 * * * *"){
+      await auctionCleanup({...env,DB:env.AUCTION_DB??env.DB});
+      return;
+    }
     // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
     // Raid snapshots are superseded every couple of minutes: keep 3 days. Ended sessions (the training data) keep the full 30.
