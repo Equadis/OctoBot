@@ -1,8 +1,8 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs?v=3";
 import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
-import {installItemPopup} from "./item-popup.mjs?v=20261118-details1";
-import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=20261118-tags1";
+import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
+import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=20261118-tags2";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
