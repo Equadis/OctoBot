@@ -33,7 +33,7 @@ const ABILITIES={
   utility('Intervene','Intercept/Intervene'),utility('Pummel','Pummel school lockout'),
   ...many(['Taunt','Disarm','Bloodrage'],'utility'),utility('Berserker Rage','Berserker Rage activation'),
   utility('Shield Wall','Retaliation/Recklessness/Shield Wall'),utility('Recklessness','Retaliation/Recklessness/Shield Wall'),
-  utility('Retaliation','Retaliation/Recklessness/Shield Wall'),utility('Battle Shout','Shouts','Battle/Demoralizing Shout'),utility('Demoralizing Shout','Shouts','Battle/Demoralizing Shout')
+  utility('Retaliation','Retaliation/Recklessness/Shield Wall'),utility('Sunder Armor'),utility('Battle Shout','Shouts','Battle/Demoralizing Shout'),utility('Demoralizing Shout','Shouts','Battle/Demoralizing Shout')
  ],
  paladin:[
   holyHeal('Holy Light','Holy Light / Flash of Light / Holy Shock','Flash of Light/Holy Light'),

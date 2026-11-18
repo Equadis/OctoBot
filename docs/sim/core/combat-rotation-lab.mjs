@@ -33,6 +33,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='warriorUtilityModel')policy.warriorUtilityModel={amount:rank.components[0].referenceAmount,durationMs:rank.components[0].durationMs,...(rank.abilityId==='warrior:sunder-armor'?{maxStacks:5,outcomes:null,threat:null}:{radius:20,includeOwner:true,allies:[]})};
   if(field==='markForDeathModel')policy.markForDeathModel=markForDeathTemplate();
   if(field==='vanishModel')policy.vanishModel={durationMs:null,reagentCost:null,threatReduction:null,cloakedAllies:[]};
   if(field==='bladeFlurryModel')policy.bladeFlurryModel=bladeFlurryTemplate();
