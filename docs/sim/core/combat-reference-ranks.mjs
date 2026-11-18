@@ -12,6 +12,665 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Hunter pet and target marking reference candidates.
+ ...[
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 136,
+    "rank": 1,
+    "learnLevel": 12,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 50,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 136,
+      "rank": 1,
+      "level": 12,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 20,
+        "referenceTotalHeal": 100,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 3111,
+    "rank": 2,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 90,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 3111,
+      "rank": 2,
+      "level": 20,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 38,
+        "referenceTotalHeal": 190,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 3661,
+    "rank": 3,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 155,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 3661,
+      "rank": 3,
+      "level": 28,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 68,
+        "referenceTotalHeal": 340,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 3662,
+    "rank": 4,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 225,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 3662,
+      "rank": 4,
+      "level": 36,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 103,
+        "referenceTotalHeal": 515,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 13542,
+    "rank": 5,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 300,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 13542,
+      "rank": 5,
+      "level": 44,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 142,
+        "referenceTotalHeal": 710,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 13543,
+    "rank": 6,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 385,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 13543,
+      "rank": 6,
+      "level": 52,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 189,
+        "referenceTotalHeal": 945,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:mend-pet",
+    "spellId": 13544,
+    "rank": 7,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 480,
+    "castMs": 5000,
+    "minRange": 0,
+    "maxRange": 20,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "mendPetModel",
+      "channelTickAtEnd"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "tickMs": 1000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:mend-pet",
+      "spellId": 13544,
+      "rank": 7,
+      "level": 60,
+      "fields": {
+        "school": "nature",
+        "referenceTickHeal": 245,
+        "referenceTotalHeal": 1225,
+        "referenceTickMs": 1000,
+        "referenceDurationMs": 5000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/mend-pet",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:bestial-wrath",
+    "spellId": 19574,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 12,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-bestial-wrath"
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "bestialWrathModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 0,
+    "referenceCooldownMs": 90000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:bestial-wrath",
+      "spellId": 19574,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "physical",
+        "referenceBaseManaPct": 12,
+        "referenceDurationMs": 18000,
+        "referenceDamageBonusPct": 40
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "damage bonus",
+          "classic": 50,
+          "earlierArchive": 30,
+          "currentScent": 40
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2322",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:hunters-mark",
+    "spellId": 1130,
+    "rank": 1,
+    "learnLevel": 6,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-mark"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "hunterMarkModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:hunters-mark",
+      "spellId": 1130,
+      "rank": 1,
+      "level": 6,
+      "fields": {
+        "school": "arcane",
+        "referenceRangedAP": 20,
+        "referenceDurationMs": 120000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:hunters-mark",
+    "spellId": 14323,
+    "rank": 2,
+    "learnLevel": 22,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 30,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-mark"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "hunterMarkModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:hunters-mark",
+      "spellId": 14323,
+      "rank": 2,
+      "level": 22,
+      "fields": {
+        "school": "arcane",
+        "referenceRangedAP": 45,
+        "referenceDurationMs": 120000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:hunters-mark",
+    "spellId": 14324,
+    "rank": 3,
+    "learnLevel": 40,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 45,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-mark"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "hunterMarkModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:hunters-mark",
+      "spellId": 14324,
+      "rank": 3,
+      "level": 40,
+      "fields": {
+        "school": "arcane",
+        "referenceRangedAP": 75,
+        "referenceDurationMs": 120000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:hunters-mark",
+    "spellId": 14325,
+    "rank": 4,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 60,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-mark"
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "hunterMarkModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:hunters-mark",
+      "spellId": 14325,
+      "rank": 4,
+      "level": 58,
+      "fields": {
+        "school": "arcane",
+        "referenceRangedAP": 110,
+        "referenceDurationMs": 120000
+      },
+      "unknown": [
+        "live rank quantities and application timing",
+        "live pet or ranged attack interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/hunter/hunters-mark",
+      "liveVerified": false
+    }
+  }
+],
  // Druid armour and AP utility reference candidates.
  ...[
   {

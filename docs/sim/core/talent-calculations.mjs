@@ -106,7 +106,7 @@ const ABILITIES={
   utility('Frost Trap','Frost/Freezing Trap','Traps and melee abilities','Trap effects'),
   profile('Immolation Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities','Trap effects'),
   profile('Explosive Trap','unknown','Immolation/Explosive Trap','Traps and melee abilities','Trap effects'),
-  utility('Revive Pet'),profile('Mend Pet','heal-periodic'),utility('Feign Death'),utility('Kill Command'),utility('Rapid Fire')
+  utility('Revive Pet'),profile('Mend Pet','heal-periodic'),utility('Bestial Wrath'),utility('Hunter’s Mark'),utility("Hunter's Mark"),utility('Feign Death'),utility('Kill Command'),utility('Rapid Fire')
  ].map(p=>['melee','ranged','periodic','unknown'].includes(p.type)?allDmg(allDmg(allDmg(p,'All damage when no pet'),'Beast/Giant/Dragonkin/Humanoid targets'),'These targets'):p),
  mage:[
   spell('Fireball','Fire'),profile('Fireball (periodic)','periodic','Fireball','Fire','All spells','Spells','Offensive spells','Fire spells','Periodic magic'),spell('Fire Blast','Fire'),spell('Scorch','Fire'),

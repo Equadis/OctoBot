@@ -9,7 +9,7 @@ export function rangedWeaponModel(snap,policy,modifiers={},criticalBonusFactor=1
  const stats={rangedMin:w.rawMin+delta,rangedMax:w.rawMax+delta};
  const miss=Math.max(0,Math.min(100,finite(m.missPct,'observed ranged miss',0,100)-(modifiers.hit||0))),crit=Math.max(0,Math.min(100,finite(m.critPct,'observed ranged crit',0,100)+(modifiers.crit||0)));
  const outcomes=physicalAttackTable({type:'ranged',missPct:miss,avoidance:{dodgePct:0,parryPct:0,blockPct:finite(m.blockPct,'ranged block',0,100)},glancePct:0,glanceMultiplier:1,critPct:crit,critSuppressionPct:finite(m.critSuppressionPct,'ranged crit suppression',0,100),critMultiplier:1+(finite(m.criticalMultiplier,'ranged critical multiplier',1)-1)*criticalBonusFactor,blockValue:finite(m.blockValue,'ranged block value'),order:m.order,position:'ranged',provenance:policy.provenance}).outcomes;
- return {stats,outcomes,mitigation:physicalArmourReduction({attackerLevel:snap.level,armour:w.targetArmour}),intervalMs:Math.round(w.intervalSeconds*1000),ammoCost:finite(m.ammoPerShot,'ammo per shot',0)};
+ return {stats,outcomes,apWeaponSeconds:speed,mitigation:physicalArmourReduction({attackerLevel:snap.level,armour:w.targetArmour}),intervalMs:Math.round(w.intervalSeconds*1000),ammoCost:finite(m.ammoPerShot,'ammo per shot',0)};
 }
 
 // Preserve the ranged one-roll table and independently apply magical resistance.

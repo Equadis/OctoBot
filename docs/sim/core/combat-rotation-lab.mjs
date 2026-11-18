@@ -40,6 +40,9 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='earthquakeModel')policy.earthquakeModel={min:rank.record.fields.referenceDamage[0],max:rank.record.fields.referenceDamage[1],coefficient:rank.record.fields.referenceCoefficient,cap:null,delayMs:4000,slowPct:15,radius:10,splash:.35,aftershock:.3,targeting:'explicit-anchor-nearby',damageBasis:'independent-base-rolls'};
   if(field==='areaModel')policy.areaModel={min:rank.record.fields.referenceDamage?.[0]??rank.record.fields.classicTotal??null,max:rank.record.fields.referenceDamage?.[1]??rank.record.fields.classicTotal??null,coefficient:null,cap:rank.abilityId==='priest:prayer-of-healing'?5:null,...(rank.abilityId==='warlock:rain-of-fire'?{durationMs:8000,tickMs:1000}:rank.abilityId==='mage:blast-wave'?{radius:10,controlEnabled:null,durationMs:6000,slowPct:null}:{targeting:'explicit-party-near-anchor'})};
   if(field==='siphonLifeModel')policy.siphonLifeModel={totalBase:rank.record.fields.classicTotal,totalCoefficient:null,durationMs:30000,intervalMs:null};
+  if(field==='mendPetModel')policy.mendPetModel={totalBase:rank.record.fields.referenceTotalHeal,totalCoefficient:null,durationMs:5000,tickMs:1000,cleansePolicy:'explicit-aura-ids',cleanseAuraIds:[]};
+  if(field==='bestialWrathModel')policy.bestialWrathModel={baseMana:null,manaCostPct:12,range:null};
+  if(field==='hunterMarkModel')policy.hunterMarkModel={rangedAP:rank.record.fields.referenceRangedAP,durationMs:120000,outcomes:null,scope:'all-ranged',stacking:'strongest'};
   if(field==='rapidFireModel')policy.rapidFireModel={castReductionPct:null};
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
@@ -113,6 +116,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
+ if(selected.some(r=>['hunter:mend-pet','hunter:bestial-wrath'].includes(r.abilityId)))encounter.petDistanceYards=null;
  if(['hunter','warlock'].includes(build.classId)&&build.classOptions.pet&&build.classOptions.pet!=='None')encounter.companionModel=companionTemplate(build);
  if(build.classId==='paladin'&&selected.some(r=>r.components.some(c=>c.kind==='seal-aura')))encounter.sealTwist=null; // Optional explicit {windowMs,swingPolicy,pairs}; no assumed live window.
  if(build.classId==='shaman'&&build.classOptions.mhImbue&&build.classOptions.mhImbue!=='None')encounter.imbueModel=imbueTemplate(build.classOptions.mhImbue,selected.filter(r=>r.components.some(c=>['weapon','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId));
