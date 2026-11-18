@@ -14,7 +14,7 @@ export function compileFireTotem(build,abilityId,policy){
  const rank=(id,cap)=>{const n=Number(build.talents?.[id]??0);if(!Number.isSafeInteger(n)||n<0||n>cap)throw Error('Invalid fire totem talent rank');return n};
  const imp=rank('227',2),flame=rank('229',3),fury=rank('232',2),align=rank('253',2),tidal=rank('236',5);
  if(!policy)throw Error('Explicit fire totem model required');
- const p={...policy,kind,slot:'fire',firstPulseMs:policy.firstPulseMs-(kind==='fire-nova'?imp*1000:0),intervalMs:kind==='searing'?Math.max(1,Math.round(policy.intervalMs/(1+.1*imp))):policy.intervalMs,rangeYards:policy.rangeYards+(kind==='searing'?imp*5:0),damageFactor:policy.damageFactor*(1+.05*flame+.05*fury),threatFactor:policy.threatFactor*(kind==='magma'?1-.25*imp:1),talents:{imp,flame,fury,align,tidal}};
+ const p={...policy,kind,slot:'fire',durationMs:kind==='fire-nova'?policy.durationMs-imp*1000:policy.durationMs,firstPulseMs:policy.firstPulseMs-(kind==='fire-nova'?imp*1000:0),intervalMs:kind==='searing'?Math.max(1,Math.round(policy.intervalMs/(1+.1*imp))):policy.intervalMs,rangeYards:policy.rangeYards+(kind==='searing'?imp*5:0),damageFactor:policy.damageFactor*(1+.05*flame+.05*fury),threatFactor:policy.threatFactor*(kind==='magma'?1-.25*imp:1),talents:{imp,flame,fury,align,tidal}};
  if(p.outcomes)p.outcomes=p.outcomes.map(o=>o.critical?{...o,multiplier:1+(o.multiplier-1)*(1+.5*fury)}:{...o});
  if(p.threat!==null&&p.threat)p.threat={...p.threat,multipliers:[...p.threat.multipliers,p.threatFactor]};
  return validateFireTotem(p);
