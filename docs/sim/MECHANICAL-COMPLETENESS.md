@@ -50,3 +50,6 @@ Explicit source-scoped equipment auras can convert ordinary hit outcomes to thei
 
 ## Combo-point-dependent critical set effect
 Direct attack events for finishers carry target-specific combo points before spending. Explicit chance per point scales the proc roll and rejects missing point evidence. The exact imported Eviscerate 5% per point tooltip maps to a source-restricted next-critical aura; duration, consumption on attempt or landed, and internal cooldown remain explicit research inputs. No live validation claimed.
+
+## Ability-specific modifiers
+Explicit aura keys abilityDamageFactor:<abilityId>, abilityCostFactor:<abilityId>:<resource> and abilityCostReduction:<abilityId>:<resource> support direct damage and mana/rage/energy payment adjustments. Costs apply after class-specific adjustments, with percentage before flat reduction and a zero floor. Channel costs snapshot at action start. Periodic damage, special execution paths, cooldown changes and individual set mappings remain outside this batch. These stacking and timing choices are reference policies, not live observations.
