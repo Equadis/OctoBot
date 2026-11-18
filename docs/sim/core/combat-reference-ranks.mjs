@@ -12,6 +12,61 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ ...[{
+  "classId": "hunter",
+  "abilityId": "hunter:scatter-shot",
+  "spellId": 19503,
+  "rank": 1,
+  "learnLevel": 30,
+  "resource": "mana",
+  "mode": "instant",
+  "cost": 8,
+  "castMs": 0,
+  "minRange": 0,
+  "maxRange": 15,
+  "components": [
+    {
+      "kind": "ranged-weapon",
+      "stat": "physical",
+      "coefficient": 0.5,
+      "flat": 0
+    }
+  ],
+  "source": "https://octowow.st/talents/hunter/",
+  "referenceSource": "https://www.wowhead.com/classic/spell=19503/scatter-shot",
+  "status": "external-reference-only",
+  "liveVerified": false,
+  "learnability": "talent-reference",
+  "requiredPolicy": [
+    "scatterShotModel",
+    "rangedModel"
+  ],
+  "referenceGcdMs": 1500,
+  "referenceCooldownMs": 30000,
+  "record": {
+    "classId": "hunter",
+    "abilityId": "hunter:scatter-shot",
+    "spellId": 19503,
+    "rank": 1,
+    "level": 30,
+    "fields": {
+      "school": "physical",
+      "weaponCoefficient": 0.5,
+      "classicBaseManaPct": 8,
+      "classicMaxRange": 15,
+      "referenceDurationMs": 4000
+    },
+    "unknown": [
+      "live mana cost and range",
+      "live weapon damage basis, ammo policy and auto restart conditions",
+      "target control eligibility"
+    ],
+    "conflicts": [],
+    "status": "external-reference-only",
+    "source": "https://octowow.st/talents/hunter/",
+    "liveVerified": false
+  }
+}],
  // Placed fire trap candidate ranks, with explicit trigger/expiry policies.
  ...[
   {

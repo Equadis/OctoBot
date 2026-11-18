@@ -97,7 +97,7 @@ const ABILITIES={
  hunter:[
   ranged('Auto Shot'),hunterShot('Aimed Shot','Steady Shot/Aimed Shot'),
   hunterShot('Steady Shot','Steady Shot/Aimed Shot'),hunterShot('Multi-Shot','Multi-Shot/Volley'),
-  hunterShot('Arcane Shot'),profile('Volley','unknown','Shots and Stings','Multi-Shot/Volley'),
+  hunterShot('Arcane Shot'),hunterShot('Scatter Shot'),profile('Volley','unknown','Shots and Stings','Multi-Shot/Volley'),
   profile('Serpent Sting','periodic','Shots and Stings'),
   utility('Viper Sting','Shots and Stings'),utility('Scorpid Sting','Shots and Stings'),
   hunterMelee('Raptor Strike','Raptor Strike/Mongoose Bite'),hunterMelee('Mongoose Bite','Raptor Strike/Mongoose Bite'),
