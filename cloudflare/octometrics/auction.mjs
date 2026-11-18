@@ -110,12 +110,15 @@ async function upload(req,env,action){
    const rows=body.items.map(normalise);
    if(rows.some(r=>!r))return bad('invalid listing');
    if(new Set(rows.map(r=>r.auction_id)).size!==rows.length)return bad('duplicate auction on page');
-   // A retry replaces exactly one page. D1 batch is atomic, so transient failures cannot partially replace a page.
-   const ops=[db.prepare('DELETE FROM ah_listings WHERE scan_id=? AND page=?').bind(body.scan_id,body.page)];
-   for(const r of rows)ops.push(db.prepare(
-     (liveSnapshot?'INSERT OR REPLACE INTO':'INSERT INTO')+' ah_listings(scan_id,auction_id,page,item_id,variant,item_name,quality,icon_url,quantity,start_bid,current_bid,min_next_bid,buyout,owner_guid,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-   ).bind(body.scan_id,r.auction_id,body.page,r.item_id,r.variant,r.item_name,r.quality,r.icon_url,r.quantity,r.start_bid,r.current_bid,r.min_next_bid,r.buyout,r.owner_guid,r.time_left_ms,r.captured_at,r.item_level,r.req_level,r.class_id,r.subclass_id,r.slot_id));
-   ops.push(db.prepare('INSERT INTO ah_pages(scan_id,page,count,response_ms) VALUES (?,?,?,?) ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')').bind(body.scan_id,body.page,rows.length,body.response_ms));
+   // Three statements rather than up to 52 per page. JSON uses one bound
+   // parameter, below D1's 100-variable limit; all rows were validated above.
+   // The status checks happen inside the atomic batch, not just before it.
+   const columns=['auction_id','item_id','variant','item_name','quality','icon_url','quantity','start_bid','current_bid','min_next_bid','buyout','owner_guid','time_left_ms','captured_at','item_level','req_level','class_id','subclass_id','slot_id'];
+   const ops=[
+     db.prepare("DELETE FROM ah_listings WHERE scan_id=? AND page=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.scan_id,body.page,body.scan_id),
+     db.prepare((liveSnapshot?'INSERT OR REPLACE INTO':'INSERT INTO')+' ah_listings(scan_id,page,'+columns.join(',')+') SELECT ?,?,'+columns.map(k=>"json_extract(value,'$."+k+"')").join(',')+" FROM json_each(?) WHERE EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.scan_id,body.page,JSON.stringify(rows),body.scan_id),
+     db.prepare("INSERT INTO ah_pages(scan_id,page,count,response_ms) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') ON CONFLICT(scan_id,page) DO UPDATE SET count=excluded.count,response_ms=excluded.response_ms,received_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')").bind(body.scan_id,body.page,rows.length,body.response_ms,body.scan_id)
+   ];
    try{await db.batch(ops)}catch{return bad('page write failed (retry safely)',503)}
    return respond({ok:true,page:body.page,items:rows.length},202);
  }
