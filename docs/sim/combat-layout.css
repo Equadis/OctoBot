@@ -223,4 +223,4 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 }
 @media(prefers-reduced-motion:reduce){.planner-view .character-stat-group>.character-stat-toggle::before{transition:none}}
 
-.item-row:has(.q0) img,.item-preview:has(.q0) img{border-color:var(--quality-0)}
+#item-dialog .item-row:has(.q0) img,#item-dialog .item-preview:has(.q0) img{border-color:var(--quality-0)}
