@@ -41,7 +41,7 @@ const raidConfig=zone==="bwl"?cfg.blackwingLair??cfg:cfg;
 const threshold=raidConfig.raidStrengthSize??raid?.minActivity;
 const tracker=raid?new RaidTracker({minRaidSize:raidConfig.minRaidSize??threshold,grouping:cfg.raidGrouping,clearSize:raidConfig.raidClearSize,strengthSize:threshold,leftFloor:raidConfig.raidLeftFloor,clearSustainedMs:raidConfig.raidClearSustainedMs,fillWindowMs:raidConfig.raidFillWindowMs,lockoutMs:raidConfig.raidLockoutMs,maxConcurrentRaids:raidConfig.raidMaxConcurrent,rosterCap:raidConfig.raidRosterCap,formConfirmMs:raidConfig.raidFormConfirmMs}):null;
 const telemetry=raid?createRaidTelemetryFromEnv(process.env,profile.realmName,log):null;
-const persistence=tracker?createRaidPersistence({url,token,secret:process.env.RAID_STATE_KEY,zone}):null;
+const persistence=tracker?createRaidPersistence({url,token,secret:process.env.RAID_STATE_KEY,zone,lockoutMs:raidConfig.raidLockoutMs}):null;
 if(persistence)log.info("Raid checkpoint: "+await persistence.restore(tracker));
 let stopping=false,socket=null,build=cfg.build;
 for(const signal of ["SIGTERM","SIGINT"])process.once(signal,()=>{stopping=true;socket?.destroy();});
