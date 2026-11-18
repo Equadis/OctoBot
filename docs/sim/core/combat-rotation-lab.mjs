@@ -34,6 +34,8 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='thunderClapModel')policy.thunderClapModel={baseDamage:rank.record.fields.referenceDamage,apCoefficient:null,durationMs:rank.record.fields.referenceDurationMs,slowPct:10};
+  if(field==='shieldSlamModel')policy.shieldSlamModel={min:null,max:null,blockValue:null,blockCoefficient:null,apCoefficient:null};
   if(field==='reactiveModel')policy.reactiveModel=reactiveTemplate(rank.abilityId);
   if(field==='flatThreat')policy.flatThreat=null;
   if(field==='warriorActivationModel')policy.warriorActivationModel={stances:null,durationMs:rank.record.fields.referenceDurationMs??rank.record.fields.durationMs??null,...(rank.abilityId==='warrior:demoralizing-shout'?{radius:10,amount:rank.components[0].referenceAmount,outcomes:null,threat:null}:rank.abilityId==='warrior:bloodrage'?{healthCostPct:null,instantRage:10,tickRage:null,intervalMs:null,tickAtExpiry:null,activateEnrage:null}:rank.abilityId==='warrior:berserker-rage'?{incomingRageFactor:null}:{})};
