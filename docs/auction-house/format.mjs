@@ -18,11 +18,11 @@ export function parseMoney(text){
 }
 export const pct=n=>n==null||!Number.isFinite(Number(n))?'No data':Number(n).toFixed(1)+'%';
 export function trend(n){
-  if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-neutral',text:'No previous completed scan to compare'};
+  if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-unknown',text:'No previous completed scan to compare'};
   n=Number(n);
-  if(Math.abs(n)<10)return {label:'→',className:'ah-change-neutral',text:'Little change since the previous scan'};
-  return {label:(n>0?'↑':'↓').repeat(Math.abs(n)>=25?2:1),className:n>0?'ah-change-up':'ah-change-down',
-    text:n>0?'Dearer than in the previous scan':'Cheaper than in the previous scan'};
+  const text=Math.abs(n)<5?'Little change since the previous scan':n>0?'Dearer than in the previous scan':'Cheaper than in the previous scan';
+  const [label,className]=n>=25?['↑↑','ah-change-up-strong']:n>=10?['↑','ah-change-up']:n>=5?['↗︎','ah-change-up-slight']:n<=-25?['↓↓','ah-change-down-strong']:n<=-10?['↓','ah-change-down']:n<=-5?['↘︎','ah-change-down-slight']:['→','ah-change-neutral'];
+  return {label,className,text};
 }
 /** Approximate remaining time: the scan's value minus time since observation. Never a guarantee. */
 export function remaining(ms,capturedAt,now=Date.now()){
