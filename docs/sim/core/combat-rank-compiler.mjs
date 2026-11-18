@@ -1,3 +1,4 @@
+import {validateIcicles} from './combat-mage-icicles.mjs';
 import {validateArcaneSurge} from './combat-mage-surge.mjs';
 import {compileFireTrap} from './combat-hunter-traps.mjs';
 import {compilePaladinDefense} from './combat-paladin-defense.mjs';
@@ -48,6 +49,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  const provenance=string(policy?.provenance,'ruleset provenance');
  const kind=rank.mode,abilityName=ROTATION_REGISTRY[build.classId].abilityRegistry[rank.abilityId]?.name;
  if(!abilityName)throw new Error('Unregistered rank');
+ const icicles=rank.abilityId==='mage:icicles'?validateIcicles({...policy.iciclesModel,flashRank:Number(build.talents?.['35']??0),frostbiteRank:Number(build.talents?.['22']??0)}):null;if(icicles){if(Number(build.talents?.['32']??0)!==1||policy.channelTickAtEnd!==true||!Number.isSafeInteger(policy.cooldownMs)||policy.cooldownMs<=0)throw new Error('Icicles requires talent and full channel timing');rank.components=[{...rank.components[0],min:icicles.tickDamage,max:icicles.tickDamage,coefficient:icicles.coefficient}];}
  const surge=rank.abilityId==='mage:arcane-surge'?validateArcaneSurge({...policy.arcaneSurgeModel,acceleratedArcana:Number(build.talents?.['52']??0)===1}):null;if(surge){if(policy.cooldownMs!==8000)throw new Error('Arcane Surge requires published eight-second base cooldown');if(surge.mode==='archive-damage'){const [min,max]=rank.record.fields.historicalDamage;rank.components=[{kind:'damage',stat:'arcane',min,max,coefficient:.65}];rank.maxRange=surge.range;rank.refreshStrategy=null;}}
  const chastise=rank.abilityId==='priest:chastise'?validateChastise(policy.chastiseModel):null;if(chastise){if(Number(build.talents?.['183']??0)!==1)throw new Error('Chastise requires its talent');if(!Number.isFinite(policy.cooldownMs)||policy.cooldownMs<=0)throw new Error('Explicit Chastise cooldown required');rank.components=[{...rank.components[0],min:chastise.min,max:chastise.max,coefficient:chastise.coefficient}];}
  const nova=rank.abilityId==='priest:holy-nova'?policy.holyNovaModel:null;if(rank.abilityId==='priest:holy-nova'){if(Number(build.talents?.['192']??0)!==1)throw new Error('Holy Nova requires its talent');if(!nova||!Number.isSafeInteger(nova.enemyCap)||nova.enemyCap<1||nova.enemyCap>40||!Array.isArray(nova.partyIds)||nova.partyIds.length>4||new Set(nova.partyIds).size!==nova.partyIds.length||nova.partyIds.some(x=>typeof x!=='string'||!x)||typeof nova.includeOwner!=='boolean'||!Number.isFinite(nova.shadowSelfDamageFactor)||nova.shadowSelfDamageFactor<0||nova.targeting!=='caster-radius'||nova.order!=='healing-before-damage')throw new Error('Explicit Holy Nova party, radius, cap and Shadowform policies required');}
@@ -231,7 +233,7 @@ export function compileReferenceRank({build,sheet,gear,spellId,learnedSpellIds,p
  if(drain){action.channelTickCosts=[{resource:'mana',amount:drain.tickCost*finite(v.manaFactor,'Drain Soul mana cost factor')}];if(drain.grantShard)action.channelDeathReward={resource:'soulShards',amount:1,requiresDamage:true};}
  if(['hunter:carve','hunter:multi-shot'].includes(rank.abilityId)){const sharedMs=finite(policy.sharedShotCooldownMs??rank.referenceCooldownMs,'shared Carve/Multi-Shot cooldown',1);if(!Number.isSafeInteger(sharedMs))throw new Error('Integer shared shot cooldown required');action.sharedCooldown={id:'hunter:carve-multi-shot',durationMs:sharedMs};}
  if(rank.sharedCooldownGroup)action.sharedCooldown={id:rank.sharedCooldownGroup,durationMs:finite(action.cooldownMs,'shared cooldown duration',1)};
- if(surge)action.arcaneSurgeModel=surge;
+ if(surge)action.arcaneSurgeModel=surge;if(icicles)action.iciclesModel=icicles;
  if(rank.abilityId==='mage:presence-of-mind')action.presenceOfMindModel=policy.presenceOfMindModel;
  if(rank.abilityId==='priest:shadowform'){action.requiredContext={form:'Humanoid'};action.shadowformPolicy=policy.shadowformPolicy;}
  if(build.classId==='priest'&&!nova&&!rank.requiredPolicy?.includes('shieldModel')&&(action.targets[0]==='ally'||rank.record.fields.school==='holy')){action.blocksInShadowform=true;if(build.classOptions?.form==='Shadowform')throw new Error('Holy healing unavailable in Shadowform');}
