@@ -1,3 +1,4 @@
+import {bladeFlurryTemplate} from './combat-blade-flurry.mjs';
 import {shadowOfDeathTemplate} from './combat-shadow-of-death.mjs';
 import {companionTemplate} from './combat-companion-reference.mjs';
 import {elementalShieldTemplate,lightningStrikeTemplate} from './combat-elemental-shield.mjs';
@@ -11,7 +12,7 @@ import {CURRENT_ENCHANT_PHASE} from './equipment-options.mjs';
 import {prepareReferenceScenario} from './combat-reference-adapter.mjs';
 
 const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aura','combo-bleed','physical-flat','physical-bleed']);
-const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind)||c.kind==='seal-aura');
+const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind)||c.kind==='seal-aura'||c.kind==='blade-flurry');
 const isRanged=r=>r.components.some(c=>['ranged-weapon','ranged-arcane'].includes(c.kind));
 const rowsFor=b=>b.controls.rotationRows;
 const rankPhase=r=>r.referenceAvailableFromPhase??1;
@@ -31,6 +32,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='bladeFlurryModel')policy.bladeFlurryModel=bladeFlurryTemplate();
   if(field==='shadowOfDeathModel')policy.shadowOfDeathModel=shadowOfDeathTemplate();
   if(field==='exposeModel')policy.exposeModel={durationMs:rank.components[0].durationMs,armourByCombo:[1,2,3,4,5].map(n=>n*rank.components[0].armourPerCombo),outcomes:null};
   if(field==='rogueCooldownModel')policy.rogueCooldownModel=rank.abilityId==='rogue:preparation'?{resetAbilityIds:[]}:rank.abilityId==='rogue:cold-blood'?{durationMs:null,criticalMultiplier:null,consume:null}:{};

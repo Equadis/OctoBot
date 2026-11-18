@@ -114,8 +114,8 @@ export class PeriodicEffects{
 }
 // Periodic regeneration is an ordinary effect with explicit gain and interval;
 // no hidden 2-second ticks or five-second rule assumed.
-export function scheduleResourceRegen(effects,resources,{id,resource,amount,durationMs,intervalMs,priority,tickAtExpiry,refresh='restart',onTick=()=>{}}){
+export function scheduleResourceRegen(effects,resources,{id,resource,amount,durationMs,intervalMs,priority,tickAtExpiry,refresh='restart',onTick=()=>{},amountForTick=x=>x}){
  if(typeof resource!=='string'||!Object.hasOwn(resources.snapshot(),resource))throw new Error('Unknown regeneration resource');
- if(!Number.isFinite(amount)||amount<0)throw new RangeError('Regeneration must be nonnegative');int(priority,'regen priority');callable(onTick,'regen callback');
- return effects.apply({id,durationMs,intervalMs,refresh,tickAtExpiry,tickPriority:priority,expirePriority:int(priority+1,'regen expiry priority'),snapshot:{resource,amount},onTick:e=>{const r=resources.change([{resource:e.snapshot.resource,delta:e.snapshot.amount}]);onTick({...e,result:r});}});
+ if(!Number.isFinite(amount)||amount<0)throw new RangeError('Regeneration must be nonnegative');int(priority,'regen priority');callable(onTick,'regen callback');callable(amountForTick,'regen amount callback');
+ return effects.apply({id,durationMs,intervalMs,refresh,tickAtExpiry,tickPriority:priority,expirePriority:int(priority+1,'regen expiry priority'),snapshot:{resource,amount},onTick:e=>{const actualAmount=amountForTick(e.snapshot.amount);if(!Number.isFinite(actualAmount)||actualAmount<0)throw new Error('Invalid adjusted regeneration');const r=resources.change([{resource:e.snapshot.resource,delta:actualAmount}]);onTick({...e,actualAmount,result:r});}});
 }
