@@ -3,7 +3,7 @@ import {publicChatMessage} from "../../docs/world-chat/chat-links.mjs";
 import {HISTORY_MS,historyPageSize,matchesChat,searchTerms} from "../../docs/world-chat/chat-history.mjs";
 import {analyseRecruitment,classInfo} from "../../docs/world-chat/lfg-catalog.mjs";
 const REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
-const SOURCES={"N'Zoth":"OBPVESW","Y'Shaarj":"OBPVPSW","C'Thun":"OBHCSW"};
+const SOURCES={"N'Zoth":["OBPVESW","OBPVEDMFA","OBPVEDMFH"],"Y'Shaarj":["OBPVPSW"],"C'Thun":["OBHCSW"]};
 const TTL=300000, HISTORY=1800000; // Live poll only; archive retention is separate.
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
 const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
@@ -55,7 +55,7 @@ export async function worldChatRoute(request,env){
     if(!env.METRICS_PUSH_TOKEN)return reply({error:"ingest unavailable"},503);
     if(request.headers.get("authorization")!=="Bearer "+env.METRICS_PUSH_TOKEN)return reply({error:"unauthorised"},401);
     let payload;try{const raw=await request.text();if(raw.length>64000)return reply({error:"payload too large"},413);payload=JSON.parse(raw);}catch{return reply({error:"invalid JSON"},400);}
-    if(!payload||!REALMS.has(payload.realm)||payload.account!==SOURCES[payload.realm]||payload.channel!=="world"||
+    if(!payload||!REALMS.has(payload.realm)||!SOURCES[payload.realm]?.includes(payload.account)||payload.channel!=="world"||
        !Array.isArray(payload.messages)||payload.messages.length>20)return reply({error:"invalid public channel batch"},400);
     const guilds=payload.guilds??[];
     if(!Array.isArray(guilds)||guilds.length>10)return reply({error:"invalid guild batch"},400);
