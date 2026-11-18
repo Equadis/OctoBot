@@ -83,6 +83,8 @@ test("scan header reuse, unauthorised calls and stale uploads",{skip},async()=>{
  assert.equal((await post(e,"start",hdr)).status,201);
  assert.equal((await post(e,"start",hdr)).json.duplicate,true);
  assert.equal((await post(e,"start",{...hdr,reported_total:6})).status,409);
+ // Simulate five minutes without committed pages using the server-side clock.
+ e.DB.sqlite.prepare("UPDATE ah_scans SET created_at=? WHERE scan_id=?").run(new Date(Date.now()-360000).toISOString(),hdr.scan_id);
  // The ancient upload is abandoned, not allowed to block collection forever.
  assert.equal((await post(e,"start",{scan_id:"ah_fresh_0001",started_at:new Date().toISOString(),reported_total:0})).status,201);
  assert.equal(e.DB.sqlite.prepare("SELECT status FROM ah_scans WHERE scan_id='ah_stale_0001'").get().status,"failed");
@@ -210,4 +212,17 @@ test("live snapshots (ahl_ scan IDs) accept a traversal whose pages shift, stric
  assert.equal((await post(e,"start",{scan_id:"ah_strict_0001",started_at:new Date().toISOString(),reported_total:70})).status,201);
  assert.equal((await post(e,"page",{scan_id:"ah_strict_0001",page:0,response_ms:1,items:items.slice(0,50)})).status,202);
  assert.equal((await post(e,"page",{scan_id:"ah_strict_0001",page:1,response_ms:1,items:items.slice(50,60)})).status,409,"strict mode needs the exact page length");
+});
+
+
+test("recent page keeps an old scan alive; stale last page releases it",{skip},async()=>{
+ const e=env(),id="ah_lease_0001";
+ assert.equal((await post(e,"start",{scan_id:id,started_at:"2020-01-01T00:00:00.000Z",reported_total:1})).status,201);
+ e.DB.sqlite.prepare("UPDATE ah_scans SET created_at=? WHERE scan_id=?").run(new Date(Date.now()-360000).toISOString(),id);
+ assert.equal((await post(e,"page",{scan_id:id,page:0,response_ms:1,items:[listing(1)]})).status,202);
+ const next={scan_id:"ah_lease_0002",started_at:new Date().toISOString(),reported_total:0};
+ assert.equal((await post(e,"start",next)).status,409);
+ e.DB.sqlite.prepare("UPDATE ah_pages SET received_at=? WHERE scan_id=?").run(new Date(Date.now()-360000).toISOString(),id);
+ assert.equal((await post(e,"start",next)).status,201);
+ assert.equal(e.DB.sqlite.prepare("SELECT status FROM ah_scans WHERE scan_id=?").get(id).status,"failed");
 });
