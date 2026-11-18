@@ -4,7 +4,7 @@ import {displayItemName,variantDetails,variantLines,richItemTooltip} from './ite
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
 import {money,moneyParts,pct,listingMarketPct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261118-listing-columns';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
-import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
+import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs?v=20261118-history1';
 import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
@@ -59,7 +59,7 @@ async function request(path){
 }
 const qualityClass=q=>{const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';};
 const itemName=item=>displayItemName(item);
-const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'];
+const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'];
 
 /** Keyboard-accessible headers for full-result (server-side) ordering. */
 function sortForTable(table){return table.dataset.sortScope==='favourites'?state.favSort:state.filters;}
@@ -264,7 +264,7 @@ async function fillDetail(cell,item,unavailable){
       const rows=listings.listings||[];
       const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
       if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
-      else auctions.body.append(simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Historical avg.','Market %','Time left'],
+      else auctions.body.append(simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left'],
         rows.map(r=>{
           const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
           const average=item.historical_avg;
@@ -326,7 +326,7 @@ async function refreshFavourites(){
   const found=new Map((data?.items||[]).map(i=>[keyOf(i),i]));
   if(data){state.fav=refreshSnapshots(state.fav,data.items);saveFavourites(storage,state.fav);}
   const table=el('table'),head=el('tr');
-  ['','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'].forEach((h,i)=>{const th=el('th',h);if(i===0){th.className='ah-col-star';th.append(el('span','Favourite','sr-only'));}head.append(th);});
+  ['','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'].forEach((h,i)=>{const th=el('th',h);if(i===0){th.className='ah-col-star';th.append(el('span','Favourite','sr-only'));}head.append(th);});
   const thead=el('thead');thead.append(head);table.append(thead);
   const tbody=el('tbody');
   // The API orders all listed favourites by the selected metric; unavailable ones follow by name.

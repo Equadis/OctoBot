@@ -316,7 +316,7 @@ test('trend colours share the countdown palette and sorting has accessible label
 });
 test('expanded auction listings omit starting bid and minimum next bid columns and cells',()=>{
  const js=read('auction-house/auction.js');
- assert.ok(js.includes("simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Historical avg.','Market %','Time left']"));
+ assert.ok(js.includes("simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left']"));
  assert.doesNotMatch(js,/moneyNode\(r\.(?:start_bid|min_next_bid)\)/);
 });
 

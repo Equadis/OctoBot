@@ -16,7 +16,7 @@ export const SORT_DEFAULT_DIR=Object.freeze({recent:'desc',name:'asc',unit_buyou
 // The star is an action, not a sortable data column. Every displayed metric is sortable.
 export const COLUMN_SORTS=Object.freeze([
   ['Item','name'],['Available','quantity'],['Listings','listings'],['Unit price','unit_buyout'],
-  ['Stack price','stack_buyout'],['Current bid','current_bid'],['Historical avg.','historical_avg'],
+  ['Stack price','stack_buyout'],['Current bid','current_bid'],['Avg. price','historical_avg'],
   ['Market %','market_pct'],['Trend','trend_pct'],['Time left','time_left']]);
 export function nextColumnSort(current,key){
  if(!SORT_DEFAULT_DIR[key])throw new Error('Unknown Auction House sort column');

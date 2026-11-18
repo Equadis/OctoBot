@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="../site-theme.css?v=20261118-q3">
 <link rel="stylesheet" href="auction.css?v=20261118-equal-columns"><link rel="stylesheet" href="../quality-select.css?v=1">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<script src="auction.js?v=20261118-listing-columns" type="module"></script>
+<script src="auction.js?v=20261118-avg-price" type="module"></script>
 <script src="../viewer-presence.js?v=20261113-live" defer></script>
 </head><body><main>
 <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1 id="ah-realm-heading">Auction House – N'Zoth</h1></div></div>
@@ -67,7 +67,7 @@
 </div>
 <div id="filter-errors" class="ah-errors" role="alert"></div>
 </form>
-<div class="ah-scroll"><table><thead><tr><th class="ah-col-star"><span class="sr-only">Favourite</span></th><th>Item</th><th>Available</th><th>Listings</th><th>Unit price</th><th>Stack price</th><th>Current bid</th><th>Historical avg.</th><th>Market %</th><th>Trend</th><th>Time left</th></tr></thead><tbody id="items"><tr><td colspan="11" class="ah-empty">No data – awaiting a verified complete scan.</td></tr></tbody></table></div>
+<div class="ah-scroll"><table><thead><tr><th class="ah-col-star"><span class="sr-only">Favourite</span></th><th>Item</th><th>Available</th><th>Listings</th><th>Unit price</th><th>Stack price</th><th>Current bid</th><th>Avg. price</th><th>Market %</th><th>Trend</th><th>Time left</th></tr></thead><tbody id="items"><tr><td colspan="11" class="ah-empty">No data – awaiting a verified complete scan.</td></tr></tbody></table></div>
 <div class="ah-footer"><span id="result-count">0 items</span><div class="ah-pager"><button id="previous" type="button" class="ah-btn" disabled>Previous</button> <span id="page-label">Page 1</span> <button id="next" type="button" class="ah-btn" disabled>Next</button></div></div>
 </section>
 <p class="ah-caveat">Historical values require at least four distinct completed daily observations. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive. Seller names are not available from the auction data, so listings show the owner GUID.</p>
