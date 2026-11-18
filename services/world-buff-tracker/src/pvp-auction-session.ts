@@ -26,14 +26,14 @@ const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
 const token=process.env.AUCTION_PUSH_TOKEN?.trim();
 const uploadUrl=new URL(endpoint);
-const auctionRealm=process.env.COLLECTOR_PROFILE==="OBPVEAH"?"N\u0027Zoth":"Y\u0027Shaarj";
+const auctionRealm=(process.env.COLLECTOR_PROFILE||process.env.RAILWAY_SERVICE_NAME||"").toUpperCase()==="OBPVEAH"?"N\u0027Zoth":"Y\u0027Shaarj";
 uploadUrl.searchParams.set("realm",auctionRealm);
 if(uploadUrl.protocol!=="https:"||!uploadUrl.pathname.endsWith("/api/auction/scan")||
  uploadUrl.username||uploadUrl.password)throw new Error("AUCTION_PUSH_URL must be an HTTPS /api/auction/scan endpoint");
 function auctionUrl(suffix:string):URL {
  const url=new URL(uploadUrl);url.pathname=url.pathname.replace(/\/scan\/?$/,"")+suffix;return url;
 }
-class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
+class UploadError extends Error{constructor(message:string,readonly status:number,readonly retryAfterMs=0){super(message);}}
 async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
  for(let attempt=0;attempt<6;attempt++){
@@ -43,11 +43,11 @@ async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"selle
      body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)
    });
    if(response.ok)return;
-   throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status);
+   throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status,Math.min(30000,Math.max(0,Number(response.headers.get("retry-after"))*1000||0)));
   }catch(error){
-   if(error instanceof UploadError&&error.status!==429&&error.status<500)throw error;
+   if(error instanceof UploadError&&![408,425,429].includes(error.status)&&error.status<500)throw error;
    if(attempt===5)throw error;
-   await sleep(Math.min(30000,2000*2**attempt)+Math.floor(Math.random()*1000));
+   await sleep(Math.max(error instanceof UploadError?error.retryAfterMs:0,Math.min(30000,2000*2**attempt))+Math.floor(Math.random()*1000));
   }
  }
 }
@@ -231,7 +231,7 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
    onObjectDestroyed(guid){if(auctioneerGuid===guid)auctioneerGuid=null;for(const [entry,value] of knownGuids)if(value===guid)knownGuids.delete(entry);},
    onAuctionHello(hello){if(!pendingHello||finished)return;clearTimeout(pendingHello);pendingHello=null;
     if(hello.guid!==auctioneerGuid||hello.houseId===0){busy=false;log.warn("PvP Auction House unavailable");return;}
-    void run(hello.guid).catch(e=>log.warn("PvP auction scan failed: "+String(e))).finally(()=>{busy=false;nextAttemptAt=Date.now()+cooldownMs;});
+    void run(hello.guid).then(()=>{nextAttemptAt=Date.now()+cooldownMs;}).catch(e=>{log.warn("Auction scan failed: "+String(e));nextAttemptAt=Date.now()+Math.min(cooldownMs,300000)+Math.floor(Math.random()*30000);}).finally(()=>{busy=false;});
    },
    onAuctionList(result){const p=pendingQuery;if(!p||finished)return;clearTimeout(p.timer);pendingQuery=null;p.resolve(result);},
    onItemTemplate(reply){const p=pendingItem;if(!p||p.id!==reply.item_id)return;clearTimeout(p.timer);pendingItem=null;p.resolve(reply);}
