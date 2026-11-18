@@ -17,6 +17,7 @@ jobs:
       - run: python -m unittest discover -s tests/sim -p 'test_*.py'
       - run: node tools/sim/audit-combat-abilities.mjs
       - run: node tools/sim/audit-combat-systems.mjs
+      - run: node tools/sim/audit-equipment-runtime.mjs
       - run: node tools/sim/audit-mvp-readiness.mjs
       - run: node tools/sim/audit-data-integrity.mjs
       - run: node tools/sim/audit-base-reconciliation.mjs
@@ -31,6 +32,7 @@ jobs:
             data-integrity-queue.json
             base-reference-reconciliation.json
             integrity-resolution.json
+            equipment-runtime-audit.json
       - run: node --check docs/sim/reference-rotation.mjs && node --check docs/sim/reference-worker.mjs && node --check docs/sim/planner.mjs
       - name: Browser smoke (Chromium)
         run: |
