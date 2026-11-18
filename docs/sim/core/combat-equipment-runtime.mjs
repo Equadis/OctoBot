@@ -1,8 +1,10 @@
 import {attemptProc,REFERENCE_PRIORITIES as P} from './combat-timeline.mjs';
+import {sampleAttack} from './combat-attack-tables.mjs';
+import {expectedOutcome} from './combat-math.mjs';
 const id=v=>typeof v==='string'&&v.trim();
 const validModifier=m=>m&&id(m.stat)&&['flat','addPct','multiplyPct'].includes(m.mode)&&Number.isFinite(m.value)&&(m.mode!=='multiplyPct'||m.value>=-100);
 const validRange=x=>Number.isFinite(x.min)&&Number.isFinite(x.max)&&x.min>=0&&x.max>=x.min;
-const validEffect=x=>x&&['aura','resource','heal'].includes(x.kind)&&(x.kind==='aura'?Number.isSafeInteger(x.durationMs)&&x.durationMs>0&&Array.isArray(x.modifiers)&&x.modifiers.length>0&&x.modifiers.every(validModifier):x.kind==='heal'?validRange(x):id(x.resource)&&(Number.isFinite(x.amount)&&x.amount>=0||validRange(x)));
+const validEffect=x=>x&&['aura','resource','heal','damage'].includes(x.kind)&&(x.kind==='aura'?Number.isSafeInteger(x.durationMs)&&x.durationMs>0&&Array.isArray(x.modifiers)&&x.modifiers.length>0&&x.modifiers.every(validModifier):['heal','damage'].includes(x.kind)?validRange(x):id(x.resource)&&(Number.isFinite(x.amount)&&x.amount>=0||validRange(x)));
 export function createEquipmentRuntime(config,owner,pools,duration){
  if(config==null)return null;
  if(!Array.isArray(config.effects))throw Error('Explicit equipment effect list required');
@@ -12,6 +14,7 @@ export function createEquipmentRuntime(config,owner,pools,duration){
  for(const x of config.effects){
   if(!id(x.id)||seen.has(x.id)||!id(x.source)||!id(x.provenance)||!validEffect(x.effect)||!Number.isSafeInteger(x.cooldownMs)||x.cooldownMs<0)throw Error('Invalid explicit equipment effect');
   seen.add(x.id);if(x.loadout!==undefined&&(!swap||!['before','after'].includes(x.loadout)))throw Error('Invalid equipment loadout');
+  if(x.effect.kind==='damage'){const f=x.effect;if(!['physical','fire','frost','nature','shadow','arcane','holy'].includes(f.school)||!Number.isFinite(f.mitigation)||f.mitigation<0||f.mitigation>1||!Array.isArray(f.outcomes)||f.outcomes.some(o=>typeof o.landed!=='boolean')||x.trigger==='use'&&!id(x.targetId))throw Error('Explicit equipment damage model required');expectedOutcome({min:f.min,max:f.max,outcomes:f.outcomes,mitigation:f.mitigation});}
   if(x.effect.kind==='resource'&&!Object.hasOwn(pools,x.effect.resource))throw Error('Unknown equipment resource');
   if(x.sharedGroup!==undefined&&(!id(x.sharedGroup)||!Number.isSafeInteger(x.sharedCooldownMs)||x.sharedCooldownMs<0))throw Error('Invalid equipment shared cooldown');
   if(x.trigger==='use'){if(!Array.isArray(x.atMs)||new Set(x.atMs).size!==x.atMs.length||x.atMs.some(t=>!Number.isSafeInteger(t)||t<0||t>=duration))throw Error('Invalid equipment use times');}
@@ -25,9 +28,10 @@ export function createEquipmentRuntime(config,owner,pools,duration){
   cd.start(shared);
   const f=x.effect;
   if(f.kind==='aura')e.auras.apply({id:'equipment:'+x.id,name:x.source,targetId:owner,ownerId:owner,kind:'buff',durationMs:f.durationMs,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',exclusiveGroup:f.exclusiveGroup??null,modifiers:f.modifiers});
+  else if(f.kind==='damage'){const victim=x.trigger==='use'?x.targetId:target;const hit=sampleAttack({min:f.min,max:f.max,outcomes:f.outcomes,mitigation:f.mitigation,random:e.random});e.timeline.schedule(e.timeline.now,P.decision,()=>{if(!e.unit(owner).alive||!e.unit(victim).alive)return;e.recordMechanic('attack-result',{actorId:owner,targetId:victim,source:x.source,school:f.school,equipmentProc:true,...hit});if(hit.landed)e.damage({actorId:owner,targetId:victim,source:x.source,school:f.school,value:hit.raw,threat:f.threat??null});});}
   else if(f.kind==='heal'){const value=f.min+(f.max-f.min)*e.random();e.heal({actorId:owner,targetId:owner,source:x.source,value});}
   else {const amount=f.amount??(f.min+(f.max-f.min)*e.random());const q=e.resources.change([{resource:f.resource,delta:amount}]);e.recordMechanic('resource-change',{actorId:owner,source:x.source,resource:f.resource,delta:amount-(q.suppressed?.[f.resource]??0),overflow:q.overflow[f.resource]??0});}
   e.recordMechanic('proc',{actorId:owner,targetId:target,source:x.source,procId:'equipment:'+x.id});return true;
  }
- return {install(e){if(swap)e.timeline.schedule(swap.atMs,P.resource,()=>{if(!e.unit(owner).alive)return;swapped=true;if(swap.statModifiers?.length)e.auras.apply({id:'equipment:swap-stats',name:'Replacement trinket stats',targetId:owner,ownerId:owner,kind:'buff',durationMs:duration-swap.atMs+1,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:swap.statModifiers});if(swap.auraPolicy==='remove')for(const x of config.effects.filter(x=>x.loadout==='before'))e.auras.remove({id:'equipment:'+x.id,targetId:owner,ownerId:owner,kind:'buff'},'unequipped');e.recordMechanic('proc',{actorId:owner,targetId:owner,source:'Trinket swap',procId:swap.mode});});for(const x of config.effects.filter(x=>x.trigger==='use'))for(const at of x.atMs)e.timeline.schedule(at,P.resource,()=>activate(e,x,owner));},attack(e,ev){if(ev.actorId!==owner||!ev.landed)return;for(const x of config.effects){if(x.trigger==='use'||!x.sources.includes(ev.source)||x.trigger==='critical'&&!ev.critical)continue;activate(e,x,ev.targetId);}}};
+ return {install(e){if(swap)e.timeline.schedule(swap.atMs,P.resource,()=>{if(!e.unit(owner).alive)return;swapped=true;if(swap.statModifiers?.length)e.auras.apply({id:'equipment:swap-stats',name:'Replacement trinket stats',targetId:owner,ownerId:owner,kind:'buff',durationMs:duration-swap.atMs+1,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:swap.statModifiers});if(swap.auraPolicy==='remove')for(const x of config.effects.filter(x=>x.loadout==='before'))e.auras.remove({id:'equipment:'+x.id,targetId:owner,ownerId:owner,kind:'buff'},'unequipped');e.recordMechanic('proc',{actorId:owner,targetId:owner,source:'Trinket swap',procId:swap.mode});});for(const x of config.effects.filter(x=>x.trigger==='use'))for(const at of x.atMs)e.timeline.schedule(at,P.resource,()=>activate(e,x,owner));},attack(e,ev){if(ev.actorId!==owner||!ev.landed||ev.equipmentProc)return;for(const x of config.effects){if(x.trigger==='use'||!x.sources.includes(ev.source)||x.trigger==='critical'&&!ev.critical)continue;activate(e,x,ev.targetId);}}};
 }
