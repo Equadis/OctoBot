@@ -32,6 +32,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='vanishModel')policy.vanishModel={durationMs:null,reagentCost:null,threatReduction:null,cloakedAllies:[]};
   if(field==='bladeFlurryModel')policy.bladeFlurryModel=bladeFlurryTemplate();
   if(field==='shadowOfDeathModel')policy.shadowOfDeathModel=shadowOfDeathTemplate();
   if(field==='exposeModel')policy.exposeModel={durationMs:rank.components[0].durationMs,armourByCombo:[1,2,3,4,5].map(n=>n*rank.components[0].armourPerCombo),outcomes:null};
@@ -91,6 +92,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  if(build.classId==='shaman'&&build.classOptions.mhImbue&&build.classOptions.mhImbue!=='None')encounter.imbueModel=imbueTemplate(build.classOptions.mhImbue,selected.filter(r=>r.components.some(c=>['weapon','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId));
  if(encounter.imbueModel?.name==='Frostbrand Weapon'&&Number(build.talents?.['263']??0)>0)encounter.imbueModel.elementalWeapons={chanceMode:null,frostShockScope:null,criticalMultiplier:null};
  if(encounter.imbueModel?.name==='Rockbiter Weapon'&&Number(build.talents?.['263']??0)>0)encounter.imbueModel.elementalWeapons={bulwarkBasis:null};
+ if(build.classId==='rogue'&&selected.some(r=>r.requiresStealth||r.abilityId==='rogue:vanish')){encounter.stealthPolicy={initial:null,autoPolicy:null,breakOnIncoming:null};if(selected.some(r=>r.abilityId==='rogue:vanish'))encounter.flashPowderCount=null;}
  if(build.classId==='rogue'){const eligible=selected.filter(r=>r.components.some(c=>['weapon','combo','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId);encounter.poisonModel={};for(const [hand,key] of [['mainhand','mhPoison'],['offhand','ohPoison']]){const name=build.classOptions[key];if(name&&name!=='None')encounter.poisonModel[hand]=poisonTemplate(name,eligible);}}
  if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}
  if(build.classId==='warrior'||build.classId==='druid'&&build.classOptions.form==='Bear')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
