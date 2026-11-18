@@ -33,6 +33,6 @@ export function buildChart(doc,history,average=null){
   for(const p of g.points){const c=el('circle',{cx:p.x.toFixed(1),cy:p.y.toFixed(1),r:3,class:'ah-chart-dot'});c.append(el('title',{},p.day+': '+money(p.value)));svg.append(c);}
   svg.append(el('text',{x:g.pad.l,y:g.height-5,class:'ah-chart-label'},first.day));
   svg.append(el('text',{x:g.width-g.pad.r,y:g.height-5,'text-anchor':'end',class:'ah-chart-label'},last.day));
-  svg.append(el('text',{x:g.width-g.pad.r,y:g.pad.t-2,'text-anchor':'end',class:'ah-chart-label'},'High '+money(g.hi)+' · Low '+money(g.lo)));
+
   return svg;
 }
