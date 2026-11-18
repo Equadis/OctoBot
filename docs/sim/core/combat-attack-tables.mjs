@@ -11,7 +11,7 @@ const oneRollNames=['miss','dodge','parry','block','glance','crit'];
 // multipliers. Neither Classic/Turtle order nor values are asserted as OctoWoW.
 export function physicalAttackTable({type,weaponSkill,targetDefense,hitPct,dualWieldWhite,dualWieldPenaltyPct,missPct,avoidance,glancePct,glanceMultiplier,critPct,critSuppressionPct,critMultiplier,blockValue,order,position,provenance}){
  if(!['melee-white','melee-special','ranged'].includes(type))throw new Error('Explicit physical attack type required');
- if(!['front','behind','ranged'].includes(position)||(type==='ranged')!==(position==='ranged'))throw new Error('Explicit compatible attack position required');
+ if(!['front','behind','side','ranged'].includes(position)||(type==='ranged')!==(position==='ranged'))throw new Error('Explicit compatible attack position required');
  if(!validId(provenance))throw new Error('Explicit attack table provenance required');
  if(!Array.isArray(order)||order.length!==oneRollNames.length||new Set(order).size!==order.length||order.some(n=>!oneRollNames.includes(n)))throw new Error('Explicit complete one-roll outcome order required');
  if(!avoidance)throw new Error('Explicit target avoidance required');
