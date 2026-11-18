@@ -45,7 +45,7 @@ export class CombatEncounter{
   for(const r of rows){const a=this.#action(r.abilityId||r.ability);if(!a||a.name!==r.ability)throw new Error('Unsupported rotation ability: '+r.ability);if(!Array.isArray(r.conditions)||!['primary','cycle','ally','self','pet'].includes(r.target??'primary'))throw new Error('Invalid rotation row');}
  }
  #action(id){return this.#actions.get(id)||[...this.#actions.values()].find(a=>a.name===id);}
- #effectiveAction(a){if(a.costsWhenAuraActive&&this.auras.active(this.#player,'buff').some(x=>x.id===a.costsWhenAuraActive.id&&x.ownerId===this.#player))a={...a,costs:a.costsWhenAuraActive.costs};if(!a.castProc)return a;const p=a.castProc,buff=this.auras.active(this.#player,'buff').find(x=>x.id===p.id&&x.ownerId===this.#player);if(!buff)return a;if(!['instant','cast'].includes(a.kind))throw new Error('Cast proc cannot modify queued or channeled action');const castMs=p.instant?0:Math.max(0,a.castMs-p.castReductionMsPerStack*buff.stacks);return {...a,kind:castMs===0?'instant':'cast',castMs,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:c.delta*p.manaCostFactor}:c),procAura:buff,guaranteeHit:p.guaranteeHit};}
+ #effectiveAction(a){if(a.costsWhenAuraActive&&this.auras.active(this.#player,'buff').some(x=>x.id===a.costsWhenAuraActive.id&&x.ownerId===this.#player))a={...a,costs:a.costsWhenAuraActive.costs,arcaneRuptureActive:a.costsWhenAuraActive.id==='mage:arcane-rupture'};if(!a.castProc)return a;const p=a.castProc,buff=this.auras.active(this.#player,'buff').find(x=>x.id===p.id&&x.ownerId===this.#player);if(!buff)return a;if(!['instant','cast'].includes(a.kind))throw new Error('Cast proc cannot modify queued or channeled action');const castMs=p.instant?0:Math.max(0,a.castMs-p.castReductionMsPerStack*buff.stacks);return {...a,kind:castMs===0?'instant':'cast',castMs,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:c.delta*p.manaCostFactor}:c),procAura:buff,guaranteeHit:p.guaranteeHit};}
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
@@ -120,7 +120,7 @@ export class CombatEncounter{
     c.tickets.push(this.timeline.after(offset,P.cast,()=>{
      if(this.#cast!==c)return;
      if(!this.#active()||!this.#allows(a,targetId)){this.interrupt('target unavailable');return;}
-     this.#record('channel-tick',{ability:a.name,targetId,tickIndex});a.onTick(this,targetId,tickIndex);
+     this.#record('channel-tick',{ability:a.name,targetId,tickIndex});a.onTick(this,targetId,tickIndex,{arcaneRuptureActive:a.arcaneRuptureActive===true});
     }));
    }
    c.tickets.push(this.timeline.schedule(completeAt,P.cast,()=>{

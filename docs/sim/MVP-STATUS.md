@@ -94,3 +94,6 @@ Paladin talent expansion: Shield Specialization and Redoubt now work independent
 ### Mage frost control
 - Added 4 Frost Nova, 5 Cone of Cold and 4 Ice Barrier candidate rank models; explicit learner, cost, scaling and control policy; no live rank verification.
 - Shatter 7% per point transferred from hit to crit within the same resistance bin on direct spells; configurable damage break probability. Ice Barrier damage 10% while timed buff is active plus 5% while absorb remains. Movement, cone orientation, immunities per enemy and pushback are not simulated. Talent metadata: https://octowow.st/talents/mage/.
+
+### Mage arcane and cooldown follow-on
+- Arcane Rupture six candidate ranks: explicit rank coefficients and buff trigger, published 20% Arcane Missiles damage/cost snapshot at channel start. Cold Snap resets only configured Frost cooldowns, not its own. Evocation explicit channel interval, duration and mana per tick. Research-only; unresolved OctoWoW rank data and timing policies remain explicit.

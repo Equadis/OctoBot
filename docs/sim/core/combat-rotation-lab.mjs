@@ -35,6 +35,8 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
   if(field==='paladinDefenseModel')policy.paladinDefenseModel=rank.abilityId==='paladin:righteous-fury'?{mode:'enable-only',threatBonusPct:null,improvedBasis:null}:{durationMs:10000,charges:4,blockBonusPct:45,baseDamage:rank.record.fields.referenceDamage,spellPowerCoefficient:null,mitigation:null,outcomes:null,additionalThreatPct:50,threat:null};
+  if(field==='arcaneRuptureModel')policy.arcaneRuptureModel={min:rank.record.fields.classicDamageRange?.[0]??null,max:rank.record.fields.classicDamageRange?.[1]??null,coefficient:null,durationMs:8000,buffTrigger:null};
+  if(field==='evocationModel')policy.evocationModel={manaPerTick:null,durationMs:8000,tickMs:2000};
   if(field==='frostControlModel')policy.frostControlModel={min:null,max:null,coefficient:null,cap:null,radius:rank.maxRange,durationMs:8000,slowPct:rank.abilityId==='mage:cone-of-cold'?50:0,breakChancePct:null,controlEnabled:null};
   if(field==='iceBarrierModel')policy.iceBarrierModel={base:rank.record.fields.referenceAbsorb,coefficient:null,durationMs:60000};
   if(field==='paladinDamageModel')policy.paladinDamageModel={min:rank.record.fields.classicDamageRange?.[0]??null,max:rank.record.fields.classicDamageRange?.[1]??null,coefficient:null,threatFactor:null,...(rank.abilityId==='paladin:exorcism'?{targetTypes:rank.record.fields.classicTargetTypes}:{healthMaxPct:20})};
