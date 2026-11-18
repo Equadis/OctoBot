@@ -38,6 +38,7 @@ test('archived monitoring chart, calendar and incidents render after import',asy
       if(!nodes.has(id))nodes.set(id,element());
       return nodes.get(id);
     },
+    createTextNode:text=>({nodeType:3,textContent:String(text)}),
     createElement:tag=>element(tag),
     createElementNS:(_namespace,tag)=>element(tag)
   };
