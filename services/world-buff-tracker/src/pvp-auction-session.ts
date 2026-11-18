@@ -145,7 +145,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
    const timer=setTimeout(()=>{pendingQuery=null;reject(new Error("Auction page response timeout; do not misassociate late reply"));world.close();},queryTimeoutMs);
    pendingQuery={resolve,reject,timer};
    lastQuery=Date.now();
-   world.auctionList(guid,offset);
+   try{world.auctionList(guid,offset);}catch(error){clearTimeout(timer);pendingQuery=null;reject(error instanceof Error?error:new Error(String(error)));}
   });
  };
  const queryItem=(id:number):Promise<ItemTemplateReply|null>=>{
@@ -217,6 +217,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
   handlers:{
    onWorldObjects(raw){if(finished||!getWorld()?.isReady)return;const w=current();const objects=parseUpdateObject(raw,w.selfGuid??undefined);
     for(const unit of objects.units)knownGuids.set(unit.entry,unit.guid);
+    for(const change of objects.ownerChanges)if(change.kind==="out-of-range"){if(auctioneerGuid===change.guid)auctioneerGuid=null;for(const [entry,value] of knownGuids)if(value===change.guid)knownGuids.delete(entry);}
     for(const entry of watchers.take(objects.units.map(u=>u.entry),15)){const guid=knownGuids.get(entry);if(guid!==undefined)w.queryCreature(entry,guid);}
    },
    onCreatureName(entry,name){if(finished||name!==target)return;const guid=knownGuids.get(entry);if(guid===undefined)return;auctioneerGuid=guid;log.info("PvP Auctioneer Fitch discovered");attempt();},
