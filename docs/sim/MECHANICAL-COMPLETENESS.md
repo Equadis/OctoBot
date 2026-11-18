@@ -23,3 +23,6 @@ Exact complete timed AP, spell/healing power, simple direct damage and extra-att
 
 ## Absorption and life transfer
 Equipment effects now execute sampled absorption capacity, explicit school restrictions and timed replacement, and damage/periodic damage optionally use the shared leech ledger. Exact source-shaped absorption and life-transfer tooltips are mapped. Unknown life-transfer school and healing basis remain explicit research inputs rather than inferred values. Compound multi-effect procs and dynamic haste remain outstanding.
+
+## Dynamic spell attack tables
+Ordinary direct magical damage with explicit spell outcome bins supports temporary spell hit, spell crit and school-specific crit deltas. Miss probability is adjusted independently; conditional resistance distribution is preserved, and conditional critical chance is adjusted separately within each non-full resistance bin. Zero modifiers leave existing tables unchanged. Unsupported tables fail closed; ranged magical attacks, application rolls, healing and special execution paths are not promoted to verified coverage. Arithmetic is a research reference, not live validation.
