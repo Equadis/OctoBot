@@ -13,7 +13,7 @@ export function releaseReadiness(){
    const candidateIds=[...new Set(a.candidateSpellIds||[])];
    const evidenceIds=new Set(ranks.map(r=>r.spellId));
    const availability=['hunter:counterattack','priest:power-infusion','shaman:natures-swiftness'].includes(a.id)?'removed':a.id==='hunter:trueshot-aura'?'conflicting-guide-and-archive':null;
-   const executableAdapter=['hunter:auto-shot','hunter:pet-attack','warlock:pet-attack'].includes(a.id)?'scheduler-command':a.id==='druid:powershift'?'fixed-form-transition':null;
+   const executableAdapter=['hunter:auto-shot','hunter:pet-attack','warlock:pet-attack'].includes(a.id)?'scheduler-command':a.id==='druid:powershift'?'fixed-form-transition':a.id==='paladin:holy-strike'?'unresolved-identity-reference':null;
    return {id:a.id,name:a.name,availability,executableAdapter,status:[...ranks,...externalReferenceRanks].some(r=>r.conflicts.length)?'source-conflict':ranks.length||externalReferenceRanks.length||a.contract?'published-partial':'unresolved',candidateIds,unreviewedCandidateIds:candidateIds.filter(id=>!evidenceIds.has(id)),guideContract:a.contract,ranks,externalReferenceRanks,referenceRankIds:referenceRanks.map(r=>r.spellId),validated:false};
   });
   const rows=base.combinations.filter(b=>b.classId===c.classId);
