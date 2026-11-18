@@ -59,3 +59,14 @@ test("unseeded zones never start numbering at one",{skip},async()=>{
  assert.equal(r.status,409);assert.equal(r.json.error,"counter_not_seeded");
  assert.equal(db.sqlite.prepare("SELECT COUNT(*) n FROM raid_numbers").get().n,0);
 });
+
+test("encrypted checkpoint endpoints reject stale writes and preserve legacy state",{skip},async()=>{
+ const db=makeDb(),now=Date.now(),payload=Buffer.alloc(48,1).toString("base64");
+ assert.equal((await call(db,"checkpoint?zone=onyxia")).status,404);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now,payload})).status,200);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now-1,payload})).status,409);
+ assert.equal((await call(db,"checkpoint?zone=onyxia")).json.payload,payload);
+ assert.equal((await call(db,"checkpoint?zone=bwl")).status,404);
+ assert.equal((await call(db,"state?zone=onyxia")).status,404);
+ assert.equal((await call(db,"checkpoint","PUT",{zone:"onyxia",observedAt:now,payload:"plaintext"})).status,400);
+});
