@@ -16,9 +16,9 @@ export function holyStrikeRange(p){
  return {school:'holy',damageMin,damageMax,threatMultiplier:p.threatMultiplier,allyHealing,selfHealing:allyHealing*p.selfHealingMultiplier,manaRestore:p.manaRestore};
 }
 
-export function executeHolyStrike(e,{owner,target,enemyIds,geometry,recipients,manaPools,model,outcomes,roll,refreshJudgements}){
+export function executeHolyStrike(e,{owner,target,enemyIds,geometry,recipients,manaPools,model,outcomes,healThreat,roll,refreshJudgements}){
  const values=holyStrikeRange(model);
- if(!Array.isArray(recipients)||!recipients.includes(owner)||recipients.length<1||recipients.length>5||new Set(recipients).size!==recipients.length||!manaPools||typeof manaPools!=='object'||Array.isArray(manaPools)||!Array.isArray(outcomes)||!outcomes.length||Math.abs(outcomes.reduce((n,o)=>n+o.probability,0)-1)>1e-8||outcomes.some(o=>typeof o.landed!=='boolean'))throw new Error('Explicit Holy Strike party, distinct mana pools and outcomes required');
+ if(!Array.isArray(recipients)||!recipients.includes(owner)||recipients.length<1||recipients.length>5||new Set(recipients).size!==recipients.length||!manaPools||typeof manaPools!=='object'||Array.isArray(manaPools)||!(healThreat===null||Number.isFinite(healThreat)&&healThreat>=0)||!Array.isArray(outcomes)||!outcomes.length||Math.abs(outcomes.reduce((n,o)=>n+o.probability,0)-1)>1e-8||outcomes.some(o=>typeof o.landed!=='boolean'))throw new Error('Explicit Holy Strike party, distinct mana pools and outcomes required');
  for(const [id,pool] of Object.entries(manaPools))if(!recipients.includes(id)||pool!==(id===owner?'mana':'partyMana:'+id)||!e.resources.snapshot()[pool])throw new Error('Holy Strike mana recipient lacks distinct configured pool');
  if(!e.unit(owner).alive||!e.unit(target).alive)return;
  const hit=roll({min:values.damageMin,max:values.damageMax,outcomes,random:e.random});
@@ -27,7 +27,7 @@ export function executeHolyStrike(e,{owner,target,enemyIds,geometry,recipients,m
  const livingEnemies=enemyIds.filter(id=>e.unit(id).alive);
  for(const id of recipients){if(!e.unit(id).alive||!geometry[owner]?.[id]||geometry[owner][id].distance>10)continue;
  const healing=id===owner?values.selfHealing:values.allyHealing;
- e.heal({actorId:owner,targetId:id,source:'Holy Strike (party)',value:healing,threat:livingEnemies.length?{actorId:owner,enemyIds:livingEnemies,coefficient:0,flat:0,multipliers:[],distribution:'split'}:null});
+ e.heal({actorId:owner,targetId:id,source:'Holy Strike (party)',value:healing,threat:livingEnemies.length&&healThreat!==null?{actorId:owner,enemyIds:livingEnemies,coefficient:healThreat,flat:0,multipliers:[],distribution:'split'}:null});
  const resource=manaPools[id];if(resource&&values.manaRestore>0){const before=e.resources.snapshot()[resource].current;const change=e.resources.change([{resource,delta:values.manaRestore}]);if(!change.ok)throw new Error('Holy Strike mana return failed');const actual=e.resources.snapshot()[resource].current-before;e.recordMechanic('resource-change',{actorId:owner,targetId:id,source:'Holy Strike (mana)',resource,delta:actual,overflow:values.manaRestore-actual});}
  }
 }
