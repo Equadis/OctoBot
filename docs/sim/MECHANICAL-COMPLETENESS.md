@@ -38,3 +38,6 @@ Incoming magical attacks with rating-based resistance inputs rebuild their distr
 
 ## Dynamic capacities
 Explicit opt-in capacity policy supports player health, mana, energy and rage aura modifiers. Current resource can clamp, preserve deficit or preserve ratio; health cannot be reduced below one by capacity changes. Original base capacities remain immutable, refresh/replacement avoids transient expiration, and changes are logged. Exact server semantics and companion capacities remain unverified.
+
+## Conditional equipment triggers
+Incoming landed or critical attack-result events can activate explicit source-matched effects; optional owner or target health threshold predicates are evaluated before cooldown and proc rolls. Incoming resource-return set wording retains all three published amounts and requires a compatible explicit resource selection. These are pre-damage attack-result triggers, not damage-taken or post-damage triggers; rates, Druid form changes and server event timing remain unverified.
