@@ -17,6 +17,7 @@ const physicalKinds=new Set(['weapon','combo','execute','physical-ap','combo-aur
 const isMelee=r=>r.components.some(c=>physicalKinds.has(c.kind)||c.kind==='seal-aura'||c.kind==='blade-flurry');
 const isRanged=r=>r.components.some(c=>['ranged-weapon','ranged-arcane'].includes(c.kind));
 const rowsFor=b=>b.controls.rotationRows;
+const hunterCommand=id=>['hunter:auto-shot','hunter:pet-attack'].includes(id);
 const rankPhase=r=>r.referenceAvailableFromPhase??1;
 const provenance='Explicit experimental rotation policy; reference mechanics, not live verified';
 const order=['miss','dodge','parry','block','glance','crit'];
@@ -42,6 +43,7 @@ function defaults(rank,position,normalisedSpeed){
   if(field==='siphonLifeModel')policy.siphonLifeModel={totalBase:rank.record.fields.classicTotal,totalCoefficient:null,durationMs:30000,intervalMs:null};
   if(field==='lacerateModel')policy.lacerateModel={baseMana:null,manaCostPct:8,windowMs:null,consume:null,trigger:null,tickMs:null,bleedBasis:null,refresh:null};
   if(field==='intimidationModel')policy.intimidationModel={windowMs:null,eligibleSources:[],stunOutcomes:null,threatTiming:'after-trigger',range:null};
+  if(field==='steadyShotModel')policy.steadyShotModel={baseMana:null,weaponCoefficient:null,flatDamage:null,castMs:1000,minRange:8,maxRange:35,learnedCastIdentityConfirmed:false};
   if(field==='scatterShotModel')policy.scatterShotModel={baseMana:null,manaCostPct:8,range:15,controlEnabled:null,autoResume:null,resumeAbilityIds:[]};
   if(field==='fireTrapModel')policy.fireTrapModel={initialMin:rank.record.fields.classicInitial?.[0]??null,initialMax:rank.record.fields.classicInitial?.[1]??null,totalPeriodic:rank.record.fields.classicTotal,durationMs:rank.record.fields.referenceDurationMs,tickMs:rank.record.fields.referenceTickMs,lifetimeMs:60000,triggerDelayMs:null,placementRange:5,cap:rank.abilityId==='hunter:immolation-trap'?1:null,targeting:rank.abilityId==='hunter:immolation-trap'?'single-anchor':'static-anchor-nearby',pendingPolicy:null,prepullAtZero:null,sharedCooldownMs:null,initialAPCoefficient:rank.abilityId==='hunter:immolation-trap'?0:1/6.5,periodicAPPerTick:rank.abilityId==='hunter:immolation-trap'?.1:1/30,initialOutcomes:null,applicationOutcomes:null,tickOutcomes:null,applicationPolicy:null,resistancePolicy:'explicit-post-talent',acknowledgeMissingNettle:false};
   if(field==='mendPetModel')policy.mendPetModel={totalBase:rank.record.fields.referenceTotalHeal,totalCoefficient:null,durationMs:5000,tickMs:1000,cleansePolicy:'explicit-aura-ids',cleanseAuraIds:[]};
@@ -109,13 +111,14 @@ export function rotationReferenceTemplate(build,gearById={}){
  const normalisedSpeed=weapon?.subclass===15?1.7:weapon?.slot===17?3.3:2.4;
  const selected=[];
  for(const [id,name] of distinctActions(build)){
+  if(hunterCommand(id)){rankChoices[id]=[{spellId:null,rank:null,status:'scheduler-command',source:'https://octowow.st/index.php/hunter'}];rankByAbility[id]=null;policies[id]={phase:CURRENT_ENCHANT_PHASE,provenance,command:id,activation:'scheduled-phase'};continue;}
   const options=choices.filter(r=>r.abilityId===id).sort((a,b)=>b.rank-a.rank);
   if(!options.length){unsupported.push(name);continue;}
   rankChoices[id]=options.map(({spellId,rank,source,status})=>({spellId,rank,source,status}));
   const rank=options[0];selected.push(rank);rankByAbility[id]=rank.spellId;policies[id]=defaults(rank,position,normalisedSpeed);
  }
  if(unsupported.length)return {unsupported,config:null,rankChoices};
- const melee=selected.some(isMelee),ranged=selected.some(isRanged);
+ const melee=selected.some(isMelee),ranged=selected.some(isRanged)||Object.hasOwn(rankByAbility,'hunter:auto-shot');
  const encounter={...(build.classId==='paladin'&&Number(build.talents?.['460']??0)>0?{daybreakModel:{durationMs:30000,min:248,max:289,healingCoefficient:null,abilityIds:selected.filter(r=>r.components.some(c=>c.kind==='heal')).map(r=>r.abilityId),includeOwner:null,triggerDamageBasis:null,refresh:null,threat:null,outcomes:null}}:{}),...(build.classId==='paladin'&&Number(build.talents?.['474']??0)>0?{reckoningPolicy:null}:{}),...(selected.some(r=>r.abilityId==='paladin:exorcism')?{targetTypes:{boss:null}}:{}),mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
@@ -132,7 +135,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}
  if(build.classId==='warrior'||build.classId==='druid'&&build.classOptions.form==='Bear')encounter.autoPolicy.rageModel={provenance:'Explicit research estimate; https://octowow.st/index.php/warrior describes terms but not coefficients',perDamage:null,perWeaponSecond:null,damageBasis:'post-mitigation',handFactors:{mainhand:null,offhand:null},criticalFactor:null,rounding:'none',allowZeroDamage:false};
  if(build.classId==='hunter'&&Number(build.talents?.['385']??0)>0&&encounter.companionModel)encounter.scentOfBloodPolicy={includeWhite:null,abilityIds:[],refresh:'preserve-longer'};
- if(ranged){encounter.ammoCount=null;encounter.rangedAutoPolicy={...structuredClone(policies[selected.find(isRanged).abilityId]),autoCastPolicy:'skip-during-cast'};encounter.rangedAutoPolicy.rangedModel.weaponPolicy='actual-swing';}
+ if(ranged){encounter.ammoCount=null;const shot=selected.find(isRanged);encounter.rangedAutoPolicy={...(shot?structuredClone(policies[shot.abilityId]):{provenance,rangedModel:{attackPower:null,weaponPolicy:'actual-swing',normalisedSpeed:2.8,ammoUsesActualSpeed:true,missPct:null,critPct:null,blockPct:0,blockValue:0,critSuppressionPct:0,criticalMultiplier:2,order,ammoPerShot:1}}),autoCastPolicy:'skip-during-cast'};encounter.rangedAutoPolicy.rangedModel.weaponPolicy='actual-swing';if(rowsFor(build).some(row=>row.conditions.some(c=>c.metric==='safeRangedWindow')))encounter.rangedWindowPolicy={marginMs:null,mode:'reference-no-clip'};}
  return {unsupported,rankChoices,config:{rankByAbility,policies,encounter,seed:42,iterations:build.planning.iterations}};
 }
 export function prepareRotationLab({build,talents,gearById,config,confirmed}){
@@ -149,6 +152,7 @@ export function prepareRotationLab({build,talents,gearById,config,confirmed}){
  if(Object.keys(config.rankByAbility??{}).length!==ids.length||Object.keys(config.policies??{}).length!==ids.length)throw new Error('Exactly one rank and policy required per distinct rotation action');
  const learnedSpellIds=[];
  for(const id of ids){
+  if(hunterCommand(id)){const p=config.policies[id];if(config.rankByAbility[id]!==null||p?.phase!==CURRENT_ENCHANT_PHASE||p.command!==id||p.activation!=='scheduled-phase')throw new Error('Explicit rankless Hunter command policy required');continue;}
   const rank=referenceRank(build.classId,config.rankByAbility[id]);const p=config.policies[id];
   if(rank.abilityId!==id||rankPhase(rank)>CURRENT_ENCHANT_PHASE||rank.learnLevel>build.level)throw new Error('Wrong ability, level or phase for '+id);
   if(!p||p.phase!==CURRENT_ENCHANT_PHASE||p.allowFutureRank===true)throw new Error('Current-phase policy required for '+id);

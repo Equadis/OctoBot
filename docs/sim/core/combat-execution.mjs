@@ -85,6 +85,7 @@ export class CombatEncounter{
   if(extra?.targets)state.targets=base.targets.map(t=>({...extra.targets.find(x=>x.id===t.id),...t}));
   if(extra?.allies)state.allies=base.allies.map(t=>({...extra.allies.find(x=>x.id===t.id),...t}));
   if(this.manageAuras){const buffs=this.auras.frame(this.#player,'buff',null);state.buffs=buffs;state.selfBuffs=buffs;const debuffsFor=id=>({debuffs:this.auras.frame(id,'debuff',null),ownDebuffs:this.auras.frame(id,'debuff',this.#player)});Object.assign(state,debuffsFor(primary));state.targets=state.targets.map(t=>({...t,...debuffsFor(t.id)}));}
+  state.castTimes={...state.castTimes,...Object.fromEntries([...this.#actions.values()].map(a=>[a.name,this.#effectiveAction(a).castMs/1000]))};
   for(const original of this.#actions.values()){
    const a=this.#effectiveAction(original);const remaining=Math.max(0,...a.cooldowns.map(c=>this.resources.cooldowns.remaining(c.id)),...(a.requiresGcdReady?[this.resources.cooldowns.remaining('gcd')]:[]))/1000;
    const available=resourceLedger(pool,a.costs).ok&&(a.kind!=='queued-melee'||this.#swings.has(a.swingId)&&!this.#queued.has(a.swingId))&&(!a.available||a.available(this,state)===true);
@@ -141,10 +142,10 @@ export class CombatEncounter{
    this.#scheduleDecision(this.timeline.now);
   });this.#cast={ticket,action:a,targetId,completeAt};
  }
- addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve,actorId=null,hasteStat=null,hastePolicy=null}){
+ addAutoAttack({id,intervalMs,firstAtMs,castPolicy,resolve,eligible=null,actorId=null,hasteStat=null,hastePolicy=null}){
   if(this.#started)throw new Error('Configure auto-attacks before run');key(id);integer(intervalMs,'auto interval',1);integer(firstAtMs,'first auto');fn(resolve,'auto resolver');if(!['continue','skip-during-cast'].includes(castPolicy)||this.#swings.has(id))throw new Error('Invalid auto policy or duplicate hand');
   if(hasteStat!==null){key(hasteStat);if(!this.#units.has(actorId)||!['preserve-progress','reset','next-swing'].includes(hastePolicy))throw new Error('Explicit dynamic haste policy required');}
-  const s={id,intervalMs,baseIntervalMs:intervalMs,actorId,hasteStat,hastePolicy,nextAt:firstAtMs,lastAt:null,castPolicy,resolve,ticket:null,firing:false};this.#swings.set(id,s);this.#scheduleSwing(s);
+  if(eligible!==null)fn(eligible,'auto eligibility');const s={id,intervalMs,baseIntervalMs:intervalMs,actorId,hasteStat,hastePolicy,nextAt:firstAtMs,lastAt:null,castPolicy,resolve,eligible,ticket:null,firing:false};this.#swings.set(id,s);this.#scheduleSwing(s);
  }
  #updateSwingHaste(actorId){for(const s of this.#swings.values()){if(s.actorId!==actorId||s.hasteStat===null)continue;const haste=this.auras.stat(actorId,s.hasteStat,1);positive(haste,'dynamic haste factor');const ms=Math.max(1,Math.round(s.baseIntervalMs/haste));if(ms!==s.intervalMs)this.setSwingInterval(s.id,ms,s.hastePolicy);}}
  #scheduleSwing(s){
@@ -153,7 +154,7 @@ export class CombatEncounter{
    s.ticket=null;if(!this.#active())return;
    const targetId=this.#alive(this.#primary)?this.#primary:this.#targets.find(x=>this.#alive(x));
    s.firing=true;try{
-    if(!this.#cast||s.castPolicy==='continue'){
+    if(s.eligible&&!s.eligible(this,targetId)){this.#record('auto-skipped',{id:s.id,targetId,reason:'inactive'});}else if(!this.#cast||s.castPolicy==='continue'){
      s.lastAt=this.timeline.now;const queued=this.#queued.get(s.id);this.#queued.delete(s.id);
      let replaced=false;
      if(queued){

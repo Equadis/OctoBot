@@ -48,7 +48,7 @@ export function conditionValue(condition,context){
  if(m==='snapshotUpgrade')return Number(named(context.snapshotUpgrades,name,'verified snapshot policy'));
  if(m==='safeSwingWindow'||m==='safeRangedWindow'){
   const timer=need(context[m==='safeSwingWindow'?'meleeSwing':'rangedSwing'],'swing timer');
-  if(named(context.castWindowPolicies,name,'verified swing-reset/clip policies')!=='verified-safe')return fail(`swing policy: ${name}`);
+  if(!['verified-safe','reference-no-clip'].includes(named(context.castWindowPolicies,name,'explicit swing-reset/clip policies')))return fail(`swing policy: ${name}`);
   const cast=named(context.castTimes,name,'cast times');return Number(cast+need(context.latencySeconds,'latency')<need(timer.nextIn,'next swing')&&need(timer.sinceLast,'last swing')>=0);
  }
  if(m==='nextSwingIn')return need(context.meleeSwing?.nextIn,m);

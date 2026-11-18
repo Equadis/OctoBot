@@ -14,6 +14,72 @@ export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
  ...[{
   "classId": "hunter",
+  "abilityId": "hunter:steady-shot",
+  "spellId": 45974,
+  "rank": 8,
+  "learnLevel": 60,
+  "resource": "mana",
+  "mode": "cast",
+  "cost": 5,
+  "castMs": 1000,
+  "minRange": 8,
+  "maxRange": 35,
+  "components": [
+    {
+      "kind": "ranged-weapon",
+      "stat": "physical",
+      "coefficient": null,
+      "flat": 0
+    }
+  ],
+  "source": "https://octowow.st/git/Meta/MetaHunt/commit/8479607a1396943e15862443be03c90c9be190f3?show-outdated=&style=split&whitespace=ignore-eol",
+  "referenceSource": "https://octowow.st/index.php/hunter",
+  "status": "external-reference-only",
+  "liveVerified": false,
+  "learnability": "imported-candidate-reference",
+  "requiredPolicy": [
+    "steadyShotModel",
+    "rangedModel",
+    "acceptSourceConflict"
+  ],
+  "referenceGcdMs": 1500,
+  "referenceCooldownMs": 0,
+  "record": {
+    "classId": "hunter",
+    "abilityId": "hunter:steady-shot",
+    "spellId": 45974,
+    "rank": 8,
+    "level": 60,
+    "fields": {
+      "school": "physical",
+      "referenceBaseManaPct": 5,
+      "referenceCastMs": 1000,
+      "referenceRange": [
+        8,
+        35
+      ]
+    },
+    "unknown": [
+      "live rank damage coefficient and flat bonus",
+      "other live learned rank identities and levels",
+      "live cast, cooldown, weapon and ammunition policies"
+    ],
+    "conflicts": [
+      {
+        "field": "rank",
+        "guide": "six ranks from level 4",
+        "imported": "rank 8, level 60",
+        "archive": "five ranks from level 20",
+        "addon": "45974, 1s cast"
+      }
+    ],
+    "status": "external-reference-only",
+    "source": "https://octowow.st/index.php/hunter",
+    "liveVerified": false
+  }
+}],
+ ...[{
+  "classId": "hunter",
   "abilityId": "hunter:scatter-shot",
   "spellId": 19503,
   "rank": 1,
