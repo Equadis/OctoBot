@@ -20,6 +20,7 @@ const positiveInt=(raw:string|undefined,fallback:number,min:number,max:number)=>
 };
 const liveItemQueries=process.env.AUCTION_LIVE_ITEM_QUERIES==="true";
 const intervalMs=positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,0,0,600000);
+const uploadIntervalMs=positiveInt(process.env.AUCTION_UPLOAD_INTERVAL_MS,500,250,60000);
 const cooldownMs=positiveInt(process.env.AUCTION_SCAN_COOLDOWN_MS,3600000,60000,86400000);
 const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000,180000);
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
@@ -34,7 +35,7 @@ function auctionUrl(suffix:string):URL {
 class UploadError extends Error{constructor(message:string,readonly status:number){super(message);}}
 async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
- for(let attempt=0;attempt<3;attempt++){
+ for(let attempt=0;attempt<6;attempt++){
   try{
    const response=await fetch(auctionUrl("/scan/"+action),{
      method:"POST",headers:{"authorization":"Bearer "+token,"content-type":"application/json"},
@@ -44,8 +45,8 @@ async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"selle
    throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status);
   }catch(error){
    if(error instanceof UploadError&&error.status!==429&&error.status<500)throw error;
-   if(attempt===2)throw error;
-   await sleep(750*2**attempt);
+   if(attempt===5)throw error;
+   await sleep(Math.min(30000,2000*2**attempt)+Math.floor(Math.random()*1000));
   }
  }
 }
@@ -191,6 +192,7 @@ export function createPvpAuction({account,log,getWorld}:{account:{account:string
        };
       });
       await publish("page",{scan_id:scanId,page,items,response_ms:responseMs});
+      await sleep(uploadIntervalMs);
       if(page===0||cursor.page%20===0||cursor.complete)log.info("Auction scan "+scanId+": "+cursor.retrieved+"/"+cursor.latestTotal+" rows traversed; page "+cursor.page+" in "+responseMs+"ms");
       if(cursor.complete)break;
     }
