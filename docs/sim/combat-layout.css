@@ -52,7 +52,7 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 @media(max-width:480px){.item-picker-grid{grid-template-columns:110px minmax(0,1fr)}.item-picker-controls{padding:9px 7px}.item-picker-controls .field{font-size:10px}.item-picker-controls .field select,#item-direction{font-size:10px;padding:7px 3px}.item-picker-actions>button{font-size:11px;padding:8px 4px}.item-picker-header>#item-count{display:none}.item-picker-header h2{font-size:15px}#item-dialog .item-row{grid-template-columns:25px minmax(0,1fr);padding:5px;gap:6px}#item-dialog .item-row img{width:24px;height:24px}.item-db-link{grid-column:2;justify-self:end;font-size:8px!important;margin-top:-3px}.item-row-name{font-size:11px}.item-level{font-size:9px}.item-preview{padding:9px}.item-full-tooltip{padding:9px;font-size:10px}.item-preview-header h3{font-size:12px}}
 
 /* Equipped slots use the item's quality colour; empty slots remain neutral. */
-.slot[data-quality="0"],.slot[data-quality="1"]{--item-quality:#fff}.slot[data-quality="2"]{--item-quality:#1eff00}.slot[data-quality="3"]{--item-quality:#0070dd}.slot[data-quality="4"]{--item-quality:#a335ee}.slot[data-quality="5"],.slot[data-quality="6"]{--item-quality:#ff8000}
+.slot[data-quality="0"]{--item-quality:#9d9d9d}.slot[data-quality="1"]{--item-quality:#fff}.slot[data-quality="2"]{--item-quality:#1eff00}.slot[data-quality="3"]{--item-quality:#0070dd}.slot[data-quality="4"]{--item-quality:#a335ee}.slot[data-quality="5"],.slot[data-quality="6"]{--item-quality:#ff8000}
 .planner-view .slot.has-item .slot-name,.planner-view .slot.has-item .slot-icon{border-color:var(--item-quality);box-shadow:0 0 5px color-mix(in srgb,var(--item-quality) 60%,transparent)}
 #reset-gear{padding:1px 0;min-height:22px;border:0;border-radius:0;background:transparent;color:#ed6969;font-size:11px}#reset-gear:hover{color:#ff9696;text-decoration:underline}
 
@@ -74,7 +74,7 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .class-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin-top:15px}.class-options .field{margin-bottom:10px}
 
 /* Shared tree panels and compact preset selector for every class. */
-.planner-view .talent-tree,.planner-view .talent-tree:last-child{border:1px solid #39495d;border-radius:10px;background:#172230;padding:12px 6px 18px}
+.planner-view .talent-tree,.planner-view .talent-tree:last-child{border:1px solid #39495d;border-radius:10px;background:#152030;padding:12px 6px 18px}
 .planner-view .tree-heading{display:grid;grid-template-columns:minmax(0,1fr);position:relative;min-height:32px;margin-bottom:12px;padding-top:10px;gap:0}
 .planner-view .tree-heading h3{width:100%;margin:0;text-align:center;text-transform:none;font-size:11px;line-height:1.4;letter-spacing:0;color:var(--gold)}
 .planner-view .tree-heading span{position:absolute;right:0;top:-3px;font-size:9px;line-height:1.2;color:var(--muted)}
@@ -200,7 +200,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 }
 
 /* Character and Buffs/ Debuffs use a wider left column; preserve existing control and icon dimensions. */
-.planner-view .planner-grid{grid-template-columns:minmax(400px,1.15fr) minmax(0,1.5fr);width:100%;margin-left:0;margin-right:0;gap:18px;align-items:start}
+.planner-view .planner-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-left:0;margin-right:0;gap:18px;align-items:start}
 .planner-view .left-column,.planner-view .right-column{min-width:0}
 .planner-view .left-column>section.card+section.card{margin-top:0}
 @media(max-width:940px){.planner-view .planner-grid{grid-template-columns:minmax(0,1fr)}}
@@ -222,3 +222,5 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
  .planner-view .character-controls>.field:last-child{grid-column:2;grid-row:1}
 }
 @media(prefers-reduced-motion:reduce){.planner-view .character-stat-group>.character-stat-toggle::before{transition:none}}
+
+.item-row:has(.q0) img,.item-preview:has(.q0) img{border-color:var(--quality-0)}
