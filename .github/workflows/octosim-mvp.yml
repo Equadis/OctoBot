@@ -20,12 +20,17 @@ jobs:
       - run: node tools/sim/audit-mvp-readiness.mjs
       - run: node tools/sim/audit-data-integrity.mjs
       - run: node tools/sim/audit-base-reconciliation.mjs
+      - name: Smoke test integrity review packet (empty synthetic context)
+        run: |
+          printf '%s' '{"realm":"synthetic-ci","phase":"synthetic-ci","clientBuild":"synthetic-ci","base":[],"spells":[]}' > /tmp/octosim-evidence.json
+          node tools/sim/review-integrity-packet.mjs /tmp/octosim-evidence.json
       - uses: actions/upload-artifact@v4
         with:
           name: octosim-data-integrity
           path: |
             data-integrity-queue.json
             base-reference-reconciliation.json
+            integrity-resolution.json
       - run: node --check docs/sim/reference-rotation.mjs && node --check docs/sim/reference-worker.mjs && node --check docs/sim/planner.mjs
       - name: Browser smoke (Chromium)
         run: |
