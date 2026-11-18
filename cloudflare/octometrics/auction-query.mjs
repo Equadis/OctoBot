@@ -28,13 +28,16 @@ export function parseKeys(raw){
   }
   return keys.length>MAX_FAVOURITE_KEYS?null:keys;
 }
+export const MIN_PRICE_LISTINGS=5;
+export const MIN_OUTLIER_LISTINGS=10;
+export const HIGH_PRICE_MULTIPLIER=10;
 const SORTS={
   recent:{expr:'latest_listing_seen_at',dir:'DESC',nullable:true},
   name:{expr:"COALESCE(item_name,'Item #'||item_id) COLLATE NOCASE",dir:'ASC'},
   unit_buyout:{expr:'unit_buyout',dir:'ASC',nullable:true},
   stack_buyout:{expr:'(CASE WHEN stack_buyout>0 THEN stack_buyout END)',dir:'ASC',nullable:true},
   current_bid:{expr:'(CASE WHEN current_bid>0 THEN current_bid WHEN start_bid>0 THEN start_bid END)',dir:'ASC',nullable:true},
-  historical_avg:{expr:'(CASE WHEN days>=4 THEN avg_unit END)',dir:'ASC',nullable:true},
+  historical_avg:{expr:'avg_unit',dir:'ASC',nullable:true},
   quantity:{expr:'quantity',dir:'DESC'},
   listings:{expr:'listings',dir:'DESC'},
   trend_pct:{expr:'trend_pct',dir:'ASC',nullable:true},
@@ -109,11 +112,22 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
   }
   const trend=listingFiltered?"NULL":"(CASE WHEN prev.unit_buyout>0 AND d.unit_buyout IS NOT NULL THEN 100*(d.unit_buyout-prev.unit_buyout)/prev.unit_buyout END)";
   const prevJoin=listingFiltered?"":" LEFT JOIN ah_item_points prev ON prev.scan_id=? AND prev.item_id=d.item_id AND prev.variant=d.variant";
+  // Use the most recent observation of each distinct priced auction ID, from at most three complete scans.
+  // Median screening prevents a high asking price from inflating the very baseline used to detect it.
+  // Historical daily lows remain a separate fallback for sparse items with four prior days of data.
   const sql0="WITH history AS (SELECT item_id,variant,AVG(representative_unit) avg_unit,COUNT(*) days FROM ah_daily WHERE day < substr(?,1,10) AND day >= date(?,'-14 days') GROUP BY item_id,variant),"
-    +pts+",data AS (SELECT d.*,h.avg_unit,h.days,(CASE WHEN h.days>=4 AND h.avg_unit>0 THEN 100*d.unit_buyout/h.avg_unit END) market_pct,"
-    +(listingFiltered?"":"prev.unit_buyout previous_unit,")+trend+" trend_pct FROM pts d LEFT JOIN history h ON h.item_id=d.item_id AND h.variant=d.variant"+prevJoin+")";
-  // Bind order follows placeholder order: history (2), pts (listing or point binds), then previous scan.
-  const allBinds=[scan.completed_at,scan.completed_at,...binds];
+    +"recent_scans AS (SELECT scan_id,completed_at FROM ah_scans WHERE status='complete' AND completed_at<=? ORDER BY completed_at DESC,scan_id DESC LIMIT 3),"
+    +"observed AS (SELECT l.item_id,l.variant,l.auction_id,CAST(l.buyout AS REAL)/l.quantity unit,ROW_NUMBER() OVER (PARTITION BY l.item_id,l.variant,l.auction_id ORDER BY s.completed_at DESC,s.scan_id DESC) seen_rank FROM recent_scans s JOIN ah_listings l ON l.scan_id=s.scan_id WHERE l.quantity>0 AND l.buyout>0),"
+    +"price_rank AS (SELECT item_id,variant,unit,ROW_NUMBER() OVER (PARTITION BY item_id,variant ORDER BY unit,auction_id) rn,COUNT(*) OVER (PARTITION BY item_id,variant) sample_count FROM observed WHERE seen_rank=1),"
+    +"price_median AS (SELECT item_id,variant,AVG(unit) median FROM price_rank WHERE rn IN ((sample_count+1)/2,(sample_count+2)/2) GROUP BY item_id,variant),"
+    +"recent_prices AS (SELECT r.item_id,r.variant,MAX(r.sample_count) samples,COUNT(CASE WHEN r.sample_count<"+MIN_OUTLIER_LISTINGS+" OR r.unit<=m.median*"+HIGH_PRICE_MULTIPLIER+" THEN 1 END) retained,AVG(CASE WHEN r.sample_count<"+MIN_OUTLIER_LISTINGS+" OR r.unit<=m.median*"+HIGH_PRICE_MULTIPLIER+" THEN r.unit END) avg_unit FROM price_rank r JOIN price_median m ON m.item_id=r.item_id AND m.variant=r.variant GROUP BY r.item_id,r.variant),"
+    +pts+",baseline AS (SELECT d.*,h.days,COALESCE(r.samples,0) price_samples,CASE WHEN r.retained>="+MIN_PRICE_LISTINGS+" THEN r.samples-r.retained ELSE 0 END price_excluded,"
+    +"CASE WHEN r.retained>="+MIN_PRICE_LISTINGS+" THEN r.avg_unit WHEN h.days>=4 THEN h.avg_unit END avg_unit,"
+    +"CASE WHEN r.retained>="+MIN_PRICE_LISTINGS+" THEN 'recent_listings' WHEN h.days>=4 THEN 'daily_lows' END average_source FROM pts d LEFT JOIN history h ON h.item_id=d.item_id AND h.variant=d.variant LEFT JOIN recent_prices r ON r.item_id=d.item_id AND r.variant=d.variant),"
+    +"data AS (SELECT d.*,(CASE WHEN d.avg_unit>0 THEN 100*d.unit_buyout/d.avg_unit END) market_pct,"
+    +(listingFiltered?"":"prev.unit_buyout previous_unit,")+trend+" trend_pct FROM baseline d"+prevJoin+")";
+  // Bind order: history dates (2), recent scan cutoff, listing/point binds, then previous scan.
+  const allBinds=[scan.completed_at,scan.completed_at,scan.completed_at,...binds];
   if(!listingFiltered)allBinds.push(previousScanId||'');
   const sql=listingFiltered?sql0.replace("prev.unit_buyout previous_unit,",""):sql0;
 
@@ -138,7 +152,7 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
     else{iw.push("EXISTS (SELECT 1 FROM json_each(?) j WHERE json_extract(j.value,'$[0]')=item_id AND json_extract(j.value,'$[1]')=variant)");ib.push(JSON.stringify(keys));}
   }
   const where=iw.length?' WHERE '+iw.join(' AND '):'';
-  const base=sql+' SELECT '+COLUMNS+',avg_unit,days,market_pct,trend_pct'+(listingFiltered?'':',previous_unit')+' FROM data'+where;
+  const base=sql+' SELECT '+COLUMNS+',avg_unit,days,price_samples,price_excluded,average_source,market_pct,trend_pct'+(listingFiltered?'':',previous_unit')+' FROM data'+where;
   const order=(sort.nullable?sort.expr+' IS NULL,':'')+sort.expr+' '+dir;
   return {
     sql:base+' ORDER BY '+order+',item_id ASC,variant ASC LIMIT ? OFFSET ?',

@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="../site-theme.css?v=20261118-q3">
 <link rel="stylesheet" href="auction.css?v=20261118-equal-columns"><link rel="stylesheet" href="../quality-select.css?v=1">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<script src="auction.js?v=20261118-avg-price" type="module"></script>
+<script src="auction.js?v=20261118-average-samples" type="module"></script>
 <script src="../viewer-presence.js?v=20261113-live" defer></script>
 </head><body><main>
 <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1 id="ah-realm-heading">Auction House – N'Zoth</h1></div></div>
@@ -62,7 +62,7 @@
 <label class="ah-field">Seller owner GUID<input id="owner" inputmode="numeric" placeholder="Numeric GUID"></label>
 </div>
 <div class="ah-checks"><label><input id="gear" type="checkbox"> Equipment only</label><label><input id="exact" type="checkbox"> Exact item name</label><label><input id="has_buyout" type="checkbox"> Only auctions with a buyout</label></div>
-<p class="ah-hint">Price, bid, stack, buyout, time-left and seller filters apply to individual auctions: the quantity, listing count and prices shown are recalculated from the matching auctions only, and price movement is hidden. Level, category and slot use catalogue data and never match an item the catalogue does not describe. Market % needs four days of history.</p>
+<p class="ah-hint">Price, bid, stack, buyout, time-left and seller filters apply to individual auctions: the quantity, listing count and prices shown are recalculated from the matching auctions only, and price movement is hidden. Level, category and slot use catalogue data and never match an item the catalogue does not describe. Avg. price uses distinct priced auctions from the latest three completed scans (minimum 5); prices above 10× the median are excluded after at least 10 observations. Sparse items fall back to four prior daily lows. Market % compares each unit price to that reference.</p>
 <div class="ah-saved"><label class="ah-field">Save this search<div class="ah-inline"><input id="save-name" placeholder="Name" maxlength="40"><button id="save-search" type="button" class="ah-btn">Save</button></div></label><div id="saved-list" class="ah-chips" aria-label="Saved searches"></div></div>
 </div>
 <div id="filter-errors" class="ah-errors" role="alert"></div>
@@ -70,5 +70,5 @@
 <div class="ah-scroll"><table><thead><tr><th class="ah-col-star"><span class="sr-only">Favourite</span></th><th>Item</th><th>Available</th><th>Listings</th><th>Unit price</th><th>Stack price</th><th>Current bid</th><th>Avg. price</th><th>Market %</th><th>Trend</th><th>Time left</th></tr></thead><tbody id="items"><tr><td colspan="11" class="ah-empty">No data – awaiting a verified complete scan.</td></tr></tbody></table></div>
 <div class="ah-footer"><span id="result-count">0 items</span><div class="ah-pager"><button id="previous" type="button" class="ah-btn" disabled>Previous</button> <span id="page-label">Page 1</span> <button id="next" type="button" class="ah-btn" disabled>Next</button></div></div>
 </section>
-<p class="ah-caveat">Historical values require at least four distinct completed daily observations. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive. Seller names are not available from the auction data, so listings show the owner GUID.</p>
+<p class="ah-caveat">Average prices use at least five distinct priced auctions, or four prior daily observations for sparse items. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive. Seller names are not available from the auction data, so listings show the owner GUID.</p>
 </main></body></html>

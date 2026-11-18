@@ -279,3 +279,19 @@ test("historical count tracks unique completed auction IDs, never repeat listing
  assert.equal((await get(e,"summary")).json.total_historical_auctions,5);
  assert.equal(e.DB.sqlite.prepare("SELECT COUNT(*) n FROM ah_first_seen").get().n,5);
 });
+
+
+test("early average uses distinct priced auction IDs, screens high outliers only with enough listings and keeps all live listings",{skip},async()=>{
+ const e=env();n=0;
+ const rows=Array.from({length:9},(_,i)=>L(1001,{auction_id:10000+i,buyout:i===8?2000:100}));
+ const other=Array.from({length:4},(_,i)=>L(1002,{auction_id:20000+i,buyout:100}));
+ await scan(e,"ah_price_01","2026-11-10",[...rows,...other]);
+ let items=(await q(e,"sort=name")).json.items;
+ let sword=items.find(i=>i.item_id===1001);assert.equal(sword.average_samples,9);assert.equal(sword.average_excluded,0);assert.equal(sword.historical_avg,(800+2000)/9);
+ assert.equal(items.find(i=>i.item_id===1002).historical_avg,null);
+ await scan(e,"ah_price_02","2026-11-11",[...rows,...other,L(1001,{auction_id:10009,buyout:100})]);
+ items=(await q(e,"sort=market_pct")).json.items;sword=items.find(i=>i.item_id===1001);
+ assert.equal(sword.average_source,"recent_listings");assert.equal(sword.average_samples,10);assert.equal(sword.average_excluded,1);assert.equal(sword.historical_avg,100);assert.equal(sword.market_pct,100);assert.equal(sword.listings,10);
+ assert.equal(items.find(i=>i.item_id===1002).average_samples,4,"rescan is not an independent listing");
+ const filtered=(await q(e,"max_unit_buyout=100&q=Iron+Sword")).json.items[0];assert.equal(filtered.historical_avg,100);assert.equal(filtered.listings,9);
+});

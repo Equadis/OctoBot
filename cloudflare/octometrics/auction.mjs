@@ -73,7 +73,7 @@ async function upload(req,env,action){
    if(unfinished)return bad('another upload already in progress',409);
    // Partial unique D1 index also protects concurrent starts.
    try{
-     await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,"N'Zoth",body.started_at,body.reported_total).run();
+     await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,env.AUCTION_REALM??"N'Zoth",body.started_at,body.reported_total).run();
    }catch{return bad('another upload already in progress or duplicate scan ID',409)}
    return respond({ok:true},201);
  }
@@ -192,7 +192,7 @@ async function readApi(url,env){
    return respond({items:rows.map(r=>({item_id:r.item_id,variant:r.variant,item_name:r.item_name,quality:r.quality,icon_url:r.icon_url,
      item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
      quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
-     historical_avg:r.days>=4?r.avg_unit:null,historical_days:r.days??0,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
+     historical_avg:r.avg_unit??null,historical_days:r.days??0,average_samples:r.price_samples??0,average_excluded:r.price_excluded??0,average_source:r.average_source??null,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
      time_left_ms:r.time_left_ms,captured_at:r.captured_at,latest_listing_seen_at:r.latest_listing_seen_at})),
      total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
      listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
@@ -210,9 +210,18 @@ async function readApi(url,env){
  }
  return bad('not found',404);
 }
+// Realm-specific namespace keeps listing IDs, history, scan locks and counters isolated.
+export function auctionNamespace(db,realm){
+ if(realm==="N'Zoth")return db;
+ if(realm!=="Y'Shaarj")throw new Error("Unsupported auction realm");
+ return {prepare(sql){return db.prepare(sql.replace(/\bah_/g,"pvp_ah_"));},batch(statements){return db.batch(statements);}};
+}
 export async function auctionRoute(request,env){
  const url=new URL(request.url);
  if(!url.pathname.startsWith('/api/auction/'))return null;
+ const realm=url.searchParams.get('realm')??"N'Zoth";
+ if(realm!=="N'Zoth"&&realm!=="Y'Shaarj")return bad('auction realm unavailable',400);
+ env={...env,DB:auctionNamespace(env.DB,realm),AUCTION_REALM:realm};
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
    if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata'].includes(action))return bad('not found',404);
@@ -222,8 +231,12 @@ export async function auctionRoute(request,env){
  return bad('method not allowed',405);
 }
 export async function auctionCleanup(env){
+ await cleanupRealm(env.DB);
+ // PvP tables are created by migration 0011; deploy the migration before this Worker.
+ await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"));
+}
+async function cleanupRealm(db){
  // Retain the three latest complete scans for movement comparisons; historical prices are compact daily rows.
- const db=env.DB;
  await db.prepare("DELETE FROM ah_listings WHERE scan_id IN (SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')) OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
  await db.prepare("DELETE FROM ah_pages WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='uploading' OR (status='complete' AND scan_id IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
  await db.prepare("DELETE FROM ah_item_points WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();

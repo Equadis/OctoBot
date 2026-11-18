@@ -222,8 +222,8 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
       stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':moneyNode(item.stack_buyout)));
       stats.append(stat('Available',count(item.quantity),count(item.listings)+' listing'+(item.listings===1?'':'s')));
-      stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
-      stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ historical average'));
+      stats.append(stat('Avg. price',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.average_source==='recent_listings'?((item.average_samples??0)+' distinct priced auctions'+(item.average_excluded?' · '+item.average_excluded+' high-price outliers excluded':'')):item.average_source==='daily_lows'?((item.historical_days??0)+' prior daily lows (fallback)'):'Needs 5 distinct priced auctions or 4 prior daily lows'));
+      stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ average unit price'));
       const t=trend(item.trend_pct);
       const movement=el('span',null,t.className);movement.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));
       stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':movement,item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
@@ -250,7 +250,7 @@ async function fillDetail(cell,item,unavailable){
     const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
     const summary=el('div',null,'ah-history-summary');
     if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
-    if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the rolling historical average.':'.'),'ah-chart-note'));}
+    if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the current average-price reference.':'.'),'ah-chart-note'));}
     else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
     if(!chart&&values.length)hist.body.append(summary);
     if(days.length){
@@ -363,7 +363,6 @@ async function refreshSummary(first){
       'Catalogue metadata: '+count(s.items_with_metadata)+' of '+count(s.item_count)+' item variants ('+(coverage*100).toFixed(1)+'%)';
     // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
     note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
-    if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';updateSortHeaders();}
   }catch{note('Auction House feed unavailable – no data is being invented.');}
 }
 /** Re-evaluates the scan status card from the last data received; called every second so the timers run. */
