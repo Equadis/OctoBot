@@ -234,3 +234,5 @@
 
 /* Character-local race and body controls. */
 .character-pickers{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;margin:12px 0 16px}.character-pickers .race-picker{flex-wrap:wrap}.toolbar:empty,#feedback:empty{display:none}.result:has(.quality-0) img{border-color:var(--quality-0)}
+
+.toolbar>.actions{margin-left:auto}
