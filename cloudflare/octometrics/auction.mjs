@@ -46,6 +46,17 @@ async function upload(req,env,action){
  let body;try{body=await req.json()}catch{return bad('invalid JSON');}
  if(!validId(body?.scan_id))return bad('invalid scan_id');
  const db=env.DB;
+ if(action==='seller-names'){
+   const scan=await first(db,"SELECT status FROM ah_scans WHERE scan_id=?",body.scan_id);
+   if(scan?.status!=='complete')return bad('seller names require a completed scan',409);
+   const rows=body.sellers;
+   if(!Array.isArray(rows)||rows.length<1||rows.length>50||rows.some(r=>!r||typeof r.owner_guid!=='string'||!/^\d{1,20}$/.test(r.owner_guid)||r.owner_guid==='0'||(r.character_name!==null&&(typeof r.character_name!=='string'||!/^\p{L}{1,24}$/u.test(r.character_name))))||new Set(rows.map(r=>r.owner_guid)).size!==rows.length)return bad('invalid seller batch');
+   const observed=await all(db,"SELECT DISTINCT owner_guid FROM ah_listings WHERE scan_id=? AND owner_guid IN (SELECT value FROM json_each(?))",body.scan_id,JSON.stringify(rows.map(r=>r.owner_guid)));
+   if(observed.length!==rows.length)return bad('seller not observed in scan',409);
+   const sql="INSERT INTO ah_seller_names(owner_guid,character_name,attempted_at) VALUES (?,?,?) ON CONFLICT(owner_guid) DO UPDATE SET character_name=COALESCE(excluded.character_name,ah_seller_names.character_name),attempted_at=excluded.attempted_at";
+   await db.batch(rows.map(r=>db.prepare(sql).bind(r.owner_guid,r.character_name,new Date().toISOString())));
+   return respond({ok:true,resolved:rows.filter(r=>r.character_name).length});
+ }
  if(action==='metadata'){
    const scan=await first(db,"SELECT status FROM ah_scans WHERE scan_id=?",body.scan_id);
    if(scan?.status!=='complete')return bad('metadata requires a completed scan',409);
@@ -175,6 +186,10 @@ async function readApi(url,env){
      within_2s:values.filter(v=>v.drift<=2000).length,within_10s:values.filter(v=>v.drift<=10000).length,
      note:'Matching auction IDs across two complete scans; compares packet duration decay with observation time, not actual in-game expiry.'});
  }
+ if(url.pathname==='/api/auction/missing-sellers'){
+   const rows=await all(db,"SELECT l.owner_guid,COUNT(*) listings FROM ah_listings l LEFT JOIN ah_seller_names s ON s.owner_guid=l.owner_guid WHERE l.scan_id=? AND l.owner_guid IS NOT NULL AND l.owner_guid<>'0' AND (s.owner_guid IS NULL OR (s.character_name IS NULL AND s.attempted_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 hours')) OR (s.character_name IS NOT NULL AND s.attempted_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days'))) GROUP BY l.owner_guid ORDER BY listings DESC,l.owner_guid LIMIT 30",scan.scan_id);
+   return respond({scan_id:scan.scan_id,sellers:rows});
+ }
  if(url.pathname==='/api/auction/incomplete-metadata'){
    const rows=await all(db,"SELECT l.item_id,COUNT(*) listings,MAX(CASE WHEN COALESCE(l.item_name,m.item_name) IS NULL THEN 1 ELSE 0 END) missing_name FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND (COALESCE(l.item_name,m.item_name) IS NULL OR COALESCE(l.quality,m.quality) IS NULL OR COALESCE(l.class_id,m.class_id) IS NULL OR COALESCE(l.subclass_id,m.subclass_id) IS NULL OR COALESCE(l.item_level,m.item_level) IS NULL OR COALESCE(l.req_level,m.req_level) IS NULL OR COALESCE(l.icon_url,m.icon_url) IS NULL) AND (m.resolved_at IS NULL OR julianday(m.resolved_at)<julianday('now','-30 minutes')) GROUP BY l.item_id ORDER BY missing_name DESC,listings DESC,l.item_id LIMIT 1000",scan.scan_id);
    return respond({items:rows,scan_id:scan.scan_id});
@@ -202,7 +217,7 @@ async function readApi(url,env){
    const itemId=apiId(detail[2]);if(!itemId)return bad('invalid item');
    const variant=(url.searchParams.get('variant')||'').slice(0,90);
    if(detail[1]==='item'){
-     const rows=await all(db,"SELECT l.auction_id,l.item_id,l.variant,l.quantity,l.start_bid,l.current_bid,l.min_next_bid,l.buyout,l.owner_guid,l.time_left_ms,l.captured_at,f.first_seen_at,CASE WHEN l.buyout>0 THEN CAST(l.buyout AS REAL)/l.quantity END unit_buyout FROM ah_listings l LEFT JOIN ah_first_seen f ON f.auction_id=l.auction_id WHERE l.scan_id=? AND l.item_id=? AND l.variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC,l.auction_id LIMIT 200",scan.scan_id,itemId,variant);
+     const rows=await all(db,"SELECT l.auction_id,l.item_id,l.variant,l.quantity,l.start_bid,l.current_bid,l.min_next_bid,l.buyout,l.owner_guid,s.character_name owner_name,l.time_left_ms,l.captured_at,f.first_seen_at,CASE WHEN l.buyout>0 THEN CAST(l.buyout AS REAL)/l.quantity END unit_buyout FROM ah_listings l LEFT JOIN ah_first_seen f ON f.auction_id=l.auction_id LEFT JOIN ah_seller_names s ON s.owner_guid=l.owner_guid WHERE l.scan_id=? AND l.item_id=? AND l.variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC,l.auction_id LIMIT 200",scan.scan_id,itemId,variant);
      return respond({listings:rows,scan_id:scan.scan_id,limited:rows.length===200});
    }
    const rows=await all(db,"SELECT day,representative_unit,quantity,listings FROM ah_daily WHERE item_id=? AND variant=? ORDER BY day DESC LIMIT 90",itemId,variant);
@@ -224,10 +239,13 @@ export async function auctionRoute(request,env){
  env={...env,DB:auctionNamespace(env.DB,realm),AUCTION_REALM:realm};
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
-   if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata'].includes(action))return bad('not found',404);
+   if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata','seller-names'].includes(action))return bad('not found',404);
    return upload(request,env,action);
  }
- if(request.method==='GET')return readApi(url,env);
+ if(request.method==='GET'){
+   if(url.pathname==='/api/auction/missing-sellers'&&(!env.AUCTION_PUSH_TOKEN||request.headers.get('authorization')!=='Bearer '+env.AUCTION_PUSH_TOKEN))return bad('unauthorised',401);
+   return readApi(url,env);
+ }
  return bad('method not allowed',405);
 }
 export async function auctionCleanup(env){

@@ -269,7 +269,7 @@ async function fillDetail(cell,item,unavailable){
         rows.map(r=>{
           const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
           const average=item.historical_avg;
-          return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),pct(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
+          return [r.owner_name||'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),pct(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
         })));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
