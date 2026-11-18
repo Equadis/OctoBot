@@ -96,7 +96,12 @@ export async function readHistory(url,db,now){
  while(rows.length<=size&&!exhausted){
   const where=["m.realm=?","m.gm=?","m.observed_ms>=?","m.observed_ms<=?"],params=[realm,Number(feed==="gm"),cutoff,now+5000];
   if(cursor){where.push("(m.observed_ms,m.id)<(?,?)");params.push(cursor.time,cursor.id);}
-  for(const term of terms){where.push("instr(lower(m.author||' '||COALESCE(p.guild,g.guild,'')||' '||COALESCE(s.message,m.message)),?)>0");params.push(term);}
+  for(const {kind,value} of terms){
+   if(kind==="from"){where.push("lower(m.author)=?");params.push(value);}
+   else if(kind==="item"&&/^\d+$/.test(value)){const id=String(Number(value));where.push("(instr(lower(m.message),?)>0 OR instr(lower(m.message),?)>0)");params.push("|hitem:"+id+":","|hitem:"+id+"|h");}
+   else if(kind==="item"){where.push("instr(lower(COALESCE(s.message,m.message)),?)>0");params.push(value);}
+   else{where.push("instr(lower(m.author||' '||COALESCE(p.guild,g.guild,'')||' '||COALESCE(s.message,m.message)),?)>0");params.push(value);}
+  }
   const limit=terms.length?Math.min(250,Math.max(101,size+1-rows.length)):size+1;
   const [result]=await db.batch([db.prepare(select+from+" WHERE "+where.join(" AND ")+" ORDER BY m.observed_ms DESC,m.id DESC LIMIT ?").bind(...params,limit)]);
   const candidates=result.results;
