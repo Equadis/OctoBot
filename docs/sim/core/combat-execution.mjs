@@ -49,7 +49,7 @@ export class CombatEncounter{
   for(const r of rows){const a=this.#action(r.abilityId||r.ability);if(!a||a.name!==r.ability)throw new Error('Unsupported rotation ability: '+r.ability);if(!Array.isArray(r.conditions)||!['primary','cycle','ally','self','pet'].includes(r.target??'primary'))throw new Error('Invalid rotation row');}
  }
  #action(id){return this.#actions.get(id)||[...this.#actions.values()].find(a=>a.name===id);}
-  #effectiveAction(a){if(a.castTimeFactorStat&&a.kind==='cast'){const factor=positive(this.auras.stat(this.#player,a.castTimeFactorStat,1),'dynamic cast duration factor');a={...a,castMs:Math.max(1,Math.round(a.castMs*factor))};}if(a.costsWhenAuraActive&&this.auras.active(this.#player,'buff').some(x=>x.id===a.costsWhenAuraActive.id&&x.ownerId===this.#player))a={...a,costs:a.costsWhenAuraActive.costs,arcaneRuptureActive:a.costsWhenAuraActive.id==='mage:arcane-rupture'};if(!a.castProc)return a;const p=a.castProc,buff=this.auras.active(this.#player,'buff').find(x=>x.id===p.id&&x.ownerId===this.#player);if(!buff)return a;if(!['instant','cast'].includes(a.kind))throw new Error('Cast proc cannot modify queued or channeled action');const castMs=p.instant?0:Math.max(0,a.castMs-p.castReductionMsPerStack*buff.stacks);return {...a,kind:castMs===0?'instant':'cast',castMs,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:c.delta*p.manaCostFactor}:c),procAura:buff,guaranteeHit:p.guaranteeHit};}
+  #effectiveAction(a){if(a.castTimeFactorStat&&a.kind==='cast'){const factor=positive(this.auras.stat(this.#player,a.castTimeFactorStat,1),'dynamic cast duration factor');a={...a,castMs:Math.max(1,Math.round(a.castMs*factor))};}if(a.costsWhenAuraActive&&this.auras.active(this.#player,'buff').some(x=>x.id===a.costsWhenAuraActive.id&&x.ownerId===this.#player))a={...a,costs:a.costsWhenAuraActive.costs,arcaneRuptureActive:a.costsWhenAuraActive.id==='mage:arcane-rupture'};const active=this.auras.active(this.#player,'buff'),focus=a.innerFocus?active.find(x=>x.id==='priest:inner-focus'&&x.ownerId===this.#player):null,p=a.castProc,buff=p&&(!focus||a.innerFocus.overlap==='consume-both')?active.find(x=>x.id===p.id&&x.ownerId===this.#player):null;if(buff){if(!['instant','cast'].includes(a.kind))throw new Error('Cast proc cannot modify queued or channeled action');const castMs=p.instant?0:Math.max(0,a.castMs-p.castReductionMsPerStack*buff.stacks);a={...a,kind:castMs===0?'instant':'cast',castMs,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:c.delta*p.manaCostFactor}:c),procAura:buff,guaranteeHit:p.guaranteeHit};}if(focus)a={...a,costs:a.costs.map(c=>c.resource==='mana'?{...c,delta:0}:c),innerFocusAura:focus,innerFocusCrit:a.innerFocus.critical};return a;}
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
@@ -114,8 +114,8 @@ export class CombatEncounter{
    this.#queued.set(a.swingId,{action:a,targetId});this.#record('attack-queued',{ability:a.name,targetId,swingId:a.swingId});this.#scheduleDecision(this.timeline.now+this.#cadence);return;
   }
   const started=this.resources.startAction({changes:a.costs,cooldowns:a.cooldowns});if(!started.ok)throw new Error('Action availability changed during decision');
-  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});this.#recordCosts(a,targetId);if(a.procAura)this.auras.remove(a.procAura,'consumed');
-  if(a.kind==='instant'){a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true});this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
+  this.#record('action-start',{ability:a.name,targetId,castMs:a.castMs});this.#recordCosts(a,targetId);if(a.procAura)this.auras.remove(a.procAura,'consumed');if(a.innerFocusAura)this.auras.remove(a.innerFocusAura,'consumed');
+  if(a.kind==='instant'){a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true,innerFocusCrit:a.innerFocusCrit===true});this.#scheduleDecision(this.timeline.now+this.#cadence);return;}
   const completeAt=this.timeline.now+a.castMs;
   if(a.kind==='channel'){
    const c={action:a,targetId,completeAt,tickets:[]};this.#cast=c;a.onChannelStart?.(this,targetId);
@@ -126,7 +126,7 @@ export class CombatEncounter{
      if(this.#cast!==c)return;
      if(!this.#active()||!this.#allows(a,targetId)){this.interrupt('target unavailable');return;}
      if(a.tickCosts?.length){const paid=this.resources.change(a.tickCosts);if(!paid.ok){this.interrupt('insufficient channel resource');return;}for(const c of a.tickCosts)if(c.delta)this.#record('resource-change',{actorId:this.#player,targetId,source:a.name,resource:c.resource,delta:c.delta,overflow:0});}
-     this.#record('channel-tick',{ability:a.name,targetId,tickIndex});a.onTick(this,targetId,tickIndex,{arcaneRuptureActive:a.arcaneRuptureActive===true});
+     this.#record('channel-tick',{ability:a.name,targetId,tickIndex});a.onTick(this,targetId,tickIndex,{arcaneRuptureActive:a.arcaneRuptureActive===true,innerFocusCrit:a.innerFocusCrit===true});
     }));
    }
    c.tickets.push(this.timeline.schedule(completeAt,P.cast,()=>{
@@ -138,7 +138,7 @@ export class CombatEncounter{
   }
   const ticket=this.timeline.schedule(completeAt,P.cast,()=>{
    this.#cast=null;
-   if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true});}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
+   if(this.#active()&&this.#allows(a,targetId)){this.#record('cast-complete',{ability:a.name,targetId});a.resolve(this,targetId,{guaranteeHit:a.guaranteeHit===true,innerFocusCrit:a.innerFocusCrit===true});}else this.#record('cast-failed',{ability:a.name,targetId,reason:'target unavailable'});
    this.#scheduleDecision(this.timeline.now);
   });this.#cast={ticket,action:a,targetId,completeAt};
  }
