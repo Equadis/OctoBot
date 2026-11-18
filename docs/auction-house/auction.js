@@ -175,7 +175,7 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
     td(tr,item.quantity??'–');td(tr,item.listings??'–');moneyTd(tr,item.unit_buyout);
     moneyTd(tr,item.stack_buyout);
     const bid=bidAmount(item.current_bid,item.start_bid,item.stack_buyout,item.unit_buyout);
-    if(bid===null)td(tr,'-');else moneyTd(tr,bid);
+    if(bid===null)td(tr,'–');else moneyTd(tr,bid);
     moneyTd(tr,item.historical_avg);td(tr,pct(item.market_pct));
     const t=trend(item.trend_pct),tc=td(tr,null,t.className);
     tc.append(el('span',t.label,'ah-trend-arrow'));
@@ -265,7 +265,7 @@ async function fillDetail(cell,item,unavailable){
       const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
       if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
       else auctions.body.append(simpleTable(['Seller (owner GUID)','Quantity','Current bid','Buyout','Unit buyout','Time left (est.)'],
-        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,r.current_bid>0?(bid===null?'-':moneyNode(r.current_bid)):'No bids',r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
+        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,r.current_bid>0?(bid===null?'–':moneyNode(r.current_bid)):'No bids',r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }
