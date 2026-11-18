@@ -34,6 +34,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='paladinDamageModel')policy.paladinDamageModel={min:rank.record.fields.classicDamageRange?.[0]??null,max:rank.record.fields.classicDamageRange?.[1]??null,coefficient:null,threatFactor:null,...(rank.abilityId==='paladin:exorcism'?{targetTypes:rank.record.fields.classicTargetTypes}:{healthMaxPct:20})};
   if(field==='masterStrikeModel')policy.masterStrikeModel={targetMounted:null,secondaryEnabled:null};
   if(field==='warriorDisciplineModel')policy.warriorDisciplineModel=rank.abilityId==='warrior:shield-block'?{durationMs:null,stances:null,charges:null,blockBonusPct:null,consume:null}:rank.abilityId==='warrior:recklessness'?{durationMs:15000,stances:null,includeWhite:null,abilityIds:[],criticalMultiplier:null,damageTakenPct:20}:{durationMs:20000,stances:null,charges:5,includeWhite:true,abilityIds:[],radius:null,copyFactor:null,copyBasis:null,consume:null,threat:null};
   if(field==='thunderClapModel')policy.thunderClapModel={baseDamage:rank.record.fields.referenceDamage,apCoefficient:null,durationMs:rank.record.fields.referenceDurationMs,slowPct:10};
@@ -94,7 +95,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  }
  if(unsupported.length)return {unsupported,config:null,rankChoices};
  const melee=selected.some(isMelee),ranged=selected.some(isRanged);
- const encounter={mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
+ const encounter={...(selected.some(r=>r.abilityId==='paladin:exorcism')?{targetTypes:{boss:null}}:{}),mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
