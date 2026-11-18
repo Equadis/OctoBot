@@ -25,3 +25,10 @@ export function adjustSpellOutcomes(outcomes,hitPct,critPct){
  for(const {hit,crit} of bins.values()){if(!hit||!crit)throw Error('Incomplete spell crit bin');const total=hit.probability+crit.probability;const delta=Math.max(-crit.probability,Math.min(hit.probability,total*critPct/100));crit.probability+=delta;hit.probability-=delta;}
  return r;
 }
+
+// Preserve misses, avoidance and resistance. Convert ordinary landed hits only.
+export function forceEligibleCritical(outcomes){
+ const r=outcomes.map(x=>({...x}));let moved=0;
+ for(const h of r.filter(x=>x.landed&&(x.name==='hit'||x.name.startsWith('hit-resist-')))){const crit=r.find(x=>x.landed&&(x.name==='crit'||x.name.startsWith('crit-resist-'))&&(x.resistedFraction??0)===(h.resistedFraction??0));if(!crit)throw Error('Guaranteed critical requires paired critical outcome');crit.probability+=h.probability;moved+=h.probability;h.probability=0;}
+ if(!r.some(x=>x.landed&&(x.name==='crit'||x.critical===true)))throw Error('Guaranteed critical requires critical outcome');return r;
+}

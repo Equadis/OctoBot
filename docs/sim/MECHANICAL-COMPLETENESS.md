@@ -44,3 +44,6 @@ Incoming landed or critical attack-result events can activate explicit source-ma
 
 ## Stacking equipment auras and expendable charges
 Explicit aura stacking supports add/replace/max, cap, duration refresh or preservation, and charge consumption on named landed or critical outgoing/incoming attacks. Consumption runs before new proc activation on the same attack, so newly granted charges cannot be consumed by their triggering event. These are post-roll effects: charge modifiers must already be present when the current attack rolls; spell-specific guarantees and one-charge effects granting a full outcome override require separate integration. Source-specific stack/charge policies remain research inputs.
+
+## Ability-specific critical charges
+Explicit source-scoped equipment auras can convert ordinary hit outcomes to their paired critical outcomes while preserving miss, avoidance and resistance. Charge consumption can occur on attempt or landed outcome. This is not a full guaranteed-hit model; glance/block outcomes remain unchanged. Competing charges use first configured eligible effect; exact overlap and named set proc rates remain unverified. Direct damage only.
