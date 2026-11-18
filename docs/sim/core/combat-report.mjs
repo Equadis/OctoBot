@@ -13,7 +13,7 @@ export function combatReport(result){
   if(e.type==='damage'||e.type==='heal'){
    if(e.type==='damage'){r.damage+=finite(e.effective,'effective damage');r.overkill+=finite(e.overkill,'overkill');}
    else{r.healing+=finite(e.effective,'effective healing');r.overheal+=finite(e.overheal,'overheal');}
-   if(e.generatedThreat==null&&!(e.type==='damage'&&e.targetId===e.actorId))r.unknownThreatEvents++;else r.grossThreat+=finite(e.generatedThreat,'generated threat');
+   if(e.generatedThreat==null){if(!(e.type==='damage'&&e.targetId===e.actorId))r.unknownThreatEvents++;}else r.grossThreat+=finite(e.generatedThreat,'generated threat');
   }else if(e.type==='attack-result'){
    r.attacks++;if(e.landed===true)r.landed++;if(e.critical===true&&e.landed===true)r.crits++;add(r.outcomes,e.outcome,1);
   }else if(e.type==='absorb')r.absorbed+=finite(e.amount,'absorbed damage');
