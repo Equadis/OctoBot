@@ -157,3 +157,23 @@ Consolidated duplicate class/spell identities for Blast Wave rank 5 (13021) and 
 ### Hunter passive ranged damage effects
 - Piercing Shots current imported talent rank 15/30% of critical Aimed Shot, Steady Shot and Multi-Shot damage over 8 seconds, no threat; historical archive had 10/20%, so current talent used. Explicit effective/post-mitigation basis, independent/replace overlap and complete tick interval; snapshots raw value, no armour double-application, no recursive procs. Each qualifying target handled separately.
 - Endless Quiver current imported 3/6% chance from Auto Shot, Arcane Shot, Steady Shot, Multi-Shot; explicit landed-per-target or landed-once-per-cast, separate attack roll using configured normal ranged model, without ammo cost or scheduler reset. No recursion or other proc chaining for extra shot in this reference policy. Miss-side proc eligibility remains unverified. Source https://octowow.st/talents/hunter/ ; https://octowow.st/index.php/hunter ; https://octowow.st/forum/viewtopic.php?t=2322 .
+
+## 2026-11-18 — explicit combat research checkpoint
+
+The machine-readable `combat-release-readiness.mjs` audit is authoritative over older numerical counts earlier in this history. This checkpoint deliberately distinguishes executable **research** from live-verified gameplay.
+
+- Nine registered classes; 187 registered ability identities, of which three are explicitly removed in the current guide.
+- 184 not-explicitly-removed entries; 183 have rank-reference execution or explicit research adapters; Trueshot Aura remains the lone source-conflicting availability blocker.
+- 428 executable reference rank definitions (50 spell database observations and 378 external-only candidate references). Observed database entries do **not** mean verified damage, coefficients, uptime or learnability; none of these rank implementations are publicly validated.
+- Two identity/availability-gated research mechanics are separately labelled: Holy Strike and Trueshot Aura. They are not promoted to rank-selectable live abilities. The historical spell ID 679 maps to `zzOLDHoly Strike`, while the current class guide describes eight reworked ranks; server-side cast identities require live capture. The current Hunter guide removes Trueshot Aura, while legacy database ranks and archived notes retain different flat/percentage formulas.
+- Shaman Searing/Magma/Fire Nova totems use mutually exclusive fire slots and explicit pulse timing, hit models, target order, talent changes and mana policies. All 15 new rank references are external-only.
+- Warlock Pet Attack is a rankless scheduler command. Power Overwhelming uses timed pet damage/health effects. Felguard Felstorm uses the separate pet mana pool, a 6-second periodic area channel and a 45-second pet cooldown; it does not spend player mana or duplicate auto attacks.
+- The combat event report separates enemy damage from self/friendly damage. Pet self-health drain is never counted as enemy DPS, and no-threat self-damage is not misclassified as an unexplained threat event.
+- Live validation remains blocked: 1,140 unverified race/class/level base-stat rows, three base-stat anomalies, incomplete independent observed combat fixtures, and unsupported or unverified interactions documented in the subsystem audits. No class is live-validated and `publicReady` remains false. Keep the public **Run Simulation** gate disabled.
+
+### Evidence needed for the last two identities
+
+1. **Holy Strike:** On an actual OctoWoW Paladin, export the spellbook/cast spell ID for each of the eight learned ranks, the character level and current phase, mana and shared cooldown, weapon/SP/heal scaling, party mana/healing recipients, and miss behaviour. Do not use the legacy `zzOLDHoly Strike` IDs or a private-server historical rank table as a live substitute.
+2. **Trueshot Aura:** Confirm whether the ability is actually trainable/usable on the current realm and phase, then measure learned rank IDs and whether the buff is flat Attack Power, percentage-plus-flat per recipient, or truly removed. Until then use only the explicitly source-conflicting research mode, not a live simulation.
+
+The integration workflow runs JavaScript and Python regressions, spell/capability and MVP audits, syntax checks and a Chromium smoke test. A passing suite proves internal consistency, **not** correspondence with unobserved server mechanics.
