@@ -128,7 +128,7 @@ const ABILITIES={
   dest('Soul Fire','Fire'),dest('Shadowburn','Shadow'),dest('Conflagrate','Fire'),
   dest('Rain of Fire','Fire'),dest('Hellfire','Fire'),
   profile('Immolate (periodic)','periodic','Fire','Immolate','Immolate periodic','Destruction'),
-  utility('Power Overwhelming'),spellUtility('Life Tap','Imp'),...many(['Curse of Weakness','Curse of Exhaustion','Health Funnel','Mana Funnel','Demon Armor'],'utility')
+  utility('Felstorm'),utility('Power Overwhelming'),spellUtility('Life Tap','Imp'),...many(['Curse of Weakness','Curse of Exhaustion','Health Funnel','Mana Funnel','Demon Armor'],'utility')
  ].map(p=>['spell','periodic'].includes(p.type)?allDmg(allDmg(allDmg(allDmg(p,'All damage when no pet'),'All damage while Soul Link demon active'),'Succubus'),'Imp'):p),
  priest:[
   spell('Smite','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
