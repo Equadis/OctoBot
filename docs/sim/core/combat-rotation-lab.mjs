@@ -34,6 +34,8 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='masterStrikeModel')policy.masterStrikeModel={targetMounted:null,secondaryEnabled:null};
+  if(field==='warriorDisciplineModel')policy.warriorDisciplineModel=rank.abilityId==='warrior:shield-block'?{durationMs:null,stances:null,charges:null,blockBonusPct:null,consume:null}:rank.abilityId==='warrior:recklessness'?{durationMs:15000,stances:null,includeWhite:null,abilityIds:[],criticalMultiplier:null,damageTakenPct:20}:{durationMs:20000,stances:null,charges:5,includeWhite:true,abilityIds:[],radius:null,copyFactor:null,copyBasis:null,consume:null,threat:null};
   if(field==='thunderClapModel')policy.thunderClapModel={baseDamage:rank.record.fields.referenceDamage,apCoefficient:null,durationMs:rank.record.fields.referenceDurationMs,slowPct:10};
   if(field==='shieldSlamModel')policy.shieldSlamModel={min:null,max:null,blockValue:null,blockCoefficient:null,apCoefficient:null};
   if(field==='reactiveModel')policy.reactiveModel=reactiveTemplate(rank.abilityId);
