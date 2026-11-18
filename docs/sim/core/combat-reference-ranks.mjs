@@ -12,6 +12,126 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Current imported Hunter talent identities (not ambiguous effect ranks).
+ ...[
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:lacerate",
+    "spellId": 48049,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 8,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "physical-ap",
+        "stat": "attackPower",
+        "coefficient": 0.4,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/hunter/",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "talent-reference",
+    "requiredPolicy": [
+      "lacerateModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:lacerate",
+      "spellId": 48049,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "physical",
+        "referenceBaseManaPct": 8,
+        "referenceAPCoefficient": 0.4,
+        "referenceBleedFraction": 0.2,
+        "referenceDurationMs": 8000,
+        "referenceSideBonusPct": 15
+      },
+      "unknown": [
+        "live cost, cooldown, reaction window, hit and timing policy",
+        "live target selection and bleed/command resolution"
+      ],
+      "conflicts": [
+        {
+          "field": "AP/side coefficient",
+          "earlier": "35%/10%",
+          "current": "40%/15%"
+        },
+        {
+          "field": "rank identity",
+          "database": "multiple archived ranks and effect IDs",
+          "currentTalent": 48049
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/hunter/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:intimidation",
+    "spellId": 19577,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 100,
+    "components": [
+      {
+        "kind": "hunter-intimidation"
+      }
+    ],
+    "source": "https://octowow.st/talents/hunter/",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2322",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "talent-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "intimidationModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": null,
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:intimidation",
+      "spellId": 19577,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "physical",
+        "referenceStunMs": 3000,
+        "referenceThreatDurationMs": 8000,
+        "referenceThreatPct": 50
+      },
+      "unknown": [
+        "live cost, cooldown, reaction window, hit and timing policy",
+        "live target selection and bleed/command resolution"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/hunter/",
+      "liveVerified": false
+    }
+  }
+],
  // Hunter pet and target marking reference candidates.
  ...[
   {
