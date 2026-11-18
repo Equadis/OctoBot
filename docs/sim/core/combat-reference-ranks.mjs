@@ -12,6 +12,848 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Bear, melee Hunter and Affliction reference candidates.
+ ...[
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 6807,
+    "rank": 1,
+    "learnLevel": 10,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 6807,
+      "rank": 1,
+      "level": 10,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 18
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 6808,
+    "rank": 2,
+    "learnLevel": 18,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 6808,
+      "rank": 2,
+      "level": 18,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 27
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 6809,
+    "rank": 3,
+    "learnLevel": 26,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 6809,
+      "rank": 3,
+      "level": 26,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 37
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 8972,
+    "rank": 4,
+    "learnLevel": 34,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 8972,
+      "rank": 4,
+      "level": 34,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 49
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 9745,
+    "rank": 5,
+    "learnLevel": 42,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 9745,
+      "rank": 5,
+      "level": 42,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 71
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 9880,
+    "rank": 6,
+    "learnLevel": 50,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 9880,
+      "rank": 6,
+      "level": 50,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 101
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:maul",
+    "spellId": 9881,
+    "rank": 7,
+    "learnLevel": 58,
+    "resource": "rage",
+    "mode": "queued-melee",
+    "cost": 15,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 5,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "feralModel",
+      "weaponDamageModel",
+      "costOverride",
+      "flatThreat"
+    ],
+    "referenceGcdMs": 0,
+    "form": "Bear",
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:maul",
+      "spellId": 9881,
+      "rank": 7,
+      "level": 58,
+      "fields": {
+        "school": "physical",
+        "classicFlat": 128
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/druid/maul",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:siphon-life",
+    "spellId": 18265,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 150,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "durationMs": 30000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "siphonLifeModel",
+      "leechModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:siphon-life",
+      "spellId": 18265,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "shadow",
+        "classicTotal": 150,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "damage timing and scaling",
+          "staging": "fixed tick amount over 30 seconds; rank 4 45 every 3 seconds",
+          "guide": "total health transfer over full duration",
+          "archive": "total spell power scaling changed from 50% to 100%"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:siphon-life",
+    "spellId": 18879,
+    "rank": 2,
+    "learnLevel": 38,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 205,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "durationMs": 30000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "siphonLifeModel",
+      "leechModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:siphon-life",
+      "spellId": 18879,
+      "rank": 2,
+      "level": 38,
+      "fields": {
+        "school": "shadow",
+        "classicTotal": 220,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "damage timing and scaling",
+          "staging": "fixed tick amount over 30 seconds; rank 4 45 every 3 seconds",
+          "guide": "total health transfer over full duration",
+          "archive": "total spell power scaling changed from 50% to 100%"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:siphon-life",
+    "spellId": 18880,
+    "rank": 3,
+    "learnLevel": 48,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 285,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "durationMs": 30000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "siphonLifeModel",
+      "leechModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:siphon-life",
+      "spellId": 18880,
+      "rank": 3,
+      "level": 48,
+      "fields": {
+        "school": "shadow",
+        "classicTotal": 330,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "damage timing and scaling",
+          "staging": "fixed tick amount over 30 seconds; rank 4 45 every 3 seconds",
+          "guide": "total health transfer over full duration",
+          "archive": "total spell power scaling changed from 50% to 100%"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:siphon-life",
+    "spellId": 18881,
+    "rank": 4,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 365,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "durationMs": 30000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "siphonLifeModel",
+      "leechModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:siphon-life",
+      "spellId": 18881,
+      "rank": 4,
+      "level": 58,
+      "fields": {
+        "school": "shadow",
+        "classicTotal": 450,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "damage timing and scaling",
+          "staging": "fixed tick amount over 30 seconds; rank 4 45 every 3 seconds",
+          "guide": "total health transfer over full duration",
+          "archive": "total spell power scaling changed from 50% to 100%"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/siphon-life",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:carve",
+    "spellId": 51575,
+    "rank": 1,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/hunter/",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "weaponDamageModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "multiTarget": {
+      "cap": 5,
+      "radius": 10,
+      "falloff": 1
+    },
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:carve",
+      "spellId": 51575,
+      "rank": 1,
+      "level": 20,
+      "fields": {
+        "school": "physical",
+        "archivedWeaponCoefficient": 0.6,
+        "archivedManaPct": 8,
+        "cap": 5,
+        "radius": 10
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "rank weapon coefficient",
+          "archive": "60/65/70% weapon damage after December 2024 revision",
+          "currentTalent": "rank 1 60%, upper ranks unverified"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/hunter/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:carve",
+    "spellId": 52415,
+    "rank": 2,
+    "learnLevel": 38,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/hunter/",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "weaponDamageModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "multiTarget": {
+      "cap": 5,
+      "radius": 10,
+      "falloff": 1
+    },
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:carve",
+      "spellId": 52415,
+      "rank": 2,
+      "level": 38,
+      "fields": {
+        "school": "physical",
+        "archivedWeaponCoefficient": 0.65,
+        "archivedManaPct": 8,
+        "cap": 5,
+        "radius": 10
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "rank weapon coefficient",
+          "archive": "60/65/70% weapon damage after December 2024 revision",
+          "currentTalent": "rank 1 60%, upper ranks unverified"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/hunter/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "hunter",
+    "abilityId": "hunter:carve",
+    "spellId": 52416,
+    "rank": 3,
+    "learnLevel": 56,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "weapon",
+        "stat": "mainhand",
+        "coefficient": null,
+        "flat": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/hunter/",
+    "referenceSource": "https://octowow.st/index.php/hunter",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "weaponDamageModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 10000,
+    "multiTarget": {
+      "cap": 5,
+      "radius": 10,
+      "falloff": 1
+    },
+    "record": {
+      "classId": "hunter",
+      "abilityId": "hunter:carve",
+      "spellId": 52416,
+      "rank": 3,
+      "level": 56,
+      "fields": {
+        "school": "physical",
+        "archivedWeaponCoefficient": 0.7,
+        "archivedManaPct": 8,
+        "cap": 5,
+        "radius": 10
+      },
+      "unknown": [
+        "live rank coefficients, cost, cooldown and outcome policies",
+        "live timing and talent interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "rank weapon coefficient",
+          "archive": "60/65/70% weapon damage after December 2024 revision",
+          "currentTalent": "rank 1 60%, upper ranks unverified"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/hunter/",
+      "liveVerified": false
+    }
+  }
+],
  {"classId":"hunter","abilityId":"hunter:rapid-fire","spellId":3045,"rank":1,"learnLevel":26,"resource":"mana","mode":"instant","cost":100,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"hunter-rapid-fire","stat":"arcane","coefficient":null}],"source":"https://octowow.st/db/?spell=3045","referenceSource":"https://octowow.st/hunter","status":"external-reference-only","liveVerified":false,"learnability":"imported-candidate-reference","requiredPolicy":["rapidFireModel"],"referenceGcdMs":1500,"referenceCooldownMs":300000,"refreshStrategy":"actor-buff","record":{"classId":"hunter","abilityId":"hunter:rapid-fire","spellId":3045,"rank":1,"level":26,"fields":{"school":"arcane","durationMs":15000,"rangedHastePct":40,"referenceCost":100},"unknown":["live cooldown and GCD","Aimed Shot and Steady Shot cast reduction magnitude","live swing rescheduling policy"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/db/?spell=3045","liveVerified":false}},
  // Classic healing rank candidates; coefficients and mana cost must be explicitly acknowledged.
  ...[

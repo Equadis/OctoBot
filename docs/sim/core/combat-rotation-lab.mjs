@@ -31,7 +31,9 @@ function defaults(rank,position,normalisedSpeed){
  periodicCanCrit:false,healCriticalMultiplier:1.5,spellCriticalMultiplier:1.5,resistance:resistance(),
  refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',threat:null,spendOnMiss:false,
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
+ if(['hunter:carve','hunter:multi-shot'].includes(rank.abilityId))policy.sharedShotCooldownMs=10000;
  for(const field of rank.requiredPolicy??[]){
+  if(field==='siphonLifeModel')policy.siphonLifeModel={totalBase:rank.record.fields.classicTotal,totalCoefficient:null,durationMs:30000,intervalMs:null};
   if(field==='rapidFireModel')policy.rapidFireModel={castReductionPct:null};
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
