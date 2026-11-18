@@ -11,6 +11,22 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'landed',effect:{kind:'damage',min:+m[1],max:+(m[2]??m[1]),school:m[3].toLowerCase()}};
  m=s.match(/^Chance on hit: Grants (\d+) extra attacks?\.?$/i);
  if(m)return {trigger:'landed',effect:{kind:'extra-attack',count:+m[1]}};
+ m=s.match(/^Chance on melee attack to restore (\d+) (energy|mana|rage)\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'resource',resource:m[2].toLowerCase(),amount:+m[1]}};
+ m=s.match(/^Your normal melee swings have a chance to Invigorate you, healing you for (\d+) to (\d+)\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'white-melee',effect:{kind:'heal',min:+m[1],max:+m[2]}};
+ m=s.match(/^Use: Restores (\d+)(?: to (\d+))? health\.?$/i);
+ if(m)return {trigger:'use',effect:{kind:'heal',min:+m[1],max:+(m[2]??m[1])}};
+ m=s.match(/^Chance on hit: (?:Increases (?:your )?attack power by) (\d+) for (\d+) sec\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:[{stat:'attackPower',mode:'flat',value:+m[1]}]}};
+ m=s.match(/^Chance on hit: (?:Blasts a target for|Sends a shadowy bolt at the enemy causing) (\d+)(?: to (\d+))? (Fire|Frost|Nature|Shadow|Arcane|Holy) damage\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'damage',min:+m[1],max:+(m[2]??m[1]),school:m[3].toLowerCase()}};
+ m=s.match(/^(\d+)% chance of dealing (\d+) to (\d+) (Fire|Frost|Nature|Shadow|Arcane|Holy) damage on a successful melee attack\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',chance:+m[1]/100,effect:{kind:'damage',min:+m[2],max:+m[3],school:m[4].toLowerCase()}};
+ m=s.match(/^Equip: (\d+)% chance on melee hit to gain (\d+) extra attacks?\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',chance:+m[1]/100,effect:{kind:'extra-attack',count:+m[2]}};
+ m=s.match(/^Chance on hit: Poisons target for (\d+) Nature damage every (\d+) sec for (\d+) sec\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'periodic-damage',school:'nature',min:+m[1],max:+m[1],intervalMs:+m[2]*1000,durationMs:+m[3]*1000}};
  return null;
 }
 export function compileEquipmentTooltips(gear,build,requests=[]){
@@ -23,7 +39,7 @@ export function compileEquipmentTooltips(gear,build,requests=[]){
   const key=JSON.stringify(identity);if(seen.has(key))throw Error('Duplicate tooltip effect');seen.add(key);
   const parsed=parseTimedEquipmentTooltip(raw);if(!parsed)throw Error('Unmapped equipment tooltip: '+raw);
   if(r.acknowledgeUnverifiedTiming!==true)throw Error('Explicit research timing acknowledgement required');
-  const effect={...parsed.effect};if(effect.kind==='damage'){effect.outcomes=r.outcomes;effect.mitigation=r.mitigation;effect.threat=r.threat??null;}if(effect.kind==='extra-attack')effect.hand=r.hand;
-  return {id:'tooltip:'+key,source:name,provenance:'Imported exact tooltip: '+raw,trigger:parsed.trigger,effect,cooldownMs:r.cooldownMs,...(parsed.trigger==='use'?{atMs:r.atMs}:{chance:r.chance,sources:r.sources}),...(r.sharedGroup?{sharedGroup:r.sharedGroup,sharedCooldownMs:r.sharedCooldownMs}:{})};
+  const effect={...parsed.effect};if(['damage','periodic-damage'].includes(effect.kind)){effect.outcomes=r.outcomes;effect.mitigation=r.mitigation;effect.threat=r.threat??null;if(effect.kind==='periodic-damage'){effect.refresh=r.refresh;effect.tickAtExpiry=r.tickAtExpiry;}}if(effect.kind==='extra-attack')effect.hand=r.hand;
+  return {id:'tooltip:'+key,source:name,provenance:'Imported exact tooltip: '+raw,trigger:parsed.trigger,effect,cooldownMs:r.cooldownMs,...(parsed.trigger==='use'?{atMs:r.atMs}:{chance:parsed.chance??r.chance,sources:r.sources,...(parsed.eligibility?{eligibility:parsed.eligibility}:{})}),...(r.sharedGroup?{sharedGroup:r.sharedGroup,sharedCooldownMs:r.sharedCooldownMs}:{})};
  });
 }
