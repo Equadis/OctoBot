@@ -1,7 +1,23 @@
+import {isInstancedRaid} from './targets.mjs?v=20261117-buff-audit4';
 // Independently modelled from UI experiments, Combat Gum Alpha v3.01, 2026-11-12.
 // See data/reference/combatgum-buff-observations.json. This is a planning baseline,
 // not proof of OctoWoW server behaviour. Last selection wins, including imports.
 const exclusive=(...ids)=>ids.flatMap((a,i)=>ids.slice(i+1).map(b=>[a,b]));
+// Community quest guide + individual official quest/book records. The grouping
+// of one/two handed versions is a planning assumption pending live verification.
+export const WEAPON_MASTERY=Object.freeze([
+ ['axes','Axes',[0,1],'item=70227'],['maces','Maces',[4,5],'item=70229'],['swords','Swords',[7,8],'quest=41537'],['daggers','Daggers',[15],'quest=41548'],['fists','Fist Weapons',[13],'quest=41545'],['polearms','Polearms',[6],'quest=41533'],['staves','Staves',[10],'item=70232'],['bows','Bows',[2],'item=70234'],['guns','Guns',[3],'quest=41524'],['crossbows','Crossbows',[18],'quest=41528'],['thrown','Thrown Weapons',[16],'quest=41522']
+].map(([key,name,subclasses,source])=>({id:'mastery-'+key,name,subclasses,source:'https://octowow.st/db/?'+source})));
+export function weaponMasteryStats(ids,level){
+ if(level<60)return {};
+ const scoped=Object.create(null);
+ for(const m of WEAPON_MASTERY)if(ids.includes('skill-book')||ids.includes(m.id))for(const sub of m.subclasses)scoped['weaponSkill:'+sub]=5;
+ return {...scoped};
+}
+export const WORLD_BUFF_IDS=Object.freeze(['fengus','slipkik']);
+export const WORLD_BUFF_RAID_REASON='World buffs do not apply in instanced raids.';
+export function worldBuffRestriction(id,planning){return WORLD_BUFF_IDS.includes(id)&&isInstancedRaid(planning)?WORLD_BUFF_RAID_REASON:null;}
+export function effectiveBuffIds(ids,planning){return normaliseBuffs(ids).filter(id=>!worldBuffRestriction(id,planning));}
 export const BUFF_CONFLICTS=Object.freeze([
  ...exclusive('mongoose','greater-agility','emerald-mongoose'),
  ['emerald-mongoose','dreamshard'],
@@ -24,11 +40,11 @@ export function selectBuffGroup(current,ids,enabled=true){
 }
 // Percentage values use percentage points; haste is combined multiplicatively.
 export const BUFF_STATS=Object.freeze({
- 'battle-shout':{ap:232},might:{ap:222},wild:{str:12,agi:12,sta:12},pack:{crit:3},earth:{str:96},air:{agi:96},trueshot:{ap:30,apMultiplier:1.03},tricks:{crit:4},
+ 'battle-shout':{ap:232},might:{ap:222},wild:{str:12,agi:12,sta:12,int:12,spi:12,armour:285,arcaneRes:20,fireRes:20,natureRes:20,frostRes:20,shadowRes:20},pack:{crit:3,rangedCrit:3},earth:{str:96},air:{agi:96},trueshot:{ap:100,rangedAP:100},tricks:{crit:4},
  mongoose:{agi:25,crit:2},'greater-agility':{agi:25},scorpok:{agi:25},firewater:{ap:35},'juju-might':{ap:40},giants:{str:25},'juju-power':{str:30},dreamshard:{sp:15,spellCrit:2},
  'emerald-mongoose':{sp:15,agi:25,crit:2,spellCrit:2},dreamwater:{sp:35,ap:35},'arcane-giant':{sp:35,str:25},'brute-force':{str:18,sta:18},
  'supreme-power':{sp:150},dreamtonic:{sp:35},'greater-arcane':{sp:35},'nature-power':{natureSp:55},firepower:{fireSp:40},
- 'wizard-oil-mh':{sp:36,spellCrit:1},'wizard-oil-oh':{sp:36,spellCrit:1},
- medley:{haste:2},berry:{agi:10},skewer:{agi:20},carrots:{ap:32},chimaerek:{dodge:2,sta:30},fishe:{dodge:1,defense:4},merlot:{sta:25},rum:{sta:15},flurry:{haste:1},quickness:{haste:1.25},
- expose:{targetArmour:-2550},sunder:{targetArmour:-2250},eskhandar:{targetArmour:-1200},recklessness:{targetArmour:-640},faerie:{targetArmour:-505},'wind-serpent':{targetArmour:-400},annihilator:{targetArmour:-300},shartateth:{targetArmour:-250},ripper:{targetArmour:-163},'skill-book':{weaponSkill:5}
+ 'wizard-oil-mh':{damageOnlySp:36,spellCrit:1},'wizard-oil-oh':{damageOnlySp:36,spellCrit:1},
+ medley:{haste:2},berry:{agi:10},skewer:{agi:20},carrots:{ap:32},chimaerek:{dodge:2,sta:30},fishe:{dodge:1,defense:4},merlot:{sta:25},rum:{sta:15},flurry:{},quickness:{},
+ expose:{targetArmour:-2550},sunder:{targetArmour:-2250},eskhandar:{},recklessness:{targetArmour:-640},faerie:{targetArmour:-505},'wind-serpent':{targetArmour:-400},annihilator:{targetArmour:-600},shartateth:{targetArmour:-250},ripper:{},'skill-book':{}
 });

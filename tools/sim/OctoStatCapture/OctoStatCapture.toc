@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: OctoStatCapture
+## Notes: Anonymous naked character stat evidence for OctoBot audit
+## Version: 0.1.0
+## SavedVariables: OctoStatCaptures
+OctoStatCapture.lua

@@ -1,0 +1,51 @@
+name: Buff and consumable audit
+on:
+  push:
+    branches: ['audit/buff-consumable-effects']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tools/sim/audit-buff-consumables.mjs
+      - run: node tools/sim/audit-base-stats.mjs
+      - run: node tools/sim/audit-stacking.mjs
+      - run: node tools/sim/audit-pets.mjs
+      - run: node tools/sim/audit-combat-abilities.mjs
+      - run: node tools/sim/audit-combat-timeline.mjs
+      - run: node tools/sim/audit-combat-execution.mjs
+      - run: node tools/sim/audit-combat-systems.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: combat-ability-audit
+          path: |
+            combat-ability-audit.json
+            combat-timeline-audit.json
+            combat-execution-audit.json
+            combat-systems-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pet-audit
+          path: |
+            pet-audit.json
+            pet-equipment-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stacking-audit
+          path: stacking-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: base-stat-audit
+          path: base-stat-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: buff-consumable-audit
+          path: buff-consumable-audit.json
+      - run: node --test tests/sim/*.test.mjs
+      - run: python -m unittest discover -s tests/sim -p 'test_*.py'

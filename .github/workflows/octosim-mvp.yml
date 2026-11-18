@@ -1,0 +1,31 @@
+name: OctoSim MVP integration
+on:
+  push:
+    branches: ['release/octosim-mvp-0.1']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/sim/*.test.mjs
+      - run: python -m unittest discover -s tests/sim -p 'test_*.py'
+      - run: node tools/sim/audit-combat-abilities.mjs
+      - run: node tools/sim/audit-combat-systems.mjs
+      - run: node tools/sim/audit-mvp-readiness.mjs
+      - run: node --check docs/sim/reference-rotation.mjs && node --check docs/sim/reference-worker.mjs && node --check docs/sim/planner.mjs
+      - name: Browser smoke (Chromium)
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright-core@1.51.1
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_PATH"
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/octosim-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/docs/sim/ >/dev/null && break; sleep 1; done
+          node tests/sim/browser-smoke.mjs

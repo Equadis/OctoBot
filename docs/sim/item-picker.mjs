@@ -1,8 +1,8 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
-import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
-import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
+import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors,equipmentListingWithDetail} from './core/items.mjs?v=20261117-mvp1';
+import {SLOTS} from './core/builds.mjs?v=20261117-mvp1';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
+import {SORT_OPTIONS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-mvp1';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
@@ -30,7 +30,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    if(responses.some(response=>!response.ok))throw new Error('The equipment catalogue could not load.');
    const [catalogue,bundled,manifest,referenceData,supplement]=await Promise.all(responses.map(response=>response.json()));details={...supplement,...bundled};references=referenceData.items;
    try{for(const entry of JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').slice(-128)){const d=entry.detail;if(Date.now()-entry.savedAt<86400000 && Number.isInteger(d?.id) && Number.isInteger(d.classMask) && Number.isInteger(d.raceMask) && Array.isArray(d.requirements) && typeof d.summary==='string' && d.source===`https://octowow.st/db/?item=${d.id}`)if(!details[d.id])details[d.id]=d;}}catch{}
-   items=catalogue.map(item=>({...item,...(details[item.id]?{name:details[item.id].name,slot:details[item.id].slot,reqlevel:details[item.id].requiredLevel}:{}),icon:/^[a-z0-9_]+$/i.test(item.icon||'')?item.icon:'inv_misc_questionmark'}));$('catalogue-status').textContent=`${manifest.equipmentCount.toLocaleString()} equipment records`;
+   items=catalogue.map(item=>equipmentListingWithDetail(item,details[item.id])).filter(Boolean).map(item=>({...item,icon:/^[a-z0-9_]+$/i.test(item.icon||'')?item.icon:'inv_misc_questionmark'}));$('catalogue-status').textContent=`${items.length.toLocaleString()} equipment records`;
   })();try{await loading;}finally{loading=null;}
  }
  async function detail(item){

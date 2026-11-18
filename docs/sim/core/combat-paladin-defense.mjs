@@ -1,0 +1,35 @@
+import {expectedOutcome} from './combat-math.mjs';
+import {attemptProc} from './combat-timeline.mjs';
+const n=(v,k,min=0,max=Infinity)=>{if(!Number.isFinite(v)||v<min||v>max)throw new Error('Explicit Paladin defence '+k+' required');return v;};
+const i=(v,k,min=0,max=Infinity)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw new Error('Explicit Paladin defence '+k+' required');return v;};
+const talent=(b,id,max)=>i(Number(b.talents?.[String(id)]??0),'talent rank '+id,0,max);
+export function validatePaladinDefense(x){
+ if(x?.kind==='righteous-fury'){if(!['enable-only','manual-toggle'].includes(x.mode)||!['bonus','total'].includes(x.improvedBasis))throw new Error('Explicit Righteous Fury toggle and talent basis required');n(x.threatBonusPct,'holy threat bonus');i(x.improvedRank,'Improved Righteous Fury rank',0,3);i(x.defenseRank,'Righteous Defense rank',0,3);return x;}
+ if(x?.kind!=='holy-shield')throw new Error('Explicit Paladin defence model required');
+ i(x.durationMs,'Holy Shield duration',1);i(x.charges,'Holy Shield charges',1,20);n(x.blockBonusPct,'block bonus',0,100);i(x.specializationRank,'Shield Specialization rank',0,3);i(x.redoubtRank,'Redoubt rank',0,5);
+ const d=x.retaliation;if(d?.kind!=='damage'||d.school!=='holy')throw new Error('Explicit Holy Shield retaliation effect required');expectedOutcome({min:0,max:0,outcomes:d.outcomes});return x;
+}
+export function compilePaladinDefense(build,rank,p,gear){
+ if(!p)throw new Error('Explicit Paladin defence model required');
+ if(rank.abilityId==='paladin:righteous-fury')return validatePaladinDefense({kind:'righteous-fury',when:'always',mode:p.mode,threatBonusPct:p.threatBonusPct,improvedBasis:p.improvedBasis,improvedRank:talent(build,466,3),defenseRank:talent(build,472,3)});
+ if(gear.offhand?.classs!==4||gear.offhand?.subclass!==6||!talent(build,473,1))throw new Error('Holy Shield requires equipped shield and talent');
+ const base=n(p.baseDamage,'Holy Shield base damage'),coefficient=n(p.spellPowerCoefficient,'Holy Shield SP coefficient');const threat=p.threat===null?null:{coefficient:n(p.threat?.coefficient,'threat coefficient'),flat:n(p.threat?.flat,'flat threat'),multipliers:[1+n(p.additionalThreatPct,'additional threat')/100],distribution:'each'};
+ return validatePaladinDefense({kind:'holy-shield',when:'always',durationMs:p.durationMs,charges:p.charges,blockBonusPct:p.blockBonusPct,specializationRank:talent(build,468,3),redoubtRank:talent(build,462,5),retaliation:{kind:'damage',when:'always',school:'holy',formula:{min:base,max:base,terms:[{stat:'holy',coefficient}],multiplier:1},outcomes:p.outcomes,mitigation:n(p.mitigation,'retaliation mitigation',0,1),flatReduction:0,threat}});
+}
+export function righteousFuryFactor(x){return x.improvedBasis==='bonus'?1+x.threatBonusPct/100*(1+.25*x.improvedRank):(1+x.threatBonusPct/100)*(1+.25*x.improvedRank);}
+const aura=(e,actor,id,name,durationMs,stacks=1,modifiers=[])=>e.auras.apply({id,name,targetId:actor,ownerId:actor,kind:'buff',durationMs,maxStacks:stacks,stacks,stackPolicy:'replace',refreshPolicy:'refresh',modifiers});
+export function createPaladinDefenseRuntime(actions,owner,durationMs,classState,talents=null,reckoning=null){
+ const fury=actions.flatMap(a=>a.effects).find(x=>x.kind==='righteous-fury'),shield=actions.flatMap(a=>a.effects).find(x=>x.kind==='holy-shield');if(fury)validatePaladinDefense(fury);if(shield)validatePaladinDefense(shield);
+ const specializationRank=i(talents?.specializationRank??shield?.specializationRank??0,'Shield Specialization rank',0,3),redoubtRank=i(talents?.redoubtRank??shield?.redoubtRank??0,'Redoubt rank',0,5),reckoningRank=i(talents?.reckoningRank??0,'Reckoning rank',0,5);const hasShield=talents?.hasShield??!!shield;if(typeof hasShield!=='boolean'||shield&&!hasShield)throw new Error('Explicit Paladin shield status required');if(reckoning&&(!reckoningRank||!hasShield||reckoning.kind!=='immediate-mainhand'||typeof reckoning.procSeals!=='boolean'||!Number.isFinite(reckoning.maxRangeYards)||reckoning.maxRangeYards<=0))throw new Error('Explicit Reckoning policy requires talent and shield');
+ const active=(e,id)=>e.auras.active(owner,'buff').find(a=>a.id===id&&a.ownerId===owner);
+ const enable=e=>{aura(e,owner,'paladin:righteous-fury','Righteous Fury',Math.max(1,durationMs-e.timeline.now+1),1,[{stat:'holyThreatFactor',mode:'multiplyPct',value:(righteousFuryFactor(fury)-1)*100},{stat:'incomingDamageFactor',mode:'multiplyPct',value:-[0,3,6,10][fury.defenseRank]}]);classState.righteousFury='On';};
+ return {initialize(e){if(fury&&classState.righteousFury==='On')enable(e);},available(e){return !fury||fury.mode==='manual-toggle'||!active(e,'paladin:righteous-fury');},
+ apply(e,x){if(x.kind==='righteous-fury'){const a=active(e,'paladin:righteous-fury');if(a){e.auras.remove(a,'toggle-off');classState.righteousFury='Off';}else enable(e);}else aura(e,owner,'paladin:holy-shield','Holy Shield',x.durationMs,x.charges);},
+ incoming(e,attack){if(attack.targetId!==owner||attack.school!=='physical'||!attack.blockModel)return attack;if(!hasShield)throw new Error('Block roll requires an equipped shield');const a=active(e,'paladin:holy-shield'),redoubt=active(e,'paladin:redoubt'),b=attack.blockModel;const chance=Math.min(100,b.baseChancePct+(a?shield.blockBonusPct:0)+(redoubt?3*redoubtRank:0));const block=e.random()<chance/100;return {...attack,outcome:block?'block':'hit',amount:Math.max(0,attack.amount-(block?b.blockValue*(1+.1*specializationRank):0))};},
+ reduceIncoming(e,attack){if(attack.targetId!==owner||attack.outcome!=='block')return attack.amount;const z=active(e,'paladin:zealous-defense');if(!z)return attack.amount;const factor=1-z.modifiers.find(m=>m.stat==='blockedDamageReductionPct').value/100;e.auras.consume(z,1);return attack.amount*factor;},
+ afterIncoming(e,attack,retaliate,extraAttack=()=>{}){if(!hasShield||attack.targetId!==owner||!e.unit(owner).alive||!['hit','crit','block'].includes(attack.outcome)||attack.school!=='physical')return;
+ if(attack.outcome==='block'){const a=active(e,'paladin:holy-shield'),r=active(e,'paladin:redoubt');if(r)e.auras.consume(r,1);if(a){e.auras.consume(a,1);if(e.unit(attack.actorId).alive)retaliate(shield.retaliation,attack.actorId);}
+ if(specializationRank&&attemptProc(e.resources.cooldowns,{id:'paladin:shield-specialization',chance:[0,.33,.66,1][specializationRank],internalCooldownMs:5000},e.random).triggered){const delta=e.resources.snapshot().mana.max*.02,q=e.resources.change([{resource:'mana',delta}]);if(!q.ok)throw new Error('Shield Specialization mana failed');e.recordMechanic('resource-change',{actorId:owner,source:'Shield Specialization',resource:'mana',delta,overflow:q.overflow.mana??0});}if(reckoning&&reckoningRank&&e.unit(attack.actorId).alive&&e.random()<.1*reckoningRank){e.recordMechanic('proc',{actorId:owner,targetId:attack.actorId,source:'Reckoning',procId:'reckoning'});extraAttack(attack.actorId,reckoning);}}
+ if(redoubtRank&&e.random()<.02*redoubtRank)aura(e,owner,'paladin:redoubt','Redoubt',10000,5);
+ }};
+}
