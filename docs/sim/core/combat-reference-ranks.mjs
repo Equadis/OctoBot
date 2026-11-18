@@ -12,6 +12,607 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Elemental Shaman direct, refresh and ground-area candidate ranks.
+ ...[
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36916,
+    "rank": 1,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 65,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36916,
+      "rank": 1,
+      "level": 20,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          61,
+          73
+        ],
+        "referenceCost": 65,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36917,
+    "rank": 2,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 95,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36917,
+      "rank": 2,
+      "level": 28,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          96,
+          119
+        ],
+        "referenceCost": 95,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36918,
+    "rank": 3,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 120,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36918,
+      "rank": 3,
+      "level": 36,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          136,
+          155
+        ],
+        "referenceCost": 120,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36919,
+    "rank": 4,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 145,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36919,
+      "rank": 4,
+      "level": 44,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          185,
+          204
+        ],
+        "referenceCost": 145,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36920,
+    "rank": 5,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 175,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36920,
+      "rank": 5,
+      "level": 52,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          238,
+          268
+        ],
+        "referenceCost": 175,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:molten-blast",
+    "spellId": 36921,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 210,
+    "castMs": 2000,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "book-required-or-confirmed",
+    "requiredPolicy": [
+      "costOverride",
+      "moltenBlastModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "referenceAvailableFromPhase": 3,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:molten-blast",
+      "spellId": 36921,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "fire",
+        "referenceDamage": [
+          290,
+          331
+        ],
+        "referenceCost": 210,
+        "referenceCoefficient": 0.5714285714285714,
+        "referenceCastMs": 2000
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "Flame Shock refresh",
+          "archive": "refresh and Searing Totem focus",
+          "currentGuide": "refresh talent bonus; player reports conflict on refresh behavior"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:earthquake",
+    "spellId": 48306,
+    "rank": 1,
+    "learnLevel": 40,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 225,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "nature",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "earthquakeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 18000,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:earthquake",
+      "spellId": 48306,
+      "rank": 1,
+      "level": 40,
+      "fields": {
+        "school": "nature",
+        "referenceDamage": [
+          262,
+          291
+        ],
+        "referenceCost": 225,
+        "referenceCoefficient": 0.6,
+        "referenceSplash": 0.35,
+        "referenceAftershock": 0.3,
+        "referenceRadius": 10,
+        "referenceDelayMs": 4000,
+        "referenceSlowPct": 15
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "rank damage and cooldown",
+          "earlier": "227–253/343–387/510–551; 20 seconds",
+          "later": "262–291/395–446/587–634; 18 seconds"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:earthquake",
+    "spellId": 48307,
+    "rank": 2,
+    "learnLevel": 50,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 335,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "nature",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "earthquakeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 18000,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:earthquake",
+      "spellId": 48307,
+      "rank": 2,
+      "level": 50,
+      "fields": {
+        "school": "nature",
+        "referenceDamage": [
+          395,
+          446
+        ],
+        "referenceCost": 335,
+        "referenceCoefficient": 0.6,
+        "referenceSplash": 0.35,
+        "referenceAftershock": 0.3,
+        "referenceRadius": 10,
+        "referenceDelayMs": 4000,
+        "referenceSlowPct": 15
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "rank damage and cooldown",
+          "earlier": "227–253/343–387/510–551; 20 seconds",
+          "later": "262–291/395–446/587–634; 18 seconds"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "shaman",
+    "abilityId": "shaman:earthquake",
+    "spellId": 48308,
+    "rank": 3,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": 440,
+    "castMs": 2500,
+    "minRange": 0,
+    "maxRange": 36,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "nature",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+    "referenceSource": "https://octowow.st/shaman",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "earthquakeModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 18000,
+    "record": {
+      "classId": "shaman",
+      "abilityId": "shaman:earthquake",
+      "spellId": 48308,
+      "rank": 3,
+      "level": 60,
+      "fields": {
+        "school": "nature",
+        "referenceDamage": [
+          587,
+          634
+        ],
+        "referenceCost": 440,
+        "referenceCoefficient": 0.6,
+        "referenceSplash": 0.35,
+        "referenceAftershock": 0.3,
+        "referenceRadius": 10,
+        "referenceDelayMs": 4000,
+        "referenceSlowPct": 15
+      },
+      "unknown": [
+        "live rank DPS scaling, cost, outcome and timing",
+        "live bonus/refresh and area targeting semantics"
+      ],
+      "conflicts": [
+        {
+          "field": "rank damage and cooldown",
+          "earlier": "227–253/343–387/510–551; 20 seconds",
+          "later": "262–291/395–446/587–634; 18 seconds"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2327",
+      "liveVerified": false
+    }
+  }
+],
  // Dark Harvest candidate ranks and explicit temporal policy.
  ...[
   {
