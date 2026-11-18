@@ -1,12 +1,12 @@
 /* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
-import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261117-variant2';
+import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details1';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
 import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette2';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
-import {buildChart,MIN_POINTS} from './chart.mjs';
+import {buildChart,MIN_POINTS} from './chart.mjs?v=20261118-history1';
 import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
 
 // A different API origin is honoured only when the page itself is served from this machine (used for local testing against fixtures).
@@ -232,8 +232,12 @@ async function fillDetail(cell,item,unavailable){
     // price history
     const hist=section('Price history',true);
     const chart=buildChart(document,days,item.historical_avg??null);
-    if(chart){hist.body.append(chart);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the historical average.':'.'),'ah-chart-note'));}
+    const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
+    const summary=el('div',null,'ah-history-summary');
+    if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
+    if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the rolling historical average.':'.'),'ah-chart-note'));}
     else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
+    if(!chart&&values.length)hist.body.append(summary);
     if(days.length){
       const raw=section('Daily observations ('+days.length+')',false);
       raw.body.append(simpleTable(['Day','Lowest unit buyout','Quantity','Listings'],days.map(d=>[d.day,moneyNode(d.representative_unit),count(d.quantity),count(d.listings)])));
