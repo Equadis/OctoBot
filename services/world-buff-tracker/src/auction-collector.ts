@@ -18,12 +18,15 @@ import {fetchAuctionCatalogue,fetchAuctionItem,type AuctionItemMetadata} from ".
 import {createLogger,type Logger} from "./logger.js";
 import {resolveBuild} from "./net/client-resolver.js";
 import {VersionMismatchError} from "./errors.js";
+import {auctionWorldTargets,connectAuctionWorld,type WorldTarget} from "./auction-world-targets.js";
 
 try{process.loadEnvFile();}catch{/* Railway injects environment variables without a .env file. */}
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const endpoint=process.env.AUCTION_PUSH_URL?.trim()||"https://octometrics.eqvoice.workers.dev/api/auction/scan";
 let stopping=false;
 const sockets=new Set<Socket>();
+let lastWorldTarget:WorldTarget|null=null;
+const fallbackHosts=process.env.AUCTION_WORLD_FALLBACK_HOSTS||"";
 const positiveInt=(raw:string|undefined,fallback:number,min:number,max:number)=>{
  const n=raw?Number(raw):fallback;
  if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error("Invalid auction collector numeric configuration");
@@ -118,10 +121,13 @@ async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItem
 }
 function tcp(host:string,port:number):Promise<Socket>{
  return new Promise((resolve,reject)=>{
-  const socket=connect({host,port});
-  const timeout=setTimeout(()=>{socket.destroy();reject(new Error("Auction world TCP timeout"));},15000);
-  socket.once("connect",()=>{clearTimeout(timeout);socket.removeAllListeners("error");resolve(socket)});
-  socket.once("error",(error)=>{clearTimeout(timeout);socket.destroy();reject(error)});
+  const socket=connect({host,port});sockets.add(socket);
+  const fail=(error:Error)=>{clearTimeout(timeout);sockets.delete(socket);socket.destroy();reject(error);};
+  const closed=()=>fail(new Error("Auction world TCP closed before connecting"));
+  const timeout=setTimeout(()=>fail(new Error("Auction world TCP timeout")),15000);
+  socket.once("close",closed);
+  socket.once("connect",()=>{clearTimeout(timeout);socket.removeListener("close",closed);socket.removeListener("error",fail);resolve(socket)});
+  socket.once("error",fail);
  });
 }
 type Pending<T>={resolve:(value:T)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>};
@@ -132,8 +138,17 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  });
  const realm=auth.realms.find(r=>r.name.toLowerCase()==="n'zoth");
  if(!realm)throw new Error("N'Zoth unavailable in authentication realm list");
- const addr=config.worldHost?{host:config.worldHost,port:config.worldPort??8085}:parseAddress(realm.address);
- const socket=await tcp(addr.host,addr.port);sockets.add(socket);
+ const advertised=parseAddress(realm.address);
+ const override=config.worldHost?{host:config.worldHost,port:config.worldPort??8085}:null;
+ const targets=auctionWorldTargets(advertised,override,lastWorldTarget,fallbackHosts);
+ const {connection:socket,target:addr}=await connectAuctionWorld(targets,async target=>{
+  log.info("Auction world connecting to "+target.host+":"+target.port);
+  return tcp(target.host,target.port);
+ },()=>stopping,(target,error)=>{
+  if(lastWorldTarget?.host===target.host&&lastWorldTarget.port===target.port)lastWorldTarget=null;
+  log.warn("Auction world endpoint "+target.host+":"+target.port+" failed: "+(error instanceof Error?error.message:String(error)));
+ });
+ if(stopping){socket.destroy();sockets.delete(socket);throw new Error("Auction collector stopping");}
  let pendingQuery:Pending<AuctionResult>|null=null;
  let pendingItem:{id:number;resolve:(reply:ItemTemplateReply|null)=>void;timer:ReturnType<typeof setTimeout>}|null=null;
  let pendingHello:Pending<bigint>|null=null;
@@ -223,7 +238,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
  const world=new WorldClient({
    socket,account:config.account,sessionKey:auth.sessionKey,characterName:config.characterName,
    build:config.worldBuild,logger:log,handlers:{
-    onReady:()=>{log.info("OBPVEAH in world; waiting to discover nearby Auctioneer Fitch");},
+    onReady:()=>{lastWorldTarget=addr;log.info("Auction world connected via "+addr.host+":"+addr.port);log.info("OBPVEAH in world; waiting to discover nearby Auctioneer Fitch");},
     onWorldObjects:raw=>{
       if(!world.isReady||finished)return;
       const objects=parseUpdateObject(raw,world.selfGuid??undefined);
