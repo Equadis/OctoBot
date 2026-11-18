@@ -79,13 +79,13 @@ async function upload(req,env,action){
        return respond({ok:true,duplicate:true,status:existing.status});
      return bad('scan ID already used or different scan header',409);
    }
-   await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 hours')").run();
+   await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND COALESCE((SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id),created_at)<strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 minutes')").run();
    const unfinished=await first(db,"SELECT scan_id FROM ah_scans WHERE status='uploading' LIMIT 1");
    if(unfinished)return bad('another upload already in progress',409);
    // Partial unique D1 index also protects concurrent starts.
    try{
      await db.prepare("INSERT INTO ah_scans(scan_id,realm,status,started_at,reported_total) VALUES (?,?,'uploading',?,?)").bind(body.scan_id,env.AUCTION_REALM??"N'Zoth",body.started_at,body.reported_total).run();
-   }catch{return bad('another upload already in progress or duplicate scan ID',409)}
+   }catch(error){if(/unique constraint/i.test(String(error)))return bad('another upload already in progress or duplicate scan ID',409);return bad('database temporarily unavailable',503)}
    return respond({ok:true},201);
  }
  const scan=await first(db,"SELECT * FROM ah_scans WHERE scan_id=?",body.scan_id);
