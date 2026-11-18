@@ -12,6 +12,902 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Area damage and party healing candidate ranks.
+ ...[
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:rain-of-fire",
+    "spellId": 5740,
+    "rank": 1,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "tickMs": 1000,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:rain-of-fire",
+      "spellId": 5740,
+      "rank": 1,
+      "level": 20,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 172,
+        "classicCost": 295,
+        "archivedTickMs": 1000,
+        "classicTickMs": 2000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "channel interval",
+          "classic": 2000,
+          "archive": 1000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:rain-of-fire",
+    "spellId": 6219,
+    "rank": 2,
+    "learnLevel": 34,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "tickMs": 1000,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:rain-of-fire",
+      "spellId": 6219,
+      "rank": 2,
+      "level": 34,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 384,
+        "classicCost": 605,
+        "archivedTickMs": 1000,
+        "classicTickMs": 2000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "channel interval",
+          "classic": 2000,
+          "archive": 1000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:rain-of-fire",
+    "spellId": 11677,
+    "rank": 3,
+    "learnLevel": 46,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "tickMs": 1000,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:rain-of-fire",
+      "spellId": 11677,
+      "rank": 3,
+      "level": 46,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 620,
+        "classicCost": 885,
+        "archivedTickMs": 1000,
+        "classicTickMs": 2000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "channel interval",
+          "classic": 2000,
+          "archive": 1000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:rain-of-fire",
+    "spellId": 11678,
+    "rank": 4,
+    "learnLevel": 58,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+    "referenceSource": "https://octowow.st/index.php/warlock",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "tickMs": 1000,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:rain-of-fire",
+      "spellId": 11678,
+      "rank": 4,
+      "level": 58,
+      "fields": {
+        "school": "fire",
+        "classicTotal": 908,
+        "classicCost": 1185,
+        "archivedTickMs": 1000,
+        "classicTickMs": 2000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "channel interval",
+          "classic": 2000,
+          "archive": 1000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/warlock/rain-of-fire",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:prayer-of-healing",
+    "spellId": 596,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": null,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:prayer-of-healing",
+      "spellId": 596,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "holy",
+        "classicCost": 410,
+        "referencePartyCap": 5,
+        "referencePartyRadius": 30
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "healing and targeting",
+          "classic": "caster party within 30 yards",
+          "archive": "target ally party within 30 yards; healing rank changes"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:prayer-of-healing",
+    "spellId": 996,
+    "rank": 2,
+    "learnLevel": 40,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": null,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:prayer-of-healing",
+      "spellId": 996,
+      "rank": 2,
+      "level": 40,
+      "fields": {
+        "school": "holy",
+        "classicCost": 560,
+        "referencePartyCap": 5,
+        "referencePartyRadius": 30
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "healing and targeting",
+          "classic": "caster party within 30 yards",
+          "archive": "target ally party within 30 yards; healing rank changes"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:prayer-of-healing",
+    "spellId": 10960,
+    "rank": 3,
+    "learnLevel": 50,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": null,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:prayer-of-healing",
+      "spellId": 10960,
+      "rank": 3,
+      "level": 50,
+      "fields": {
+        "school": "holy",
+        "classicCost": 770,
+        "referencePartyCap": 5,
+        "referencePartyRadius": 30
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "healing and targeting",
+          "classic": "caster party within 30 yards",
+          "archive": "target ally party within 30 yards; healing rank changes"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:prayer-of-healing",
+    "spellId": 10961,
+    "rank": 4,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": null,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:prayer-of-healing",
+      "spellId": 10961,
+      "rank": 4,
+      "level": 60,
+      "fields": {
+        "school": "holy",
+        "classicCost": 1030,
+        "referencePartyCap": 5,
+        "referencePartyRadius": 30
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "healing and targeting",
+          "classic": "caster party within 30 yards",
+          "archive": "target ally party within 30 yards; healing rank changes"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:prayer-of-healing",
+    "spellId": 25316,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "cast",
+    "cost": null,
+    "castMs": 3000,
+    "minRange": 0,
+    "maxRange": 40,
+    "components": [
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "book-required-or-confirmed",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "referenceAvailableFromPhase": 3,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:prayer-of-healing",
+      "spellId": 25316,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "holy",
+        "classicCost": 1070,
+        "referencePartyCap": 5,
+        "referencePartyRadius": 30
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "healing and targeting",
+          "classic": "caster party within 30 yards",
+          "archive": "target ally party within 30 yards; healing rank changes"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/prayer-of-healing",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blast-wave",
+    "spellId": 11113,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/mage/",
+    "referenceSource": "https://octowow.st/index.php/mage",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blast-wave",
+      "spellId": 11113,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "fire",
+        "referenceRadius": 10,
+        "referenceSlowMs": 6000,
+        "referenceCooldownMs": 30000,
+        "referenceDamage": [
+          160,
+          192
+        ]
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "classic": 45000,
+          "archive": 30000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/mage/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blast-wave",
+    "spellId": 13018,
+    "rank": 2,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/mage/",
+    "referenceSource": "https://octowow.st/index.php/mage",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blast-wave",
+      "spellId": 13018,
+      "rank": 2,
+      "level": 36,
+      "fields": {
+        "school": "fire",
+        "referenceRadius": 10,
+        "referenceSlowMs": 6000,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "classic": 45000,
+          "archive": 30000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/mage/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blast-wave",
+    "spellId": 13019,
+    "rank": 3,
+    "learnLevel": 44,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/mage/",
+    "referenceSource": "https://octowow.st/index.php/mage",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blast-wave",
+      "spellId": 13019,
+      "rank": 3,
+      "level": 44,
+      "fields": {
+        "school": "fire",
+        "referenceRadius": 10,
+        "referenceSlowMs": 6000,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "classic": 45000,
+          "archive": 30000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/mage/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blast-wave",
+    "spellId": 13020,
+    "rank": 4,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/mage/",
+    "referenceSource": "https://octowow.st/index.php/mage",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blast-wave",
+      "spellId": 13020,
+      "rank": 4,
+      "level": 52,
+      "fields": {
+        "school": "fire",
+        "referenceRadius": 10,
+        "referenceSlowMs": 6000,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "classic": 45000,
+          "archive": 30000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/mage/",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "mage",
+    "abilityId": "mage:blast-wave",
+    "spellId": 13021,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": null,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "fire",
+        "coefficient": null,
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "source": "https://octowow.st/talents/mage/",
+    "referenceSource": "https://octowow.st/index.php/mage",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "areaModel",
+      "targetPolicy",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "mage",
+      "abilityId": "mage:blast-wave",
+      "spellId": 13021,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "fire",
+        "referenceRadius": 10,
+        "referenceSlowMs": 6000,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live rank damage/healing, costs and scaling",
+        "live target selection, coefficient, control and channel timing"
+      ],
+      "conflicts": [
+        {
+          "field": "cooldown",
+          "classic": 45000,
+          "archive": 30000
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/talents/mage/",
+      "liveVerified": false
+    }
+  }
+],
  // Bear, melee Hunter and Affliction reference candidates.
  ...[
   {
