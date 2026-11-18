@@ -23,7 +23,7 @@ document.title='OctoBot · Auction House – '+REALM;
 const realmHeading=$('ah-realm-heading');if(realmHeading)realmHeading.textContent='Auction House – '+REALM;
 const storage=(()=>{try{const s=window.localStorage;if(REALM==="N'Zoth")return s;return {getItem:key=>s.getItem('pvp:'+key),setItem:(key,value)=>s.setItem('pvp:'+key,value),removeItem:key=>s.removeItem('pvp:'+key)};}catch{return null;}})();
 const COLS=11;
-const state={filters:{...DEFAULTS},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,scan:{completedAt:null,scanning:false,startedAt:null,pages:'',collectorStatus:null},sortTouched:false,busy:0,favFailed:false};
+const state={filters:{...DEFAULTS},favSort:{sort:DEFAULTS.sort,dir:DEFAULTS.dir},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,scan:{completedAt:null,scanning:false,startedAt:null,pages:'',collectorStatus:null},sortTouched:false,busy:0,favFailed:false};
 
 function el(tag,content,className){
   const node=document.createElement(tag);
@@ -62,20 +62,24 @@ const itemName=item=>displayItemName(item);
 const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Historical avg.','Market %','Trend','Time left'];
 
 /** Keyboard-accessible headers for full-result (server-side) ordering. */
-function updateSortHeaders(){
- for(const th of document.querySelectorAll('th[data-sort-key]')){
-  const key=th.dataset.sortKey,active=state.filters.sort===key;
-  const dir=active?(state.filters.dir||SORT_DEFAULT_DIR[key]):null;
+function sortForTable(table){return table.dataset.sortScope==='favourites'?state.favSort:state.filters;}
+function updateSortHeaders(table){
+ if(!table){for(const t of document.querySelectorAll('table[data-sort-scope]'))updateSortHeaders(t);return;}
+ const sort=sortForTable(table);
+ for(const th of table.querySelectorAll('th[data-sort-key]')){
+  const key=th.dataset.sortKey,active=sort.sort===key;
+  const dir=active?(sort.dir||SORT_DEFAULT_DIR[key]):null;
   th.setAttribute('aria-sort',dir==='asc'?'ascending':dir==='desc'?'descending':'none');
   const arrow=th.querySelector('.ah-sort-arrow');
   if(arrow){arrow.textContent=dir==='asc'?'↑':dir==='desc'?'↓':'⇅';arrow.dataset.direction=dir||'none';arrow.setAttribute('aria-hidden','true');}
   th.classList.toggle('ah-sort-active',active);
-  const next=nextColumnSort(state.filters,key);
+  const next=nextColumnSort(sort,key);
   const button=th.querySelector('button');
   if(button){const action='Sort '+th.dataset.sortLabel+' '+(next.dir==='asc'?'ascending':'descending');button.title=action;button.setAttribute('aria-label',action);}
  }
 }
-function prepareSortHeaders(table){
+function prepareSortHeaders(table,scope='items'){
+ table.dataset.sortScope=scope;
  const headers=Array.from(table.querySelectorAll('thead th'));
  for(const [i,[label,key]] of COLUMN_SORTS.entries()){
   const th=headers[i+1];if(!th)continue;
@@ -83,15 +87,15 @@ function prepareSortHeaders(table){
   const button=el('button',null,'ah-sort-header');button.type='button';
   button.append(el('span',label,'ah-sort-title'),el('span','⇅','ah-sort-arrow'));
   button.addEventListener('click',()=>{
-   const next=nextColumnSort(state.filters,key);
-   Object.assign(state.filters,next);
-   state.sortTouched=true;state.page=0;
-   updateSortHeaders();
-   void refreshItems();void refreshFavourites();
+   const sort=sortForTable(table);
+   Object.assign(sort,nextColumnSort(sort,key));
+   updateSortHeaders(table);
+   if(scope==='favourites'){void refreshFavourites();}
+   else{state.sortTouched=true;state.page=0;void refreshItems();}
   });
   th.replaceChildren(button);
  }
- updateSortHeaders();
+ updateSortHeaders(table);
 }
 
 function measureNames(root){
@@ -309,7 +313,7 @@ async function refreshFavourites(){
   }
   let data=null;
   state.favFailed=false;
-  try{data=await request('/api/auction/items?'+buildParams({...DEFAULTS,sort:state.filters.sort,dir:state.filters.dir},{limit:100,keys:apiKeys(state.fav)}));}catch{state.favFailed=true;}
+  try{data=await request('/api/auction/items?'+buildParams({...DEFAULTS,...state.favSort},{limit:100,keys:apiKeys(state.fav)}));}catch{state.favFailed=true;}
   if(id!==state.favId)return;
   const wasFiltered=state.listingFiltered;
   state.listingFiltered=false;
@@ -326,10 +330,9 @@ async function refreshFavourites(){
     if(live)appendItemRow(tbody,live);else appendItemRow(tbody,f,{unavailable:true,error:state.favFailed});
   }
   table.append(tbody);
-  prepareSortHeaders(table);
+  prepareSortHeaders(table,'favourites');
   const scroll=el('div',null,'ah-scroll');scroll.append(table);
   body.replaceChildren(scroll);
-  updateSortHeaders();
   state.listingFiltered=wasFiltered;
 }
 
