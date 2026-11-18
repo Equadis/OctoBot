@@ -16,7 +16,18 @@ export function openCheckpoint(payload,zone,secret){
  if(state.version!==1||!Array.isArray(state.slots)||!Array.isArray(state.ended)||!Array.isArray(state.seen)||!state.locks)throw Error("Invalid checkpoint schema");
  return state;
 }
-export function createRaidPersistence({url,token,secret,zone,fetcher=fetch}){
+/** Legacy lockout timestamps represent the time a roster member was last locked.
+ * An active slot always blocks a clean cutover, regardless of its age. */
+export function legacyStateNeedsMigration(state,lockoutMs,now=Date.now()){
+ if(!state||!Array.isArray(state.slots)||state.slots.length)return true;
+ const locks=state.lockouts??{};
+ if(!locks||typeof locks!=="object"||Array.isArray(locks))return true;
+ const values=Object.values(locks);
+ if(!values.length)return false;
+ if(!Number.isSafeInteger(lockoutMs)||lockoutMs<=0)return true;
+ return values.some(at=>!Number.isSafeInteger(at)||at<=0||at>now||now-at<lockoutMs);
+}
+export function createRaidPersistence({url,token,secret,zone,fetcher=fetch,lockoutMs,now=Date.now}){
  keyFor(secret);
  const headers={authorization:"Bearer "+token,"content-type":"application/json"};
  async function req(path,method="GET",body){
@@ -30,7 +41,7 @@ export function createRaidPersistence({url,token,secret,zone,fetcher=fetch}){
    if(r.status===200){tracker.restoreCheckpoint(openCheckpoint(r.data.payload,zone,secret));lastSaved=r.data.observedAt;return "restored";}
    if(r.status!==404)throw Error("Raid checkpoint read HTTP "+r.status);
    const old=await req("state?zone="+zone);
-   if(old.status===200&&(old.data.state?.slots?.length||Object.keys(old.data.state?.lockouts??{}).length))throw Error("Legacy raid state requires migration before starting "+zone);
+   if(old.status===200&&legacyStateNeedsMigration(old.data.state,lockoutMs,now()))throw Error("Legacy raid state requires migration before starting "+zone);
    if(![200,404].includes(old.status))throw Error("Legacy state read HTTP "+old.status);
    return "empty";
   },
