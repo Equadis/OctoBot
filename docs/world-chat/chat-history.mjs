@@ -1,9 +1,21 @@
 export const HISTORY_DAYS=7,HISTORY_MS=HISTORY_DAYS*86400000;
 export const historyPageSize=query=>query.trim()?100:1000;
-export function searchTerms(query){return String(query??"").trim().toLowerCase().split(/\s+/).filter(Boolean);}
+export function searchTerms(query){
+ const text=String(query??"").trim().toLowerCase();
+ const terms=[];const pattern=/(?:^|\s)(from|item):(?:"([^"]*)"|([^\s"]+)(?:\s+([^]*?))?(?=\s+(?:from|item):|$))|(?:^|\s)([^\s]+)/g;
+ for(const match of text.matchAll(pattern)){
+  if(!match[1]){terms.push({kind:"text",value:match[5]});continue;}
+  let value=(match[2]??match[3]??"").trim();
+  if(match[1]==="item"&&match[2]===undefined&&match[4])value+=" "+match[4].trim();
+  if(value)terms.push({kind:match[1],value});
+  if(match[1]==="from"&&match[4])for(const word of match[4].trim().split(/\s+/).filter(Boolean))terms.push({kind:"text",value:word});
+ }
+ return terms;
+}
 export function matchesChat(row,query){
  const hay=[row.author,row.guild,row.message].filter(Boolean).join(" ").toLowerCase();
- return searchTerms(query).every(t=>hay.includes(t));
+ const parts=Array.isArray(row.parts)?row.parts.filter(p=>Number.isSafeInteger(p?.itemId)&&p.itemId>0):[];
+ return searchTerms(query).every(({kind,value})=>kind==="from"?String(row.author??"").toLowerCase()===value:kind==="item"?(/^\d+$/.test(value)?parts.some(p=>p.itemId===Number(value)):parts.some(p=>String(p.text??"").toLowerCase().includes(value))):hay.includes(value));
 }
 export function compareChat(a,b){return a.time-b.time||(a.id<b.id?-1:a.id>b.id?1:0);}
 export function mergeChat(existing,incoming){const map=new Map(existing.map(r=>[r.id,r]));for(const r of incoming)map.set(r.id,r);return [...map.values()].sort(compareChat);}
