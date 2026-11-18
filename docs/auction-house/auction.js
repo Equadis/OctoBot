@@ -42,7 +42,7 @@ function moneyNode(n){
   wrap.setAttribute('aria-label',parts.map(p=>(p.number==='<1'?'less than 1':p.amount)+' '+COIN[p.unit]).join(' '));
   for(const p of parts){
     wrap.append(el('span',p.number,'ah-num'));
-    const coin=document.createElement('img');coin.className='ah-coin';coin.src='../img/coin-'+COIN[p.unit]+'.png';coin.alt='';coin.width=16;coin.height=16;coin.title=COIN[p.unit];
+    const coin=document.createElement('img');coin.className='ah-coin';coin.src='../img/coin-'+COIN[p.unit]+'.png';coin.alt='';coin.width=16;coin.height=16;
     wrap.append(coin);
   }
   return wrap;
@@ -174,7 +174,7 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
     if(bid===null)td(tr,'-');else moneyTd(tr,bid);
     moneyTd(tr,item.historical_avg);td(tr,pct(item.market_pct));
     const t=trend(item.trend_pct),tc=td(tr,t.label,t.className);
-    tc.title=item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct));
+    tc.setAttribute('aria-label',item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct)));
     td(tr).append(timeNode(item.time_left_ms,item.captured_at));
   }
   for(const [index,c] of Array.from(tr.children).entries())c.dataset.label=unavailable&&index===2?'Status':COLUMNS[index];
