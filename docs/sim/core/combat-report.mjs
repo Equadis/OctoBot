@@ -1,7 +1,7 @@
 import {attributedActorRates} from './combat-attribution.mjs';
 import {encounterRates,runIterations,pairedDifference} from './combat-statistics.mjs';
 const finite=(x,n)=>{if(!Number.isFinite(x))throw new Error('Invalid '+n);return x;};
-const entry=()=>({damage:0,healing:0,overkill:0,overheal:0,absorbed:0,grossThreat:0,threatReduction:0,unknownThreatEvents:0,attacks:0,landed:0,crits:0,outcomes:{},procs:0,resourceChanges:{}});
+const entry=()=>({damage:0,enemyDamage:0,nonEnemyDamage:0,healing:0,overkill:0,overheal:0,absorbed:0,grossThreat:0,threatReduction:0,unknownThreatEvents:0,attacks:0,landed:0,crits:0,outcomes:{},procs:0,resourceChanges:{}});
 const add=(map,k,n)=>{if(!Object.hasOwn(map,k))map[k]=0;map[k]+=n;};
 export function combatReport(result){
  if(!result?.attribution||!Array.isArray(result.events)||!Number.isFinite(result.durationMs)||result.durationMs<=0)throw new Error('Complete positive-duration encounter required');
@@ -13,7 +13,7 @@ export function combatReport(result){
   if(e.type==='damage'||e.type==='heal'){
    if(e.type==='damage'){r.damage+=finite(e.effective,'effective damage');r.overkill+=finite(e.overkill,'overkill');}
    else{r.healing+=finite(e.effective,'effective healing');r.overheal+=finite(e.overheal,'overheal');}
-   if(e.generatedThreat==null)r.unknownThreatEvents++;else r.grossThreat+=finite(e.generatedThreat,'generated threat');
+   if(e.generatedThreat==null&&!(e.type==='damage'&&e.targetId===e.actorId))r.unknownThreatEvents++;else r.grossThreat+=finite(e.generatedThreat,'generated threat');
   }else if(e.type==='attack-result'){
    r.attacks++;if(e.landed===true)r.landed++;if(e.critical===true&&e.landed===true)r.crits++;add(r.outcomes,e.outcome,1);
   }else if(e.type==='absorb')r.absorbed+=finite(e.amount,'absorbed damage');
@@ -25,11 +25,12 @@ export function combatReport(result){
   }
  }
  const actorReports={};for(const actor of Object.keys(result.attribution.actors)){
-  const a=byActor.get(actor)||new Map();const rows=Object.fromEntries(a);
+  const a=byActor.get(actor)||new Map();const rows=Object.fromEntries(a);for(const [source,line] of Object.entries(rows)){line.enemyDamage=result.attribution.actors[actor].bySource[source]?.enemyDamage??0;line.nonEnemyDamage=line.damage-line.enemyDamage;if(line.nonEnemyDamage<0||line.enemyDamage<0)throw Error('Inconsistent enemy damage attribution');}
   const generated=Object.values(rows).reduce((n,r)=>n+r.grossThreat,0),ledger=result.threat?.generated?.[actor]??0;
   const threatActor=result.threat?.actors?.includes(actor);
   actorReports[actor]={rates:{...attributedActorRates(result,actor),grossTps:threatActor?encounterRates(result,actor).actorGrossTps:null},bySource:rows,unallocatedThreat:threatActor?ledger-generated:null,threatSourceComplete:threatActor&&Math.abs(ledger-generated)<1e-9&&Object.values(rows).every(r=>r.unknownThreatEvents===0)};
  }
+ unattributed.enemyDamage=result.attribution.unattributed.totals.enemyDamage;unattributed.nonEnemyDamage=unattributed.damage-unattributed.enemyDamage;
  return {durationSeconds:seconds,engineValidated:false,actors:actorReports,unattributed,auras:result.auras,events:result.events.length};
 }
 // A scenario factory must build a new encounter for each paired seed.
