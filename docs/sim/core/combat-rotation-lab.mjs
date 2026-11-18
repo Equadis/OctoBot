@@ -33,6 +33,7 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  if(['hunter:carve','hunter:multi-shot'].includes(rank.abilityId))policy.sharedShotCooldownMs=10000;
  for(const field of rank.requiredPolicy??[]){
+  if(field==='drainSoulModel'){policy.drainSoulModel={totalBase:rank.record.fields.historicalTotal,totalCoefficient:null,durationMs:6000,tickMs:1000,tickCost:rank.record.fields.historicalTickCost,grantShard:false};}
   if(field==='areaModel')policy.areaModel={min:rank.record.fields.referenceDamage?.[0]??rank.record.fields.classicTotal??null,max:rank.record.fields.referenceDamage?.[1]??rank.record.fields.classicTotal??null,coefficient:null,cap:rank.abilityId==='priest:prayer-of-healing'?5:null,...(rank.abilityId==='warlock:rain-of-fire'?{durationMs:8000,tickMs:1000}:rank.abilityId==='mage:blast-wave'?{radius:10,controlEnabled:null,durationMs:6000,slowPct:null}:{targeting:'explicit-party-near-anchor'})};
   if(field==='siphonLifeModel')policy.siphonLifeModel={totalBase:rank.record.fields.classicTotal,totalCoefficient:null,durationMs:30000,intervalMs:null};
   if(field==='rapidFireModel')policy.rapidFireModel={castReductionPct:null};
@@ -113,6 +114,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  if(build.classId==='shaman'&&build.classOptions.mhImbue&&build.classOptions.mhImbue!=='None')encounter.imbueModel=imbueTemplate(build.classOptions.mhImbue,selected.filter(r=>r.components.some(c=>['weapon','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId));
  if(encounter.imbueModel?.name==='Frostbrand Weapon'&&Number(build.talents?.['263']??0)>0)encounter.imbueModel.elementalWeapons={chanceMode:null,frostShockScope:null,criticalMultiplier:null};
  if(encounter.imbueModel?.name==='Rockbiter Weapon'&&Number(build.talents?.['263']??0)>0)encounter.imbueModel.elementalWeapons={bulwarkBasis:null};
+ if(selected.some(r=>r.abilityId==='warlock:drain-soul')){encounter.soulShardCount=0;encounter.soulShardCap=null;encounter.soulShardEligibleTargets=[];}
  if(build.classId==='rogue'&&selected.some(r=>r.requiresStealth||r.abilityId==='rogue:vanish')){encounter.stealthPolicy={initial:null,autoPolicy:null,breakOnIncoming:null};if(selected.some(r=>r.abilityId==='rogue:vanish'))encounter.flashPowderCount=null;}
  if(build.classId==='rogue'){const eligible=selected.filter(r=>r.components.some(c=>['weapon','combo','physical-flat','physical-ap'].includes(c.kind))).map(r=>r.abilityId);encounter.poisonModel={};for(const [hand,key] of [['mainhand','mhPoison'],['offhand','ohPoison']]){const name=build.classOptions[key];if(name&&name!=='None')encounter.poisonModel[hand]=poisonTemplate(name,eligible);}}
  if(build.classId==='druid'&&['Cat','Bear'].includes(build.classOptions.form)){encounter.feralModel=feralTemplate(build.classOptions.form);if(build.classOptions.form==='Cat')encounter.initialComboPoints=0;}

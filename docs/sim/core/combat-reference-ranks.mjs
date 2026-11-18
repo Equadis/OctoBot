@@ -12,6 +12,374 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Drain Soul published candidate identities and historical numerical evidence.
+ ...[
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:drain-soul",
+    "spellId": 1120,
+    "rank": 1,
+    "learnLevel": 10,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 15,
+    "castMs": 6000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "drainSoulModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:drain-soul",
+      "spellId": 1120,
+      "rank": 1,
+      "level": 10,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 110,
+        "historicalInitialCost": 15,
+        "historicalTickCost": 10,
+        "historicalPerTickCoefficient": 0.2,
+        "referenceDurationMs": 6000,
+        "referenceTickMs": 1000
+      },
+      "unknown": [
+        "live damage, effective channel interval, mana charges, coefficient and shard eligibility",
+        "live application resistance and haste interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana schedule",
+          "archiveEarlier": "flat mana cost",
+          "archiveLater": "initial plus per-second cost"
+        },
+        {
+          "field": "damage progression",
+          "archiveEarlier": "increasing tick damage",
+          "archiveLater": "uniform tick damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:drain-soul",
+    "spellId": 8288,
+    "rank": 2,
+    "learnLevel": 24,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 35,
+    "castMs": 6000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "drainSoulModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:drain-soul",
+      "spellId": 8288,
+      "rank": 2,
+      "level": 24,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 280,
+        "historicalInitialCost": 35,
+        "historicalTickCost": 25,
+        "historicalPerTickCoefficient": 0.2,
+        "referenceDurationMs": 6000,
+        "referenceTickMs": 1000
+      },
+      "unknown": [
+        "live damage, effective channel interval, mana charges, coefficient and shard eligibility",
+        "live application resistance and haste interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana schedule",
+          "archiveEarlier": "flat mana cost",
+          "archiveLater": "initial plus per-second cost"
+        },
+        {
+          "field": "damage progression",
+          "archiveEarlier": "increasing tick damage",
+          "archiveLater": "uniform tick damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:drain-soul",
+    "spellId": 8289,
+    "rank": 3,
+    "learnLevel": 38,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 70,
+    "castMs": 6000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "drainSoulModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:drain-soul",
+      "spellId": 8289,
+      "rank": 3,
+      "level": 38,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 460,
+        "historicalInitialCost": 70,
+        "historicalTickCost": 40,
+        "historicalPerTickCoefficient": 0.2,
+        "referenceDurationMs": 6000,
+        "referenceTickMs": 1000
+      },
+      "unknown": [
+        "live damage, effective channel interval, mana charges, coefficient and shard eligibility",
+        "live application resistance and haste interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana schedule",
+          "archiveEarlier": "flat mana cost",
+          "archiveLater": "initial plus per-second cost"
+        },
+        {
+          "field": "damage progression",
+          "archiveEarlier": "increasing tick damage",
+          "archiveLater": "uniform tick damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:drain-soul",
+    "spellId": 11675,
+    "rank": 4,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 100,
+    "castMs": 6000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "drainSoulModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:drain-soul",
+      "spellId": 11675,
+      "rank": 4,
+      "level": 52,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 760,
+        "historicalInitialCost": 100,
+        "historicalTickCost": 55,
+        "historicalPerTickCoefficient": 0.2,
+        "referenceDurationMs": 6000,
+        "referenceTickMs": 1000
+      },
+      "unknown": [
+        "live damage, effective channel interval, mana charges, coefficient and shard eligibility",
+        "live application resistance and haste interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana schedule",
+          "archiveEarlier": "flat mana cost",
+          "archiveLater": "initial plus per-second cost"
+        },
+        {
+          "field": "damage progression",
+          "archiveEarlier": "increasing tick damage",
+          "archiveLater": "uniform tick damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:drain-soul",
+    "spellId": 51687,
+    "rank": 5,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": 135,
+    "castMs": 6000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "drainSoulModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:drain-soul",
+      "spellId": 51687,
+      "rank": 5,
+      "level": 60,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 950,
+        "historicalInitialCost": 135,
+        "historicalTickCost": 65,
+        "historicalPerTickCoefficient": 0.2,
+        "referenceDurationMs": 6000,
+        "referenceTickMs": 1000
+      },
+      "unknown": [
+        "live damage, effective channel interval, mana charges, coefficient and shard eligibility",
+        "live application resistance and haste interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "mana schedule",
+          "archiveEarlier": "flat mana cost",
+          "archiveLater": "initial plus per-second cost"
+        },
+        {
+          "field": "damage progression",
+          "archiveEarlier": "increasing tick damage",
+          "archiveLater": "uniform tick damage"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/forum/viewtopic.php?t=2328",
+      "liveVerified": false
+    }
+  }
+],
  // Area damage and party healing candidate ranks.
  ...[
   {
