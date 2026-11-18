@@ -17,8 +17,28 @@ export function validLine(line,now){
   if(!message.trim()||!author)return null;
   return {...line,author,message,storedMessage};
 }
+// Fixed-origin, read-only item detail lookup for browser clients that cannot read the DB cross-origin.
+export async function itemTooltipRoute(url,fetcher=fetch,Rewriter=globalThis.HTMLRewriter){
+ const id=url.searchParams.get("id")??"";
+ if(!/^[1-9][0-9]{0,9}$/.test(id)||Number(id)>2147483647)return reply({error:"invalid item id"},400);
+ if(typeof Rewriter!=="function")return reply({error:"item lookup unavailable"},503);
+ try{
+  const response=await fetcher("https://octowow.st/db/?item="+id,{redirect:"error",headers:{Accept:"text/html"},signal:AbortSignal.timeout(7000),cf:{cacheEverything:true,cacheTtl:86400}});
+  if(!response.ok)return reply({error:"item database unavailable"},502);
+  const selector="#tooltip"+id+"-generic";let found=false,raw="";
+  const append=text=>{if(raw.length<16000)raw+=text.slice(0,16000-raw.length);};
+  const rewriter=new Rewriter().on(selector,{element(){found=true;},text(chunk){append(chunk.text);}});
+  for(const tag of ["br","table","div","tr","td","th"])rewriter.on(selector+" "+tag,{element(el){if(tag==="br"||tag==="tr"||tag==="div")append("\n");if(tag!=="br")el.onEndTag(()=>append("\n"));}});
+  await rewriter.transform(response).arrayBuffer();
+  const tooltipText=raw.replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n\s*\n/g,"\n").split("\n").map(line=>line.trim()).filter(Boolean).join("\n");
+  if(!found||!tooltipText)return reply({error:"item tooltip not found"},404);
+  return new Response(JSON.stringify({id:Number(id),tooltipText,source:"OctoWoW DB"}),{headers:{"Content-Type":"application/json; charset=utf-8","Access-Control-Allow-Origin":"https://equadis.github.io","Cache-Control":"public, max-age=3600","Vary":"Origin"}});
+ }catch{return reply({error:"item database unavailable"},502);}
+}
+
 export async function worldChatRoute(request,env){
   const url=new URL(request.url);
+  if(url.pathname==="/api/world-chat/item-tooltip"&&request.method==="GET")return itemTooltipRoute(url);
   if(!["/api/world-chat","/api/world-chat/ingest","/api/world-chat/history"].includes(url.pathname))return null;
   const now=Date.now(), db=env.DB;
   
