@@ -37,6 +37,8 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'periodic-damage',school:'shadow',min:+m[1],max:+m[1],intervalMs:+m[2]*1000,durationMs:+m[3]*1000,requiresLeech:true}};
  m=s.match(/^Equip: Gives a chance when your harmful spells land to deal (\d+) Shadow damage and restore (\d+) mana to you\.?$/i);
  if(m)return {trigger:'landed',effect:{kind:'compound',effects:[{kind:'damage',school:'shadow',min:+m[1],max:+m[1]},{kind:'resource',resource:'mana',amount:+m[2]}]}};
+ m=s.match(/^Chance on hit: Increases your attack speed by (\d+)% for (\d+) sec\.?$/i);
+ if(m)return {trigger:'landed',eligibility:'melee',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:[{stat:'meleeHasteFactor',mode:'multiplyPct',value:+m[1]}]}};
  return null;
 }
 export function compileEquipmentTooltips(gear,build,requests=[]){
