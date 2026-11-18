@@ -205,14 +205,14 @@ async function readApi(url,env){
    const prev=await previous(db,scan);
    const query=buildItemsQuery(url.searchParams,scan,prev?.scan_id);
    if(query.error)return bad(query.error);
-   const totalRow=await first(db,query.countSql,...query.binds);
-   const rows=await all(db,query.sql,...query.binds,query.limit,query.offset);
+   const rows=await all(db,query.pageSql,...query.binds,query.limit,query.offset);
+   const total=rows.length?rows[0].total_rows:query.offset>0?(await first(db,query.countSql,...query.binds)).n:0;
    return respond({items:rows.map(r=>({item_id:r.item_id,variant:r.variant,item_name:r.item_name,quality:r.quality,icon_url:r.icon_url,
      item_level:r.item_level,req_level:r.req_level,class_id:r.class_id,subclass_id:r.subclass_id,slot_id:r.slot_id,
      quantity:r.quantity,listings:r.listings,unit_buyout:r.unit_buyout,stack_buyout:r.stack_buyout,current_bid:r.current_bid,start_bid:r.start_bid,
      historical_avg:r.avg_unit??null,historical_days:r.days??0,average_samples:r.price_samples??0,average_excluded:r.price_excluded??0,average_source:r.average_source??null,market_pct:r.market_pct,trend_pct:r.trend_pct,previous_unit:r.previous_unit??null,
      time_left_ms:r.time_left_ms,captured_at:r.captured_at,latest_listing_seen_at:r.latest_listing_seen_at})),
-     total:totalRow.n,has_more:query.offset+rows.length<totalRow.n,limit:query.limit,offset:query.offset,
+     total,has_more:query.offset+rows.length<total,limit:query.limit,offset:query.offset,
      listing_filtered:query.listingFiltered,scan_id:scan.scan_id,completed_at:scan.completed_at});
  }
  const detail=url.pathname.match(/^\/api\/auction\/(item|history)\/(\d+)$/);
