@@ -29,3 +29,6 @@ Ordinary direct magical damage with explicit spell outcome bins supports tempora
 
 ## General spell haste
 Explicit eligible ability IDs use spellHasteFactor at action start; cast duration and optionally whole-tick channels and GCD are shortened. Existing class-specific reductions remain separate. Channel tick count is preserved. Mid-cast changes do not retime existing casts. GCD scaling and floor must be supplied explicitly rather than inferred from Classic rules. Live timing and interactions remain unverified.
+
+## Dynamic physical defence
+Calculated incoming physical attacks rebuild the supplied one-roll table from temporary armour, defence skill, dodge, parry, block chance, block value and crit suppression deltas. Class block charges continue to use the same selected outcome. Defence skill changes the reference miss formula; other avoidance and crit-suppression changes are explicit separate deltas, not inferred from defence conversion. Scripted pre-resolved damage is unchanged. Live validation and dynamic spell resistance remain outstanding.

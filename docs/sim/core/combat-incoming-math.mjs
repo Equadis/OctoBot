@@ -20,11 +20,12 @@ export function compileIncomingAttack(attack){
  expectedOutcome(input);
  return input;
 }
-export function resolveIncomingAttack(attack,compiled,random,defence=null){
- if(defence&&attack.school==='physical'){
+export function resolveIncomingAttack(attack,compiled,random,defence=null,stats=null){
+ if((defence||stats)&&attack.school==='physical'){
   const model=attack.attackModel,base=model.table;
-  const table=physicalAttackTable({...base,avoidance:{...base.avoidance,blockPct:Math.min(100,base.avoidance.blockPct+defence.blockBonusPct)},blockValue:base.blockValue*defence.blockValueFactor,provenance:model.provenance});
-  compiled={...compiled,outcomes:table.outcomes};
+  const clamp=v=>Math.max(0,Math.min(100,v));const delta=k=>{const v=stats?.[k]??0;if(!Number.isFinite(v))throw Error('Invalid dynamic defence: '+k);return v;};
+  const table=physicalAttackTable({...base,...(base.type==='ranged'?{}:{targetDefense:Math.max(0,base.targetDefense+delta('defense'))}),avoidance:{...base.avoidance,dodgePct:clamp(base.avoidance.dodgePct+delta('dodge')),parryPct:clamp(base.avoidance.parryPct+delta('parry')),blockPct:clamp(base.avoidance.blockPct+(defence?.blockBonusPct??0)+delta('block'))},critSuppressionPct:clamp(base.critSuppressionPct+delta('critSuppression')),blockValue:Math.max(0,base.blockValue+delta('blockValue'))*(defence?.blockValueFactor??1),provenance:model.provenance});
+  compiled={...compiled,outcomes:table.outcomes,mitigation:physicalArmourReduction({...model.armourModel,armour:Math.max(0,model.armourModel.armour+delta('armour'))})};
  }
  const hit=sampleAttack({...compiled,random});
  defence?.afterRoll?.(hit);
