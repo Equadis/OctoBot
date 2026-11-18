@@ -244,7 +244,25 @@ export async function auctionRoute(request,env){
  }
  if(request.method==='GET'){
    if(url.pathname==='/api/auction/missing-sellers'&&(!env.AUCTION_PUSH_TOKEN||request.headers.get('authorization')!=='Bearer '+env.AUCTION_PUSH_TOKEN))return bad('unauthorised',401);
-   return readApi(url,env);
+   if(url.pathname==='/api/auction/missing-sellers'||url.pathname==='/api/auction/incomplete-metadata'||url.pathname==='/api/auction/missing-metadata')return readApi(url,env);
+   // Collapse repeated public browser reads at the edge. Never cache authenticated
+   // endpoints, failures, or writes. Keep live scan status on a shorter TTL.
+   const cache=globalThis.caches?.default;
+   if(!cache)return readApi(url,env);
+   const key=new Request(url.href,{method:'GET'});
+   try{const hit=await cache.match(key);if(hit)return hit;}catch{}
+   let result;
+   try{result=await readApi(url,env);}catch(error){
+     console.warn('Auction read temporarily unavailable',String(error).slice(0,200));
+     return new Response(JSON.stringify({error:'database temporarily unavailable'}),{status:503,headers:{'Content-Type':'application/json','Retry-After':'15','Cache-Control':'no-store',...CORS}});
+   }
+   if(result.ok){
+     const ttl=url.pathname.endsWith('/scan-status')?3:15;
+     const headers=new Headers(result.headers);headers.set('Cache-Control','public, max-age='+ttl);
+     result=new Response(result.body,{status:result.status,headers});
+     try{await cache.put(key,result.clone());}catch{}
+   }
+   return result;
  }
  return bad('method not allowed',405);
 }
@@ -254,11 +272,16 @@ export async function auctionCleanup(env){
  await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"));
 }
 async function cleanupRealm(db){
- // Retain the three latest complete scans for movement comparisons; historical prices are compact daily rows.
- await db.prepare("DELETE FROM ah_listings WHERE scan_id IN (SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='uploading' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')) OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
- await db.prepare("DELETE FROM ah_pages WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='uploading' OR (status='complete' AND scan_id IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)))").run();
- await db.prepare("DELETE FROM ah_item_points WHERE scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
- await db.prepare("DELETE FROM ah_scans WHERE status='failed' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days')").run();
- await db.prepare("DELETE FROM ah_scans WHERE status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC LIMIT 3)").run();
- await db.prepare("DELETE FROM ah_daily WHERE day < date('now','-365 days')").run();
+ // The three latest complete scans and all compact price history remain readable.
+ // Limit write amplification per SQL statement; incomplete cleanup resumes on the next cron.
+ const expired="SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC,scan_id DESC LIMIT 3))";
+ await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND COALESCE((SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id),created_at)<strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 minutes')").run();
+ for(const table of ["ah_listings","ah_pages","ah_item_points"]){
+   for(let i=0;i<4;i++){
+     const result=await db.prepare("DELETE FROM "+table+" WHERE rowid IN (SELECT rowid FROM "+table+" WHERE scan_id IN ("+expired+") LIMIT 2000)").run();
+     if(result?.meta?.changes===0)break;
+   }
+ }
+ await db.prepare("DELETE FROM ah_scans WHERE (status='failed' AND started_at<strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days') OR status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC,scan_id DESC LIMIT 3)) AND NOT EXISTS(SELECT 1 FROM ah_listings l WHERE l.scan_id=ah_scans.scan_id) AND NOT EXISTS(SELECT 1 FROM ah_pages p WHERE p.scan_id=ah_scans.scan_id) AND NOT EXISTS(SELECT 1 FROM ah_item_points i WHERE i.scan_id=ah_scans.scan_id)").run();
+ await db.prepare("DELETE FROM ah_daily WHERE rowid IN (SELECT rowid FROM ah_daily WHERE day < date('now','-365 days') LIMIT 2000)").run();
 }
