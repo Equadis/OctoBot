@@ -25,6 +25,8 @@
 .ah-field-end{justify-content:flex-end}
 .ah-inline{display:flex;gap:6px}
 .ah-actions{flex-direction:row;gap:8px;margin-left:auto}
+.ah-realm-actions{align-items:flex-end;flex-wrap:wrap}.ah-realm-actions #ah-realm{min-width:150px}
+@media(max-width:560px){.ah-realm-actions>.ah-field{flex:1 1 100%}.ah-realm-actions #ah-realm{width:100%;min-width:0}}
 .ah-filters input:not([type=checkbox]),.ah-filters select,.ah-btn{box-sizing:border-box;height:38px;min-height:38px;padding:0 12px;background:#182333;border:1px solid var(--line);border-radius:4px;color:#dce5ee;font:inherit;font-size:12px}
 .ah-filters input:not([type=checkbox]){width:100%;min-width:90px}
 .ah-filters select{min-width:150px;max-width:100%}
