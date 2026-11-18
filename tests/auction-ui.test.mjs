@@ -157,10 +157,9 @@ test('money is copper-based and money input parses the same units back',()=>{
   assert.equal(parseMoney('2g 50s'),25000);assert.equal(parseMoney('1g20s5c'),12005);assert.equal(parseMoney('75s'),7500);assert.equal(parseMoney('300'),300);
   assert.equal(parseMoney(''),undefined);assert.equal(parseMoney('g'),null);assert.equal(parseMoney('1.5g'),null);assert.equal(parseMoney('99999999999'),null);
 });
-test('trend arrows follow the 10% and 25% thresholds, and market % is plain',()=>{
-  const arrows=[[null,'\u2013'],[9.99,'\u2192'],[-9.99,'\u2192'],[10,'\u2191'],[24.99,'\u2191'],[25,'\u2191\u2191'],[-10,'\u2193'],[-24.99,'\u2193'],[-25,'\u2193\u2193']];
-  for(const [n,label] of arrows)assert.equal(trend(n).label,label,String(n));
-  assert.equal(trend(30).className,'ah-change-up');assert.equal(trend(-30).className,'ah-change-down');
+test('trend arrows follow symmetric 5%, 10%, and 25% thresholds and seven colours',()=>{
+  const arrows=[[null,'–','ah-change-unknown'],[0,'→','ah-change-neutral'],[4.99,'→','ah-change-neutral'],[-4.99,'→','ah-change-neutral'],[5,'↗︎','ah-change-up-slight'],[9.99,'↗︎','ah-change-up-slight'],[-5,'↘︎','ah-change-down-slight'],[-9.99,'↘︎','ah-change-down-slight'],[10,'↑','ah-change-up'],[24.99,'↑','ah-change-up'],[25,'↑↑','ah-change-up-strong'],[-10,'↓','ah-change-down'],[-24.99,'↓','ah-change-down'],[-25,'↓↓','ah-change-down-strong']];
+  for(const [n,label,cls] of arrows){assert.equal(trend(n).label,label,String(n));assert.equal(trend(n).className,cls,String(n));}
   assert.equal(pct(250),'250.0%');assert.equal(pct(null),'No data');
 });
 test('remaining time is an estimate and says so when unknown',()=>{

@@ -2,9 +2,9 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261117-time-palette2';
+import {money,moneyParts,pct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261118-trend7';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
-import {DEFAULTS,SORTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
+import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261117-recent1';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs?v=20261118-history1';
 import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
@@ -68,7 +68,7 @@ function updateSortHeaders(){
   const dir=active?(state.filters.dir||SORT_DEFAULT_DIR[key]):null;
   th.setAttribute('aria-sort',dir==='asc'?'ascending':dir==='desc'?'descending':'none');
   const arrow=th.querySelector('.ah-sort-arrow');
-  if(arrow)arrow.textContent=dir==='asc'?'↑':dir==='desc'?'↓':'⇅';
+  if(arrow){arrow.textContent=dir==='asc'?'↑':dir==='desc'?'↓':'⇅';arrow.dataset.direction=dir||'none';arrow.setAttribute('aria-hidden','true');}
   th.classList.toggle('ah-sort-active',active);
   const next=nextColumnSort(state.filters,key);
   const button=th.querySelector('button');
@@ -86,7 +86,7 @@ function prepareSortHeaders(table){
    const next=nextColumnSort(state.filters,key);
    Object.assign(state.filters,next);
    state.sortTouched=true;state.page=0;
-   $('sort').value=key;syncDirection();updateSortHeaders();
+   updateSortHeaders();
    void refreshItems();void refreshFavourites();
   });
   th.replaceChildren(button);
@@ -220,7 +220,7 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
       stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ historical average'));
       const t=trend(item.trend_pct);
-      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':t.label+' '+pct(item.trend_pct),item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
+      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':el('span',t.label+' '+pct(item.trend_pct),t.className),item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
       stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
     }else stats.append(stat('Current status','Not listed','No auctions in the latest completed scan'));
     const parts=[stats],variant=variantDetails(item),bonuses=variantLines(item);
@@ -354,7 +354,7 @@ async function refreshSummary(first){
       'Catalogue metadata: '+count(s.items_with_metadata)+' of '+count(s.item_count)+' item variants ('+(coverage*100).toFixed(1)+'%)';
     // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
     note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
-    if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';$('sort').value='name';}
+    if(first&&s.historical_days<4&&state.filters.sort==='market_pct'&&!state.sortTouched){state.filters.sort='name';updateSortHeaders();}
   }catch{note('Auction House feed unavailable – no data is being invented.');}
 }
 /** Re-evaluates the scan status card from the last data received; called every second so the timers run. */
@@ -374,7 +374,6 @@ async function refreshAll(first=false){
 function option(value,label){const o=document.createElement('option');o.value=String(value);o.textContent=label;return o;}
 function fillSelect(select,first,pairs){select.replaceChildren(option('',first),...pairs.map(([v,l])=>option(v,l)));}
 function populate(){
-  $('sort').replaceChildren(...SORTS.map(([v,l])=>option(v,l)));
   fillSelect($('quality'),'All rarities',RARITIES);
   fillSelect($('item_class'),'All categories',CATEGORIES.map(c=>[c.id,c.name]));
   fillSelect($('slot'),'Any slot',SLOTS.map(s=>[s.id,s.name]));
@@ -394,22 +393,14 @@ function readFilters(){
   const f=state.filters;
   for(const k of TEXT_FIELDS)f[k]=$(DOM_ID[k]||k).value;
   for(const k of CHECK_FIELDS)f[k]=$(k).checked;
-  f.sort=$('sort').value;
 }
 function writeFilters(){
   const f=state.filters;
   $('item_class').value=f.item_class;fillSubclasses();
   for(const k of TEXT_FIELDS)$(DOM_ID[k]||k).value=f[k];
   for(const k of CHECK_FIELDS)$(k).checked=f[k];
-  $('sort').value=f.sort;
   const fav=$('fav-only');fav.setAttribute('aria-pressed',String(f.favourites_only));
-  syncDirection();updateBadges();syncAllStars();updateSortHeaders();
-}
-function syncDirection(){
-  const d=state.filters.dir,b=$('dir');
-  b.textContent=d==='asc'?'↑':d==='desc'?'↓':'⇅';
-  const label=d==='asc'?'ascending':d==='desc'?'descending':'default';
-  b.setAttribute('aria-label','Sort direction: '+label);b.title='Sort direction: '+label+' (click to change)';
+  updateBadges();syncAllStars();updateSortHeaders();
 }
 function updateBadges(){
   const n=advancedCount(state.filters),badge=$('adv-badge');
@@ -435,16 +426,14 @@ function changed(immediate){
 }
 function bind(){
   prepareSortHeaders($('items').closest('table'));
-  for(const id of [...TEXT_FIELDS.map(k=>DOM_ID[k]||k),...CHECK_FIELDS,'sort']){
+  for(const id of [...TEXT_FIELDS.map(k=>DOM_ID[k]||k),...CHECK_FIELDS]){
     const node=$(id);
     node.addEventListener(node.tagName==='INPUT'&&node.type!=='checkbox'?'input':'change',()=>{
       if(id==='item_class'){$('item_subclass').value='';fillSubclasses();}
-      if(id==='sort'){state.sortTouched=true;state.filters.sort=$('sort').value;state.filters.dir='';syncDirection();updateSortHeaders();void refreshFavourites();}
       changed(node.tagName==='SELECT'||node.type==='checkbox');
     });
   }
   $('filters').addEventListener('submit',e=>e.preventDefault());
-  $('dir').addEventListener('click',()=>{state.filters.dir=state.filters.dir===''?'asc':state.filters.dir==='asc'?'desc':'';state.sortTouched=true;syncDirection();updateSortHeaders();state.page=0;void refreshItems();void refreshFavourites();});
   $('fav-only').addEventListener('click',()=>{state.filters.favourites_only=!state.filters.favourites_only;$('fav-only').setAttribute('aria-pressed',String(state.filters.favourites_only));state.page=0;syncAllStars();void refreshItems();});
   $('adv-toggle').addEventListener('click',()=>{const open=$('advanced').hidden;$('advanced').hidden=!open;$('adv-toggle').setAttribute('aria-expanded',String(open));});
   $('reset').addEventListener('click',()=>{state.filters=reset(state.filters);state.page=0;writeFilters();void refreshItems();});
