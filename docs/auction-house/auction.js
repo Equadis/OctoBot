@@ -13,7 +13,15 @@ import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
 const override=new URLSearchParams(location.search).get('api');
 const API=override&&['localhost','127.0.0.1'].includes(location.hostname)?override.replace(/\/$/,''):'https://octometrics.eqvoice.workers.dev';
 const $=id=>document.getElementById(id);
-const storage=(()=>{try{return window.localStorage;}catch{return null;}})();
+const REALM=new URLSearchParams(location.search).get('realm')==="Y'Shaarj"?"Y'Shaarj":"N'Zoth";
+const realmSelect=$('ah-realm');
+if(realmSelect){
+ realmSelect.value=REALM;
+ realmSelect.addEventListener('change',()=>{const url=new URL(location.href);url.searchParams.set('realm',realmSelect.value);location.assign(url.toString());});
+}
+document.title='OctoBot · Auction House – '+REALM;
+const realmHeading=$('ah-realm-heading');if(realmHeading)realmHeading.textContent='Auction House – '+REALM;
+const storage=(()=>{try{const s=window.localStorage;if(REALM==="N'Zoth")return s;return {getItem:key=>s.getItem('pvp:'+key),setItem:(key,value)=>s.setItem('pvp:'+key,value),removeItem:key=>s.removeItem('pvp:'+key)};}catch{return null;}})();
 const COLS=11;
 const state={filters:{...DEFAULTS},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,scan:{completedAt:null,scanning:false,startedAt:null,pages:'',collectorStatus:null},sortTouched:false,busy:0,favFailed:false};
 
@@ -44,7 +52,8 @@ function timeNode(ms,capturedAt){const node=el('span',null,'ah-auction-time');no
 function tickAuctionTimes(){const now=Date.now();for(const node of document.querySelectorAll('.ah-auction-time[data-duration]'))updateTimeNode(node,now);}
 const moneyTd=(row,n)=>{const c=el('td');c.append(moneyNode(n));row.append(c);return c;};
 async function request(path){
-  const r=await fetch(API+path,{cache:'no-store',headers:{Accept:'application/json'}});
+  const url=new URL(API+path);url.searchParams.set('realm',REALM);
+  const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
   if(!r.ok)throw new Error('API HTTP '+r.status);
   return r.json();
 }
