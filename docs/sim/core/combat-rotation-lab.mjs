@@ -1,3 +1,4 @@
+import {markForDeathTemplate} from './combat-mark-for-death.mjs';
 import {bladeFlurryTemplate} from './combat-blade-flurry.mjs';
 import {shadowOfDeathTemplate} from './combat-shadow-of-death.mjs';
 import {companionTemplate} from './combat-companion-reference.mjs';
@@ -32,6 +33,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='markForDeathModel')policy.markForDeathModel=markForDeathTemplate();
   if(field==='vanishModel')policy.vanishModel={durationMs:null,reagentCost:null,threatReduction:null,cloakedAllies:[]};
   if(field==='bladeFlurryModel')policy.bladeFlurryModel=bladeFlurryTemplate();
   if(field==='shadowOfDeathModel')policy.shadowOfDeathModel=shadowOfDeathTemplate();

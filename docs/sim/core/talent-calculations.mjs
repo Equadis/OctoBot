@@ -52,7 +52,7 @@ const ABILITIES={
   rogueBuilder('Sinister Strike','Sinister Strike/Eviscerate/Riposte/Surprise Attack'),
   rogueBuilder('Backstab','Backstab/Garrote/Ambush from behind'),
   rogueBuilder('Ambush','Backstab/Garrote/Ambush from behind'),
-  rogueBuilder('Noxious Assault'),rogueBuilder('Hemorrhage'),rogueBuilder('Ghostly Strike'),
+  rogueBuilder('Mark for Death'),rogueBuilder('Noxious Assault'),rogueBuilder('Hemorrhage'),rogueBuilder('Ghostly Strike'),
   rogueBuilder('Surprise Attack','Sinister Strike/Eviscerate/Riposte/Surprise Attack'),
   melee('Eviscerate','Sinister Strike/Eviscerate/Riposte/Surprise Attack'),
   profile('Garrote','periodic','Backstab/Garrote/Ambush from behind','Rupture/Garrote','Cheap Shot/Garrote'),
