@@ -27,7 +27,7 @@
     return n;
   };
   const label = (value) => ({
-    online:'Online',offline:'Offline',reachable:'Reachable',
+    online:'Online',partial:'Partial',offline:'Offline',reachable:'Reachable',
     unreachable:'Unreachable',responsive:'Responsive',unresponsive:'Unresponsive',
     malformed_response:'Invalid response',available:'Available',unavailable:'Unavailable',
     unknown:'Unknown'
