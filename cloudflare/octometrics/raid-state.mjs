@@ -78,6 +78,20 @@ export async function handleRaidRoute(request,url,env,reply){
   }
   return reply({error:"busy"},503);
  }
+ if(request.method==="GET"&&url.pathname==="/api/raid/preflight"){
+  const zone=url.searchParams.get("zone");
+  if(!isZone(zone))return reply({error:"invalid zone"},400);
+  const floor=await env.DB.prepare("SELECT floor FROM raid_number_floor WHERE zone=?").bind(zone).first();
+  const highest=await env.DB.prepare("SELECT MAX(n) n FROM raid_numbers WHERE zone=?").bind(zone).first();
+  const legacy=await env.DB.prepare("SELECT state_json,saved_at FROM raid_tracker_state WHERE zone=?").bind(zone).first();
+  const checkpoint=await env.DB.prepare("SELECT observed_at,saved_at FROM raid_checkpoint_v2 WHERE zone=?").bind(zone).first();
+  let state=null;
+  if(legacy){try{state=validateTrackerState({zone,state:JSON.parse(legacy.state_json)})?.state??null;}catch{}}
+  const values=state?Object.values(state.lockouts):[];
+  return reply({zone,counterSeeded:!!floor,highestNumber:floor?Math.max(floor.floor,highest?.n??0):null,
+   legacy:legacy?{valid:!!state,savedAt:legacy.saved_at,activeSlots:state?.slots.length??null,lockoutCount:state?values.length:null,lastLockedAt:values.length?Math.max(...values):null}:null,
+   checkpoint:checkpoint?{observedAt:checkpoint.observed_at,savedAt:checkpoint.saved_at}:null},200);
+ }
  if(url.pathname==="/api/raid/checkpoint"){
   if(request.method==="GET"){
    const zone=url.searchParams.get("zone");
