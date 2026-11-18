@@ -41,3 +41,6 @@ Explicit opt-in capacity policy supports player health, mana, energy and rage au
 
 ## Conditional equipment triggers
 Incoming landed or critical attack-result events can activate explicit source-matched effects; optional owner or target health threshold predicates are evaluated before cooldown and proc rolls. Incoming resource-return set wording retains all three published amounts and requires a compatible explicit resource selection. These are pre-damage attack-result triggers, not damage-taken or post-damage triggers; rates, Druid form changes and server event timing remain unverified.
+
+## Stacking equipment auras and expendable charges
+Explicit aura stacking supports add/replace/max, cap, duration refresh or preservation, and charge consumption on named landed or critical outgoing/incoming attacks. Consumption runs before new proc activation on the same attack, so newly granted charges cannot be consumed by their triggering event. These are post-roll effects: charge modifiers must already be present when the current attack rolls; spell-specific guarantees and one-charge effects granting a full outcome override require separate integration. Source-specific stack/charge policies remain research inputs.
