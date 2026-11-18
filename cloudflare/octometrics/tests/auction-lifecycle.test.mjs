@@ -226,3 +226,19 @@ test("recent page keeps an old scan alive; stale last page releases it",{skip},a
  assert.equal((await post(e,"start",next)).status,201);
  assert.equal(e.DB.sqlite.prepare("SELECT status FROM ah_scans WHERE scan_id=?").get(id).status,"failed");
 });
+
+test("a lease revoked immediately before finalisation cannot publish historical prices",{skip},async()=>{
+ const e=env(),id="ahl_revoked_01",now=new Date().toISOString();
+ await post(e,"start",{scan_id:id,started_at:now,reported_total:1});
+ await post(e,"page",{scan_id:id,page:0,response_ms:1,items:[listing(1)]});
+ const batch=e.DB.batch.bind(e.DB);
+ e.DB.batch=async ops=>{e.DB.sqlite.prepare("UPDATE ah_scans SET status='failed' WHERE scan_id=?").run(id);return batch(ops);};
+ assert.equal((await post(e,"complete",{scan_id:id,completed_at:now,expected_pages:1,reported_total:1})).status,409);
+ for(const table of ["ah_first_seen","ah_item_points","ah_daily"])assert.equal(e.DB.sqlite.prepare("SELECT COUNT(*) n FROM "+table).get().n,0,table);
+ assert.equal((await get(e,"summary")).json.completed_at,null);
+});
+test("D1 overload before a write returns a retryable 503",async()=>{
+ const e={AUCTION_PUSH_TOKEN:"test",DB:{prepare(){throw Error("D1 DB is overloaded");}}};
+ const r=await auctionRoute(new Request("https://octometrics.example/api/auction/scan/start",{method:"POST",headers:{authorization:"Bearer test","content-type":"application/json"},body:JSON.stringify({scan_id:"ahl_overload_001",started_at:new Date().toISOString(),reported_total:1})}),e);
+ assert.equal(r.status,503);assert.equal(r.headers.get("retry-after"),"15");assert.equal((await r.json()).error,"database temporarily unavailable");
+});
