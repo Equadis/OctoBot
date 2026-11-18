@@ -22,3 +22,34 @@ test('Hot Streak follows the imported two-rank talent: five-stack cap and one se
  const r=createExplicitClassEncounter({...common,classId:'mage',durationMs:8500,actions:[trigger,consumer],castProcs:policy,rows:[{ability:'Pyroblast',target:'primary',conditions:[{metric:'buffStacks',operator:'>=',value:5,aura:'Hot Streak'},{metric:'combatTime',operator:'>=',value:6}]},{ability:'Fire Blast',target:'primary',conditions:[]}]}).run();
  assert.equal(r.events.find(e=>e.type==='action-start'&&e.ability==='Pyroblast').castMs,1000);
 });
+
+test('Purifying Flames uses imported ranks, does not require Smite and rejects malformed aura-only policies',()=>{
+ const fire=action('priest:holy-fire',15261,[effect(hit)]);
+ assert.deepEqual(buildCastProcs({classId:'priest',talents:{}},[fire]).procs,[]);
+ const p=buildCastProcs({classId:'priest',talents:{178:1}},[fire]).procs[0];
+ assert.equal(p.chance,.5);assert.equal(p.consumerId,null);assert.equal(p.durationMs,10000);
+ assert.throws(()=>buildCastProcs({classId:'priest',talents:{178:3}},[fire]),/Invalid Purifying Flames/);
+ assert.throws(()=>createExplicitClassEncounter({...common,actions:[fire],castProcs:[{...p,chance:.6}],rows:[{ability:'Holy Fire',target:'primary',conditions:[]}]}),/Invalid Purifying Flames/);
+});
+test('Purifying Flames boosts subsequent Holy damage, does not consume on Smite, and expires exactly at ten seconds',()=>{
+ const fire=action('priest:holy-fire',15261,[effect(hit)],{kind:'instant',castMs:0,cooldownMs:60000,costs:[]});
+ const smite=action('priest:smite',10934,[effect(hit)],{kind:'instant',castMs:0,costs:[]});
+ const castProcs=buildCastProcs({classId:'priest',talents:{178:2}},[fire,smite]).procs;
+ const r=createExplicitClassEncounter({...common,durationMs:12000,actions:[fire,smite],castProcs,rows:[{ability:'Holy Fire',target:'primary',conditions:[]},{ability:'Smite',target:'primary',conditions:[]}]}).run();
+ const raw=r.events.filter(e=>e.type==='damage').map(e=>[e.time,e.source,Math.round(e.raw)]);
+ assert.deepEqual(raw.slice(0,3),[[0,'Holy Fire',100],[1500,'Smite',112],[3000,'Smite',112]]);
+ assert.deepEqual(raw.filter(e=>e[0]>=10000).map(e=>e[2]),[100,100]);
+ assert.equal(r.events.filter(e=>e.type==='proc'&&e.procId==='purifying-flames').length,1);
+ assert.ok(r.events.some(e=>e.type==='aura-remove'&&e.id==='purifying-flames'&&e.time===10000&&e.reason==='expired'));
+});
+test('Missed Holy Fire does not activate Purifying Flames; shadow damage is unaffected',()=>{
+ const miss=[{name:'miss',probability:1,multiplier:0,landed:false}];
+ for(const outcomes of [miss,hit]){
+  const fire=action('priest:holy-fire',15261,[effect(outcomes)],{kind:'instant',castMs:0,cooldownMs:60000,costs:[]});
+  const mind=action('priest:mind-blast',10947,[{...effect(hit),school:'shadow'}],{kind:'instant',castMs:0,costs:[]});
+  const castProcs=buildCastProcs({classId:'priest',talents:{178:2}},[fire,mind]).procs;
+  const r=createExplicitClassEncounter({...common,actions:[fire,mind],castProcs,rows:[{ability:'Holy Fire',target:'primary',conditions:[]},{ability:'Mind Blast',target:'primary',conditions:[]}]}).run();
+  assert.equal(r.events.filter(e=>e.type==='proc'&&e.procId==='purifying-flames').length,outcomes===hit?1:0);
+  assert.ok(r.events.filter(e=>e.type==='damage'&&e.source==='Mind Blast').every(e=>e.raw===100));
+ }
+});
