@@ -53,3 +53,6 @@ Direct attack events for finishers carry target-specific combo points before spe
 
 ## Ability-specific modifiers
 Explicit aura keys abilityDamageFactor:<abilityId>, abilityCostFactor:<abilityId>:<resource> and abilityCostReduction:<abilityId>:<resource> support direct damage and mana/rage/energy payment adjustments. Costs apply after class-specific adjustments, with percentage before flat reduction and a zero floor. Channel costs snapshot at action start. Periodic damage, special execution paths, cooldown changes and individual set mappings remain outside this batch. These stacking and timing choices are reference policies, not live observations.
+
+## Scoped cooldown and periodic modifiers
+Personal ability cooldowns use abilityCooldownFactor:<abilityId> and abilityCooldownReductionMs:<abilityId> at activation; shared and global cooldowns are excluded, running cooldowns do not retime. Ordinary periodic damage uses the existing snapshot or dynamic policy for abilityDamageFactor. Special execution paths and live validation remain outstanding.
