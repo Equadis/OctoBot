@@ -169,7 +169,7 @@
     $('archive-readout').style.color=match?COLOUR[match.status]||COLOUR.unknown:'#e3bd57';
     const tooltip=$('archive-tooltip');
     tooltip.replaceChildren();
-    const heading=document.createElement('strong');heading.textContent=match?SIGNALS[source][0]+' · '+match.status.toUpperCase():'NO DATA';
+    const heading=document.createElement('strong');if(match){heading.append(document.createTextNode(SIGNALS[source][0]+' · '));const value=document.createElement('span');value.textContent=match.status.toUpperCase();value.style.color=COLOUR[match.status]||'#a1adbd';heading.append(value);}else heading.textContent='NO DATA';
     const time=document.createElement('div');time.textContent=timestamp;
     tooltip.append(heading,time);
     if(match){
