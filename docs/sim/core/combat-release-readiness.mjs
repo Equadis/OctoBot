@@ -12,9 +12,9 @@ export function releaseReadiness(){
    const referenceRanks=REFERENCE_RANKS.filter(r=>r.abilityId===a.id),externalReferenceRanks=referenceRanks.filter(r=>r.status==='external-reference-only').map(r=>structuredClone(r.record));
    const candidateIds=[...new Set(a.candidateSpellIds||[])];
    const evidenceIds=new Set(ranks.map(r=>r.spellId));
-   const availability=['hunter:counterattack','priest:power-infusion','shaman:natures-swiftness'].includes(a.id)?'removed':a.id==='hunter:trueshot-aura'?'conflicting-guide-and-archive':null;
-   const researchMechanic=a.id==='paladin:holy-strike'?'engine-built-rank-identities-unverified':a.id==='hunter:trueshot-aura'?'conflicting-guides-research-only':null;
-   const executableAdapter=['hunter:auto-shot','hunter:pet-attack','warlock:pet-attack'].includes(a.id)?'scheduler-command':a.id==='druid:powershift'?'fixed-form-transition':a.id==='paladin:holy-strike'?'unresolved-identity-reference':null;
+   const availability=['hunter:counterattack','priest:power-infusion','shaman:natures-swiftness'].includes(a.id)?'removed':a.id==='hunter:trueshot-aura'?'player-observed-available':null;
+   const researchMechanic=a.id==='paladin:holy-strike'?'engine-built-rank-identities-unverified':a.id==='hunter:trueshot-aura'?'player-observed-single-rank-identity-unverified':null;
+   const executableAdapter=['hunter:auto-shot','hunter:pet-attack','warlock:pet-attack'].includes(a.id)?'scheduler-command':a.id==='druid:powershift'?'fixed-form-transition':a.id==='paladin:holy-strike'?'unresolved-identity-reference':a.id==='hunter:trueshot-aura'?'observed-tooltip-reference':null;
    return {id:a.id,name:a.name,availability,executableAdapter,historicalResearchAdapter:a.id==='hunter:trueshot-aura'?'explicit-opt-in':null,researchMechanic,status:[...ranks,...externalReferenceRanks].some(r=>r.conflicts.length)?'source-conflict':ranks.length||externalReferenceRanks.length||a.contract?'published-partial':'unresolved',candidateIds,unreviewedCandidateIds:candidateIds.filter(id=>!evidenceIds.has(id)),guideContract:a.contract,ranks,externalReferenceRanks,referenceRankIds:referenceRanks.map(r=>r.spellId),validated:false};
   });
   const rows=base.combinations.filter(b=>b.classId===c.classId);

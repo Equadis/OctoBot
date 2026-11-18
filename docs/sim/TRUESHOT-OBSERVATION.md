@@ -1,0 +1,2 @@
+# Trueshot Aura — player evidence, 2026-11-18
+Player-provided screenshot text: “Increases attack power by 3%, plus an additional 30.” Player reports obtaining it through levelling, one rank only. This supersedes the guide-removal claim for availability. Exact learned spell ID, level, mana cost, cooldown, aura duration/radius, ranged applicability and arithmetic order remain unverified. Research uses flat-after-percentage against explicit recipient snapshot AP, not an authenticated server formula. Old archived variants remain opt-in only. Public gate stays closed.

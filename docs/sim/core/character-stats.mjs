@@ -65,7 +65,7 @@ export function characterStats(build,talentData,gear={}){
  if(c==='druid'&&build.classOptions.form==='Cat'&&base)ap=2*level-20+s.str*2+s.agi+s.ap;
  if(c==='druid'&&build.classOptions.form==='Bear'&&base)ap=3*level-20+s.str*2+s.ap;
  if(ap!==null){ap+=s.agi*(special.apFromAgiPct||0)/100;ap*=1+(special.apPct||0)/100;}
- // Trueshot uses the explicitly selected database vector, not the conflicting reference multiplier.
+ if(ap!==null&&buffAudit.entries.some(e=>e.id==='trueshot'&&e.active))ap=ap*1.03+30; // observed tooltip; flat-after-percent reference order
  if(s.spi!==null)s.sp+=s.spi*(special.spFromSpiritPct||0)/100;
  const health=base?(base[5]+s.health+Math.min(20,s.sta)+Math.max(0,s.sta-20)*10)*(racial.healthMultiplier||1)*(1+(special.maxHealthPct||0)/100):null;
  let armour=base?s.armour+s.agi*2:null;
