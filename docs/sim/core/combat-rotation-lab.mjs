@@ -1,3 +1,4 @@
+import {reactiveTemplate} from './combat-warrior-reactive.mjs';
 import {markForDeathTemplate} from './combat-mark-for-death.mjs';
 import {bladeFlurryTemplate} from './combat-blade-flurry.mjs';
 import {shadowOfDeathTemplate} from './combat-shadow-of-death.mjs';
@@ -33,6 +34,8 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='componentCoefficients')policy.componentCoefficients=rank.components.map(c=>c.coefficient??null);
   if(field==='utilityCurseModel')policy.utilityCurseModel={durationMs:null,outcomes:null,schools:null,damageBonusPct:null,resistanceReduction:null,armourReduction:null,enemyAttackPowerBonus:null};
+  if(field==='reactiveModel')policy.reactiveModel=reactiveTemplate(rank.abilityId);
+  if(field==='flatThreat')policy.flatThreat=null;
   if(field==='warriorActivationModel')policy.warriorActivationModel={stances:null,durationMs:rank.record.fields.referenceDurationMs??rank.record.fields.durationMs??null,...(rank.abilityId==='warrior:demoralizing-shout'?{radius:10,amount:rank.components[0].referenceAmount,outcomes:null,threat:null}:rank.abilityId==='warrior:bloodrage'?{healthCostPct:null,instantRage:10,tickRage:null,intervalMs:null,tickAtExpiry:null,activateEnrage:null}:rank.abilityId==='warrior:berserker-rage'?{incomingRageFactor:null}:{})};
   if(field==='warriorUtilityModel')policy.warriorUtilityModel={amount:rank.components[0].referenceAmount,durationMs:rank.components[0].durationMs,...(rank.abilityId==='warrior:sunder-armor'?{maxStacks:5,outcomes:null,threat:null}:{radius:20,includeOwner:true,allies:[]})};
   if(field==='markForDeathModel')policy.markForDeathModel=markForDeathTemplate();
