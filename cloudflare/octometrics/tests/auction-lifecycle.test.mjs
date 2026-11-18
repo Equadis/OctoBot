@@ -186,7 +186,7 @@ test("search wildcards are treated literally",{skip},async()=>{
 
 test("a full-size scan uploads, publishes and queries within sane limits",{skip},async()=>{
  const e=env();
- const n=20000; // synthetic stress size, 400 pages
+ const n=46000; // synthetic stress at the observed production scale, 920 pages
  const items=Array.from({length:n},(_,i)=>listing(i+1,{item_id:1000+(i%6000),buyout:100+(i%977)}));
  const t0=performance.now();
  assert.equal((await runScan(e,{id:"ah_big_000001",day:"2026-11-01",listings:items})).status,201);
