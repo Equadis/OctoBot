@@ -47,6 +47,12 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'struck',effect:{kind:'resource-choice',amounts:{mana:+m[1],rage:+m[2],energy:+m[3]}}};
  m=s.match(/^Your Eviscerate has a (\d+)% chance per combo point to reveal a flaw in your opponent's armor, granting a 100% critical hit chance for your next Backstab, Sinister Strike, Noxious Assault, or Hemorrhage\.?$/i);
  if(m)return {trigger:'landed',sources:['Eviscerate'],chancePerComboPoint:+m[1]/100,effect:{kind:'aura',modifiers:[],guaranteedCrit:{sources:['Backstab','Sinister Strike','Noxious Assault','Hemorrhage']}}};
+ m=s.match(/^(\d+)% chance to restore (\d+) energy and increase dodge and melee attack speed by (\d+)% for (\d+) sec\.?$/i);
+ if(m)return {trigger:'landed',chance:+m[1]/100,effect:{kind:'compound',effects:[{kind:'resource',resource:'energy',amount:+m[2]},{kind:'aura',durationMs:+m[4]*1000,modifiers:[{stat:'incomingDodgeDeltaPct',mode:'flat',value:+m[3]},{stat:'meleeHasteFactor',mode:'multiplyPct',value:+m[3]}]}]}};
+ m=s.match(/^Equip: Gives a chance when your harmful spells land to increase the damage of your spells and effects by up to (\d+) for (\d+) sec\.?$/i);
+ if(m)return {trigger:'landed',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:['fire','frost','nature','shadow','arcane','holy'].map(stat=>({stat,mode:'flat',value:+m[1]}))}};
+ m=s.match(/^Use: Increases your attack speed by (\d+)% for (\d+) sec\.?$/i);
+ if(m)return {trigger:'use',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:[{stat:'meleeHasteFactor',mode:'multiplyPct',value:+m[1]}]}};
  return null;
 }
 export function compileEquipmentTooltips(gear,build,requests=[]){

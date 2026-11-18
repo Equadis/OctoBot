@@ -56,3 +56,6 @@ Explicit aura keys abilityDamageFactor:<abilityId>, abilityCostFactor:<abilityId
 
 ## Scoped cooldown and periodic modifiers
 Personal ability cooldowns use abilityCooldownFactor:<abilityId> and abilityCooldownReductionMs:<abilityId> at activation; shared and global cooldowns are excluded, running cooldowns do not retime. Ordinary periodic damage uses the existing snapshot or dynamic policy for abilityDamageFactor. Special execution paths and live validation remain outstanding.
+
+## Additional catalogue proc mappings
+Exact imported compound 2% energy/dodge/melee haste set wording, harmful spell damage-only proc wording and on-use attack speed wording compile to the existing runtime. The source set does not state eligible events; source restrictions must be supplied. Generic on-use attack speed is interpreted as melee only in this research mapping; ranged scope is not asserted. Swing and incoming defence models must be configured to observe the relevant benefits. These mappings do not establish live proc rates or automatic activation.
