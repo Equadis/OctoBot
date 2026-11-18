@@ -142,13 +142,15 @@ async function upload(req,env,action){
    }
    const duration=Math.max(0,Date.parse(body.completed_at)-Date.parse(scan.started_at));
    const ops=[
-     db.prepare("INSERT OR IGNORE INTO ah_first_seen(auction_id,first_seen_at) SELECT auction_id,? FROM ah_listings WHERE scan_id=?").bind(body.completed_at,body.scan_id),
-     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id),
-     db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND 1=1 ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id").bind(body.completed_at,body.scan_id,body.scan_id),
+     db.prepare("INSERT OR IGNORE INTO ah_first_seen(auction_id,first_seen_at) SELECT auction_id,? FROM ah_listings WHERE scan_id=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading')").bind(body.completed_at,body.scan_id,body.scan_id),
+     db.prepare("INSERT INTO ah_item_points(scan_id,item_id,variant,cheapest_auction_id,unit_buyout,quantity,listings,captured_at) SELECT ?,g.item_id,g.variant,(SELECT l2.auction_id FROM ah_listings l2 WHERE l2.scan_id=? AND l2.item_id=g.item_id AND l2.variant=g.variant ORDER BY CASE WHEN l2.buyout>0 THEN 0 ELSE 1 END,CASE WHEN l2.buyout>0 THEN CAST(l2.buyout AS REAL)/l2.quantity END,l2.auction_id LIMIT 1),MIN(CASE WHEN g.buyout>0 THEN CAST(g.buyout AS REAL)/g.quantity END),SUM(g.quantity),COUNT(*),MAX(g.captured_at) FROM ah_listings g WHERE g.scan_id=? AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') GROUP BY g.item_id,g.variant").bind(body.scan_id,body.scan_id,body.scan_id,body.scan_id),
+     db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id") .bind(body.completed_at,body.scan_id,body.scan_id,body.scan_id),
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
    ];
    try{await db.batch(ops)}catch{return bad('finalisation failed',503)}
-   return respond({ok:true,auction_count:count.n,duration_ms:duration,snapshot_quality:liveSnapshot?'live_estimate':'strict'},201);
+   const published=await first(db,"SELECT status,completed_at,expected_pages,reported_total,auction_count,duration_ms FROM ah_scans WHERE scan_id=?",body.scan_id);
+   if(published?.status!=='complete'||published.completed_at!==body.completed_at||published.expected_pages!==body.expected_pages||published.reported_total!==body.reported_total)return bad('scan no longer uploading or completion conflict',409);
+   return respond({ok:true,auction_count:published.auction_count,duration_ms:published.duration_ms,snapshot_quality:liveSnapshot?'live_estimate':'strict'},201);
  }
  return bad('unknown upload action',404);
 }
@@ -243,7 +245,7 @@ export async function auctionRoute(request,env){
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
    if(!url.pathname.startsWith('/api/auction/scan/')||!['start','page','complete','fail','metadata','seller-names'].includes(action))return bad('not found',404);
-   return upload(request,env,action);
+   try{return await upload(request,env,action);}catch(error){console.warn('Auction upload temporarily unavailable',String(error).slice(0,200));return new Response(JSON.stringify({error:'database temporarily unavailable'}),{status:503,headers:{'Content-Type':'application/json','Retry-After':'15','Cache-Control':'no-store',...CORS}});}
  }
  if(request.method==='GET'){
    if(url.pathname==='/api/auction/missing-sellers'&&(!env.AUCTION_PUSH_TOKEN||request.headers.get('authorization')!=='Bearer '+env.AUCTION_PUSH_TOKEN))return bad('unauthorised',401);
