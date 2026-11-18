@@ -75,7 +75,7 @@ function updateSortHeaders(table){
   th.classList.toggle('ah-sort-active',active);
   const next=nextColumnSort(sort,key);
   const button=th.querySelector('button');
-  if(button){const action='Sort '+th.dataset.sortLabel+' '+(next.dir==='asc'?'ascending':'descending');button.title=action;button.setAttribute('aria-label',action);}
+  if(button){const action='Sort '+th.dataset.sortLabel+' '+(next.dir==='asc'?'ascending':'descending');button.setAttribute('aria-label',action);}
  }
 }
 function prepareSortHeaders(table,scope='items'){
@@ -177,7 +177,8 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
     const bid=bidAmount(item.current_bid,item.start_bid,item.stack_buyout,item.unit_buyout);
     if(bid===null)td(tr,'-');else moneyTd(tr,bid);
     moneyTd(tr,item.historical_avg);td(tr,pct(item.market_pct));
-    const t=trend(item.trend_pct),tc=td(tr,t.label,t.className);
+    const t=trend(item.trend_pct),tc=td(tr,null,t.className);
+    tc.append(el('span',t.label,'ah-trend-arrow'));
     tc.setAttribute('aria-label',item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct)));
     td(tr).append(timeNode(item.time_left_ms,item.captured_at));
   }
@@ -224,7 +225,8 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Historical average',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg),item.historical_avg==null?'Needs 4 days; '+(item.historical_days??days.length)+' so far':(item.historical_days??'')+' daily observations'));
       stats.append(stat('Market %',pct(item.market_pct),'Current unit buyout ÷ historical average'));
       const t=trend(item.trend_pct);
-      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':el('span',t.label+' '+pct(item.trend_pct),t.className),item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
+      const movement=el('span',null,t.className);movement.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));
+      stats.append(stat('Movement since previous scan',item.trend_pct==null?'No comparison':movement,item.previous_unit==null?t.text:money(item.previous_unit)+' → '+money(item.unit_buyout)));
       stats.append(stat('Cheapest listing time left',timeNode(item.time_left_ms,item.captured_at),'Estimate, not guaranteed'));
     }else stats.append(stat('Current status','Not listed','No auctions in the latest completed scan'));
     const parts=[stats],variant=variantDetails(item),bonuses=variantLines(item);
@@ -262,8 +264,8 @@ async function fillDetail(cell,item,unavailable){
       const rows=listings.listings||[];
       const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
       if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
-      else auctions.body.append(simpleTable(['Seller (owner GUID)','Quantity','Starting bid','Current bid','Minimum next bid','Buyout','Unit buyout','Time left (est.)'],
-        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,moneyNode(r.start_bid),r.current_bid>0?(bid===null?'-':moneyNode(r.current_bid)):'No bids',moneyNode(r.min_next_bid),r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
+      else auctions.body.append(simpleTable(['Seller (owner GUID)','Quantity','Current bid','Buyout','Unit buyout','Time left (est.)'],
+        rows.map(r=>{const bid=r.current_bid>0?bidAmount(r.current_bid,r.start_bid,r.buyout,r.unit_buyout):0;return [r.owner_guid?'GUID '+r.owner_guid:'Unknown',r.quantity,r.current_bid>0?(bid===null?'-':moneyNode(r.current_bid)):'No bids',r.buyout>0?moneyNode(r.buyout):'No buyout',moneyNode(r.unit_buyout),timeNode(r.time_left_ms,r.captured_at)];})));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }

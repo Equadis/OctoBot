@@ -102,21 +102,22 @@
 /* Prices: white numbers, each followed by its coin. Zero amounts are not shown. */
 .ah-money{display:inline-flex;align-items:center;gap:1px;flex-wrap:wrap;white-space:normal}.ah-num{color:#fff}.ah-coin{width:11px;height:11px;margin-right:1px;flex:none}.ah-money .ah-coin:last-child{margin-right:0}
 .ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:var(--gold)}.ah-time-green{color:#4fdc7a}
-/* Auction countdown palette from the reference image; do not recolour scan/status indicators. */
+/* Shared auction countdown and trend palette; do not recolour scan/status indicators. */
 .ah-auction-time.ah-time-red{color:#ff0000}
-.ah-auction-time.ah-time-orange{color:#ff9218}
+.ah-auction-time.ah-time-orange{color:#ff8000}
 .ah-auction-time.ah-time-yellow{color:#ffff00}
-.ah-auction-time.ah-time-green{color:#1eff00}
-.ah-auction-time.ah-time-blue{color:#2992ff}
+.ah-auction-time.ah-time-green{color:#00ff00}
+.ah-auction-time.ah-time-blue{color:#0080ff}
 
-.ah-scroll td.ah-change-up-strong,.ah-stats .ah-change-up-strong{color:#990000}
-.ah-scroll td.ah-change-up,.ah-stats .ah-change-up{color:#FF0000}
-.ah-scroll td.ah-change-up-slight,.ah-stats .ah-change-up-slight{color:#FF8000}
-.ah-scroll td.ah-change-neutral,.ah-stats .ah-change-neutral{color:#FFFF00}
-.ah-scroll td.ah-change-down-slight,.ah-stats .ah-change-down-slight{color:#80FF00}
-.ah-scroll td.ah-change-down,.ah-stats .ah-change-down{color:#00FF00}
-.ah-scroll td.ah-change-down-strong,.ah-stats .ah-change-down-strong{color:#009900}
+.ah-scroll td.ah-change-up-strong,.ah-stats .ah-change-up-strong{color:#ff0000}
+.ah-scroll td.ah-change-up,.ah-stats .ah-change-up{color:#ff8000}
+.ah-scroll td.ah-change-up-slight,.ah-stats .ah-change-up-slight{color:#ffff00}
+.ah-scroll td.ah-change-neutral,.ah-stats .ah-change-neutral{color:#ffffff}
+.ah-scroll td.ah-change-down-slight,.ah-stats .ah-change-down-slight{color:#80ff00}
+.ah-scroll td.ah-change-down,.ah-stats .ah-change-down{color:#00ff00}
+.ah-scroll td.ah-change-down-strong,.ah-stats .ah-change-down-strong{color:#0080ff}
 .ah-scroll td.ah-change-unknown,.ah-stats .ah-change-unknown{color:#a8b7c7}
+.ah-trend-arrow{display:inline-block;font-size:calc(1em + 2pt);line-height:1;vertical-align:middle}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}
 .ah-star:hover,.ah-star[aria-pressed=true]{color:#f4d65c}
