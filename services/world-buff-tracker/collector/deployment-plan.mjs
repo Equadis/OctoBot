@@ -3,7 +3,7 @@ const shared=name=>"${{shared."+name+"}}";
 /** Non-executing deployment plan. No credentials or provider-generated variables. */
 export function deploymentPlan(){
  return Object.entries(PROFILES).map(([name,p])=>{
-  const variables={COLLECTOR_PROFILE:name,WOW_ACCOUNT:p.account,WOW_CHARACTER:p.account,WOW_REALM:p.realmName,WOW_LISTENERS:"[]",WOW_LOGIN_ENABLED:"false",
+  const variables={COLLECTOR_PROFILE:name,WOW_ACCOUNT:p.account,WOW_CHARACTER:p.character??p.account,WOW_REALM:p.realmName,WOW_LISTENERS:"[]",WOW_LOGIN_ENABLED:"false",
    WOW_AUTH_HOST:shared("WOW_AUTH_HOST"),WOW_PASSWORD:shared("WOW_PASSWORD"),METRICS_PUSH_URL:shared("METRICS_PUSH_URL"),METRICS_PUSH_TOKEN:shared("METRICS_PUSH_TOKEN"),RAILPACK_NODE_VERSION:shared("RAILPACK_NODE_VERSION")};
   if(p.raid)variables.RAID_STATE_KEY=shared("RAID_STATE_KEY");
   if(p.chat)variables.WORLD_CHAT_ENABLED="true";
