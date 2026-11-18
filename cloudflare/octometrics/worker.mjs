@@ -38,7 +38,7 @@ function validateRecord(x){
     return x.confirmed===true&&x.source==="onsite"&&typeof x.npc==="string"&&
       x.npc.trim().length>0&&x.npc.length<=100?{ok:true}:no("invalid_sighting");
   }
-  if(x.type==="server_info"&&x.realm==="N\u0027Zoth"&&((x.role==="ah"&&x.account==="OBPVEAH")||DMF_ROLES[x.role]?.account===x.account))return {ok:true};
+  if(["server_info","session_online","session_offline","session_error"].includes(x.type)&&x.realm==="N\u0027Zoth"&&((x.role==="ah"&&x.account==="OBPVEAH")||DMF_ROLES[x.role]?.account===x.account))return {ok:true};
   if(!["sw","org","bb"].includes(x.role)||x.account!==ALLOWED_ACCOUNTS[x.realm][x.role])return no("account_role_mismatch");
   if(x.type==="listener_health")return typeof x.connected==="boolean"?{ok:true}:no("invalid_health");
   if(x.type==="world_buff_drop"){
