@@ -215,7 +215,7 @@ async function scanOnce(config:BotConfig,build:number,log:Logger):Promise<void>{
     await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
     succeeded=true;
     await resolveMissingMetadata(scanId,missingIds,log,liveItemQueries?queryItem:undefined);
-    await resolveAuctionSellers({url:new URL(uploadUrl.toString().replace(/\\/scan\\/?$/, "/missing-sellers")),token,scanId,resolve:guid=>world.resolveName(guid,3000),publish:payload=>publish("seller-names",payload),log,active:()=>!finished&&!stopping&&world.isReady});
+    await resolveAuctionSellers({url:new URL("/api/auction/missing-sellers",uploadUrl),token,scanId,resolve:guid=>world.resolveName(guid,3000),publish:payload=>publish("seller-names",payload),log,active:()=>!finished&&!stopping&&world.isReady});
     log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
    }catch(error){
     if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
