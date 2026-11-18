@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {sealCheckpoint,openCheckpoint,createRaidPersistence} from "./raid-persistence.mjs";
+import {sealCheckpoint,openCheckpoint,createRaidPersistence,legacyStateNeedsMigration} from "./raid-persistence.mjs";
 const secret="synthetic-checkpoint-key-123",zone="onyxia",state={version:1,at:Date.now(),slots:[],ended:[],seen:[{name:"SyntheticCharacter"}],locks:{}};
 test("checkpoint encrypts roster, authenticates zone and key",()=>{
  const blob=sealCheckpoint(state,zone,secret);assert.ok(!blob.includes("SyntheticCharacter"));assert.deepEqual(openCheckpoint(blob,zone,secret),state);
@@ -19,3 +19,5 @@ test("allocated numbering uses an idempotent session key",async()=>{
  const s={key:"u123-0",id:null};const tracker={sessions:()=>({sessions:[s]}),assignNumber:(key,n)=>{assert.equal(key,s.key);s.id=n;return true;}};
  await p.number(tracker);await p.number(tracker);assert.equal(s.id,701);assert.deepEqual(requests,[{zone,requestId:"onyxia:u123-0"}]);
 });
+
+test("legacy cutover accepts only expired lockouts and no active slots",()=>{const now=Date.now(),lockoutMs=7200000;assert.equal(legacyStateNeedsMigration({slots:[],lockouts:{a:now-lockoutMs}},lockoutMs,now),false);assert.equal(legacyStateNeedsMigration({slots:[],lockouts:{a:now-lockoutMs+1}},lockoutMs,now),true);assert.equal(legacyStateNeedsMigration({slots:[{}],lockouts:{}},lockoutMs,now),true);assert.equal(legacyStateNeedsMigration({slots:[],lockouts:{a:NaN}},lockoutMs,now),true);assert.equal(legacyStateNeedsMigration({slots:[],lockouts:{a:now-lockoutMs}},undefined,now),true);});
