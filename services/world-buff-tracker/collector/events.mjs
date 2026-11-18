@@ -25,6 +25,7 @@ export class EventPublisher {
     token;
     queue = [];
     pumping = false;
+    #inFlight = null;
     shuttingDown = false;
     fileChain = Promise.resolve();
     #fetch;
@@ -56,8 +57,15 @@ export class EventPublisher {
         this.fileChain = this.fileChain.then(() => this.#append(this.file, JSON.stringify(event) + "\n")).catch(e => console.error(`METRICS file error: ${String(e)}`));
         if (this.url) {
             if (this.queue.length >= this.#maxQueue) {
-                const index = this.queue.findIndex(e => e.type !== "world_buff_drop");
-                const [removed] = this.queue.splice(index >= 0 ? index : 0, 1);
+                // Never evict the in-flight request: its completion would otherwise remove a different event.
+                const index = this.queue.findIndex(e => e !== this.#inFlight && e.type !== "world_buff_drop");
+                const fallback = this.queue.findIndex(e => e !== this.#inFlight);
+                const victim = index >= 0 ? index : fallback;
+                if (victim < 0 || (index < 0 && event.type !== "world_buff_drop")) {
+                    this.#stats.dropped += 1;
+                    return;
+                }
+                const [removed] = this.queue.splice(victim, 1);
                 this.#stats.dropped += 1;
                 console.error(`METRICS ingest queue full; dropped ${removed.type}`);
                 this.#log({ stage: "dropped_queue_full", type: removed.type, eventId: removed.eventId ?? null });
@@ -74,6 +82,7 @@ export class EventPublisher {
         try {
             while (this.queue.length && !this.shuttingDown) {
                 const event = this.queue[0];
+                this.#inFlight = event;
                 let status = null, detail = "";
                 try {
                     const response = await this.#fetch(this.url, {
@@ -90,7 +99,9 @@ export class EventPublisher {
                 const verdict = status === null ? "retry" : classifyStatus(status);
                 const isDrop = event.type === "world_buff_drop";
                 if (verdict === "delivered") {
-                    this.queue.shift();
+                    const index = this.queue.indexOf(event);
+                    if (index >= 0) this.queue.splice(index, 1);
+                    this.#inFlight = null;
                     this.#stats.delivered += 1;
                     this.#stats.lastOkAt = this.#now();
                     delay = 10_000;
@@ -98,7 +109,9 @@ export class EventPublisher {
                         this.#log({ stage: "accepted", status, type: event.type, faction: event.faction, buff: event.buff, eventId: event.eventId ?? null, observedAt: event.time });
                 }
                 else if (verdict === "reject") {
-                    this.queue.shift();
+                    const index = this.queue.indexOf(event);
+                    if (index >= 0) this.queue.splice(index, 1);
+                    this.#inFlight = null;
                     this.#stats.rejected += 1;
                     this.#stats.lastError = `HTTP ${status} ${detail}`.trim();
                     this.#stats.lastErrorAt = this.#now();
@@ -118,6 +131,7 @@ export class EventPublisher {
             }
         }
         finally {
+            this.#inFlight = null;
             this.pumping = false;
         }
     }
