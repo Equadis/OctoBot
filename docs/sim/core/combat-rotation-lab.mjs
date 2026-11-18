@@ -96,7 +96,7 @@ export function rotationReferenceTemplate(build,gearById={}){
  }
  if(unsupported.length)return {unsupported,config:null,rankChoices};
  const melee=selected.some(isMelee),ranged=selected.some(isRanged);
- const encounter={...(selected.some(r=>r.abilityId==='paladin:exorcism')?{targetTypes:{boss:null}}:{}),mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
+ const encounter={...(build.classId==='paladin'&&Number(build.talents?.['460']??0)>0?{daybreakModel:{durationMs:30000,min:248,max:289,healingCoefficient:null,abilityIds:selected.filter(r=>r.components.some(c=>c.kind==='heal')).map(r=>r.abilityId),includeOwner:null,triggerDamageBasis:null,refresh:null,threat:null,outcomes:null}}:{}),...(build.classId==='paladin'&&Number(build.talents?.['474']??0)>0?{reckoningPolicy:null}:{}),...(selected.some(r=>r.abilityId==='paladin:exorcism')?{targetTypes:{boss:null}}:{}),mode:'reference-research',acknowledgeIncompleteEffects:true,position,distanceYards:melee||selected.some(r=>r.maxRange<=10)?3:20,allyDistanceYards:20,
  includeMelee:melee,includeRanged:ranged,autoPolicy:{provenance,physical:physical(position),threat:null,firstSwing:'after-interval',autoCastPolicy:'skip-during-cast',swingHastePolicy:'preserve-progress'},
  recastPeriodic:'rotation-only',durationMs:build.planning.duration*1000,decisionIntervalMs:build.controls.keyInterval,
  enemyHealth:1e9,allyMaxHealth:1e9,allyHealth:1,regeneration:[],incomingDamage:[],requireCompleteCastProcs:true,...(build.classId==='warlock'&&build.talents?.['347']>0?{castProcPolicies:{nightfall:{durationMs:null}}}:{})};
