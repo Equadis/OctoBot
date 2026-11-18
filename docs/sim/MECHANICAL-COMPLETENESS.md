@@ -47,3 +47,6 @@ Explicit aura stacking supports add/replace/max, cap, duration refresh or preser
 
 ## Ability-specific critical charges
 Explicit source-scoped equipment auras can convert ordinary hit outcomes to their paired critical outcomes while preserving miss, avoidance and resistance. Charge consumption can occur on attempt or landed outcome. This is not a full guaranteed-hit model; glance/block outcomes remain unchanged. Competing charges use first configured eligible effect; exact overlap and named set proc rates remain unverified. Direct damage only.
+
+## Combo-point-dependent critical set effect
+Direct attack events for finishers carry target-specific combo points before spending. Explicit chance per point scales the proc roll and rejects missing point evidence. The exact imported Eviscerate 5% per point tooltip maps to a source-restricted next-critical aura; duration, consumption on attempt or landed, and internal cooldown remain explicit research inputs. No live validation claimed.
