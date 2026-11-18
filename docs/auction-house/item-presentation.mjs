@@ -66,10 +66,13 @@ async function referenceFor(id){
  const [details,supplement]=await Promise.all([catalogueFor("details.json"),catalogueFor("details-supplement.json")]);
  const found=details?.[id]??supplement?.[id];
  if(found&&(found.tooltipText||found.summary))return {tooltipText:found.tooltipText||found.summary,source:"OctoWoW DB snapshot"};
- const ref=await catalogueFor("reference-tooltips.json");
- return ref?.items?.[id]||null;
+ return null;
 }
 async function officialFor(id){
+ try{
+  const response=await fetch("https://octometrics.eqvoice.workers.dev/api/world-chat/item-tooltip?id="+id,{credentials:"omit",signal:AbortSignal.timeout(8000)});
+  if(response.ok){const data=await response.json();if(data.id===id&&typeof data.tooltipText==="string"&&data.tooltipText.trim()&&data.source==="OctoWoW DB")return data;}
+ }catch{/* Existing direct DB request remains a fallback. */}
  try{
   const response=await fetch("https://octowow.st/db/?item="+id,{credentials:"omit",signal:AbortSignal.timeout(7000)});
   if(!response.ok)return null;
@@ -88,7 +91,7 @@ export async function richItemTooltip(item){
  const id=Number(item?.item_id),v=variantDetails(item),title=displayItemName(item);
  let base=null;
  if(Number.isSafeInteger(id)&&id>0){
-  if(!baseCache.has(id))baseCache.set(id,(async()=>await referenceFor(id)||await officialFor(id))());
+  if(!baseCache.has(id))baseCache.set(id,(async()=>await referenceFor(id)||await officialFor(id)||(await catalogueFor("reference-tooltips.json"))?.items?.[id]||null)());
   base=await baseCache.get(id);if(!base)baseCache.delete(id);
  }
  const raw=typeof base?.tooltipText==='string'?base.tooltipText.trim():'';
