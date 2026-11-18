@@ -7,23 +7,23 @@ function post(action,body){return new Request("https://octometrics.example/api/a
  body:JSON.stringify({scan_id:id,...body})
 });}
 function fakeDb(scan,options={}){
- const calls=[],batches=[];
+ const calls=[],batches=[];let current={...scan};const boundCalls=new WeakMap();
  const db={
   prepare(sql){
    const call={sql,args:[]};calls.push(call);
    const bound={
     bind(...args){call.args=args;return bound;},
     async first(){
-     if(sql.includes("FROM ah_scans WHERE scan_id=?"))return scan;
+     if(sql.includes("FROM ah_scans WHERE scan_id=?"))return current;
      if(sql.includes("FROM ah_pages WHERE scan_id=?"))return options.pages||null;
      if(sql.includes("COUNT(DISTINCT auction_id)"))return options.listings||null;
      return null;
     },
     async run(){return {success:true};}
    };
-   return bound;
+   boundCalls.set(bound,call);return bound;
   },
-  async batch(ops){batches.push(ops);return ops.map(()=>({success:true}));}
+  async batch(ops){batches.push(ops);for(const op of ops){const call=boundCalls.get(op);if(call?.sql.startsWith("UPDATE ah_scans SET status='complete'")&&current.status==='uploading'){const [completed_at,expected_pages,reported_total,page_count,auction_count,duration_ms]=call.args;current={...current,status:'complete',completed_at,expected_pages,reported_total,page_count,auction_count,duration_ms};}}return ops.map(()=>({success:true}));}
  };
  return {db,calls,batches};
 }
