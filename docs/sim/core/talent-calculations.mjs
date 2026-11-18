@@ -79,7 +79,7 @@ const ABILITIES={
   feral('Maul','Claw/Rake/Maul/Swipe/Savage Bite'),feral('Swipe','Claw/Rake/Maul/Swipe/Savage Bite'),
   feral('Savage Bite','Claw/Rake/Maul/Swipe/Savage Bite'),feral('Ferocious Bite'),
   profile('Rip','periodic','All physical attacks','Feral abilities'),
-  utility('Faerie Fire','Balance spells','Balance/utility spells'),utility('Faerie Fire (Feral)','Feral abilities'),utility('Demoralizing Roar','Feral abilities'),utility('Tiger\'s Fury'),utility('Enrage'),utility('Bash','Bash/Pounce'),utility('Pounce','Bash/Pounce')
+  utility('Faerie Fire','Balance spells','Balance/utility spells'),utility('Faerie Fire (Feral)','Feral abilities'),utility('Demoralizing Roar','Feral abilities'),utility('Tiger\'s Fury'),utility('Enrage'),utility("Nature's Swiftness"),utility('Bash','Bash/Pounce'),utility('Pounce','Bash/Pounce')
  ],
  shaman:[
   sham('Lightning Bolt','Nature','Lightning spells','Lightning Bolt/Chain Lightning'),
@@ -92,7 +92,7 @@ const ABILITIES={
   fireTotem('Fire Nova Totem'),fireTotem('Magma Totem'),fireTotem('Searing Totem'),utility('Grounding Totem','Totems','Helpful Totems'),
   utility('Mana Spring Totem','Totems','Helpful Totems'),utility('Healing Stream Totem','Totems','Helpful Totems'),
   utility('Earth Shield','Shield spells'),utility('Lightning Shield','Shield spells'),utility('Water Shield','Shield spells'),
-  utility('Ghost Wolf'),utility('Reincarnation'),utility('Totemic Recall')
+  utility('Elemental Mastery'),utility('Ancestral Swiftness'),utility('Ghost Wolf'),utility('Reincarnation'),utility('Totemic Recall')
  ],
  hunter:[
   ranged('Auto Shot'),hunterShot('Aimed Shot','Steady Shot/Aimed Shot'),
