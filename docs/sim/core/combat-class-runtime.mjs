@@ -1,4 +1,5 @@
 import {createHunterRangedTalents} from './combat-hunter-ranged-talents.mjs';
+import {validateTigersFury,applyTigersFury,tigersFuryBonus} from './combat-druid-feral.mjs';
 import {validateSwiftness,validateElementalMastery} from './combat-nature-cooldowns.mjs';
 import {validateIcicles,freezeImmune,allowFreeze,attemptFrostbite,iciclesAvailable,beginIcicles,shatterIcicles} from './combat-mage-icicles.mjs';
 import {validateArcaneSurge,applySurge,surgeReady,consumeSurge,triggerSurge} from './combat-mage-surge.mjs';
@@ -111,6 +112,7 @@ function validateEffects(effects,ctx,depth=0){
   else if(x.kind==='blade-flurry'){if(ctx.classId!=='rogue')throw new Error('Blade Flurry requires Rogue');validateBladeFlurry(x.model);if(x.model.abilityIds.some(id=>!ctx.abilityIds.has(id)))throw new Error('Blade Flurry eligibility references unconfigured action');}
   else if(x.kind==='shadow-of-death'){if(ctx.classId!=='rogue'||!ctx.comboEnabled)throw new Error('Shadow of Death requires Rogue combo points');validateShadowOfDeath(x.model);finite(ctx.stats.attackPower,'Shadow of Death attack power',0);}
   else if(x.kind==='expose-armor'){if(ctx.classId!=='rogue'||!ctx.comboEnabled||!Array.isArray(x.armourByCombo)||x.armourByCombo.length!==5)throw new Error('Expose Armor requires five combo values');for(const n of x.armourByCombo)finite(n,'armour reduction',0);int(x.durationMs,'Expose Armor duration',1);validateOutcomes(x.outcomes);}
+  else if(x.kind==='tigers-fury'){if(ctx.classId!=='druid'||!has(ctx.pools,'energy'))throw new Error('Tiger’s Fury requires Druid energy');validateTigersFury(x.model);id(x.name,'Tiger’s Fury name');}
   else if(x.kind==='mage-arcane-surge'){if(ctx.classId!=='mage'||validateArcaneSurge(x.model).mode!=='guide-buff')throw new Error('Arcane Surge buff requires Mage and guide policy');}
   else if(x.kind==='mage-combustion'){if(ctx.classId!=='mage')throw new Error('Combustion requires Mage');validateCombustion(x.model);if(x.model.eligibleAbilityIds.some(id=>!ctx.abilityIds.has(id)))throw new Error('Unconfigured Combustion spell');}
   else if(x.kind==='mage-arcane-power'){if(ctx.classId!=='mage')throw new Error('Arcane Power requires Mage');validateArcanePower(x.model);}
@@ -156,6 +158,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   if(damageEffect&&castContext.abilityId==='mage:arcane-missiles'&&castContext.arcaneRuptureActive){amountRange={min:amountRange.min*1.2,max:amountRange.max*1.2};}
   if(damageEffect&&x.school!=='physical'&&castContext.surgeModel?.mode==='guide-buff'&&actor===castContext.ownerId){const f=e.auras.stat(actor,'arcaneSurgeDamageFactor',1);amountRange={min:amountRange.min*f,max:amountRange.max*f};}
   if(damageEffect&&['fire','frost','nature'].includes(x.school)){const f=e.auras.stat(actor,'elementalMasteryDamageFactor',1)*(castContext.swiftnessDamageFactor??1);amountRange={min:amountRange.min*f,max:amountRange.max*f};}
+  if(castContext.classId==='druid'&&classState.form==='Cat'){const bonus=tigersFuryBonus(e,actor,x,castContext);amountRange={min:amountRange.min+bonus,max:amountRange.max+bonus};}
   if(damageEffect&&x.school==='holy'){const purifying=1+e.auras.stat(actor,'purifyingFlamesHolyPct',0)/100;amountRange={min:amountRange.min*purifying,max:amountRange.max*purifying};}
   if(damageEffect&&x.school==='frost'){const barrier=frostDamageFactor(e,actor);amountRange={min:amountRange.min*barrier,max:amountRange.max*barrier};}
   const allyChastise=castContext.chastise&&castContext.partyAllyIds?.includes(target);if(allyChastise)amountRange={min:amountRange.min*castContext.chastise.allyDamageFactor,max:amountRange.max*castContext.chastise.allyDamageFactor};let outcomes=allyChastise?castContext.chastise.allyOutcomes:x.outcomes;if(castContext.combustion&&actor===castContext.ownerId&&depth===0)outcomes=combustionOutcomes(e,actor,castContext.combustion,castContext,x,outcomes);if(castContext.innerFocusCrit===true&&['damage','heal'].includes(x.kind))outcomes=frozenOutcomes(outcomes,25);if(x.frozenCritBonusPct&&e.auras.stat(target,'frozen',0)>0)outcomes=frozenOutcomes(outcomes,x.frozenCritBonusPct);if(depth===0&&castContext.disciplineRuntime)outcomes=castContext.disciplineRuntime.critical(e,actor,x,castContext,outcomes);if(castContext.guaranteeHit===true&&x.kind==='damage'){const landed=outcomes.filter(o=>o.landed),sum=landed.reduce((n,o)=>n+o.probability,0);if(sum<=0)throw new Error('Guaranteed cast has no landed outcome');outcomes=landed.map(o=>({...o,probability:o.probability/sum}));}
@@ -220,6 +223,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   else if(x.kind==='expose-armor'){last=sampleAttack({min:0,max:0,outcomes:x.outcomes,random:e.random});e.recordMechanic('attack-result',{actorId:actor,targetId:target,source,school:'physical',...last});if(last.landed){const value=x.armourByCombo[e.comboPoints.points(target)-1];if(!Number.isFinite(value))throw new Error('Missing Expose Armor combo value');e.auras.apply({id:'rogue:expose-armor',name:'Expose Armor',targetId:target,ownerId:actor,kind:'debuff',durationMs:x.durationMs,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[{stat:'majorArmourReduction',mode:'flat',value}]});}}
   else if(x.kind==='cold-blood'){e.auras.apply({...x.aura,targetId:actor,ownerId:actor});}
   else if(x.kind==='mage-arcane-surge'){applySurge(e,actor,x.model);}
+  else if(x.kind==='tigers-fury'){applyTigersFury(e,actor,x.name,x.model);}
   else if(x.kind==='mage-combustion'){applyCombustion(e,actor,x.model);}
   else if(x.kind==='mage-arcane-power'){applyArcanePower(e,actor,x.model);}
   else if(x.kind==='mage-reset'){for(const id of castContext.frostResetIds??[]){const remaining=e.resources.cooldowns.remaining(id);e.resources.cooldowns.reset(id);e.recordMechanic('cooldown-reset',{actorId:actor,source,abilityId:id,remainingMs:remaining});}}
