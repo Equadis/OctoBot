@@ -12,6 +12,249 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ ...[[2944,215,19],[19278,645,68]].map(([id,cost,tick])=>row('priest','devouring-plague',id,'mana','instant',[c('periodic-damage','shadow',null,{min:tick,max:tick,durationMs:24000,intervalMs:3000,leech:true})],{cost,castMs:0,minRange:0,maxRange:30,referenceCooldownMs:180000,referenceGcdMs:1500,referenceSource:'https://octowow.st/index.php/priest',requiredPolicy:['componentCoefficients','leechModel',...(id===2944?['acceptSourceConflict']:[])],refreshStrategy:'target-debuff'})),
+ ...[
+  {
+    "classId": "priest",
+    "abilityId": "priest:devouring-plague",
+    "spellId": 19276,
+    "rank": 2,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 350,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 34,
+        "max": 34,
+        "durationMs": 24000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=19276/devouring-plague",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "componentCoefficients",
+      "leechModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 180000,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:devouring-plague",
+      "spellId": 19276,
+      "rank": 2,
+      "level": 28,
+      "fields": {
+        "school": "shadow",
+        "classicManaCost": 350,
+        "classicBaseTick": 34,
+        "referenceDurationMs": 24000,
+        "referenceTickMs": 3000,
+        "referenceCooldownMs": 180000
+      },
+      "unknown": [
+        "OctoWoW rank cost and damage",
+        "live cooldown, coefficient, leech basis and threat"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=19276/devouring-plague",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:devouring-plague",
+    "spellId": 19277,
+    "rank": 3,
+    "learnLevel": 36,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 495,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 50,
+        "max": 50,
+        "durationMs": 24000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://classicdb.ch/?spell=19277",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "componentCoefficients",
+      "leechModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 180000,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:devouring-plague",
+      "spellId": 19277,
+      "rank": 3,
+      "level": 36,
+      "fields": {
+        "school": "shadow",
+        "classicManaCost": 495,
+        "classicBaseTick": 50,
+        "referenceDurationMs": 24000,
+        "referenceTickMs": 3000,
+        "referenceCooldownMs": 180000
+      },
+      "unknown": [
+        "OctoWoW rank cost and damage",
+        "live cooldown, coefficient, leech basis and threat"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classicdb.ch/?spell=19277",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:devouring-plague",
+    "spellId": 19279,
+    "rank": 5,
+    "learnLevel": 52,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 810,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 89,
+        "max": 89,
+        "durationMs": 24000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://classic.warcraftdb.com/data/spell/19279",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "componentCoefficients",
+      "leechModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 180000,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:devouring-plague",
+      "spellId": 19279,
+      "rank": 5,
+      "level": 52,
+      "fields": {
+        "school": "shadow",
+        "classicManaCost": 810,
+        "classicBaseTick": 89,
+        "referenceDurationMs": 24000,
+        "referenceTickMs": 3000,
+        "referenceCooldownMs": 180000
+      },
+      "unknown": [
+        "OctoWoW rank cost and damage",
+        "live cooldown, coefficient, leech basis and threat"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://classic.warcraftdb.com/data/spell/19279",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:devouring-plague",
+    "spellId": 19280,
+    "rank": 6,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 985,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "periodic-damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 113,
+        "max": 113,
+        "durationMs": 24000,
+        "intervalMs": 3000,
+        "leech": true
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=19280/devouring-plague",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "componentCoefficients",
+      "leechModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 180000,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:devouring-plague",
+      "spellId": 19280,
+      "rank": 6,
+      "level": 60,
+      "fields": {
+        "school": "shadow",
+        "classicManaCost": 985,
+        "classicBaseTick": 113,
+        "referenceDurationMs": 24000,
+        "referenceTickMs": 3000,
+        "referenceCooldownMs": 180000
+      },
+      "unknown": [
+        "OctoWoW rank cost and damage",
+        "live cooldown, coefficient, leech basis and threat"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=19280/devouring-plague",
+      "liveVerified": false
+    }
+  }
+],
  ...[{
   "classId": "hunter",
   "abilityId": "hunter:steady-shot",
