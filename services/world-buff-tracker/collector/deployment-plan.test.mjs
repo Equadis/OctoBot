@@ -1,0 +1,4 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {deploymentPlan} from "./deployment-plan.mjs";
+test("all seven services share deployment settings and begin with logins disabled",()=>{const p=deploymentPlan();assert.equal(p.length,7);assert.equal(new Set(p.map(x=>x.variables.WOW_ACCOUNT)).size,7);for(const s of p){assert.equal(s.variables.WOW_LOGIN_ENABLED,"false");assert.equal(s.deploy.startCommand,"npm run start:collector");assert.equal(s.variables.METRICS_PUSH_TOKEN,"${{shared.METRICS_PUSH_TOKEN}}");assert.equal(s.variables.WOW_PASSWORD,"${{shared.WOW_PASSWORD}}");}assert.equal(p.filter(x=>x.variables.RAID_STATE_KEY).length,2);assert.equal(p.filter(x=>x.variables.WORLD_CHAT_ENABLED==="true").length,2);assert.equal(p.filter(x=>x.variables.AUCTION_COLLECTOR_ENABLED==="true").length,2);assert.ok(p.filter(x=>x.variables.AUCTION_COLLECTOR_ENABLED).every(x=>x.variables.AUCTION_RULES_APPROVED==="false"));});
