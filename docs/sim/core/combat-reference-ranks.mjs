@@ -12,6 +12,7 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ {"classId":"priest","abilityId":"priest:shadowform","spellId":15473,"rank":1,"learnLevel":40,"resource":"mana","mode":"instant","cost":0,"castMs":0,"minRange":0,"maxRange":0,"components":[{"kind":"priest-shadowform"}],"source":"https://octowow.st/talents/priest/","referenceSource":"https://www.wowhead.com/classic/spell=15473/shadowform","status":"external-reference-only","liveVerified":false,"learnability":"talent-reference","requiredPolicy":["costOverride","shadowformPolicy"],"referenceGcdMs":1500,"referenceCooldownMs":0,"record":{"classId":"priest","abilityId":"priest:shadowform","spellId":15473,"rank":1,"level":40,"fields":{"school":"shadow","shadowDamagePct":15,"physicalDamageTakenReductionPct":15},"unknown":["Live mana cost, improved Shadowform passive, cancellation and snapshot interaction"],"conflicts":[],"status":"external-reference-only","source":"https://octowow.st/talents/priest/","liveVerified":false}},
  ...[
   {
     "classId": "priest",
