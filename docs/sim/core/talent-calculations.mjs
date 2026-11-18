@@ -70,7 +70,7 @@ const ABILITIES={
   balance('Hurricane','Nature','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath'),
   profile('Insect Swarm','periodic','Nature','Starfire/Moonfire/Hurricane/Insect Swarm/Wrath','Balance and healing spells','Balance spells','Balance/utility spells','Spells','Periodic magic'),
   heal('Healing Touch','Nature','Healing Touch/Regrowth/Tranquility','Balance and healing spells'),
-  heal('Regrowth','Nature','Healing Touch/Regrowth/Tranquility','Balance and healing spells'),
+  heal('Regrowth','Nature','Healing Touch/Regrowth/Tranquility','Balance and healing spells'),heal('Swiftmend','Nature','Balance and healing spells'),
   profile('Regrowth (periodic)','heal-periodic','Healing spells','Periodic magic','Regrowth with Rejuvenation'),
   profile('Rejuvenation','heal-periodic','Healing spells','Periodic magic','Balance and healing spells'),
   profile('Tranquility','heal','Healing spells','Healing Touch/Regrowth/Tranquility','Balance and healing spells'),
