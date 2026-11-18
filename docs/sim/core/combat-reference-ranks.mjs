@@ -12,6 +12,701 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Druid armour and AP utility reference candidates.
+ ...[
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire",
+    "spellId": 770,
+    "rank": 1,
+    "learnLevel": 18,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 55,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=770",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire",
+      "spellId": 770,
+      "rank": 1,
+      "level": 18,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 175,
+        "referenceDurationMs": 40000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=770",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire",
+    "spellId": 778,
+    "rank": 2,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 75,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=778",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire",
+      "spellId": 778,
+      "rank": 2,
+      "level": 30,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 285,
+        "referenceDurationMs": 40000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=778",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire",
+    "spellId": 9749,
+    "rank": 3,
+    "learnLevel": 42,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 95,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=9749",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire",
+      "spellId": 9749,
+      "rank": 3,
+      "level": 42,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 395,
+        "referenceDurationMs": 40000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=9749",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire",
+    "spellId": 9907,
+    "rank": 4,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 115,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=9907",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire",
+      "spellId": 9907,
+      "rank": 4,
+      "level": 54,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 505,
+        "referenceDurationMs": 40000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=9907",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire-feral",
+    "spellId": 16857,
+    "rank": 1,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=16857",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 6000,
+    "refreshStrategy": "target-debuff",
+    "forms": [
+      "Cat",
+      "Bear"
+    ],
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire-feral",
+      "spellId": 16857,
+      "rank": 1,
+      "level": 30,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 175,
+        "referenceDurationMs": 40000,
+        "referenceBaselineLevel": 30
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [
+        {
+          "field": "learn level",
+          "classic": 25,
+          "octowowGuide": 30
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=16857",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire-feral",
+    "spellId": 17390,
+    "rank": 2,
+    "learnLevel": 30,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=17390",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 6000,
+    "refreshStrategy": "target-debuff",
+    "forms": [
+      "Cat",
+      "Bear"
+    ],
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire-feral",
+      "spellId": 17390,
+      "rank": 2,
+      "level": 30,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 285,
+        "referenceDurationMs": 40000,
+        "referenceBaselineLevel": 30
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=17390",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire-feral",
+    "spellId": 17391,
+    "rank": 3,
+    "learnLevel": 42,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=17391",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 6000,
+    "refreshStrategy": "target-debuff",
+    "forms": [
+      "Cat",
+      "Bear"
+    ],
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire-feral",
+      "spellId": 17391,
+      "rank": 3,
+      "level": 42,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 395,
+        "referenceDurationMs": 40000,
+        "referenceBaselineLevel": 30
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=17391",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:faerie-fire-feral",
+    "spellId": 17392,
+    "rank": 4,
+    "learnLevel": 54,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 0,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=17392",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 6000,
+    "refreshStrategy": "target-debuff",
+    "forms": [
+      "Cat",
+      "Bear"
+    ],
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:faerie-fire-feral",
+      "spellId": 17392,
+      "rank": 4,
+      "level": 54,
+      "fields": {
+        "school": "nature",
+        "referenceAmount": 505,
+        "referenceDurationMs": 40000,
+        "referenceBaselineLevel": 30
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=17392",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:demoralizing-roar",
+    "spellId": 99,
+    "rank": 1,
+    "learnLevel": 10,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=99",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "feralModel",
+      "targetPolicy"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "form": "Bear",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:demoralizing-roar",
+      "spellId": 99,
+      "rank": 1,
+      "level": 10,
+      "fields": {
+        "school": "physical",
+        "referenceAmount": 30,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=99",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:demoralizing-roar",
+    "spellId": 1735,
+    "rank": 2,
+    "learnLevel": 20,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=1735",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "feralModel",
+      "targetPolicy"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "form": "Bear",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:demoralizing-roar",
+      "spellId": 1735,
+      "rank": 2,
+      "level": 20,
+      "fields": {
+        "school": "physical",
+        "referenceAmount": 60,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=1735",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:demoralizing-roar",
+    "spellId": 9490,
+    "rank": 3,
+    "learnLevel": 32,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=9490",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "feralModel",
+      "targetPolicy"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "form": "Bear",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:demoralizing-roar",
+      "spellId": 9490,
+      "rank": 3,
+      "level": 32,
+      "fields": {
+        "school": "physical",
+        "referenceAmount": 75,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=9490",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:demoralizing-roar",
+    "spellId": 9747,
+    "rank": 4,
+    "learnLevel": 42,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=9747",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "feralModel",
+      "targetPolicy"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "form": "Bear",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:demoralizing-roar",
+      "spellId": 9747,
+      "rank": 4,
+      "level": 42,
+      "fields": {
+        "school": "physical",
+        "referenceAmount": 110,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=9747",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "druid",
+    "abilityId": "druid:demoralizing-roar",
+    "spellId": 9898,
+    "rank": 5,
+    "learnLevel": 52,
+    "resource": "rage",
+    "mode": "instant",
+    "cost": 10,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 10,
+    "components": [
+      {
+        "kind": "druid-debuff"
+      }
+    ],
+    "source": "https://www.wowhead.com/classic/spell=9898",
+    "referenceSource": "https://octowow.st/index.php/druid",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "druidDebuffModel",
+      "feralModel",
+      "targetPolicy"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "refreshStrategy": "target-debuff",
+    "form": "Bear",
+    "record": {
+      "classId": "druid",
+      "abilityId": "druid:demoralizing-roar",
+      "spellId": 9898,
+      "rank": 5,
+      "level": 52,
+      "fields": {
+        "school": "physical",
+        "referenceAmount": 138,
+        "referenceDurationMs": 30000
+      },
+      "unknown": [
+        "live rank costs, aura amount, range, application outcomes and threat",
+        "live stacking and NPC action power interactions"
+      ],
+      "conflicts": [],
+      "status": "external-reference-only",
+      "source": "https://www.wowhead.com/classic/spell=9898",
+      "liveVerified": false
+    }
+  }
+],
  // Elemental Shaman direct, refresh and ground-area candidate ranks.
  ...[
   {

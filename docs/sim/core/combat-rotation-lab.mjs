@@ -22,7 +22,7 @@ const provenance='Explicit experimental rotation policy; reference mechanics, no
 const order=['miss','dodge','parry','block','glance','crit'];
 const physical=position=>({dualWieldPenaltyPct:19,parryPct:0,blockPct:0,critSuppressionPct:0,criticalMultiplier:2,blockValue:0,order,position});
 const resistance=()=>Object.fromEntries(['fire','frost','shadow','nature','arcane','holy'].map(s=>[s,{policy:'none',bins:[{fraction:0,probability:1}]}]));
-function availableRanks(b){return referenceRanks(b.classId).filter(r=>rankPhase(r)<=CURRENT_ENCHANT_PHASE&&r.learnLevel<=b.level&&(!r.form||r.form===b.classOptions.form));}
+function availableRanks(b){return referenceRanks(b.classId).filter(r=>rankPhase(r)<=CURRENT_ENCHANT_PHASE&&r.learnLevel<=b.level&&(!r.form||r.form===b.classOptions.form)&&(!r.forms||r.forms.includes(b.classOptions.form)));}
 function distinctActions(b){return [...new Map(rowsFor(b).map(row=>[abilityKey(b.classId,row.ability),row.ability])).entries()];}
 function defaults(rank,position,normalisedSpeed){
  const policy={provenance,phase:CURRENT_ENCHANT_PHASE,acceptExternalReference:false,acceptSourceConflict:false,
@@ -35,6 +35,7 @@ function defaults(rank,position,normalisedSpeed){
  for(const field of rank.requiredPolicy??[]){
   if(field==='darkHarvestModel')policy.darkHarvestModel={totalBase:rank.record.fields.talentTooltipTotal??rank.record.fields.historicalTotal,totalCoefficient:null,durationMs:8000,tickMs:null,intervalFactor:null,expiryPolicy:null,activation:'channel-start',agonyOverflow:'clamp-last'};
   if(field==='drainSoulModel'){policy.drainSoulModel={totalBase:rank.record.fields.historicalTotal,totalCoefficient:null,durationMs:6000,tickMs:1000,tickCost:rank.record.fields.historicalTickCost,grantShard:false};}
+  if(field==='druidDebuffModel')policy.druidDebuffModel={amount:rank.record.fields.referenceAmount,durationMs:rank.record.fields.referenceDurationMs,outcomes:null,threat:null,...(rank.abilityId==='druid:demoralizing-roar'?{radius:10,cap:null}:{})};
   if(field==='moltenBlastModel')policy.moltenBlastModel={min:rank.record.fields.referenceDamage[0],max:rank.record.fields.referenceDamage[1],coefficient:rank.record.fields.referenceCoefficient,refreshEnabled:null,refresh:null,durationMs:null,bonusBasis:'raw-periodic-per-second',bonusDamagePerSecond:null,bonusOutcomes:null};
   if(field==='earthquakeModel')policy.earthquakeModel={min:rank.record.fields.referenceDamage[0],max:rank.record.fields.referenceDamage[1],coefficient:rank.record.fields.referenceCoefficient,cap:null,delayMs:4000,slowPct:15,radius:10,splash:.35,aftershock:.3,targeting:'explicit-anchor-nearby',damageBasis:'independent-base-rolls'};
   if(field==='areaModel')policy.areaModel={min:rank.record.fields.referenceDamage?.[0]??rank.record.fields.classicTotal??null,max:rank.record.fields.referenceDamage?.[1]??rank.record.fields.classicTotal??null,coefficient:null,cap:rank.abilityId==='priest:prayer-of-healing'?5:null,...(rank.abilityId==='warlock:rain-of-fire'?{durationMs:8000,tickMs:1000}:rank.abilityId==='mage:blast-wave'?{radius:10,controlEnabled:null,durationMs:6000,slowPct:null}:{targeting:'explicit-party-near-anchor'})};
