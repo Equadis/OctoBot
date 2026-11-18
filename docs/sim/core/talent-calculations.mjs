@@ -45,7 +45,7 @@ const ABILITIES={
   profile('Judgement of Righteousness','unknown','Holy','Seal/Judgement of Righteousness','Judgement/Seals','Judgement'),
   profile('Seal of Righteousness','unknown','Holy','Seal/Judgement of Righteousness','Judgement/Seals'),profile('Retribution Aura','unknown','Holy'),
   ...many(['Seal of Command','Seal of the Crusader','Seal of Wisdom','Seal of Light'],'utility','Judgement/Seals'),
-  utility('Judgement','Judgement/Seals'),utility('Hand of Reckoning'),utility('Lay on Hands'),utility('Devotion Aura'),utility('Concentration Aura'),
+  utility('Holy Shield'),utility('Righteous Fury'),utility('Judgement','Judgement/Seals'),utility('Hand of Reckoning'),utility('Lay on Hands'),utility('Devotion Aura'),utility('Concentration Aura'),
   ...many(['Hand of Protection','Hand of Freedom','Hammer of Justice'],'utility')
  ],
  rogue:[
