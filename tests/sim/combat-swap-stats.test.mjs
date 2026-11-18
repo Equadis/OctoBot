@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {swapStatModifiers} from '../../docs/sim/core/combat-swap-stats.mjs';
+const before={attackPower:100,healingPower:10,spellPower:10,schools:{fire:10},health:100,melee:{mainhand:{min:20,max:30,damage:'20-30',baseSpeedSeconds:2,handMultiplier:1},offhand:{damage:'0-0'}}};
+test('AP and spell power swaps propagate only supported formula deltas',()=>{const after=structuredClone(before);after.attackPower=170;after.schools.fire=30;after.melee.mainhand.min+=10;after.melee.mainhand.max+=10;assert.deepEqual(swapStatModifiers(before,after),[{stat:'attackPower',mode:'flat',value:70},{stat:'fire',mode:'flat',value:20}]);after.health=200;assert.throws(()=>swapStatModifiers(before,after),/Unsupported/);});

@@ -9,3 +9,5 @@ Owner-to-pet inheritance and known Great Stamina health contribution may now be 
 
 ## Trinket swap reference transition
 The equipment runtime can transition explicitly scheduled before/after loadouts with preserved cooldowns, equip lock, and configurable old aura retention. The build adapter checks replacement legality, exact item IDs for loadout effects and unchanged static combat snapshot; it rejects stat-changing swaps. The combat drop is an acknowledged research scenario input, not an actual Vanish/Feign Death cast or success model. Public readiness stays blocked; integration of real cast outcomes and dynamic stat/attack-table changes remains outstanding.
+
+The restricted swap adapter now supports AP and school/healing power changes via persistent dynamic stat modifiers. Other changes (hit, crit, health, haste, unrelated weapon damage) fail closed. Formulas reading static inputs outside the dynamic range path still require review; actual combat drop is not simulated.
