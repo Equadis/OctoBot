@@ -286,7 +286,7 @@ test("auction countdown colours use upper duration bands and 72h remains blue as
  assert.equal(timeClass(72*H,seen,now+1000),"ah-time-blue");
  assert.equal(timeClass(null,seen,now),null);
  assert.equal(timeClass(H,seen,now+2*H),null);
- for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff9218",yellow:"#ffff00",green:"#1eff00",blue:"#2992ff"}))
+ for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff8000",yellow:"#ffff00",green:"#00ff00",blue:"#0080ff"}))
   assert.ok(read("auction-house/auction.css").includes(".ah-auction-time.ah-time-"+colour+"{color:"+hex+"}"));
 });
 
@@ -302,4 +302,20 @@ test("Auction House KPIs order scan status, item count, active auctions and hist
  assert.ok(js.includes("count(s.total_historical_auctions)"));
  assert.ok(js.includes("'Last scan: '+dateTime(s.completed_at)"));
  assert.ok(!js.includes("last.className=lastScanClass"));
+});
+
+
+test('trend colours share the countdown palette and sorting has accessible labels without hover titles',()=>{
+ const css=read('auction-house/auction.css'),js=read('auction-house/auction.js');
+ const palette={"up-strong":"#ff0000","up":"#ff8000","up-slight":"#ffff00","neutral":"#ffffff","down-slight":"#80ff00","down":"#00ff00","down-strong":"#0080ff"};
+ for(const [key,hex] of Object.entries(palette))assert.ok(css.includes('.ah-scroll td.ah-change-'+key+',.ah-stats .ah-change-'+key+'{color:'+hex+'}'),key);
+ assert.ok(css.includes('font-size:calc(1em + 2pt)'));
+ assert.ok(js.includes("button.setAttribute('aria-label',action)"));
+ assert.ok(!js.includes('button.title=action'));
+ assert.ok(!js.includes('tc.title='));
+});
+test('expanded auction listings omit starting bid and minimum next bid columns and cells',()=>{
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes("simpleTable(['Seller (owner GUID)','Quantity','Current bid','Buyout','Unit buyout','Time left (est.)']"));
+ assert.doesNotMatch(js,/moneyNode\(r\.(?:start_bid|min_next_bid)\)/);
 });

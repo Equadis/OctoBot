@@ -51,7 +51,7 @@ test('Auction House time-left colours follow 30m red, 2h orange, 8h yellow, 24h 
   assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-orange');
   assert.equal(timeClass(72*H,seen,t0+1),'ah-time-blue','a 72h auction remains blue after a second');
   const css=read('auction-house/auction.css');
-  for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff9218',yellow:'#ffff00',green:'#1eff00',blue:'#2992ff'}))
+  for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff8000',yellow:'#ffff00',green:'#00ff00',blue:'#0080ff'}))
     assert.ok(css.includes('.ah-auction-time.ah-time-'+colour+'{color:'+hex+'}'),'specific auction countdown colour for '+colour);
   const js=read('auction-house/auction.js');
   assert.match(js,/cls\?'ah-auction-time '\+cls:'ah-auction-time'/,'all countdowns are styled without recolouring status indicators');
