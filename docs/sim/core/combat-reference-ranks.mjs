@@ -12,6 +12,160 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ ...[
+  {
+    "classId": "priest",
+    "abilityId": "priest:holy-nova",
+    "spellId": 15237,
+    "rank": 1,
+    "learnLevel": 20,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 185,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "holy",
+        "coefficient": null,
+        "min": 29,
+        "max": 33
+      },
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 54,
+        "max": 62
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/holy-nova",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "holyNovaModel",
+      "componentCoefficients",
+      "costOverride",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:holy-nova",
+      "spellId": 15237,
+      "rank": 1,
+      "level": 20,
+      "fields": {
+        "school": "holy",
+        "referenceDamage": [
+          29,
+          33
+        ],
+        "referenceHeal": [
+          54,
+          62
+        ],
+        "referenceRadius": 10
+      },
+      "unknown": [
+        "live ranked base amounts, mana cost, coefficients, threat, Shadowform penalty"
+      ],
+      "conflicts": [
+        {
+          "field": "manaThreat",
+          "classic": "rank cost 185, zero threat",
+          "guide": "180 mana, reduced threat; rank unspecified"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/holy-nova",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "priest",
+    "abilityId": "priest:holy-nova",
+    "spellId": 15430,
+    "rank": 2,
+    "learnLevel": 28,
+    "resource": "mana",
+    "mode": "instant",
+    "cost": 290,
+    "castMs": 0,
+    "minRange": 0,
+    "maxRange": 0,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "holy",
+        "coefficient": null,
+        "min": 52,
+        "max": 60
+      },
+      {
+        "kind": "heal",
+        "stat": "healingPower",
+        "coefficient": null,
+        "min": 89,
+        "max": 101
+      }
+    ],
+    "source": "https://wowcalc.net/en/classic/wiki/spells/priest/holy-nova",
+    "referenceSource": "https://octowow.st/index.php/priest",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "holyNovaModel",
+      "componentCoefficients",
+      "costOverride",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 0,
+    "record": {
+      "classId": "priest",
+      "abilityId": "priest:holy-nova",
+      "spellId": 15430,
+      "rank": 2,
+      "level": 28,
+      "fields": {
+        "school": "holy",
+        "referenceDamage": [
+          52,
+          60
+        ],
+        "referenceHeal": [
+          89,
+          101
+        ],
+        "referenceRadius": 10
+      },
+      "unknown": [
+        "live ranked base amounts, mana cost, coefficients, threat, Shadowform penalty"
+      ],
+      "conflicts": [
+        {
+          "field": "manaThreat",
+          "classic": "rank cost 290, zero threat",
+          "guide": "180 mana, reduced threat; rank unspecified"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://wowcalc.net/en/classic/wiki/spells/priest/holy-nova",
+      "liveVerified": false
+    }
+  }
+],
+ row('priest','holy-nova',15431,'mana','instant',[{kind:'damage',stat:'holy',coefficient:null,min:76,max:89},{kind:'heal',stat:'healingPower',coefficient:null,min:121,max:140}],{cost:400,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:0,referenceGcdMs:1500,requiredPolicy:["holyNovaModel","componentCoefficients","costOverride","acceptSourceConflict"]}),
+ row('priest','holy-nova',27799,'mana','instant',[{kind:'damage',stat:'holy',coefficient:null,min:106,max:123},{kind:'heal',stat:'healingPower',coefficient:null,min:161,max:188}],{cost:520,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:0,referenceGcdMs:1500,requiredPolicy:["holyNovaModel","componentCoefficients","costOverride","acceptSourceConflict"]}),
+ row('priest','holy-nova',27800,'mana','instant',[{kind:'damage',stat:'holy',coefficient:null,min:140,max:163},{kind:'heal',stat:'healingPower',coefficient:null,min:235,max:272}],{cost:635,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:0,referenceGcdMs:1500,requiredPolicy:["holyNovaModel","componentCoefficients","costOverride","acceptSourceConflict"]}),
+ row('priest','holy-nova',27801,'mana','instant',[{kind:'damage',stat:'holy',coefficient:null,min:181,max:210},{kind:'heal',stat:'healingPower',coefficient:null,min:302,max:351}],{cost:750,castMs:0,minRange:0,maxRange:0,referenceCooldownMs:0,referenceGcdMs:1500,requiredPolicy:["holyNovaModel","componentCoefficients","costOverride","acceptSourceConflict"]}),
  {
   "classId": "priest",
   "abilityId": "priest:inner-focus",

@@ -134,7 +134,7 @@ const ABILITIES={
   spell('Smite','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
   spell('Holy Fire','Holy','Smite/Holy Fire/Heal/Greater Heal','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),profile('Holy Fire (periodic)','periodic','Holy Fire','Holy','All spells','Spells','Offensive spells','Holy spells','Periodic magic'),
   spell('Chastise','Holy','Smite/Holy Fire/Chastise','Instant/Holy/Discipline spells'),
-  spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
+  spell('Holy Nova','Holy','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),holyHeal('Holy Nova (healing)','Holy Nova','Prayer of Healing/Holy Nova','Instant/Holy/Discipline spells'),
   spell('Mind Blast','Shadow'),spell('Mind Flay','Shadow'),spell('Mana Burn','Discipline','Instant/Holy/Discipline spells'),
   profile('Shadow Word: Pain','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
   profile('Devouring Plague','periodic','Shadow','All spells','Spell casting','Spells','Offensive spells','Shadow spells','Instant/Holy/Discipline spells'),
