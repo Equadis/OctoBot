@@ -81,8 +81,9 @@ export class PeriodicEffects{
  has(id){return this.#effects.has(keyOf(id));}
  #cancel(e){if(e.tickTicket!==null)this.timeline.cancel(e.tickTicket);if(e.expiryTicket!==null)this.timeline.cancel(e.expiryTicket);}
  remove(id){keyOf(id);const e=this.#effects.get(id);if(!e)return false;this.#cancel(e);this.#effects.delete(id);return true;}
- #public(e){return {id:e.id,appliedAt:e.appliedAt,expiresAt:e.expiresAt,nextTick:e.nextTick,tickIndex:e.tickIndex,snapshot:structuredClone(e.snapshot)};}
+ #public(e){return {id:e.id,appliedAt:e.appliedAt,expiresAt:e.expiresAt,nextTick:e.nextTick,tickIndex:e.tickIndex,intervalMs:e.intervalMs,snapshot:structuredClone(e.snapshot)};}
  get(id){const e=this.#effects.get(keyOf(id));return e?this.#public(e):null;}
+ retime(id,intervalMs,expiryPolicy){keyOf(id);int(intervalMs,'periodic interval',1);if(!['fixed-expiry','preserve-tick-count'].includes(expiryPolicy))throw new Error('Explicit periodic retiming policy required');const e=this.#effects.get(id);if(!e)return null;const now=this.timeline.now;if(e.expiresAt<=now||e.intervalMs===intervalMs)return this.#public(e);const oldInterval=e.intervalMs,oldNext=e.nextTick,oldExpiry=e.expiresAt;if(e.tickTicket!==null){this.timeline.cancel(e.tickTicket);e.tickTicket=null;}e.intervalMs=intervalMs;e.nextTick=addTime(now,Math.max(0,Math.round((oldNext-now)*intervalMs/oldInterval)));if(expiryPolicy==='preserve-tick-count'){const remaining=oldExpiry-oldNext;const complete=Math.floor(remaining/oldInterval),partial=remaining-complete*oldInterval;e.expiresAt=e.nextTick+complete*intervalMs+Math.floor(partial*intervalMs/oldInterval);if(e.expiresAt<=now)e.expiresAt=now+1;if(e.expiryTicket!==null)this.timeline.cancel(e.expiryTicket);e.expiryTicket=this.timeline.schedule(e.expiresAt,e.expirePriority,()=>{if(this.#effects.get(id)!==e)return;this.#effects.delete(id);e.expiryTicket=null;if(e.tickTicket!==null)this.timeline.cancel(e.tickTicket);e.onExpire({...this.#public(e),time:this.timeline.now});});}e.scheduleTick();return this.#public(e);}
  shorten(id,ms){keyOf(id);int(ms,'periodic shortening',1);const e=this.#effects.get(id);if(!e)return false;const now=this.timeline.now;e.expiresAt=Math.max(now,e.expiresAt-ms);if(e.expiryTicket!==null)this.timeline.cancel(e.expiryTicket);if(e.tickTicket!==null&&(e.nextTick>e.expiresAt||e.nextTick===e.expiresAt&&!e.tickAtExpiry)){this.timeline.cancel(e.tickTicket);e.tickTicket=null;}const expire=()=>{if(this.#effects.get(id)!==e)return;this.#effects.delete(id);e.expiryTicket=null;if(e.tickTicket!==null)this.timeline.cancel(e.tickTicket);e.onExpire({...this.#public(e),time:this.timeline.now});};if(e.expiresAt===now)expire();else e.expiryTicket=this.timeline.schedule(e.expiresAt,e.expirePriority,expire);return true;}
  apply({id,durationMs,intervalMs,refresh,tickAtExpiry,tickPriority,expirePriority,snapshot,onTick,onExpire=()=>{}}){
   keyOf(id);int(durationMs,'duration',1);int(intervalMs,'interval',1);int(tickPriority,'tick priority');int(expirePriority,'expiry priority');
@@ -96,7 +97,7 @@ export class PeriodicEffects{
   if(old)this.remove(id);this.#effects.set(id,e);
   const tickEligible=()=>e.nextTick<e.expiresAt||e.tickAtExpiry&&e.nextTick===e.expiresAt;
   const scheduleTick=()=>{
-   if(!tickEligible())return;
+   if(e.tickTicket!==null||!tickEligible())return;
    e.tickTicket=this.timeline.schedule(e.nextTick,e.tickPriority,()=>{
     if(this.#effects.get(id)!==e)return;
     e.tickTicket=null;e.tickIndex++;
@@ -106,7 +107,7 @@ export class PeriodicEffects{
     if(this.#effects.get(id)===e)scheduleTick();
    });
   };
-  scheduleTick();e.expiryTicket=this.timeline.schedule(expiresAt,expirePriority,()=>{
+  e.scheduleTick=scheduleTick;scheduleTick();e.expiryTicket=this.timeline.schedule(expiresAt,expirePriority,()=>{
    if(this.#effects.get(id)!==e)return;this.#effects.delete(id);e.expiryTicket=null;if(e.tickTicket!==null)this.timeline.cancel(e.tickTicket);e.onExpire({...this.#public(e),time:this.timeline.now});
   });
   return this.get(id);

@@ -12,6 +12,216 @@ const row=(classId,slug,spellId,resource,mode,components,extra={})=>{
 };
 export const REFERENCE_RANKS=Object.freeze([
  ...EXTERNAL_REFERENCE_RANKS,
+ // Dark Harvest candidate ranks and explicit temporal policy.
+ ...[
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:dark-harvest",
+    "spellId": 52550,
+    "rank": 1,
+    "learnLevel": 40,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/index.php/warlock",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "darkHarvestModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:dark-harvest",
+      "spellId": 52550,
+      "rank": 1,
+      "level": 40,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 700,
+        "talentTooltipTotal": 704,
+        "referenceDurationMs": 8000,
+        "referenceIntervalReductionPct": 30,
+        "historicalPerTickCoefficient": 0.25,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live damage, resource costs, channel tick timing and coefficient",
+        "whether accelerated DoTs retain expiry or preserve tick count; application timing and Agony stage progression"
+      ],
+      "conflicts": [
+        {
+          "field": "periodic haste",
+          "talentTooltip": "30% interval reduction",
+          "archive": "30% haste (different possible interval factor)"
+        },
+        {
+          "field": "rank 1 damage",
+          "archive": 700,
+          "talentTooltip": 704
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/warlock",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:dark-harvest",
+    "spellId": 52551,
+    "rank": 2,
+    "learnLevel": 50,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/index.php/warlock",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "darkHarvestModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:dark-harvest",
+      "spellId": 52551,
+      "rank": 2,
+      "level": 50,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 900,
+        "referenceDurationMs": 8000,
+        "referenceIntervalReductionPct": 30,
+        "historicalPerTickCoefficient": 0.25,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live damage, resource costs, channel tick timing and coefficient",
+        "whether accelerated DoTs retain expiry or preserve tick count; application timing and Agony stage progression"
+      ],
+      "conflicts": [
+        {
+          "field": "periodic haste",
+          "talentTooltip": "30% interval reduction",
+          "archive": "30% haste (different possible interval factor)"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/warlock",
+      "liveVerified": false
+    }
+  },
+  {
+    "classId": "warlock",
+    "abilityId": "warlock:dark-harvest",
+    "spellId": 52552,
+    "rank": 3,
+    "learnLevel": 60,
+    "resource": "mana",
+    "mode": "channel",
+    "cost": null,
+    "castMs": 8000,
+    "tickMs": 1000,
+    "minRange": 0,
+    "maxRange": 30,
+    "components": [
+      {
+        "kind": "damage",
+        "stat": "shadow",
+        "coefficient": null,
+        "min": 0,
+        "max": 0,
+        "channelPeriodic": true
+      }
+    ],
+    "source": "https://octowow.st/index.php/warlock",
+    "referenceSource": "https://octowow.st/forum/viewtopic.php?t=2328",
+    "status": "external-reference-only",
+    "liveVerified": false,
+    "learnability": "imported-candidate-reference",
+    "requiredPolicy": [
+      "costOverride",
+      "darkHarvestModel",
+      "channelApplicationPolicy",
+      "channelTickAtEnd",
+      "acceptSourceConflict"
+    ],
+    "referenceGcdMs": 1500,
+    "referenceCooldownMs": 30000,
+    "record": {
+      "classId": "warlock",
+      "abilityId": "warlock:dark-harvest",
+      "spellId": 52552,
+      "rank": 3,
+      "level": 60,
+      "fields": {
+        "school": "shadow",
+        "historicalTotal": 1150,
+        "referenceDurationMs": 8000,
+        "referenceIntervalReductionPct": 30,
+        "historicalPerTickCoefficient": 0.25,
+        "referenceCooldownMs": 30000
+      },
+      "unknown": [
+        "live damage, resource costs, channel tick timing and coefficient",
+        "whether accelerated DoTs retain expiry or preserve tick count; application timing and Agony stage progression"
+      ],
+      "conflicts": [
+        {
+          "field": "periodic haste",
+          "talentTooltip": "30% interval reduction",
+          "archive": "30% haste (different possible interval factor)"
+        }
+      ],
+      "status": "external-reference-only",
+      "source": "https://octowow.st/index.php/warlock",
+      "liveVerified": false
+    }
+  }
+],
  // Drain Soul published candidate identities and historical numerical evidence.
  ...[
   {

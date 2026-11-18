@@ -33,6 +33,7 @@ function defaults(rank,position,normalisedSpeed){
  targetPolicy:'ordered-nearby',channelTickAtEnd:true,swingHastePolicy:'preserve-progress'};
  if(['hunter:carve','hunter:multi-shot'].includes(rank.abilityId))policy.sharedShotCooldownMs=10000;
  for(const field of rank.requiredPolicy??[]){
+  if(field==='darkHarvestModel')policy.darkHarvestModel={totalBase:rank.record.fields.talentTooltipTotal??rank.record.fields.historicalTotal,totalCoefficient:null,durationMs:8000,tickMs:null,intervalFactor:null,expiryPolicy:null,activation:'channel-start',agonyOverflow:'clamp-last'};
   if(field==='drainSoulModel'){policy.drainSoulModel={totalBase:rank.record.fields.historicalTotal,totalCoefficient:null,durationMs:6000,tickMs:1000,tickCost:rank.record.fields.historicalTickCost,grantShard:false};}
   if(field==='areaModel')policy.areaModel={min:rank.record.fields.referenceDamage?.[0]??rank.record.fields.classicTotal??null,max:rank.record.fields.referenceDamage?.[1]??rank.record.fields.classicTotal??null,coefficient:null,cap:rank.abilityId==='priest:prayer-of-healing'?5:null,...(rank.abilityId==='warlock:rain-of-fire'?{durationMs:8000,tickMs:1000}:rank.abilityId==='mage:blast-wave'?{radius:10,controlEnabled:null,durationMs:6000,slowPct:null}:{targeting:'explicit-party-near-anchor'})};
   if(field==='siphonLifeModel')policy.siphonLifeModel={totalBase:rank.record.fields.classicTotal,totalCoefficient:null,durationMs:30000,intervalMs:null};
