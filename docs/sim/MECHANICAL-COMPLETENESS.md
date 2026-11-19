@@ -101,3 +101,6 @@ Explicit per-application provider distance and talent factor; pairwise friendly 
 
 ## Additional mechanical policies
 Hunter defensive passive training accepts confirmed Natural Armor and school resistance ranks, and optional explicit baseline inheritance. Calculated incoming attacks use delta contributions (not scripted outcomes). Swap policies optionally support global crit and hit changes with equal hand deltas; unsupported snapshot changes remain rejected. Fiery Blaze single-target approximation and Elemental Slayer creature binding require explicit acknowledgement. None of these source coefficients are live verified.
+
+## Elemental Devastation conditional talent
+Imported Shaman talent 222 rank 1/2/3 grants 3/6/9 percentage points of spell hit for ten seconds on owner landed physical melee critical strikes. Dynamic refresh, no permanent double-count with static talent hit, no ranged or equipment-generated proc activation. Ordinary direct spell table consumes the delta; special/periodic application coverage not asserted.
