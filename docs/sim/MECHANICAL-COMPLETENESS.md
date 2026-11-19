@@ -155,3 +155,6 @@ Explicit owner health threshold, shield amount and duration compile to the share
 
 ## Felhunter Paranoia reference
 Explicit timed owner-only stealth detection aura, with no invented combat benefit. Detection checks, persistent party propagation and pet-death aura removal are not implemented; caller acknowledges the limited bookkeeping model.
+
+## Screech debuff reference
+Optional explicit attack-power reduction and duration attach a tracked debuff to each living landed damage target. Enemy AP-based damage conversion and competing shout overlap are not inferred; the debuff does not yet change scripted incoming damage.
