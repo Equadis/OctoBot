@@ -232,11 +232,12 @@
 .ah-scroll>table>tbody>tr.ah-entry>td:first-child .ah-star{display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;padding:0;box-sizing:border-box;overflow:visible}
 
 /* Market %: comparison with historical average, independent of scan-to-scan trend. */
-.ah-market-expensive-strong{color:#f04444}
-.ah-market-expensive{color:#ff6666}
-.ah-market-expensive-slight{color:#ff9a3c}
-.ah-market-neutral{color:var(--gold)}
-.ah-market-cheap-slight{color:#a3e635}
-.ah-market-cheap{color:#4ade80}
-.ah-market-cheap-strong{color:#22c55e}
+.ah-market-dark-red{color:#b22222}
+.ah-market-red{color:#ff0000}
+.ah-market-orange{color:#ff8000}
+.ah-market-yellow{color:#ffff00}
+.ah-market-white{color:#ffffff}
+.ah-market-yellow-green{color:#80ff00}
+.ah-market-green{color:#00ff00}
+.ah-market-blue{color:#0080ff}
 .ah-market-unknown{color:#a8b7c7}
