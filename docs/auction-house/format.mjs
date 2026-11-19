@@ -23,6 +23,12 @@ export function listingMarketPct(unitBuyout,historicalAverage){
   if(!Number.isFinite(unit)||unit<=0||!Number.isFinite(avg)||avg<=0)return null;
   return 100*unit/avg;
 }
+/** Market percentage is relative to a historical average of 100%. */
+export function marketClass(n){
+  if(n==null||!Number.isFinite(Number(n))||Number(n)<=0)return 'ah-market-unknown';
+  n=Number(Number(n).toFixed(1));
+  return n>=125?'ah-market-expensive-strong':n>=110?'ah-market-expensive':n>=105?'ah-market-expensive-slight':n<=75?'ah-market-cheap-strong':n<=90?'ah-market-cheap':n<=95?'ah-market-cheap-slight':'ah-market-neutral';
+}
 export function trend(n){
   if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-unknown',text:'No previous completed scan to compare'};
   n=Number(n);
