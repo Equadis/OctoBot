@@ -15,6 +15,7 @@ function node(tag,cls,value){const e=document.createElement(tag);if(cls)e.classN
 function status(state,text){const e=byId("feed-state");e.dataset.state=state;e.textContent=text;}
 function empty(parent,message){parent.replaceChildren(node("div","chat-empty",message));}
 let focusedPlayer="",knownPlayers=new Set();
+const knownClasses=new Map();
 const tradeSignatures={};
 const closeItemPopup=installItemPopup();
 function playerButton(name,cls,key=playerKey(name)){
@@ -35,7 +36,20 @@ function refreshKnownPlayers(){
  for(const key of ["world","gm","lfg","wtb","wts"])for(const row of current?.[key]??[])next.add(playerKey(row.author));
  next.delete("");next.delete("unknown player");knownPlayers=next;
 }
-function focusSignature(row){return JSON.stringify([row,mentionParts(row.message,knownPlayers).filter(p=>p.player).map(p=>p.player)]);}
+// The public API already supplies verified class IDs. Reuse them by character
+// name within this realm so older loaded rows recolour even outside the live window.
+function refreshKnownClasses(){
+ const rows=[...feeds.flatMap(key=>history[key]?.rows??[]),...["world","gm","lfg","wtb","wts"].flatMap(key=>current?.[key]??[])];
+ for(const row of rows){
+  const key=playerKey(row.author);
+  if(!row.gm&&key&&key!=="unknown player"&&Object.hasOwn(classInfo,row.classId))knownClasses.set(key,row.classId);
+ }
+}
+function resolvedClass(row){
+ if(row.gm||row.author==="Unknown player")return null;
+ return Object.hasOwn(classInfo,row.classId)?row.classId:knownClasses.get(playerKey(row.author))??null;
+}
+function focusSignature(row){return JSON.stringify([row,resolvedClass(row),mentionParts(row.message,knownPlayers).filter(p=>p.player).map(p=>p.player)]);}
 function applyPlayerFocus(){
  for(const line of document.querySelectorAll(".chat-line[data-author]")){
   const mentions=[...line.querySelectorAll(".chat-mention")].map(e=>e.dataset.player);
@@ -50,8 +64,8 @@ document.addEventListener("click",event=>{
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&focusedPlayer){focusedPlayer="";applyPlayerFocus();}});
 // Use the same verified class metadata and Classic class palette as LFG.
 function colourAuthor(author,row){
- if(row.gm||row.author==="Unknown player"||!Object.hasOwn(classInfo,row.classId))return;
- author.style.color=classInfo[row.classId][1];
+ if(row.gm)return;
+ author.style.color=classInfo[resolvedClass(row)]?.[1]??"#9D9D9D";
 }
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
@@ -78,6 +92,7 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
  const parent=byId(key),state=history[key],rows=state.rows;
  syncHistoryButton(key);
  refreshKnownPlayers();
+ refreshKnownClasses();
  const rowSignatures=rows.map(focusSignature);
  const signature=JSON.stringify([state.ready,state.error,rowSignatures]);
  if(!forceBottom&&state.signature===signature)return;state.signature=signature;
@@ -124,7 +139,9 @@ async function fetchHistory(key,older=false){
   state.ready=true;state.more=Boolean(data.hasMore);state.capacity=Math.max(state.capacity,older?state.rows.length:historyPageSize(q));
   // Merge a live poll that may have completed while the initial archive loaded.
   if(current?.realm===realm)mergeLiveHistory(key,current[key],false,older);
+  refreshKnownClasses();
   drawHistory(key,{forceBottom:!older,preserveTop:older});
+  for(const other of feeds)if(other!==key&&history[other])drawHistory(other);
  }catch(e){if(token!==historyGeneration||history[key]!==state)return;state.error=e.historyFailure?e.message:historyErrorMessage();
   if(!state.ready&&current?.realm===realm)state.rows=liveFallback(current[key],q);
   drawHistory(key);}
@@ -209,7 +226,7 @@ function drawLfg(now){
    entries.sort((a,b)=>filters.sort==="oldest"?a.time-b.time:b.time-a.time);
    for(const row of entries){
     const info=analyseRecruitment(row.message),line=node("div","lfg-row"),body=node("div","lfg-body"),author=node("button","lfg-player",row.author);author.type="button";author.disabled=row.author==="Unknown player";author.title="Copy /w "+row.author;author.addEventListener("click",()=>copyWhisper(row.author));
-    const cls=classInfo[row.classId];
+    const cls=classInfo[resolvedClass(row)];
     colourAuthor(author,row);
     const who=node("div","lfg-who");who.append(author);
     if(row.guild)who.append(node("span","lfg-guild"," <"+row.guild+">"));
@@ -230,6 +247,7 @@ function drawLfg(now){
 function drawListings(){
   if(!current)return;
   const now=Date.now();
+  refreshKnownClasses();
   drawLfg(now);
   for(const key of ["wtb","wts"]){
     const parent=byId(key),rows=current[key].filter(r=>r.expiresAt>now);
@@ -246,7 +264,7 @@ function drawListings(){
     updateTimers(parent,now);
   }
 }
-function reset(){current=null;primed=false;known.clear();knownPlayers.clear();focusedPlayer="";closeItemPopup();lastLfgKey="";for(const k of Object.keys(tradeSignatures))delete tradeSignatures[k];for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
+function reset(){current=null;primed=false;known.clear();knownPlayers.clear();knownClasses.clear();focusedPlayer="";closeItemPopup();lastLfgKey="";for(const k of Object.keys(tradeSignatures))delete tradeSignatures[k];for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
   if(requesting)return;requesting=true;
   const token=generation, realm=select.value;controller=new AbortController();
