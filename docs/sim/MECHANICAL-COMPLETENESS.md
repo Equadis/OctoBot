@@ -110,3 +110,6 @@ Exact active unconditional ability scopes now apply percentage ordinary direct/p
 
 ## Critical charge selection and threat effects
 Guaranteed-critical landed consumption now tracks the exact chosen charge for the corresponding resolution, so a second overlapping charge is not consumed merely because its source matches. Exact timed threat-reduction wording can compile to a global threat multiplier on ordinary damage and healing resolution; special explicit threat paths remain outside this mapping.
+
+## Periodic consumable restoration
+Added non-seated timed health/resource restoration leaf with explicit integral tick interval, expiry tick, restart refresh, resource cap and death gate. Exact imported Razorlash Root tooltip compiles into two simultaneous restoration streams; caller must acknowledge unresolved tick timing and interval. Seated food/drink, bandage interrupts and unknown compound effects remain unsupported.

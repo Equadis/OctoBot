@@ -12,9 +12,12 @@ export function compileConsumableUses(build,uses=[]){
   if(!(item.buffId?(build.controls.buffIds||[]).includes(item.buffId):(build.controls.consumableIds||[]).includes(item.id)))throw Error('Consumable must be selected: '+item.name);
   const m=(item.effects||[]).join(' ').match(/^Use: (?:Instantly restores|Restores) (\d+)(?: to (\d+))? (mana|energy|rage|health)\.$/i);
   const both=(item.effects||[]).join(' ').match(/^Use: Restores (\d+) to (\d+) mana and health\.$/i);
-  if(!m&&!both)throw Error('Unsupported compound or timed consumable: '+item.name);
+  const timed=(item.effects||[]).join(' ').match(/^Use: Restores (\d+) health and mana over (\d+) sec\.$/i);
+  if(!m&&!both&&!timed)throw Error('Unsupported compound or timed consumable: '+item.name);
   if(u.acknowledgeCooldownUnverified!==true||!Number.isSafeInteger(u.cooldownMs)||u.cooldownMs<0||!Number.isSafeInteger(u.count)||u.count<1||!Array.isArray(u.atMs)||u.atMs.length>u.count)throw Error('Explicit consumable inventory and cooldown policy required');
   if(item.sharedCooldown&&(!Number.isSafeInteger(u.sharedCooldownMs)||u.sharedCooldownMs<0))throw Error('Explicit shared consumable cooldown required');
+  const common={id:'consumable:'+item.id,source:item.name,provenance:item.source,trigger:'use',atMs:u.atMs,cooldownMs:u.cooldownMs,...(item.sharedCooldown?{sharedGroup:item.sharedCooldown,sharedCooldownMs:u.sharedCooldownMs}:{})};
+  if(timed){const durationMs=Number(timed[2])*1000,intervalMs=u.tickIntervalMs;if(!Number.isSafeInteger(intervalMs)||intervalMs<1||durationMs%intervalMs!==0||u.acknowledgeTickTimingUnverified!==true)throw Error('Explicit periodic restoration interval required');return {...common,effect:{kind:'compound',effects:['health','mana'].map(resource=>({kind:'periodic-restore',resource,amount:Number(timed[1])*intervalMs/durationMs,durationMs,intervalMs}))}};}
   const resource=both?'mana':m[3].toLowerCase(),min=Number((both??m)[1]),max=Number((both??m)[2]??(both??m)[1]);
   if(both&&u.rangePolicy!=='independent')throw Error('Explicit independent compound restoration rolls required');
   if(max<min)throw Error('Invalid restoration range');
