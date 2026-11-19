@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,listingMarketPct,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261118-listing-columns';
+import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261119-market-colour';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -47,6 +47,7 @@ function moneyNode(n){
   }
   return wrap;
 }
+function marketNode(n){return el('span',pct(n),marketClass(n));}
 function updateTimeNode(node,now=Date.now()){const ms=node.dataset.duration===''?null:Number(node.dataset.duration),capturedAt=node.dataset.capturedAt;const cls=timeClass(ms,capturedAt,now);node.textContent=left(ms,capturedAt,now);node.className=cls?'ah-auction-time '+cls:'ah-auction-time';}
 function timeNode(ms,capturedAt){const node=el('span',null,'ah-auction-time');node.dataset.duration=ms??'';node.dataset.capturedAt=capturedAt??'';updateTimeNode(node);return node;}
 function tickAuctionTimes(){const now=Date.now();for(const node of document.querySelectorAll('.ah-auction-time[data-duration]'))updateTimeNode(node,now);}
@@ -176,7 +177,7 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
     moneyTd(tr,item.stack_buyout);
     const bid=bidAmount(item.current_bid,item.start_bid,item.stack_buyout,item.unit_buyout);
     if(bid===null)td(tr,'–');else moneyTd(tr,bid);
-    moneyTd(tr,item.historical_avg);td(tr,pct(item.market_pct));
+    moneyTd(tr,item.historical_avg);td(tr,marketNode(item.market_pct));
     const t=trend(item.trend_pct),tc=td(tr,null,t.className);
     tc.append(el('span',t.label,'ah-trend-arrow'));
     tc.setAttribute('aria-label',item.trend_pct==null?(state.listingFiltered?'Hidden while price filters are active':t.text):(t.text+'. Previous '+money(item.previous_unit)+'; now '+money(item.unit_buyout)+'; change '+pct(item.trend_pct)));
@@ -222,7 +223,7 @@ async function fillDetail(cell,item,unavailable){
       stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':moneyNode(item.stack_buyout)));
       stats.append(stat('Available',count(item.quantity)));
       stats.append(stat('Avg. price',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg)));
-      stats.append(stat('Market %',pct(item.market_pct)));
+      stats.append(stat('Market %',marketNode(item.market_pct)));
       const t=trend(item.trend_pct);
       const movement=el('span');
       const change=el('span',null,t.className);change.append(el('span',t.label,'ah-trend-arrow'),' '+pct(item.trend_pct));movement.append(change);
@@ -269,7 +270,7 @@ async function fillDetail(cell,item,unavailable){
         rows.map(r=>{
           const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
           const average=item.historical_avg;
-          return [r.owner_name||'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),pct(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
+          return [r.owner_name||'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),marketNode(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
         })));
       if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
