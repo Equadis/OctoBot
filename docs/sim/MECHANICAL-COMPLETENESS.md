@@ -185,3 +185,6 @@ Explicit landed control applies a timed target debuff that suppresses scheduled 
 
 ## Maintained Seduction channels
 Optional maintained-channel mode locks companion casting and swings until control expires, breaks on effective target damage or companion death, and optionally breaks on effective damage to the companion. Channel identity prevents stale expiry callbacks from releasing later casts. No resource refund. Creature immunities and diminishing returns remain explicit unresolved mechanics.
+
+## Seduction target eligibility
+Optional explicit creature-type allowlist and immune enemy identifiers prevent activation without consuming companion mana. Added combat tests for these gates and for release on lethal damage from a separate enemy. Actual boss immunities and creature types must be supplied by the scenario; no automatic live database classification or diminishing returns inferred.
