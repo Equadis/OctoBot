@@ -137,3 +137,6 @@ Shell Shield and Phase Shift can be configured as explicit reference incoming-da
 
 ## Companion self-healing reference
 Consume Shadows is available as explicit self-healing at cast completion, gated by health, resource and cooldown. Caller must acknowledge cast approximation; out-of-combat restrictions and actual channel ticks are not represented by this limited policy. No live value inferred.
+
+## Companion channel healing
+Optional explicit tick interval divides total healing evenly across integral channel ticks, pays cost once, locks companion attacks during the cast and stops future ticks on death. Cast-completion mode remains available with acknowledgement. Combat restrictions and interruption by nonlethal damage or movement are not modelled; timing and amount are reference inputs.
