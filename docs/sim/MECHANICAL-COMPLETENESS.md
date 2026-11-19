@@ -191,3 +191,6 @@ Optional explicit creature-type allowlist and immune enemy identifiers prevent a
 
 ## Companion crowd-control diminishing returns
 Optional per-target policy provides a descending duration multiplier sequence ending in immunity and a reset interval measured from the scheduled control expiry. Only landed control advances the sequence; the immune tier skips activation without mana cost. The scheduled-expiry reset is conservative when damage breaks control early; cross-spell DR categories and live-server coefficients remain unverified.
+
+## Felhunter Spell Lock reference
+Optional explicit incoming spell cast start times permit reactive interruption, timed silence and school-specific suppression of later cast starts. Only marked spell casts are affected, not melee or legacy instantaneous damage. The companion uses Spell Lock only when a target has an active scripted cast; no autonomous enemy cast generation or live coefficients inferred.
