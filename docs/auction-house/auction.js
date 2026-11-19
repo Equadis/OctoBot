@@ -19,8 +19,8 @@ if(realmSelect){
  realmSelect.value=REALM;
  realmSelect.addEventListener('change',()=>{const url=new URL(location.href);url.searchParams.set('realm',realmSelect.value);location.assign(url.toString());});
 }
-document.title='OctoBot · Auction House – '+REALM;
-const realmHeading=$('ah-realm-heading');if(realmHeading)realmHeading.textContent='Auction House – '+REALM;
+document.title='OctoBot · Auction House';
+const realmHeading=$('ah-realm-heading');if(realmHeading)realmHeading.textContent='Auction House';
 const storage=(()=>{try{const s=window.localStorage;if(REALM==="N'Zoth")return s;return {getItem:key=>s.getItem('pvp:'+key),setItem:(key,value)=>s.setItem('pvp:'+key,value),removeItem:key=>s.removeItem('pvp:'+key)};}catch{return null;}})();
 const COLS=11;
 const state={filters:{...DEFAULTS},favSort:{sort:DEFAULTS.sort,dir:DEFAULTS.dir},page:0,limit:50,queryId:0,favId:0,fav:loadFavourites(storage),saved:loadSaved(storage),listingFiltered:false,scan:{completedAt:null,scanning:false,startedAt:null,pages:'',collectorStatus:null},sortTouched:false,busy:0,favFailed:false};
