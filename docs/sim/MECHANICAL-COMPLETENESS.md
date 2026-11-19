@@ -95,3 +95,6 @@ Optional raidProviderSchedules assign each migrated selected armour/spell debuff
 
 ## Friendly raid providers
 Explicit friendlyProviderSchedules support existing ally providers, a party of up to five, named recipients, application time, duration and reference secondary modifiers. Same-ID external buffs replace one another (last applied reference rule); matching static selected IDs are rejected. Dead providers or recipients cannot receive new applications. Party membership is supplied per schedule; range, provider class/talents, different-ID conflicts and autonomous raid rotations are not inferred. Ally aura bookkeeping does not imply autonomous ally DPS. Live validation pending.
+
+## Provider, consumable and equipment follow-up
+Explicit per-application provider distance and talent factor; pairwise friendly exclusion and static conflict checks. Compound rejuvenation uses independent reference rolls only when acknowledged. Primal Gods AP tooltip mapping and corrected observed ranged AP inheritance adapter key. These remain reference models; range is supplied per activation rather than simulated movement.

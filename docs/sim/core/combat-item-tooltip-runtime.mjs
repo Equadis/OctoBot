@@ -53,6 +53,8 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'landed',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:['fire','frost','nature','shadow','arcane','holy'].map(stat=>({stat,mode:'flat',value:+m[1]}))}};
  m=s.match(/^Use: Increases your attack speed by (\d+)% for (\d+) sec\.?$/i);
  if(m)return {trigger:'use',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:[{stat:'meleeHasteFactor',mode:'multiplyPct',value:+m[1]}]}};
+ m=s.match(/^Grants a small chance when ranged or melee damage is dealt to infuse the wielder with a blessing from the Primal Gods\. Ranged and melee attack power increased by (\d+) for (\d+) seconds\.$/i);
+ if(m)return {trigger:'landed',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:['attackPower','rangedAP'].map(stat=>({stat,mode:'flat',value:+m[1]}))}};
  return null;
 }
 export function compileEquipmentTooltips(gear,build,requests=[]){
