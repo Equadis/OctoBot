@@ -306,6 +306,17 @@ export class ClearTracker {
    * Null if no departure is pending: it can never manufacture a clear on its own. The kill is
    * proven, so the raid is final — it never resumes.
    */
+  /** Independently matched final boss kill, even before departure. Preserve locks. */
+  confirmBossKill(observedAt: number): ConfirmedClear | null {
+    if (this.#formedAt === null || !this.#confirmed || !Number.isFinite(observedAt) || observedAt < this.#formedAt) return null;
+    const end = this.#belowSince ?? observedAt;
+    const clear = this.#clearOf(this.#formedAt, end);
+    this.#lockRoster(observedAt);
+    this.#cleared = null;
+    this.#reset();
+    return clear;
+  }
+
   confirmNow(): ConfirmedClear | null {
     if (this.#formedAt === null || !this.#confirmed || this.#belowSince === null) return null;
     const clear = this.#clearOf(this.#formedAt, this.#belowSince);
