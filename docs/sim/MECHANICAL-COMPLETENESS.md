@@ -158,3 +158,6 @@ Explicit timed owner-only stealth detection aura, with no invented combat benefi
 
 ## Screech debuff reference
 Optional explicit attack-power reduction and duration attach a tracked debuff to each living landed damage target. Enemy AP-based damage conversion and competing shout overlap are not inferred; the debuff does not yet change scripted incoming damage.
+
+## Calculated enemy attack power
+Optional physical incoming attack policy supplies base enemy AP, pre-armour damage per AP and explicit strongest or additive overlap. Active enemy debuff modifiers are read at attack time; reduction caps at base AP and damage floors at zero. Fixed scripted damage and unconfigured attacks are unchanged. Corrected Screech application to use the boolean landed return from executeEffects. Live overlap and coefficients remain unverified.

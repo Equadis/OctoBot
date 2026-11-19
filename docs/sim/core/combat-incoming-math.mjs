@@ -3,6 +3,7 @@ import {sampleAttack,physicalAttackTable,spellAttackTable} from './combat-attack
 const schools=new Set(['fire','frost','shadow','nature','arcane','holy']);
 // Explicit reference inputs. An armour model uses the enemy's attack level,
 // not the defender's. Spell resistance is a supplied conditional distribution.
+export function enemyAttackPowerReduction(auras,overlap){const values=auras.flatMap(a=>(a.modifiers??[]).filter(m=>m.stat==='enemyAttackPowerReduction'&&m.mode==='flat').map(m=>m.value*(a.stacks??1)));if(values.some(x=>!Number.isFinite(x)||x<0))throw Error('Invalid enemy AP reduction');if(overlap==='strongest')return Math.max(0,...values);if(overlap==='additive')return values.reduce((a,b)=>a+b,0);throw Error('Explicit enemy AP overlap required');}
 export function compileIncomingAttack(attack){
  const m=attack.attackModel;
  if(!m||attack.amount!==undefined||attack.outcome!==undefined||attack.blockModel!==undefined)throw new Error('Calculated incoming attack cannot mix with resolved damage or block model');
@@ -10,10 +11,10 @@ export function compileIncomingAttack(attack){
  let table,mitigation=0;
  if(attack.school==='physical'){
   if(m.kind!=='physical'||!m.table||!m.armourModel)throw new Error('Explicit physical incoming attack table and armour required');
-  table=physicalAttackTable({...m.table,provenance:m.provenance});
+  if(m.enemyAPPolicy!==undefined){const p=m.enemyAPPolicy;if(!p||!Number.isFinite(p.baseAP)||p.baseAP<0||!Number.isFinite(p.damagePerAP)||p.damagePerAP<0||!['strongest','additive'].includes(p.overlap))throw Error('Explicit enemy AP policy required');}table=physicalAttackTable({...m.table,provenance:m.provenance});
   mitigation=physicalArmourReduction(m.armourModel);
  }else{
-  if(!schools.has(attack.school)||m.kind!=='spell'||!m.table||m.armourModel!==undefined)throw new Error('Explicit spell incoming resistance distribution required');
+  if(m.enemyAPPolicy!==undefined)throw Error('Enemy AP policy requires physical damage');if(!schools.has(attack.school)||m.kind!=='spell'||!m.table||m.armourModel!==undefined)throw new Error('Explicit spell incoming resistance distribution required');
   table=spellAttackTable({...m.table,provenance:m.provenance});
  }
  const input={min:m.min,max:m.max,outcomes:table.outcomes,mitigation,flatReduction:m.flatReduction??0};
@@ -33,7 +34,7 @@ export function resolveIncomingAttack(attack,compiled,random,defence=null,stats=
    const table=spellAttackTable({...base,...(rating!==0?{resistanceModel:{...base.resistanceModel,rating:Math.max(0,base.resistanceModel.rating+rating)}}:{}),criticalPct:Math.max(0,Math.min(100,base.criticalPct-suppression)),provenance:m.provenance});compiled={...compiled,outcomes:table.outcomes};
   }
  }
- const hit=sampleAttack({...compiled,random});
+ const ap=attack.attackModel.enemyAPPolicy;if(ap){const reduction=stats?.enemyAPReduction??0;if(!Number.isFinite(reduction)||reduction<0)throw Error('Invalid enemy AP reduction');const loss=Math.min(ap.baseAP,reduction)*ap.damagePerAP;compiled={...compiled,min:Math.max(0,compiled.min-loss),max:Math.max(0,compiled.max-loss)};}const hit=sampleAttack({...compiled,random});
  defence?.afterRoll?.(hit);
  return {attack:{...attack,amount:hit.raw,outcome:hit.outcome},hit};
 }
