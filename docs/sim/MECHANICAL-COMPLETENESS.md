@@ -146,3 +146,6 @@ Optional explicit effective-damage interruption cancels pending healing ticks, r
 
 ## Defensive companion attack lock
 Optional defensive policy prevents pet auto attacks, independent active actions and Kill Command while the aura is active. The reference lock is broader than an attack-only ability filter; no untargetability or movement semantics inferred. Damage reduction is separate.
+
+## Explicit companion recovery windows
+Optional sorted, nonoverlapping out-of-combat reference windows restrict self-healing to channels that fit entirely inside a window. Normal pet priority, white attacks and Kill Command are blocked during recovery windows. The windows are supplied by the caller, not inferred from actual threat/combat flags; encounter-wide combat transitions and incoming attacks remain separate.
