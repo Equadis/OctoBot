@@ -24,8 +24,7 @@
   ];
   var EVENTS = [
     { key: 'soon', label: 'Estimated clear ending soon', note: 'When the estimated clear is close, a few minutes from now.' },
-    { key: 'finished', label: 'Raid finished', note: 'When a raid is seen to end. A finished raid is not a confirmed clear.' },
-    { key: 'confirmed', label: 'Clear confirmed', note: 'Only when the tracker confirms a clear. The tracker does not report this yet.' },
+    { key: 'finished', label: 'Raid finished', note: 'Chronicle final boss kill preferred; otherwise a sustained roster departure. One alert per raid.' },
     { key: 'allianceDrop', label: 'Head dropped: Alliance', note: 'A confirmed Rallying Cry announcement in Stormwind.' },
     { key: 'hordeDrop', label: 'Head dropped: Horde', note: 'A confirmed Rallying Cry announcement in Orgrimmar.' }
   ];
@@ -38,7 +37,6 @@
     events: {
       soon: { on: true, sound: 'map-ping' },
       finished: { on: true, sound: 'raid-warning' },
-      confirmed: { on: true, sound: 'level-up' },
       allianceDrop: { on: true, sound: 'dragon-roar' },
       hordeDrop: { on: true, sound: 'war-horn' }
     }
