@@ -77,3 +77,6 @@ An explicitly selected player mana tick stream adds temporary Spirit-derived man
 
 ## Dynamic percentage primary attributes
 Opt-in primaryAttributePolicy mode dynamic derives secondary deltas once from the full active flat/additive/multiplicative primary aura totals against the build snapshot. Ordering is flat then additive percentage then multiplicative percentage. Existing flat-only expansion remains backward compatible. This is a marginal linear reference policy; nonlinear server thresholds and changing base attributes on loadout changes are not inferred.
+
+## Selected timed buff compilation
+The adapter now compiles eligible selected Flurry and Quickness event buffs into timed melee haste auras. Activation schedules and reuse remain explicit research inputs; Quickness requires melee-only scope acknowledgement. Existing planner exclusions remain authoritative and a static conflicting selected buff is rejected rather than silently stacked. These two mapped effects currently have no pair in BUFF_CONFLICTS; general timed pairwise exclusion and provider/raid propagation remain outstanding.
