@@ -212,3 +212,6 @@ Optional trigger `cast` waits for actual execution of a resource-paid Vanish wit
 
 ## Additional consumable and companion catalogue mapping
 Exact single-school Protection Potion absorbs, simple attack-speed consumables (explicit melee-only), and exact radius damage wording (explicit single-target acknowledgement) now compile from the imported catalogue. Area targeting, control effects and cooldown validation remain unverified. Succubus Lesser Invisibility is represented as a timed non-damaging marker, removed on landed direct offensive damage, without an inferred detection or immunity system.
+
+## Petless Feign Death trinket swap
+Explicit scheduled attempt consumes mana and starts its cooldown only when not casting, then samples caller-supplied combat-drop chance. Success clears owner threat and triggers replacement equipment, failure retains original equipment. Pet presence is rejected. This is a scripted reference attempt, not a trainable rotation rank or live NPC resist/combat flag model; no stand-up delay or auto-shot reset inferred.

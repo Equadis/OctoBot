@@ -14,7 +14,7 @@ export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=
  const components=x=>x.effect?.kind==='compound'?x.effect.effects.map((effect,i)=>({...x,id:x.id+':component:'+i,effect})): [x];
  const seen=new Set();const auraSpec=f=>f.stacking??{maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh'};const swap=config.swap??null;let swapped=false,swappedAt=null;let restorationChannel=null;
  if(swap&&(!Number.isSafeInteger(swap.atMs)||swap.atMs<0||swap.atMs>=duration||!['vanish','petless-feign-death'].includes(swap.mode)||swap.confirmedCombatDrop!==true||!Number.isSafeInteger(swap.equipLockMs)||swap.equipLockMs<0||!['retain','remove'].includes(swap.auraPolicy)))throw Error('Explicit research trinket swap policy required');
- if(swap?.trigger!==undefined&&(!['scheduled','cast'].includes(swap.trigger)||swap.trigger==='cast'&&swap.mode!=='vanish'))throw Error('Unsupported cast-driven swap mode');
+ if(swap?.trigger!==undefined&&(!['scheduled','cast'].includes(swap.trigger)))throw Error('Unsupported cast-driven swap mode');
  if(swap?.statModifiers!==undefined&&(!Array.isArray(swap.statModifiers)||!swap.statModifiers.every(validModifier)))throw Error('Invalid swap stat modifiers');
  for(const x of config.effects){
   if(!id(x.id)||seen.has(x.id)||!id(x.source)||!id(x.provenance)||!(x.effect?.kind==='compound'?Array.isArray(x.effect.effects)&&x.effect.effects.length>=2&&x.effect.effects.length<=8&&x.effect.effects.every(validEffect):validEffect(x.effect))||!Number.isSafeInteger(x.cooldownMs)||x.cooldownMs<0)throw Error('Invalid explicit equipment effect');
