@@ -197,3 +197,6 @@ Optional explicit incoming spell cast start times permit reactive interruption, 
 
 ## Felhunter Devour Magic reference
 Explicit aura IDs and owner/pet/enemy target order enable a single eligible friendly debuff or enemy buff removal and companion self-healing. Scripted dispellable aura events supply timed reference markers, not inferred debuff effects. No automatic magic classification, friendly range, dispel resistance or party-wide selection inferred.
+
+### Devour Magic range and resistance
+Optional explicit dispel outcomes preserve the aura and suppress healing on resistance while spending the activation cost. Ordered ally selection requires explicit friendly distances; enemy dispels use encounter geometry. Existing owner-only fixtures without friendly distances retain the previous approximation. No inferred magic classification or moving ally paths.
