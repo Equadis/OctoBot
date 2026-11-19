@@ -107,3 +107,6 @@ Imported Shaman talent 222 rank 1/2/3 grants 3/6/9 percentage points of spell hi
 
 ## Scoped equipment healing and cast geometry
 Exact active unconditional ability scopes now apply percentage ordinary direct/periodic healing, flat direct non-combo/non-weapon damage/healing, cast time reductions on cast actions, and range changes. Flat amounts are deliberately not replicated on periodic ticks. Special execution paths and conditional scopes remain outside this compiler.
+
+## Critical charge selection and threat effects
+Guaranteed-critical landed consumption now tracks the exact chosen charge for the corresponding resolution, so a second overlapping charge is not consumed merely because its source matches. Exact timed threat-reduction wording can compile to a global threat multiplier on ordinary damage and healing resolution; special explicit threat paths remain outside this mapping.

@@ -201,6 +201,7 @@ function executeEffects(e,actor,target,source,effects,stats,enemyIds,depth=0,cla
   if(depth===0&&actor===castContext.ownerId&&damageEffect&&x.school!=='physical')triggerSurge(e,actor,castContext.surgeModel,castContext.abilityId,hit);
   if(!hit.landed)return hit;if(castContext.abilityId==='warlock:shadowburn'&&depth===0)markShadowburn(e,actor,target);if(castContext.combustion&&actor===castContext.ownerId&&depth===0)advanceCombustion(e,actor,castContext.combustion,castContext,x,hit);if(charge&&hit.raw>0)e.auras.consume(charge,1);
   let threat=x.threat===null||allyChastise?null:{actorId:actor,...x.threat};if(threat&&rock)threat={...threat,multipliers:[...threat.multipliers,rock.threatMultiplier]};const isHeal=x.kind.endsWith('heal');
+  if(threat){const factor=e.auras.stat(actor,'globalThreatFactor',1);if(factor!==1)threat={...threat,multipliers:[...threat.multipliers,factor]};}
   if(threat&&damageEffect){const factor=e.auras.stat(actor,'petThreatFactor',1);if(factor!==1)threat={...threat,multipliers:[...threat.multipliers,factor]};}
   if(threat&&isHeal){const alive=enemyIds.filter(id=>e.unit(id).alive);threat=alive.length?{...threat,enemyIds:alive}:null;}
   if(threat&&damageEffect&&x.school==='holy'){const factor=e.auras.stat(actor,'holyThreatFactor',1);if(factor!==1)threat={...threat,multipliers:[...threat.multipliers,factor]};}
