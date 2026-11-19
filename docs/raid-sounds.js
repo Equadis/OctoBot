@@ -139,12 +139,12 @@
       var select = el('select', { 'aria-label': event.label + ' sound' });
       SOUNDS.forEach(function (s) { var o = el('option', { value: s.id, text: s.label }); if (s.id === settings.events[event.key].sound) o.selected = true; select.append(o); });
       select.addEventListener('change', function () { settings.events[event.key].sound = select.value; save(); play(select.value, { quiet: false }); });
-      var test = el('button', { type: 'button', class: 'sound-test', title: 'Play this sound', 'aria-label': 'Play ' + event.label + ' sound' });
+      var test = el('button', { type: 'button', class: 'sound-test', 'aria-label': 'Play ' + event.label + ' sound' });
       test.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg>';
       test.addEventListener('click', function () { play(settings.events[event.key].sound); });
       var label = el('label', { class: 'sound-event-label' }, [on, el('span', { text: event.label })]);
       var controls = el('div', { class: 'sound-controls' }, [select, test]);
-      var row = el('div', { class: 'sound-row', title: event.note }, [label, controls]);
+      var row = el('div', { class: 'sound-row' }, [label, controls]);
       rowRefs[event.key] = { row: row, inputs: [on, select, test], note: event.key === 'soon' ? el('p', { class: 'sound-disabled-note', text: 'This option is disabled until estimated clear confidence is higher.' }) : null };
       if (rowRefs[event.key].note) row.append(rowRefs[event.key].note);
       return row;
