@@ -125,3 +125,6 @@ Explicit before/after trinket tooltip schedules compile against their respective
 
 ## Ranged temporary AP and trinket deltas
 Ranged formula readers add temporary rangedAP aura contributions to Hunter Mark AP before applying the existing weapon-speed coefficient. The observed baseline remains in the compiled formula, so baseline AP is not applied twice. Optional ranged swap policy accepts explicit observed AP/hit/crit changes; unchanged observed AP is not inferred from equipment. Physical ranged tables use hit/crit deltas; hybrid Arcane Shot outcome redistribution remains unresolved.
+
+## Hybrid Arcane Shot and ranged swap input
+Arcane Shot retains its explicit defence policy and, for ranged defence, rebuilds independent resistance bins from the adjusted original ranged table. Spell defence receives ordinary spell hit/crit modifiers instead. Replacement observed ranged AP can now be explicitly supplied in the swap policy; it is not inferred from unverified gear coefficients. Live validation pending.
