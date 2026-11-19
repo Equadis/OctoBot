@@ -230,7 +230,7 @@
     return {
       observedAt: time(a.observedAt), stale: a.stale === true, expired: a.expired === true, sessions,
       lair: object(a.lair) || {},
-      lastFinished: last && validPast(time(last.at), serverNow()) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
+      lastFinished: last && validPast(time(last.at), serverNow()) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, key: typeof last.key === 'string' ? last.key : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
     };
   }
   function renderAuthRaid(key, auth) {
@@ -563,7 +563,7 @@
     renderLive();
   }
   // ---- Sound alerts: edges only (something new since the last look), never on first load. Nothing plays unless the visitor turned alerts on.
-  const sound = { baselined: false, finished: {}, drop: {}, soon: {}, confirmed: {} };
+  const sound = { baselined: false, finished: {}, finishedKeys: {}, drop: {}, soon: {} };
   const sounds = () => (typeof window !== 'undefined' && window.RaidSounds) || null;
   function watchSounds(fromData) {
     const player = sounds();
@@ -575,11 +575,14 @@
       if (fromData) {
         const authFinished = state.auth[raidKey] && state.auth[raidKey].lastFinished ? state.auth[raidKey].lastFinished.at : null;
         const finishedAt = state.auth[raidKey] ? (validPast(authFinished, serverNow()) ? authFinished : null) : raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
-        if (sound.baselined && finishedAt && finishedAt > (sound.finished[raidKey] || 0)) player.notify('finished');
-        if (finishedAt) sound.finished[raidKey] = finishedAt;
-        const confirmed = Boolean(clear && clear.confirmed === true);
-        if (sound.baselined && confirmed && !sound.confirmed[raidKey]) player.notify('confirmed');
-        sound.confirmed[raidKey] = confirmed;
+        const finished = state.auth[raidKey] && state.auth[raidKey].lastFinished;
+        const identity = finished && (finished.key || (finished.id ? 'raid:' + finished.id : null));
+        const seen = sound.finishedKeys[raidKey] || (sound.finishedKeys[raidKey] = new Set());
+        if (finishedAt) {
+          if (sound.baselined && finishedAt > (sound.finished[raidKey] || 0) && (!identity || !seen.has(identity))) player.notify('finished');
+          if (identity) { seen.add(identity); if (seen.size > 200) seen.delete(seen.values().next().value); }
+          sound.finished[raidKey] = Math.max(finishedAt, sound.finished[raidKey] || 0);
+        }
       }
       // The ending-soon alert waits for a medium or high confidence estimate; a low-confidence estimate stays silent.
       const trusted = Boolean(clear && ['medium', 'high'].includes(String(clear.confidence)));
