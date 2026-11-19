@@ -59,3 +59,6 @@ Personal ability cooldowns use abilityCooldownFactor:<abilityId> and abilityCool
 
 ## Additional catalogue proc mappings
 Exact imported compound 2% energy/dodge/melee haste set wording, harmful spell damage-only proc wording and on-use attack speed wording compile to the existing runtime. The source set does not state eligible events; source restrictions must be supplied. Generic on-use attack speed is interpreted as melee only in this research mapping; ranged scope is not asserted. Swing and incoming defence models must be configured to observe the relevant benefits. These mappings do not establish live proc rates or automatic activation.
+
+## Automatic scoped equipment compilation
+The build adapter now consumes the existing combined active item/set scoped audit for exact unconditioned ability names. Percentage ordinary direct/periodic formula damage, personal cooldown reductions and existing mana/energy/rage start costs are applied once after rank/talent compilation and recorded with rank provenance. Unsupported, conditional, shared cooldown, special and non-exact scope effects remain outside this mapping. Scoped applied bonuses with trinket swaps are rejected pending loadout-aware compilation. Live validation pending.

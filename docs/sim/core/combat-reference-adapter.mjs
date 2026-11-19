@@ -1,3 +1,4 @@
+import {applyCompiledEquipment} from './combat-scoped-equipment.mjs';
 import {swapStatModifiers} from './combat-swap-stats.mjs';
 import {postSwapBuild,TRINKET_SWAP_MODES} from './trinket-swaps.mjs';
 import {compileEquipmentTooltips} from './combat-item-tooltip-runtime.mjs';
@@ -100,7 +101,7 @@ export function prepareReferenceScenario({build:raw,talents,gearById={},learnedS
   const myRows=normalized.filter(r=>r.abilityId===aid);
   if(myRows.some(r=>!compiled.action.targets.includes(r.target==='ally'?'ally':r.target==='self'?'self':r.target==='pet'?'pet':'enemy')))throw new Error('Rotation target role mismatch for '+aid);
   if(encounter.recastPeriodic==='after-expiry'&&compiled.rank.refreshStrategy!=='do-not-gate'&&compiled.action.effects.some(e=>e.kind.startsWith('periodic')))compiled.action.refreshGate={kind:compiled.action.targets[0]==='ally'?'buff':'debuff',name:ROTATION_REGISTRY[build.classId].abilityRegistry[aid].name,remainingMs:0};
-  actions.push(compiled.action);rankRows.push({abilityId:aid,spellId,rank:compiled.rank.rank,source:compiled.rank.source,referenceSource:compiled.rank.referenceSource,provenance:compiled.provenance});
+  const equipment=applyCompiledEquipment(compiled.action,ROTATION_REGISTRY[build.classId].abilityRegistry[aid].name,sheet.equipmentAudit.scoped);if(swap&&equipment.applied.length)throw Error('Scoped equipped ability modifiers require fixed loadout');actions.push(equipment.action);rankRows.push({abilityId:aid,spellId,rank:compiled.rank.rank,source:compiled.rank.source,referenceSource:compiled.rank.referenceSource,provenance:compiled.provenance,equipmentModifiers:equipment.applied});
  }
  if(!['after-expiry','rotation-only'].includes(encounter.recastPeriodic))throw new Error('Explicit periodic recast policy required');
  if(actions.some(a=>a.holyStrikePolicy?.cooldownPolicy==='shared-with-crusader'))for(const a of actions)if(a.abilityId==='paladin:crusader-strike')a.sharedCooldown={id:'paladin:holy-crusader-strike',durationMs:6000};
