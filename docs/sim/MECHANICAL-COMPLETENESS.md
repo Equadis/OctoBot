@@ -182,3 +182,6 @@ Charge optionally closes the selected target's distance to an explicit arrival d
 
 ## Succubus Seduction reference
 Explicit landed control applies a timed target debuff that suppresses scheduled incoming attacks and breaks on effective damage. No target creature-type immunity, diminishing returns, maintained channel or pet-death cancellation inferred; caller acknowledges the scripted approximation.
+
+## Maintained Seduction channels
+Optional maintained-channel mode locks companion casting and swings until control expires, breaks on effective target damage or companion death, and optionally breaks on effective damage to the companion. Channel identity prevents stale expiry callbacks from releasing later casts. No resource refund. Creature immunities and diminishing returns remain explicit unresolved mechanics.
