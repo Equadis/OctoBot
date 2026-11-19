@@ -149,3 +149,6 @@ Optional defensive policy prevents pet auto attacks, independent active actions 
 
 ## Explicit companion recovery windows
 Optional sorted, nonoverlapping out-of-combat reference windows restrict self-healing to channels that fit entirely inside a window. Normal pet priority, white attacks and Kill Command are blocked during recovery windows. The windows are supplied by the caller, not inferred from actual threat/combat flags; encounter-wide combat transitions and incoming attacks remain separate.
+
+## Voidwalker Sacrifice
+Explicit owner health threshold, shield amount and duration compile to the shared absorption ledger and consume the companion without generating damage. Pet actions and regeneration end on death. No automatic rank values, resummoning or soul-link interactions inferred.
