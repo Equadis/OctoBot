@@ -1,6 +1,7 @@
+import {ppmChance} from './combat-proc-rates.mjs';
 import {ENCHANTS,validEnchant,enchantAvailable} from './equipment-options.mjs';
 const known=new Set(['crusader','lifestealing','fiery_weapon']);
-export function compileEnchantProcs(build,gear,policies={}){
+export function compileEnchantProcs(build,gear,policies={},snapshot=null){
  const result=[];
  for(const [slot,p] of Object.entries(policies)){
   const item=gear[slot],selected=build.gear?.[slot]?.enchantId,entry=ENCHANTS.find(x=>x.id===selected);
@@ -19,7 +20,8 @@ export function compileEnchantProcs(build,gear,policies={}){
    effect={kind:'damage',school:family==='fiery_weapon'?'fire':'shadow',min:number(p.min),max:number(p.max),outcomes:p.outcomes,mitigation:p.mitigation,threat:p.threat??null};
    if(family==='lifestealing'){if(!['effective','post-mitigation'].includes(p.leechBasis))throw Error('Explicit lifestealing basis required');effect.leech={basis:p.leechBasis,fraction:1};}
   }
-  result.push({id:'enchant:'+slot+':'+selected,source:entry.name,provenance:p.provenance,trigger:'landed',eligibility:'melee',hand:slot,sources:p.sources,chance:p.chance,cooldownMs:p.cooldownMs,effect});
+  let chance=p.chance;if(p.ppm!==undefined){if(p.chance!==undefined||p.rateBasis!=='base-weapon-speed-landed'||!['white-only','named-attacks'].includes(p.eligibleAttacks))throw Error('Explicit exclusive PPM rate and event policy required');chance=ppmChance(p.ppm,snapshot?.melee?.[slot]?.baseSpeedSeconds);}
+  result.push({id:'enchant:'+slot+':'+selected,source:entry.name,provenance:p.provenance,trigger:'landed',eligibility:p.ppm!==undefined&&p.eligibleAttacks==='white-only'?'white-melee':'melee',hand:slot,sources:p.sources,chance,cooldownMs:p.cooldownMs,effect});
  }
  return result;
 }

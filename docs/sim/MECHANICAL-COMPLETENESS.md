@@ -65,3 +65,6 @@ The build adapter now consumes the existing combined active item/set scoped audi
 
 ## Weapon enchantment runtime
 Selected, available weapon enchant IDs are validated against the equipped hand and compiled with explicit reference proc policies. Fiery Weapon and Lifestealing use school-specific damage and leech; Crusader supports an acknowledged AP-only approximation plus healing, not full Strength inheritance. Hand-tagged landed events are required; missing hand metadata cannot trigger the enchant. Proc rates, damage, timing and overlap are not inferred. Other event enchants and PPM conversion remain outstanding.
+
+## Weapon speed PPM reference
+Enchant policies can select fixed chance or explicit PPM with base-weapon-speed-landed basis. Conversion clamps ppm * unmodified weapon seconds / 60 to one; haste does not reduce per-contact probability. White-only or explicit named attacks are required; misses and nonmatching hands are excluded by existing runtime. Realised procs/minute can differ due to misses, haste, specials and cooldowns. No live rates assumed.
