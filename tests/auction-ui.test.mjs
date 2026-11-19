@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,listingMarketPct,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,listingMarketPct,marketClass,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -328,7 +328,7 @@ test('each auction listing uses its own unit buyout for market percent and missi
  for(const [unit,avg] of [[null,100],[100,null],[100,0],[0,100],[NaN,20],[30,Infinity]])assert.equal(listingMarketPct(unit,avg),null);
  const js=read('auction-house/auction.js');
  assert.ok(js.includes("bid===null?'–':moneyNode(bid)"));
- assert.ok(js.includes('pct(listingMarketPct(r.unit_buyout,average))'));
+ assert.ok(js.includes('marketNode(listingMarketPct(r.unit_buyout,average))'));
 });
 
 
@@ -338,4 +338,11 @@ test('auction and favourites tables share equal metric column widths',()=>{
  assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(2){width:20%;box-sizing:border-box}'));
  assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(n+3){width:auto}'));
  assert.doesNotMatch(css,/\.ah-scroll>table>thead th:nth-child\((?:[3-9]|10|11)\)\{width:/);
+});
+
+test('market value colours reflect the displayed percentage and missing data stays neutral',()=>{
+ for(const [value,expected] of [[null,'unknown'],[NaN,'unknown'],[50,'cheap-strong'],[75,'cheap-strong'],[75.1,'cheap'],[90,'cheap'],[90.1,'cheap-slight'],[95,'cheap-slight'],[95.1,'neutral'],[100,'neutral'],[104.9,'neutral'],[105,'expensive-slight'],[110,'expensive'],[125,'expensive-strong']]) assert.equal(marketClass(value),'ah-market-'+expected);
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes('td(tr,marketNode(item.market_pct))'));
+ assert.ok(js.includes("stat('Market %',marketNode(item.market_pct))"));
 });
