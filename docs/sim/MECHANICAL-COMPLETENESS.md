@@ -161,3 +161,6 @@ Optional explicit attack-power reduction and duration attach a tracked debuff to
 
 ## Calculated enemy attack power
 Optional physical incoming attack policy supplies base enemy AP, pre-armour damage per AP and explicit strongest or additive overlap. Active enemy debuff modifiers are read at attack time; reduction caps at base AP and damage floors at zero. Fixed scripted damage and unconfigured attacks are unchanged. Corrected Screech application to use the boolean landed return from executeEffects. Live overlap and coefficients remain unverified.
+
+## Imp Fire Shield reference
+Timed owner aura retaliates against effective incoming physical damage, using explicit fixed fire damage and mitigation. Attribution is to the living pet. No melee/ranged distinction, absorbed-hit trigger, party propagation, independent resist roll or generated threat inferred; caller acknowledges the effective physical damage approximation.
