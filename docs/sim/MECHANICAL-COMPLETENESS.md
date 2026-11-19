@@ -98,3 +98,6 @@ Explicit friendlyProviderSchedules support existing ally providers, a party of u
 
 ## Provider, consumable and equipment follow-up
 Explicit per-application provider distance and talent factor; pairwise friendly exclusion and static conflict checks. Compound rejuvenation uses independent reference rolls only when acknowledged. Primal Gods AP tooltip mapping and corrected observed ranged AP inheritance adapter key. These remain reference models; range is supplied per activation rather than simulated movement.
+
+## Additional mechanical policies
+Hunter defensive passive training accepts confirmed Natural Armor and school resistance ranks, and optional explicit baseline inheritance. Calculated incoming attacks use delta contributions (not scripted outcomes). Swap policies optionally support global crit and hit changes with equal hand deltas; unsupported snapshot changes remain rejected. Fiery Blaze single-target approximation and Elemental Slayer creature binding require explicit acknowledgement. None of these source coefficients are live verified.

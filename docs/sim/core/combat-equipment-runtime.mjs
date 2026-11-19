@@ -7,7 +7,7 @@ const id=v=>typeof v==='string'&&v.trim();
 const validModifier=m=>m&&id(m.stat)&&['flat','addPct','multiplyPct'].includes(m.mode)&&Number.isFinite(m.value)&&(m.mode!=='multiplyPct'||m.value>=-100);
 const validRange=x=>Number.isFinite(x.min)&&Number.isFinite(x.max)&&x.min>=0&&x.max>=x.min;
 const validEffect=x=>x&&['aura','resource','heal','damage','periodic-damage','extra-attack','absorb'].includes(x.kind)&&(x.kind==='aura'?Number.isSafeInteger(x.durationMs)&&x.durationMs>0&&Array.isArray(x.modifiers)&&(x.modifiers.length>0||x.guaranteedCrit)&&x.modifiers.every(validModifier):x.kind==='absorb'?validRange(x)&&Number.isSafeInteger(x.durationMs)&&x.durationMs>0&&(x.schools===null||Array.isArray(x.schools)&&x.schools.length>0&&x.schools.every(s=>['physical','fire','frost','nature','shadow','arcane','holy'].includes(s))):x.kind==='extra-attack'?Number.isSafeInteger(x.count)&&x.count>=1&&x.count<=10&&['mainhand','offhand'].includes(x.hand):['heal','damage','periodic-damage'].includes(x.kind)?validRange(x):id(x.resource)&&(Number.isFinite(x.amount)&&x.amount>=0||validRange(x)));
-export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=null,enemyIds=null}={}){
+export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=null,enemyIds=null,targetTypes=null}={}){
  if(config==null)return null;
  if(!Array.isArray(config.effects))throw Error('Explicit equipment effect list required');
  config={...config,effects:expandPrimaryEffects(config.effects,config.primaryAttributePolicy)};
@@ -28,6 +28,7 @@ export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=
   if(x.chancePerComboPoint!==undefined&&(!['landed','critical'].includes(x.trigger)||!Number.isFinite(x.chancePerComboPoint)||x.chancePerComboPoint<0||x.chancePerComboPoint>1||x.chance!==0))throw Error('Invalid combo point proc probability');
   if(x.sharedGroup!==undefined&&(!id(x.sharedGroup)||!Number.isSafeInteger(x.sharedCooldownMs)||x.sharedCooldownMs<0))throw Error('Invalid equipment shared cooldown');
   if(x.conditions!==undefined&&(!Array.isArray(x.conditions)||x.conditions.some(q=>!q||!['owner','target'].includes(q.unit)||!['health-at-most','health-at-least'].includes(q.kind)||!Number.isFinite(q.percent)||q.percent<0||q.percent>100)))throw Error('Invalid equipment conditions');
+  if(x.targetTypes!==undefined&&(!Array.isArray(x.targetTypes)||!x.targetTypes.length||!x.targetTypes.every(id)||!targetTypes))throw Error('Explicit equipment target type map required');
   if(x.hand!==undefined&&(!['mainhand','offhand'].includes(x.hand)||!['landed','critical'].includes(x.trigger)))throw Error('Invalid equipment hand restriction');
   if(x.eligibility!==undefined&&!['melee','white-melee'].includes(x.eligibility))throw Error('Invalid equipment eligibility');
   if(x.trigger==='use'){if(!Array.isArray(x.atMs)||new Set(x.atMs).size!==x.atMs.length||x.atMs.some(t=>!Number.isSafeInteger(t)||t<0||t>=duration))throw Error('Invalid equipment use times');}
@@ -37,7 +38,7 @@ export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=
  function activate(e,x,target,ev=null){
   const cd=e.resources.cooldowns,shared=x.sharedGroup?[{id:'equipment-group:'+x.sharedGroup,duration:x.sharedCooldownMs}]:[];
   if(x.loadout==='before'&&swapped||x.loadout==='after'&&(!swapped||e.timeline.now<swap.atMs+swap.equipLockMs))return false;
-  if(!e.unit(owner).alive||!cd.check(shared))return false;
+  if(!e.unit(owner).alive||!cd.check(shared)||x.targetTypes&&!x.targetTypes.includes(targetTypes?.[target]))return false;
   for(const q of x.conditions??[]){const u=e.unit(q.unit==='owner'?owner:target);if(!Number.isFinite(u.healthPercent)|| (q.kind==='health-at-most'?u.healthPercent>q.percent:u.healthPercent<q.percent))return false;}
   const points=ev?.comboPointsBefore;if(x.chancePerComboPoint!==undefined&&(!Number.isInteger(points)||points<1||points>5))return false;const chance=x.chancePerComboPoint===undefined?x.chance:Math.min(1,x.chancePerComboPoint*points);
   const p=attemptProc(cd,{id:'equipment:'+x.id,chance:x.trigger==='use'?1:chance,internalCooldownMs:x.cooldownMs},e.random);if(!p.triggered)return false;
