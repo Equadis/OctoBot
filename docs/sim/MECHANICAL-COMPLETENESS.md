@@ -104,3 +104,6 @@ Hunter defensive passive training accepts confirmed Natural Armor and school res
 
 ## Elemental Devastation conditional talent
 Imported Shaman talent 222 rank 1/2/3 grants 3/6/9 percentage points of spell hit for ten seconds on owner landed physical melee critical strikes. Dynamic refresh, no permanent double-count with static talent hit, no ranged or equipment-generated proc activation. Ordinary direct spell table consumes the delta; special/periodic application coverage not asserted.
+
+## Scoped equipment healing and cast geometry
+Exact active unconditional ability scopes now apply percentage ordinary direct/periodic healing, flat direct non-combo/non-weapon damage/healing, cast time reductions on cast actions, and range changes. Flat amounts are deliberately not replicated on periodic ticks. Special execution paths and conditional scopes remain outside this compiler.
