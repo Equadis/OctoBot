@@ -188,3 +188,6 @@ Optional maintained-channel mode locks companion casting and swings until contro
 
 ## Seduction target eligibility
 Optional explicit creature-type allowlist and immune enemy identifiers prevent activation without consuming companion mana. Added combat tests for these gates and for release on lethal damage from a separate enemy. Actual boss immunities and creature types must be supplied by the scenario; no automatic live database classification or diminishing returns inferred.
+
+## Companion crowd-control diminishing returns
+Optional per-target policy provides a descending duration multiplier sequence ending in immunity and a reset interval measured from the scheduled control expiry. Only landed control advances the sequence; the immune tier skips activation without mana cost. The scheduled-expiry reset is conservative when damage breaks control early; cross-spell DR categories and live-server coefficients remain unverified.
