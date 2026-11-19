@@ -56,7 +56,7 @@ export class CombatEncounter{
  unit(id){const u=this.#units.get(id);if(!u)throw new Error('Unknown unit: '+id);return {...u,alive:u.health>0,healthPercent:u.health/u.maxHealth*100};}
  #alive(id){return this.#units.get(id).health>0;}
  #record(type,details){this.#log.push({time:this.timeline.now,type,...details});}
- recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset','poison-charge','companion-action','companion-threat','utility-threat'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active()){this.#record(type,copy(details));if(type==='attack-result')this.#onAttackResult(this,details);}}
+ recordMechanic(type,details){if(!['attack-result','proc','resource-change','combo-change','action-ineligible','class-state-change','cooldown-reset','poison-charge','companion-action','companion-threat','companion-interrupt','utility-threat'].includes(type)||!details||typeof details!=='object'||Object.hasOwn(details,'type')||Object.hasOwn(details,'time'))throw new Error('Invalid mechanic event');if(this.#active()){this.#record(type,copy(details));if(type==='attack-result')this.#onAttackResult(this,details);}}
  #active(){return this.#finishedAt===null&&this.#alive(this.#player)&&this.#targets.some(id=>this.#alive(id));}
  absorbRemaining(id,targetId,actorId){const s=this.#shields.get(JSON.stringify([actorId,targetId,id]));return s&&s.expiresAt>this.timeline.now?s.remaining:0;}
  applyAbsorb({id,targetId,actorId,source,amount:capacity,durationMs,schools=null,refresh='replace',fraction=1,capacityCap=null}){
