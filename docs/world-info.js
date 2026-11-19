@@ -50,6 +50,8 @@
   function raidGroupLabel(name) {
     const label = String(groupLabel(name) ?? '').trim();
     if (!label || /^(pug|unknown)$/i.test(label)) return label;
+    const led = /^(.+?)-led PUG$/i.exec(label);
+    if (led) return '<' + led[1].trim().replace(/^<|>$/g, '') + '>-led PUG';
     return '<' + label.replace(/^<|>$/g, '') + '>';
   }
   // Build raid labels with text nodes, not HTML, because guild names come from roster data.
@@ -58,7 +60,7 @@
     if (!guild) return;
     const name = raidGroupLabel(guild);
     node.append(document.createTextNode(' \u2013 '));
-    if (name.startsWith('<') && name.endsWith('>')) {
+    if (name.startsWith('<')) {
       const bold = document.createElement('strong');
       bold.className = 'raid-guild';
       bold.textContent = name;
