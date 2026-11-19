@@ -113,3 +113,6 @@ Guaranteed-critical landed consumption now tracks the exact chosen charge for th
 
 ## Periodic consumable restoration
 Added non-seated timed health/resource restoration leaf with explicit integral tick interval, expiry tick, restart refresh, resource cap and death gate. Exact imported Razorlash Root tooltip compiles into two simultaneous restoration streams; caller must acknowledge unresolved tick timing and interval. Seated food/drink, bandage interrupts and unknown compound effects remain unsupported.
+
+## Timed defensive and Rage consumables
+Short-duration exact armour and all-school/dual-school resistance effects now compile to dynamic incoming mitigation auras; long-duration prepull effects are rejected to avoid duplicate application. Mighty Rage Potion compiles a compound resource and primary Strength grant with explicit acknowledgement of the anomalous imported Rage range. Strength conversion requires the existing primary attribute policy. No correction of the imported range is inferred; live measurement remains required.
