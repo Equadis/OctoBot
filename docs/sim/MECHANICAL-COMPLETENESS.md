@@ -215,3 +215,6 @@ Exact single-school Protection Potion absorbs, simple attack-speed consumables (
 
 ## Petless Feign Death trinket swap
 Explicit scheduled attempt consumes mana and starts its cooldown only when not casting, then samples caller-supplied combat-drop chance. Success clears owner threat and triggers replacement equipment, failure retains original equipment. Pet presence is rejected. This is a scripted reference attempt, not a trainable rotation rank or live NPC resist/combat flag model; no stand-up delay or auto-shot reset inferred.
+
+## Exact equipment ability hit/crit and periodic timing
+Direct ordinary physical and complete spell outcome tables accept exact unconditioned ability hit/crit percentages using existing redistribution kernels. Ordinary periodic effects accept duration/interval adjustments only when they preserve integral tick schedules. Non-integral schedules, incomplete outcome bins and special paths are not silently promoted. Live tick rounding and scoped set coefficients remain unverified.
