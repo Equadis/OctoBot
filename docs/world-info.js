@@ -11,6 +11,8 @@
   // The Bufftracker reports every ~2 minutes; older than this its raids are shown as last known, flagged stale.
   const TRACKER_FRESH_MS = 3 * MINUTE;
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
+  const DMF_MOVING_GAP_MS = 3 * MINUTE;
+  const DMF_HEARTBEAT_MS = 3 * MINUTE;
   const DAY = 86_400_000;
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
@@ -476,18 +478,31 @@
     return { location, observedAt, npc: found && typeof found.npc === 'string' ? found.npc : '',
       sites, confirmed: found && found.fresh === true };
   }
+  // A relocation is inferred, not a directly verified event. Require a known previous
+  // location and fresh post-sighting heartbeats from BOTH independent observers.
+  function dmfMoving(dmf, now, apiOk) {
+    if (!apiOk || !dmf || !validPast(dmf.observedAt, now) || now - dmf.observedAt < DMF_MOVING_GAP_MS) return false;
+    return ['elwynn', 'mulgore'].every(key => {
+      const site = object(dmf.sites && dmf.sites[key]);
+      const heartbeat = site && time(site.lastHeartbeatAt);
+      return Boolean(site && site.collectorStatus === 'online' && validPast(heartbeat, now) &&
+        heartbeat > dmf.observedAt && now - heartbeat <= DMF_HEARTBEAT_MS &&
+        heartbeat - dmf.observedAt >= 2 * MINUTE);
+    });
+  }
   function renderDmf() {
     const dmf = state.dmf, latest = dmf && dmf.observedAt;
-    const fresh = dmf && dmf.confirmed && validPast(latest) && freshAt(latest, FRESH_DMF_MS);
+    const moving = dmfMoving(dmf, Date.now(), state.apiOk);
+    const fresh = !moving && dmf && dmf.confirmed && validPast(latest) && freshAt(latest, FRESH_DMF_MS);
     const sw = Boolean(fresh && dmf.location === 'elwynn');
     const tb = Boolean(fresh && dmf.location === 'mulgore');
-    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Location unconfirmed';
+    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : moving ? 'Moving' : 'Location unconfirmed';
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
     if (sw || tb) icon.src = sw ? '../img/alliance-crest.png' : '../img/horde-crest.png';
     const description = $('dmf-description');
     description.hidden = Boolean(sw || tb);
-    description.textContent = 'Awaiting a confirmed on-site Darkmoon Faire NPC sighting.';
+    description.textContent = moving ? 'Both observers are online; no Faire NPC has been seen recently. Relocation inferred, not confirmed.' : 'Awaiting a confirmed on-site Darkmoon Faire NPC sighting.';
     const sites = dmf && dmf.sites || {};
     const status = key => {
       const site = object(sites[key]), value = String(site && site.collectorStatus || 'unknown');
@@ -496,14 +511,16 @@
     const observers = 'Elwynn observer: ' + status('elwynn') + ' · Mulgore observer: ' + status('mulgore');
     $('dmf-observed').textContent = sw || tb
       ? 'Confirmed ' + span(Date.now() - latest) + ' ago · ' + dmf.npc + ' · ' + observers
-      : validPast(latest)
+      : moving
+        ? 'Last confirmed ' + when(latest) + ' · ' + observers
+        : validPast(latest)
         ? 'Last confirmed ' + when(latest) + ' (now stale) · ' + observers
         : 'No confirmed Faire sighting yet · ' + observers;
     const panel = $('dmf-panel');
     panel.classList.toggle('faction-alliance', sw);
     panel.classList.toggle('faction-horde', tb);
-    panel.classList.toggle('faction-moving', !(sw || tb));
-    labelState('dmf-state', sw || tb ? 'Confirmed' : 'Unconfirmed', sw || tb ? 'online' : 'unknown');
+    panel.classList.toggle('faction-moving', moving);
+    labelState('dmf-state', sw || tb ? 'Confirmed' : moving ? 'Moving' : 'Unconfirmed', sw || tb ? 'online' : moving ? 'estimated' : 'unknown');
   }
 
   async function loadMetrics() {
