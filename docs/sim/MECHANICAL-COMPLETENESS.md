@@ -140,3 +140,6 @@ Consume Shadows is available as explicit self-healing at cast completion, gated 
 
 ## Companion channel healing
 Optional explicit tick interval divides total healing evenly across integral channel ticks, pays cost once, locks companion attacks during the cast and stops future ticks on death. Cast-completion mode remains available with acknowledgement. Combat restrictions and interruption by nonlethal damage or movement are not modelled; timing and amount are reference inputs.
+
+## Companion healing interruption
+Optional explicit effective-damage interruption cancels pending healing ticks, releases cast lock and preserves the paid resource and cooldown. Legacy channels remain uninterrupted by nonlethal damage. Fully absorbed attacks and movement are not modelled as interrupts; no live server policy asserted.
