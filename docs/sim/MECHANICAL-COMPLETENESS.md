@@ -122,3 +122,6 @@ Exact bandage healing totals compile into explicit tick intervals with effective
 
 ## Loadout-aware tooltip effects
 Explicit before/after trinket tooltip schedules compile against their respective equipped loadouts and retain shared cooldown logic; fixed effects cannot reference swapped slots. Set effects still require fixed loadouts. Corrected bandage identification to use item name rather than broad category classification after CI regression.
+
+## Ranged temporary AP and trinket deltas
+Ranged formula readers add temporary rangedAP aura contributions to Hunter Mark AP before applying the existing weapon-speed coefficient. The observed baseline remains in the compiled formula, so baseline AP is not applied twice. Optional ranged swap policy accepts explicit observed AP/hit/crit changes; unchanged observed AP is not inferred from equipment. Physical ranged tables use hit/crit deltas; hybrid Arcane Shot outcome redistribution remains unresolved.

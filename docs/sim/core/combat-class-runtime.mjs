@@ -84,7 +84,7 @@ function range(e,target,actor,f,stats,baseFactor=1){
  if(!base)throw new Error('Explicit combo-point rank range unavailable');
  const stat=k=>e.auras.stat(actor,k,finite(stats[k],k));
  let extra=0;for(const t of f.terms)extra+=stat(t.stat)*(t.comboCoefficients?(t.comboCoefficients[points-1]??(()=>{throw new Error('Missing combo coefficient');})()):t.coefficient)*(t.perComboPoint?points:1);
- if(f.targetRangedAPCoefficient!==undefined){const marks=e.auras.active(target,'debuff').filter(a=>a.id==='hunter:hunters-mark'&&(a.ownerId===actor||a.modifiers.some(m=>m.stat==='hunterMarkShared'&&m.value===1)));const rap=Math.max(0,...marks.flatMap(a=>a.modifiers.filter(m=>m.stat==='hunterMarkRangedAP').map(m=>m.value)));extra+=rap*f.targetRangedAPCoefficient;}
+ if(f.targetRangedAPCoefficient!==undefined){const marks=e.auras.active(target,'debuff').filter(a=>a.id==='hunter:hunters-mark'&&(a.ownerId===actor||a.modifiers.some(m=>m.stat==='hunterMarkShared'&&m.value===1)));const rap=Math.max(0,...marks.flatMap(a=>a.modifiers.filter(m=>m.stat==='hunterMarkRangedAP').map(m=>m.value)));extra+=(rap+e.auras.stat(actor,'rangedAP',0))*f.targetRangedAPCoefficient;}
  if(f.dynamicWeaponAP!==undefined)extra+=(stat('attackPower')-stats.attackPower)*f.dynamicWeaponAP;
  const wm=f.weapon?f.weapon.coefficient:0;
  const a=(base[0]*baseFactor+extra+(f.weapon?stat(f.weapon.minStat)*wm:0))*f.multiplier;
