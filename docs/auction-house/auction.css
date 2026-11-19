@@ -113,7 +113,7 @@
 .ah-scroll td.ah-change-up,.ah-stats .ah-change-up{color:#ff8000}
 .ah-scroll td.ah-change-up-slight,.ah-stats .ah-change-up-slight{color:#ffff00}
 .ah-scroll td.ah-change-neutral,.ah-stats .ah-change-neutral{color:#ffffff}
-.ah-scroll td.ah-change-down-slight,.ah-stats .ah-change-down-slight{color:#80ff00}
+.ah-scroll td.ah-change-down-slight,.ah-stats .ah-change-down-slight{color:#dfff00}
 .ah-scroll td.ah-change-down,.ah-stats .ah-change-down{color:#00ff00}
 .ah-scroll td.ah-change-down-strong,.ah-stats .ah-change-down-strong{color:#0080ff}
 .ah-scroll td.ah-change-unknown,.ah-stats .ah-change-unknown{color:#a8b7c7}
@@ -237,7 +237,7 @@
 .ah-market-orange{color:#ff8000}
 .ah-market-yellow{color:#ffff00}
 .ah-market-white{color:#ffffff}
-.ah-market-yellow-green{color:#80ff00}
+.ah-market-yellow-green{color:#dfff00}
 .ah-market-green{color:#00ff00}
 .ah-market-blue{color:#0080ff}
 .ah-market-unknown{color:#a8b7c7}
