@@ -128,3 +128,6 @@ Ranged formula readers add temporary rangedAP aura contributions to Hunter Mark 
 
 ## Hybrid Arcane Shot and ranged swap input
 Arcane Shot retains its explicit defence policy and, for ranged defence, rebuilds independent resistance bins from the adjusted original ranged table. Spell defence receives ordinary spell hit/crit modifiers instead. Replacement observed ranged AP can now be explicitly supplied in the swap policy; it is not inferred from unverified gear coefficients. Live validation pending.
+
+## Pet-specific equipment effects
+Active exact Pet scopes for AP, maximum health percentage and damage percentage now feed companion configuration under an explicit included/apply policy. Owner AP inheritance remains separate; no inference about live stacking or coefficients. Inactive and unrelated scopes are excluded.
