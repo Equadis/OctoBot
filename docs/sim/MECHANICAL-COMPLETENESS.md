@@ -179,3 +179,6 @@ Explicit range-gated opening AP aura applies to companion formulas and is consum
 
 ## Companion movement reference
 Charge optionally closes the selected target's distance to an explicit arrival distance. Dash and Dive support explicit instant approach distances, with activation range and independent cost/cooldown. Geometry is encounter-local and target-specific, never mutating the supplied scenario. This is not a continuous movement-speed or pathfinding model; position, other target distances, and immobilisation remain unchanged.
+
+## Succubus Seduction reference
+Explicit landed control applies a timed target debuff that suppresses scheduled incoming attacks and breaks on effective damage. No target creature-type immunity, diminishing returns, maintained channel or pet-death cancellation inferred; caller acknowledges the scripted approximation.
