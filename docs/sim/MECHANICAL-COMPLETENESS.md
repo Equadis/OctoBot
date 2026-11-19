@@ -203,3 +203,6 @@ Optional explicit dispel outcomes preserve the aura and suppress healing on resi
 
 ## Imp Blood Pact reference
 Explicit observed owner health capacity bonus uses the existing health transition policy and is removed on lethal companion damage. Requires acknowledgement of owner-only health approximation and an explicit capacity policy. Stamina conversion, party propagation, stacking groups and live rank values are not inferred.
+
+### Blood Pact party capacity
+Explicit selected ally recipients receive the same observed health bonus using the existing capacity transition policy; resource resizing remains owner-only. Lethal companion damage removes all pact auras. Group membership, range and stamina conversion are not inferred; caller supplies eligible recipients.
