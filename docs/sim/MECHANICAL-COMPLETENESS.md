@@ -92,3 +92,6 @@ Corrected the direct spell runtime's premature reference to curseAuras (CI 44438
 
 ## Scheduled raid debuff providers
 Optional raidProviderSchedules assign each migrated selected armour/spell debuff to an existing additional ally, enemy target, application time and duration. Dead providers/targets cannot apply new auras. Existing aura ownership and strongest-group semantics preserve overlap and expiry. Multiple targets permitted only with explicit schedules; baseline target armour/resistance remains shared reference configuration, not individual creature stats. Providers do not independently cast or generate threat; fixed loadout only. Legacy encounter-long synthetic auras retained without schedules.
+
+## Friendly raid providers
+Explicit friendlyProviderSchedules support existing ally providers, a party of up to five, named recipients, application time, duration and reference secondary modifiers. Same-ID external buffs replace one another (last applied reference rule); matching static selected IDs are rejected. Dead providers or recipients cannot receive new applications. Party membership is supplied per schedule; range, provider class/talents, different-ID conflicts and autonomous raid rotations are not inferred. Ally aura bookkeeping does not imply autonomous ally DPS. Live validation pending.
