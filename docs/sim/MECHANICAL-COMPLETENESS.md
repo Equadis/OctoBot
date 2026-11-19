@@ -86,3 +86,6 @@ Opt-in strongest-active research policy transfers selected Sunder, Expose, Reckl
 
 ## Raid spell overlap reference
 Opt-in selected Elements/Shadow curses migrate from the static sheet to encounter-duration target auras. Existing strongest curse vulnerability semantics apply. Optional direct ordinary spell resistance policies rebuild rating-based bins after the strongest reduction and reject mismatches with compiled baseline outcomes. No inferred server distribution; periodic application/tick resistance, special paths and multi-target provider schedules remain outstanding. Fixed loadout single target only for migrated raid auras.
+
+## Periodic resistance extension and regression correction
+Corrected the direct spell runtime's premature reference to curseAuras (CI 44438064994). Explicit per-school direct/application/tick resistance policies now permit separate ordinary tables and recalculate using active target debuffs at the actual roll time. Legacy direct policy remains accepted. Unconfigured phases retain original outcomes; special/guaranteed application distributions are not automatically converted. Server validation still pending.
