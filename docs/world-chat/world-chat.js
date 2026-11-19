@@ -48,11 +48,17 @@ document.addEventListener("click",event=>{
  focusedPlayer=token&&token.dataset.player!==focusedPlayer?token.dataset.player:"";applyPlayerFocus();
 });
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&focusedPlayer){focusedPlayer="";applyPlayerFocus();}});
+// Use the same verified class metadata and Classic class palette as LFG.
+function colourAuthor(author,row){
+ if(row.gm||row.author==="Unknown player"||!Object.hasOwn(classInfo,row.classId))return;
+ author.style.color=classInfo[row.classId][1];
+}
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
   if(row.gm)content.append(node("span","chat-gm-tag","<GM> "));
   const author=withTime&&row.author!=="Unknown player"?playerButton(row.author,"chat-author"):node("span","chat-author",row.author);
+  colourAuthor(author,row);
   content.append(author);
   if(row.guild)content.append(node("span","chat-guild"," <"+row.guild+">"));
   content.append(document.createTextNode(": "));
@@ -204,6 +210,7 @@ function drawLfg(now){
    for(const row of entries){
     const info=analyseRecruitment(row.message),line=node("div","lfg-row"),body=node("div","lfg-body"),author=node("button","lfg-player",row.author);author.type="button";author.disabled=row.author==="Unknown player";author.title="Copy /w "+row.author;author.addEventListener("click",()=>copyWhisper(row.author));
     const cls=classInfo[row.classId];
+    colourAuthor(author,row);
     const who=node("div","lfg-who");who.append(author);
     if(row.guild)who.append(node("span","lfg-guild"," <"+row.guild+">"));
     if(row.level||cls){const meta=node("span","lfg-meta"," · "+(row.level?"Lvl "+row.level+(cls?" ":""):""));if(cls){const classLabel=node("span","lfg-class",cls[0]);classLabel.style.color=cls[1];meta.append(classLabel);}who.append(meta);}
