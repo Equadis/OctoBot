@@ -1,6 +1,6 @@
 // Explicit linear marginal coefficients, not a claim about server stat formulas.
 const primary=new Set(['strength','agility','stamina','intellect','spirit']);
-const secondary=new Set(['attackPower','rangedAP','meleeCritDeltaPct','rangedCritDeltaPct','spellCritDeltaPct','incomingArmourDelta','incomingDodgeDeltaPct','maxHealth','maxMana']);
+const secondary=new Set(['attackPower','rangedAP','meleeCritDeltaPct','rangedCritDeltaPct','spellCritDeltaPct','incomingArmourDelta','incomingDodgeDeltaPct','maxHealth','maxMana','spiritManaRegenPerSecondDelta','mp5Delta']);
 export function expandPrimaryModifiers(modifiers,policy){
  const out=[];
  for(const m of modifiers){if(!primary.has(m.stat)){out.push(m);continue;}

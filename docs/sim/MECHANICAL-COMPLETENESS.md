@@ -71,3 +71,6 @@ Enchant policies can select fixed chance or explicit PPM with base-weapon-speed-
 
 ## Temporary primary attributes
 Explicit marginal conversion policies expand flat Strength, Agility, Stamina, Intellect and Spirit equipment aura contributions into supported secondary keys. All derivatives share the original aura stacks and expiry. Crusader can alternatively supply Strength rather than AP-only approximation. Capacity effects require an explicit capacity policy. Spirit regeneration, nonlinear thresholds, primary percentage stacking and class coefficients are not inferred; empty coefficient maps explicitly model no secondary contribution. Server validation pending.
+
+## Dynamic Spirit and MP5 regeneration
+An explicitly selected player mana tick stream adds temporary Spirit-derived mana/second and MP5 deltas using its interval. Spirit follows the configured inside-window fraction; MP5 is independent of the spend window. A separate mana regeneration factor applies to the combined amount. One stream only prevents duplicate aura contributions. Coefficients and casting-window fraction remain caller-supplied reference inputs; no server rates inferred.
