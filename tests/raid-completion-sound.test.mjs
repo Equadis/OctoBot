@@ -1,0 +1,30 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const js=readFileSync(new URL('../docs/world-info.js',import.meta.url),'utf8');
+const sounds=readFileSync(new URL('../docs/raid-sounds.js',import.meta.url),'utf8');
+test('one completion preference replaces the two historical options',()=>{
+ assert.match(sounds,/key: 'finished', label: 'Raid finished'/);
+ assert.doesNotMatch(sounds,/key: 'confirmed'/);
+ assert.doesNotMatch(js,/player\.notify\('confirmed'\)/);
+});
+test('Chronicle later confirming an inferred end never plays a second sound',()=>{
+ const now=Date.now(), heard=[];
+ const state={heads:{},raids:{},auth:{ony:null,bwl:null},buffs:{}};
+ const start=js.indexOf('  const sound = {');
+ const end=js.indexOf('  function renderLive()',start);
+ const watch=vm.runInNewContext(js.slice(start,end)+'\nwatchSounds',{state,window:{RaidSounds:{notify:k=>heard.push(k),setAvailability(){}}},validPast:n=>Number.isFinite(n)&&n>0&&n<=now,serverNow:()=>now,time:Date.parse,MINUTE:60000,Date});
+ watch(true);
+ state.auth.ony={lastFinished:{at:now-2000,id:701,key:'u701',killConfirmed:false}};
+ watch(true);
+ assert.deepEqual(heard,['finished']);
+ state.auth.ony.lastFinished={at:now-1000,id:701,key:'u701',killConfirmed:true};
+ watch(true);
+ assert.deepEqual(heard,['finished']);
+ state.auth.ony.lastFinished={at:now,id:702,key:'u702',killConfirmed:true};
+ watch(true);
+ assert.deepEqual(heard,['finished','finished']);
+ watch(true);
+ assert.deepEqual(heard,['finished','finished']);
+});
