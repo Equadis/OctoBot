@@ -116,3 +116,6 @@ Added non-seated timed health/resource restoration leaf with explicit integral t
 
 ## Timed defensive and Rage consumables
 Short-duration exact armour and all-school/dual-school resistance effects now compile to dynamic incoming mitigation auras; long-duration prepull effects are rejected to avoid duplicate application. Mighty Rage Potion compiles a compound resource and primary Strength grant with explicit acknowledgement of the anomalous imported Rage range. Strength conversion requires the existing primary attribute policy. No correction of the imported range is inferred; live measurement remains required.
+
+## Bandage restoration channels
+Exact bandage healing totals compile into explicit tick intervals with effective damage interruption, player decision lock and existing shared bandage cooldown. Starting while casting is rejected, and explicit battleground restrictions are checked. This is a self-bandage reference model; target-specific Recently Bandaged, movement, fully absorbed attacks and live tick timing are not inferred.
