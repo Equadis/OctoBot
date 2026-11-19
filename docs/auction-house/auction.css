@@ -230,3 +230,13 @@
 /* Keep the compact favourite cell from clipping the star into an ellipsis. */
 .ah-scroll>table>tbody>tr.ah-entry>td:first-child{padding:0;text-align:center;overflow:visible;text-overflow:clip;white-space:nowrap}
 .ah-scroll>table>tbody>tr.ah-entry>td:first-child .ah-star{display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;padding:0;box-sizing:border-box;overflow:visible}
+
+/* Market %: comparison with historical average, independent of scan-to-scan trend. */
+.ah-market-expensive-strong{color:#f04444}
+.ah-market-expensive{color:#ff6666}
+.ah-market-expensive-slight{color:#ff9a3c}
+.ah-market-neutral{color:var(--gold)}
+.ah-market-cheap-slight{color:#a3e635}
+.ah-market-cheap{color:#4ade80}
+.ah-market-cheap-strong{color:#22c55e}
+.ah-market-unknown{color:#a8b7c7}
