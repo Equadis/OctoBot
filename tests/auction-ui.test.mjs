@@ -341,7 +341,7 @@ test('auction and favourites tables share equal metric column widths',()=>{
 });
 
 test('market value colours reflect the displayed percentage and missing data stays neutral',()=>{
- for(const [value,expected] of [[null,'unknown'],[NaN,'unknown'],[50,'cheap-strong'],[75,'cheap-strong'],[75.1,'cheap'],[90,'cheap'],[90.1,'cheap-slight'],[95,'cheap-slight'],[95.1,'neutral'],[100,'neutral'],[104.9,'neutral'],[105,'expensive-slight'],[110,'expensive'],[125,'expensive-strong']]) assert.equal(marketClass(value),'ah-market-'+expected);
+ for(const [value,expected] of [[null,'unknown'],[NaN,'unknown'],[49.9,'blue'],[50,'green'],[74.9,'green'],[75,'yellow-green'],[89.9,'yellow-green'],[90,'white'],[100,'white'],[110,'white'],[110.1,'yellow'],[124.9,'yellow'],[125,'orange'],[150,'orange'],[150.1,'red'],[300,'red'],[300.1,'dark-red']]) assert.equal(marketClass(value),'ah-market-'+expected);
  const js=read('auction-house/auction.js');
  assert.ok(js.includes('td(tr,marketNode(item.market_pct))'));
  assert.ok(js.includes("stat('Market %',marketNode(item.market_pct))"));
