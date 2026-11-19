@@ -164,3 +164,6 @@ Optional physical incoming attack policy supplies base enemy AP, pre-armour dama
 
 ## Imp Fire Shield reference
 Timed owner aura retaliates against effective incoming physical damage, using explicit fixed fire damage and mitigation. Attribution is to the living pet. No melee/ranged distinction, absorbed-hit trigger, party propagation, independent resist roll or generated threat inferred; caller acknowledges the effective physical damage approximation.
+
+## Felhunter Tainted Blood reference
+Explicit self aura applies stack-capped enemy AP debuffs after effective physical damage to the living companion. Existing incoming AP policy reads those debuffs on subsequent attacks. Stack limits, duration, damage basis and AP values are explicit reference inputs; no melee-only distinction or live verification asserted.
