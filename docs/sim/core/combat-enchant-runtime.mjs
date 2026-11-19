@@ -14,8 +14,8 @@ export function compileEnchantProcs(build,gear,policies={},snapshot=null){
    if(!Number.isSafeInteger(p.durationMs)||p.durationMs<1)throw Error('Explicit Crusader duration required');
    // Direct strength conversion is not supported dynamically. Caller supplies
    // measured AP conversion and explicitly acknowledges omitted strength effects.
-   if(p.acknowledgeAPOnly!==true)throw Error('Crusader requires explicit AP-only acknowledgement');
-   effect={kind:'compound',effects:[{kind:'aura',durationMs:p.durationMs,modifiers:[{stat:'attackPower',mode:'flat',value:number(p.attackPower)}],exclusiveGroup:p.exclusiveGroup??null},{kind:'heal',min:number(p.healMin),max:number(p.healMax)}]};
+   if(p.strength===undefined&&p.acknowledgeAPOnly!==true)throw Error('Crusader requires explicit AP-only acknowledgement');if(p.strength!==undefined&&p.attackPower!==undefined)throw Error('Crusader requires exclusive strength or AP model');
+   effect={kind:'compound',effects:[{kind:'aura',durationMs:p.durationMs,modifiers:[{stat:p.strength===undefined?'attackPower':'strength',mode:'flat',value:number(p.strength??p.attackPower)}],exclusiveGroup:p.exclusiveGroup??null},{kind:'heal',min:number(p.healMin),max:number(p.healMax)}]};
   }else{
    effect={kind:'damage',school:family==='fiery_weapon'?'fire':'shadow',min:number(p.min),max:number(p.max),outcomes:p.outcomes,mitigation:p.mitigation,threat:p.threat??null};
    if(family==='lifestealing'){if(!['effective','post-mitigation'].includes(p.leechBasis))throw Error('Explicit lifestealing basis required');effect.leech={basis:p.leechBasis,fraction:1};}

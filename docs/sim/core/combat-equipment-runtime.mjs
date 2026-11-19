@@ -1,3 +1,4 @@
+import {expandPrimaryEffects} from './combat-primary-attributes.mjs';
 import {attemptProc,REFERENCE_PRIORITIES as P} from './combat-timeline.mjs';
 import {sampleAttack} from './combat-attack-tables.mjs';
 import {forceEligibleCritical} from './combat-dynamic-outcomes.mjs';
@@ -9,6 +10,7 @@ const validEffect=x=>x&&['aura','resource','heal','damage','periodic-damage','ex
 export function createEquipmentRuntime(config,owner,pools,duration,{extraAttack=null,enemyIds=null}={}){
  if(config==null)return null;
  if(!Array.isArray(config.effects))throw Error('Explicit equipment effect list required');
+ config={...config,effects:expandPrimaryEffects(config.effects,config.primaryAttributePolicy)};
  const components=x=>x.effect?.kind==='compound'?x.effect.effects.map((effect,i)=>({...x,id:x.id+':component:'+i,effect})): [x];
  const seen=new Set();const auraSpec=f=>f.stacking??{maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh'};const swap=config.swap??null;let swapped=false;
  if(swap&&(!Number.isSafeInteger(swap.atMs)||swap.atMs<0||swap.atMs>=duration||!['vanish','petless-feign-death'].includes(swap.mode)||swap.confirmedCombatDrop!==true||!Number.isSafeInteger(swap.equipLockMs)||swap.equipLockMs<0||!['retain','remove'].includes(swap.auraPolicy)))throw Error('Explicit research trinket swap policy required');

@@ -68,3 +68,6 @@ Selected, available weapon enchant IDs are validated against the equipped hand a
 
 ## Weapon speed PPM reference
 Enchant policies can select fixed chance or explicit PPM with base-weapon-speed-landed basis. Conversion clamps ppm * unmodified weapon seconds / 60 to one; haste does not reduce per-contact probability. White-only or explicit named attacks are required; misses and nonmatching hands are excluded by existing runtime. Realised procs/minute can differ due to misses, haste, specials and cooldowns. No live rates assumed.
+
+## Temporary primary attributes
+Explicit marginal conversion policies expand flat Strength, Agility, Stamina, Intellect and Spirit equipment aura contributions into supported secondary keys. All derivatives share the original aura stacks and expiry. Crusader can alternatively supply Strength rather than AP-only approximation. Capacity effects require an explicit capacity policy. Spirit regeneration, nonlinear thresholds, primary percentage stacking and class coefficients are not inferred; empty coefficient maps explicitly model no secondary contribution. Server validation pending.
