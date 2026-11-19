@@ -540,6 +540,42 @@ export class RaidTracker {
     return null;
   }
 
+  /**
+   * Reconcile a validated final-boss log with exactly one roster and raid window.
+   * The Chronicle recent endpoint exposes the log's FIRST encounter, not the final death
+   * timestamp. Never use that start time as the kill/clear time. A late log upgrades the
+   * existing session in place without changing its completion timestamp or identity.
+   */
+  confirmChronicleKill(uploader: string, logStartedAt: number, observedAt: number): boolean {
+    if (!uploader.trim() || !Number.isFinite(logStartedAt) || !Number.isFinite(observedAt) || logStartedAt > observedAt) return false;
+    const member = uploader.toLowerCase();
+    const matches = (roster: Iterable<string>, formedAt: number, end: number) =>
+      logStartedAt >= formedAt - 120_000 && logStartedAt <= end &&
+      [...roster].some(name => name.toLowerCase() === member);
+    const active = this.#slots.filter(slot => slot.live && slot.clears.confirmed &&
+      matches(slot.clears.members, slot.live.formedAt, observedAt));
+    const historical = this.#ended.filter(s => matches(s.roster, s.formedAt, s.endedAt));
+    if (active.length + historical.length !== 1) return false;
+    const old = historical[0];
+    if (old) {
+      if (old.clearSource === "chronicle_kill") return false;
+      old.endReason = "kill_confirmed";
+      old.clearSource = "chronicle_kill";
+      return true;
+    }
+    const slot = active[0];
+    if (!slot?.live) return false;
+    const formedAt = slot.live.formedAt;
+    // When still in the lair we know the kill happened, but not precisely when.
+    // Exclude that approximate duration from the timer's training data.
+    if (slot.clears.belowSince === null) slot.live.tainted = true;
+    slot.lastRoster = new Set(slot.clears.members);
+    const clear = slot.clears.confirmBossKill(observedAt);
+    if (!clear) return false;
+    this.#end(slot, "kill_confirmed", formedAt + clear.durationMs, "chronicle_kill", observedAt);
+    return true;
+  }
+
   /** The pipeline judged a just-ended raid a disband (left too soon to have killed the boss). */
   annotateEnd(number: number | null, reason: SessionEndReason): void {
     const ended = this.#ended.find((e) => e.id === number);
