@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261119-market-colour';
+import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261119-market-scale2';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
