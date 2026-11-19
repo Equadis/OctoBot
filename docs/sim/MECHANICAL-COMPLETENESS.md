@@ -194,3 +194,6 @@ Optional per-target policy provides a descending duration multiplier sequence en
 
 ## Felhunter Spell Lock reference
 Optional explicit incoming spell cast start times permit reactive interruption, timed silence and school-specific suppression of later cast starts. Only marked spell casts are affected, not melee or legacy instantaneous damage. The companion uses Spell Lock only when a target has an active scripted cast; no autonomous enemy cast generation or live coefficients inferred.
+
+## Felhunter Devour Magic reference
+Explicit aura IDs and owner/pet/enemy target order enable a single eligible friendly debuff or enemy buff removal and companion self-healing. Scripted dispellable aura events supply timed reference markers, not inferred debuff effects. No automatic magic classification, friendly range, dispel resistance or party-wide selection inferred.
