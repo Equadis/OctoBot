@@ -12,6 +12,8 @@ import {parseUpdateObject} from "../dist/protocol/update-object.js";
 import {RaidTracker} from "../dist/watcher/raid-tracker.js";
 import {createRaidTelemetryFromEnv} from "../dist/raid-telemetry.js";
 import {fetchRoster} from "../dist/watcher/roster.js";
+import {HttpChronicleClient,BLACKWING_RECENT_URL} from "../dist/chronicle/client.js";
+import {cleanFinalBossKills} from "../dist/chronicle/parse.js";
 import {createDropPipeline} from "./drop-pipeline.mjs";
 import {ListenerHealth} from "./listener-health.mjs";
 import {EventPublisher} from "./events.mjs";
@@ -43,6 +45,15 @@ const tracker=raid?new RaidTracker({minRaidSize:raidConfig.minRaidSize??threshol
 const telemetry=raid?createRaidTelemetryFromEnv(process.env,profile.realmName,log):null;
 const persistence=tracker?createRaidPersistence({url,token,secret:process.env.RAID_STATE_KEY,zone,lockoutMs:raidConfig.raidLockoutMs}):null;
 if(persistence)log.info("Raid checkpoint: "+await persistence.restore(tracker));
+const chronicle=raid?new HttpChronicleClient(undefined,zone==="bwl"?BLACKWING_RECENT_URL:undefined):null;
+let lastChronicleAttempt=0;
+async function reconcileChronicle(){
+ if(!chronicle||!tracker.sessions().sessions.length||Date.now()-lastChronicleAttempt<60000)return;
+ lastChronicleAttempt=Date.now();
+ try{const logs=await chronicle.fetchRecent();const kills=cleanFinalBossKills(logs,profile.realmName,zone==="bwl"?"Nefarian":"Onyxia");
+  return kills;
+ }catch(error){log.warn("Chronicle unavailable; using roster departure: "+String(error));}
+}
 let stopping=false,socket=null,build=cfg.build,connectedAt=0;
 for(const signal of ["SIGTERM","SIGINT"])process.once(signal,()=>{stopping=true;socket?.destroy();});
 function tcp(host,port){return new Promise((resolve,reject)=>{const s=connect({host,port});socket=s;const timer=setTimeout(()=>{s.destroy();reject(Error("TCP timeout"));},15000);s.once("error",e=>{clearTimeout(timer);reject(e);});s.once("connect",()=>{clearTimeout(timer);resolve(s);});});}
@@ -61,7 +72,7 @@ async function session(){
   function finish(error){if(ended)return;ended=true;clearTimeout(timeout);clearTimeout(infoTimer);for(const stop of stops)stop();chat?.stop();ah?.stop();if(ready)emit("session_offline",{reason:String(error??"closed").slice(0,160)});if(ready&&profile.dmf)emit("dmf_status",{site:profile.dmf,connected:false,queries:watch.asked});if(ready&&profile.buffs){health.disconnected(Date.now(),String(error??"closed"));emit("listener_health",health.snapshot(Date.now(),publisher.stats()));}ready=false;world?.close();s.destroy();error&&!stopping?reject(error):resolve();}
   function presence(){if(!ready||Date.now()-lastDmf<60000)return;for(const entry of nearby.values()){const npc=names.get(entry);if(npc&&isFaireNpc(npc)){lastDmf=Date.now();emit("dmf_sighting",{site:profile.dmf,npc,source:"onsite",confirmed:true});break;}}}
   function pollInfo(){if(!ready||info)return;info=[];try{world.say(".server info");}catch(error){info=null;throw error;}infoTimer=setTimeout(()=>{const lines=info??[];info=null;const match=lines.join(" ").match(/Players online:\s*(\d+)/i);if(match)emit("server_info",{lines,population:Number(match[1]),source:"server_info",valid:true});else log.warn("No valid server info reply");},6000);}
-  async function pollRaid(){if(!ready)return;let lastWho=0;const areaId=zone==="bwl"?raidConfig.areaId:cfg.watchAreaId;const result=await fetchRoster(async query=>{if(lastWho)await wait(Math.max(0,cfg.whoSliceDelayMs-(Date.now()-lastWho)));if(!ready||ended)throw Error("Raid session disconnected");lastWho=Date.now();return world.whoOnce(query,cfg.whoTimeoutMs);},areaId),at=Date.now(),present=result.players.filter(p=>p.areaId===areaId),complete=result.complete;if(!ready||ended)return;tracker.observe({present,complete,at});await persistence.save(tracker);if(!ready||ended)return;if(tracker.sessions().sessions.some(s=>s.id===null)){await persistence.number(tracker);await persistence.save(tracker);}if(!ready||ended)return;const state=tracker.sessions();emit("raid_who",{zone:areaId,zoneName:raid.zoneName,playersListed:present.length,serverWhoOnline:result.onlineCount,listCapped:!complete,activity:state.sessions.some(x=>x.status!=="ended"),observationOnly:true,clearConfirmed:false});telemetry?.report(zone,[{label:"crossfaction",sessions:state}],{formAt:threshold,floor:raidConfig.raidLeftFloor},{present:present.length,complete,at});}
+  async function pollRaid(){if(!ready)return;let lastWho=0;const areaId=zone==="bwl"?raidConfig.areaId:cfg.watchAreaId;const result=await fetchRoster(async query=>{if(lastWho)await wait(Math.max(0,cfg.whoSliceDelayMs-(Date.now()-lastWho)));if(!ready||ended)throw Error("Raid session disconnected");lastWho=Date.now();return world.whoOnce(query,cfg.whoTimeoutMs);},areaId),at=Date.now(),present=result.players.filter(p=>p.areaId===areaId),complete=result.complete;if(!ready||ended)return;tracker.observe({present,complete,at});const kills=await reconcileChronicle();if(!ready||ended)return;for(const kill of kills??[]){if(tracker.confirmChronicleKill(kill.uploader,kill.at.getTime(),Date.now()))log.info("Chronicle final boss kill matched to raid");}await persistence.save(tracker);if(!ready||ended)return;if(tracker.sessions().sessions.some(s=>s.id===null)){await persistence.number(tracker);await persistence.save(tracker);}if(!ready||ended)return;const state=tracker.sessions();emit("raid_who",{zone:areaId,zoneName:raid.zoneName,playersListed:present.length,serverWhoOnline:result.onlineCount,listCapped:!complete,activity:state.sessions.some(x=>x.status!=="ended"),observationOnly:true,clearConfirmed:false});telemetry?.report(zone,[{label:"crossfaction",sessions:state}],{formAt:threshold,floor:raidConfig.raidLeftFloor},{present:present.length,complete,at});}
   const job=(fn,settings)=>stops.push(schedule(fn,settings,{onError:e=>log.warn(String(e))}));
   world=new WorldClient({socket:s,account:cfg.account,sessionKey:auth.sessionKey,characterName:cfg.characterName,build:cfg.worldBuild,logger:log,handlers:{
     ...ah?.handlers,
