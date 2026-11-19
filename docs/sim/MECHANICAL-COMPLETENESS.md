@@ -176,3 +176,6 @@ Explicit opening multiplier applies to a companion's next landed direct physical
 
 ## Boar Charge reference
 Explicit range-gated opening AP aura applies to companion formulas and is consumed on its next landed direct physical attack. Caller acknowledges no movement or immobilisation model; range remains static. AP can affect other formula reads while the aura lasts, and live rank values and consumption semantics remain unverified.
+
+## Companion movement reference
+Charge optionally closes the selected target's distance to an explicit arrival distance. Dash and Dive support explicit instant approach distances, with activation range and independent cost/cooldown. Geometry is encounter-local and target-specific, never mutating the supplied scenario. This is not a continuous movement-speed or pathfinding model; position, other target distances, and immobilisation remain unchanged.
