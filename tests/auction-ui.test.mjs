@@ -307,7 +307,7 @@ test("Auction House KPIs order scan status, item count, active auctions and hist
 
 test('trend colours share the countdown palette and sorting has accessible labels without hover titles',()=>{
  const css=read('auction-house/auction.css'),js=read('auction-house/auction.js');
- const palette={"up-strong":"#ff0000","up":"#ff8000","up-slight":"#ffff00","neutral":"#ffffff","down-slight":"#80ff00","down":"#00ff00","down-strong":"#0080ff"};
+ const palette={"up-strong":"#ff0000","up":"#ff8000","up-slight":"#ffff00","neutral":"#ffffff","down-slight":"#dfff00","down":"#00ff00","down-strong":"#0080ff"};
  for(const [key,hex] of Object.entries(palette))assert.ok(css.includes('.ah-scroll td.ah-change-'+key+',.ah-stats .ah-change-'+key+'{color:'+hex+'}'),key);
  assert.ok(css.includes('font-size:calc(1em + 2pt)'));
  assert.ok(js.includes("button.setAttribute('aria-label',action)"));
