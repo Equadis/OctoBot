@@ -206,3 +206,6 @@ Explicit observed owner health capacity bonus uses the existing health transitio
 
 ### Blood Pact party capacity
 Explicit selected ally recipients receive the same observed health bonus using the existing capacity transition policy; resource resizing remains owner-only. Lethal companion damage removes all pact auras. Group membership, range and stamina conversion are not inferred; caller supplies eligible recipients.
+
+## Cast-driven Vanish trinket swap
+Optional trigger `cast` waits for actual execution of a resource-paid Vanish with explicitly full threat reduction, after the requested earliest time. Replacement stats and equip-lock timing use the actual transition timestamp. Failure to cast leaves the old loadout available. Scheduled acknowledged mode remains backward compatible, including petless Feign Death; live combat-state confirmation and actual Feign Death execution remain outstanding.
