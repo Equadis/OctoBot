@@ -1,5 +1,14 @@
 name: Seven collector release checks
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/world-buff-tracker/**'
+      - 'cloudflare/octometrics/**'
+      - 'docs/world-info.js'
+      - 'docs/raid-sounds.js'
+      - 'tests/raid-completion-sound.test.mjs'
+      - '.github/workflows/seven-collector-ci.yml'
   pull_request:
     paths:
       - 'services/world-buff-tracker/**'
@@ -37,5 +46,5 @@ jobs:
             timeout 3s env COLLECTOR_PROFILE="$profile" WOW_PASSWORD=synthetic-only WOW_LOGIN_ENABLED=false node collector/run.mjs || status=$?
             test "$status" -eq 124
           done
-      - run: node --test cloudflare/octometrics/tests/*.test.mjs
+      - run: node --test cloudflare/octometrics/tests/*.test.mjs tests/raid-completion-sound.test.mjs
       - run: python3 -m unittest discover -s cloudflare/octometrics/tests -p 'test_auction_sql.py'
