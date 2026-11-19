@@ -89,3 +89,6 @@ Opt-in selected Elements/Shadow curses migrate from the static sheet to encounte
 
 ## Periodic resistance extension and regression correction
 Corrected the direct spell runtime's premature reference to curseAuras (CI 44438064994). Explicit per-school direct/application/tick resistance policies now permit separate ordinary tables and recalculate using active target debuffs at the actual roll time. Legacy direct policy remains accepted. Unconfigured phases retain original outcomes; special/guaranteed application distributions are not automatically converted. Server validation still pending.
+
+## Scheduled raid debuff providers
+Optional raidProviderSchedules assign each migrated selected armour/spell debuff to an existing additional ally, enemy target, application time and duration. Dead providers/targets cannot apply new auras. Existing aura ownership and strongest-group semantics preserve overlap and expiry. Multiple targets permitted only with explicit schedules; baseline target armour/resistance remains shared reference configuration, not individual creature stats. Providers do not independently cast or generate threat; fixed loadout only. Legacy encounter-long synthetic auras retained without schedules.
