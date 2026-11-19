@@ -134,3 +134,6 @@ Active exact Pet scopes for AP, maximum health percentage and damage percentage 
 
 ## Defensive companion utility
 Shell Shield and Phase Shift can be configured as explicit reference incoming-damage reduction effects with health threshold, duration, cost, cooldown and rank eligibility. This is a damage-only approximation; attack eligibility, untargetability and movement are not inferred.
+
+## Companion self-healing reference
+Consume Shadows is available as explicit self-healing at cast completion, gated by health, resource and cooldown. Caller must acknowledge cast approximation; out-of-combat restrictions and actual channel ticks are not represented by this limited policy. No live value inferred.
