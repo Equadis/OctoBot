@@ -74,3 +74,6 @@ Explicit marginal conversion policies expand flat Strength, Agility, Stamina, In
 
 ## Dynamic Spirit and MP5 regeneration
 An explicitly selected player mana tick stream adds temporary Spirit-derived mana/second and MP5 deltas using its interval. Spirit follows the configured inside-window fraction; MP5 is independent of the spend window. A separate mana regeneration factor applies to the combined amount. One stream only prevents duplicate aura contributions. Coefficients and casting-window fraction remain caller-supplied reference inputs; no server rates inferred.
+
+## Dynamic percentage primary attributes
+Opt-in primaryAttributePolicy mode dynamic derives secondary deltas once from the full active flat/additive/multiplicative primary aura totals against the build snapshot. Ordering is flat then additive percentage then multiplicative percentage. Existing flat-only expansion remains backward compatible. This is a marginal linear reference policy; nonlinear server thresholds and changing base attributes on loadout changes are not inferred.

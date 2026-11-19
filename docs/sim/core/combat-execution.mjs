@@ -17,7 +17,7 @@ const fn=(v,label)=>{if(typeof v!=='function')throw new TypeError(label+' must b
 const copy=structuredClone;
 export class CombatEncounter{
  #units=new Map();#actions=new Map();#rows;#primary;#player;#pet;#allies;#targets;#duration;#cadence;#context;#cast=null;#log=[];#decision=null;#finishedAt=null;#started=false;#swings=new Map();#queued=new Map();#done=false;#shields=new Map();#shieldSeq=0;#onDamage;#onResourceSpend;#lastSpent=new Map();#onAttackResult;#capacityPolicy=null;#baseCaps=null;
- constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null,onDamage=()=>{},resourceGainFactor=()=>1,onResourceSpend=()=>true,onAttackResult=()=>{},capacityPolicy=null}){
+ constructor({durationMs,decisionIntervalMs,seed,pools,units,playerId,primaryId,targetIds,allyIds=[],petId=null,rows,actions,context=()=>({}),manageAuras=false,comboPoints=null,onDamage=()=>{},resourceGainFactor=()=>1,onResourceSpend=()=>true,onAttackResult=()=>{},capacityPolicy=null,primaryAttributePolicy=null}){
   this.#onAttackResult=fn(onAttackResult,'attack observer');this.#duration=integer(durationMs,'duration',1);this.#cadence=integer(decisionIntervalMs,'decision interval',1);this.random=seededRandom(seed);
   this.timeline=new CombatTimeline();this.resources=new CombatResources(this.timeline,pools,{gainFactor:resource=>resourceGainFactor(this,resource)});this.#onResourceSpend=fn(onResourceSpend,'resource spending observer');this.periodic=new PeriodicEffects(this.timeline);this.#context=fn(context,'context adapter');this.#onDamage=fn(onDamage,'damage observer');
   for(const u of units){const id=key(u.id),max=positive(u.maxHealth,'max health'),health=amount(u.health??max,'health');if(health>max||this.#units.has(id))throw new Error('Invalid or duplicate unit: '+id);this.#units.set(id,{id,maxHealth:max,health,...(u.level===undefined?{}:{level:integer(u.level,'unit level',1)})});}
@@ -28,7 +28,7 @@ export class CombatEncounter{
   this.manageAuras=manageAuras===true;
   if(comboPoints&&Object.hasOwn(pools,'comboPoints'))throw new Error('Target-banked combo points must not share a global resource pool');
   this.comboPoints=comboPoints===null?null:new ComboPointBank({...comboPoints,validateTarget:id=>this.#targets.includes(id)});
-  this.auras=new CombatAuras(this.timeline,{validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active()){this.#record(e.type,e);this.#updateSwingHaste(e.targetId);if(e.type!=='aura-remove'||e.reason!=='refresh'&&e.reason!=='exclusive-replacement')this.#updateCapacity(e.targetId);}}});
+  this.auras=new CombatAuras(this.timeline,{primaryPolicy:primaryAttributePolicy,primaryTarget:playerId,validateUnit:id=>this.#units.has(id),onChange:e=>{if(this.#active()){this.#record(e.type,e);this.#updateSwingHaste(e.targetId);if(e.type!=='aura-remove'||e.reason!=='refresh'&&e.reason!=='exclusive-replacement')this.#updateCapacity(e.targetId);}}});
   this.threat=new ThreatLedger(this.timeline,{enemyIds:this.#targets,actorIds:[...new Set([this.#player,...this.#allies,...(this.#pet?[this.#pet]:[])])],onChange:e=>{if(this.#active())this.#record('threat',e);}});
   for(const a of actions){
    key(a.id);key(a.name);if(this.#actions.has(a.id)||[...this.#actions.values()].some(x=>x.name===a.name))throw new Error('Duplicate action');
