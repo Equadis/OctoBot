@@ -119,3 +119,6 @@ Short-duration exact armour and all-school/dual-school resistance effects now co
 
 ## Bandage restoration channels
 Exact bandage healing totals compile into explicit tick intervals with effective damage interruption, player decision lock and existing shared bandage cooldown. Starting while casting is rejected, and explicit battleground restrictions are checked. This is a self-bandage reference model; target-specific Recently Bandaged, movement, fully absorbed attacks and live tick timing are not inferred.
+
+## Loadout-aware tooltip effects
+Explicit before/after trinket tooltip schedules compile against their respective equipped loadouts and retain shared cooldown logic; fixed effects cannot reference swapped slots. Set effects still require fixed loadouts. Corrected bandage identification to use item name rather than broad category classification after CI regression.
