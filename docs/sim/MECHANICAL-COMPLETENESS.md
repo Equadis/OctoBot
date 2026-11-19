@@ -173,3 +173,6 @@ Explicit fixed physical damage bonus applies to the owner next landed direct phy
 
 ## Cat Prowl reference
 Explicit opening multiplier applies to a companion's next landed direct physical attack and is consumed. Stealth, movement, detection and actual first-attempt consumption semantics are not inferred; caller acknowledges the approximation. Values remain reference inputs.
+
+## Boar Charge reference
+Explicit range-gated opening AP aura applies to companion formulas and is consumed on its next landed direct physical attack. Caller acknowledges no movement or immobilisation model; range remains static. AP can affect other formula reads while the aura lasts, and live rank values and consumption semantics remain unverified.
