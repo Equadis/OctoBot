@@ -143,3 +143,6 @@ Optional explicit tick interval divides total healing evenly across integral cha
 
 ## Companion healing interruption
 Optional explicit effective-damage interruption cancels pending healing ticks, releases cast lock and preserves the paid resource and cooldown. Legacy channels remain uninterrupted by nonlethal damage. Fully absorbed attacks and movement are not modelled as interrupts; no live server policy asserted.
+
+## Defensive companion attack lock
+Optional defensive policy prevents pet auto attacks, independent active actions and Kill Command while the aura is active. The reference lock is broader than an attack-only ability filter; no untargetability or movement semantics inferred. Damage reduction is separate.
