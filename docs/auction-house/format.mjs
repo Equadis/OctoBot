@@ -27,7 +27,7 @@ export function listingMarketPct(unitBuyout,historicalAverage){
 export function marketClass(n){
   if(n==null||!Number.isFinite(Number(n))||Number(n)<=0)return 'ah-market-unknown';
   n=Number(Number(n).toFixed(1));
-  return n>=125?'ah-market-expensive-strong':n>=110?'ah-market-expensive':n>=105?'ah-market-expensive-slight':n<=75?'ah-market-cheap-strong':n<=90?'ah-market-cheap':n<=95?'ah-market-cheap-slight':'ah-market-neutral';
+  return n>300?'ah-market-dark-red':n>150?'ah-market-red':n>=125?'ah-market-orange':n>110?'ah-market-yellow':n>=90?'ah-market-white':n>=75?'ah-market-yellow-green':n>=50?'ah-market-green':'ah-market-blue';
 }
 export function trend(n){
   if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-unknown',text:'No previous completed scan to compare'};
