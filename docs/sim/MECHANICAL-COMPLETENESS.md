@@ -167,3 +167,6 @@ Timed owner aura retaliates against effective incoming physical damage, using ex
 
 ## Felhunter Tainted Blood reference
 Explicit self aura applies stack-capped enemy AP debuffs after effective physical damage to the living companion. Existing incoming AP policy reads those debuffs on subsequent attacks. Stack limits, duration, damage basis and AP values are explicit reference inputs; no melee-only distinction or live verification asserted.
+
+## Wolf Furious Howl reference
+Explicit fixed physical damage bonus applies to the owner next landed direct physical attack and consumes the aura, independently of companion focus and cooldown. Misses retain the aura. Party and pet recipients, exact eligible attacks, source rank values and damage ordering remain unverified; owner-only policy must be acknowledged.
