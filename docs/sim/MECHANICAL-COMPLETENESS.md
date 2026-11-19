@@ -200,3 +200,6 @@ Explicit aura IDs and owner/pet/enemy target order enable a single eligible frie
 
 ### Devour Magic range and resistance
 Optional explicit dispel outcomes preserve the aura and suppress healing on resistance while spending the activation cost. Ordered ally selection requires explicit friendly distances; enemy dispels use encounter geometry. Existing owner-only fixtures without friendly distances retain the previous approximation. No inferred magic classification or moving ally paths.
+
+## Imp Blood Pact reference
+Explicit observed owner health capacity bonus uses the existing health transition policy and is removed on lethal companion damage. Requires acknowledgement of owner-only health approximation and an explicit capacity policy. Stamina conversion, party propagation, stacking groups and live rank values are not inferred.
