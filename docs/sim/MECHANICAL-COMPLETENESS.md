@@ -131,3 +131,6 @@ Arcane Shot retains its explicit defence policy and, for ranged defence, rebuild
 
 ## Pet-specific equipment effects
 Active exact Pet scopes for AP, maximum health percentage and damage percentage now feed companion configuration under an explicit included/apply policy. Owner AP inheritance remains separate; no inference about live stacking or coefficients. Inactive and unrelated scopes are excluded.
+
+## Defensive companion utility
+Shell Shield and Phase Shift can be configured as explicit reference incoming-damage reduction effects with health threshold, duration, cost, cooldown and rank eligibility. This is a damage-only approximation; attack eligibility, untargetability and movement are not inferred.
