@@ -62,3 +62,6 @@ Exact imported compound 2% energy/dodge/melee haste set wording, harmful spell d
 
 ## Automatic scoped equipment compilation
 The build adapter now consumes the existing combined active item/set scoped audit for exact unconditioned ability names. Percentage ordinary direct/periodic formula damage, personal cooldown reductions and existing mana/energy/rage start costs are applied once after rank/talent compilation and recorded with rank provenance. Unsupported, conditional, shared cooldown, special and non-exact scope effects remain outside this mapping. Scoped applied bonuses with trinket swaps are rejected pending loadout-aware compilation. Live validation pending.
+
+## Weapon enchantment runtime
+Selected, available weapon enchant IDs are validated against the equipped hand and compiled with explicit reference proc policies. Fiery Weapon and Lifestealing use school-specific damage and leech; Crusader supports an acknowledged AP-only approximation plus healing, not full Strength inheritance. Hand-tagged landed events are required; missing hand metadata cannot trigger the enchant. Proc rates, damage, timing and overlap are not inferred. Other event enchants and PPM conversion remain outstanding.
