@@ -83,3 +83,6 @@ The adapter now compiles eligible selected Flurry and Quickness event buffs into
 
 ## Raid armour overlap reference
 Opt-in strongest-active research policy transfers selected Sunder, Expose, Recklessness and Faerie armour reductions from the sheet to encounter-duration target auras. The existing strongest-per-group armour resolver prevents double counting with class debuffs and restores weaker contributions on expiry. Single target/fixed loadout only. The provider is a synthetic player-owned aura with separate raid label, not a simulated raid actor. Other target effects and special damage paths are not claimed validated.
+
+## Raid spell overlap reference
+Opt-in selected Elements/Shadow curses migrate from the static sheet to encounter-duration target auras. Existing strongest curse vulnerability semantics apply. Optional direct ordinary spell resistance policies rebuild rating-based bins after the strongest reduction and reject mismatches with compiled baseline outcomes. No inferred server distribution; periodic application/tick resistance, special paths and multi-target provider schedules remain outstanding. Fixed loadout single target only for migrated raid auras.
