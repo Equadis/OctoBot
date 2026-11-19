@@ -152,3 +152,6 @@ Optional sorted, nonoverlapping out-of-combat reference windows restrict self-he
 
 ## Voidwalker Sacrifice
 Explicit owner health threshold, shield amount and duration compile to the shared absorption ledger and consume the companion without generating damage. Pet actions and regeneration end on death. No automatic rank values, resummoning or soul-link interactions inferred.
+
+## Felhunter Paranoia reference
+Explicit timed owner-only stealth detection aura, with no invented combat benefit. Detection checks, persistent party propagation and pet-death aura removal are not implemented; caller acknowledges the limited bookkeeping model.
