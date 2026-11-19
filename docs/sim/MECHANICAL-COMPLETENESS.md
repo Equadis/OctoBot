@@ -170,3 +170,6 @@ Explicit self aura applies stack-capped enemy AP debuffs after effective physica
 
 ## Wolf Furious Howl reference
 Explicit fixed physical damage bonus applies to the owner next landed direct physical attack and consumes the aura, independently of companion focus and cooldown. Misses retain the aura. Party and pet recipients, exact eligible attacks, source rank values and damage ordering remain unverified; owner-only policy must be acknowledged.
+
+## Cat Prowl reference
+Explicit opening multiplier applies to a companion's next landed direct physical attack and is consumed. Stealth, movement, detection and actual first-attempt consumption semantics are not inferred; caller acknowledges the approximation. Values remain reference inputs.
