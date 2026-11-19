@@ -80,3 +80,6 @@ Opt-in primaryAttributePolicy mode dynamic derives secondary deltas once from th
 
 ## Selected timed buff compilation
 The adapter now compiles eligible selected Flurry and Quickness event buffs into timed melee haste auras. Activation schedules and reuse remain explicit research inputs; Quickness requires melee-only scope acknowledgement. Existing planner exclusions remain authoritative and a static conflicting selected buff is rejected rather than silently stacked. These two mapped effects currently have no pair in BUFF_CONFLICTS; general timed pairwise exclusion and provider/raid propagation remain outstanding.
+
+## Raid armour overlap reference
+Opt-in strongest-active research policy transfers selected Sunder, Expose, Recklessness and Faerie armour reductions from the sheet to encounter-duration target auras. The existing strongest-per-group armour resolver prevents double counting with class debuffs and restores weaker contributions on expiry. Single target/fixed loadout only. The provider is a synthetic player-owned aura with separate raid label, not a simulated raid actor. Other target effects and special damage paths are not claimed validated.
