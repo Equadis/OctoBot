@@ -306,3 +306,29 @@ it("confirms the specified pending raid, not just the first pending slot",()=>{
   expect(t.pendingClear()?.number).toBe(701);
   expect(ended(t).find(s=>s.id===702)?.endReason).toBe("kill_confirmed");
 });
+
+describe("Chronicle-first raid completion", () => {
+  it("ends an active raid on a unique matching log and does not train on guessed kill time", () => {
+    const t = make(BWL);
+    const players = group("Nightfall",40);
+    feed(t, players, 1, 8);
+    const key=live(t)[0]!.key;
+    expect(t.confirmChronicleKill("Nightfall0",T0+2*M,T0+8*M)).toBe(true);
+    expect(live(t)).toHaveLength(0);
+    expect(ended(t)[0]).toMatchObject({key,endReason:"kill_confirmed",clearSource:"chronicle_kill",trusted:false});
+    expect(t.confirmChronicleKill("Nightfall0",T0+2*M,T0+9*M)).toBe(false);
+    feed(t,players,9,10);
+    expect(live(t)).toHaveLength(0);
+  });
+  it("upgrades a roster-departure fallback without changing the raid identity or completion timestamp", () => {
+    const t=make(); const players=group("Nightfall",25);
+    feed(t,players,1,8); feed(t,[],9,15);
+    const old=ended(t)[0]!;
+    expect(old.endReason).toBe("departed");
+    expect(t.confirmChronicleKill("another-player",T0+2*M,T0+16*M)).toBe(false);
+    expect(t.confirmChronicleKill("Nightfall0",T0-10*M,T0+16*M)).toBe(false);
+    expect(t.confirmChronicleKill("NIGHTFALL0",T0+2*M,T0+16*M)).toBe(true);
+    expect(ended(t)[0]).toMatchObject({key:old.key,confirmedAt:old.confirmedAt,endedAt:old.endedAt,endReason:"kill_confirmed",clearSource:"chronicle_kill"});
+    expect(t.confirmChronicleKill("Nightfall0",T0+2*M,T0+17*M)).toBe(false);
+  });
+});
