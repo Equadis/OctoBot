@@ -209,3 +209,6 @@ Explicit selected ally recipients receive the same observed health bonus using t
 
 ## Cast-driven Vanish trinket swap
 Optional trigger `cast` waits for actual execution of a resource-paid Vanish with explicitly full threat reduction, after the requested earliest time. Replacement stats and equip-lock timing use the actual transition timestamp. Failure to cast leaves the old loadout available. Scheduled acknowledged mode remains backward compatible, including petless Feign Death; live combat-state confirmation and actual Feign Death execution remain outstanding.
+
+## Additional consumable and companion catalogue mapping
+Exact single-school Protection Potion absorbs, simple attack-speed consumables (explicit melee-only), and exact radius damage wording (explicit single-target acknowledgement) now compile from the imported catalogue. Area targeting, control effects and cooldown validation remain unverified. Succubus Lesser Invisibility is represented as a timed non-damaging marker, removed on landed direct offensive damage, without an inferred detection or immunity system.
