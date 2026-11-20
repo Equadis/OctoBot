@@ -21,12 +21,16 @@ function rendered(route,base){
   return nav.children.map(g=>({label:g.attrs['aria-label'],links:g.children.map(a=>({text:a.textContent,href:a.attrs.href,current:a.attrs['aria-current']==='page'}))}));
 }
 
-test('navigation shows stable pages and the disabled Auction House entry',()=>{
+test('navigation shows every tool in order without release labels',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
-    ['Auction House']]);
-  assert.equal(GROUPS.length,2);
+    ['Gear Planner','Dressing Room'],
+    ['World Info','Auction House','World Chat']]);
+  assert.equal(GROUPS.length,3);
+  const nav=el('nav');
+  render(nav,'../');
+  assert.ok(nav.children.flatMap(group=>group.children).every(link=>link.children.length===0));
 });
 
 test('Auction House is disabled in the navigation and on the home page',()=>{
@@ -47,12 +51,12 @@ test('every page uses the shared script, names itself, and highlights only its o
     assert.match(html,new RegExp(`<nav class="page-nav" aria-label="Dashboard pages" data-current="${route}"></nav><script src="../site-nav.js`),route);
     assert.ok(!/<nav class="page-nav"[^>]*>\s*<a/.test(html),`no hand-written duplicate links on /${route}/`);
     const current=rendered(route,'../').flatMap(g=>g.links).filter(l=>l.current);
-    assert.equal(current.length,['population','status','auction-house'].includes(route)?1:0,route);
+    assert.equal(current.length,1,route);
   }
 });
 
 test('enabled links resolve to the canonical directory URLs from every page',()=>{
-  const expected=['population/','status/'].map(p=>new URL(p,BASE).href);
+  const expected=['population/','status/','sim/','outfitter/','world-info/','world-chat/'].map(p=>new URL(p,BASE).href);
   for(const route of ROUTES){
     const urls=rendered(route,'../').flatMap(g=>g.links).filter(l=>l.href).map(l=>{const u=new URL(l.href,new URL(route+'/',BASE));return u.origin+u.pathname;});
     assert.deepEqual(urls,expected,route);

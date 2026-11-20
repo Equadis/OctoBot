@@ -8,8 +8,13 @@
     { label: 'Server monitoring', links: [
       { id: 'population', href: 'population/#server=all', text: 'Population' },
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
+    { label: 'Character tools', links: [
+      { id: 'sim', href: 'sim/', text: 'Gear Planner' },
+      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
-      { id: 'auction-house', disabled: true, text: 'Auction House' } ] }
+      { id: 'world-info', href: 'world-info/', text: 'World Info' },
+      { id: 'auction-house', disabled: true, text: 'Auction House' },
+      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
