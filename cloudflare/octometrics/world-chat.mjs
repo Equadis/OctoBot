@@ -11,6 +11,18 @@ const receiptSchema=db=>[
  db.prepare("CREATE INDEX IF NOT EXISTS world_chat_receipt_match ON world_chat_receipts(realm,canonical_id,source)").bind(),
  db.prepare("CREATE INDEX IF NOT EXISTS world_chat_receipt_expiry ON world_chat_receipts(observed_ms)").bind()
 ];
+// Legacy overlap: source account was not retained on archived rows. Hide only
+// high-confidence pairs from the observed cutover interval; do not delete records.
+const LEGACY_START=Date.parse("2026-11-20T11:04:54Z");
+const LEGACY_END=Date.parse("2026-11-20T11:17:11Z");
+const LEGACY_TOLERANCE_MS=1000;
+const legacyUnique=`(m.realm<>'N''Zoth' OR m.observed_ms<${LEGACY_START} OR m.observed_ms>${LEGACY_END} OR NOT EXISTS (
+ SELECT 1 FROM world_chat_messages earlier
+ WHERE earlier.realm=m.realm AND earlier.gm=m.gm
+ AND earlier.observed_ms BETWEEN MAX(${LEGACY_START},m.observed_ms-${LEGACY_TOLERANCE_MS}) AND m.observed_ms
+ AND earlier.author_key=m.author_key AND earlier.message=m.message
+ AND (earlier.observed_ms<m.observed_ms OR (earlier.observed_ms=m.observed_ms AND earlier.id<m.id))
+))`;
 const TTL=300000, HISTORY=1800000; // Live poll only; archive retention is separate.
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
 const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
@@ -106,8 +118,8 @@ export async function worldChatRoute(request,env){
     const realm=url.searchParams.get("realm")||"N'Zoth";
     if(!REALMS.has(realm))return reply({error:"invalid realm"},400);
     const [world,gm,lfg,wtb,wts,heartbeat]=await db.batch([
-      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=0 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 150").bind(realm,now-HISTORY),
-      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=1 AND m.observed_ms>? ORDER BY m.observed_ms DESC,m.id DESC LIMIT 100").bind(realm,now-HISTORY),
+      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=0 AND m.observed_ms>? AND "+legacyUnique+" ORDER BY m.observed_ms DESC,m.id DESC LIMIT 150").bind(realm,now-HISTORY),
+      db.prepare("SELECT m.id,m.author,m.message,m.gm,m.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_messages m LEFT JOIN world_chat_guilds g ON g.realm=m.realm AND g.author_key=m.author_key LEFT JOIN world_chat_profiles p ON p.realm=m.realm AND p.author_key=m.author_key WHERE m.realm=? AND m.gm=1 AND m.observed_ms>? AND "+legacyUnique+" ORDER BY m.observed_ms DESC,m.id DESC LIMIT 100").bind(realm,now-HISTORY),
       ...["lfg","wtb","wts"].map(kind=>db.prepare("SELECT l.tag,l.author,l.message,l.observed_ms,COALESCE(p.guild,g.guild) AS guild,p.level,p.class_id FROM world_chat_listings l LEFT JOIN world_chat_guilds g ON g.realm=l.realm AND g.author_key=l.author_key LEFT JOIN world_chat_profiles p ON p.realm=l.realm AND p.author_key=l.author_key WHERE l.realm=? AND l.kind=? AND l.observed_ms>? ORDER BY l.observed_ms DESC LIMIT 300").bind(realm,kind,now-TTL)),
       db.prepare("SELECT observed_ms FROM world_chat_heartbeat WHERE realm=?").bind(realm)
     ]);
@@ -132,7 +144,7 @@ export async function readHistory(url,db,now){
  // visible-text verification removes matches in invisible protocol metadata.
  let exhausted=false;
  while(rows.length<=size&&!exhausted){
-  const where=["m.realm=?","m.gm=?","m.observed_ms>=?","m.observed_ms<=?"],params=[realm,Number(feed==="gm"),cutoff,now+5000];
+  const where=["m.realm=?","m.gm=?","m.observed_ms>=?","m.observed_ms<=?",legacyUnique],params=[realm,Number(feed==="gm"),cutoff,now+5000];
   if(cursor){where.push("(m.observed_ms,m.id)<(?,?)");params.push(cursor.time,cursor.id);}
   for(const {kind,value} of terms){
    if(kind==="from"){where.push("lower(m.author)=?");params.push(value);}
