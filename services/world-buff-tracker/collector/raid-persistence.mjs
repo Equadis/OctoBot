@@ -57,7 +57,7 @@ export function createRaidPersistence({url,token,secret,zone,fetcher=fetch,locko
     if(s.id!==null)continue;
     const requestId=zone+":"+s.key;
     const r=await req("number","POST",{zone,requestId});
-    if(r.status!==200||!Number.isSafeInteger(r.data.n))throw Error("Raid number allocation HTTP "+r.status);
+    if(r.status!==200||!Number.isSafeInteger(r.data.n))throw Error("Raid number allocation HTTP "+r.status+" ("+zone+": "+(["counter_not_seeded","request_zone_conflict","busy"].includes(r.data?.error)?r.data.error:"unexpected_response")+")");
     if(!tracker.assignNumber(s.key,r.data.n))throw Error("Raid number could not attach to session");
    }
   }
