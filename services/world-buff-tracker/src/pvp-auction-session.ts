@@ -21,7 +21,7 @@ const positiveInt=(raw:string|undefined,fallback:number,min:number,max:number)=>
 const liveItemQueries=process.env.AUCTION_LIVE_ITEM_QUERIES==="true";
 const intervalMs=positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,0,0,600000);
 const uploadIntervalMs=positiveInt(process.env.AUCTION_UPLOAD_INTERVAL_MS,500,250,60000);
-const cooldownMs=positiveInt(process.env.AUCTION_SCAN_COOLDOWN_MS,3600000,60000,86400000);
+const nextUtcHour=(now=Date.now())=>Math.floor(now/3600000)*3600000+3600000;
 const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000,180000);
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
 const token=process.env.AUCTION_PUSH_TOKEN?.trim();
@@ -113,7 +113,7 @@ async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItem
 }
 
 type Pending<T>={resolve:(value:T)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>};
-let nextAttemptAt=0;
+let nextAttemptAt=nextUtcHour();
 export function pvpAuctionEligible(account:{account:string;realmName:string}, env:NodeJS.ProcessEnv=process.env):boolean {
  return account.account==="OBPVPSW"&&account.realmName==="Y'Shaarj"&&env.AUCTION_COLLECTOR_ENABLED==="true"&&env.AUCTION_RULES_APPROVED==="true"&&Boolean(env.AUCTION_PUSH_TOKEN?.trim());
 }
@@ -213,13 +213,13 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
 
  const attempt=()=>{
   if(finished||busy||!auctioneerGuid||Date.now()<nextAttemptAt||!getWorld()?.isReady)return;
-  busy=true;nextAttemptAt=Date.now()+cooldownMs;
+  busy=true;nextAttemptAt=nextUtcHour();
   const guid=auctioneerGuid;
   pendingHello=setTimeout(()=>{pendingHello=null;busy=false;log.warn("PvP auction hello timed out; will retry next scan interval");},queryTimeoutMs);
   try{current().auctionHello(guid);}catch(e){clearTimeout(pendingHello);pendingHello=null;busy=false;log.warn(String(e));}
  };
  return {
-  start(){if(finished||ticker)return;log.info("AH enabled on "+account.account+" connection; waiting for Auctioneer Fitch");ticker=setInterval(attempt,15000);ticker.unref?.();},
+  start(){if(finished||ticker)return;log.info("AH enabled on "+account.account+" connection; waiting for Auctioneer Fitch");ticker=setInterval(attempt,1000);ticker.unref?.();},
   stop,
   handlers:{
    onWorldObjects(raw){if(finished||!getWorld()?.isReady)return;const w=current();const objects=parseUpdateObject(raw,w.selfGuid??undefined);
@@ -231,7 +231,7 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
    onObjectDestroyed(guid){if(auctioneerGuid===guid)auctioneerGuid=null;for(const [entry,value] of knownGuids)if(value===guid)knownGuids.delete(entry);},
    onAuctionHello(hello){if(!pendingHello||finished)return;clearTimeout(pendingHello);pendingHello=null;
     if(hello.guid!==auctioneerGuid||hello.houseId===0){busy=false;log.warn("PvP Auction House unavailable");return;}
-    void run(hello.guid).then(()=>{nextAttemptAt=Date.now()+cooldownMs;}).catch(e=>{log.warn("Auction scan failed: "+String(e));nextAttemptAt=Date.now()+Math.min(cooldownMs,300000)+Math.floor(Math.random()*30000);}).finally(()=>{busy=false;});
+    void run(hello.guid).then(()=>{nextAttemptAt=nextUtcHour();}).catch(e=>{log.warn("Auction scan failed: "+String(e));nextAttemptAt=nextUtcHour();}).finally(()=>{busy=false;});
    },
    onAuctionList(result){const p=pendingQuery;if(!p||finished)return;clearTimeout(p.timer);pendingQuery=null;p.resolve(result);},
    onItemTemplate(reply){const p=pendingItem;if(!p||p.id!==reply.item_id)return;clearTimeout(p.timer);pendingItem=null;p.resolve(reply);}
