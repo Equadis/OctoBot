@@ -21,7 +21,7 @@ function rendered(route,base){
   return nav.children.map(g=>({label:g.attrs['aria-label'],links:g.children.map(a=>({text:a.textContent,href:a.attrs.href,current:a.attrs['aria-current']==='page'}))}));
 }
 
-test('navigation shows every tool in order without release labels',()=>{
+test('navigation shows every tool in order with BETA badges only on character tools',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
@@ -30,7 +30,9 @@ test('navigation shows every tool in order without release labels',()=>{
   assert.equal(GROUPS.length,3);
   const nav=el('nav');
   render(nav,'../');
-  assert.ok(nav.children.flatMap(group=>group.children).every(link=>link.children.length===0));
+  const badged=nav.children.flatMap(group=>group.children).filter(link=>link.children.length);
+  assert.deepEqual(badged.map(link=>link.textContent),['Gear Planner','Dressing Room']);
+  assert.ok(badged.every(link=>link.children.length===1 && link.children[0].textContent==='BETA'));
 });
 
 test('Auction House is disabled in the navigation and on the home page',()=>{
