@@ -1,8 +1,15 @@
 import {HUNTER_FAMILIES,DEMON_TYPES} from './pet-training-audit.mjs';
 
+const chronicleReport={
+ source:'https://octo.chronicleclassic.com/instances/LIGCnEjGyLkG4cXS',
+ instanceId:'e4e180a0-3fc7-4069-aa38-512f26e3c907',
+ realm:"N'Zoth",instance:'Blackwing Lair',startedAt:'2026-11-20T02:26:28.048Z',
+ clientBuild:'7272',clientVersion:'1.18.1',
+};
 const identityPlans={
  'paladin:holy-strike':{
   name:'Holy Strike',ranks:8,
+  raidCastObservations:[{...chronicleReport,spellId:10333,classId:'paladin',castStream:'spell_go',casts:443,distinctCasters:2,damageEvents:464}],
   published:[
    {source:'https://forge.octowow.st/paladin',kind:'class-guide',rankCount:8,firstLevel:4,lastLevel:60,cooldownMs:6000,endpointManaCosts:[5,90]},
    {source:'https://octowow.st/forum/viewtopic.php?t=20',kind:'official-hotfix',date:'2026-04-29',rank:1,trainable:true},
@@ -15,6 +22,7 @@ const identityPlans={
  },
  'hunter:trueshot-aura':{
   name:'Trueshot Aura',ranks:1,reviewUpToRank:3,
+  raidCastObservations:[{...chronicleReport,spellId:19506,classId:'hunter',castStream:'spell_go',casts:4,distinctCasters:3,explicitCasterAuraEvents:4}],
   published:[
    {source:'https://octowow.st/index.php/hunter',kind:'guide-removal-claim'},
    {source:'https://octowow.st/db/?spell=19506',kind:'legacy-rank-record',spellId:19506,rank:1,level:40,flatAttackPower:50},
