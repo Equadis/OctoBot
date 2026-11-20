@@ -90,6 +90,6 @@ for(const [realm,ns,name] of [["N'Zoth",'ah_','nzoth'],["Y'Shaarj",'pvp_ah_','ys
   items_with_metadata:catalogue.filter(row=>row.class_id!==null).length,scan_duration_ms:latest.duration_ms,
   historical_days:days.size+Number(hasDayPoints),archived_days:[...days],snapshot_quality:latest.scan_id.startsWith('ahl_')?'live_estimate':'strict'}};
  await writeFile(join(directory,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
- console.log(realm+': '+current.length+' current listings, '+ledgerSize+' historical auctions and '+days.size+' price days.');
+ console.log(realm+': '+current.length+' current listings, '+ledgerSize+' historical auctions and '+manifest.latest.historical_days+' price days.');
 }
 db.close();

@@ -368,7 +368,7 @@ export async function auctionSnapshotRoute(request,url,env,realm){
   if(['missing-sellers','missing-metadata','incomplete-metadata'].includes(route))return json(await recoveryCandidates(bucket,base,state,latest,route,now));
   if(route==='expiry-diagnostics')return json(await expiryDiagnostics(bucket,state,latest));
   const requestedVersion=url.searchParams.get('scan_id');
-  if(requestedVersion&&['catalogue','items'].includes(route)){
+  if(requestedVersion&&(['catalogue','items'].includes(route)||/^(item|history)\//.test(route))){
    latest=state?.retained?.find(entry=>entry.scan_id===requestedVersion);
    assert(latest,'auction snapshot changed',409);
   }

@@ -236,10 +236,11 @@ function simpleTable(headings,rows){
   table.append(body);return table;
 }
 async function fillDetail(cell,item,unavailable){
-  const v=encodeURIComponent(item.variant||'');
+  const params=new URLSearchParams({variant:item.variant||''});
+  if(state.scan.catalogue&&state.scan.id)params.set('scan_id',state.scan.id);
   const id=encodeURIComponent(item.item_id);
   try{
-    const listings=unavailable?{listings:[]}:await request('/api/auction/item/'+id+'?variant='+v);
+    const listings=unavailable?{listings:[]}:await request('/api/auction/item/'+id+'?'+params);
     const stats=el('dl',null,'ah-stats');
     if(!unavailable){
       stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
@@ -278,7 +279,7 @@ async function fillDetail(cell,item,unavailable){
       historyLoaded=true;
       hist.body.replaceChildren(el('p','Loading price history…','ah-muted'));
       try{
-        const history=await request('/api/auction/history/'+id+'?variant='+v);
+        const history=await request('/api/auction/history/'+id+'?'+params);
         const days=Array.isArray(history.history)?history.history:[];
         hist.body.replaceChildren();
         const chart=buildChart(document,days,item.historical_avg??null);

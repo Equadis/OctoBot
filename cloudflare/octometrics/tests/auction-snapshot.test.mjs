@@ -118,6 +118,10 @@ test('publishes only a complete compressed scan and retains previous catalogue o
  assert.deepEqual(after.listing_changes,{new:0,changed:1,unchanged:0,disappeared:1});
  const retained=await read(go('items?scan_id='+first));
  assert.equal(retained.total,2);
+ const retainedDetail=await read(go('item/9?variant=0:12:0&scan_id='+first));
+ assert.equal(retainedDetail.listings[0].auction_id,2);
+ const retainedHistory=await read(go('history/9?variant=0:12:0&scan_id='+first));
+ assert.equal(retainedHistory.history[0].representative_unit,25);
  assert.equal((await read(go('summary',{realm:pvp}))).completed_at,null);
 });
 
