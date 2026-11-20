@@ -107,8 +107,6 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 }
 
 /* Compact BETA labels for developing sections; tooltip comes from site-tooltips.js. */
-.page-nav .nav-beta{display:inline-block;margin-left:7px;padding:1px 4px;border:1px solid #6a5930;border-radius:3px;background:#302e22;color:#dabc6d;font:600 9px/13px Arial,Helvetica,sans-serif;letter-spacing:.04em;vertical-align:middle;white-space:nowrap}
-@media(max-width:560px){.page-nav .nav-beta{margin-left:4px;padding:0 3px;font-size:8px}}
 
 /* Small square icon button shared with the Dressing Room's viewer tools (identical to its reset-camera control). */
 .tool-btn{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #39465a;border-radius:4px;background:rgba(24,35,51,.85);color:#c0ccda;cursor:pointer}
@@ -120,3 +118,5 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 
 /* Item rarity colours. These are the Gear Planner's, and every page uses them (Dressing Room, Auction House, dropdowns). */
 :root{--quality-0:#9d9d9d;--quality-1:#fff;--quality-2:#1eff00;--quality-3:#0070dd;--quality-4:#a335ee;--quality-5:#ff8000;--quality-6:#ff8000}
+
+.page-nav .nav-group a[aria-disabled=true]{background:#26282c;color:#a0a2a6;border-color:#464950;cursor:not-allowed;pointer-events:none}

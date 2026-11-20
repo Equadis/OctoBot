@@ -21,28 +21,24 @@ function rendered(route,base){
   return nav.children.map(g=>({label:g.attrs['aria-label'],links:g.children.map(a=>({text:a.textContent,href:a.attrs.href,current:a.attrs['aria-current']==='page'}))}));
 }
 
-test('navigation has exactly three groups in the required order',()=>{
+test('navigation shows stable pages and the disabled Auction House entry',()=>{
   const groups=rendered('sim','');
   assert.deepEqual(groups.map(g=>g.links.map(l=>l.text)),[
     ['Population','Server Status'],
-    ['Gear Planner','Dressing Room'],
-    ['World Info','Auction House','World Chat']]);
-  assert.equal(GROUPS.length,3);
+    ['Auction House']]);
+  assert.equal(GROUPS.length,2);
 });
 
-test('beta badges appear on four specified tabs with the shared hover explanation',()=>{
-  const nav=el('nav');nav.attrs['data-current']='sim';render(nav,'../');
-  const links=nav.children.flatMap(group=>group.children);
-  const tagged=links.filter(link=>link.children.some(child=>child.textContent==='BETA'));
-  assert.deepEqual(tagged.map(link=>link.textContent),['Gear Planner','Dressing Room','World Info','Auction House']);
-  for(const link of tagged){
-    const beta=link.children.find(child=>child.textContent==='BETA');
-    assert.equal(beta.attrs['data-site-tip'],'This section is currently in beta, results may not be 100% accurate.');
-  }
+test('Auction House is disabled in the navigation and on the home page',()=>{
+  const nav=el('nav');
+  nav.attrs['data-current']='auction-house';
+  render(nav,'../');
+  const auction=nav.children.flatMap(group=>group.children).find(link=>link.textContent==='Auction House');
+  assert.equal(auction.getAttribute('href'),null);
+  assert.equal(auction.getAttribute('aria-disabled'),'true');
   const home=readFileSync(new URL('index.html',docs),'utf8');
-  assert.equal((home.match(/>BETA<\/em>/g)||[]).length,4);
-  assert.doesNotMatch(home,/World Info – N(?:'|&#39;)Zoth/);
-  assert.match(home,/Browse auction listings/);
+  assert.doesNotMatch(home,/>\s*(?:BETA|ALPHA)\s*</);
+  assert.match(home,/home-card-disabled" role="link" aria-disabled="true"/);
 });
 
 test('every page uses the shared script, names itself, and highlights only its own link',()=>{
@@ -51,14 +47,14 @@ test('every page uses the shared script, names itself, and highlights only its o
     assert.match(html,new RegExp(`<nav class="page-nav" aria-label="Dashboard pages" data-current="${route}"></nav><script src="../site-nav.js`),route);
     assert.ok(!/<nav class="page-nav"[^>]*>\s*<a/.test(html),`no hand-written duplicate links on /${route}/`);
     const current=rendered(route,'../').flatMap(g=>g.links).filter(l=>l.current);
-    assert.equal(current.length,1,route);
+    assert.equal(current.length,['population','status','auction-house'].includes(route)?1:0,route);
   }
 });
 
-test('links resolve to the seven canonical directory URLs from every page, in the same order',()=>{
-  const expected=['population/','status/','sim/','outfitter/','world-info/','auction-house/','world-chat/'].map(p=>new URL(p,BASE).href);
+test('enabled links resolve to the canonical directory URLs from every page',()=>{
+  const expected=['population/','status/'].map(p=>new URL(p,BASE).href);
   for(const route of ROUTES){
-    const urls=rendered(route,'../').flatMap(g=>g.links).map(l=>{const u=new URL(l.href,new URL(route+'/',BASE));return u.origin+u.pathname;});
+    const urls=rendered(route,'../').flatMap(g=>g.links).filter(l=>l.href).map(l=>{const u=new URL(l.href,new URL(route+'/',BASE));return u.origin+u.pathname;});
     assert.deepEqual(urls,expected,route);
   }
 });
@@ -71,32 +67,15 @@ test('separators are thin borders between groups only, matching the header rule'
   assert.match(css,/@media\(max-width:1000px\)\{[^@]*border-top:1px solid var\(--line\)/); // horizontal rule when stacked on narrow screens
 });
 
-test('the home page lists the tools in the same order as the navigation',()=>{
+test('the home page keeps direct access to the available tools',()=>{
   const html=readFileSync(new URL('index.html',docs),'utf8');
   const hrefs=[...html.matchAll(/class="home-card" href="([^"]+)"/g)].map(m=>m[1]);
-  assert.deepEqual(hrefs,['population/#server=all','status/','sim/','outfitter/','world-info/','auction-house/','world-chat/']);
+  assert.deepEqual(hrefs,['population/#server=all','status/','sim/','outfitter/','world-info/','world-chat/']);
 });
 
 test('tab size is pinned in the shared theme so pages that restyle .page-nav a cannot make tabs taller or thinner',()=>{
   const css=readFileSync(new URL('site-theme.css',docs),'utf8');
   assert.match(css,/\.page-nav \.nav-group a\{[^}]*height:38px[^}]*padding:0 13px[^}]*font-size:12px/);
-});
-
-test('no tab carries a WIP marker, and the World Info tab drops N\'Zoth while its page title keeps it',()=>{
-  const labels=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
-  assert.ok(labels.includes('Dressing Room')&&labels.includes('Gear Planner'));
-  assert.ok(!labels.some(l=>/(Dressing Room|Gear Planner).*WIP/.test(l)));
-  assert.ok(page('outfitter').includes('<title>OctoBot · Dressing Room</title>')&&page('outfitter').includes('<h1>Dressing Room</h1>'));
-  assert.ok(page('sim').includes('<title>OctoBot · Gear Planner &amp; DPS Simulator</title>')&&page('sim').includes('<h1>Gear Planner &amp; DPS Simulator</h1>'));
-  const home=readFileSync(new URL('index.html',docs),'utf8');
-  assert.doesNotMatch(home,/Dressing Room <em>WIP<\/em>/);
-  assert.doesNotMatch(home,/Gear ?Planner[^<]*<em>WIP<\/em>/);
-  assert.doesNotMatch(home,/Auction House <em>WIP<\/em>/);
-  const labels2=rendered('sim','').flatMap(g=>g.links.map(l=>l.text));
-  assert.deepEqual(labels2.filter(l=>/WIP/.test(l)),[]);
-  assert.ok(labels2.includes('World Info')&&!labels2.some(l=>/N'Zoth/.test(l)));
-  assert.ok(page('world-info').includes('<h1>World Info – N&#39;Zoth</h1>')||page('world-info').includes("<h1>World Info – N'Zoth</h1>"),'the page heading keeps N\'Zoth');
-  assert.match(page('world-info'),/<title>OctoBot · World Info – N(?:'|&#39;)Zoth<\/title>/);
 });
 
 test('the header box model is fixed in the shared theme, so every tab has the same header height',()=>{
@@ -105,4 +84,9 @@ test('the header box model is fixed in the shared theme, so every tab has the sa
   assert.match(css,/min-height:74px/);
 });
 
-test('World Chat alone has the alpha marker',()=>{const nav=el('nav');nav.attrs['data-current']='world-chat';render(nav,'../');const tagged=nav.children.flatMap(g=>g.children).filter(a=>a.children.some(c=>c.textContent==='ALPHA'));assert.deepEqual(tagged.map(a=>a.textContent),['World Chat']);});
+test('the disabled Auction House page cannot load its polling scripts',()=>{
+  const html=page('auction-house');
+  assert.match(html,/<main class="ah-maintenance-background" inert>/);
+  assert.match(html,/<\/main>\s*<div class="ah-maintenance-notice"><h1>CURRENTLY DISABLED\.<\/h1>/);
+  assert.doesNotMatch(html,/<script[^>]+(?:auction\.js|viewer-presence\.js)/);
+});
