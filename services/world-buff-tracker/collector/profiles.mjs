@@ -39,7 +39,7 @@ export function validateLiveProfile(profile,env=process.env){
  required("METRICS_PUSH_TOKEN");
  if(profile.raid){if((env.RAID_STATE_KEY?.trim().length??0)<16)missing.push("RAID_STATE_KEY (at least 16 characters)");}
  if(profile.chat&&env.WORLD_CHAT_ENABLED!=="true")missing.push("WORLD_CHAT_ENABLED=true");
- if(profile.auction){
+ if(profile.auction&&env.AUCTION_COLLECTOR_ENABLED!=="false"){
   required("AUCTION_PUSH_TOKEN");
   if(env.AUCTION_COLLECTOR_ENABLED!=="true")missing.push("AUCTION_COLLECTOR_ENABLED=true");
   if(env.AUCTION_RULES_APPROVED!=="true")missing.push("AUCTION_RULES_APPROVED=true");

@@ -241,3 +241,7 @@
 .ah-market-green{color:#00ff00}
 .ah-market-blue{color:#0080ff}
 .ah-market-unknown{color:#a8b7c7}
+
+#last-scan.ah-time-green{color:#00ff00}
+#last-scan.ah-time-yellow{color:#ffff00}
+#last-scan.ah-time-red{color:#ff0000}

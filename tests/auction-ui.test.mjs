@@ -301,7 +301,7 @@ test("Auction House KPIs order scan status, item count, active auctions and hist
  assert.match(css,/\.ah-kpi small\{font-size:11px;color:#9fadbf;/);
  assert.ok(js.includes("count(s.total_historical_auctions)"));
  assert.ok(js.includes("'Last scan: '+dateTime(s.completed_at)"));
- assert.ok(!js.includes("last.className=lastScanClass"));
+ assert.ok(js.includes("last.className=lastScanClass"));
 });
 
 

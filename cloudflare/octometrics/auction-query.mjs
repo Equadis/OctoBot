@@ -51,7 +51,7 @@ const overlay=(alias)=>META_FIELDS.map(k=>'COALESCE('+alias+'.'+k+',m.'+k+') '+k
 const COLUMNS="item_id,variant,quantity,listings,unit_buyout,item_name,quality,icon_url,start_bid,current_bid,stack_buyout,time_left_ms,captured_at,item_level,req_level,class_id,subclass_id,slot_id,cheapest_auction_id,latest_listing_seen_at";
 
 /** @returns {{error:string}|{sql:string,countSql:string,binds:any[],listingFiltered:boolean,limit:number,offset:number}} */
-export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
+export function buildItemsQuery(params,scan,previousScanId,now=Date.now(),precomputed=false){
   const get=name=>params.get(name);
   const bad=message=>({error:message});
   const limit=Math.min(100,Math.max(1,Number(get('limit'))||50));
@@ -129,7 +129,16 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
   // Bind order: history dates (2), recent scan cutoff, listing/point binds, then previous scan.
   const allBinds=[scan.completed_at,scan.completed_at,scan.completed_at,...binds];
   if(!listingFiltered)allBinds.push(previousScanId||'');
-  const sql=listingFiltered?sql0.replace("prev.unit_buyout previous_unit,",""):sql0;
+  // The scan finaliser writes this compact baseline once. Public requests never
+  // reconstruct the three-scan window or the fourteen-day price history.
+  const cachedPts=listingFiltered?pts:pts.replace(
+    "(SELECT MAX(f.first_seen_at) FROM ah_listings a JOIN ah_first_seen f ON f.auction_id=a.auction_id WHERE a.scan_id=p.scan_id AND a.item_id=p.item_id AND a.variant=p.variant)",
+    "(SELECT b.latest_listing_seen_at FROM ah_market_baseline b WHERE b.scan_id=p.scan_id AND b.item_id=p.item_id AND b.variant=p.variant)");
+  const cachedSql="WITH "+cachedPts+",baseline AS (SELECT d.*,b.days,b.price_samples,b.price_excluded,b.avg_unit,b.average_source FROM pts d LEFT JOIN ah_market_baseline b ON b.scan_id=? AND b.item_id=d.item_id AND b.variant=d.variant),"
+    +"data AS (SELECT d.*,(CASE WHEN d.avg_unit>0 THEN 100*d.unit_buyout/d.avg_unit END) market_pct,"
+    +(listingFiltered?"":"prev.unit_buyout previous_unit,")+trend+" trend_pct FROM baseline d"+prevJoin+")";
+  const sql=precomputed?cachedSql:sql0;
+  const queryBinds=precomputed?[...binds,scan.scan_id,...(listingFiltered?[]:[previousScanId||''])]:allBinds;
 
   // ---- item filters ----
   const iw=[],ib=[];
@@ -158,6 +167,7 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now()){
     sql:base+' ORDER BY '+order+',item_id ASC,variant ASC LIMIT ? OFFSET ?',
     pageSql:'SELECT page_rows.*,COUNT(*) OVER() AS total_rows FROM ('+base+') page_rows ORDER BY '+order+',item_id ASC,variant ASC LIMIT ? OFFSET ?',
     countSql:'SELECT COUNT(*) n FROM ('+base+')',
-    binds:[...allBinds,...ib],limit,offset,listingFiltered
+    binds:[...queryBinds,...ib],limit,offset,listingFiltered,
+    baselineSql:!listingFiltered&&!precomputed?sql0+' SELECT item_id,variant,avg_unit,days,price_samples,price_excluded,average_source,latest_listing_seen_at FROM data':null
   };
 }
