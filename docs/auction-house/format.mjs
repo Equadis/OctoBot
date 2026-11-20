@@ -106,7 +106,7 @@ export function scanStatus({completedAt=null,scanning=false,startedAt=null,colle
   }
   const age=scanAge(completedAt,now);
   if(age===null)return {text:'No completed scan',className:'ah-time-yellow'};
-  return {text:'Last scan · '+age,className:lastScanClass(completedAt,now)==='ah-time-red'?'ah-time-red':'ah-time-yellow'};
+  return {text:'Last scan · '+age,className:lastScanClass(completedAt,now)};
 }
 /** Last complete scan: green under 1 hour, yellow from 1 to under 24 hours, red thereafter. */
 export function lastScanClass(completedAt,now=Date.now()){
