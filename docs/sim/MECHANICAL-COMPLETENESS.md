@@ -221,3 +221,6 @@ Direct ordinary physical and complete spell outcome tables accept exact uncondit
 
 ## Scoped absorption and threat equipment
 Exact unconditioned ability modifiers now support formula-based absorption capacity and duration, existing ordinary threat multipliers, and generic starting mana/rage/energy percentage reductions. Unsupported special threat and absorb paths remain separate; live stacking order is not inferred.
+
+## Companion equipment armour and critical chance
+Explicit pet equipment apply/included policy now accepts exact Armour and critical chance scopes. Armour requires observed baseline; critical conversion uses the existing normal-hit-only companion outcome method with explicit eligibility and critical multiplier. No automatic NPC defence or live stacking inference.
