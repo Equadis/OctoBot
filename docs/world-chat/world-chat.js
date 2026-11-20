@@ -2,7 +2,7 @@ import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} fro
 import {appendChatMessage} from "./chat-links.mjs?v=3";
 import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
 import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
-import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback} from "./chat-history.mjs?v=20261118-tags2";
+import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -172,6 +172,30 @@ byId("chat-search").addEventListener("input",()=>{
  clearTimeout(searchTimer);const q=byId("chat-search").value.trim().slice(0,160);
  resetHistory(q,false);searchTimer=setTimeout(()=>{for(const key of feeds)void fetchHistory(key);},350);
 });
+const searchInput=byId("chat-search"),searchMenu=byId("chat-search-options"),searchWrap=byId("chat-search-wrap");
+function searchOpen(open){searchMenu.hidden=!open;searchInput.setAttribute("aria-expanded",String(open));}
+for(const option of SEARCH_OPTIONS){
+ const b=node("button","chat-search-option");b.type="button";b.append(node("code","",option.token),node("small","",option.description));searchMenu.append(b);
+ b.addEventListener("click",()=>{
+  const prefix=searchInput.value.trimEnd();const next=(prefix?prefix+" ":"")+option.token;
+  if(next.length>160)return;
+  searchInput.value=next;searchInput.focus();searchOpen(false);
+  if(!option.token.endsWith(":"))searchInput.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+}
+searchInput.addEventListener("focus",()=>searchOpen(true));
+searchInput.addEventListener("click",()=>searchOpen(true));
+searchInput.addEventListener("keydown",e=>{
+ if(e.key==="ArrowDown"){e.preventDefault();searchOpen(true);searchMenu.querySelector("button")?.focus();}
+ if(e.key==="Escape"||e.key==="Enter")searchOpen(false);
+});
+searchMenu.addEventListener("keydown",e=>{
+ const buttons=[...searchMenu.querySelectorAll("button")],i=buttons.indexOf(document.activeElement);
+ if(e.key==="Escape"){e.preventDefault();searchInput.focus();searchOpen(false);}
+ if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();buttons[(i+(e.key==="ArrowDown"?1:-1)+buttons.length)%buttons.length]?.focus();}
+});
+document.addEventListener("pointerdown",e=>{if(!searchWrap.contains(e.target))searchOpen(false);});
+searchWrap.addEventListener("focusout",e=>{if(!searchWrap.contains(e.relatedTarget))searchOpen(false);});
 const defaultFilters={kind:"all",intent:"all",role:"all",tag:"all",query:"",blacklist:"",sort:"latest",alerts:false};
 let filters={...defaultFilters},collapsed=new Set(),known=new Set(),primed=false,audio=null,lastLfgKey="";
 try{const s=JSON.parse(localStorage.getItem("octobot-lfg-v2")||"{}");for(const k of Object.keys(defaultFilters))if(typeof s.filters?.[k]===typeof defaultFilters[k])filters[k]=s.filters[k];collapsed=new Set(Array.isArray(s.collapsed)?s.collapsed:[]);}catch{}
