@@ -2,7 +2,7 @@
  * so result counts and pages always cover every matching item, not just the rows currently loaded. */
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261119-market-scale2';
+import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261120-hourly';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
@@ -372,6 +372,7 @@ function renderScan(){
   const now=Date.now(),sc=state.scan;
   const status=$('scan-progress'),next=scanStatus(sc,now);
   status.textContent=next.text;status.className=next.className;
+  const last=$('last-scan');if(last)last.className=lastScanClass(sc.completedAt,now)||'ah-time-yellow';
   status.title=sc.collectorStatus==='STALE'?'Scan upload has not reported progress recently':sc.scanning?sc.pages:'';
 }
 async function refreshAll(first=false){
@@ -468,6 +469,11 @@ populate();bind();renderSaved();
 state.filters.q=auctionSearchFromURL(location.href);
 writeFilters();
 await refreshAll(true);
-setInterval(()=>{void refreshAll();},60_000);
+let polling=false;
+setInterval(async()=>{
+  if(document.hidden||polling)return;
+  polling=true;
+  try{const before=state.scan.completedAt;await refreshSummary(false);if(state.scan.completedAt!==before)await Promise.all([refreshItems(),refreshFavourites()]);}finally{polling=false;}
+},60_000);
 setInterval(()=>{renderScan();tickAuctionTimes();},1000);                       // keep scan duration and last-scan age current
-setInterval(()=>{void refreshSummary(false);},15_000); // notice a scan starting or finishing within seconds
+// Summary polling above replaces repeated full item and favourites refreshes.
