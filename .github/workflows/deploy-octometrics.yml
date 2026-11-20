@@ -25,6 +25,8 @@ jobs:
       - name: Seller and pricing regression checks
         run: |
           node --test cloudflare/octometrics/tests/auction-pricing.test.mjs cloudflare/octometrics/tests/auction-filters.test.mjs cloudflare/octometrics/tests/auction-pvp.test.mjs
+      - name: Cross-collector World Chat regression checks
+        run: node --test cloudflare/octometrics/tests/world-chat-receipts.test.mjs
       - name: Apply additive seller schema and deploy existing Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
