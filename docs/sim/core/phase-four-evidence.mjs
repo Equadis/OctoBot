@@ -5,15 +5,21 @@ const identityPlans={
   name:'Holy Strike',ranks:8,
   published:[
    {source:'https://forge.octowow.st/paladin',kind:'class-guide',rankCount:8,firstLevel:4,lastLevel:60,cooldownMs:6000,endpointManaCosts:[5,90]},
+   {source:'https://octowow.st/forum/viewtopic.php?t=20',kind:'official-hotfix',date:'2026-04-29',rank:1,trainable:true},
+   {source:'https://octowow.st/forum/viewtopic.php?p=21212',kind:'player-report',date:'2026-11-18',healingReported:true},
+   {source:'https://forge.octowow.st/database/?spell=13953',kind:'incompatible-record',spellId:13953,level:1},
+   {source:'https://forge.octowow.st/database/?spell=20216',kind:'different-spell-record',spellId:20216,name:'Divine Favor'},
    {source:'https://octowow.st/db/?spell=679',kind:'obsolete-record',spellId:679,level:99},
    {source:'https://octowow.st/db/?spell=17284',kind:'incompatible-record',spellId:17284,level:1},
   ],
  },
  'hunter:trueshot-aura':{
-  name:'Trueshot Aura',ranks:1,
+  name:'Trueshot Aura',ranks:1,reviewUpToRank:3,
   published:[
    {source:'https://octowow.st/index.php/hunter',kind:'guide-removal-claim'},
    {source:'https://octowow.st/db/?spell=19506',kind:'legacy-rank-record',spellId:19506,rank:1,level:40,flatAttackPower:50},
+   {source:'https://octowow.st/db/?spell=20905',kind:'legacy-rank-record',spellId:20905,rank:2,level:50,flatAttackPower:75},
+   {source:'https://octowow.st/db/?spell=20906',kind:'legacy-rank-record',spellId:20906,rank:3,level:60,flatAttackPower:100},
   ],
  },
 };
@@ -58,7 +64,7 @@ export function reviewIdentityEvidence(records,identityRows){
  const result=reviewObservations(records,r=>{
   const plan=identityPlans[r.abilityId];
   return targets.has(r.abilityId)&&plan&&r.method==='learned-cast-identity'&&r.learned===true&&r.spellName===plan.name&&
-   positiveInteger(r.rank)&&r.rank<=plan.ranks&&positiveInteger(r.spellId)&&positiveInteger(r.characterLevel)&&r.characterLevel<=60&&
+   positiveInteger(r.rank)&&r.rank<=(plan.reviewUpToRank??plan.ranks)&&positiveInteger(r.spellId)&&positiveInteger(r.characterLevel)&&r.characterLevel<=60&&
    ['client-spell-link','cast-event-id'].includes(r.idSource);
  },r=>[r.abilityId,r.rank],r=>r.spellId);
  const assigned=new Map();
@@ -77,11 +83,12 @@ export function reviewIdentityEvidence(records,identityRows){
   const ranks=Array.from({length:plan.ranks},(_,i)=>{
    const rank=i+1;
    const observation=result.rows.find(row=>row.coordinate[0]===task.abilityId&&row.coordinate[1]===rank)??null;
-   const disagreement=observation?.values.some(id=>plan.published.some(p=>p.spellId===id&&['obsolete-record','incompatible-record'].includes(p.kind)));
+   const disagreement=observation?.values.some(id=>plan.published.some(p=>p.spellId===id&&['obsolete-record','incompatible-record','different-spell-record'].includes(p.kind)));
    return {rank,observation,status:disagreement?'conflict':observation?.status??'no-observation'};
   });
-  const status=ranks.some(r=>r.status==='conflict')?'conflict':ranks.every(r=>r.status==='corroborated-candidate')?'candidate-needs-authentication':ranks.some(r=>r.observation)?'partial-observation':'no-observation';
-  return {...task,plan,ranks,status};
+  const unexpectedRanks=result.rows.filter(row=>row.coordinate[0]===task.abilityId&&row.coordinate[1]>plan.ranks);
+  const status=(unexpectedRanks.length>0||ranks.some(r=>r.status==='conflict'))?'conflict':ranks.every(r=>r.status==='corroborated-candidate')?'candidate-needs-authentication':ranks.some(r=>r.observation)?'partial-observation':'no-observation';
+  return {...task,plan,ranks,unexpectedRanks,status};
  })};
 }
 

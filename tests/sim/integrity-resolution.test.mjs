@@ -53,3 +53,13 @@ test('rank conflicts cannot be resolved by pooling differing condition groups or
  assert.equal(p.rejected.spells.length,1);
  assert.equal(p.totals.spellCandidates,0);
 });
+
+test('a second learned Trueshot rank is retained as conflicting identity evidence',()=>{
+ const abilityId='hunter:trueshot-aura';
+ const row={...context,abilityId,spellName:'Trueshot Aura',rank:2,spellId:20905,characterLevel:60,learned:true,method:'learned-cast-identity',idSource:'client-spell-link',captureId:'a',observerId:'a',rawEvidence:'a'};
+ const p=integrityResolution({...context,identities:[row]},{...queue,identityRows:[{abilityId}]});
+ assert.equal(p.identityTasks[0].status,'conflict');
+ assert.deepEqual(p.identityTasks[0].unexpectedRanks[0].values,[20905]);
+ assert.equal(p.rejected.identities.length,0);
+ assert.equal(p.totals.authenticatedCorrections,0);
+});
