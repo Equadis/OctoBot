@@ -40,3 +40,25 @@ test("cross-source receipts pair observations one-to-one without suppressing sam
   await worldChatCleanup(env);
  }finally{sql.close();}
 });
+
+test("legacy overlap is hidden in history and live reads without deleting archive",async()=>{
+ const sql=new DatabaseSync(":memory:");
+ for(const name of ["0004_world_chat","0005_world_chat_guilds","0006_world_chat_profiles","0007_world_chat_history"])
+  sql.exec(readFileSync(new URL("../migrations/"+name+".sql",import.meta.url),"utf8"));
+ const DB={prepare(query){return {bind(...args){return {query,args}}}},async batch(statements){return statements.map(({query,args})=>({results:sql.prepare(query).all(...args)}));}};
+ const now=Date.parse("2026-11-20T11:18:00Z"),t=Date.parse("2026-11-20T11:05:00Z"),original=Date.now;
+ const insert=sql.prepare("INSERT INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)");
+ const id=n=>"12345678-1234-1234-1234-"+String(n).padStart(12,"0");
+ try{
+  Date.now=()=>now;
+  for(const [n,realm,time,sender,msg] of [[1,"N'Zoth",t,"1","same"],[2,"N'Zoth",t+100,"1","same"],[3,"N'Zoth",t+150,"2","same"],[4,"N'Zoth",t+1500,"1","same"],[5,"Y'Shaarj",t+100,"1","same"],[6,"Y'Shaarj",t+200,"1","same"],[7,"N'Zoth",t-30000,"1","same"],[8,"N'Zoth",t-29900,"1","same"]])insert.run(realm,id(n),time,sender,"Player"+sender,msg,0);
+  const base="https://worker.example/api/world-chat";
+  const history=await(await worldChatRoute(new Request(base+"/history"),{DB})).json();
+  assert.deepEqual(history.items.map(x=>x.id),[7,8,1,3,4].map(id));
+  const live=await(await worldChatRoute(new Request(base),{DB})).json();
+  assert.deepEqual(live.world.map(x=>x.id),[7,8,1,3,4].map(id));
+  const pvp=await(await worldChatRoute(new Request(base+"/history?realm=Y%27Shaarj"),{DB})).json();
+  assert.equal(pvp.items.length,2);
+  assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM world_chat_messages").get().n,8);
+ }finally{Date.now=original;sql.close();}
+});
