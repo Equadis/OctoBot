@@ -43,7 +43,8 @@ test('Auction House is disabled in the navigation and on the home page',()=>{
   assert.equal(auction.getAttribute('href'),null);
   assert.equal(auction.getAttribute('aria-disabled'),'true');
   const home=readFileSync(new URL('index.html',docs),'utf8');
-  assert.doesNotMatch(home,/>\s*(?:BETA|ALPHA)\s*</);
+  assert.doesNotMatch(home,/>\s*ALPHA\s*</);
+  assert.equal((home.match(/>BETA<\/span>/g)||[]).length,2);
   assert.match(home,/home-card-disabled" role="link" aria-disabled="true"/);
 });
 
