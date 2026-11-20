@@ -147,6 +147,12 @@ async function upload(req,env,action){
      db.prepare("INSERT INTO ah_daily(item_id,variant,day,representative_unit,quantity,listings,scan_id) SELECT item_id,variant,substr(?,1,10),unit_buyout,quantity,listings,? FROM ah_item_points WHERE scan_id=? AND unit_buyout IS NOT NULL AND EXISTS(SELECT 1 FROM ah_scans WHERE scan_id=? AND status='uploading') ON CONFLICT(item_id,variant,day) DO UPDATE SET representative_unit=MIN(ah_daily.representative_unit,excluded.representative_unit),quantity=excluded.quantity,listings=excluded.listings,scan_id=excluded.scan_id") .bind(body.completed_at,body.scan_id,body.scan_id,body.scan_id),
      db.prepare("UPDATE ah_scans SET status='complete',completed_at=?,expected_pages=?,reported_total=?,page_count=?,auction_count=?,duration_ms=? WHERE scan_id=? AND status='uploading'").bind(body.completed_at,body.expected_pages,body.reported_total,check.n,count.n,duration,body.scan_id)
    ];
+   if(env.AUCTION_PRECOMPUTED==='true'){
+     const query=buildItemsQuery(new URLSearchParams(),{scan_id:body.scan_id,completed_at:body.completed_at},'');
+     // The final status, market rows and readiness marker are committed atomically.
+     ops.push(db.prepare("INSERT INTO ah_market_baseline(scan_id,item_id,variant,avg_unit,days,price_samples,price_excluded,average_source,latest_listing_seen_at) SELECT ?,x.* FROM ("+query.baselineSql+") x").bind(body.scan_id,...query.binds));
+     ops.push(db.prepare("INSERT INTO ah_market_ready(scan_id) VALUES (?)").bind(body.scan_id));
+   }
    try{await db.batch(ops)}catch{return bad('finalisation failed',503)}
    const published=await first(db,"SELECT status,completed_at,expected_pages,reported_total,auction_count,duration_ms FROM ah_scans WHERE scan_id=?",body.scan_id);
    if(published?.status!=='complete'||published.completed_at!==body.completed_at||published.expected_pages!==body.expected_pages||published.reported_total!==body.reported_total)return bad('scan no longer uploading or completion conflict',409);
@@ -164,7 +170,7 @@ async function readApi(url,env){
    const item=scan?await first(db,'SELECT COUNT(*) n FROM ah_item_points WHERE scan_id=?',scan.scan_id):null;
    const hist=await first(db,'SELECT COUNT(DISTINCT day) n FROM ah_daily');
    const total=await first(db,'SELECT auction_count FROM ah_historical_total WHERE id=1');
-   const meta=scan?await first(db,"SELECT COUNT(DISTINCT l.item_id||':'||l.variant) n FROM ah_listings l LEFT JOIN ah_item_metadata m ON m.item_id=l.item_id WHERE l.scan_id=? AND COALESCE(l.class_id,m.class_id) IS NOT NULL",scan.scan_id):null;
+   const meta=scan?await first(db,"SELECT COUNT(*) n FROM ah_item_points p LEFT JOIN ah_listings l ON l.scan_id=p.scan_id AND l.auction_id=p.cheapest_auction_id LEFT JOIN ah_item_metadata m ON m.item_id=p.item_id WHERE p.scan_id=? AND COALESCE(l.class_id,m.class_id) IS NOT NULL",scan.scan_id):null;
    return respond({collector_status:recent?'ONLINE':current?'STALE':'OFFLINE',scanning:!!current,
      pages_done:current?.pages_done??0,pages_expected:current?Math.max(1,Math.ceil(current.reported_total/50)):null,
      completed_at:scan?.completed_at??null,auction_count:scan?.auction_count??null,total_historical_auctions:total?.auction_count??null,
@@ -205,7 +211,10 @@ async function readApi(url,env){
  }
  if(url.pathname==='/api/auction/items'){
    const prev=await previous(db,scan);
-   const query=buildItemsQuery(url.searchParams,scan,prev?.scan_id);
+   const precomputed=env.AUCTION_PRECOMPUTED==='true';
+   if(precomputed&&!await first(db,"SELECT scan_id FROM ah_market_ready WHERE scan_id=?",scan.scan_id))
+     return bad('Awaiting next hourly market snapshot',503);
+   const query=buildItemsQuery(url.searchParams,scan,prev?.scan_id,Date.now(),precomputed);
    if(query.error)return bad(query.error);
    const rows=await all(db,query.pageSql,...query.binds,query.limit,query.offset);
    const total=rows.length?rows[0].total_rows:query.offset>0?(await first(db,query.countSql,...query.binds)).n:0;
@@ -274,16 +283,16 @@ export async function auctionRoute(request,env){
 }
 export async function auctionCleanup(env){
  if(env.AUCTION_API_PAUSED==='true')return;
- await cleanupRealm(env.DB);
+ await cleanupRealm(env.DB,env.AUCTION_PRECOMPUTED==='true');
  // PvP tables are created by migration 0011; deploy the migration before this Worker.
- await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"));
+ await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"),env.AUCTION_PRECOMPUTED==='true');
 }
-async function cleanupRealm(db){
+async function cleanupRealm(db,precomputed=false){
  // The three latest complete scans and all compact price history remain readable.
  // Limit write amplification per SQL statement; incomplete cleanup resumes on the next cron.
  const expired="SELECT scan_id FROM ah_scans WHERE status='failed' OR (status='complete' AND scan_id NOT IN (SELECT scan_id FROM ah_scans WHERE status='complete' ORDER BY completed_at DESC,scan_id DESC LIMIT 3))";
  await db.prepare("UPDATE ah_scans SET status='failed',error='abandoned upload' WHERE status='uploading' AND COALESCE((SELECT MAX(received_at) FROM ah_pages WHERE scan_id=ah_scans.scan_id),created_at)<strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 minutes')").run();
- for(const table of ["ah_listings","ah_pages","ah_item_points"]){
+ for(const table of ["ah_listings","ah_pages","ah_item_points",...(precomputed?["ah_market_baseline","ah_market_ready"]:[])]){
    for(let i=0;i<4;i++){
      const result=await db.prepare("DELETE FROM "+table+" WHERE rowid IN (SELECT rowid FROM "+table+" WHERE scan_id IN ("+expired+") LIMIT 2000)").run();
      if(result?.meta?.changes===0)break;
