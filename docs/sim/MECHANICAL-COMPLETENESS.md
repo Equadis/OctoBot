@@ -230,3 +230,17 @@ Explicit pet equipment apply/included policy now accepts exact Armour and critic
 The reference compiler reads exact Firebolt bonuses from [Pimgib's Collar](https://octowow.st/db/?item=18354), [Grellskin Gloves](https://octowow.st/db/?item=60424) and [Impskin Gloves](https://octowow.st/db/?item=80777). With an Imp and Firebolt configured, `equipmentPolicy.mode: "apply"` adds each equipped bonus to both ends of the base damage range before multipliers and mitigation. Use `"included"` when the supplied damage already includes gear. Stacking and calculation order are research assumptions pending live evidence.
 
 The companion equipment audit reports 19 imported lines with at least one compiled companion modifier, including the three Firebolt lines. It includes per-modifier runtime keys in the CI artifact. Future batches include pet stamina and resistance set bonuses, The Black Book's timed armour and damage, and Devilsaur Tooth's next-attack critical strike.
+
+## Phase 3 research checkpoint
+
+The BWL reference engine now exercises the documented shared mechanical paths for companion effects, special damage pulses, cast-driven swaps and raid providers. Each model uses supplied inputs for unresolved server behaviour.
+
+| Area | Reference behaviour covered |
+| --- | --- |
+| Temporary modifiers and special actions | Felstorm snapshots its configured scaling power at activation and reads scoped and companion damage modifiers at each pulse. Fire totems support scoped damage and opt-in pulse-time Fire spell power. Drain Mana can use explicit pools on additional enemies. |
+| Companion equipment | Pet Stamina and resistance set bonuses are threshold-aware. Stamina requires explicit health conversion. The five modeled resistance deltas require a rating-based incoming attack when applied. The Black Book schedules damage and calculated armour buffs for its eligible demons. Devilsaur Tooth consumes one scoped critical charge and preserves misses with explicit outcome tables, charge duration and consumption policy. |
+| Companion targeting | Per-enemy distance and position can override the companion's default geometry. Movement and control use the existing explicit encounter policies. |
+| Trinket swaps | Regression tests cover cast-driven Vanish, paid petless Feign Death and its failure path, swap timing, equip locks, shared and individual cooldowns, and propagation of supported combat stat deltas. A trinket effect retains its cooldown when the item changes slots. Unequal dual-wield hit or crit deltas are rejected by the global-delta model. |
+| Raid providers | Hostile applications can require explicit target range and a landed result. An optional curse policy replaces the same provider's prior curse on the same enemy. Friendly applications support explicit party or raid rosters and an opt-in companion recipient with its owner in the roster. Static and timed exclusions remain enforced. |
+
+The companion equipment audit reports 26 lines with a runtime mapping, including two timed or charged uses. Phase 4 collects and reconciles build and ability data. Phase 5 tracks unmodelled catalogue effects and broader interactions. Phase 6 verifies live coefficients, timing, pet behaviour, raid rules and trinket combat-state transitions. Public simulation remains gated.

@@ -11,3 +11,16 @@ test('a full rotation never silently drops unknown actions',()=>{let p=params();
 test('rank-level simulated healing does not reapply a HoT before expiry',()=>{const p=params('druid',25299,'Rejuvenation');p.policies['druid:rejuvenation'].allowFutureRank=true;p.encounter.durationMs=12000;const r=runReferenceScenario(prepareReferenceScenario(p),{seed:1,iterations:2});assert.equal(r.exampleEvents.filter(x=>x.type==='heal').length,4);assert.equal(r.exampleEvents.filter(x=>x.type==='action-start').length,1);});
 
 test('Trueshot build adapter requires historical opt-in and exact research rank',()=>{const p=params('hunter',19506,'Trueshot Aura'),aid='hunter:trueshot-aura';p.rows[0].target='self';p.policies[aid]={...policy,cooldownMs:60000,trueshotPolicy:{acceptSourceConflict:true,sourceModel:'legacy-flat',rank:1,radiusYards:45,durationMs:1800000,recipients:['player'],recipientStats:{player:{meleeAP:100,rangedAP:200}},statBasis:'snapshot',costPolicy:'explicit-research',manaCost:0}};assert.throws(()=>prepareReferenceScenario(p),/historical research opt-in/);p.policies[aid].allowHistoricalAbility=true;const prepared=prepareReferenceScenario(p);assert.equal(prepared.rankRows[0].kind,'historical-conflict-research');assert.equal(prepared.scenario.actions[0].trueshotPolicy.rank,1);p.rankByAbility[aid]=20905;assert.throws(()=>prepareReferenceScenario(p),/historical Trueshot rank/);});
+
+test('Drain Mana configures mana pools for additional encounter targets',()=>{
+ const p=params('warlock',5138,'Drain Mana');
+ p.policies['warlock:drain-mana']={...policy,costOverride:115,acceptExternalReference:true,channelTickAtEnd:true,drainManaModel:{tickAmount:25,coefficient:0,outcomes:[{name:'hit',landed:true,probability:1,multiplier:1}],stopWhenEmpty:true}};
+ p.encounter.additionalEnemies=[{id:'add',maxHealth:100}];
+ p.encounter.enemyManaPools={add:{current:20,max:40}};
+ p.encounter.additionalGeometry={add:{distance:20,position:'behind'}};
+ p.rows[0].target='cycle';
+ const prepared=prepareReferenceScenario(p);
+ assert.deepEqual(prepared.scenario.pools['enemyMana:add'],{current:20,max:40});
+ const r=runReferenceScenario(prepared,{seed:7,iterations:1});
+ assert.equal(r.exampleEvents.find(e=>e.source==='Drain Mana (drained)')?.delta,-20);
+});

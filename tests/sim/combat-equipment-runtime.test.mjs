@@ -35,3 +35,33 @@ test('hand-specific equipment proc ignores other hand',()=>{const x={...effect,t
 test('periodic restoration ticks, shared activation cooldown and expiry',()=>{const x={...effect,atMs:[0],effect:{kind:'periodic-restore',resource:'mana',amount:15,durationMs:3000,intervalMs:1000}};const {e}=fixture({effects:[x]});e.timeline.runUntil(999);assert.equal(e.resources.snapshot().mana.current,10);e.timeline.runUntil(3000);assert.equal(e.resources.snapshot().mana.current,55);e.timeline.runUntil(4000);assert.equal(e.resources.snapshot().mana.current,55);});
 
 test('bandage stream is interrupted by effective incoming damage',()=>{const x={...effect,atMs:[0],effect:{kind:'periodic-restore',resource:'health',amount:10,durationMs:4000,intervalMs:1000,channel:true}};const {e,rt}=fixture({effects:[x]});let healed=0;e.heal=v=>healed+=v.value;e.timeline.runUntil(1000);assert.equal(healed,10);assert.equal(e.auras.stat('p','restorationChannel',0),1);rt.onDamage(e,{targetId:'p',effective:1});e.timeline.runUntil(4000);assert.equal(healed,10);assert.equal(e.auras.stat('p','restorationChannel',0),0);});
+
+test('moving a trinket preserves its own cooldown across an equip lock',()=>{
+ const cooldownKey='same equipped trinket effect';
+ const old={...effect,id:'old',atMs:[0],loadout:'before',cooldownKey};
+ const next={...effect,id:'new',atMs:[700,1000],loadout:'after',cooldownKey};
+ const swap={atMs:500,mode:'vanish',confirmedCombatDrop:true,equipLockMs:100,auraPolicy:'remove'};
+ const {e,events}=fixture({effects:[old,next],swap});
+ e.timeline.runUntil(999);
+ assert.deepEqual(events.map(x=>x.procId),['equipment:old','vanish']);
+ e.timeline.runUntil(1000);
+ assert.equal(events.at(-1).procId,'equipment:new');
+ assert.throws(()=>fixture({effects:[old,{...next,cooldownMs:900}],swap}),/consistent individual cooldown/);
+});
+
+test('a companion critical charge preserves misses and is isolated to eligible pet damage',()=>{
+ const x={...effect,atMs:[0],effect:{kind:'aura',recipient:'companion',durationMs:1000,modifiers:[],guaranteedCrit:{sources:['Bite'],consume:'landed'}}};
+ const outcomes=[{name:'miss',probability:.25,multiplier:0,landed:false},{name:'hit',probability:.75,multiplier:1,landed:true},{name:'crit',probability:0,multiplier:2,landed:true}];
+ const options={companion:{id:'pet',attackModels:[{source:'Bite',outcomes}]},enemyIds:['boss']};
+ const {e,rt}=fixture({effects:[x]},options);
+ e.timeline.runUntil(0);
+ const ev={actorId:'pet',targetId:'boss',source:'Bite'};
+ assert.equal(rt.critical(e,{...ev,actorId:'p'},outcomes),outcomes);
+ assert.equal(rt.critical(e,{...ev,source:'Claw'},outcomes),outcomes);
+ assert.deepEqual(rt.critical(e,ev,outcomes).map(o=>o.probability),[.25,0,.75]);
+ rt.attack(e,{...ev,landed:false});
+ assert.equal(rt.critical(e,ev,outcomes)[2].probability,.75);
+ rt.attack(e,{...ev,landed:true});
+ assert.equal(rt.critical(e,ev,outcomes),outcomes);
+ assert.throws(()=>fixture({effects:[x]},{companion:{id:'pet',attackModels:[{source:'Claw',outcomes}]}}),/requires configured direct attack sources/);
+});

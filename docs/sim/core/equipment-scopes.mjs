@@ -18,6 +18,7 @@ export function scopedEquipmentEffect(raw){
  // Never split arbitrary sentences: every term must agree with the source.
  if((m=match('Improves spell critical strike chance by '+N+'% and increases Shadow damage dealt by damage over time effects by '+N+'%')))return {status:'scoped',stats:{spellCrit:+m[1]},modifiers:[mod('Shadow periodic damage','damagePct',m[2])]};
  if((m=match("Increases Holy Shock's chance to hit by "+N+"% and its damage by "+N+"%")))return found([mod('Holy Shock (damage)','hitPct',m[1]),mod('Holy Shock (damage)','damagePct',m[2])]);
+ if((m=match(N+"% increased damage from your summoned pets' melee attacks and damage spells")))return found([mod('Pet','damagePct',m[1],{pet:true})]);
  if((m=match("Increases your pet and enslaved demon's damage and health by "+N+"%")))return found([mod('Pet','damagePct',m[1],{pet:true}),mod('Pet','healthPct',m[1],{pet:true})]);
  if((m=match("Increases Attack Power by "+N+" for both you and your pet")))return {status:'scoped',stats:{ap:+m[1]},modifiers:[mod('Pet','attackPower',m[1],{pet:true})]};
  if((m=match("Increases the range of your Mend Pet spell by "+N+"% and the effect by "+N+"%. Also reduces the cost by "+N+"%")))return found([mod('Mend Pet','rangeIncreasePct',m[1]),mod('Mend Pet','healingPct',m[2]),mod('Mend Pet','manaCostReductionPct',m[3])]);

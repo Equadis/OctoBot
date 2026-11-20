@@ -26,7 +26,9 @@ export function resolveIncomingAttack(attack,compiled,random,defence=null,stats=
   const model=attack.attackModel,base=model.table;
   const clamp=v=>Math.max(0,Math.min(100,v));const delta=k=>{const v=stats?.[k]??0;if(!Number.isFinite(v))throw Error('Invalid dynamic defence: '+k);return v;};
   const table=physicalAttackTable({...base,...(base.type==='ranged'?{}:{targetDefense:Math.max(0,base.targetDefense+delta('defense'))}),avoidance:{...base.avoidance,dodgePct:clamp(base.avoidance.dodgePct+delta('dodge')),parryPct:clamp(base.avoidance.parryPct+delta('parry')),blockPct:clamp(base.avoidance.blockPct+(defence?.blockBonusPct??0)+delta('block'))},critSuppressionPct:clamp(base.critSuppressionPct+delta('critSuppression')),blockValue:Math.max(0,base.blockValue+delta('blockValue'))*(defence?.blockValueFactor??1),provenance:model.provenance});
-  compiled={...compiled,outcomes:table.outcomes,mitigation:physicalArmourReduction({...model.armourModel,armour:Math.max(0,model.armourModel.armour+delta('armour'))})};
+  const armourFactor=stats?.armourFactor??1;
+  if(!Number.isFinite(armourFactor)||armourFactor<0)throw Error('Invalid dynamic armour multiplier');
+  compiled={...compiled,outcomes:table.outcomes,mitigation:physicalArmourReduction({...model.armourModel,armour:Math.max(0,model.armourModel.armour+delta('armour'))*armourFactor})};
  }
  if(attack.school!=='physical'&&stats){
   const rating=stats.resistance??0,suppression=stats.spellCritSuppression??0;if(!Number.isFinite(rating)||!Number.isFinite(suppression))throw Error('Invalid dynamic spell defence');

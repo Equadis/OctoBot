@@ -1,3 +1,4 @@
+import {abilityDamageFactor} from './combat-ability-modifiers.mjs';
 // Research-only fire totem model. Rank damage, timing, and threat require explicit policy.
 const finite=(x,name,min=0)=>{if(!Number.isFinite(x)||x<min)throw Error('Invalid fire totem '+name);return x};
 const integer=(x,name)=>{if(!Number.isSafeInteger(x)||x<1)throw Error('Invalid fire totem '+name);return x};
@@ -5,6 +6,7 @@ export function validateFireTotem(p){
  if(!p||!['searing','magma','fire-nova'].includes(p.kind)||p.slot!=='fire'||p.targeting!=='ordered-living-in-radius'||p.threatRouting!=='owner-reference'||!Array.isArray(p.outcomes)||!p.outcomes.length)throw Error('Explicit fire totem kind, slot, targeting and threat routing required');
  for(const k of ['durationMs','firstPulseMs','intervalMs','cap'])integer(p[k],k);for(const k of ['rangeYards','baseMin','baseMax','coefficient','damageFactor','threatFactor'])finite(p[k],k);
  if(p.rangeYards<=0||p.baseMax<p.baseMin||p.cap>40||p.firstPulseMs>p.durationMs||p.kind==='searing'&&p.cap!==1||p.kind==='fire-nova'&&p.durationMs!==p.firstPulseMs||p.outcomes.some(x=>typeof x.landed!=='boolean'||!Number.isFinite(x.probability)||x.probability<0||!Number.isFinite(x.multiplier)||x.multiplier<0)||Math.abs(p.outcomes.reduce((s,x)=>s+x.probability,0)-1)>1e-8)throw Error('Invalid totem pulse schedule, targeting or outcomes');
+ if(p.spellPowerTiming!==undefined&&!['baseline','pulse'].includes(p.spellPowerTiming))throw Error('Explicit fire totem spell power timing required');
  if(p.threat!==null&&(!p.threat||!Number.isFinite(p.threat.coefficient)||p.threat.coefficient<0||!Number.isFinite(p.threat.flat)||p.threat.flat<0||!Array.isArray(p.threat.multipliers)||!['each','split'].includes(p.threat.distribution)))throw Error('Explicit totem threat policy required');
  return p;
 }
@@ -18,6 +20,13 @@ export function compileFireTotem(build,abilityId,policy){
  if(p.outcomes)p.outcomes=p.outcomes.map(o=>o.critical?{...o,multiplier:1+(o.multiplier-1)*(1+.5*fury)}:{...o});
  if(p.threat!==null&&p.threat)p.threat={...p.threat,multipliers:[...p.threat.multipliers,p.threatFactor]};
  return validateFireTotem(p);
+}
+export function fireTotemPulseRange(auras,owner,action,baselineFirePower){
+ const p=action.fireTotem;
+ if(!Number.isFinite(baselineFirePower))throw Error('Fire totem requires explicit Fire spell power');
+ const power=p.spellPowerTiming==='pulse'?auras.stat(owner,'fire',baselineFirePower):baselineFirePower;
+ const factor=p.damageFactor*abilityDamageFactor(auras,owner,action.abilityId);
+ return {min:(p.baseMin+power*p.coefficient)*factor,max:(p.baseMax+power*p.coefficient)*factor};
 }
 export function createFireTotemRuntime({owner,targetIds,geometry,resolve,priority}){
  let current=null;

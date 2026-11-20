@@ -47,7 +47,9 @@ export function buildCompanionConfig(build,m,durationMs,ownerStats=null,equipmen
  if(m.level!==level||level>build.level)throw new Error('Companion level must match selected level and not exceed player');
  if(!Array.isArray(m.abilities)||m.abilities.length>20)throw new Error('Explicit companion ability priority required');
  const equipment=petEquipmentModifiers(equipmentRows,m.equipmentPolicy,{usesImpFirebolt:build.classId==='warlock'&&name==='Imp'&&m.abilities.some(a=>a?.name==='Firebolt')});
- const resolvedStats=resolvePetStats(build,m,ownerStats);resolvedStats.health*=1+equipment.healthPct/100;resolvedStats.attackPower+=equipment.attackPower;if(equipment.armourPct){if(!Number.isFinite(resolvedStats.armour))throw Error('Explicit pet armour baseline required');resolvedStats.armour*=1+equipment.armourPct/100;}const maxHealth=num(resolvedStats.health,'health',1),health=num(m.initialHealth,'initial health',1,maxHealth),current=num(m.resource?.current,'initial resource'),max=num(m.resource?.max,'maximum resource',Math.max(1,current)),regenAmount=num(m.resource?.regenAmount,'resource regeneration'),regenIntervalMs=integer(m.resource?.regenIntervalMs,'resource interval',1);
+ const resolvedStats=resolvePetStats(build,m,ownerStats);
+ if(equipment.stamina)resolvedStats.health+=equipment.stamina*num(m.equipmentPolicy.healthPerStamina,'equipment health per Stamina',Number.MIN_VALUE);
+ resolvedStats.health*=1+equipment.healthPct/100;resolvedStats.attackPower+=equipment.attackPower;if(equipment.armourPct){if(!Number.isFinite(resolvedStats.armour))throw Error('Explicit pet armour baseline required');resolvedStats.armour*=1+equipment.armourPct/100;}const maxHealth=num(resolvedStats.health,'health',1),health=num(m.initialHealth,'initial health',1,maxHealth),current=num(m.resource?.current,'initial resource'),max=num(m.resource?.max,'maximum resource',Math.max(1,current)),regenAmount=num(m.resource?.regenAmount,'resource regeneration'),regenIntervalMs=integer(m.resource?.regenIntervalMs,'resource interval',1);
  num(m.damageMultiplier,'damage multiplier');const t=hunterTalents(build,m);if(equipment.critPct){if(m.equipmentPolicy?.critMode!=='normal-hit-only')throw Error('Explicit pet equipment crit conversion policy required');t.critBonus+=equipment.critPct/100;}m={...m,resolvedTalents:t,fireboltFlatDamage:equipment.fireboltFlatDamage,damageMultiplier:m.damageMultiplier*(1+equipment.damagePct/100)};const stats={attackPower:resolvedStats.attackPower+t.apBonus,spellPower:resolvedStats.spellPower+t.spBonus};
  if(!['behind','front','side'].includes(m.position))throw new Error('Explicit companion position required');
  const geometry={distance:num(m.distanceYards,'distance'),position:m.position},decisionIntervalMs=integer(m.decisionIntervalMs,'decision interval',10,10000),gcdMs=integer(m.gcdMs,'GCD',1);
@@ -56,5 +58,13 @@ export function buildCompanionConfig(build,m,durationMs,ownerStats=null,equipmen
  const autos=m.auto===null?[]:[{id:'companion-white',actorId:'pet',source:'Companion auto attack',intervalMs:integer(m.auto?.intervalMs,'swing interval',1),firstAtMs:integer(m.auto?.firstAtMs,'first swing'),castPolicy:'continue',...(t.frenzyRank?{hasteStat:'meleeHasteFactor',hastePolicy:t.frenzySwingPolicy}:{}),minRangeYards:0,maxRangeYards:num(m.auto?.maxRangeYards,'melee range',0),effects:[damage(m.auto?.damage,m,'Companion auto attack')]}];
  if(!abilities.length&&!autos.length)throw new Error('Companion requires at least one explicit auto attack or active ability');
  if(autos.some(a=>a.effects[0].school!=='physical'))throw new Error('Companion auto attack must be physical');
- return {id:'pet',defensive:Object.fromEntries(Object.entries(resolvedStats).filter(([k])=>k==='armour'||k.endsWith('Resistance')).map(([k,v])=>[k,v-m[k]])),unit:{id:'pet',maxHealth,health},stats,geometry,pool:{resource,current,max},autos,priority:{resource,decisionIntervalMs,gcdMs,abilities},talents:t,damageMultiplier:m.damageMultiplier*(1+t.damageBonus),regen:{amount:regenAmount+t.focusPerTick,intervalMs:regenIntervalMs,durationMs}};
+ const defensiveDeltas={};
+ if(resolvedStats.armour!==undefined)defensiveDeltas.armour=resolvedStats.armour-m.armour;
+ for(const school of ['arcane','fire','frost','nature','shadow']){
+  const key=school+'Resistance';
+  if(resolvedStats[key]!==undefined||equipment.allResistance){
+   defensiveDeltas[key]=(resolvedStats[key]??0)-(m[key]??0)+(equipment.allResistance??0);
+  }
+ }
+ return {id:'pet',defensive:defensiveDeltas,unit:{id:'pet',maxHealth,health},stats,geometry,pool:{resource,current,max},autos,priority:{resource,decisionIntervalMs,gcdMs,abilities},talents:t,damageMultiplier:m.damageMultiplier*(1+t.damageBonus),regen:{amount:regenAmount+t.focusPerTick,intervalMs:regenIntervalMs,durationMs}};
 }

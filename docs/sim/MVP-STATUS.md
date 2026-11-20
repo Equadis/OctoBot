@@ -181,3 +181,7 @@ The integration workflow runs JavaScript and Python regressions, spell/capabilit
 ## 20 November 2026 — Phase 3 continuation
 
 Imp Firebolt now applies three source-backed equipment effects under the companion's explicit equipment inclusion policy. The companion equipment audit identifies 19 imported effect lines with at least one runtime mapping and is included in the integration workflow's data-integrity artifact. The next companion equipment gaps are stamina/resistance sets and timed or charged pet effects. Public readiness remains false and the mapped effects still await live validation. See [Mechanical Completeness](MECHANICAL-COMPLETENESS.md#imp-firebolt-equipment-damage).
+
+## 20 November 2026 — Phase 3 research checkpoint complete
+
+The shared mechanical reference pass now covers pet Stamina and resistances, The Black Book, Devilsaur Tooth, selected special damage paths, same-item swap cooldowns and targeted raid-provider outcomes. See the [Phase 3 research checkpoint](MECHANICAL-COMPLETENESS.md#phase-3-research-checkpoint) for the supported policies and test scope. The next phase is data integrity, including base-stat reconciliation and spell evidence. Public readiness remains false.

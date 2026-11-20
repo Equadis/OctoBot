@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {CombatTimeline,REFERENCE_PRIORITIES as P} from '../../docs/sim/core/combat-timeline.mjs';
 import {CombatAuras} from '../../docs/sim/core/combat-auras.mjs';
-import {compileFireTotem,validateFireTotem,createFireTotemRuntime} from '../../docs/sim/core/combat-shaman-fire-totems.mjs';
+import {compileFireTotem,validateFireTotem,createFireTotemRuntime,fireTotemPulseRange} from '../../docs/sim/core/combat-shaman-fire-totems.mjs';
 const hit=[{name:'hit',probability:1,multiplier:1,landed:true}];
 const policy=(kind,overrides={})=>({kind,slot:'fire',targeting:'ordered-living-in-radius',threatRouting:'owner-reference',durationMs:kind==='fire-nova'?3000:8000,firstPulseMs:kind==='fire-nova'?3000:2000,intervalMs:2000,rangeYards:10,baseMin:40,baseMax:40,coefficient:0,damageFactor:1,threatFactor:1,outcomes:hit,cap:kind==='searing'?1:3,threat:null,...overrides});
 test('Fire Totem talent combinations adjust Nova delay, Searing speed/range, Magma threat and critical damage',()=>{
@@ -30,4 +30,17 @@ test('One active fire totem: replacement cancels previously queued pulses, Magma
 test('Fire Nova fires only after activation delay and vacates fire slot',()=>{
  const timeline=new CombatTimeline(),auras=new CombatAuras(timeline),hits=[];const e={timeline,auras,unit:()=>({alive:true}),recordMechanic:()=>{}},fire=createFireTotemRuntime({owner:'p',targetIds:['boss','add'],geometry:{p:{boss:{distance:5},add:{distance:15}}},priority:P.tick,resolve:(_,id)=>hits.push([id,timeline.now])});
  fire.cast(e,{name:'Fire Nova Totem',abilityId:'shaman:fire-nova-totem',fireTotem:policy('fire-nova')});timeline.runUntil(2999);assert.deepEqual(hits,[]);timeline.runUntil(3000);assert.deepEqual(hits,[['boss',3000]]);assert.equal(auras.active('p','buff').length,0);
+});
+
+test('fire totem pulse opts into active spell power and applies the exact ability aura',()=>{
+ const timeline=new CombatTimeline(),auras=new CombatAuras(timeline);
+ const action={abilityId:'shaman:searing-totem',fireTotem:policy('searing',{coefficient:.5})};
+ auras.apply({id:'buff',targetId:'p',ownerId:'p',kind:'buff',durationMs:1000,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[
+  {stat:'fire',mode:'flat',value:20},{stat:'abilityDamageFactor:shaman:searing-totem',mode:'multiplyPct',value:50},
+ ]});
+ assert.equal(fireTotemPulseRange(auras,'p',action,100).min,135);
+ action.fireTotem.spellPowerTiming='pulse';
+ assert.equal(fireTotemPulseRange(auras,'p',action,100).min,150);
+ timeline.runUntil(1000);
+ assert.equal(fireTotemPulseRange(auras,'p',action,100).min,90);
 });

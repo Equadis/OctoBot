@@ -86,3 +86,78 @@ test('imported Firebolt equipment adds damage only to the configured Imp spell',
  delete model.equipmentPolicy;
  assert.equal(run().pet.bySource['Lash of Pain'].damage,90);
 });
+
+function equipImported(p,slots){
+ const itemsRoot=new URL('../../docs/sim/data/items/',import.meta.url);
+ const load=name=>JSON.parse(readFileSync(new URL(name,itemsRoot)));
+ const listings=load('equipment.json');
+ const details={...load('details-supplement.json'),...load('details.json')};
+ for(const [slot,id] of Object.entries(slots)){
+  p.build.gear[slot]={id,label:details[id].name};
+  p.gearById[id]={...listings.find(item=>item.id===id),...details[id]};
+ }
+}
+
+test('equipped Felheart threshold adds Stamina and school resistance under explicit policy',()=>{
+ const p=params();
+ equipImported(p,{head:16808,shoulder:16807,wrist:16804,hands:16805,feet:16803});
+ const m=p.encounter.companionModel;
+ m.equipmentPolicy={mode:'apply',provenance:'synthetic'};
+ assert.throws(()=>prepareReferenceScenario(p),/health per Stamina/);
+ m.equipmentPolicy.healthPerStamina=10;
+ const applied=prepareReferenceScenario(p).scenario;
+ assert.equal(applied.units.find(unit=>unit.id==='pet').maxHealth,250);
+ assert.deepEqual(applied.petDefensiveDeltas,{arcaneResistance:100,fireResistance:100,frostResistance:100,natureResistance:100,shadowResistance:100});
+ m.equipmentPolicy.mode='included';
+ assert.equal(prepareReferenceScenario(p).scenario.units.find(unit=>unit.id==='pet').maxHealth,100);
+});
+
+test('Black Book schedules the equipped damage and armour buff on the living eligible demon',()=>{
+ const p=params();
+ equipImported(p,{trinket1:19337});
+ const request={slot:'trinket1',itemId:19337,tooltip:p.gearById[19337].effects[0],acknowledgeUnverifiedTiming:true,cooldownMs:60000,atMs:[1000]};
+ p.encounter.equipmentTooltipUses=[request];
+ const model={kind:'physical',provenance:'synthetic',min:10,max:10,table:{type:'melee-white',position:'behind',weaponSkill:300,targetDefense:300,hitPct:100,critPct:0,critSuppressionPct:0,critMultiplier:2,dualWieldWhite:false,dualWieldPenaltyPct:0,glancePct:0,glanceMultiplier:1,order:['miss','dodge','parry','block','glance','crit'],avoidance:{dodgePct:0,parryPct:0,blockPct:0},blockValue:0},armourModel:{attackerLevel:60,armour:1000}};
+ p.encounter.incomingDamage=[500,1500].map(atMs=>({atMs,source:'Enemy',actorId:'boss',targetId:'pet',school:'physical',attackModel:model}));
+ p.encounter.companionModel.health=1000;
+ const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1});
+ assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.source==='Firebolt').map(e=>e.raw),[30,60,60]);
+ const incoming=r.exampleEvents.filter(e=>e.type==='attack-result'&&e.source==='Enemy');
+ assert.ok(incoming[1].raw<incoming[0].raw);
+ p.build.classOptions.pet='Felguard';
+ const excluded=pet('Felguard','Felstorm');
+ excluded.abilities[0].areaPolicy={mode:'primary'};
+ p.encounter.companionModel=excluded;
+ assert.throws(()=>prepareReferenceScenario(p),/eligible companion/);
+});
+
+test('equipped Devilsaur Tooth consumes only one eligible Hunter companion attack',()=>{
+ const m=pet('Cat','Claw');
+ m.abilities[0].damage={...damage,school:'physical',outcomes:[...landed,{name:'crit',landed:true,critical:true,probability:0,multiplier:2}]};
+ const p=params(m);
+ p.build=newBuild('hunter');
+ p.build.classOptions.pet='Cat';
+ p.build.classOptions.petLevel=60;
+ p.talents=JSON.parse(readFileSync(new URL('../../docs/sim/data/talents/hunter.json',import.meta.url)));
+ equipImported(p,{trinket1:19992});
+ p.learnedSpellIds=[];
+ p.rankByAbility={'hunter:pet-attack':null};
+ p.policies={'hunter:pet-attack':{command:'hunter:pet-attack',activation:'scheduled-phase',phase:2,provenance:'synthetic'}};
+ p.rows=[{ability:'Pet Attack',target:'primary',conditions:[]}];
+ const request={slot:'trinket1',itemId:19992,tooltip:p.gearById[19992].effects[0],acknowledgeUnverifiedTiming:true,cooldownMs:60000,atMs:[1000],durationMs:3000,consume:'landed',criticalSources:['Claw']};
+ p.encounter.equipmentTooltipUses=[request];
+ const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1});
+ assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.source==='Claw').map(e=>e.raw),[30,60,30]);
+ request.criticalSources=['Growl'];
+ assert.throws(()=>runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1}),/configured direct attack sources/);
+});
+
+test('companion geometry uses explicit distances per enemy for area targeting',()=>{
+ const p=params();
+ p.encounter.additionalEnemies=[{id:'add',maxHealth:1000}];
+ p.encounter.companionModel.targetGeometry={boss:{distance:3,position:'side'},add:{distance:50,position:'front'}};
+ const prepared=prepareReferenceScenario(p);
+ assert.deepEqual(prepared.scenario.geometry.pet,p.encounter.companionModel.targetGeometry);
+ p.encounter.companionModel.targetGeometry.typo={distance:0,position:'front'};
+ assert.throws(()=>prepareReferenceScenario(p),/companion target geometry/);
+});

@@ -15,7 +15,7 @@ export function resolvePetStats(build,m,ownerStats){
 }
 
 // Static pet-specific equipped bonuses are separate from owner stat inheritance.
-const petStats=new Set(['attackPower','healthPct','damagePct','armourPct','critPct']);
+const petStats=new Set(['attackPower','healthPct','damagePct','armourPct','critPct','stamina','allResistance']);
 export function petEquipmentEffectKey(row){
  const condition=row.condition??{};
  if(row.scope==='Pet'&&condition.pet===true&&Object.keys(condition).length===1&&petStats.has(row.stat))return row.stat;

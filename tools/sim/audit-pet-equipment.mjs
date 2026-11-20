@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import {classifyEquipmentEffect,parseItemSet} from '../../docs/sim/core/item-effects.mjs';
 import {petEquipmentEffectKey} from '../../docs/sim/core/combat-pet-stats.mjs';
+import {parseTimedEquipmentTooltip} from '../../docs/sim/core/combat-item-tooltip-runtime.mjs';
 const root=new URL('../../docs/sim/data/items/',import.meta.url);
 const load=name=>JSON.parse(fs.readFileSync(new URL(name,root),'utf8'));
 const eq=load('equipment.json'),details={...load('details-supplement.json'),...load('details.json')};
@@ -9,7 +10,9 @@ const items=[],setLines=new Map(),seen=new Set();
 function classify(raw){
  const result=classifyEquipmentEffect(raw);
  const modifiers=(result.modifiers??[]).map(row=>({...row,companionRuntimeKey:petEquipmentEffectKey(row)}));
- return {raw,status:result.status,playerStats:result.stats,modifiers};
+ const timed=parseTimedEquipmentTooltip(raw);
+ const companionRuntimeUse=timed?.effect.recipient==='companion'?(timed.effect.guaranteedCrit?'critical-charge':'timed-aura'):null;
+ return {raw,status:result.status,playerStats:result.stats,modifiers,companionRuntimeUse};
 }
 for(const listing of eq){
  const item=details[listing.id];if(!item||seen.has(listing.id))continue;seen.add(listing.id);
@@ -22,7 +25,7 @@ const sets=[...setLines.values()];
 const itemEffects=items.flatMap(item=>item.effects);
 const all=[...itemEffects,...sets];
 const scoped=all.filter(effect=>effect.status==='scoped');
-const mapped=all.filter(effect=>effect.modifiers.some(modifier=>modifier.companionRuntimeKey));
+const mapped=all.filter(effect=>effect.companionRuntimeUse||effect.modifiers.some(modifier=>modifier.companionRuntimeKey));
 const statusCounts={},companionRuntimeModifiers={};
 for(const effect of all)statusCounts[effect.status]=(statusCounts[effect.status]??0)+1;
 for(const {companionRuntimeKey:key} of mapped.flatMap(effect=>effect.modifiers)){
@@ -37,6 +40,7 @@ const summary={
  statusCounts,
  companionRuntimeEffectLines:mapped.length,
  companionRuntimeModifiers,
+ companionRuntimeUseLines:mapped.filter(effect=>effect.companionRuntimeUse).length,
  liveVerified:0,
 };
 console.log('PET_EQUIPMENT_AUDIT_BEGIN'+JSON.stringify(summary)+'PET_EQUIPMENT_AUDIT_END');

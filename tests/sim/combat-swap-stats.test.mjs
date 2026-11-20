@@ -5,3 +5,20 @@ test('AP and spell power swaps propagate only supported formula deltas',()=>{con
 test('optional global crit and hit swaps use dynamic deltas',()=>{const a={...structuredClone(before),spell:{missPct:10,critPct:10}};a.melee.hitPct=1;a.melee.mainhand.critPct=10;const b=structuredClone(a);b.spell.missPct=9;b.spell.critPct=12;b.melee.hitPct=2;b.melee.mainhand.critPct=13;assert.deepEqual(swapStatModifiers(a,b,{allowCritHit:true,acknowledgeUnverified:true}).map(x=>[x.stat,x.value]),[['spellHitDeltaPct',1],['spellCritDeltaPct',2],['meleeHitDeltaPct',1],['meleeCritDeltaPct',3]]);});
 
 test('explicit ranged swap changes preserve fixed weapon geometry',()=>{const a={...structuredClone(before),ranged:{observedAP:400,hitBonusPct:2,critBonusPct:3,baseSpeedSeconds:3}};const b=structuredClone(a);b.ranged.observedAP+=70;b.ranged.hitBonusPct++;b.ranged.critBonusPct+=2;assert.deepEqual(swapStatModifiers(a,b,{allowRangedHitCrit:true,acknowledgeUnverified:true}).map(x=>[x.stat,x.value]),[['rangedAP',70],['rangedHitDeltaPct',1],['rangedCritDeltaPct',2]]);b.ranged.baseSpeedSeconds=2;assert.throws(()=>swapStatModifiers(a,b,{allowRangedHitCrit:true,acknowledgeUnverified:true}),/Unsupported/);});
+
+test('dual wield rejects a global swing delta when one hand would be overcredited',()=>{
+ const a=structuredClone(before);
+ a.melee.dual=true;
+ a.melee.hitPct=1;
+ a.melee.mainhand.critPct=10;
+ a.melee.offhand={...a.melee.mainhand,hitPct:2};
+ const b=structuredClone(a);
+ const policy={allowCritHit:true,acknowledgeUnverified:true};
+ b.melee.mainhand.critPct=11;
+ assert.throws(()=>swapStatModifiers(a,b,policy),/unequal hand critPct/);
+ b.melee.offhand.critPct=11;
+ b.melee.hitPct=2;
+ assert.throws(()=>swapStatModifiers(a,b,policy),/unequal hand hitPct/);
+ b.melee.offhand.hitPct=3;
+ assert.deepEqual(swapStatModifiers(a,b,policy).map(m=>m.value),[1,1]);
+});

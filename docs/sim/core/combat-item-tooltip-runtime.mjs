@@ -57,9 +57,14 @@ export function parseTimedEquipmentTooltip(raw){
  if(m)return {trigger:'landed',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:['attackPower','rangedAP'].map(stat=>({stat,mode:'flat',value:+m[1]}))}};
  m=s.match(/^Use: Reduces (?:your )?threat (?:generated|caused) by (\d+)% for (\d+) sec(?:onds?)?\.?$/i);
  if(m&&+m[1]<=100)return {trigger:'use',effect:{kind:'aura',durationMs:+m[2]*1000,modifiers:[{stat:'globalThreatFactor',mode:'multiplyPct',value:-Number(m[1])}]}};
+ m=s.match(/^Use: Empowers your pet, increasing pet damage by (\d+)% and increasing pet armor by (\d+)% for (\d+) sec\. This spell will only affect an Imp, Succubus, Voidwalker, or Felhunter\.$/i);
+ if(m)return {trigger:'use',effect:{kind:'aura',recipient:'companion',families:['Imp','Succubus','Voidwalker','Felhunter'],durationMs:+m[3]*1000,modifiers:[{stat:'petDamageFactor',mode:'multiplyPct',value:+m[1]},{stat:'incomingArmourFactor',mode:'multiplyPct',value:+m[2]}]}};
+ if(/^Use: Your pet's next attack is guaranteed to critically strike if that attack is capable of striking critically\.$/i.test(s)){
+  return {trigger:'use',effect:{kind:'aura',recipient:'companion',modifiers:[],guaranteedCrit:{}}};
+ }
  return null;
 }
-export function compileEquipmentTooltips(gear,build,requests=[]){
+export function compileEquipmentTooltips(gear,build,requests=[],{preserveItemCooldown=false}={}){
  if(!Array.isArray(requests))throw Error('Explicit item effect requests required');
  const seen=new Set(),sets=equipmentSetAudit(gear,build).active;
  return requests.map(r=>{
@@ -69,7 +74,44 @@ export function compileEquipmentTooltips(gear,build,requests=[]){
   const key=JSON.stringify(identity);if(seen.has(key))throw Error('Duplicate tooltip effect');seen.add(key);
   const parsed=parseTimedEquipmentTooltip(raw);if(!parsed)throw Error('Unmapped equipment tooltip: '+raw);
   if(r.acknowledgeUnverifiedTiming!==true)throw Error('Explicit research timing acknowledgement required');
-  const compileEffect=raw=>{const effect={...raw};if(effect.kind==='resource-choice'){if(!Object.hasOwn(effect.amounts,r.resource)||r.resource!==({warrior:'rage',rogue:'energy',druid:r.resource} [build.classId]??'mana'))throw Error('Explicit compatible resource choice required');return {kind:'resource',resource:r.resource,amount:effect.amounts[r.resource]};}if(effect.kind==='compound')return {...effect,effects:effect.effects.map(compileEffect)};if(['damage','periodic-damage'].includes(effect.kind)){if(effect.requiresSchool){effect.school=r.school;delete effect.requiresSchool;}if(effect.requiresLeech){if(!['effective','post-mitigation'].includes(r.leechBasis))throw Error('Explicit leech basis required');effect.leech={basis:r.leechBasis,fraction:1};delete effect.requiresLeech;}effect.outcomes=r.outcomes;effect.mitigation=r.mitigation;effect.threat=r.threat??null;if(effect.kind==='periodic-damage'){effect.refresh=r.refresh;effect.tickAtExpiry=r.tickAtExpiry;}}if(effect.kind==='extra-attack')effect.hand=r.hand;if(effect.guaranteedCrit){if(build.classId!=='rogue'||!Number.isSafeInteger(r.durationMs)||r.durationMs<1||!['attempt','landed'].includes(r.consume))throw Error('Explicit Rogue critical charge duration and consumption required');effect.durationMs=r.durationMs;effect.guaranteedCrit={...effect.guaranteedCrit,consume:r.consume};}return effect;};const effect=compileEffect(parsed.effect);
-  return {id:'tooltip:'+key,source:name,provenance:'Imported exact tooltip: '+raw,trigger:parsed.trigger,effect,cooldownMs:r.cooldownMs,...(r.conditions?{conditions:r.conditions}:{}),...(parsed.trigger==='use'?{atMs:r.atMs}:{chance:parsed.chancePerComboPoint!==undefined?0:parsed.chance??r.chance,sources:parsed.sources??r.sources,...(parsed.chancePerComboPoint!==undefined?{chancePerComboPoint:parsed.chancePerComboPoint}:{}),...(parsed.eligibility?{eligibility:parsed.eligibility}:{})}),...(r.sharedGroup?{sharedGroup:r.sharedGroup,sharedCooldownMs:r.sharedCooldownMs}:{})};
+  const compileEffect=definition=>{
+   const effect={...definition};
+   if(effect.kind==='resource-choice'){
+    const resource=({warrior:'rage',rogue:'energy',druid:r.resource}[build.classId]??'mana');
+    if(!Object.hasOwn(effect.amounts,r.resource)||r.resource!==resource)throw Error('Explicit compatible resource choice required');
+    return {kind:'resource',resource:r.resource,amount:effect.amounts[r.resource]};
+   }
+   if(effect.kind==='compound')return {...effect,effects:effect.effects.map(compileEffect)};
+   if(['damage','periodic-damage'].includes(effect.kind)){
+    if(effect.requiresSchool){effect.school=r.school;delete effect.requiresSchool;}
+    if(effect.requiresLeech){
+     if(!['effective','post-mitigation'].includes(r.leechBasis))throw Error('Explicit leech basis required');
+     effect.leech={basis:r.leechBasis,fraction:1};
+     delete effect.requiresLeech;
+    }
+    effect.outcomes=r.outcomes;
+    effect.mitigation=r.mitigation;
+    effect.threat=r.threat??null;
+    if(effect.kind==='periodic-damage'){effect.refresh=r.refresh;effect.tickAtExpiry=r.tickAtExpiry;}
+   }
+   if(effect.kind==='extra-attack')effect.hand=r.hand;
+   const companion=effect.recipient==='companion';
+   if(companion){
+    const pet=build.classOptions?.pet;
+    const eligible=effect.families?build.classId==='warlock'&&effect.families.includes(pet):build.classId==='hunter';
+    if(!pet||pet==='None'||!eligible)throw Error('Equipment requires an eligible companion');
+    delete effect.families;
+   }
+   if(effect.guaranteedCrit){
+    if(!Number.isSafeInteger(r.durationMs)||r.durationMs<1||!['attempt','landed'].includes(r.consume)||(!companion&&build.classId!=='rogue'))throw Error('Explicit equipment critical charge duration and consumption required');
+    const sources=companion?r.criticalSources:effect.guaranteedCrit.sources;
+    if(companion&&(!Array.isArray(sources)||!sources.length||new Set(sources).size!==sources.length||sources.some(source=>typeof source!=='string'||!source.trim())))throw Error('Explicit companion critical attack sources required');
+    effect.durationMs=r.durationMs;
+    effect.guaranteedCrit={sources,consume:r.consume};
+   }
+   return effect;
+  };
+  const effect=compileEffect(parsed.effect);
+  return {id:'tooltip:'+key,...(preserveItemCooldown&&r.set===undefined?{cooldownKey:JSON.stringify([r.itemId,raw])}:{}),source:name,provenance:'Imported exact tooltip: '+raw,trigger:parsed.trigger,effect,cooldownMs:r.cooldownMs,...(r.conditions?{conditions:r.conditions}:{}),...(parsed.trigger==='use'?{atMs:r.atMs}:{chance:parsed.chancePerComboPoint!==undefined?0:parsed.chance??r.chance,sources:parsed.sources??r.sources,...(parsed.chancePerComboPoint!==undefined?{chancePerComboPoint:parsed.chancePerComboPoint}:{}),...(parsed.eligibility?{eligibility:parsed.eligibility}:{})}),...(r.sharedGroup?{sharedGroup:r.sharedGroup,sharedCooldownMs:r.sharedCooldownMs}:{})};
  });
 }

@@ -24,3 +24,16 @@ test('Felstorm refuses fabricated scaling or target rules',()=>{
  assert.throws(()=>validateFelstorm({...model,radius:-10}),/Explicit Felstorm/);
  assert.throws(()=>validateFelstorm({...model,shadowPowerBasis:'guessed'}),/Explicit Felstorm/);
 });
+
+test('Felstorm reads active scoped and pet damage modifiers at pulse time',()=>{
+ const effect=(id,stat,recipient)=>({
+  id,source:id,provenance:'synthetic',trigger:'use',atMs:[1200],cooldownMs:0,
+  effect:{kind:'aura',...(recipient?{recipient}:{}),durationMs:1500,modifiers:[{stat,mode:'multiplyPct',value:100}]},
+ });
+ const equipmentEffects={effects:[
+  effect('pet enhancement','petDamageFactor','companion'),
+  effect('command enhancement','abilityDamageFactor:warlock:felstorm'),
+ ]};
+ const r=createExplicitClassEncounter({...base,equipmentEffects}).run();
+ assert.deepEqual(r.events.filter(e=>e.type==='damage'&&e.source==='Felstorm (physical)'&&e.targetId==='boss').map(e=>e.raw),[50,200,50,50,50,50]);
+});
