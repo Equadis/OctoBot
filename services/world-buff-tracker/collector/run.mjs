@@ -22,7 +22,8 @@ import {createRaidPersistence} from "./raid-persistence.mjs";
 try{process.loadEnvFile();}catch{}
 const profile=getProfile();
 // Load the auction module only after .env is loaded; its legacy configuration is evaluated on import.
-const createAuctionSession=profile.auction?(await import("../dist/pvp-auction-session.js")).createAuctionSession:null;
+const auctionEnabled=Boolean(profile.auction)&&process.env.AUCTION_COLLECTOR_ENABLED==="true";
+const createAuctionSession=auctionEnabled?(await import("../dist/pvp-auction-session.js")).createAuctionSession:null;
 const cfg=loadConfig({...process.env,WOW_ACCOUNT:profile.account,WOW_CHARACTER:profile.character,WOW_REALM:profile.realmName,WOW_LISTENERS:"[]"});
 const log=prefixed(createLogger(cfg.logLevel),profile.key);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -69,7 +70,7 @@ async function session(){
   let world,ended=false,ready=false,info=null,infoTimer=null,lastDmf=0;
   const stops=[],health=new ListenerHealth(profile),watch=new NpcWatch(),nearby=new Map(),names=new Map();
   const chat=profile.chat?createWorldChat({account:profile,config:{pushUrl:url.href,pushToken:token},log,getWorld:()=>world}):null;
-  const ah=profile.auction?createAuctionSession({account:profile,log,getWorld:()=>world}):null;
+  const ah=auctionEnabled?createAuctionSession({account:profile,log,getWorld:()=>world}):null;
   const timeout=setTimeout(()=>finish(Error("World login timeout")),30000);
   function finish(error){if(ended)return;ended=true;clearTimeout(timeout);clearTimeout(infoTimer);for(const stop of stops)stop();chat?.stop();ah?.stop();if(ready)emit("session_offline",{reason:String(error??"closed").slice(0,160)});if(ready&&profile.dmf)emit("dmf_status",{site:profile.dmf,connected:false,queries:watch.asked});if(ready&&profile.buffs){health.disconnected(Date.now(),String(error??"closed"));emit("listener_health",health.snapshot(Date.now(),publisher.stats()));}ready=false;world?.close();s.destroy();error&&!stopping?reject(error):resolve();}
   function presence(){if(!ready||Date.now()-lastDmf<60000)return;for(const entry of nearby.values()){const npc=names.get(entry);if(npc&&isFaireNpc(npc)){lastDmf=Date.now();emit("dmf_sighting",{site:profile.dmf,npc,source:"onsite",confirmed:true});break;}}}
