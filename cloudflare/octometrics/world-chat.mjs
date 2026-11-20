@@ -4,6 +4,13 @@ import {HISTORY_MS,historyPageSize,matchesChat,searchTerms} from "../../docs/wor
 import {analyseRecruitment,classInfo} from "../../docs/world-chat/lfg-catalog.mjs";
 const REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
 const SOURCES={"N'Zoth":["OBPVESW","OBPVEDMFA","OBPVEDMFH"],"Y'Shaarj":["OBPVPSW"],"C'Thun":["OBHCSW"]};
+// Keep a short receipt ledger to pair observations one-to-one across independent listeners.
+const DEDUPE_MS=3000, RECEIPT_TTL=300000;
+const receiptSchema=db=>[
+ db.prepare("CREATE TABLE IF NOT EXISTS world_chat_receipts (realm TEXT NOT NULL,id TEXT NOT NULL,source TEXT NOT NULL,canonical_id TEXT NOT NULL,observed_ms INTEGER NOT NULL,PRIMARY KEY(realm,id))").bind(),
+ db.prepare("CREATE INDEX IF NOT EXISTS world_chat_receipt_match ON world_chat_receipts(realm,canonical_id,source)").bind(),
+ db.prepare("CREATE INDEX IF NOT EXISTS world_chat_receipt_expiry ON world_chat_receipts(observed_ms)").bind()
+];
 const TTL=300000, HISTORY=1800000; // Live poll only; archive retention is separate.
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
 const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
@@ -59,7 +66,7 @@ export async function worldChatRoute(request,env){
        !Array.isArray(payload.messages)||payload.messages.length>20)return reply({error:"invalid public channel batch"},400);
     const guilds=payload.guilds??[];
     if(!Array.isArray(guilds)||guilds.length>10)return reply({error:"invalid guild batch"},400);
-    const statements=[];
+    const statements=receiptSchema(db);
     for(const g of guilds){
       if(!g||typeof g.authorKey!=="string"||!/^[0-9]{1,20}$/.test(g.authorKey)||g.authorKey==="0"||
         typeof g.guild!=="string"||g.guild.length>100||!Number.isSafeInteger(g.time)||g.time<now-120000||g.time>now+5000)
@@ -71,14 +78,25 @@ export async function worldChatRoute(request,env){
     const searchRows=[];
     for(const raw of payload.messages){
       const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
-      statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) VALUES(?,?,?,?,?,?,?)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.storedMessage,Number(l.gm)));
+      // A retry keeps its original receipt; a second observation from the same source
+      // must not consume the same canonical message twice.
+      statements.push(db.prepare(`INSERT OR IGNORE INTO world_chat_receipts(realm,id,source,canonical_id,observed_ms)
+        VALUES(?,?,?,COALESCE((
+          SELECT m.id FROM world_chat_messages m
+          JOIN world_chat_receipts r ON r.realm=m.realm AND r.id=m.id AND r.canonical_id=m.id
+          WHERE m.realm=? AND m.author_key=? AND m.message=? AND m.gm=?
+            AND m.observed_ms BETWEEN ? AND ? AND r.source<>?
+            AND NOT EXISTS(SELECT 1 FROM world_chat_receipts seen WHERE seen.realm=m.realm AND seen.canonical_id=m.id AND seen.source=?)
+          ORDER BY ABS(m.observed_ms-?),m.id LIMIT 1
+        ),?),?)`).bind(payload.realm,l.id,payload.account,payload.realm,l.authorKey,l.storedMessage,Number(l.gm),l.time-DEDUPE_MS,l.time+DEDUPE_MS,payload.account,payload.account,l.time,l.id,l.time));
+      statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_messages(realm,id,observed_ms,author_key,author,message,gm) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM world_chat_receipts WHERE realm=? AND id=? AND canonical_id=id)").bind(payload.realm,l.id,l.time,l.authorKey,l.author,l.storedMessage,Number(l.gm),payload.realm,l.id));
       searchRows.push([payload.realm,l.id,l.message.toLowerCase(),l.time]);
       if(!l.gm)for(const {kind,tag} of listingKinds(l.message).slice(0,3)){
         statements.push(db.prepare("INSERT INTO world_chat_listings(realm,kind,author_key,tag,author,message,observed_ms) VALUES(?,?,?,?,?,?,?) ON CONFLICT(realm,kind,author_key,tag) DO UPDATE SET author=excluded.author,message=excluded.message,observed_ms=excluded.observed_ms WHERE excluded.observed_ms>world_chat_listings.observed_ms").bind(payload.realm,kind,l.authorKey,tag,l.author,l.storedMessage,l.time));
       }
     }
     // One bounded multi-row write keeps the statement/parameter count within D1 limits.
-    if(searchRows.length)statements.push(db.prepare("INSERT OR IGNORE INTO world_chat_search_text(realm,id,message,observed_ms) VALUES "+searchRows.map(()=>"(?,?,?,?)").join(",")).bind(...searchRows.flat()));
+    if(searchRows.length)statements.push(db.prepare("WITH candidates(realm,id,message,observed_ms) AS (VALUES "+searchRows.map(()=>"(?,?,?,?)").join(",")+") INSERT OR IGNORE INTO world_chat_search_text(realm,id,message,observed_ms) SELECT c.realm,c.id,c.message,c.observed_ms FROM candidates c JOIN world_chat_messages m ON m.realm=c.realm AND m.id=c.id").bind(...searchRows.flat()));
     // Heartbeat is sent only after a valid World packet was seen on this connection.
     statements.push(db.prepare("INSERT INTO world_chat_heartbeat(realm,observed_ms) VALUES(?,?) ON CONFLICT(realm) DO UPDATE SET observed_ms=MAX(observed_ms,excluded.observed_ms)").bind(payload.realm,now));
     await db.batch(statements);
@@ -139,6 +157,8 @@ export async function readHistory(url,db,now){
 }
 export async function worldChatCleanup(env){
   await env.DB.batch([
+    ...receiptSchema(env.DB),
+    env.DB.prepare("DELETE FROM world_chat_receipts WHERE observed_ms<?").bind(Date.now()-RECEIPT_TTL),
     env.DB.prepare("DELETE FROM world_chat_messages WHERE observed_ms<?").bind(Date.now()-HISTORY_MS),
     env.DB.prepare("DELETE FROM world_chat_search_text WHERE observed_ms<?").bind(Date.now()-HISTORY_MS),
     env.DB.prepare("DELETE FROM world_chat_listings WHERE observed_ms<?").bind(Date.now()-TTL),
