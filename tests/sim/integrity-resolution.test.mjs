@@ -67,7 +67,11 @@ test('a second learned Trueshot rank is retained as conflicting identity evidenc
 test('Chronicle casts appear as evidence without resolving the learned rank',()=>{
  const q={...queue,identityRows:[{abilityId:'paladin:holy-strike'},{abilityId:'hunter:trueshot-aura'}]};
  const result=integrityResolution(context,q);
- assert.deepEqual(result.identityTasks.map(t=>t.plan.raidCastObservations[0].spellId),[10333,19506]);
+ const [holy,trueshot]=result.identityTasks.map(t=>t.plan.raidCastObservations);
+ assert.deepEqual([...new Set(holy.map(row=>row.spellId))],[10333,10332,1866,2495,680,5569]);
+ assert.deepEqual([...new Set(trueshot.map(row=>row.spellId))],[19506]);
+ assert.equal(holy.filter(row=>row.spellId===10333).reduce((n,row)=>n+row.casts,0),2265);
+ assert.equal(trueshot.reduce((n,row)=>n+row.casts,0),5);
  assert.ok(result.identityTasks.every(t=>t.ranks.every(rank=>rank.observation===null)));
  assert.equal(result.totals.identityBlockers,2);
  assert.equal(result.totals.authenticatedCorrections,0);

@@ -1,15 +1,43 @@
 import {HUNTER_FAMILIES,DEMON_TYPES} from './pet-training-audit.mjs';
 
-const chronicleReport={
- source:'https://octo.chronicleclassic.com/instances/LIGCnEjGyLkG4cXS',
- instanceId:'e4e180a0-3fc7-4069-aa38-512f26e3c907',
- realm:"N'Zoth",instance:'Blackwing Lair',startedAt:'2026-11-20T02:26:28.048Z',
- clientBuild:'7272',clientVersion:'1.18.1',
-};
+function chronicleReport(slug,instanceId,realm,startedAt,instance="Blackwing Lair"){
+ return {source:'https://octo.chronicleclassic.com/instances/'+slug,instanceId,realm,instance,startedAt,
+  clientBuild:'7272',clientVersion:'1.18.1',castStream:'spell_go'};
+}
+const solstice=chronicleReport('LIGCnEjGyLkG4cXS','e4e180a0-3fc7-4069-aa38-512f26e3c907',"N'Zoth",'2026-11-20T02:26:28.048Z');
+const earlierNzoth=chronicleReport('DU_nwbg0KMg5F6Tu','48bb6599-5b19-43a8-8936-7e114af70ec0',"N'Zoth",'2026-11-19T19:31:25.719Z');
+const laterNzoth=chronicleReport('BxyfpdEyw8hyvdL3','959d6508-99c9-4a62-9e3a-b226bfa72d75',"N'Zoth",'2026-11-20T14:02:02.913Z');
+const cthun=chronicleReport('HAme0Cm5IJqEKU3y','c520eeac-bf06-4c04-927a-c9905a90bdee',"C'Thun",'2026-11-19T19:06:31.833Z');
+const deadmines=chronicleReport('c8TGKZ2oYnqtjdGr','1da671cb-e112-4fa1-af17-bed30b2e5be4',"N'Zoth",'2026-10-15T08:55:32.733Z','Deadmines');
+const monasteryCthun=chronicleReport('l9WkN_cB8PTQMEPv','45d4ce53-fafa-459d-9b7a-66c5d45671e3',"C'Thun",'2026-10-05T09:12:53.93Z','Scarlet Monastery');
+const monasteryNzoth=chronicleReport('ZOXW5zhuaMi9dEAv','c9e6cd00-c125-40f2-9a2b-def9de4c0118',"N'Zoth",'2026-08-16T08:54:20.364Z','Scarlet Monastery');
+const earlierMonastery=chronicleReport('JQQPOfYUiW9qWvhq','349f1daf-a010-4ab6-b5de-d64fb803b481',"N'Zoth",'2026-08-05T18:32:55.194Z','Scarlet Monastery');
+const blackfathom=chronicleReport('Q2-PuHyeMzrpZlDB','7e0f3d4b-ee5c-42f3-b34a-04f0153078f1',"C'Thun",'2026-09-27T11:28:43.688Z','Blackfathom Deeps');
+const earlierFarrak=chronicleReport('QT-XQZ0oqk5Ki98R','0793d609-2f3e-4aff-ad0e-f338514961a7',"N'Zoth",'2026-10-22T16:54:03.723Z',"Zul'Farrak");
+const laterFarrak=chronicleReport('z2PipNMNe2gTlxXn','bcba65fc-e935-4c0f-9ed7-a6846639f7f4',"N'Zoth",'2026-11-17T18:24:32.908Z',"Zul'Farrak");
+const laterSeptemberDeadmines=chronicleReport('OwRNF9yDH07WRIZ3','4467fa5f-b06b-478b-a25b-48873d0d8750',"N'Zoth",'2026-09-06T11:44:06.204Z','Deadmines');
+const earlierSeptemberDeadmines=chronicleReport('llcKKrOpSxIzAlEN','a760edd8-de05-4307-9019-0a155974bdb3',"N'Zoth",'2026-09-06T10:39:17.761Z','Deadmines');
 const identityPlans={
  'paladin:holy-strike':{
   name:'Holy Strike',ranks:8,
-  raidCastObservations:[{...chronicleReport,spellId:10333,classId:'paladin',castStream:'spell_go',casts:443,distinctCasters:2,damageEvents:464}],
+  raidCastObservations:[
+   {...solstice,spellId:10333,classId:'paladin',casts:443,distinctCasters:2,reportedCasterLevels:[60],damageEvents:464},
+   {...earlierNzoth,spellId:10332,classId:'paladin',casts:2,distinctCasters:1,reportedCasterLevels:[60]},
+   {...earlierNzoth,spellId:10333,classId:'paladin',casts:732,distinctCasters:5,reportedCasterLevels:[60]},
+   {...laterNzoth,spellId:10333,classId:'paladin',casts:539,distinctCasters:5,reportedCasterLevels:[60]},
+   {...cthun,spellId:10333,classId:'paladin',casts:30,distinctCasters:3,reportedCasterLevels:[60]},
+   {...deadmines,spellId:1866,classId:'paladin',casts:249,distinctCasters:1,reportedCasterLevels:[25]},
+   {...laterSeptemberDeadmines,spellId:1866,classId:'paladin',casts:17,distinctCasters:1,reportedCasterLevels:[21]},
+   {...earlierSeptemberDeadmines,spellId:1866,classId:'paladin',casts:265,distinctCasters:1,reportedCasterLevels:[21]},
+   {...monasteryCthun,spellId:2495,classId:'paladin',casts:6,distinctCasters:1,reportedCasterLevels:[50]},
+   {...monasteryNzoth,spellId:680,classId:'paladin',casts:1,distinctCasters:1,reportedCasterLevels:[48]},
+   {...monasteryNzoth,spellId:2495,classId:'paladin',casts:3,distinctCasters:2,reportedCasterLevels:[39,48]},
+   {...earlierMonastery,spellId:680,classId:'paladin',casts:2,distinctCasters:1,reportedCasterLevels:[35]},
+   {...earlierMonastery,spellId:2495,classId:'paladin',casts:2,distinctCasters:1,reportedCasterLevels:[40]},
+   {...blackfathom,spellId:680,classId:'paladin',casts:199,distinctCasters:1,reportedCasterLevels:[30]},
+   {...earlierFarrak,spellId:5569,classId:'paladin',casts:119,distinctCasters:1,reportedCasterLevels:[46]},
+   {...laterFarrak,spellId:10333,classId:'paladin',casts:521,distinctCasters:1,reportedCasterLevels:[60]},
+  ],
   published:[
    {source:'https://forge.octowow.st/paladin',kind:'class-guide',rankCount:8,firstLevel:4,lastLevel:60,cooldownMs:6000,endpointManaCosts:[5,90]},
    {source:'https://octowow.st/forum/viewtopic.php?t=20',kind:'official-hotfix',date:'2026-04-29',rank:1,trainable:true},
@@ -22,7 +50,10 @@ const identityPlans={
  },
  'hunter:trueshot-aura':{
   name:'Trueshot Aura',ranks:1,reviewUpToRank:3,
-  raidCastObservations:[{...chronicleReport,spellId:19506,classId:'hunter',castStream:'spell_go',casts:4,distinctCasters:3,explicitCasterAuraEvents:4}],
+  raidCastObservations:[
+   {...solstice,spellId:19506,classId:'hunter',casts:4,distinctCasters:3,reportedCasterLevels:[60],explicitCasterAuraEvents:4},
+   {...earlierNzoth,spellId:19506,classId:'hunter',casts:1,distinctCasters:1,reportedCasterLevels:[60]},
+  ],
   published:[
    {source:'https://octowow.st/index.php/hunter',kind:'guide-removal-claim'},
    {source:'https://octowow.st/db/?spell=19506',kind:'legacy-rank-record',spellId:19506,rank:1,level:40,flatAttackPower:50},
