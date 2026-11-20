@@ -218,3 +218,6 @@ Explicit scheduled attempt consumes mana and starts its cooldown only when not c
 
 ## Exact equipment ability hit/crit and periodic timing
 Direct ordinary physical and complete spell outcome tables accept exact unconditioned ability hit/crit percentages using existing redistribution kernels. Ordinary periodic effects accept duration/interval adjustments only when they preserve integral tick schedules. Non-integral schedules, incomplete outcome bins and special paths are not silently promoted. Live tick rounding and scoped set coefficients remain unverified.
+
+## Scoped absorption and threat equipment
+Exact unconditioned ability modifiers now support formula-based absorption capacity and duration, existing ordinary threat multipliers, and generic starting mana/rage/energy percentage reductions. Unsupported special threat and absorb paths remain separate; live stacking order is not inferred.
