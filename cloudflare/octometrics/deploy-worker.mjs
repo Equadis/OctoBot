@@ -35,13 +35,23 @@ const keepNames=settings.bindings.map(b=>b.name).sort();
 const before=await api(path+"/deployments");
 console.log("Existing deployment:",before.deployments?.[0]?.id??"unknown");
 const query=async sql=>api(db+"/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sql})});
-const tables=await query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('metric_events','ah_listings','pvp_ah_listings','ah_daily','pvp_ah_daily')");
-if(!Array.isArray(tables)||tables[0]?.results?.length!==5)throw Error("Existing production schema not verified");
-const migration=await readFile(new URL("migrations/0012_auction_seller_names.sql",folder),"utf8");
-await query(migration);
-const verified=await query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('ah_seller_names','pvp_ah_seller_names')");
-if(verified[0]?.results?.length!==2)throw Error("Seller schema not verified");
-console.log("Both realm seller caches exist.");
+const variable=name=>settings.bindings.find(binding=>binding.name===name&&binding.type==='plain_text')?.text;
+const snapshotMode=variable('AUCTION_SNAPSHOT_MODE')==='true';
+if(snapshotMode){
+ if(!settings.bindings.some(binding=>binding.name==='AUCTION_SNAPSHOTS'&&binding.type==='r2_bucket'))throw Error('Snapshot mode requires the existing AUCTION_SNAPSHOTS R2 binding');
+ if(!settings.bindings.some(binding=>binding.name==='AUCTION_ADMIN_TOKEN'))throw Error('Snapshot mode requires an existing AUCTION_ADMIN_TOKEN secret');
+ if(variable('AUCTION_COLLECTION_PAUSED')!=='true'&&process.env.OCTOMETRICS_ALLOW_AUCTION_LIVE!=='true'){
+  throw Error('Pause Auction House collection for the first snapshot deployment or explicitly acknowledge a live update');
+ }
+}else{
+ const tables=await query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('metric_events','ah_listings','pvp_ah_listings','ah_daily','pvp_ah_daily')");
+ if(!Array.isArray(tables)||tables[0]?.results?.length!==5)throw Error("Existing production schema not verified");
+ const migration=await readFile(new URL("migrations/0012_auction_seller_names.sql",folder),"utf8");
+ await query(migration);
+ const verified=await query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('ah_seller_names','pvp_ah_seller_names')");
+ if(verified[0]?.results?.length!==2)throw Error("Seller schema not verified");
+ console.log("Both realm seller caches exist.");
+}
 // Inherit every existing binding by name. Strict mode rejects missing inheritance.
 const metadata={main_module:"cloudflare/octometrics/worker.mjs",compatibility_date:settings.compatibility_date,compatibility_flags:settings.compatibility_flags??[],bindings:settings.bindings.map(b=>({type:"inherit",name:b.name})),annotations:{"workers/message":"OctoBot "+(process.env.GITHUB_SHA??"manual").slice(0,12)}};
 for(const key of ["limits","logpush","observability","placement","tags","tail_consumers","usage_model","cache_options"])if(settings[key]!=null)metadata[key]=settings[key];
@@ -68,7 +78,10 @@ await api(path+"?bindings_inherit=strict",{method:"PUT",body:parts});
 const after=await api(path+"/settings");
 if(JSON.stringify(after.bindings.map(b=>b.name).sort())!==JSON.stringify(keepNames))throw Error("Post-deploy binding check failed");
 console.log("Existing bindings preserved.");
-for(const realm of ["N'Zoth","Y'Shaarj"]){
+const health=await fetch('https://octometrics.eqvoice.workers.dev/health',{signal:AbortSignal.timeout(20000)});
+if(!health.ok||!(await health.json()).ok)throw Error('OctoMetrics health check failed');
+const auctionPaused=variable('AUCTION_API_PAUSED')==='true'||variable('AUCTION_PUBLIC_PAUSED')==='true';
+for(const realm of auctionPaused?[]:["N'Zoth","Y'Shaarj"]){
  const baseUrl="https://octometrics.eqvoice.workers.dev/api/auction/";
  const suffix="?realm="+encodeURIComponent(realm);
  const get=async resource=>{
@@ -77,6 +90,7 @@ for(const realm of ["N'Zoth","Y'Shaarj"]){
   return r.json();
  };
  const summary=await get("summary");
+ if(snapshotMode&&!summary.has_catalogue)continue;
  const items=await get("items");
  if(items.items?.length&&!Object.hasOwn(items.items[0],"average_samples"))throw Error("New price contract missing");
  console.log(realm+": "+(summary.auction_count??0)+" listings; "+(items.items??[]).filter(i=>i.historical_avg!=null).length+" of "+(items.items??[]).length+" sampled items have averages");

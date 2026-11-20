@@ -1,3 +1,4 @@
+import {auctionSnapshotRoute,auctionSnapshotCleanup} from "./auction-snapshot.mjs";
 import {buildItemsQuery} from "./auction-query.mjs";
 /* Auction House ingestion and read API.
  * Always publish from the latest COMPLETE scan; never expose partial pages.
@@ -251,6 +252,7 @@ export async function auctionRoute(request,env){
  if(env.AUCTION_API_PAUSED==='true')return bad('Auction House temporarily paused to protect database budget',503);
  const realm=url.searchParams.get('realm')??"N'Zoth";
  if(realm!=="N'Zoth"&&realm!=="Y'Shaarj")return bad('auction realm unavailable',400);
+ if(env.AUCTION_SNAPSHOT_MODE==='true')return auctionSnapshotRoute(request,url,env,realm);
  env={...env,DB:auctionNamespace(env.DB,realm),AUCTION_REALM:realm};
  if(request.method==='POST'){
    const action=url.pathname.slice('/api/auction/scan/'.length);
@@ -282,7 +284,9 @@ export async function auctionRoute(request,env){
  return bad('method not allowed',405);
 }
 export async function auctionCleanup(env){
- if(env.AUCTION_API_PAUSED==='true')return;
+ if(env.AUCTION_API_PAUSED==='true'||env.AUCTION_MAINTENANCE_PAUSED==='true')return;
+ if(env.AUCTION_SNAPSHOT_MODE==='true')return auctionSnapshotCleanup(env);
+
  await cleanupRealm(env.DB,env.AUCTION_PRECOMPUTED==='true');
  // PvP tables are created by migration 0011; deploy the migration before this Worker.
  await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"),env.AUCTION_PRECOMPUTED==='true');

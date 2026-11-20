@@ -1,5 +1,5 @@
-/* OctoBot Auction House: no mock records and no frontend secrets. Filtering, sorting and pagination happen on the server,
- * so result counts and pages always cover every matching item, not just the rows currently loaded. */
+/* OctoBot Auction House. Item filters use the versioned catalogue when available. */
+import {parseSnapshotQuery,querySnapshot} from "./snapshot-query.mjs?v=1";
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
 import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261120-hourly';
@@ -52,11 +52,35 @@ function updateTimeNode(node,now=Date.now()){const ms=node.dataset.duration===''
 function timeNode(ms,capturedAt){const node=el('span',null,'ah-auction-time');node.dataset.duration=ms??'';node.dataset.capturedAt=capturedAt??'';updateTimeNode(node);return node;}
 function tickAuctionTimes(){const now=Date.now();for(const node of document.querySelectorAll('.ah-auction-time[data-duration]'))updateTimeNode(node,now);}
 const moneyTd=(row,n)=>{const c=el('td');c.append(moneyNode(n));row.append(c);return c;};
-async function request(path){
+async function request(path,signal){
   const url=new URL(API+path);url.searchParams.set('realm',REALM);
-  const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+  const r=await fetch(url,{signal,headers:{Accept:'application/json'}});
   if(!r.ok)throw new Error('API HTTP '+r.status);
   return r.json();
+}
+let catalogueRequest=null, itemRequest=null, favouriteRequest=null;
+async function catalogueFor(scanId){
+  if(catalogueRequest?.scanId!==scanId){
+    const promise=request('/api/auction/catalogue?scan_id='+encodeURIComponent(scanId));
+    catalogueRequest={scanId,promise};
+    promise.catch(()=>{if(catalogueRequest?.promise===promise)catalogueRequest=null;});
+  }
+  return catalogueRequest.promise;
+}
+async function requestItems(params,signal){
+  const scan=state.scan;
+  const query=parseSnapshotQuery(params);
+  if(scan.catalogue&&scan.id&&!query.error&&!query.listingFiltered){
+    try{
+      const catalogue=await catalogueFor(scan.id);
+      if(signal.aborted)throw signal.reason;
+      return querySnapshot(catalogue,query,{});
+    }catch(error){
+      if(signal.aborted)throw error;
+    }
+  }
+  if(scan.catalogue&&scan.id)params.set('scan_id',scan.id);
+  return request('/api/auction/items?'+params,signal);
 }
 const qualityClass=q=>{const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';};
 const itemName=item=>displayItemName(item);
@@ -215,12 +239,12 @@ async function fillDetail(cell,item,unavailable){
   const v=encodeURIComponent(item.variant||'');
   const id=encodeURIComponent(item.item_id);
   try{
-    const [listings,history]=await Promise.all([unavailable?Promise.resolve({listings:[]}):request('/api/auction/item/'+id+'?variant='+v),request('/api/auction/history/'+id+'?variant='+v)]);
-    const days=Array.isArray(history.history)?history.history:[];
+    const listings=unavailable?{listings:[]}:await request('/api/auction/item/'+id+'?variant='+v);
     const stats=el('dl',null,'ah-stats');
     if(!unavailable){
       stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
-      stats.append(stat('Lowest stack buyout',item.stack_buyout==null||!(item.stack_buyout>0)?'No buyout listed':moneyNode(item.stack_buyout)));
+      const lowestStack=item.cheapest_stack_buyout??item.stack_buyout;
+      stats.append(stat('Lowest stack buyout',lowestStack>0?moneyNode(lowestStack):'No buyout listed'));
       stats.append(stat('Available',count(item.quantity)));
       stats.append(stat('Avg. price',item.historical_avg==null?'Not enough history':moneyNode(item.historical_avg)));
       stats.append(stat('Market %',marketNode(item.market_pct)));
@@ -247,19 +271,33 @@ async function fillDetail(cell,item,unavailable){
     parts.push(dbLink);
     if(state.listingFiltered&&!unavailable)parts.push(el('p','Totals above reflect your active price, stack and time filters. The listings below are every auction for this item.','ah-muted'));
     // price history
-    const hist=section('Price history',true);
-    const chart=buildChart(document,days,item.historical_avg??null);
-    const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
-    const summary=el('div',null,'ah-history-summary');
-    if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
-    if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the current average-price reference.':'.'),'ah-chart-note'));}
-    else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
-    if(!chart&&values.length)hist.body.append(summary);
-    if(days.length){
-      const raw=section('Daily observations ('+days.length+')',false);
-      raw.body.append(simpleTable(['Day','Lowest unit buyout','Quantity','Listings'],days.map(d=>[d.day,moneyNode(d.representative_unit),count(d.quantity),count(d.listings)])));
-      hist.body.append(raw.d);
-    }
+    const hist=section('Price history',false);
+    let historyLoaded=false;
+    hist.d.addEventListener('toggle',async()=>{
+      if(!hist.d.open||historyLoaded)return;
+      historyLoaded=true;
+      hist.body.replaceChildren(el('p','Loading price history…','ah-muted'));
+      try{
+        const history=await request('/api/auction/history/'+id+'?variant='+v);
+        const days=Array.isArray(history.history)?history.history:[];
+        hist.body.replaceChildren();
+        const chart=buildChart(document,days,item.historical_avg??null);
+        const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
+        const summary=el('div',null,'ah-history-summary');
+        if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
+        if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the current average-price reference.':'.'),'ah-chart-note'));}
+        else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
+        if(!chart&&values.length)hist.body.append(summary);
+        if(days.length){
+          const raw=section('Daily observations ('+days.length+')',false);
+          raw.body.append(simpleTable(['Day','Lowest unit buyout','Quantity','Listings'],days.map(d=>[d.day,moneyNode(d.representative_unit),count(d.quantity),count(d.listings)])));
+          hist.body.append(raw.d);
+        }
+      }catch{
+        historyLoaded=false;
+        hist.body.replaceChildren(el('p','Price history is unavailable. Close and reopen to retry.','ah-muted'));
+      }
+    });
     parts.push(hist.d);
     // individual auctions
     if(!unavailable){
@@ -297,6 +335,8 @@ function renderRows(data,{favouritesOnlyEmpty=false}={}){
 }
 async function refreshItems(){
   const id=++state.queryId;
+  itemRequest?.abort();
+  const controller=itemRequest=new AbortController();
   const errors=validate(state.filters);
   renderErrors(errors);
   if(Object.keys(errors).length)return;
@@ -304,16 +344,18 @@ async function refreshItems(){
   const params=buildParams(state.filters,{limit:state.limit,offset:state.page*state.limit,keys:state.filters.favourites_only?apiKeys(state.fav):null});
   busy(1);
   try{
-    const data=await request('/api/auction/items?'+params);
+    const data=await requestItems(params,controller.signal);
     if(id!==state.queryId)return;
     if(!data.items.length&&state.page>0&&data.total>0){state.page=Math.max(0,Math.ceil(data.total/state.limit)-1);return refreshItems();}
     renderRows(data);
     state.fav=refreshSnapshots(state.fav,data.items);
-  }catch{if(id===state.queryId)renderRows({items:[],total:0,has_more:false});}
+  }catch{if(id===state.queryId)note('Auction House results could not be refreshed.');}
   finally{busy(-1);}
 }
 async function refreshFavourites(){
   const id=++state.favId,body=$('fav-body');
+  favouriteRequest?.abort();
+  const controller=favouriteRequest=new AbortController();
   $('fav-count').textContent=String(state.fav.length);
   if(!state.fav.length){
     body.replaceChildren(el('p','No favourites yet. Select the star beside any item to track it here, with its latest price, quantity, market % and trend. Favourites are saved in this browser.','ah-muted ah-empty-fav'));
@@ -321,7 +363,7 @@ async function refreshFavourites(){
   }
   let data=null;
   state.favFailed=false;
-  try{data=await request('/api/auction/items?'+buildParams({...DEFAULTS,...state.favSort},{limit:100,keys:apiKeys(state.fav)}));}catch{state.favFailed=true;}
+  try{data=await requestItems(buildParams({...DEFAULTS,...state.favSort},{limit:100,keys:apiKeys(state.fav)}),controller.signal);}catch{if(id===state.favId)state.favFailed=true;}
   if(id!==state.favId)return;
   const wasFiltered=state.listingFiltered;
   state.listingFiltered=false;
@@ -350,10 +392,13 @@ function busy(delta){
   const on=state.busy>0,button=$('refresh');
   button.disabled=on;button.classList.toggle('loading',on);button.setAttribute('aria-busy',String(on));
 }
-async function refreshSummary(first){
+async function refreshSummary(){
   try{
-    const [s,st]=await Promise.all([request('/api/auction/summary'),request('/api/auction/scan-status').catch(()=>null)]);
-    state.scan={completedAt:s.completed_at,scanning:Boolean(st?st.scanning:s.scanning),startedAt:st?.started_at??null,collectorStatus:st?.collector_status??s.collector_status??null,pages:(st?.pages_done??s.pages_done??0)+' / '+(st?.pages_expected??s.pages_expected??'?')+' pages'};
+    const s=await request('/api/auction/summary');
+    const st=Object.hasOwn(s,'has_catalogue')?s:await request('/api/auction/scan-status').catch(()=>s);
+    state.scan={id:s.scan_id??s.completed_at,catalogue:s.has_catalogue===true,completedAt:s.completed_at,
+      scanning:Boolean(st.scanning),startedAt:st.started_at??null,collectorStatus:st.collector_status??null,
+      pages:(st.pages_done??0)+' / '+(st.pages_expected??'?')+' pages'};
     $('last-scan').textContent=s.completed_at?'Last scan: '+dateTime(s.completed_at):'No completed scan';
     renderScan();
     $('auction-count').textContent=count(s.auction_count);
@@ -375,9 +420,9 @@ function renderScan(){
   const last=$('last-scan');if(last)last.className=lastScanClass(sc.completedAt,now)||'ah-time-yellow';
   status.title=sc.collectorStatus==='STALE'?'Scan upload has not reported progress recently':sc.scanning?sc.pages:'';
 }
-async function refreshAll(first=false){
+async function refreshAll(){
   busy(1);
-  try{await refreshSummary(first);await Promise.all([refreshItems(),refreshFavourites()]);}
+  try{await refreshSummary();await Promise.all([refreshItems(),refreshFavourites()]);}
   finally{busy(-1);}
 }
 
@@ -468,12 +513,14 @@ function bind(){
 populate();bind();renderSaved();
 state.filters.q=auctionSearchFromURL(location.href);
 writeFilters();
-await refreshAll(true);
+await refreshAll();
 let polling=false;
-setInterval(async()=>{
+async function pollSnapshot(){
   if(document.hidden||polling)return;
   polling=true;
-  try{const before=state.scan.completedAt;await refreshSummary(false);if(state.scan.completedAt!==before)await Promise.all([refreshItems(),refreshFavourites()]);}finally{polling=false;}
-},60_000);
+  try{const before=state.scan.id;await refreshSummary();if(state.scan.id!==before)await Promise.all([refreshItems(),refreshFavourites()]);}finally{polling=false;}
+}
+setInterval(pollSnapshot,60_000);
+document.addEventListener('visibilitychange',pollSnapshot);
 setInterval(()=>{renderScan();tickAuctionTimes();},1000);                       // keep scan duration and last-scan age current
 // Summary polling above replaces repeated full item and favourites refreshes.

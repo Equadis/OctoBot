@@ -1,5 +1,8 @@
 /** Auction hooks for one account-owned metrics session; no AuthClient or second login. */
 import {randomBytes} from "node:crypto";
+import {gzip} from "node:zlib";
+import {promisify} from "node:util";
+import {utcScanSlot,AUCTION_SCAN_DURATION_MS} from "./auction-schedule.js";
 import type {WorldClient,WorldClientHandlers} from "./net/world-client.js";
 import {NpcWatch} from "./darkmoon/npc-watch.js";
 import {parseUpdateObject} from "./protocol/update-object.js";
@@ -19,9 +22,8 @@ const positiveInt=(raw:string|undefined,fallback:number,min:number,max:number)=>
  return n;
 };
 const liveItemQueries=process.env.AUCTION_LIVE_ITEM_QUERIES==="true";
-const intervalMs=positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,0,0,600000);
-const uploadIntervalMs=positiveInt(process.env.AUCTION_UPLOAD_INTERVAL_MS,500,250,60000);
-const nextUtcHour=(now=Date.now())=>Math.floor(now/3600000)*3600000+3600000;
+const intervalMs=Math.max(250,positiveInt(process.env.AUCTION_QUERY_INTERVAL_MS,500,0,600000));
+const gzipPayload=promisify(gzip);
 const queryTimeoutMs=positiveInt(process.env.AUCTION_QUERY_TIMEOUT_MS,30000,5000,180000);
 const maxPages=positiveInt(process.env.AUCTION_MAX_PAGES,2000,1,20000);
 const token=process.env.AUCTION_PUSH_TOKEN?.trim();
@@ -34,19 +36,23 @@ function auctionUrl(suffix:string):URL {
  const url=new URL(uploadUrl);url.pathname=url.pathname.replace(/\/scan\/?$/,"")+suffix;return url;
 }
 class UploadError extends Error{constructor(message:string,readonly status:number,readonly retryAfterMs=0){super(message);}}
-async function publish(action:"start"|"page"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
+async function publish(action:"claim"|"progress"|"complete"|"fail"|"metadata"|"seller-names",payload:Record<string,unknown>):Promise<void>{
  if(!token)throw new Error("AUCTION_PUSH_TOKEN missing");
- for(let attempt=0;attempt<6;attempt++){
+ const json=JSON.stringify(payload);
+ const packed=action==="complete"?await gzipPayload(json):null;
+ const headers={"authorization":"Bearer "+token,"content-type":"application/json",...(packed?{"content-encoding":"gzip"}:{})};
+ const attempts=action==="claim"||action==="progress"?2:6;
+ for(let attempt=0;attempt<attempts;attempt++){
   try{
    const response=await fetch(auctionUrl("/scan/"+action),{
-     method:"POST",headers:{"authorization":"Bearer "+token,"content-type":"application/json"},
-     body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)
+     method:"POST",headers,body:packed?new Uint8Array(packed):json,
+     signal:AbortSignal.timeout(action==="complete"?90000:action==="claim"?3000:10000)
    });
    if(response.ok)return;
    throw new UploadError("Auction ingestion "+action+" HTTP "+response.status+" "+(await response.text()).slice(0,180),response.status,Math.min(30000,Math.max(0,Number(response.headers.get("retry-after"))*1000||0)));
   }catch(error){
    if(error instanceof UploadError&&![408,425,429].includes(error.status)&&error.status<500)throw error;
-   if(attempt===5)throw error;
+   if(attempt===attempts-1)throw error;
    await sleep(Math.max(error instanceof UploadError?error.retryAfterMs:0,Math.min(30000,2000*2**attempt))+Math.floor(Math.random()*1000));
   }
  }
@@ -61,7 +67,7 @@ async function resolveMissingMetadata(scanId:string,ids:Set<number>,log:Logger,g
  // if its read endpoint is unavailable, without disrupting the scan.
  try{
   const url=auctionUrl(gameLookup?"/incomplete-metadata":"/missing-metadata");
-  const response=await fetch(url,{signal:AbortSignal.timeout(6000)});
+  const response=await fetch(url,{headers:{authorization:"Bearer "+token},signal:AbortSignal.timeout(6000)});
   if(response.ok){
    const result=await response.json() as {scan_id?:string;items?:{item_id:number}[]};
    if(result.scan_id===scanId&&Array.isArray(result.items))ids=new Set(result.items.map(row=>row.item_id));
@@ -113,7 +119,7 @@ async function cachedMetadata(log:Logger):Promise<ReadonlyMap<number,AuctionItem
 }
 
 type Pending<T>={resolve:(value:T)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>};
-let nextAttemptAt=nextUtcHour();
+let lastAttemptedSlot=-1;
 export function pvpAuctionEligible(account:{account:string;realmName:string}, env:NodeJS.ProcessEnv=process.env):boolean {
  return account.account==="OBPVPSW"&&account.realmName==="Y'Shaarj"&&env.AUCTION_COLLECTOR_ENABLED==="true"&&env.AUCTION_RULES_APPROVED==="true"&&Boolean(env.AUCTION_PUSH_TOKEN?.trim());
 }
@@ -128,7 +134,8 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
  let pendingQuery:Pending<AuctionResult>|null=null;
  let pendingItem:{id:number;resolve:(reply:ItemTemplateReply|null)=>void;timer:ReturnType<typeof setTimeout>}|null=null;
  let pendingHello:ReturnType<typeof setTimeout>|null=null;
- let finished=false,started=false,scanId="",lastQuery=0,busy=false;
+ let finished=false,lastQuery=0,busy=false;
+ let claim:{id:string;slot:number;startedAt:string}|null=null;
  let auctioneerGuid:bigint|null=null;
  let ticker:ReturnType<typeof setInterval>|null=null;
  const watchers=new NpcWatch(120);
@@ -141,13 +148,13 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
   if(pendingQuery){const p=pendingQuery;pendingQuery=null;clearTimeout(p.timer);p.reject(new Error("PvP session stopped"));}
   if(pendingItem){const p=pendingItem;pendingItem=null;clearTimeout(p.timer);p.resolve(null);}
  };
- const query=async(guid:bigint,offset:number):Promise<AuctionResult>=>{
+ const query=async(guid:bigint,offset:number,deadline:number):Promise<AuctionResult>=>{
   const elapsed=Date.now()-lastQuery;
   if(lastQuery&&elapsed<intervalMs)await sleep(intervalMs-elapsed);
-  if(finished)throw new Error("Auction collector stopping");
+  if(finished||Date.now()>=deadline)throw new Error("Auction scan stopped or UTC slot expired");
   if(pendingQuery)throw new Error("Auction query overlap blocked");
   return new Promise<AuctionResult>((resolve,reject)=>{
-   const timer=setTimeout(()=>{pendingQuery=null;reject(new Error("Auction page response timeout; do not misassociate late reply"));world.close();},queryTimeoutMs);
+   const timer=setTimeout(()=>{pendingQuery=null;reject(new Error("Auction page response timeout; do not misassociate late reply"));world.close();},Math.min(queryTimeoutMs,deadline-Date.now()));
    pendingQuery={resolve,reject,timer};
    lastQuery=Date.now();
    try{world.auctionList(guid,offset);}catch(error){clearTimeout(timer);pendingQuery=null;reject(error instanceof Error?error:new Error(String(error)));}
@@ -161,62 +168,74 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
    try{world.queryItemTemplate(id);}catch{clearTimeout(timer);pendingItem=null;resolve(null);}
   });
  };
- const run=async(guid:bigint):Promise<void>=>{
-   const catalogue=await cachedMetadata(log);
-   if(finished)throw new Error('Auction session stopped');
-   started=false;
-   const missingIds=new Set<number>();
-   const startedAt=new Date().toISOString();
-   scanId=(auctionRealm==="N\u0027Zoth"?"ahl_":"ahl_pvp_")+Date.now().toString(36)+"_"+randomBytes(6).toString("hex");
-   const cursor=new AuctionScanCursor(true);
-   try{
-    // Do not declare a scan started until the server actually replies to the first query.
-    while(cursor.page<maxPages){
-      const page=cursor.page,offset=cursor.retrieved;
-      const sentAt=Date.now();
-      const response=await query(guid,offset);
-      const responseMs=Date.now()-sentAt;
-      cursor.accept(response); // Live AH counts drift; allow offset shifts, deduplicate IDs during ingestion.
-      if(page===0){
-       await publish("start",{scan_id:scanId,started_at:startedAt,reported_total:cursor.total});
-       started=true;
-      }
-      const items=response.auctions.map((row:AuctionRow)=>{
-       const info=recoveredMetadata.get(row.item_id)??catalogue.get(row.item_id);
-       if(!info)missingIds.add(row.item_id);
-       return {
-        auction_id:row.auction_id,item_id:row.item_id,variant:row.variant,quantity:row.quantity,
-        item_name:info?.item_name??null,quality:info?.quality??null,icon_url:info?.icon_url??null,
-        item_level:info?.item_level??null,req_level:info?.req_level??null,class_id:info?.class_id??null,
-        subclass_id:info?.subclass_id??null,slot_id:info?.slot_id??null,
-        start_bid:row.start_bid,current_bid:row.current_bid,min_next_bid:row.min_next_bid,
-        buyout:row.buyout,owner_guid:row.owner_guid,time_left_ms:row.time_left_ms,
-        captured_at:row.captured_at
-       };
-      });
-      await publish("page",{scan_id:scanId,page,items,response_ms:responseMs});
-      await sleep(uploadIntervalMs);
-      if(page===0||cursor.page%20===0||cursor.complete)log.info("Auction scan "+scanId+": "+cursor.retrieved+"/"+cursor.latestTotal+" rows traversed; page "+cursor.page+" in "+responseMs+"ms");
-      if(cursor.complete)break;
-    }
-    if(!cursor.complete)throw new Error("Auction scan exceeded AUCTION_MAX_PAGES or ended early");
-    await publish("complete",{scan_id:scanId,completed_at:new Date().toISOString(),expected_pages:cursor.page,reported_total:cursor.total});
-    
-    await resolveMissingMetadata(scanId,missingIds,log,liveItemQueries?queryItem:undefined);
-    await resolveAuctionSellers({url:auctionUrl("/missing-sellers"),token,scanId,resolve:guid=>current().resolveName(guid,3000),publish:payload=>publish("seller-names",payload),log,active:()=>!finished&&Boolean(getWorld()?.isReady)});
-    log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+cursor.ids.size+" unique IDs, "+cursor.page+" pages, "+(Date.now()-Date.parse(startedAt))+"ms; listing totals can change during traversal");
-   }catch(error){
-    if(started)try{await publish("fail",{scan_id:scanId,reason:(error instanceof Error?error.message:String(error)).slice(0,170)})}catch(e){log.warn("Failed to record partial scan failure");}
-    throw error;
-   }
+ const recordFailure=async(scanId:string,error:unknown)=>{
+  const reason=(error instanceof Error?error.message:String(error)).slice(0,170);
+  try{await publish("fail",{scan_id:scanId,reason});}
+  catch{log.warn("Could not record failed auction scan "+scanId);}
+  log.warn("Auction scan failed: "+reason);
  };
-
+ const run=async(guid:bigint,slot:number,scanId:string,startedAt:string):Promise<void>=>{
+   const cataloguePromise=cachedMetadata(log);
+   const cursor=new AuctionScanCursor(true);
+   const listings=new Map<number,AuctionRow>();
+   const deadline=slot+AUCTION_SCAN_DURATION_MS;
+   let lastProgress=0, finalPageCount=0;
+   try{
+    while(cursor.page<maxPages){
+      const response=await query(guid,cursor.retrieved,deadline);
+      cursor.accept(response);
+      finalPageCount=response.auctions.length;
+      for(const row of response.auctions)listings.set(row.auction_id,row);
+      if(listings.size>60000)throw new Error("Auction traversal exceeded the 60,000 listing upload limit");
+      if(cursor.complete)break;
+      if(Date.now()-lastProgress>=30000){
+       lastProgress=Date.now();
+       try{
+        await publish("progress",{scan_id:scanId,pages_done:cursor.page,pages_expected:Math.max(1,Math.ceil((cursor.latestTotal??0)/50))});
+       }catch(error){log.warn("Auction progress update unavailable: "+String(error));}
+      }
+    }
+    if(!cursor.complete||finished||Date.now()>=deadline)throw new Error("Auction scan ended before completing traversal");
+    const completedAt=new Date().toISOString();
+    const catalogue=await cataloguePromise;
+    if(finished||Date.now()>=deadline)throw new Error("Auction scan expired before upload");
+    const metadata:Record<number,AuctionItemMetadata>={};
+    const missingIds=new Set<number>();
+    for(const row of listings.values()){
+     if(metadata[row.item_id]||missingIds.has(row.item_id))continue;
+     const info=recoveredMetadata.get(row.item_id)??catalogue.get(row.item_id);
+     if(info)metadata[row.item_id]=info;
+     else missingIds.add(row.item_id);
+    }
+    await publish("complete",{scan_id:scanId,started_at:startedAt,completed_at:completedAt,expected_pages:cursor.page,
+     reported_total:cursor.total,final_total:cursor.latestTotal,traversed:cursor.retrieved,final_page_count:finalPageCount,
+     items:[...listings.values()].map(({enchant_id,random_property_id,suffix_factor,...row})=>({...row,owner_guid:row.owner_guid==="0"?null:row.owner_guid})),metadata});
+    await resolveMissingMetadata(scanId,missingIds,log,liveItemQueries?queryItem:undefined);
+    await resolveAuctionSellers({url:auctionUrl("/missing-sellers"),token,scanId,
+     resolve:guid=>current().resolveName(guid,3000),publish:payload=>publish("seller-names",payload),log,
+     active:()=>!finished&&Boolean(getWorld()?.isReady)});
+    log.info("Auction live traversal completed: "+cursor.retrieved+" rows, "+listings.size+" unique IDs, "+cursor.page+" pages");
+   }catch(error){await recordFailure(scanId,error);}
+ };
  const attempt=()=>{
-  if(finished||busy||!auctioneerGuid||Date.now()<nextAttemptAt||!getWorld()?.isReady)return;
-  busy=true;nextAttemptAt=nextUtcHour();
+  const now=Date.now(), slot=utcScanSlot(now);
+  if(finished||busy||!auctioneerGuid||slot===null||slot<=lastAttemptedSlot||!getWorld()?.isReady)return;
+  busy=true;lastAttemptedSlot=slot;
   const guid=auctioneerGuid;
-  pendingHello=setTimeout(()=>{pendingHello=null;busy=false;log.warn("PvP auction hello timed out; will retry next scan interval");},queryTimeoutMs);
-  try{current().auctionHello(guid);}catch(e){clearTimeout(pendingHello);pendingHello=null;busy=false;log.warn(String(e));}
+  const scan={id:"ahl_"+slot.toString(36)+"_"+randomBytes(8).toString("hex"),slot,startedAt:new Date(now).toISOString()};
+  void publish("claim",{scan_id:scan.id,slot}).then(()=>{
+   if(finished||auctioneerGuid!==guid||utcScanSlot(Date.now())!==slot)throw new Error("UTC scan window closed before auction query");
+   claim=scan;
+   pendingHello=setTimeout(()=>{
+    pendingHello=null;claim=null;
+    void recordFailure(scan.id,new Error("Auctioneer hello timed out")).finally(()=>{busy=false;});
+   },queryTimeoutMs);
+   current().auctionHello(guid);
+  }).catch(error=>{
+   if(pendingHello)clearTimeout(pendingHello);
+   pendingHello=null;claim=null;busy=false;
+   log.warn("Auction slot skipped: "+String(error));
+  });
  };
  return {
   start(){if(finished||ticker)return;log.info("AH enabled on "+account.account+" connection; waiting for Auctioneer Fitch");ticker=setInterval(attempt,1000);ticker.unref?.();},
@@ -229,9 +248,11 @@ export function createAuctionSession({account,log,getWorld}:{account:{account:st
    },
    onCreatureName(entry,name){if(finished||name!==target)return;const guid=knownGuids.get(entry);if(guid===undefined)return;auctioneerGuid=guid;log.info("PvP Auctioneer Fitch discovered");attempt();},
    onObjectDestroyed(guid){if(auctioneerGuid===guid)auctioneerGuid=null;for(const [entry,value] of knownGuids)if(value===guid)knownGuids.delete(entry);},
-   onAuctionHello(hello){if(!pendingHello||finished)return;clearTimeout(pendingHello);pendingHello=null;
-    if(hello.guid!==auctioneerGuid||hello.houseId===0){busy=false;log.warn("PvP Auction House unavailable");return;}
-    void run(hello.guid).then(()=>{nextAttemptAt=nextUtcHour();}).catch(e=>{log.warn("Auction scan failed: "+String(e));nextAttemptAt=nextUtcHour();}).finally(()=>{busy=false;});
+   onAuctionHello(hello){if(!pendingHello||!claim||finished)return;clearTimeout(pendingHello);pendingHello=null;
+    const scan=claim;claim=null;
+    const result=hello.guid!==auctioneerGuid||hello.houseId===0?
+     recordFailure(scan.id,new Error("Auction House unavailable")):run(hello.guid,scan.slot,scan.id,scan.startedAt);
+    void result.finally(()=>{busy=false;});
    },
    onAuctionList(result){const p=pendingQuery;if(!p||finished)return;clearTimeout(p.timer);pendingQuery=null;p.resolve(result);},
    onItemTemplate(reply){const p=pendingItem;if(!p||p.id!==reply.item_id)return;clearTimeout(p.timer);pendingItem=null;p.resolve(reply);}
