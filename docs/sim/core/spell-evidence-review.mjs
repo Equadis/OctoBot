@@ -1,6 +1,15 @@
 import {buildIntegrityQueue} from './data-integrity.mjs';
 const nonempty=v=>typeof v==='string'&&v.trim().length>0;
-const numeric=v=>typeof v==='number'&&Number.isFinite(v);
+const exactUnits=new Map([
+ ['manaCost','mana'],['mana cost','mana'],['cooldown','ms'],['castTime','ms'],['castMs','ms'],['channel interval','ms'],
+ ['learn level','level'],
+]);
+const exactValue=r=>{
+ if(typeof r.value!=='number'||!Number.isFinite(r.value)||!nonempty(r.unit))return false;
+ const expected=exactUnits.get(r.field);
+ if(!expected)return true;
+ return r.unit===expected&&Number.isSafeInteger(r.value)&&(expected==='level'?r.value>=1&&r.value<=60:r.value>=0);
+};
 // Accept exact deterministic observations only. Damage ranges, proc rates and
 // inferred coefficients require a separate controlled statistical protocol.
 export function reviewSpellEvidence(records,queue=buildIntegrityQueue()){
@@ -15,7 +24,7 @@ export function reviewSpellEvidence(records,queue=buildIntegrityQueue()){
  }
  for(const r of records){
   const fields=r&&ranks.get(JSON.stringify([r.abilityId,r.spellId,r.rank]));
-  const valid=fields?.has(r.field)&&numeric(r.value)&&['unit','realm','phase','clientBuild','conditions','captureId','observerId','rawEvidence'].every(k=>nonempty(r[k]))&&r.method==='controlled-exact-observation'&&r.learnedIdentityConfirmed===true;
+  const valid=fields?.has(r.field)&&exactValue(r)&&['unit','realm','phase','clientBuild','conditions','captureId','observerId','rawEvidence'].every(k=>nonempty(r[k]))&&r.method==='controlled-exact-observation'&&r.learnedIdentityConfirmed===true;
   if(!valid){rejected.push({captureId:r?.captureId??null,reason:'not a controlled observation of a queued rank conflict'});continue;}
   const key=JSON.stringify([r.abilityId,r.spellId,r.rank,r.field,r.unit,r.realm,r.phase,r.clientBuild,r.conditions]);
   if(!groups.has(key))groups.set(key,[]);
@@ -23,9 +32,9 @@ export function reviewSpellEvidence(records,queue=buildIntegrityQueue()){
  }
  const rows=[];
  for(const [key,rs] of groups){
-  const vals=new Set(rs.map(r=>r.value));
+  const vals=new Set(rs.map(r=>JSON.stringify([r.value,r.unit])));
   const independent=rs.some(a=>rs.some(b=>a.observerId!==b.observerId&&a.captureId!==b.captureId&&a.rawEvidence!==b.rawEvidence));
-  rows.push({coordinate:JSON.parse(key),status:vals.size>1?'conflict':independent?'corroborated-candidate':'single-observation',value:vals.size===1?rs[0].value:null,captureIds:[...new Set(rs.map(r=>r.captureId))]});
+  rows.push({coordinate:JSON.parse(key),status:vals.size>1?'conflict':independent?'corroborated-candidate':'single-observation',value:vals.size===1?rs[0].value:null,unit:vals.size===1?rs[0].unit:null,captureIds:[...new Set(rs.map(r=>r.captureId))]});
  }
  return {rows,rejected,publicReady:false};
 }

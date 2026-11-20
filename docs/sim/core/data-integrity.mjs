@@ -1,4 +1,5 @@
 import {baseStatInventory} from './base-stat-audit.mjs';
+import {companionEvidencePlan} from './phase-four-evidence.mjs';
 import {releaseReadiness} from './combat-release-readiness.mjs';
 
 // A capture queue is evidence debt, not a substitute for measured values.
@@ -6,7 +7,7 @@ export function buildIntegrityQueue(base=baseStatInventory(), combat=releaseRead
  const baseRows=base.combinations.flatMap(c=>[
   ...c.missingLevels.map(level=>({race:c.race,classId:c.classId,level,reason:'missing'})),
   ...c.anomalies.map(a=>({race:c.race,classId:c.classId,level:a.level,reason:'anomaly',issues:a.issues}))
- ]);
+ ]).sort((a,b)=>Number(b.level===60)-Number(a.level===60)||Number(b.reason==='anomaly')-Number(a.reason==='anomaly'));
  const abilities=combat.classes.flatMap(c=>c.abilities);
  const spellRows=abilities.flatMap(a=>{
   const ranks=[...a.ranks,...a.externalReferenceRanks];
@@ -21,10 +22,11 @@ export function buildIntegrityQueue(base=baseStatInventory(), combat=releaseRead
   baseCaptureRows:baseRows.filter(r=>r.classId===c.classId).length,
   conflictingAbilities:c.abilities.filter(a=>a.status==='source-conflict').length,
   spellCaptureRows:spellRows.filter(r=>r.abilityId.startsWith(c.classId+':')).length}));
- return {schemaVersion:1,publicReady:false,totals:{
+ const companionRows=companionEvidencePlan();
+ return {schemaVersion:2,publicReady:false,totals:{
   missingBaseRows:base.totals.missingRows,baseAnomalies:base.totals.anomalies,
   referenceBaseRowsNotLiveVerified:base.totals.referenceRows-base.totals.liveVerifiedRows,
-  baseCaptureRows:baseRows.length,conflictingAbilities:abilities.filter(a=>a.status==='source-conflict').length,
+  baseCaptureRows:baseRows.length,level60BaseCaptureRows:baseRows.filter(r=>r.level===60).length,companionBaselineRows:companionRows.length,conflictingAbilities:abilities.filter(a=>a.status==='source-conflict').length,
   conflictingRankRows:spellRows.filter(r=>r.conflicts.length).length,spellCaptureRows:spellRows.length,
-  identityRows:identityRows.length},byClass,baseRows,spellRows,identityRows};
+  identityRows:identityRows.length},byClass,baseRows,spellRows,identityRows,companionRows};
 }

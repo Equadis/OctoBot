@@ -185,3 +185,7 @@ Imp Firebolt now applies three source-backed equipment effects under the compani
 ## 20 November 2026 — Phase 3 research checkpoint complete
 
 The shared mechanical reference pass now covers pet Stamina and resistances, The Black Book, Devilsaur Tooth, selected special damage paths, same-item swap cooldowns and targeted raid-provider outcomes. See the [Phase 3 research checkpoint](MECHANICAL-COMPLETENESS.md#phase-3-research-checkpoint) for the supported policies and test scope. The next phase is data integrity, including base-stat reconciliation and spell evidence. Public readiness remains false.
+
+## 20 November 2026 — Phase 4 evidence review
+
+The Phase 4 packet now prioritises missing level-60 rows and reviews learned cast identity, companion baselines and controlled inheritance pairs. The published Holy Strike and Trueshot Aura records are traceable to their sources. The outstanding live inputs include 19 missing level-60 base rows, three flagged base anomalies, 76 abilities with source conflicts, two ability identity gates, and controlled companion measurements. No authenticated captures were available at this checkpoint. See [Data integrity](DATA-INTEGRITY.md) for the packet schema and evidence requirements.

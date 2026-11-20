@@ -1,6 +1,14 @@
 -- Read-only manual capture, compatible with the 1.12 client.
 -- Does not export character names or automatically remove equipment/buffs.
 OctoSimCaptures = OctoSimCaptures or {}
+local function spellLinkIdentity(index)
+ if type(GetSpellLink)~="function" then return nil,nil end
+ local ok,link=pcall(GetSpellLink,index,BOOKTYPE_SPELL)
+ if not ok or type(link)~="string" then return nil,nil end
+ local _,_,id=string.find(link,"|Hspell:(%d+)[^|]*|h")
+ if not id or tonumber(id)<1 then return nil,nil end
+ return tonumber(id),link
+end
 local function capture()
  local race = UnitRace("player")
  local _, class = UnitClass("player")
@@ -24,7 +32,10 @@ local function capture()
   local _,_,offset,count=GetSpellTabInfo(tab)
   for i=offset+1,offset+count do
    local name,rank=GetSpellName(i,BOOKTYPE_SPELL)
-   if name then table.insert(row.spellbook,{index=i,name=name,rank=rank or ""}) end
+   if name then
+    local spellId,spellLink=spellLinkIdentity(i)
+    table.insert(row.spellbook,{index=i,name=name,rank=rank or "",spellId=spellId,spellLink=spellLink})
+   end
   end
  end
  table.insert(OctoSimCaptures,row)

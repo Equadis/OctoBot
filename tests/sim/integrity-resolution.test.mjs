@@ -17,3 +17,39 @@ test('context mismatch and disagreements remain visible',()=>{
  assert.equal(p.rejected.outsideContext,1);assert.equal(p.totals.baseCandidates,0);assert.equal(p.totals.spellConflicts,1);
  assert.throws(()=>integrityResolution({realm:'test'},queue));
 });
+
+test('Phase 4 evidence preserves identity, rank, context and independent capture requirements',()=>{
+ const hunter='hunter:trueshot-aura',paladin='paladin:holy-strike';
+ const q={...queue,identityRows:[{abilityId:hunter},{abilityId:paladin}]};
+ const first={...context,abilityId:hunter,spellName:'Trueshot Aura',rank:1,spellId:60000,characterLevel:60,learned:true,method:'learned-cast-identity',idSource:'client-spell-link',captureId:'a',observerId:'a',rawEvidence:'a'};
+ const holy={...first,abilityId:paladin,spellName:'Holy Strike',spellId:60001,captureId:'holy',rawEvidence:'holy'};
+ const result=integrityResolution({...context,identities:[first,second(first),holy,{...holy,rank:2},{...holy,rank:3,spellId:679},{...holy,rank:0},{...first,clientBuild:'other'}]},q);
+ assert.equal(result.identityTasks[0].status,'candidate-needs-authentication');
+ assert.equal(result.identityTasks[1].status,'conflict');
+ assert.deepEqual(result.identityTasks[1].ranks.slice(0,4).map(r=>r.status),['conflict','conflict','conflict','no-observation']);
+ assert.equal(result.totals.identityBlockers,2);
+ assert.equal(result.rejected.identities.length,1);
+ assert.equal(result.rejected.outsideContext,1);
+ assert.equal(result.totals.authenticatedCorrections,0);
+});
+
+test('paired companion observations retain controlled owner values and do not promote runtime inputs',()=>{
+ const meta={...context,classId:'hunter',pet:'Cat',level:60,ownerLevel:60,conditions:'same pet training and owner talents',captureId:'a',observerId:'a',rawEvidence:'a'};
+ const pet={...meta,method:'clean-companion-observation',ownerUnbuffed:true,companionUnbuffed:true,trainingRecorded:true,stats:{maxHealth:1000,attackPower:140,spellPower:0}};
+ const pair={...meta,method:'controlled-companion-stat-pair',oneVariableChanged:true,ownerStat:'rangedAP',petStat:'attackPower',ownerBefore:400,ownerAfter:500,petBefore:140,petAfter:165};
+ const p=integrityResolution({...context,companions:[pet,second(pet),{...pet,pet:'Imp'}],inheritance:[pair,second(pair),{...pair,ownerAfter:400}]},queue);
+ assert.equal(p.totals.companionBaselineCandidates,1);
+ assert.equal(p.totals.inheritanceCandidates,1);
+ assert.deepEqual(p.companion.inheritance.rows[0].values,[25]);
+ assert.equal(p.rejected.companions.length,1);
+ assert.equal(p.rejected.inheritance.length,1);
+ assert.equal(p.publicReady,false);
+});
+
+test('rank conflicts cannot be resolved by pooling differing condition groups or units',()=>{
+ const altered={...s,conditions:'different context',value:395};
+ const p=integrityResolution({...context,spells:[s,second(s),altered,second(altered),{...s,unit:'ms'}]},queue);
+ assert.equal(p.spellTasks[0].status,'condition-dependent');
+ assert.equal(p.rejected.spells.length,1);
+ assert.equal(p.totals.spellCandidates,0);
+});
