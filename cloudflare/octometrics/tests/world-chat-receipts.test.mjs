@@ -62,3 +62,12 @@ test("legacy overlap is hidden in history and live reads without deleting archiv
   assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM world_chat_messages").get().n,8);
  }finally{Date.now=original;sql.close();}
 });
+
+import {searchTerms,matchesChat,SEARCH_OPTIONS} from "../../../docs/world-chat/chat-history.mjs";
+test("advanced search options compose with quoted values and exact player mentions",()=>{
+ const row={author:"Alice",guild:"Night Watch",message:"Hey @Bob, see https://example.org and [Sword]",parts:[{text:"[Sword]",itemId:123}]};
+ assert.equal(SEARCH_OPTIONS.length,7);
+ assert.deepEqual(searchTerms('from:Alice in:"Night Watch" has:item'),[{kind:"from",value:"alice"},{kind:"in",value:"night watch"},{kind:"has",value:"item"}]);
+ for(const q of ['from:alice','mentions:bob','has:mentions','has:item','has:link','item:123','in:"Night Watch"','from:alice has:item mentions:bob'])assert.equal(matchesChat(row,q),true,q);
+ for(const q of ['from:bob','mentions:bo','in:other','has:unknown','item:124'])assert.equal(matchesChat(row,q),false,q);
+});
