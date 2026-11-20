@@ -1,1 +1,1 @@
-Production deployment: suppress high-confidence historical World Chat duplicates in the 2026-11-20 migration overlap; retain original archive rows.
+Production deployment: advanced World Chat search filters and dropdown (2026-11-20).
