@@ -177,3 +177,7 @@ The machine-readable `combat-release-readiness.mjs` audit is authoritative over 
 2. **Trueshot Aura:** Confirm whether the ability is actually trainable/usable on the current realm and phase, then measure learned rank IDs and whether the buff is flat Attack Power, percentage-plus-flat per recipient, or truly removed. Until then use only the explicitly source-conflicting research mode, not a live simulation.
 
 The integration workflow runs JavaScript and Python regressions, spell/capability and MVP audits, syntax checks and a Chromium smoke test. A passing suite proves internal consistency, **not** correspondence with unobserved server mechanics.
+
+## 20 November 2026 — Phase 3 continuation
+
+Imp Firebolt now applies three source-backed equipment effects under the companion's explicit equipment inclusion policy. The companion equipment audit identifies 19 imported effect lines with at least one runtime mapping and is included in the integration workflow's data-integrity artifact. The next companion equipment gaps are stamina/resistance sets and timed or charged pet effects. Public readiness remains false and the mapped effects still await live validation. See [Mechanical Completeness](MECHANICAL-COMPLETENESS.md#imp-firebolt-equipment-damage).

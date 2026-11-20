@@ -15,4 +15,22 @@ export function resolvePetStats(build,m,ownerStats){
 }
 
 // Static pet-specific equipped bonuses are separate from owner stat inheritance.
-export function petEquipmentModifiers(rows,policy){const active=rows.filter(r=>r.active&&r.scope==='Pet'&&r.condition?.pet===true&&Object.keys(r.condition).length===1&&['attackPower','healthPct','damagePct','armourPct','critPct'].includes(r.stat));const result={attackPower:0,healthPct:0,damagePct:0};if(!active.length)return result;if(!policy||!['included','apply'].includes(policy.mode)||typeof policy.provenance!=='string'||!policy.provenance.trim())throw Error('Explicit pet equipment inclusion policy required');if(policy.mode==='apply')for(const row of active)result[row.stat]=(result[row.stat]??0)+n(row.amount,'equipment '+row.stat);return result;}
+const petStats=new Set(['attackPower','healthPct','damagePct','armourPct','critPct']);
+export function petEquipmentEffectKey(row){
+ const condition=row.condition??{};
+ if(row.scope==='Pet'&&condition.pet===true&&Object.keys(condition).length===1&&petStats.has(row.stat))return row.stat;
+ if(row.scope==="Imp's Firebolt"&&row.stat==='flatDamage'&&!Object.keys(condition).length)return 'fireboltFlatDamage';
+ return null;
+}
+
+export function petEquipmentModifiers(rows,policy,{usesImpFirebolt=false}={}){
+ const active=rows.filter(row=>row.active).map(row=>[row,petEquipmentEffectKey(row)])
+  .filter(([,key])=>key&&(key!=='fireboltFlatDamage'||usesImpFirebolt));
+ const result={attackPower:0,healthPct:0,damagePct:0};
+ if(!active.length)return result;
+ if(!policy||!['included','apply'].includes(policy.mode)||typeof policy.provenance!=='string'||!policy.provenance.trim())throw Error('Explicit pet equipment inclusion policy required');
+ if(policy.mode==='apply'){
+  for(const [row,key] of active)result[key]=(result[key]??0)+n(row.amount,'equipment '+key);
+ }
+ return result;
+}

@@ -49,3 +49,40 @@ test('Succubus Seduction suppresses scripted enemy attacks until effective damag
 test('maintained Seduction releases its channel when target damage breaks control',()=>{const m=pet('Succubus','Seduction');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,cooldownMs:60000,utility:{durationMs:4000,outcomes:landed,acknowledgeScriptedControl:true,maintainedChannel:true}};m.abilities.push({...m.abilities[0],name:'Lash of Pain',cooldownMs:60000,utility:undefined});const p=params(m);p.build.classOptions.pet='Succubus';const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});const stop=r.exampleEvents.find(e=>e.type==='companion-interrupt'&&e.source==='Seduction');assert.ok(stop);const lash=r.exampleEvents.find(e=>e.type==='companion-action'&&e.source==='Lash of Pain');assert.ok(lash&&lash.time>=stop.time&&lash.time<4000);});
 
 test('pet equipment armour and crit require explicit baseline and outcome policy',()=>{const b=newBuild('warlock');b.classOptions.pet='Imp';const m=pet();m.armour=200;m.equipmentPolicy={mode:'apply',provenance:'synthetic',critMode:'normal-hit-only'};m.abilities[0].damage={...m.abilities[0].damage,ferocityEligible:true,ferocityCriticalMultiplier:2};const rows=[{active:true,scope:'Pet',stat:'armourPct',amount:25,condition:{pet:true}},{active:true,scope:'Pet',stat:'critPct',amount:10,condition:{pet:true}}];const p=buildCompanionConfig(b,m,5000,null,rows);assert.equal(p.defensive.armour,50);assert.equal(p.priority.abilities[0].effects[0].outcomes.find(x=>x.critical).probability,.1);assert.throws(()=>buildCompanionConfig(b,{...m,armour:undefined},5000,null,rows));});
+
+test('imported Firebolt equipment adds damage only to the configured Imp spell',()=>{
+ const itemsRoot=new URL('../../docs/sim/data/items/',import.meta.url);
+ const read=name=>JSON.parse(readFileSync(new URL(name,itemsRoot)));
+ const listings=read('equipment.json');
+ const details={...read('details-supplement.json'),...read('details.json')};
+ const p=params();
+ const equip=(slot,id)=>{
+  p.build.gear[slot]={id,label:details[id].name};
+  p.gearById[id]={...listings.find(item=>item.id===id),...details[id]};
+ };
+ equip('trinket1',18354);
+ equip('hands',60424);
+
+ const model=p.encounter.companionModel;
+ assert.throws(()=>prepareReferenceScenario(p),/pet equipment inclusion policy/);
+ const run=()=>runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1}).example.actors;
+ model.equipmentPolicy={mode:'included',provenance:'synthetic damage inputs include equipped items'};
+ const included=run();
+ assert.equal(included.pet.bySource.Firebolt.damage,90);
+ model.equipmentPolicy={mode:'apply',provenance:'synthetic base damage without equipped items'};
+ const applied=run();
+ assert.equal(applied.pet.bySource.Firebolt.damage,138);
+ assert.deepEqual(applied.player.bySource,included.player.bySource);
+
+ equip('hands',80777);
+ assert.equal(run().pet.bySource.Firebolt.damage,138);
+ delete p.build.gear.trinket1;
+ assert.equal(run().pet.bySource.Firebolt.damage,114);
+
+ p.build.classOptions.pet='Succubus';
+ model.name='Succubus';
+ model.abilities[0].name='Lash of Pain';
+ model.abilities[0].damage={...damage,school:'shadow'};
+ delete model.equipmentPolicy;
+ assert.equal(run().pet.bySource['Lash of Pain'].damage,90);
+});

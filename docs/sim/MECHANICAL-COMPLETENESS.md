@@ -224,3 +224,9 @@ Exact unconditioned ability modifiers now support formula-based absorption capac
 
 ## Companion equipment armour and critical chance
 Explicit pet equipment apply/included policy now accepts exact Armour and critical chance scopes. Armour requires observed baseline; critical conversion uses the existing normal-hit-only companion outcome method with explicit eligibility and critical multiplier. No automatic NPC defence or live stacking inference.
+
+## Imp Firebolt equipment damage
+
+The reference compiler reads exact Firebolt bonuses from [Pimgib's Collar](https://octowow.st/db/?item=18354), [Grellskin Gloves](https://octowow.st/db/?item=60424) and [Impskin Gloves](https://octowow.st/db/?item=80777). With an Imp and Firebolt configured, `equipmentPolicy.mode: "apply"` adds each equipped bonus to both ends of the base damage range before multipliers and mitigation. Use `"included"` when the supplied damage already includes gear. Stacking and calculation order are research assumptions pending live evidence.
+
+The companion equipment audit reports 19 imported lines with at least one compiled companion modifier, including the three Firebolt lines. It includes per-modifier runtime keys in the CI artifact. Future batches include pet stamina and resistance set bonuses, The Black Book's timed armour and damage, and Devilsaur Tooth's next-attack critical strike.
