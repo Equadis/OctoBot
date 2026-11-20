@@ -239,6 +239,7 @@ export function auctionNamespace(db,realm){
 export async function auctionRoute(request,env){
  const url=new URL(request.url);
  if(!url.pathname.startsWith('/api/auction/'))return null;
+ if(env.AUCTION_API_PAUSED==='true')return bad('Auction House temporarily paused to protect database budget',503);
  const realm=url.searchParams.get('realm')??"N'Zoth";
  if(realm!=="N'Zoth"&&realm!=="Y'Shaarj")return bad('auction realm unavailable',400);
  env={...env,DB:auctionNamespace(env.DB,realm),AUCTION_REALM:realm};
@@ -262,7 +263,7 @@ export async function auctionRoute(request,env){
      return new Response(JSON.stringify({error:'database temporarily unavailable'}),{status:503,headers:{'Content-Type':'application/json','Retry-After':'15','Cache-Control':'no-store',...CORS}});
    }
    if(result.ok){
-     const ttl=url.pathname.endsWith('/scan-status')?3:15;
+     const ttl=url.pathname.endsWith('/scan-status')?30:300;
      const headers=new Headers(result.headers);headers.set('Cache-Control','public, max-age='+ttl);
      result=new Response(result.body,{status:result.status,headers});
      try{await cache.put(key,result.clone());}catch{}
@@ -272,6 +273,7 @@ export async function auctionRoute(request,env){
  return bad('method not allowed',405);
 }
 export async function auctionCleanup(env){
+ if(env.AUCTION_API_PAUSED==='true')return;
  await cleanupRealm(env.DB);
  // PvP tables are created by migration 0011; deploy the migration before this Worker.
  await cleanupRealm(auctionNamespace(env.DB,"Y'Shaarj"));
