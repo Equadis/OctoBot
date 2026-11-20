@@ -1,1 +1,1 @@
-Initial deployment: seller name migration and listing-based market prices.
+Production deployment: seven-collector account validation, World Chat ingestion and raid checkpoint compatibility (2026-11-20).
