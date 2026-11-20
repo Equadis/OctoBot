@@ -1,1 +1,1 @@
-Production deployment: seven-collector account validation, World Chat ingestion and raid checkpoint compatibility (2026-11-20).
+Production deployment: suppress high-confidence historical World Chat duplicates in the 2026-11-20 migration overlap; retain original archive rows.
