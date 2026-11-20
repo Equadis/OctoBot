@@ -148,6 +148,9 @@ export async function readHistory(url,db,now){
   if(cursor){where.push("(m.observed_ms,m.id)<(?,?)");params.push(cursor.time,cursor.id);}
   for(const {kind,value} of terms){
    if(kind==="from"){where.push("lower(m.author)=?");params.push(value);}
+   else if(kind==="in"){where.push("lower(COALESCE(p.guild,g.guild,''))=?");params.push(value);}
+   else if(kind==="mentions"){where.push("instr(lower(COALESCE(s.message,m.message)),?)>0");params.push(value.replace(/^@/,""));}
+   else if(kind==="has"){if(value==="mentions")where.push("instr(COALESCE(s.message,m.message),'@')>0");else if(value==="item")where.push("instr(lower(m.message),'|hitem:')>0");else if(value==="link")where.push("(instr(lower(m.message),'http://')>0 OR instr(lower(m.message),'https://')>0 OR instr(lower(m.message),'www.')>0 OR instr(lower(m.message),'discord.gg/')>0)");else where.push("0");}
    else if(kind==="item"&&/^\d+$/.test(value)){const id=String(Number(value));where.push("(instr(lower(m.message),?)>0 OR instr(lower(m.message),?)>0)");params.push("|hitem:"+id+":","|hitem:"+id+"|h");}
    else if(kind==="item"){where.push("instr(lower(COALESCE(s.message,m.message)),?)>0");params.push(value);}
    else{where.push("instr(lower(m.author||' '||COALESCE(p.guild,g.guild,'')||' '||COALESCE(s.message,m.message)),?)>0");params.push(value);}
