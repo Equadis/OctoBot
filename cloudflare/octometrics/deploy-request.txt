@@ -1,1 +1,1 @@
-Production deployment: advanced World Chat search filters and dropdown (2026-11-20).
+Production deployment: restore World Chat staff history and badges (2026-11-21).

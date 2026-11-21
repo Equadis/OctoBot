@@ -1,7 +1,8 @@
 import test from "node:test";import assert from "node:assert/strict";
 import {listingKinds,cleanText} from "../world-chat-classify.mjs";
 import {validLine} from "../world-chat.mjs";
-import {decodeWorldPacket} from "../collector/dist-metrics/metrics/world-chat.js";
+import {decodeWorldPacket as decodeLegacyWorldPacket} from "../collector/dist-metrics/metrics/world-chat.js";
+import {decodeWorldPacket} from "../../../services/world-buff-tracker/collector/world-chat.mjs";
 test("recruitment aliases, boundaries, multiple raids and trade exclusion",()=>{
   assert.deepEqual(listingKinds("LFM heal ZG / MC / Ony").map(x=>x.tag),["ZG","MC","Ony"]);
   assert.equal(listingKinds("I cleared MC yesterday").length,0);
@@ -16,12 +17,19 @@ test("fresh event validation",()=>{
  assert.ok(validLine(line,now));assert.equal(validLine({...line,time:now-120001},now),null);assert.equal(validLine({...line,gm:"true"},now),null);
 });
 test("GM flag is packet metadata, not message text",()=>{
- const text="<GM> fake",name=Buffer.from("world\0"),msg=Buffer.from(text+"\0"),body=Buffer.alloc(5+name.length+4+8+4+msg.length+1);
+ const text="|c1000ccff<GM> fake|r",name=Buffer.from("world\0"),msg=Buffer.from(text+"\0"),body=Buffer.alloc(5+name.length+4+8+4+msg.length+1);
  name.copy(body,5);const p=5+name.length+4;body.writeBigUInt64LE(42n,p);body.writeUInt32LE(msg.length,p+8);msg.copy(body,p+12);
- assert.equal(decodeWorldPacket("world",42n,text,body).gm,false);
- body[body.length-1]=4;assert.equal(decodeWorldPacket("world",42n,text,body).gm,true);
- assert.equal(decodeWorldPacket("guild",42n,text,body),null);assert.equal(decodeWorldPacket("world",43n,text,body),null);
- body.writeUInt32LE(0xffffffff,1);assert.equal(decodeWorldPacket("world",42n,text,body),null);
+ for(const decode of [decodeWorldPacket,decodeLegacyWorldPacket]){
+  for(const tag of [0,1,2,3,4]){
+   body[body.length-1]=tag;
+   assert.equal(decode("world",42n,text,body).gm,tag===3);
+  }
+  assert.equal(decode("guild",42n,text,body),null);
+  assert.equal(decode("world",43n,text,body),null);
+  body.writeUInt32LE(0xffffffff,1);
+  assert.equal(decode("world",42n,text,body),null);
+  body.writeUInt32LE(0,1);
+ }
 });
 
 import {readFileSync} from "node:fs";
@@ -120,6 +128,33 @@ test("item markup survives real SQL storage and listing refresh; legacy plain te
   const data=await (await worldChatRoute(new Request(base),env)).json();
   assert.equal(data.world.length,2);assert.equal(data.world[0].parts,undefined);assert.equal(data.world[1].parts[1].itemId,16712);
   assert.equal(data.wtb.length,1);assert.equal(data.wtb[0].parts[1].colour,"#0070dd");assert.equal(data.wtb[0].message,"WTB [Shadowcraft Gloves]");
+ }finally{DB.sql.close();}
+});
+
+test("live and archived staff display verified role badges, while player markup stays ordinary",async()=>{
+ const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
+ const now=Date.now();
+ const roles=["GM","CM","DJ","DEV"];
+ const messages=[...roles.map((_,i)=>({gm:true,message:"|c1"+i+"12aBcFStaff notice|r"})),
+  {gm:true,message:"Legacy GM notice"},{gm:false,message:"|c1312aBcFStaff notice|r"}].map((event,i)=>({
+  id:"12345678-1234-1234-1234-"+String(i).padStart(12,"0"),time:now+i,authorKey:String(i+1),author:"Sender",...event
+ }));
+ try{
+  const ingest=await worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({
+   realm:"N'Zoth",account:"OBPVEDMFA",channel:"world",messages
+  })}),env);
+  assert.equal(ingest.status,202);
+  const read=async path=>(await worldChatRoute(new Request(base+path),env)).json();
+  const live=await read("");
+  const staff=await read("/history?feed=gm&q=notice");
+  const world=await read("/history?feed=world&q=notice");
+  assert.deepEqual(staff.items,live.gm);
+  assert.deepEqual(world.items,live.world);
+  assert.deepEqual(staff.items.map(row=>row.staffRole),[...roles,"GM"]);
+  assert.deepEqual(staff.items.map(row=>row.staffColour),["#12aBcF","#12aBcF","#12aBcF","#12aBcF",undefined]);
+  assert.equal(staff.items[0].message,"Staff notice");
+  assert.equal(world.items.length,1);
+  assert.equal(world.items[0].staffRole,undefined);
  }finally{DB.sql.close();}
 });
 

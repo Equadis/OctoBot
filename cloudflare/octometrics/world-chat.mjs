@@ -25,7 +25,18 @@ const legacyUnique=`(m.realm<>'N''Zoth' OR m.observed_ms<${LEGACY_START} OR m.ob
 ))`;
 const TTL=300000, HISTORY=1800000; // Live poll only; archive retention is separate.
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Access-Control-Allow-Origin":"https://equadis.github.io","Vary":"Origin"}});
-const publicLine=r=>({id:r.id,author:r.author,guild:r.guild??null,level:r.level??null,classId:r.class_id??null,...publicChatMessage(r.message),gm:!!r.gm,time:r.observed_ms});
+const STAFF_ROLES={"10":"GM","11":"CM","12":"DJ","13":"DEV"};
+function publicLine(row){
+  const gm=Boolean(row.gm);
+  // OctoWoW encodes the badge in the alpha byte of the leading colour.
+  // The client only reads it when the packet already identifies a staff sender.
+  const badge=gm?/^\|c(1[0-3])([0-9a-f]{6})/i.exec(row.message):null;
+  return {
+    id:row.id,author:row.author,guild:row.guild??null,level:row.level??null,classId:row.class_id??null,
+    ...publicChatMessage(row.message),gm,time:row.observed_ms,
+    ...(badge?{staffRole:STAFF_ROLES[badge[1]],staffColour:"#"+badge[2]}:gm?{staffRole:"GM"}:{})
+  };
+}
 export function validLine(line,now){
   if(!line||typeof line!=="object"||typeof line.id!=="string"||!/^[a-f0-9-]{36}$/i.test(line.id)||
     typeof line.authorKey!=="string"||!/^[0-9]{1,20}$/.test(line.authorKey)||line.authorKey==="0"||

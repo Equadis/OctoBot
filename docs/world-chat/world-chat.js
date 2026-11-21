@@ -70,7 +70,12 @@ function colourAuthor(author,row){
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
-  if(row.gm)content.append(node("span","chat-gm-tag","<GM> "));
+  if(row.gm){
+   const role=["GM","CM","DJ","DEV"].includes(row.staffRole)?row.staffRole:"GM";
+   const badge=node("span","chat-gm-tag","<"+role+"> ");
+   if(/^#[0-9a-f]{6}$/i.test(row.staffColour))badge.style.color=row.staffColour;
+   content.append(badge);
+  }
   const author=withTime&&row.author!=="Unknown player"?playerButton(row.author,"chat-author"):node("span","chat-author",row.author);
   colourAuthor(author,row);
   content.append(author);
@@ -101,7 +106,7 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
  // Record the first visible row rather than relying on total height differences.
  const anchor=[...parent.children].find(e=>e.dataset.id&&e.getBoundingClientRect().bottom>top);
  const anchorId=anchor?.dataset.id,offset=anchor?anchor.getBoundingClientRect().top-top:0,before=parent.scrollTop;
- if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":historyQuery?"No messages match your search.":key==="gm"?"No recent verified GM messages.":"No recent public messages."));
+ if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":historyQuery?"No messages match your search.":key==="gm"?"No recent verified staff messages.":"No recent public messages."));
  else{
   const existing=new Map([...parent.children].filter(e=>e.dataset.id).map(e=>[e.dataset.id,e]));
   const keep=new Set(rows.map(r=>r.id));

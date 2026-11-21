@@ -9,7 +9,8 @@ export function decodeWorldPacket(channel,sender,text,raw){
     if(raw.readBigUInt64LE(offset)!==sender)return null;
     const len=raw.readUInt32LE(offset+8),start=offset+12,tag=start+len;
     if(len<2||tag!==raw.length-1||raw[tag-1]!==0||raw.toString("utf8",start,tag-1)!==text)return null;
-    return {gm:(raw[tag]&4)!==0,text:text.trim()};
+    // Vanilla chat tags are enum values: 1 = AFK, 2 = DND, 3 = GM.
+    return {gm:raw[tag]===3,text:text.trim()};
   }catch{return null;}
 }
 export function createWorldChat({account,config,log,getWorld}){
