@@ -12,18 +12,32 @@ section{min-width:0}
 .section-title h2{font-size:23px;font-weight:500;margin:0;color:var(--gold)}
 .world-grid{display:grid;gap:16px}
 .world-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-.raid-reset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-.raid-reset{display:flex;flex-direction:column}
-.raid-reset-raids{list-style:none;padding:0;margin:12px 0;font-size:13px;line-height:1.7}
-.raid-reset .raid-reset-raids{flex:1}
-.raid-reset .bottom-line{margin-top:0;padding-top:12px;gap:4px 12px}
-.raid-reset time{color:#e5e9ef;font-variant-numeric:tabular-nums}
-.raid-reset-countdown{margin-top:6px}
+.world-panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
+.raid-reset-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.raid-reset{
+  display:flex;
+  flex-direction:column;
+  min-height:168px;
+  background-image:linear-gradient(90deg,rgba(14,22,34,.93),rgba(14,22,34,.68)),var(--raid-art);
+  background-position:center;
+  background-size:cover;
+}
+.raid-reset-zul-gurub{--raid-art:url("img/raid-resets/zul-gurub.webp")}
+.raid-reset-onyxias-lair{--raid-art:url("img/raid-resets/onyxias-lair.webp")}
+.raid-reset-lower-karazhan-halls{--raid-art:url("img/raid-resets/lower-karazhan-halls.webp")}
+.raid-reset-molten-core{--raid-art:url("img/raid-resets/molten-core.webp")}
+.raid-reset-blackwing-lair{--raid-art:url("img/raid-resets/blackwing-lair.webp")}
+.raid-reset h3{font-size:18px;margin-bottom:20px}
+.raid-reset h3 a{color:inherit;text-decoration:none}
+.raid-reset h3 a:hover,.raid-reset h3 a:focus-visible{text-decoration:underline}
+.raid-reset .field-label,.raid-reset .buff-grid small{color:#aab7c7}
+.raid-reset-raids{list-style:none;padding:0;margin:12px 0 0;font-size:13px;line-height:1.7}
 .raid-reset-upcoming{margin-top:12px}
 .raid-reset-upcoming summary{cursor:pointer;color:var(--gold);font-size:14px}
-.raid-reset-upcoming .raid-reset-raids{margin-bottom:0}
 .raid-reset-sources{margin:8px 0 0}
-.world-panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
+@media(max-width:1120px){.raid-reset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.raid-reset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.raid-reset-grid{grid-template-columns:1fr}}
 .panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .eyebrow{display:block;color:#96a7ba;font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:7px}
 .world-panel h2,.world-panel h3{color:var(--gold);font-size:22px;font-weight:500;margin:0}
@@ -100,7 +114,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 a{color:#a7b9cf}
 footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#8190a4;font-size:11px;line-height:1.6}
 @media(max-width:800px){
- .world-grid.two,.raid-reset-grid{grid-template-columns:1fr}
+ .world-grid.two{grid-template-columns:1fr}
  .world-panel{padding:18px 15px}
  .day{min-height:58px;padding:6px}
  .day-boss{font-size:10px}
@@ -125,6 +139,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .heading-with-icon{display:flex;align-items:center;gap:12px}.heading-with-icon .eyebrow{margin-bottom:5px}
 .boss-icon{width:44px;height:44px;flex:none;border:1px solid #3a4a60;border-radius:4px;background:#0d1420}
 .buff-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:24px}
+.raid-reset .buff-grid{margin-top:auto}
 .buff-grid>div{min-width:0;padding-right:18px}.buff-grid>div+div{border-left:1px solid var(--line);padding-left:20px}.buff-grid>div:last-child{padding-right:0}
 .faction-alliance{background:linear-gradient(135deg,#162c57 0%,var(--panel) 62%);border-color:#2a4a86;border-left:4px solid #2f5cb3}
 .faction-horde{background:linear-gradient(135deg,#5C1010 0%,var(--panel) 62%);border-color:#772020;border-left:4px solid #8c2323}

@@ -15,19 +15,21 @@
   const DMF_HEARTBEAT_MS = 3 * MINUTE;
   const DAY = 86_400_000;
   // The three-day anchor comes from OctoTimers. OctoWoW synchronised Onyxia across realms on 31 August.
-  const RAID_RESETS = {
-    'three-day': { anchor: Date.UTC(2026, 9, 3, 2), days: 3 },
-    'five-day': { anchor: Date.UTC(2026, 7, 31, 2), days: 5 },
-    weekly: { anchor: Date.UTC(2026, 9, 7, 2), days: 7 }
-  };
+  const RAID_RESETS = [
+    { anchor: Date.UTC(2026, 9, 3, 2), days: 3, raids: ['zul-gurub'] },
+    { anchor: Date.UTC(2026, 7, 31, 2), days: 5, raids: ['onyxias-lair', 'lower-karazhan-halls'] },
+    { anchor: Date.UTC(2026, 9, 7, 2), days: 7, raids: ['molten-core', 'blackwing-lair'] }
+  ];
   const resetDate = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   });
-  const resetPanels = Object.entries(RAID_RESETS).map(([key, { anchor, days }]) => ({
+  const resetCycles = RAID_RESETS.map(({ anchor, days, raids }) => ({
     anchor, period: days * DAY, next: 0,
-    date: $('raid-reset-' + key + '-date'),
-    countdown: $('raid-reset-' + key + '-countdown')
+    cards: raids.map(raid => ({
+      date: $('raid-reset-' + raid + '-date'),
+      countdown: $('raid-reset-' + raid + '-countdown')
+    }))
   }));
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
@@ -622,14 +624,19 @@
     }
   }
   function renderRaidResets(now = Date.now()) {
-    for (const panel of resetPanels) {
-      const { anchor, period, date, countdown } = panel;
-      if (now >= panel.next || now < panel.next - period) {
-        panel.next = anchor + (Math.floor((now - anchor) / period) + 1) * period;
-        date.dateTime = new Date(panel.next).toISOString();
-        date.textContent = resetDate.format(panel.next) + ' UTC';
+    for (const cycle of resetCycles) {
+      const { anchor, period, cards } = cycle;
+      if (now >= cycle.next || now < cycle.next - period) {
+        cycle.next = anchor + (Math.floor((now - anchor) / period) + 1) * period;
+        const timestamp = new Date(cycle.next).toISOString();
+        const label = resetDate.format(cycle.next) + ' UTC';
+        for (const { date } of cards) {
+          date.dateTime = timestamp;
+          date.textContent = label;
+        }
       }
-      countdown.textContent = spanWithDays(Math.ceil((panel.next - now) / 1000) * 1000);
+      const remaining = spanWithDays(Math.ceil((cycle.next - now) / 1000) * 1000);
+      for (const { countdown } of cards) countdown.textContent = remaining;
     }
   }
   function renderLive() {

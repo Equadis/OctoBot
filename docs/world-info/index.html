@@ -21,9 +21,9 @@
 <link rel="icon" href="../favicon.png" type="image/png">
 <link rel="stylesheet" href="../site-theme.css?v=20261120-maintenance">
 <script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<link rel="stylesheet" href="../world-info.css?v=20261121-raid-resets">
+<link rel="stylesheet" href="../world-info.css?v=20261121-raid-art">
 <script src="../raid-sounds.js?v=20261119-no-tooltip" defer></script>
-<script src="../world-info.js?v=20261121-raid-resets" defer></script>
+<script src="../world-info.js?v=20261121-raid-art" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -74,31 +74,55 @@
 <section id="raid-resets" aria-labelledby="raid-resets-heading">
   <div class="section-title"><h2 id="raid-resets-heading">Raid Reset Schedule</h2><span class="muted">All realms · 02:00 UTC</span></div>
   <div class="world-grid raid-reset-grid">
-    <article class="world-panel raid-reset">
-      <h3>Every 3 days</h3>
-      <ul class="raid-reset-raids">
-        <li><a href="https://octowow.st/db/?zone=1977">Zul'Gurub</a></li>
-      </ul>
-      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-three-day-date">–</time></div>
-      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-three-day-countdown">–</strong>
+    <article class="world-panel raid-reset raid-reset-zul-gurub" aria-labelledby="raid-reset-zul-gurub-heading">
+      <h3 id="raid-reset-zul-gurub-heading"><a href="https://octowow.st/db/?zone=1977">Zul'Gurub</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-zul-gurub-countdown">–</strong>
+          <small><time id="raid-reset-zul-gurub-date">–</time></small>
+        </div>
+      </div>
     </article>
-    <article class="world-panel raid-reset">
-      <h3>Every 5 days</h3>
-      <ul class="raid-reset-raids">
-        <li><a href="https://octowow.st/db/?zone=2159">Onyxia's Lair</a></li>
-        <li><a href="https://octowow.st/db/?search=Lower%20Karazhan%20Halls">Lower Karazhan Halls</a></li>
-      </ul>
-      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-five-day-date">–</time></div>
-      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-five-day-countdown">–</strong>
+    <article class="world-panel raid-reset raid-reset-onyxias-lair" aria-labelledby="raid-reset-onyxias-lair-heading">
+      <h3 id="raid-reset-onyxias-lair-heading"><a href="https://octowow.st/db/?zone=2159">Onyxia's Lair</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-onyxias-lair-countdown">–</strong>
+          <small><time id="raid-reset-onyxias-lair-date">–</time></small>
+        </div>
+      </div>
     </article>
-    <article class="world-panel raid-reset">
-      <h3>Every Wednesday</h3>
-      <ul class="raid-reset-raids">
-        <li><a href="https://octowow.st/db/?zone=2717">Molten Core</a></li>
-        <li><a href="https://octowow.st/db/?zone=2677">Blackwing Lair</a></li>
-      </ul>
-      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-weekly-date">–</time></div>
-      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-weekly-countdown">–</strong>
+    <article class="world-panel raid-reset raid-reset-lower-karazhan-halls" aria-labelledby="raid-reset-lower-karazhan-halls-heading">
+      <h3 id="raid-reset-lower-karazhan-halls-heading"><a href="https://octowow.st/db/?search=Lower%20Karazhan%20Halls">Lower Karazhan Halls</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-lower-karazhan-halls-countdown">–</strong>
+          <small><time id="raid-reset-lower-karazhan-halls-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-molten-core" aria-labelledby="raid-reset-molten-core-heading">
+      <h3 id="raid-reset-molten-core-heading"><a href="https://octowow.st/db/?zone=2717">Molten Core</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-molten-core-countdown">–</strong>
+          <small><time id="raid-reset-molten-core-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-blackwing-lair" aria-labelledby="raid-reset-blackwing-lair-heading">
+      <h3 id="raid-reset-blackwing-lair-heading"><a href="https://octowow.st/db/?zone=2677">Blackwing Lair</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-blackwing-lair-countdown">–</strong>
+          <small><time id="raid-reset-blackwing-lair-date">–</time></small>
+        </div>
+      </div>
     </article>
   </div>
   <details class="world-panel raid-reset-upcoming">
@@ -111,7 +135,7 @@
       <li>Phase 7 · <a href="https://octowow.st/db/?zone=3457">Tower of Karazhan</a></li>
     </ul>
   </details>
-  <p class="raid-reset-sources muted"><a href="https://octowow.st/forum/viewtopic.php?t=2816">Weekly reset notes</a> · <a href="https://octotimers.com/">Rotating reset dates</a> · <a href="https://forge.octowow.st/roadmap">Raid roadmap</a></p>
+  <p class="raid-reset-sources muted"><a href="https://octowow.st/forum/viewtopic.php?t=2816">Weekly reset notes</a> · <a href="https://octotimers.com/">Rotating reset dates</a> · <a href="https://forge.octowow.st/roadmap">Raid roadmap</a> · <a href="https://octo.chronicleclassic.com/leaderboards/speedruns">Raid artwork via Chronicle</a></p>
 </section>
 
 <section aria-labelledby="buff-heading">
