@@ -18,6 +18,17 @@ section{min-width:0}
   display:flex;
   flex-direction:column;
   min-height:168px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.raid-reset::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  /* Keep the loading screen logo and borders outside the card at all aspect ratios. */
+  inset:-60% 0 -54%;
   background-image:linear-gradient(90deg,rgba(14,22,34,.93),rgba(14,22,34,.68)),var(--raid-art);
   background-position:center;
   background-size:cover;
@@ -31,9 +42,6 @@ section{min-width:0}
 .raid-reset h3 a{color:inherit;text-decoration:none}
 .raid-reset h3 a:hover,.raid-reset h3 a:focus-visible{text-decoration:underline}
 .raid-reset .field-label,.raid-reset .buff-grid small{color:#aab7c7}
-.raid-reset-raids{list-style:none;padding:0;margin:12px 0 0;font-size:13px;line-height:1.7}
-.raid-reset-upcoming{margin-top:12px}
-.raid-reset-upcoming summary{cursor:pointer;color:var(--gold);font-size:14px}
 .raid-reset-sources{margin:8px 0 0}
 @media(max-width:1120px){.raid-reset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.raid-reset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
