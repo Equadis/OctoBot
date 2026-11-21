@@ -120,3 +120,18 @@ python tools/models/blp.py "D:/Octowow/Data" tools/models/out/tex "Character\Gob
 # Extract to the ignored output folder
 python tools/models/octo_mpq.py extract "D:/Octowow/Data/patch-5.mpq" tools/models/out "Character\Goblin\Male\GoblinMale.m2"
 ```
+
+## Recovering every item appearance from the client (2026-11-21)
+
+Goal: no yellow (i) in the Dressing Room because a model was missing or estimated. Everything below is local; outputs go to the git-ignored `out/` folder and nothing is uploaded.
+
+Pipeline, in order:
+
+1. `resolve_displays.py` builds item id to display id. Sources: the client's `WDB/itemcache.wdb` (the client has no `Item.dbc`), then OctoWoW's Tmog addon groups (`DisplayGroups.lua`: items that share one look; used only when every known member has identical assets in `ItemDisplayInfo.dbc`, and measured at 149 of 150 correct against the database), then, with `--fetch`, the OctoWoW database page of any item neither source places (the page the Worker already reads; cached, 4 at a time, no models downloaded).
+2. `zam_compare.py` asks Zam's asset host which (viewer slot, display id) metadata files exist, the same files `usableDisplay()` asks for. Metadata only.
+3. `item_overlay.py build` writes Zam-format records (`meta/armor/<slot>/<display>.json`, `meta/item/<display>.json`) for every display id Zam lacks: body textures (BLP to WebP, ids from 9,700,000), cloaks, shoulders, weapons, shields, ranged and helms for all ten races (models through `m2v274`, ids from 9,800,000). `item_overlay.py oracle` first proves the generator: it rebuilds the records of display ids Zam does hold and compares structure (texture regions and sexes, geoset groups, model slots). Fields of `ItemDisplayInfo.dbc` it relies on: 1 and 2 model, 3 and 4 model texture, 6 to 8 geoset groups, 12 and 13 helm geoset visibility, 14 to 21 body textures.
+4. `recover_audit.py` sorts every item and slot pair into Verified, Recovered, Partially Recovered or Unresolved with exact reasons and writes `out/model-recovery-progress.md`. `local_audit.py` is the client-only check it uses.
+
+The Worker (`cloudflare/population/src/outfitter.js`) now asks its bucket first for `meta/armor/*` and `meta/item/*` records; the bucket holds only display ids Zam lacks, so Zam is never overridden, and a missing or failing bucket changes nothing. Not deployed.
+
+Found on the way: `m2v274` crashed on some bows and thrown weapons because a sequence pointed at keys stamped before it began (now clamped to 0, bodies unchanged).

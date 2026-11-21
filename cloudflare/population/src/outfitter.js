@@ -150,6 +150,12 @@ export async function outfitter(request,fetcher=fetch,env={}) {
    if(own)return own;
    return kind==='file'?json({error:'model_file_missing',message:'This file is not in the OctoWoW model set.'},404):json({error:'models_unavailable',message:UNAVAILABLE},503);
   }
+  // Appearance records for display ids Zam's library lacks, rebuilt from the OctoWoW client (tools/models/item_overlay.py). The bucket is asked
+  // first and holds only such ids, so a Zam record is never replaced; with no bucket, or no object, the request goes to Zam as before.
+  if(bucket&&/^meta\/(?:armor\/\d+\/\d+|item\/\d+)\.json$/.test(path)) {
+   // A bucket that fails must never break the Zam answer.
+   try {const own=await fromBucket(bucket,path,cache);if(own)return own;} catch {}
+  }
   const response=await fetcher(ASSET_BASE+path,{redirect:'manual',signal:AbortSignal.timeout(20000),cf:{cacheTtl:604800,cacheEverything:true}});
   if(!response.ok) {
    // OctoWoW's own looks have no record in Zam's library. A complete record built from the client may sit in the bucket under the same path

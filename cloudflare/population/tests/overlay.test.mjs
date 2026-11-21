@@ -150,3 +150,21 @@ test('the worker passes its bindings to the appearance route',async()=>{
  const r=await worker.fetch(new Request('https://api.test/api/outfitter/assets/m2/9000000.m2'),{MODELS:bucket});
  assert.equal(await r.text(),'MODEL');
 });
+
+test('item records for display ids Zam lacks come from the bucket first; anything else still goes to Zam',async()=>{
+ const own='{"Item":{"InventoryType":5},"ComponentTextures":{"3":9650001}}';
+ const bucket=fakeBucket(new Map([['meta/armor/5/99999.json',own],['meta/item/88888.json','{"Item":{"InventoryType":13}}']]));
+ const urls=[];
+ const zam=async url=>{urls.push(url);return new Response('{"zam":true}');};
+ for(const [path,text] of [['meta/armor/5/99999.json',own],['meta/item/88888.json','{"Item":{"InventoryType":13}}']]) {
+  const r=await outfitter(asset(path),noNetwork,{MODELS:bucket});
+  assert.equal(r.status,200);assert.equal(await r.text(),text);
+ }
+ const r=await outfitter(asset('meta/armor/5/12345.json'),zam,{MODELS:bucket});
+ assert.deepEqual(await r.json(),{zam:true});
+ assert.deepEqual(urls,['https://wow.zamimg.com/modelviewer/classic/meta/armor/5/12345.json']);
+ // with no bucket the request is unchanged
+ urls.length=0;
+ await outfitter(asset('meta/armor/5/99999.json'),zam,{});
+ assert.deepEqual(urls,['https://wow.zamimg.com/modelviewer/classic/meta/armor/5/99999.json']);
+});
