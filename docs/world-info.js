@@ -14,6 +14,21 @@
   const DMF_MOVING_GAP_MS = 3 * MINUTE;
   const DMF_HEARTBEAT_MS = 3 * MINUTE;
   const DAY = 86_400_000;
+  // The three-day anchor comes from OctoTimers. OctoWoW synchronised Onyxia across realms on 31 August.
+  const RAID_RESETS = {
+    'three-day': { anchor: Date.UTC(2026, 9, 3, 2), days: 3 },
+    'five-day': { anchor: Date.UTC(2026, 7, 31, 2), days: 5 },
+    weekly: { anchor: Date.UTC(2026, 9, 7, 2), days: 7 }
+  };
+  const resetDate = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  });
+  const resetPanels = Object.entries(RAID_RESETS).map(([key, { anchor, days }]) => ({
+    anchor, period: days * DAY, next: 0,
+    date: $('raid-reset-' + key + '-date'),
+    countdown: $('raid-reset-' + key + '-countdown')
+  }));
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
     { id: 'hazzarah', name: "Hazza'rah" },
@@ -606,6 +621,17 @@
       sound.baselined = true;
     }
   }
+  function renderRaidResets(now = Date.now()) {
+    for (const panel of resetPanels) {
+      const { anchor, period, date, countdown } = panel;
+      if (now >= panel.next || now < panel.next - period) {
+        panel.next = anchor + (Math.floor((now - anchor) / period) + 1) * period;
+        date.dateTime = new Date(panel.next).toISOString();
+        date.textContent = resetDate.format(panel.next) + ' UTC';
+      }
+      countdown.textContent = spanWithDays(Math.ceil((panel.next - now) / 1000) * 1000);
+    }
+  }
   function renderLive() {
     renderRaid('ony');
     renderRaid('bwl');
@@ -616,6 +642,7 @@
     renderBuff('alliance');
     renderBuff('horde');
     renderDmf();
+    renderRaidResets();
     renderMadnessCountdown();
     watchSounds(false);
   }

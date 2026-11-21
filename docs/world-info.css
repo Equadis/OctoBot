@@ -12,6 +12,17 @@ section{min-width:0}
 .section-title h2{font-size:23px;font-weight:500;margin:0;color:var(--gold)}
 .world-grid{display:grid;gap:16px}
 .world-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.raid-reset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.raid-reset{display:flex;flex-direction:column}
+.raid-reset-raids{list-style:none;padding:0;margin:12px 0;font-size:13px;line-height:1.7}
+.raid-reset .raid-reset-raids{flex:1}
+.raid-reset .bottom-line{margin-top:0;padding-top:12px;gap:4px 12px}
+.raid-reset time{color:#e5e9ef;font-variant-numeric:tabular-nums}
+.raid-reset-countdown{margin-top:6px}
+.raid-reset-upcoming{margin-top:12px}
+.raid-reset-upcoming summary{cursor:pointer;color:var(--gold);font-size:14px}
+.raid-reset-upcoming .raid-reset-raids{margin-bottom:0}
+.raid-reset-sources{margin:8px 0 0}
 .world-panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
 .panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .eyebrow{display:block;color:#96a7ba;font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:7px}
@@ -89,7 +100,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 a{color:#a7b9cf}
 footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#8190a4;font-size:11px;line-height:1.6}
 @media(max-width:800px){
- .world-grid.two{grid-template-columns:1fr}
+ .world-grid.two,.raid-reset-grid{grid-template-columns:1fr}
  .world-panel{padding:18px 15px}
  .day{min-height:58px;padding:6px}
  .day-boss{font-size:10px}

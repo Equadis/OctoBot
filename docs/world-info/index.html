@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
+<meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, raid resets, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OctoBot">
 <meta property="og:title" content="OctoBot — World Info">
@@ -21,9 +21,9 @@
 <link rel="icon" href="../favicon.png" type="image/png">
 <link rel="stylesheet" href="../site-theme.css?v=20261120-maintenance">
 <script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<link rel="stylesheet" href="../world-info.css?v=20261117-guild-rotation2">
+<link rel="stylesheet" href="../world-info.css?v=20261121-raid-resets">
 <script src="../raid-sounds.js?v=20261119-no-tooltip" defer></script>
-<script src="../world-info.js?v=20261119-guild-led" defer></script>
+<script src="../world-info.js?v=20261121-raid-resets" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -69,6 +69,49 @@
       <span class="info-i" tabindex="0" role="note" aria-label="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown." data-tip="Estimated clears are based on how long past raids lasted and are never a guaranteed drop. A drop is confirmed only by a capital-city announcement, and a raid finishing does not prove a head was turned in. OctoWoW has no head-drop cooldown.">i</span>
     </article>
   </div>
+</section>
+
+<section id="raid-resets" aria-labelledby="raid-resets-heading">
+  <div class="section-title"><h2 id="raid-resets-heading">Raid Reset Schedule</h2><span class="muted">All realms · 02:00 UTC</span></div>
+  <div class="world-grid raid-reset-grid">
+    <article class="world-panel raid-reset">
+      <h3>Every 3 days</h3>
+      <ul class="raid-reset-raids">
+        <li><a href="https://octowow.st/db/?zone=1977">Zul'Gurub</a></li>
+      </ul>
+      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-three-day-date">–</time></div>
+      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-three-day-countdown">–</strong>
+    </article>
+    <article class="world-panel raid-reset">
+      <h3>Every 5 days</h3>
+      <ul class="raid-reset-raids">
+        <li><a href="https://octowow.st/db/?zone=2159">Onyxia's Lair</a></li>
+        <li><a href="https://octowow.st/db/?search=Lower%20Karazhan%20Halls">Lower Karazhan Halls</a></li>
+      </ul>
+      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-five-day-date">–</time></div>
+      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-five-day-countdown">–</strong>
+    </article>
+    <article class="world-panel raid-reset">
+      <h3>Every Wednesday</h3>
+      <ul class="raid-reset-raids">
+        <li><a href="https://octowow.st/db/?zone=2717">Molten Core</a></li>
+        <li><a href="https://octowow.st/db/?zone=2677">Blackwing Lair</a></li>
+      </ul>
+      <div class="bottom-line"><span>Next reset</span><time id="raid-reset-weekly-date">–</time></div>
+      <strong class="clock mono raid-reset-countdown" role="timer" id="raid-reset-weekly-countdown">–</strong>
+    </article>
+  </div>
+  <details class="world-panel raid-reset-upcoming">
+    <summary>Upcoming raids</summary>
+    <ul class="raid-reset-raids">
+      <li>Phase 3 · <a href="https://octowow.st/db/?zone=5097">Emerald Sanctum</a></li>
+      <li>Phase 4 · <a href="https://octowow.st/db/?zone=3429">Ruins of Ahn'Qiraj</a> and <a href="https://octowow.st/db/?zone=3428">Temple of Ahn'Qiraj</a></li>
+      <li>Phase 5 · <a href="https://octowow.st/db/?search=Timbermaw%20Hold">Timbermaw Hold</a></li>
+      <li>Phase 6 · <a href="https://octowow.st/db/?zone=3456">Naxxramas</a></li>
+      <li>Phase 7 · <a href="https://octowow.st/db/?zone=3457">Tower of Karazhan</a></li>
+    </ul>
+  </details>
+  <p class="raid-reset-sources muted"><a href="https://octowow.st/forum/viewtopic.php?t=2816">Weekly reset notes</a> · <a href="https://octotimers.com/">Rotating reset dates</a> · <a href="https://forge.octowow.st/roadmap">Raid roadmap</a></p>
 </section>
 
 <section aria-labelledby="buff-heading">
