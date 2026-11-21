@@ -17,18 +17,24 @@ export function sanitiseLook(value) {
   return look;
 }
 
-/** Options that can actually be chosen, in the library's own order, each with its choices in order. */
+/** Choice ids from here up are donation-shop skins added by the appearance service; they are chosen in the Character Skins panel, not here. */
+export const SKIN_CHOICE_FIRST = 9950000;
+
+/** Options that can actually be chosen, in the library's own order, each with its choices in order. Skin choices are kept apart (skinChoiceIds). */
 export function visibleOptions(customization) {
   const options = Array.isArray(customization?.Options) ? customization.Options : [];
   return options
-    .map(option => ({
-      id: option.Id,
-      name: String(option.Name || 'Option'),
-      order: option.OrderIndex ?? 0,
-      choices: (Array.isArray(option.Choices) ? option.Choices : [])
-        .map(choice => ({ id: choice.Id, name: String(choice.Name || ''), order: choice.OrderIndex ?? 0 }))
-        .sort((a, b) => a.order - b.order),
-    }))
+    .map(option => {
+      const all = (Array.isArray(option.Choices) ? option.Choices : [])
+        .map(choice => ({ id: choice.Id, name: String(choice.Name || ''), order: choice.OrderIndex ?? 0 }));
+      return {
+        id: option.Id,
+        name: String(option.Name || 'Option'),
+        order: option.OrderIndex ?? 0,
+        choices: all.filter(choice => !(choice.id >= SKIN_CHOICE_FIRST)).sort((a, b) => a.order - b.order),
+        skinChoiceIds: all.filter(choice => choice.id >= SKIN_CHOICE_FIRST).map(choice => choice.id),
+      };
+    })
     .filter(option => positiveInteger(option.id) && option.choices.length > 0)
     .sort((a, b) => a.order - b.order);
 }
@@ -38,9 +44,13 @@ export function selectedChoice(option, look) {
   return option.choices.find(choice => choice.id === look?.[option.id]) || option.choices[0];
 }
 
-/** Complete { optionId, choiceId } list for the viewer, filling every unset option with its first choice. */
-export function lookPairs(options, look) {
-  return options.map(option => ({ optionId: option.id, choiceId: selectedChoice(option, look).id }));
+/** Complete { optionId, choiceId } list for the viewer, filling every unset option with its first choice. A skin choice, when given, replaces the
+ * choice of the option it belongs to; it is never substituted by another one. */
+export function lookPairs(options, look, skinChoiceId = 0) {
+  return options.map(option => ({
+    optionId: option.id,
+    choiceId: skinChoiceId && option.skinChoiceIds?.includes(skinChoiceId) ? skinChoiceId : selectedChoice(option, look).id,
+  }));
 }
 
 /** The look after moving one option forwards or backwards, wrapping at both ends. */

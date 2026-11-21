@@ -91,3 +91,12 @@ restarting asset loading, and desktop panels stretch to the same grid-row height
 This change requires both the new page assets and the updated Worker. Deploy the
 Worker before testing the page. A Worker without the native asset routes produces
 an explicit service-update message.
+
+## Character skins
+
+The Appearance panel has a **Character skin** row (hidden until the appearance service lists skins) and a searchable **Choose a skin...** panel: search, race
+category, "Fits this character" (on by default; untick it to see why other skins do not fit) and "Unlabelled client skins" (textures no shop token is linked to).
+A skin is texture-only, so equipment, helms and animations work as with any skin colour. A skin that does not fit the race or sex is shown with the reason and is never
+replaced by another; changing race or sex removes a saved skin that no longer fits and says so. An outfit stores the skin as `skin` (an id such as `skin-50291`); outfits and
+links without it load with the default appearance, and old pages ignore the field. `skins.mjs` holds the pure rules, `skins-ui.mjs` the cards; both have tests in
+`tests/outfitter-skins.test.mjs`.

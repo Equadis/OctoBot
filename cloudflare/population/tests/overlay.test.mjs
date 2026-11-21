@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {outfitter,overlayKind,mergeHelm,resetOverlayCache} from '../src/outfitter.js';
+import {outfitter,overlayKind,mergeHelm,mergeSkinChoices,resetOverlayCache} from '../src/outfitter.js';
 import worker from '../src/index.js';
 
 // The overlay serves OctoWoW's converted Goblin and Blood Elf files from a private bucket (env.MODELS); see README.md.
@@ -151,20 +151,47 @@ test('the worker passes its bindings to the appearance route',async()=>{
  assert.equal(await r.text(),'MODEL');
 });
 
-test('item records for display ids Zam lacks come from the bucket first; anything else still goes to Zam',async()=>{
- const own='{"Item":{"InventoryType":5},"ComponentTextures":{"3":9650001}}';
- const bucket=fakeBucket(new Map([['meta/armor/5/99999.json',own],['meta/item/88888.json','{"Item":{"InventoryType":13}}']]));
- const urls=[];
- const zam=async url=>{urls.push(url);return new Response('{"zam":true}');};
- for(const [path,text] of [['meta/armor/5/99999.json',own],['meta/item/88888.json','{"Item":{"InventoryType":13}}']]) {
-  const r=await outfitter(asset(path),noNetwork,{MODELS:bucket});
-  assert.equal(r.status,200);assert.equal(await r.text(),text);
- }
- const r=await outfitter(asset('meta/armor/5/12345.json'),zam,{MODELS:bucket});
- assert.deepEqual(await r.json(),{zam:true});
- assert.deepEqual(urls,['https://wow.zamimg.com/modelviewer/classic/meta/armor/5/12345.json']);
- // with no bucket the request is unchanged
- urls.length=0;
- await outfitter(asset('meta/armor/5/99999.json'),zam,{});
- assert.deepEqual(urls,['https://wow.zamimg.com/modelviewer/classic/meta/armor/5/99999.json']);
+// ---- character skins ----
+const zamCustomization=()=>({Options:[{Id:5,Name:'Skin Color',Choices:[{Id:11,Name:'',Elements:[]}]},{Id:6,Name:'Face',Choices:[{Id:21,Elements:[]}]}],TextureFiles:{'100':[{FileDataId:1}]}});
+const skinFragment=()=>({option:'Skin Color',Choices:[{Id:9950001,Name:'Mark of Fel Power',OrderIndex:1000,Elements:[{Id:9960001,Material:{TextureTarget:1,MaterialResourcesID:9970001}}]}],TextureFiles:{'9970001':[{FileDataId:9900001,Gender:3,Class:0,Race:0,ExtraData:0}]}});
+
+test('skin choices are appended to the Skin Color option and nowhere else',()=>{
+ const merged=mergeSkinChoices(zamCustomization(),skinFragment());
+ assert.deepEqual(merged.Options[0].Choices.map(c=>c.Id),[11,9950001]);
+ assert.deepEqual(merged.Options[1].Choices.map(c=>c.Id),[21]);
+ assert.ok(merged.TextureFiles['9970001']&&merged.TextureFiles['100']);
+});
+
+test('skin merging refuses ids outside the invented ranges, missing textures and a missing Skin Color option',()=>{
+ const bad=skinFragment();bad.Choices[0].Id=11;                                   // would shadow a library choice
+ assert.deepEqual(mergeSkinChoices(zamCustomization(),bad),zamCustomization());
+ const lowTexture=skinFragment();lowTexture.TextureFiles['9970001'][0].FileDataId=1234;   // would point at a library texture
+ assert.deepEqual(mergeSkinChoices(zamCustomization(),lowTexture),zamCustomization());
+ const noResource=skinFragment();noResource.TextureFiles={};
+ assert.deepEqual(mergeSkinChoices(zamCustomization(),noResource),zamCustomization());
+ const noSkin={Options:[{Id:6,Name:'Face',Choices:[]}]};
+ assert.deepEqual(mergeSkinChoices(noSkin,skinFragment()),{Options:[{Id:6,Name:'Face',Choices:[]}]});
+ assert.equal(mergeSkinChoices(null,skinFragment()),null);
+});
+
+test('a library body gets its skins merged into the library customization; a body with none is passed through untouched',async()=>{
+ resetOverlayCache();
+ const bucket=fakeBucket(new Map([['skins/choices/1.json',JSON.stringify(skinFragment())]]));
+ const zam=async()=>new Response(JSON.stringify(zamCustomization()));
+ const merged=await (await outfitter(asset('meta/charactercustomization/1.json'),zam,{MODELS:bucket})).json();
+ assert.deepEqual(merged.Options[0].Choices.map(c=>c.Id),[11,9950001]);
+ const plain=await (await outfitter(asset('meta/charactercustomization/3.json'),zam,{MODELS:bucket})).json();
+ assert.deepEqual(plain,zamCustomization());
+ // a failing upstream or a corrupt fragment never breaks the answer
+ resetOverlayCache();
+ const corrupt=fakeBucket(new Map([['skins/choices/1.json','not json']]));
+ assert.deepEqual(await (await outfitter(asset('meta/charactercustomization/1.json'),zam,{MODELS:corrupt})).json(),zamCustomization());
+});
+
+test('the skins catalogue is served from the bucket and is an empty list without one',async()=>{
+ resetOverlayCache();
+ const bucket=fakeBucket(new Map([['skins/catalogue.json','{"version":1,"skins":[{"id":"skin-1"}]}']]));
+ assert.deepEqual(await (await outfitter(new Request('https://api.test/api/outfitter/skins'),noNetwork,{MODELS:bucket})).json(),{version:1,skins:[{id:'skin-1'}]});
+ resetOverlayCache();
+ assert.deepEqual(await (await outfitter(new Request('https://api.test/api/outfitter/skins'),noNetwork,{})).json(),{version:1,skins:[]});
 });

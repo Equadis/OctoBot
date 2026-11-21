@@ -21,7 +21,7 @@ class RealFiles(unittest.TestCase):
         import octo_mpq
         data = octo_mpq.Client(DATA).read('Character\\Goblin\\Male\\GoblinMaleSkin00_100.blp')
         webp, w, h, alpha = blp.blp_to_webp(data)
-        self.assertEqual((w, h), (512, 512))
+        self.assertIn((w, h), [(256, 256), (512, 512)])   # 256 from the OctoWoW archives; the HD mod pack (not read) makes it 512
         self.assertEqual(webp[:4], b'RIFF')
 
 

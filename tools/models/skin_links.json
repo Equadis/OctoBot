@@ -1,0 +1,29 @@
+{
+ "_about": "Hand-curated links from the OctoWoW shop's skin tokens (item ids from the client's item cache) to the client's skin textures. The client does not say which token applies which texture (the server does), so every link records its basis: 'name' = the texture file name and the token name agree; 'ordinal' = numbered series match in order (Wildhammer I-IV, wildhammershop1-4); 'visual' = compared by eye with the shop's own thumbnail for that token. A link is evidence, not proof. Paths are client paths with forward slashes, matched case-insensitively. 'm' and 'f' are the male and female texture.",
+ "links": {
+  "50105": {"f": "textures/bakednpctextures/scarlethumanshop.blp", "basis": "name+visual", "note": "Scarlet Crusade: pale woman, matches the shop thumbnail"},
+  "50106": {"m": "textures/bakednpctextures/necrohumanshop.blp", "f": "character/human/female/humanfemaleskin00_103evil.blp", "basis": "visual", "note": "Necromancy I; pale violet skin and purple marks match the thumbnails (female link is the weaker one)"},
+  "50290": {"f": "textures/bakednpctextures/azothahumanshop.blp", "basis": "name+visual"},
+  "50291": {"m": "character/human/male/humanmaleskin00_104wizardfel.blp", "basis": "name+visual", "note": "green tattoos, 'WizardFel'"},
+  "50292": {"m": "character/human/male/humanmaleskin00_105wizardarcane.blp", "f": "textures/bakednpctextures/bluefemhumanmageshop.blp", "basis": "name+visual", "note": "violet 'WizardArcane' for the man; the woman's link is by the blue face paint (weaker)"},
+  "81210": {"m": "textures/bakednpctextures/deathknighthumanshop.blp", "basis": "name+visual"},
+  "83090": {"m": "character/human/male/humanmale_magic.blp", "basis": "visual", "note": "Dalaran Legacy; the file is called Magic"},
+  "83091": {"m": "character/human/male/humanmaleskin00_103necroblue.blp", "basis": "visual", "note": "Frost Affinity; blue tattoos, the file is called NecroBlue"},
+  "50204": {"m": "textures/bakednpctextures/wildhammershop1.blp", "basis": "ordinal"},
+  "50250": {"m": "textures/bakednpctextures/wildhammershop2.blp", "basis": "ordinal"},
+  "50251": {"m": "textures/bakednpctextures/wildhammershop3.blp", "basis": "ordinal"},
+  "50252": {"m": "textures/bakednpctextures/wildhammershop4.blp", "basis": "ordinal"},
+  "50205": {"m": "textures/bakednpctextures/darkironshop.blp", "basis": "name"},
+  "50206": {"m": "textures/bakednpctextures/earthenshop.blp", "basis": "name"},
+  "81229": {"m": "textures/bakednpctextures/dwarfdeathknightshop.blp", "basis": "name"},
+  "61104": {"m": "textures/bakednpctextures/demonelfshop.blp", "basis": "name"},
+  "61105": {"f": "character/nightelf/female/nightelffemaleskin00_104demonhunter.blp", "basis": "name"},
+  "83092": {"m": "textures/bakednpctextures/natureelfshop1.blp", "basis": "ordinal"},
+  "83099": {"m": "textures/bakednpctextures/natureelfshop2.blp", "basis": "ordinal"},
+  "83100": {"m": "textures/bakednpctextures/natureelfshop3.blp", "basis": "ordinal"},
+  "51921": {"f": "character/scourge/female/scourgebloodwidowskin00_00.blp", "basis": "name"},
+  "81256": {"m": "character/tauren/male/taurenmaleskin00_21grimtotem.blp", "f": "character/tauren/female/taurenfemaleskin00_20grimtotem.blp", "basis": "name"},
+  "81228": {"m": "textures/bakednpctextures/spiritwalkertaurenshop.blp", "basis": "name"},
+  "81206": {"m": "character/bloodelf/male/bloodelfmaleskin00_106darkranger.blp", "f": "character/bloodelf/female/bloodelffemaleskin00_106darkranger.blp", "basis": "name", "alternates": ["textures/bakednpctextures/rangershop.blp"]}
+ }
+}

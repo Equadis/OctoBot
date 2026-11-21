@@ -135,3 +135,61 @@ Pipeline, in order:
 The Worker (`cloudflare/population/src/outfitter.js`) now asks its bucket first for `meta/armor/*` and `meta/item/*` records; the bucket holds only display ids Zam lacks, so Zam is never overridden, and a missing or failing bucket changes nothing. Not deployed.
 
 Found on the way: `m2v274` crashed on some bows and thrown weapons because a sequence pointed at keys stamped before it began (now clamped to 0, bodies unchanged).
+
+## Archive precedence and the HD pack (2026-11-21)
+
+`D:\Octowow\Data` holds the OctoWoW release (the base archives, `patch.MPQ`, `patch-1` to `patch-5`) **and** mods the player installed on top. WoW.exe
+loads `patch.MPQ`, then `patch-?.MPQ` alphabetically, so a single-letter patch overrides the digits. Here `patch-V` is the Project Reforged HD pack
+(33,299 textures that replace official ones: armour textures, baked NPC textures, character skins) and `patch-L/O/S/Z` are small local mods.
+
+* `octo_mpq.Client(folder)` now follows the exe's load order and **leaves out letter patches** (`include_mods=True` opts in). `octo_mpq.archive_rank` is
+  the single definition of the order. `Client.which(path)` names the archive that supplies a file, and encrypted archive members now decrypt.
+* `asset_index.py build <Data> <out.sqlite>` indexes every named file (118,138 paths from the official archives) with its winning archive;
+  `search` and `stats` query it. Names come from each archive's `(listfile)`; `patch.MPQ` has 5,710 blocks with no known name.
+* **Finding:** until this change the reader ranked letter patches above the base archives, so the deployed build `8c2bbd319a49e0a6` contains
+  4,949 textures decoded from the HD pack (of 9,325; models, skins, skeletons and metadata are unaffected) plus 28 orphan Goblin and High Elf character
+  textures that only exist with the pack. Rebuilding from official archives only (`build_overlay.py` and `item_overlay.py`, merged with
+  `merge_overlays.py`) gives `out/publish-official`, version `87965b06bb43d4b2`, 23,342 files. It is built locally and **not uploaded**: replacing live
+  files is a public change that needs the owner's decision (see Publishing status).
+
+## Character skins (donation-shop appearances)
+
+Found by reading the client, not by assumption (`skins.py`, `skin_links.json`, `wdb.py`):
+
+* The shop sells **"Mark of ..." tokens**: 40 items in the client's item cache that all cast spell 56053 ("This token will alter your character's
+  skin, while leaving the haircut, hair color, and facial features unchanged"). Their names, allowed races and shop thumbnails
+  (`Interface\ShopFrame\entries\<token>[_1|_2].blp`; `_1` male, `_2` female, none = single sex, see `Turtle_ShopUI.lua`) are in the client; the server decides which
+  skin a token applies, so the client does **not** link tokens to textures.
+* The skins are **texture-only changes of the normal race models** (no transformation, no new geometry, so equipment, helms and animations work as for
+  any skin colour). 138 textures hold them: 99 `CharSections.dbc` skin rows flagged 1 (not selectable at creation) and 39 baked NPC textures
+  (`Textures\BakedNpcTextures\*shop*.blp`, each with a `CreatureDisplayInfoExtra` row 15735 to 15774 and a `CreatureDisplayInfo` row 20962 to 20999). Each is a whole
+  body texture that already contains the face, so the viewer needs no face or underwear layers for it.
+* `skins.py discover` writes `discovery.json` and `audit.md`; `skins.py build` also converts the textures and shop pictures to WebP (ids from 9,900,000),
+  writes `skins/catalogue.json` and one `skins/choices/<body>.json` per body, a manifest and `version.json`. Statuses follow the equipment audit
+  (Verified, Recovered, Partially Recovered, Unresolved). **No skin is Verified**: a link between a token and a texture is evidence, not proof.
+* `skin_links.json` records each link and its basis: `name` (file name and token name agree), `ordinal` (numbered series), `visual` (compared by eye with the
+  shop's own picture). 24 of the 40 tokens have a link; the other 16 (every Orc, Troll, Gnome and most Undead and High Elf tokens) have only candidate
+  textures, because their textures cannot be told apart from the pictures. Textures no token is linked to are offered as "Unlabelled client skins".
+* The Worker adds each body's skin choices to its Skin Color option (`mergeSkinChoices`), serves the catalogue at `/api/outfitter/skins`, and the page keeps the
+  choice out of the ordinary appearance list. See `cloudflare/population/README.md` and `docs/outfitter/README.md`.
+* **Visually checked** (in the real viewer, compared with the shop picture, not in game): Mark of Fel Power (Human male), Mark of the Wildhammer Clan I
+  (Dwarf male, plausible). Everything else passed automated checks only.
+
+### Unresolved equipment, by cause
+
+`unresolved_causes.py` sorts the 140 partly recovered or unresolved item-slot pairs of the audit: 56 have a texture for one sex only, 43 name no model for the
+slot, 17 are weapons in model version 257 (read with the 256 layout, plausibility-checked only), 15 have no display id anywhere in the client, 5 miss their helm model
+files, 2 name a texture the archives do not hold, 2 name a display id the client does not have. Apart from the version 257 weapons (needs a reader and a visual
+check) none of these can be fixed from the client alone.
+
+## Publishing status and rollback
+
+* **Nothing from the skins work is uploaded or deployed.** The skins overlay is built under `tools/models/out/skins/overlay` and served only by
+  `e2e_server.mjs` on this machine. The Worker and page changes are committed on the branch `feature/character-skins` only; the page hides the skin row until the
+  service lists skins, so merging it before any upload changes nothing for visitors. Uploading converted client files still needs OctoWoW's agreement (rules above).
+* `upload_overlay.mjs` now refuses to run without `--backup <folder>` (it saves the object each key already has before overwriting it) or an explicit `--no-backup`.
+  A rollback of a published build is: restore the Worker (`npx wrangler rollback <version id>`), re-upload the backup folder
+  (`node tools/models/upload_overlay.mjs <backup folder> octobot-models --no-backup`, which sends `version.json` last), and check with `/api/outfitter/models-version`.
+  Resetting the version pointer alone is **not** a rollback when keys keep their names (`helms.json`, textures).
+* The live build `8c2bbd319a49e0a6` was uploaded before this existed: its old `helms.json` was overwritten and is not recoverable except by rebuilding the previous
+  commit. The Worker before that deployment is `1408876d-0345-4295-970d-53693bc16d1a`.

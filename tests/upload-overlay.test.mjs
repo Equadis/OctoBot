@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {plan,contentType} from '../tools/models/upload_overlay.mjs';
+import {plan,contentType,positional,isMissingKey} from '../tools/models/upload_overlay.mjs';
 
 const manifest={files:{'m2/9000000.m2':{bytes:10,sha256:'a'},'textures/9100000.webp':{bytes:20,sha256:'b'},'meta/character/17.json':{bytes:5,sha256:'c'},'helms.json':{bytes:7,sha256:'d'}}};
 
@@ -26,4 +26,16 @@ test('version.json is always uploaded last, so a build goes live only when all o
  const keys=plan(withVersion).map(f=>f.key);
  assert.equal(keys.at(-1),'version.json');assert.equal(keys.length,3);
  assert.deepEqual(plan(withVersion,{'m2/9000000.m2':'a','meta/character/17.json':'c'}).map(f=>f.key),['version.json']);
+});
+
+test('flag values are not mistaken for the folder or the bucket',()=>{
+ assert.deepEqual(positional(['out','octobot-models','--backup','D:/backup','--rate','2.5','--concurrency','4','--dry-run']),['out','octobot-models']);
+ assert.deepEqual(positional(['--no-backup','out','bkt']),['out','bkt']);
+});
+
+test('only a key that is not in the bucket counts as "nothing to back up"',()=>{
+ assert.equal(isMissingKey('The specified key does not exist. [code: 10007]'),true);
+ assert.equal(isMissingKey('429 Too Many Requests'),false);
+ assert.equal(isMissingKey('network unreachable'),false);
+ assert.equal(isMissingKey(''),false);
 });
