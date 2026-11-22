@@ -120,3 +120,8 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 :root{--quality-0:#9d9d9d;--quality-1:#fff;--quality-2:#1eff00;--quality-3:#0070dd;--quality-4:#a335ee;--quality-5:#ff8000;--quality-6:#ff8000}
 
 .page-nav .nav-group a[aria-disabled=true]{background:#26282c;color:#a0a2a6;border-color:#464950;cursor:not-allowed;pointer-events:none}
+
+/* Shared warning for pages that are available while still under development. */
+.site-construction-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 0 16px;border:1px solid #8b7640;border-radius:6px;background:#302d22;color:#e8ddba;font-size:13px;line-height:1.5}
+.site-construction-banner strong{color:#f4d65c;font-size:15px;white-space:nowrap}
+.site-construction-banner span{flex:1;min-width:220px}
