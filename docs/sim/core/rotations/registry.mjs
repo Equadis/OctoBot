@@ -10,6 +10,7 @@ import mage from './presets/mage.mjs?v=20261112-rotations1';
 import warlock from './presets/warlock.mjs?v=20261112-rotations1';
 import druid from './presets/druid.mjs?v=20261112-rotations1';
 import {ABILITY_DATA} from './ability-data.mjs?v=20261112-rotations1';
+import {OBSERVED_SPELLS} from './observed-spells.mjs?v=20261122-observed1';
 import {CONDITION_DEFINITIONS} from './conditions.mjs?v=20261112-rotations1';
 export const RULESET_REVISION='octowow-public-2026-11-12';
 const extras={warrior,rogue,paladin,hunter,priest,shaman,mage,warlock,druid};
@@ -21,7 +22,7 @@ for(const [classId,legacy] of Object.entries(LEGACY_PROFILES)){
  const canonical=new Map();for(const name of names)if(!canonical.has(abilityKey(classId,name)))canonical.set(abilityKey(classId,name),name);
  const abilities=[...canonical.values()],abilityRegistry=Object.fromEntries(abilities.map(name=>{
   const id=abilityKey(classId,name),fact=ABILITY_DATA[classId]?.[id]||(id==='paladin:seal-of-wisdom'?{candidateSpells:[{id:51746,rank:'Rank 5',publishedLevel:58}],spellIds:[51746],source:'https://forge.octowow.st/database/?spell=51746',rankAvailabilityVerified:false,verification:'published-database-identity'}:id==='paladin:seal-of-light'?{candidateSpells:[20165,20347,20348,20349].map((id,i)=>({id,rank:'Rank '+(i+1),publishedLevel:30+10*i})),spellIds:[20165,20347,20348,20349],source:'https://classicdb.ch/?spell=20349',rankAvailabilityVerified:false,verification:'classic-reference-identity'}:id==='paladin:seal-of-the-crusader'?{"candidateSpells":[{"id":21082,"rank":"Rank 1","publishedLevel":6},{"id":20162,"rank":"Rank 2","publishedLevel":12},{"id":20305,"rank":"Rank 3","publishedLevel":22},{"id":20306,"rank":"Rank 4","publishedLevel":32},{"id":20307,"rank":"Rank 5","publishedLevel":42},{"id":20308,"rank":"Rank 6","publishedLevel":52}],"spellIds":[21082,20162,20305,20306,20307,20308],"source":"https://classicdb.ch/?spell=20308","rankAvailabilityVerified":false,"verification":"classic-reference-identity"}:{});
-  return [id,{id,name,classId,spellIds:[],minLevel:null,verification:'unverified',actionKind:'unverified',...fact}];
+  return [id,{id,name,classId,spellIds:[],minLevel:null,verification:'unverified',actionKind:'unverified',...fact,observedSpells:structuredClone(OBSERVED_SPELLS[id]??[])}];
  }));
  const legacyPresets=legacy.presets.filter(p=>p.id!=='custom').map(p=>({...structuredClone(p),legacy:true}));
  // Keep saved explicit legacy rows untouched. Only these newly selected templates
