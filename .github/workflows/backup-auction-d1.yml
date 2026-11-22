@@ -1,6 +1,11 @@
 name: Backup Auction D1 to private R2
 on:
   workflow_dispatch:
+    inputs:
+      confirm_backup:
+        description: 'Type BACKUP to export the production D1 database to private R2'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -8,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   backup:
+    if: inputs.confirm_backup == 'BACKUP'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
