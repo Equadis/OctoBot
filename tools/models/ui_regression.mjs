@@ -50,8 +50,14 @@ try {
   let s=await state();
   const labels=await dropdowns();
   check('Skin is the sixth Appearance dropdown, after the five of the model',labels.length===6&&labels[5]==='Skin'&&!labels.slice(0,5).includes('Skin'),JSON.stringify(labels));
-  const geometry6=await browser.eval('JSON.stringify([...document.querySelectorAll("#look-options .look-option")].map(r=>{const b=r.getBoundingClientRect();return {left:Math.round(b.left),top:Math.round(b.top),width:Math.round(b.width)}}))').then(JSON.parse);
-  check('the six Appearance buttons are the same width and sit on one row',geometry6.length===6&&geometry6.every(g=>Math.abs(g.width-geometry6[0].width)<=1&&g.top===geometry6[0].top),JSON.stringify(geometry6));
+  const geometry6=await browser.eval('JSON.stringify([...document.querySelectorAll("#look-options .look-option")].map(r=>{const b=r.getBoundingClientRect();return {left:Math.round(b.left),top:Math.round(b.top),width:Math.round(b.width),right:Math.round(b.right)}}))').then(JSON.parse);
+  const five=geometry6.slice(0,5),skinBox=geometry6[5],panel=await browser.eval('(()=>{const b=document.getElementById("look-options").getBoundingClientRect();return {left:Math.round(b.left),right:Math.round(b.right)}})()');
+  check('the five model options are the same width, on one row, and together fill the panel width',five.length===5&&five.every(g=>Math.abs(g.width-five[0].width)<=1&&g.top===five[0].top)&&Math.abs(five[0].left-panel.left)<=1&&Math.abs(five[4].right-panel.right)<=1,JSON.stringify({five,panel}));
+  check('Skin sits below them, at the left edge',skinBox&&skinBox.top>five[0].top+20&&Math.abs(skinBox.left-panel.left)<=1,JSON.stringify(skinBox));
+  const skinShape=await browser.eval('JSON.stringify({arrows:document.querySelectorAll("#skin-option .look-arrow").length,tag:document.getElementById("skin-main").tagName,caret:!!document.querySelector("#skin-option .skin-caret"),button:Math.round(document.getElementById("skin-main").getBoundingClientRect().width),longest:Math.round(document.querySelector("#skin-option .skin-sizer").getBoundingClientRect().width),sizerText:document.querySelector("#skin-option .skin-sizer").textContent,names:window.__outfitter.skins().filter(s=>s.labelled).map(s=>s.name)})').then(JSON.parse);
+  const longestName=skinShape.names.reduce((a,b)=>b.length>a.length?b:a,'');
+  check('Skin is a drop-down only: no left or right arrows',skinShape.arrows===0&&skinShape.caret&&skinShape.tag==='BUTTON',JSON.stringify(skinShape));
+  check('the Skin button is as wide as the longest skin name and does not change with the choice',skinShape.sizerText===longestName&&skinShape.button>=skinShape.longest,JSON.stringify({sizer:skinShape.sizerText,longestName,button:skinShape.button,longest:skinShape.longest}));
   const ownColours=await browser.eval('fetch("/api/outfitter/assets/meta/charactercustomization/1.json").then(r=>r.json()).then(d=>d.Options.find(o=>o.Name==="Skin Color").Choices.filter(c=>c.Id<9950000).length)');
   const pillMenu=async()=>{await browser.eval('document.querySelector("#look-options .look-option .look-main").click()');const n=await browser.eval('document.querySelectorAll(".look-menu .look-choice").length');await browser.eval('document.querySelector("#look-options .look-option .look-main").click()');return n;};
   check('the Skin Color list holds only the model own colours, none of the skins',await pillMenu()===ownColours&&ownColours>0&&ownColours<20,String(ownColours));
@@ -75,9 +81,6 @@ try {
   check('the viewer fetched the skins own texture file',browser.requests.some(url=>url.includes(`/textures/${skinFile}.webp`)));
   check('the live model carries the skin choice',JSON.parse(s.applied)[1]>=9950000,s.applied);
   check('the other five dropdowns were not changed by it',JSON.stringify(await browser.eval('JSON.stringify([...document.querySelectorAll("#look-options .look-option .look-value")].slice(0,5).map(v=>v.textContent))').then(JSON.parse))===JSON.stringify(colour.slice(0,5).map(c=>c[1])));
-  await browser.eval('document.querySelector("#skin-option .look-arrow:last-child").click()');await browser.sleep(1200);
-  s=await state();
-  check('the arrows step through the list',s.skin&&s.skin!=='skin-50291'&&s.current===list[list.indexOf('Mark of Fel Power')+1],JSON.stringify(s));
   await pick('None');await browser.sleep(800);
   check('choosing None returns to the default appearance',!(await state()).skin&&(await state()).current==='None'&&JSON.parse((await state()).applied)[1]===0);
   await pick('Mark of Fel Power');await waitSkin('skin-50291');

@@ -95,10 +95,10 @@
 .look-choice.selected{background:#3a3827;border-color:#9d8a35;color:#f4d65c}
 
 /* Narrower appearance buttons (fixed width, not stretched to fill the row) */
-.look-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 6px}
-.look-pill .look-arrow{width:16px;font-size:16px}.look-main{padding:0 3px;gap:4px;font-size:11.5px}.look-option .look-value{white-space:nowrap;flex:none}.look-option .look-name{flex:1 1 auto;min-width:0}
-/* the right-hand half opens its list towards the left, so a list never runs past the panel */
-.look-option:nth-child(n+4) .look-menu{left:auto;right:0}
+.look-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 8px}
+.look-pill .look-arrow{width:20px;font-size:16px}.look-main{padding:0 4px;gap:6px;font-size:12px}.look-option .look-value{white-space:nowrap;flex:none}.look-option .look-name{flex:1 1 auto;min-width:0}
+/* the right-hand options open their list towards the left, so a list never runs past the panel */
+.look-option:nth-child(n+4):not(.skin-option) .look-menu{left:auto;right:0}
 .look-menu{right:auto;min-width:100%;width:max-content;max-width:228px;grid-template-columns:repeat(5,34px)}
 @media(max-width:760px){.look-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:420px){.look-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -241,8 +241,12 @@
 
 .toolbar>.actions{margin-left:auto}
 
-/* Skin: the sixth Appearance button, the same width as the other five; its list is a single column of full names. */
+/* Skin: a drop-down on its own row under the model's five buttons, as wide as the longest skin name (an invisible copy of it sets the width). */
 .skin-note{margin:-6px 0 12px;font-size:12px}.skin-note[hidden]{display:none}
-.skin-option .look-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.look-menu.look-skin-menu{display:flex;flex-direction:column;left:auto;right:0;min-width:100%;width:max-content;max-width:min(340px,calc(100vw - 32px))}
+.look-option.skin-option{grid-column:1/-1;justify-self:start;max-width:100%}
+.skin-option .look-pill{width:max-content;max-width:100%}.skin-option .look-main{gap:10px;padding:0 10px;font-size:12px}
+.skin-text{display:inline-grid;text-align:left;min-width:0}.skin-text>*{grid-area:1/1;white-space:nowrap}.skin-sizer{visibility:hidden;height:0;overflow:hidden}
+.skin-option .look-value{text-align:left}.skin-caret{color:#a6b5c6;font-size:12px}
+.look-menu.look-skin-menu{display:flex;flex-direction:column;left:0;right:auto;min-width:100%;width:max-content;max-width:min(340px,calc(100vw - 32px))}
+.skin-option .look-menu.look-skin-menu{left:0;right:auto}
 .look-skin-menu .look-choice{height:28px;padding:0 10px;text-align:left;white-space:nowrap;flex:none}

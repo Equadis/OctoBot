@@ -552,16 +552,22 @@ function clearSkin(){
  if(!outfit.skin)return;
  const next={...outfit};delete next.skin;outfit=next;skinNote='';applySkinChange('Skin removed.');
 }
-// The sixth Appearance button: Skin, default None, then the donation-shop skins that fit this race and sex. It is not one of the model's own options,
-// so it has its own list; choosing applies the skin's texture as an extra Skin Color choice (skins.mjs) without touching the other five.
+// The Skin dropdown, on its own row under the model's five options: default None, then the donation-shop skins that fit this race and sex. It is not one of the model's
+// own options, so it has its own list; choosing applies the skin's texture as an extra Skin Color choice (skins.mjs) without touching the other five. It is a drop-down only
+// (no arrows) and as wide as the longest shop skin name, so the button does not change size from one body to the next.
 function skinPill(){
  const skins=skinsForBody(skinCatalogue,outfit.race,outfit.gender),choices=[{id:'',name:'None'},...skins.map(skin=>({id:skin.id,name:skin.name}))];
  const current=currentSkin().skin&&skins.some(skin=>skin.id===outfit.skin)?outfit.skin:'';
  const index=Math.max(0,choices.findIndex(choice=>choice.id===current));
- const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
+ const longest=skinCatalogue.filter(skin=>skin.labelled).reduce((best,skin)=>skin.name.length>best.length?skin.name:best,'None');
+ const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span'),sizer=document.createElement('span'),caret=document.createElement('span');
  row.className='look-option skin-option';row.id='skin-option';pill.className='look-pill';
- name.className='look-name';name.textContent='Skin';value.className='look-value';value.id='skin-value';value.textContent=choices[index].name;
- main.type='button';main.className='look-main';main.id='skin-main';main.title=choices[index].name;main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);main.append(name,value);
+ name.className='look-name';name.textContent='Skin';
+ value.className='look-value';value.id='skin-value';value.textContent=choices[index].name;
+ sizer.className='skin-sizer';sizer.setAttribute('aria-hidden','true');sizer.textContent=longest;
+ caret.className='skin-caret';caret.setAttribute('aria-hidden','true');caret.textContent='▾';
+ main.type='button';main.className='look-main';main.id='skin-main';main.title=choices[index].name;main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);
+ const text=document.createElement('span');text.className='skin-text';text.append(value,sizer);main.append(name,text,caret);
  const choose=id=>{closeLookMenu({revert:false});setSkin(id);};
  main.onclick=()=>{
   if(openLookMenu&&openLookMenu.pill===pill){closeLookMenu();return;}
@@ -573,9 +579,7 @@ function skinPill(){
   }
   row.append(menu);pill.classList.add('open');openLookMenu={menu,pill,row};menu.querySelector('.selected')?.scrollIntoView({block:'nearest'});
  };
- const arrow=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.className='look-arrow';button.textContent=text;button.setAttribute('aria-label',`${label} Skin`);button.disabled=choices.length<2;
-  button.onclick=()=>choose(choices[(index+delta+choices.length)%choices.length].id);return button;};
- pill.append(arrow('Previous',-1,'‹'),main,arrow('Next',1,'›'));row.append(pill);
+ pill.append(main);row.append(pill);
  return row;
 }
 function changeLook(look){
