@@ -5,7 +5,7 @@ import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
 const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"DJ",DEV:"Developer"};
 const staffRoles=["DEV","GM","CM","DJ"];
-const enabledStaffRoles=new Set(staffRoles);
+const enabledStaffRoles=new Set(staffRoles.filter(role=>role!=="DJ"));
 const staffRoleFor=row=>Object.hasOwn(STAFF_LABELS,row.staffRole)?row.staffRole:"GM";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
