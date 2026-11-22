@@ -7,12 +7,13 @@ import {OBSERVED_SPELLS,OBSERVED_PROVENANCE} from '../../docs/sim/core/rotations
 
 const json=JSON.parse(readFileSync(new URL('../../docs/sim/data/rotations/chronicle-observed-spells.json',import.meta.url),'utf8'));
 
-test('registry exposes Chronicle-observed spell IDs per ability as read-only evidence',()=>{
+test('registry exposes only reviewed, non-disputed Chronicle-observed IDs',()=>{
  const holy=ROTATION_REGISTRY.paladin.abilityRegistry['paladin:holy-strike'];
- assert.deepEqual(holy.observedSpells.map(s=>s.spellId).sort((a,b)=>a-b),[10332,10333]);
- assert.equal(holy.observedSpells.find(s=>s.spellId===10333).hits,905);
+ assert.deepEqual(holy.observedSpells,[],'disputed Holy Strike 10333/10332 are not exposed');
  assert.deepEqual(ROTATION_REGISTRY.hunter.abilityRegistry['hunter:steady-shot'].observedSpells,[],'disputed Steady Shot 3668 is not exposed');
- assert.equal(holy.observedSpells.find(s=>s.spellId===10333).dbName,'zzOLDHoly Strike');
+ const po=ROTATION_REGISTRY.warlock.abilityRegistry['warlock:power-overwhelming'].observedSpells;
+ assert.deepEqual(po.map(x=>x.spellId),[51714]);
+ assert.equal(po[0].dbName,'Power Overwhelming');
  assert.equal(ROTATION_REGISTRY.warrior.abilityRegistry['warrior:bloodthirst'].observedSpells.length,0);
 });
 
@@ -27,14 +28,14 @@ test('wiring leaves published identities untouched: an observation never changes
    assert.ok(!('rank' in seen)&&!('minLevel' in seen),`${ability.id} observation carries rank/level`);
   }
  }
- assert.equal(checked,3);
+ assert.equal(checked,1);
 });
 
-test('Holy Strike is observed but still absent from published identities; disputed Steady Shot 3668 is recorded, not exposed',()=>{
+test('disputed identities are recorded but never exposed: Holy Strike 10333/10332 and Steady Shot 3668',()=>{
  const holy=ROTATION_REGISTRY.paladin.abilityRegistry['paladin:holy-strike'];
  assert.ok(!holy.spellIds.includes(10333)&&!(holy.candidateSpells??[]).some(c=>c.id===10333));
- assert.deepEqual(json.disputedObserved.map(c=>[c.abilityKey,c.spellId]),[['hunter:steady-shot',3668]]);
- assert.equal(json.disputedObserved[0].review.verdict,'disputed');
+ assert.deepEqual(json.disputedObserved.map(c=>[c.abilityKey,c.spellId]).sort(),[['hunter:steady-shot',3668],['paladin:holy-strike',10332],['paladin:holy-strike',10333]]);
+ assert.ok(json.disputedObserved.every(c=>c.review.verdict==='disputed'));
  assert.ok(json.observedCandidates.every(c=>c.review?.source?.startsWith('https://octowow.st/db/?spell=')));
 });
 

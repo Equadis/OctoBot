@@ -15,9 +15,6 @@ test('Holy Strike deals damage on landed hit and preserves the independent party
 test('Holy Strike refuses missing geometry and unsupported mana recipients',()=>{
  assert.throws(()=>run(hit,{geometry:{p:{p:{distance:0,position:'self'},boss:{distance:4,position:'front'}}}}),/recipient geometry/);
 });
-test('a Chronicle-observed Holy Strike ID is accepted as a spell identity; unobserved IDs are still rejected',()=>{
- const r=run(hit,{},10333);
- assert.ok(r.totals.enemyDamage>0,'observed ID 10333 runs');
- assert.ok(run(hit,{},10332).totals.enemyDamage>0,'observed ID 10332 runs');
- assert.throws(()=>run(hit,{},99999),/Spell identity not registered/);
+test('disputed Chronicle-observed Holy Strike IDs and unknown IDs are rejected at the identity gate',()=>{
+ for(const id of [10333,10332,99999])assert.throws(()=>run(hit,{},id),/Spell identity not registered/,String(id));
 });

@@ -25,8 +25,10 @@ DB = "https://octowow.st/db/?spell="
 REVIEWS = {
     ("hunter:steady-shot", 3668): {"verdict": "disputed", "dbName": "zzOLDTrueshot", "dbRank": 5,
                                    "reason": "database names this ID a different spell than the Chronicle label"},
-    ("paladin:holy-strike", 10333): {"verdict": "name-matches-deprecated", "dbName": "zzOLDHoly Strike", "dbRank": 8, "dbLevel": 99},
-    ("paladin:holy-strike", 10332): {"verdict": "name-matches-deprecated", "dbName": "zzOLDHoly Strike", "dbRank": 7, "dbLevel": 99},
+    ("paladin:holy-strike", 10333): {"verdict": "disputed", "dbName": "zzOLDHoly Strike", "dbRank": 8, "dbLevel": 99,
+                                     "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence"},
+    ("paladin:holy-strike", 10332): {"verdict": "disputed", "dbName": "zzOLDHoly Strike", "dbRank": 7, "dbLevel": 99,
+                                     "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence"},
     ("warlock:power-overwhelming", 51714): {"verdict": "name-matches", "dbName": "Power Overwhelming", "dbLevel": 40},
 }
 

@@ -11,38 +11,6 @@
  "note": "Observation only. Does not establish rank, learn level, coefficients or availability.",
  "observedCandidates": [
   {
-   "abilityKey": "paladin:holy-strike",
-   "classId": "paladin",
-   "spellId": 10332,
-   "label": "Holy Strike",
-   "hits": 2,
-   "distinctCasters": 1,
-   "review": {
-    "verdict": "name-matches-deprecated",
-    "dbName": "zzOLDHoly Strike",
-    "dbRank": 7,
-    "dbLevel": 99,
-    "source": "https://octowow.st/db/?spell=10332",
-    "reviewedOn": "2026-11-22"
-   }
-  },
-  {
-   "abilityKey": "paladin:holy-strike",
-   "classId": "paladin",
-   "spellId": 10333,
-   "label": "Holy Strike",
-   "hits": 905,
-   "distinctCasters": 5,
-   "review": {
-    "verdict": "name-matches-deprecated",
-    "dbName": "zzOLDHoly Strike",
-    "dbRank": 8,
-    "dbLevel": 99,
-    "source": "https://octowow.st/db/?spell=10333",
-    "reviewedOn": "2026-11-22"
-   }
-  },
-  {
    "abilityKey": "warlock:power-overwhelming",
    "classId": "warlock",
    "spellId": 51714,
@@ -72,6 +40,40 @@
     "dbRank": 5,
     "reason": "database names this ID a different spell than the Chronicle label",
     "source": "https://octowow.st/db/?spell=3668",
+    "reviewedOn": "2026-11-22"
+   }
+  },
+  {
+   "abilityKey": "paladin:holy-strike",
+   "classId": "paladin",
+   "spellId": 10332,
+   "label": "Holy Strike",
+   "hits": 2,
+   "distinctCasters": 1,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 7,
+    "dbLevel": 99,
+    "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence",
+    "source": "https://octowow.st/db/?spell=10332",
+    "reviewedOn": "2026-11-22"
+   }
+  },
+  {
+   "abilityKey": "paladin:holy-strike",
+   "classId": "paladin",
+   "spellId": 10333,
+   "label": "Holy Strike",
+   "hits": 905,
+   "distinctCasters": 5,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 8,
+    "dbLevel": 99,
+    "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence",
+    "source": "https://octowow.st/db/?spell=10333",
     "reviewedOn": "2026-11-22"
    }
   }
