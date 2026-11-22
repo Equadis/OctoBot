@@ -344,7 +344,7 @@ export function createExplicitClassEncounter(input){
   }
   const unresolvedHolyStrike=classId==='paladin'&&a.abilityId==='paladin:holy-strike'&&a.holyStrikePolicy?.learned===true&&a.spellId===null&&a.evidenceStatus==='reference';const rank=int(a.rank,'learned rank',1),spellId=unresolvedHolyStrike?null:int(a.spellId,'spell id',1),learnLevel=int(a.learnLevel,'learn level',1);if(unresolvedHolyStrike&&(rank>8||a.holyStrikePolicy.rank!==rank||a.cooldownMs!==6000))throw new Error('Invalid Holy Strike reference ordinal');
   if(sc.level<learnLevel)throw new Error('Rank not available at selected level');
-  if(!unresolvedHolyStrike&&!ability.spellIds?.includes(spellId)&&!ability.candidateSpells?.some(s=>s.id===spellId)&&!rankEvidence(a.abilityId,spellId))throw new Error('Spell identity not registered for this ability');
+  if(!unresolvedHolyStrike&&!ability.spellIds?.includes(spellId)&&!ability.candidateSpells?.some(s=>s.id===spellId)&&!ability.observedSpells?.some(s=>s.spellId===spellId)&&!rankEvidence(a.abilityId,spellId))throw new Error('Spell identity not registered for this ability');
   id(a.source,'rank source');choose(a.evidenceStatus,['published-partial','reference','synthetic','live-observation'],'evidence status');
   if(!actors.has(a.actorId)||a.actorId!==sc.playerId)throw new Error('Priority actions must belong to player; use independent companion autos');
   const ctx=contextFor(a.actorId);
