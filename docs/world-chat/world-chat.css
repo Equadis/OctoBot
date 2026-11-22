@@ -42,3 +42,11 @@
 .staff-role-filters button[aria-pressed="false"]{background:#18283a;color:#718399;border-color:#35485d;opacity:.65}
 .staff-role-filters button:hover{filter:brightness(1.2)}
 .staff-role-filters button:focus-visible{outline:2px solid #ace5ee;outline-offset:2px}
+
+/* Gear Planner-style panel toggles. Only the content is hidden: message polling continues. */
+.chat-panel > h2{display:flex;align-items:center;gap:10px}
+.chat-section-toggle{flex:none;margin-left:auto;background:#26374b;color:#e8d58d;border:1px solid #40546c;border-radius:4px;padding:5px 9px;cursor:pointer;font:12px Arial,sans-serif}
+.chat-section-toggle:hover{background:#31465d}
+.chat-section-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.chat-panel-collapsed > :not(h2):not(.staff-panel-heading){display:none!important}
+.chat-panel-collapsed > h2,.chat-panel-collapsed > .staff-panel-heading{border-bottom:0}
