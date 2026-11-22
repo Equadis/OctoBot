@@ -40,8 +40,9 @@ jobs:
             }]
           }
           EOF
-          npx --yes wrangler@4.166.0 r2 bucket list --json > /tmp/r2-buckets.json
-          node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("/tmp/r2-buckets.json"));if(!Array.isArray(d)||!d.some(x=>x.name==="octobot-auction-snapshots"))throw Error("R2 bucket inaccessible or missing");'
+          # Wrangler 4.166.0 does not support --json for r2 bucket list.
+          npx --yes wrangler@4.166.0 r2 bucket list | tee /tmp/r2-buckets.txt
+          grep -Fq 'octobot-auction-snapshots' /tmp/r2-buckets.txt || { echo "R2 bucket inaccessible or missing"; exit 1; }
           df -h /tmp
       - name: Export D1 SQL on the runner
         shell: bash
