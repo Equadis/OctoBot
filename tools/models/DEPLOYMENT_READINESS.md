@@ -148,3 +148,12 @@ removed from `main` is the old `resetOverlayCache`, replaced by one that also cl
 * **Verification:** every changed key compared with the manifest: 6,159 through the Worker, `helms.json` and the 19 `skins/*` keys (not served by the old Worker) read from the bucket; 0 differences.
 * **Live checks:** Dressing Room (Skin dropdown sixth, None default, names and race/sex filtering, a skin applied on a Human man and a High Elf woman, shield on the left forearm, one-hand sword, shoulders, cloak, chest, glowing item without a black square, no failed requests), Population (all API calls 200), World Chat (history, deaths and live feed 200). 124 skins, 40 shop-named, Dreadskull Clan I and Necromancy II (Night Elf) still without a texture, six Probable matches unchanged.
 * **Left over:** the private test bucket `octobot-models-rollbacktest` still exists (its cleanup was interrupted); it is not used by anything. Item 11904 still shows a dark halo (client data).
+
+## Recovery build 2026-11-22 (local only, not deployed)
+
+* **Builds:** `rc-combined3` version `3d17559b097507f6` (combined release set) and `publish-official3` version `99db69b3b41ebc4b` (official-only), made by `overlay_patch.py` from `rc-combined2` / `publish-official2`: 9 records replaced (the Embroidered Doublets), 36 textures and `meta/octobot/appearance-states.json` added, 27 unreferenced textures dropped. Every other file is byte-identical, so an upload sends 46 files.
+  Folders: `D:\Octowow\.eco-work\skins\out3\` (not in Git).
+* **Validation:** `validate_overlay.py`: 0 unsound, 0 manifest differences, 0 orphans, the same 690 known dangling helm texture references as before.
+* **Coverage (13,919 pairs):** 6,372 verified (Zam), 7,435 recovered (7,407 before: +9 doublets, +2 single shoulders, +17 version-257 weapons looked at in the viewer), 52 invisible (the client defines nothing to draw), 44 incomplete, 16 unresolved. A model or the client's exact "nothing" for 13,859 pairs (99.57%); 13,807 with a model (99.20%, was 98.99%).
+* **Worker:** a `states` route serves `meta/octobot/appearance-states.json` from the bucket only. It is not deployed; the page works without it (404 means every item is judged as before). Deploying needs the Worker deploy and the 46 files above plus `version.json` last.
+* **Tests:** browser regression 62 of 62, skins matrix 224 of 224, JS suite 382 of 391 (the same 9 unrelated failures), Worker 44 of 44, Python model tests 90.

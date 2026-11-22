@@ -91,10 +91,12 @@ class Assets:
             self.rows[row[0]] = row
 
     def string(self, offset):
+        """A string of the table, without surrounding whitespace: a few rows carry a stray space (' Cosmetic_A_01TunicBlue_Sleeve_AU',
+        'Axe_1H_Horde_A_02Blue ') and the file the row means exists without it (the nine Gold and Silver Embroidered Doublets were lost to it)."""
         if not offset:
             return ''
         start = self._base + offset
-        return self._data[start:self._data.index(b'\0', start)].decode('latin1')
+        return self._data[start:self._data.index(b'\0', start)].decode('latin1').strip()
 
     def has(self, path):
         if path not in self.cache:

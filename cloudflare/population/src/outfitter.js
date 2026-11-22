@@ -35,7 +35,7 @@ async function classicDisplayId(id,fetcher) {
 export function assetPath(path) {
  const value=path.replace(/^\/api\/outfitter\/assets\//,'');
  // Only model data and textures; no scripts, HTML, redirects or arbitrary paths.
- return /^(?:meta\/(?:character|charactercustomization|item|itemvisual)\/\d+\.json|meta\/armor\/\d+\/\d+\.json|(?:m2\/\d+\.m2|skin\/\d+\.skin|skel\/\d+\.skel|anim\/\d+\.anim|phys\/\d+\.phys|bone\/\d+\.bone)|textures\/\d+\.(?:webp|png))$/.test(value)?value:null;
+ return /^(?:meta\/octobot\/appearance-states\.json|meta\/(?:character|charactercustomization|item|itemvisual)\/\d+\.json|meta\/armor\/\d+\/\d+\.json|(?:m2\/\d+\.m2|skin\/\d+\.skin|skel\/\d+\.skel|anim\/\d+\.anim|phys\/\d+\.phys|bone\/\d+\.bone)|textures\/\d+\.(?:webp|png))$/.test(value)?value:null;
 }
 // ---- Overlay: OctoWoW's own Goblin and Blood Elf models --------------------------------------------------------------
 // Zam's Classic library has no Blood Elf, an unlike-the-client Goblin, and no helm models for either. When a private R2 bucket is bound
@@ -43,6 +43,7 @@ export function assetPath(path) {
 // is only ever read by exact key built from a validated path: it is never listed, never public and never accepts uploads from here.
 const OVERLAY_FIRST_ID=9000000,OVERLAY_CHARACTER_IDS=new Set(['17','18','19','20']);
 export function overlayKind(path) {
+ if(path==='meta/octobot/appearance-states.json')return 'states';
  const file=path.match(/^(?:m2\/(\d+)\.m2|skin\/(\d+)\.skin|skel\/(\d+)\.skel|textures\/(\d+)\.webp)$/);
  if(file)return Number(file[1]||file[2]||file[3]||file[4])>=OVERLAY_FIRST_ID?'file':null;
  const meta=path.match(/^meta\/(?:character|charactercustomization)\/(\d+)\.json$/);
@@ -181,6 +182,12 @@ export async function outfitter(request,fetcher=fetch,env={}) {
   const current=bucket?await currentVersion(bucket):null;
   // Only a versioned URL naming the build being served is cached for good; any other version is served but not cached.
   const cache=version?(current&&version===current?IMMUTABLE:'no-store'):kind?SHORT:ZAM_LONG;
+  // The recovery build's table of items with no model, no visible appearance or an incomplete one: read from the bucket only (Zam has nothing like it).
+  // A build without it answers 404 and the site judges every item as before.
+  if(kind==='states') {
+   const own=bucket?await fromBucket(bucket,path,cache):null;
+   return own||json({error:'not_found'},404);
+  }
   const customPath=path.match(/^meta\/charactercustomization\/(\d+)\.json$/);
   if(bucket&&customPath) {
    // Skin choices for this body, if the bucket holds any. Any failure falls through to the unmerged answer below.

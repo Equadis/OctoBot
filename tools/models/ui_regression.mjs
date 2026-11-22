@@ -142,6 +142,35 @@ try {
   const slots=await browser.eval('JSON.stringify(window.__outfitter.applied().map(a=>a[0]).sort((a,b)=>a-b))').then(JSON.parse);
   check('a shield is applied as a shield (14), not as an off-hand weapon (22), beside the main-hand sword (21)',JSON.stringify(slots)==='[14,21]',JSON.stringify(slots));
 
+  // what the (i) says: the recovery build's states table decides these pairs without a lookup or an estimate
+  await open();
+  const probe=(id,slot)=>browser.eval(`window.__outfitter.preview(${id},${slot}).then(r=>JSON.stringify({kind:r.kind,displayId:r.displayId,note:r.note}))`).then(JSON.parse);
+  check('the states table was read',(await browser.eval('window.__outfitter.states().size'))>=100);
+  let r=await probe(83542,3);
+  check('a hidden-slot item (Hidden Mail Shoulders) is invisible by design: no model, no estimate, a "No visible appearance" note',r.kind==='invisible'&&r.displayId===null&&/^No visible appearance:.*shows nothing, as the game does/.test(r.note),JSON.stringify(r));
+  r=await probe(55184,1);
+  check('an item the client gives display id 0 (Radiant Veil) is invisible, not "no preview"',r.kind==='invisible'&&/display id 0/.test(r.note),JSON.stringify(r));
+  r=await probe(3522,5);
+  check('an item whose named textures are not in the client (Black Night Elf Breastplate) is a missing model',r.kind==='missing'&&/^Missing model:/.test(r.note),JSON.stringify(r));
+  r=await probe(61671,10);
+  check('an item whose display row is for another slot (Thiefs Mitts) is unresolved metadata',r.kind==='unresolved'&&/^Unresolved metadata:/.test(r.note),JSON.stringify(r));
+  r=await probe(7486,5);
+  check('a chest with no female texture (Captains Breastplate) keeps its model and gains an Incomplete model warning',r.kind==='own'&&r.displayId>0&&/^Incomplete model:.*female/.test(r.note),JSON.stringify(r));
+  r=await probe(42057,5);
+  check('a recovered Gold Embroidered Doublet (stray space in the client texture name) has its model and no icon',r.kind==='own'&&r.displayId>0&&r.note==='',JSON.stringify(r));
+  r=await probe(60757,16);
+  check('a version-257 weapon looked at in the viewer (Dawnshield Mace) has its model and no icon',r.kind==='own'&&r.note==='',JSON.stringify(r));
+  r=await probe(2825,15);
+  check('an item that is not in the table is judged as before (an unknown id gives no crash)',typeof r.kind==='string');
+  // the icon in the list carries its kind
+  await browser.eval('document.querySelector("#left-slots .slot-button, #left-slots button").click()');
+  await browser.eval('(()=>{const s=document.getElementById("search");s.value="Hidden Mail Shoulders";s.dispatchEvent(new Event("input"));})()');
+  await browser.eval('[...document.querySelectorAll("#left-slots button, #right-slots button")].find(b=>/Shoulder/i.test(b.textContent))?.click()');
+  await browser.eval('(()=>{const s=document.getElementById("search");s.value="Hidden Mail Shoulders";s.dispatchEvent(new Event("input"));})()');
+  await browser.sleep(2500);
+  const icon=await browser.eval('JSON.stringify([...document.querySelectorAll("#results .info-i")].map(i=>({kind:i.dataset.kind,tip:i.dataset.tip.slice(0,40)})))').then(JSON.parse);
+  check('the row of that item shows a quiet "invisible" icon',icon.length===1&&icon[0].kind==='invisible'&&/^No visible appearance/.test(icon[0].tip),JSON.stringify(icon));
+
   // backwards compatibility
   await open(outfitHash({}).replace('%22look%22%3A%7B%7D','%22look%22%3A%7B%7D'));
   s=await state();

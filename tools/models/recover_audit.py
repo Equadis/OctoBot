@@ -1,6 +1,6 @@
 """Final audit and recovery report for the Dressing Room (local; reads the client, the cached answers and the overlay manifest).
 
-    python tools/models/recover_audit.py <Data folder>
+    python tools/models/recover_audit.py <Data folder> [--wdb <WDB folder>] [--overlay <item overlay manifest.json>] [--extra <extra overlay manifest.json>] [--out <folder>]
 
 Run after, in this order:  resolve_displays.py --fetch,  zam_compare.py,  item_overlay.py build.
 Every item and slot pair the Dressing Room lists is put in one class:
@@ -22,6 +22,7 @@ import sys
 from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import appearance_states  # noqa: E402
 import local_audit  # noqa: E402
 import octo_mpq  # noqa: E402
 
@@ -35,14 +36,32 @@ def load(name, default=None):
     return json.load(open(path, encoding='utf-8')) if os.path.exists(path) else default
 
 
+def option(argv, name):
+    return argv[argv.index(name) + 1] if name in argv else None
+
+
 def main(argv):
+    global OUT
     if not argv:
         print(__doc__)
         return 2
     displays, presence = load('item-displays.json', {}), load('zam-presence.json', {})
     fetched = load('octowow-display-cache.json', {})
-    overlay = load(os.path.join('items-overlay', 'manifest.json'), {'built': [], 'failures': []})
+    overlay = (json.load(open(option(argv, '--overlay'), encoding='utf-8')) if option(argv, '--overlay')
+               else load(os.path.join('items-overlay', 'manifest.json'), {'built': [], 'failures': []}))
     built = {(e['slot'], e['displayId']): e for e in overlay['built']}
+    # A second-pass overlay (item_overlay.py extra) replaces the entries of the pairs it now builds completely.
+    if option(argv, '--extra'):
+        extra = json.load(open(option(argv, '--extra'), encoding='utf-8'))
+        for e in extra['built']:
+            built[(e['slot'], e['displayId'])] = e
+        overlay = dict(overlay, failures=overlay['failures'] + extra.get('failures', []), files=overlay.get('files', 0) + extra.get('files', 0))
+    # The client's own item cache: a display id of 0 there is the server saying the item has no appearance.
+    wdb = option(argv, '--wdb')
+    cache = local_audit.load_itemcache(os.path.join(wdb, 'itemcache.wdb')) if wdb else {}
+    if option(argv, '--out'):
+        OUT = option(argv, '--out')
+        os.makedirs(OUT, exist_ok=True)
     catalogue = json.load(open(local_audit.CATALOGUE, encoding='utf-8'))
     client = octo_mpq.Client(argv[0])
     assets = local_audit.Assets(client)
@@ -86,6 +105,26 @@ def main(argv):
                     else:
                         row.update(category='Partially Recovered', reason='; '.join(made['notes'] + [f'conversion check failed: {b}' for b in bad]))
             rows.append(row)
+    # Pairs that are not Verified or Recovered get a cause and a state (appearance_states.py).
+    for r in rows:
+        r['state'] = None
+        outcome = None
+        if r['category'] == 'Unresolved':
+            outcome = appearance_states.classify_unresolved(r, assets, cache[r['itemId']][2] if r['itemId'] in cache else None)
+        elif r['category'] == 'Partially Recovered':
+            outcome = appearance_states.partial_state(r)
+            if outcome and outcome[0] == 'Recovered':
+                r.update(category='Recovered', reason=r['reason'] + ' | ' + outcome[2])
+                r['cause'], r['stateWhy'] = outcome[1], outcome[2]
+                continue
+            r['gapSexes'] = appearance_states.gaps_of(r)['sexes']
+        if outcome:
+            category, cause, why = outcome
+            if category == 'Invisible':
+                r['category'] = 'Invisible'
+            r['state'] = appearance_states.STATE_OF.get(category, 'missing')
+            r['cause'], r['stateWhy'] = cause, why
+    json.dump(appearance_states.states_file(rows), open(os.path.join(OUT, 'appearance-states.json'), 'w', encoding='utf-8'), indent=1)
     counts = Counter(r['category'] for r in rows)
     items_by = defaultdict(set)
     for r in rows:
@@ -97,24 +136,26 @@ def main(argv):
     lines = ['# Dressing Room model recovery: report', '',
              f'{len(rows):,} item and slot pairs, {len({r["itemId"] for r in rows}):,} items. Built from the local client; no models were downloaded.', '',
              '| Category | Pairs | Items |', '|---|---|---|']
-    for c in ('Verified', 'Recovered', 'Partially Recovered', 'Unresolved'):
+    for c in ('Verified', 'Recovered', 'Partially Recovered', 'Invisible', 'Unresolved'):
         lines.append(f'| {c} | {counts.get(c, 0):,} | {len(items_by[c]):,} |')
-    lines += ['', '## By slot', '', '| Slot | Verified | Recovered | Partially | Unresolved |', '|---|---|---|---|---|']
+    lines += ['', '## By slot', '', '| Slot | Verified | Recovered | Partially | Invisible | Unresolved |', '|---|---|---|---|---|---|']
     for slot, c in sorted(per_slot.items()):
-        lines.append(f'| {slot} | {c["Verified"]} | {c["Recovered"]} | {c["Partially Recovered"]} | {c["Unresolved"]} |')
+        lines.append(f'| {slot} | {c["Verified"]} | {c["Recovered"]} | {c["Partially Recovered"]} | {c["Invisible"]} | {c["Unresolved"]} |')
     sources = Counter(r['displaySource'] for r in rows)
     lines += ['', '## Where the display ids came from', '', *(f'* {k}: {n:,} pairs' for k, n in sources.most_common()), '']
-    for c in ('Partially Recovered', 'Unresolved'):
+    causes = Counter((r['category'], r['state'], r['cause']) for r in rows if r.get('state'))
+    lines += ['', '## Causes and states of every pair that is not Verified or Recovered', '', *(f'* {n}: {cat} / {state} / {cause}' for (cat, state, cause), n in causes.most_common()), '']
+    for c in ('Partially Recovered', 'Invisible', 'Unresolved'):
         reasons = Counter(r['reason'] for r in rows if r['category'] == c)
         lines += [f'## {c}: reasons', '', *(f'* {n:,}: {why}' for why, n in reasons.most_common(25)), '']
     lines += ['## Partially Recovered: every row', '']
     for r in rows:
         if r['category'] == 'Partially Recovered':
             lines.append(f'* item {r["itemId"]} {r["name"]} ({r["slot"]}, display {r["displayId"]}): {r["reason"]}')
-    lines += ['', '## Unresolved: items with a display id', '']
+    lines += ['', '## Invisible and Unresolved: every pair', '']
     for r in rows:
-        if r['category'] == 'Unresolved' and r['displayId']:
-            lines.append(f'* item {r["itemId"]} {r["name"]} ({r["slot"]}, display {r["displayId"]}): {r["reason"]}')
+        if r['category'] in ('Invisible', 'Unresolved'):
+            lines.append(f'* item {r["itemId"]} {r["name"]} ({r["slot"]}, display {r["displayId"]}): [{r["category"]} / {r["cause"]}] {r["stateWhy"]}')
     lines += ['', '## Conversion', '', f'* overlay records built: {sum(1 for e in overlay["built"] if e["status"] != "not built")}',
               f'* files written (models, skins, skeletons, textures): {overlay.get("files", 0)}',
               f'* conversion or decode failures: {len(overlay["failures"])}', *(f'  * {f}' for f in overlay['failures'][:60]), '',

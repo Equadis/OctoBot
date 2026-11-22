@@ -2,6 +2,9 @@
 
     python tools/models/item_overlay.py build  <Data folder> <out folder>     # converts what Zam lacks, writes files and manifest
     python tools/models/item_overlay.py oracle <Data folder>                  # checks the generator against display ids Zam DOES hold
+    python tools/models/item_overlay.py extra  <Data folder> <out folder> <existing item overlay>
+                                                                              # rebuilds what the existing overlay built with gaps or not at all; writes only what now
+                                                                              # builds completely, with ids continuing after the existing overlay's (nothing moves)
 
 The records have the shape Zam's viewer reads (see the samples in the oracle report): meta/armor/<slot>/<display id>.json for body armour,
 shoulders and cloaks, meta/item/<display id>.json for weapons, shields and ranged. Body and cloak textures become lossless WebP under invented
@@ -37,6 +40,33 @@ HELM_RACES = {1: 'Hu', 2: 'Or', 3: 'Dw', 4: 'Ni', 5: 'Sc', 6: 'Ta', 7: 'Gn', 8: 
 ARMOR_SLOTS = (3, 4, 5, 6, 7, 8, 9, 10, 16, 19)
 
 
+def used_ids(folder):
+    """(next texture file id, next record key, next model id) after everything an existing overlay folder holds."""
+    texture, key, model = TEXTURE_FIRST - 1, KEY_FIRST, MODEL_FIRST - MODEL_STRIDE
+    textures, models = os.path.join(folder, 'textures'), os.path.join(folder, 'm2')
+    for name in os.listdir(textures) if os.path.isdir(textures) else []:
+        stem = name.split('.')[0]
+        if stem.isdigit() and TEXTURE_FIRST <= int(stem) < MODEL_FIRST:
+            texture = max(texture, int(stem))
+    for name in os.listdir(models) if os.path.isdir(models) else []:
+        stem = name.split('.')[0]
+        if stem.isdigit() and MODEL_FIRST <= int(stem) < 9900000:
+            model = max(model, int(stem))
+    for root, _, files in os.walk(os.path.join(folder, 'meta')):
+        for name in files:
+            try:
+                record = json.load(open(os.path.join(root, name), encoding='utf-8'))
+            except Exception:
+                continue
+            if not isinstance(record, dict):
+                continue
+            for group in ('TextureFiles', 'ModelFiles'):
+                for k in (record.get(group) or {}):
+                    if str(k).isdigit() and KEY_FIRST <= int(k) < TEXTURE_FIRST:
+                        key = max(key, int(k))
+    return texture + 1, key, model + MODEL_STRIDE
+
+
 def meta_path(slot, display_id):
     return f'meta/item/{display_id}.json' if slot in (21, 22, 26) else f'meta/armor/{slot}/{display_id}.json'
 
@@ -53,9 +83,12 @@ def empty_record(inventory_type, item_class, sub_class, geosets):
 class Builder:
     """Allocates ids and collects files. Ids follow the order display ids are built in; build in sorted order for stable output."""
 
-    def __init__(self, client, assets, keep_files=True):
+    def __init__(self, client, assets, keep_files=True, after=None):
         self.client, self.assets, self.keep = client, assets, keep_files
-        self.tex_ids, self.next_key, self.next_model = {}, KEY_FIRST, MODEL_FIRST
+        self.tex_ids, self.next_key, self.next_model, self.next_texture = {}, KEY_FIRST, MODEL_FIRST, TEXTURE_FIRST
+        if after:
+            # Continue after the ids an existing overlay already uses, so records added later never move or collide with it.
+            self.next_texture, self.next_key, self.next_model = used_ids(after)
         self.files, self.failures, self.models = {}, [], {}
         import helms
         self.vis = helms.DisplayInfo(client)
@@ -69,7 +102,8 @@ class Builder:
             else:
                 try:
                     webp = blp.blp_to_webp(data)[0] if self.keep else b''
-                    self.tex_ids[path] = TEXTURE_FIRST + len([v for v in self.tex_ids.values() if v])
+                    self.tex_ids[path] = self.next_texture
+                    self.next_texture += 1
                     if self.keep:
                         self.files[f'textures/{self.tex_ids[path]}.webp'] = webp
                 except Exception as error:  # a texture that will not decode is reported, not hidden
@@ -308,10 +342,54 @@ def oracle(client, assets, displays_path, limit=None):
     return stats, mismatches
 
 
-def main(argv):
-    if len(argv) < 2 or argv[0] not in ('build', 'oracle'):
+def extra(argv):
+    """Second pass over an existing item overlay: every pair it built with gaps or not at all is built again with the current code (a fixed name
+    lookup, for instance); a pair that now builds with no gap is written to <out folder> with ids that continue after the existing overlay's.
+    Pairs that still have gaps are left as they were. Nothing in the existing overlay changes except the record files that are replaced."""
+    if len(argv) != 3:
         print(__doc__)
         return 2
+    data_dir, out_dir, existing = argv
+    client = octo_mpq.Client(data_dir)
+    assets = local_audit.Assets(client)
+    presence = json.load(open(os.path.join(OUT, 'zam-presence.json')))
+    before = {(e['slot'], e['displayId']): e for e in json.load(open(os.path.join(existing, 'manifest.json')))['built']}
+    builder = Builder(client, assets, after=existing)
+    done, still = [], []
+    for (slot, display_id), item in jobs(os.path.join(OUT, 'item-displays.json')):
+        old = before.get((slot, display_id))
+        if presence.get(f'{slot}:{display_id}') is not False or (old and old['status'] == 'built'):
+            continue
+        record, notes = builder.build(display_id, slot, item)
+        entry = {'slot': slot, 'displayId': display_id, 'exampleItem': [item['id'], item['name']], 'notes': notes, 'was': old['status'] if old else 'absent'}
+        has = record is not None and bool(record['ComponentTextures'] or record['ComponentModels'] or record['Textures'])
+        if has and not notes:
+            entry['verify'] = [e.pop('_verify') for v in (record['ModelFiles'] or {}).values() for e in v]
+            entry['status'] = 'built'
+            path = os.path.join(out_dir, meta_path(slot, display_id))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            json.dump(record, open(path, 'w'))
+            done.append(entry)
+        else:
+            entry['status'] = 'unchanged'
+            still.append(entry)
+    for rel, blob in builder.files.items():
+        path = os.path.join(out_dir, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        open(path, 'wb').write(blob)
+    json.dump({'built': done, 'unchanged': len(still), 'failures': builder.failures, 'files': len(builder.files), 'after': existing},
+              open(os.path.join(out_dir, 'manifest.json'), 'w'), indent=1)
+    print(f'{len(done)} pairs now build completely ({sum(1 for e in done if e["was"] == "built with gaps")} had gaps, {sum(1 for e in done if e["was"] != "built with gaps")} were not built); '
+          f'{len(still)} still have gaps; {len(builder.files)} files; failures {len(builder.failures)}')
+    return 0
+
+
+def main(argv):
+    if len(argv) < 2 or argv[0] not in ('build', 'oracle', 'extra'):
+        print(__doc__)
+        return 2
+    if argv[0] == 'extra':
+        return extra(argv[1:])
     client = octo_mpq.Client(argv[1])
     assets = local_audit.Assets(client)
     displays_path = os.path.join(OUT, 'item-displays.json')

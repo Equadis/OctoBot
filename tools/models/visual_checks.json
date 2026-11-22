@@ -1,0 +1,7 @@
+{
+  "m2-v257-models": {
+    "checked": "2026-11-22",
+    "how": "tools/models/render_gear.mjs in the real Dressing Room viewer, a Human man, front and left views, wielded in the hand the slot uses (main hand, off hand, ranged); geometry, textures and grip looked right",
+    "displays": [40046, 40044, 37192, 36714, 36382, 60958, 66420, 60751, 66418, 40143]
+  }
+}

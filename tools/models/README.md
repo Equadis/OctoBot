@@ -213,6 +213,53 @@ weapons and held-in-off-hand items, with library (Zam) items and client-recovere
 * **Not changed and not verifiable here:** the library's own models (Human to Troll bodies, their shields) come from Zam unchanged; where one of them clips a hand in the original game it does here.
   Judging a grip is by eye, and nothing is checked in game.
 
+## The last 66 items and the 72 partial pairs (2026-11-22)
+
+**Where this started.** 13,779 of 13,919 item and slot pairs had their own model; 72 pairs were partially recovered and 68 pairs (66 items) unresolved. Every one of the 140 was
+looked at again against the client's own files (`ItemDisplayInfo.dbc`, `WDB/itemcache.wdb`, the archives, newest patch first). Nothing was matched by name or icon.
+
+**Why the 68 unresolved pairs have no model.** For 52 of them the client itself defines nothing to draw, so the exact preview is nothing:
+
+| Cause | Pairs | Evidence |
+|---|---|---|
+| Display id 0 in the client's item cache | 15 | The server's own cache (refreshed 2026-11-22) lists display id 0 for Faceted Armcuffs, Radiant Veil, Jeweled Helm, Blood Crown, Topaz Tempest Rod, Cenarion Treads and the rest of the 5518x block: unreleased placeholders with a question-mark icon. They had been "unresolved" because the OctoWoW database page names no id. |
+| Test placeholders | 14 | "Test Helm 2", "Test Chest 1/2", "Test Belt", ...: the display row is empty (or absent) and the icons are rings and necklaces. |
+| Hidden-slot items | 12 | "Hidden Mail Shoulders", "Summer Collection of Unseen Fashion", "The Emperor's New Cape": an empty display row is the point of the item. |
+| Empty display row | 9 | Tabard of the Ashbringer, Earthshatter Leggings and Greaves, Coldheart Icicle, the four Firestones: the row exists and names no model or texture. |
+| Deprecated "OLD" items | 2 | OLDCeremonial Club: empty row. |
+
+The other 16 pairs stay unresolved, each with its exact cause:
+
+| Cause | Pairs | Items |
+|---|---|---|
+| The row names textures the client does not hold (no Mail_NightElf_C_02* or Generic_DwPr_01 / OrHu_01 files for either sex) | 6 | Black and White Night Elf Breastplate, Black Night Elf Gloves, OLD Dwarven Initiate's Shirt and Pants, OLD Thick Trapper's Shirt |
+| No display row 2042 in the client table | 1 | Branch of the Great Tree |
+| The row is for another kind of slot or object (boot textures on gloves, a flint-axe model on helms, shoulder models and chest textures on a helm): the item's data is inconsistent and its intended look is unknown | 9 | Thief's Mitts, Cloudweaver Gloves, Energy Resistant Belt, Thinker's Shoulders, Crown of Wrath, Genesis Raiments, Crystalfall Cap, Felguard's Visage, Grifter's Belt |
+
+The client's inventory type agrees with the catalogue slot for all of them, so no item was in the wrong slot.
+
+**Recovered.** Nine Gold and Silver Embroidered Doublets (items 42057 to 42065) had a leading space in the name of their sleeve texture (`' Cosmetic_A_01TunicBlue_Sleeve_AU'`); the file exists without it. `local_audit.Assets.string`
+now drops surrounding whitespace and `item_overlay.py extra` rebuilt them (36 textures, 9 records). The rebuild continues the existing id ranges (`used_ids`), so no existing file moved.
+
+**Partial pairs (72, now 44).** 17 weapons have M2 version 257 models read with the version 256 layout; 12 items covering their ten display ids were rendered in the real viewer (`render_gear.mjs`, front and left, Human man) and look right
+(`visual_checks.json`), so they count as recovered. Two shoulders name one shoulder model only (the game draws one pauldron). The 44 that stay partial: 41 lack a texture for one sex in the client (chest and legs: that part shows bare), two helms
+exist for some races only, one shoulder texture is missing. These are client gaps, not converter faults: the same texture names exist for neither the missing sex nor as a unisex file.
+
+**What the page says.** Each pair that is not simply "has its own model" has a state in `meta/octobot/appearance-states.json`, built by `recover_audit.py` (`appearance_states.py`) and served from the bucket by the Worker (`states` route, not deployed). The page reads it once:
+
+| Icon | State | Shown for |
+|---|---|---|
+| quiet grey, dashed | No visible appearance | the 52 pairs the client draws nothing for; the preview shows nothing, as the game does |
+| amber | Missing model | files the client names are not in it (7 pairs) |
+| amber | Unresolved metadata | the display row is for another slot (9 pairs), or the service found no display id |
+| amber | Incomplete model | a model loads but something is absent: the note says which sex (44 pairs) |
+| amber | Estimated preview | another item's model, as before |
+| red | Service error | the appearance service failed or is out of date |
+
+A pair with a state skips the service lookup and every estimate. Without the table (an older build) the page judges items as before.
+
+**Tools.** `item_overlay.py extra` (second pass with continuing ids), `overlay_patch.py` (applies a small patch, with `.remove.json`, to a finished folder), `appearance_states.py`, `recover_audit.py --wdb --overlay --extra --out`, `visual_checks.json`.
+
 ## Publishing status and rollback
 
 * **Nothing from the skins work is uploaded or deployed.** The skins overlay is built under `tools/models/out/skins/overlay` and served only by

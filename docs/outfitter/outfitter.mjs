@@ -2,8 +2,9 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-skins3';
-import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261122-skins3';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-states1';
+import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261122-states1';
+import {stateKey,parseStates,stateNote,infoKind,NOTES} from './appearance.mjs?v=20261122-states1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='',appliedLook='';
@@ -311,11 +312,11 @@ const previewCache=new Map();
 const knownNotes=new Map();
 const noteKey=(item,slotId)=>`${item.id}:${viewerSlot(slotId,item)}`;
 const SLOW_LOOKUP_MS=4000;
-const NOTE_NAME='Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.';
-const NOTE_ICON='Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.';
-const NOTE_NONE='No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.';
-const NOTE_FAIL='The appearance service did not answer for this item, so it has no preview right now. It stays in your outfit. Selecting it again will retry.';
-const NOTE_LEGACY='No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.';
+const NOTE_NAME=NOTES.name,NOTE_ICON=NOTES.icon,NOTE_NONE=NOTES.missing,NOTE_FAIL=NOTES.error,NOTE_LEGACY=NOTES.legacy;
+// The recovery build's table of pairs that have no model, no visible appearance or an incomplete one (appearance.mjs). One small request per visit;
+// without it (an older build) every item is judged as before.
+let appearanceStates=new Map();
+async function loadAppearanceStates(){try{appearanceStates=parseStates(await getJson(`${assetBase}meta/octobot/appearance-states.json`));}catch{appearanceStates=new Map();}}
 // First display ID in the list whose model files exist in the Classic library, or null.
 async function usableDisplay(data,slot){
  for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
@@ -329,12 +330,17 @@ function resolvePreview(item,slotId){
  if(previewCache.has(key))return previewCache.get(key);
  const job=(async()=>{
   let legacy=false;
+  // The client's own answer is known for these pairs: nothing to look up, nothing to estimate.
+  const known=appearanceStates.get(stateKey(item.id,slot));
+  if(known&&known.state!=='incomplete')return {slot,displayId:null,kind:known.state,note:stateNote(known)};
+  let unknownDisplay=false;
   try{
    const data=await displayFor(item.id);
+   unknownDisplay=!data.displayId&&!(Array.isArray(data.candidates)&&data.candidates.length);
    // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
    if(!Array.isArray(data.candidates))legacy=true;
    const own=await usableDisplay(data,slot);
-   if(own!==null)return {slot,displayId:own,kind:'own',note:''};
+   if(own!==null)return {slot,displayId:own,kind:'own',note:known?stateNote(known):''};
   }catch{
    // The service itself failed (timeout or 502). Do not chain more slow lookups; report it and let the next render retry.
    queueMicrotask(()=>previewCache.delete(key));return {slot,displayId:null,kind:'error',note:NOTE_FAIL};
@@ -347,12 +353,12 @@ function resolvePreview(item,slotId){
   const byIcon=await Promise.all(sameIconItems(iconIndex,item).slice(0,8).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
   const iconMatch=byIcon.find(displayId=>displayId!==null);
   if(iconMatch!==undefined)return {slot,displayId:iconMatch,kind:'icon',note:NOTE_ICON};
-  return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:NOTE_NONE};
+  return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:unknownDisplay?NOTES.unresolved:NOTE_NONE};
  })();
  job.then(result=>{if(result?.note)knownNotes.set(key,result.note);}).catch(()=>{});
  previewCache.set(key,job);return job;
 }
-function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';return info;}
+function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.dataset.kind=infoKind(note);info.textContent='i';return info;}
 // Item rows are checked as they scroll into view, so the (i) appears for every item with an estimated or missing preview.
 // These checks are background work: they run two at a time, only for rows still on screen, and never while the 3D model
 // is loading, so they cannot slow down the model the user just chose.
@@ -462,7 +468,7 @@ async function loadLookOptions(chrModelId){
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
 // Diagnostics for testing, only with ?debug in the address: the live character actor and the current outfit.
-if(new URLSearchParams(location.search).has('debug'))window.__outfitter={skins:()=>skinCatalogue,skinNote:()=>skinNote,appliedLook:()=>appliedLook,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
+if(new URLSearchParams(location.search).has('debug'))window.__outfitter={preview:(id,slotId)=>resolvePreview(byId.get(id),slotId),states:()=>appearanceStates,skins:()=>skinCatalogue,skinNote:()=>skinNote,appliedLook:()=>appliedLook,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
 // Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
 function pushAppearance(look){
  const actor=characterActor();if(!actor)return false;
@@ -763,11 +769,10 @@ async function renderModel(resetCamera=false,forceRebuild=false){
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';modelBusy=false;return;}
    setTimeout(check,250);
   };check();
-  for(const id of unavailableIds)nextNotes.set(id,outdatedService?'No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.':'No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.');
   approxNotes=nextNotes;renderItems();
   if(slowItems.length){
    feedback(`Still fetching the model for ${slowItems.map(entry=>entry.item.name).join(', ')}. The preview will update when it arrives.`);
-   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();feedback(`No preview for ${item.name} right now: ${result.kind==='error'?'the appearance service did not answer. Select it again to retry.':'it has no Classic model.'}`);}}).catch(()=>{});
+   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();feedback(`No preview for ${item.name} right now: ${result.kind==='error'?'the appearance service did not answer. Select it again to retry.':result.kind==='invisible'?'the game client defines no visible appearance for it.':'it has no Classic model.'}`);}}).catch(()=>{});
   }
  } catch(error){if(token===revision){modelBusy=false;$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
@@ -799,7 +804,7 @@ async function start(){
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
   saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
   renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
-  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await loadSkins();renderItems();
+  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await Promise.all([loadSkins(),loadAppearanceStates()]);renderItems();
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
 

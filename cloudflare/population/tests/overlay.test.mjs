@@ -195,3 +195,18 @@ test('the skins catalogue is served from the bucket and is an empty list without
  resetOverlayCache();
  assert.deepEqual(await (await outfitter(new Request('https://api.test/api/outfitter/skins'),noNetwork,{})).json(),{version:1,skins:[]});
 });
+
+test('the appearance states table comes from the bucket only: never from Zam, 404 when the build has none',async()=>{
+ assert.equal(overlayKind('meta/octobot/appearance-states.json'),'states');
+ for(const p of ['meta/octobot/other.json','meta/octobot/appearance-states.json.bak','meta/octobot/../character/1.json'])assert.equal(overlayKind(p),null);
+ const urls=[];
+ const table='{"version":1,"items":{"55184:1":{"state":"invisible","why":"x"}}}';
+ const bucket={async get(key){return key==='meta/octobot/appearance-states.json'?{body:table}:null;}};
+ resetOverlayCache();
+ const ok=await outfitter(asset('meta/octobot/appearance-states.json'),async url=>{urls.push(url);throw Error('Zam must not be asked');},{MODELS:bucket});
+ assert.equal(ok.status,200);assert.equal(await ok.text(),table);assert.deepEqual(urls,[]);
+ const none=await outfitter(asset('meta/octobot/appearance-states.json'),async url=>{urls.push(url);throw Error('Zam must not be asked');},{MODELS:{async get(){return null;}}});
+ assert.equal(none.status,404);
+ const noBucket=await outfitter(asset('meta/octobot/appearance-states.json'),async url=>{urls.push(url);throw Error('Zam must not be asked');},{});
+ assert.equal(noBucket.status,404);assert.deepEqual(urls,[]);
+});

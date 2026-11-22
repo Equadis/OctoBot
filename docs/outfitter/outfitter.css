@@ -250,3 +250,8 @@
 .look-menu.look-skin-menu{display:flex;flex-direction:column;left:0;right:auto;min-width:100%;width:max-content;max-width:min(340px,calc(100vw - 32px))}
 .skin-option .look-menu.look-skin-menu{left:0;right:auto}
 .look-skin-menu .look-choice{height:28px;padding:0 10px;text-align:left;white-space:nowrap;flex:none}
+
+/* Info icons by kind: grey and quiet when the game shows nothing on purpose, amber when something is missing, unknown, incomplete or estimated, red when the service failed */
+.info-i[data-kind="invisible"]{border-style:dashed;color:#7a8a9f}
+.info-i[data-kind="missing"],.info-i[data-kind="unresolved"],.info-i[data-kind="incomplete"],.info-i[data-kind="estimated"]{border-color:#9d8a35;color:#e8c67c}
+.info-i[data-kind="error"]{border-color:#a8504a;color:#f09a92}
