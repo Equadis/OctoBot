@@ -129,17 +129,110 @@ def summarise(instance, data):
     } for (ability_id, class_id, spell_id), summary in sorted(sources.items())]
 
 
+def load_known_spells(evidence_path, observed_path=None):
+    """Map published spell IDs to simulator ability keys (ability-evidence.json).
+
+    observed_path optionally adds IDs seen in public Chronicle reports; these only
+    say a spell ID was observed for the ability, never its rank or learn level.
+    """
+    records = json.loads(Path(evidence_path).read_text())["records"]
+    known = {}
+    for record in records:
+        for candidate in record["candidateSpells"]:
+            known.setdefault(candidate["id"], set()).add(record["key"])
+    if observed_path:
+        for item in json.loads(Path(observed_path).read_text())["observedCandidates"]:
+            known.setdefault(item["spellId"], set()).add(item["abilityKey"])
+    return known
+
+
+def summarise_all(instance, data, known):
+    """Count every successful player cast and say whether the simulator knows its spell ID.
+
+    Nothing is discarded: casts of IDs absent from the catalogue are reported as
+    unmapped, and IDs claimed by several abilities as ambiguous, so gaps stay visible.
+    """
+    if instance["tenant_slug"] != "octo" or instance["unlisted"] is not False:
+        raise ValueError("Expected a public OctoWoW report")
+    encounters = {encounter["id"] for encounter in instance["encounters"]}
+    if not encounters:
+        raise ValueError("Expected a raid report with encounter metadata")
+    counts = defaultdict(lambda: {"casts": 0, "casters": set()})
+    skipped = {"synthetic": 0, "non_player": 0}
+    for encounter_id, event in messages(data):
+        if encounter_id not in encounters:
+            raise ValueError("Spell stream contains an encounter outside the report")
+        if fields(event.get(1, b"")).get(4):
+            skipped["synthetic"] += 1
+            continue
+        spell = fields(event.get(3, b""))
+        spell_id = spell.get(1, 0)
+        caster = bytes(event.get(4, b"")).decode()
+        player = instance["players"].get(caster)
+        if not player or not 0 < spell_id <= 2**31 - 1:
+            skipped["non_player"] += 1
+            continue
+        entry = counts[(player["class"].casefold(), spell_id, bytes(spell.get(2, b"")).decode())]
+        entry["casts"] += 1
+        entry["casters"].add(caster)
+    rows = []
+    for (class_id, spell_id, label), entry in sorted(counts.items()):
+        abilities = sorted(a for a in known.get(spell_id, ()) if a.split(":")[0] == class_id)
+        status = "mapped" if len(abilities) == 1 else "ambiguous" if abilities else "unmapped"
+        rows.append({"classId": class_id, "spellId": spell_id, "label": label,
+                     "casts": entry["casts"], "distinctCasters": len(entry["casters"]),
+                     "status": status, "abilityKeys": abilities})
+    return {"source": REPORTS + instance["slug"], "instanceId": instance["id"],
+            "skipped": skipped, "rows": rows}
+
+
+def summarise_damage(players, data, known):
+    """Count damage-event hits per player class and spell ID from the damage stream.
+
+    These are HITS, not casts: one cast can produce several hits (ticks, cleave,
+    chain targets) and misses are separate events. Use this to find which spell IDs
+    have real-log evidence, not to compare cast rates. Pets and non-players are skipped.
+    """
+    counts = defaultdict(lambda: {"hits": 0, "casters": set(), "amount": 0})
+    skipped = 0
+    for _, event in messages(data):
+        caster = bytes(event.get(3, b"")).decode()
+        player = players.get(caster)
+        spell = fields(event.get(10, b""))
+        spell_id = spell.get(1, 0)
+        if not player or not 0 < spell_id <= 2**31 - 1:
+            skipped += 1
+            continue
+        entry = counts[(player["class"].casefold(), spell_id, bytes(spell.get(2, b"")).decode())]
+        entry["hits"] += 1
+        entry["casters"].add(caster)
+        entry["amount"] += event.get(7, 0)
+    rows = []
+    for (class_id, spell_id, label), entry in sorted(counts.items()):
+        abilities = sorted(a for a in known.get(spell_id, ()) if a.split(":")[0] == class_id)
+        status = "mapped" if len(abilities) == 1 else "ambiguous" if abilities else "unmapped"
+        rows.append({"classId": class_id, "spellId": spell_id, "label": label, "hits": entry["hits"],
+                     "distinctCasters": len(entry["casters"]), "totalAmount": entry["amount"],
+                     "status": status, "abilityKeys": abilities})
+    return {"stream": "damage", "unit": "hits (not casts)", "skippedNonPlayerEvents": skipped, "rows": rows}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("instance", type=Path, help="Public instance metadata JSON")
     parser.add_argument("spell_go", type=Path, help="Gzip-compressed successful spell stream for the same instance")
+    parser.add_argument("--all", metavar="ABILITY_EVIDENCE_JSON", type=Path,
+                        help="Report every player cast, mapped to simulator abilities via this evidence file")
     args = parser.parse_args()
     instance = json.loads(args.instance.read_text())
     with gzip.open(args.spell_go, "rb") as stream:
         data = stream.read(MAX_STREAM_BYTES + 1)
     if len(data) > MAX_STREAM_BYTES:
         parser.error("Uncompressed stream exceeds 64 MiB")
-    print(json.dumps(summarise(instance, data), indent=2))
+    if args.all:
+        print(json.dumps(summarise_all(instance, data, load_known_spells(args.all)), indent=2))
+    else:
+        print(json.dumps(summarise(instance, data), indent=2))
 
 
 if __name__ == "__main__":

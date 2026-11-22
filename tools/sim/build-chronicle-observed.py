@@ -1,0 +1,66 @@
+"""Build chronicle-observed-spells.json from a public Chronicle damage stream.
+
+Inputs: gzip damage stream, a roster JSON mapping caster GUID -> class (taken from the
+report's player list), the ability-evidence file and report provenance. Output contains
+no GUIDs or character names. Counts are damage HITS, not casts. An observed ID is only
+attached to an ability whose key equals the slug of the spell label; everything else is
+listed as unmapped for review. Nothing here asserts rank, learn level or coefficients.
+"""
+import argparse
+import gzip
+import importlib.util
+import json
+import re
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+spec = importlib.util.spec_from_file_location("chronicle_casts", HERE / "import-chronicle-casts.py")
+chronicle = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(chronicle)
+
+
+def slug(label):
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", label.lower())).strip("-")
+
+
+def build(players, data, evidence_path, provenance):
+    keys = {r["key"] for r in json.loads(Path(evidence_path).read_text())["records"]}
+    known = chronicle.load_known_spells(evidence_path)
+    report = chronicle.summarise_damage(players, data, known)
+    candidates, unmapped = [], []
+    for row in report["rows"]:
+        if row["status"] != "unmapped":
+            continue
+        key = f'{row["classId"]}:{slug(row["label"])}'
+        entry = {"classId": row["classId"], "spellId": row["spellId"], "label": row["label"],
+                 "hits": row["hits"], "distinctCasters": row["distinctCasters"]}
+        if key in keys:
+            candidates.append({"abilityKey": key, **entry})
+        else:
+            unmapped.append(entry)
+    return {"schema": "octosim-chronicle-observed-v1", "provenance": provenance,
+            "unit": report["unit"],
+            "note": "Observation only. Does not establish rank, learn level, coefficients or availability.",
+            "observedCandidates": candidates, "unmappedObserved": unmapped}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("damage", type=Path)
+    parser.add_argument("roster", type=Path, help="JSON {guid: CLASS}")
+    parser.add_argument("evidence", type=Path)
+    parser.add_argument("--report-url", required=True)
+    parser.add_argument("--build", required=True)
+    parser.add_argument("--realm", required=True)
+    parser.add_argument("--date", required=True)
+    args = parser.parse_args()
+    players = {g: {"class": c} for g, c in json.loads(args.roster.read_text()).items()}
+    with gzip.open(args.damage, "rb") as stream:
+        data = stream.read()
+    provenance = {"reportUrl": args.report_url, "clientBuild": args.build, "realm": args.realm,
+                  "date": args.date, "stream": "damage"}
+    print(json.dumps(build(players, data, args.evidence, provenance), indent=1))
+
+
+if __name__ == "__main__":
+    main()
