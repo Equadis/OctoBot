@@ -816,7 +816,23 @@
     void loadMetrics();
     void loadEra();
     setInterval(renderLive, 1000);
-    setInterval(() => { void loadMetrics(); }, MINUTE);
+    // Keep drop timers within five seconds of a fresh NPC-yell event while viewed.
+    // Background tabs use the original minute cadence to limit Worker/D1 reads.
+    let metricsInFlight = false;
+    let nextMetricsAt = Date.now() + 5_000;
+    const refreshMetrics = async () => {
+      if (metricsInFlight) return;
+      metricsInFlight = true;
+      try { await loadMetrics(); }
+      finally { metricsInFlight = false; nextMetricsAt = Date.now() + (document.hidden ? MINUTE : 5_000); }
+    };
+    setInterval(() => {
+      if (Date.now() >= nextMetricsAt) void refreshMetrics();
+    }, 1_000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) { nextMetricsAt = Date.now(); void refreshMetrics(); }
+      else nextMetricsAt = Date.now() + MINUTE;
+    });
     setInterval(() => { void loadEra(); }, 15 * MINUTE);
   }
   init();
