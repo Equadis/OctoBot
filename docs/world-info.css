@@ -156,7 +156,8 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .dmf-location>.dmf-icon{width:48px;height:48px}
 .dmf-location>strong{font-size:34px;min-width:0}
 
-.clear-block{margin:8px 0 14px;display:flex;flex-direction:column;gap:5px}.clear-block .clock{font-size:24px;line-height:1.2}
+.field-header:has(+ .clear-block){margin-bottom:3px}
+.clear-block{margin:0 0 14px;display:flex;flex-direction:column;gap:5px}.clear-block .clock{font-size:24px;line-height:1.2}
 .clear-block small{color:#91a0b2;font-size:11px;line-height:1.5}
 .clear-tag{align-self:flex-start;font-size:9px;letter-spacing:.08em;font-weight:700;color:#a8d8f2;background:#29394b;border:1px solid #52758e;border-radius:3px;padding:3px 6px}
 .clear-tag[hidden]{display:none}
