@@ -246,6 +246,6 @@
 #last-scan.ah-time-yellow{color:#ffff00}
 #last-scan.ah-time-red{color:#ff0000}
 
-.ah-maintenance-background{filter:grayscale(1);opacity:.43;user-select:none}
-.ah-maintenance-notice{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:1rem;text-align:center;background:rgba(13,14,16,.55)}
-.ah-maintenance-notice h1{margin:0;padding:1rem 1.5rem;border:1px solid #61656d;border-radius:6px;background:#222428;color:#f0f0f0;font-size:clamp(1.3rem,5vw,2.25rem)}
+.ah-construction-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 0 16px;border:1px solid #8b7640;border-radius:6px;background:#302d22;color:#e8ddba;font-size:13px;line-height:1.5}
+.ah-construction-banner strong{color:#f4d65c;font-size:15px;white-space:nowrap}
+.ah-construction-banner span{flex:1;min-width:220px}
