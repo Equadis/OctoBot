@@ -2,8 +2,8 @@
 export const PROFILES=Object.freeze({
  OBPVESW:{account:"OBPVESW",realmName:"N'Zoth",role:"sw",buffs:true,raid:{zone:2159,zoneName:"Onyxia's Lair",minActivity:15,period:30,offset:8}},
  OBPVEORG:{account:"OBPVEORG",realmName:"N'Zoth",role:"org",buffs:true,raid:{zone:2677,zoneName:"Blackwing Lair",minActivity:20,period:30,offset:23}},
- OBPVEDMFA:{account:"OBPVEDMFA",realmName:"N'Zoth",role:"dmfa",dmf:"elwynn",info:{period:20,offset:0},chat:{period:10,offset:1}},
- OBPVEDMFH:{account:"OBPVEDMFH",realmName:"N'Zoth",role:"dmfh",dmf:"mulgore",info:{period:20,offset:10},chat:{period:10,offset:6}},
+ OBPVEDMFA:{account:"OBPVEDMFA",realmName:"N'Zoth",role:"dmfa",dmf:"elwynn",info:{period:20,offset:0},chat:{period:5,offset:1}},
+ OBPVEDMFH:{account:"OBPVEDMFH",realmName:"N'Zoth",role:"dmfh",dmf:"mulgore",info:{period:20,offset:10},chat:{period:5,offset:3}},
  OBPVEAH:{account:"OBPVEAH",realmName:"N'Zoth",role:"ah",auction:true,info:{period:10,offset:2}},
  OBPVPSW:{account:"OBPVPSW",realmName:"Y'Shaarj",role:"sw",auction:true,info:{period:10,offset:4}},
  OVHCSW:{account:"OBHCSW",realmName:"C'Thun",role:"sw",info:{period:10,offset:8}}
