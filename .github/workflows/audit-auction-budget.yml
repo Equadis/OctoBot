@@ -1,0 +1,64 @@
+name: Audit Auction House budget (read-only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-auction-budget.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '823592d7e68e3220a2b75f3f9c72515e' }}
+      CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+      AUCTION_BILLING_START: ${{ vars.AUCTION_BILLING_START }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check required account analytics credentials and current billing period
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$CLOUDFLARE_ANALYTICS_TOKEN" ]]; then
+            echo "::error::Add CLOUDFLARE_ANALYTICS_TOKEN (Cloudflare Analytics Read) as a GitHub Actions repository secret."
+            exit 1
+          fi
+          if [[ ! "$AUCTION_BILLING_START" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::Add AUCTION_BILLING_START (YYYY-MM-DD, actual current Cloudflare billing-period start) as a GitHub Actions repository variable."
+            exit 1
+          fi
+          echo "Credentials and billing-period inputs configured."
+      - name: Query Cloudflare account usage, without publishing or changing scan flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          node cloudflare/octometrics/report-auction-budget.mjs --print > "$RUNNER_TEMP/account-usage.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const report=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/account-usage.json','utf8'));
+          const limits={
+            day_reads:500000000,day_writes:1000000,
+            month_reads:15000000000,month_writes:30000000,
+            storage_bytes:4000000000,
+            worker_requests:8500000,worker_cpu_ms:24000000,
+            r2_class_a:800000,r2_class_b:8000000,r2_bytes:8500000000
+          };
+          let ok=true;
+          for(const [name,limit] of Object.entries(limits)){
+            const actual=report[name];
+            const valid=Number.isSafeInteger(actual)&&actual>=0&&actual<limit;
+            console.log(name.padEnd(18)+' '+String(actual).padStart(15)+' / '+String(limit).padStart(15)+' '+(valid?'PASS':'BLOCK'));
+            if(!valid)ok=false;
+          }
+          const ms=Date.now()-Date.parse(report.observed_at);
+          if(!(ms>=0&&ms<120000))throw Error('Usage observation not current');
+          console.log('Cloudflare billing period:',report.billing_period);
+          console.log('Account budget pilot eligibility:',ok?'WITHIN LIMITS':'BLOCKED');
+          if(!ok)process.exitCode=1;
+          NODE
+          echo "Read-only budget audit complete. No budget published, no auction scan claimed."
