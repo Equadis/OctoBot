@@ -6,6 +6,8 @@
 // and prints PASS or FAIL for each check. Needs a built skins overlay (skins.py build) and a model overlay (build_overlay.py / merge_overlays.py); nothing is uploaded and
 // nothing leaves this machine except the Worker's usual lookups of item data. Exit status 1 when any check fails.
 import {spawn} from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import net from 'node:net';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -16,9 +18,9 @@ const [skinsFolder,modelsFolder]=process.argv.slice(2).filter(a=>!a.startsWith('
 if(!modelsFolder){console.error('usage: node tools/models/ui_regression.mjs <skins overlay folder> <model overlay folder>');process.exit(2);}
 const freePort=()=>new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const {port}=s.address();s.close(()=>resolve(port));});});
 const servers=[];
-async function serve(folders) {
+async function serve(folders,extra=[]) {
   const port=await freePort();
-  const child=spawn('node',[path.join(here,'e2e_server.mjs'),folders.join(','),String(port)],{stdio:'ignore'});
+  const child=spawn('node',[path.join(here,'e2e_server.mjs'),folders.join(','),String(port),...extra],{stdio:'ignore'});
   servers.push(child);
   for(let i=0;i<50;i++) {try {if((await fetch(`http://127.0.0.1:${port}/api/outfitter/models-version`)).ok)return `http://127.0.0.1:${port}`;} catch {}await new Promise(r=>setTimeout(r,200));}
   throw Error('the test server did not start');
@@ -28,7 +30,10 @@ const results=[];
 function check(name,ok,detail='') {results.push({name,ok:Boolean(ok)});console.log(`${ok?'PASS':'FAIL'}  ${name}${ok?'':'  '+detail}`);}
 const outfitHash=outfit=>'#outfit='+encodeURIComponent(JSON.stringify({version:1,race:1,gender:0,gear:{},hideHead:false,hideBack:false,look:{},...outfit}));
 
-const withSkins=await serve([skinsFolder,modelsFolder]),without=await serve([modelsFolder]);
+// a catalogue whose texture files are missing (the choices and catalogue are there, the textures are not), and a service whose skins route fails
+const noTextures=fs.mkdtempSync(path.join(os.tmpdir(),'octobot-notex-'));
+fs.cpSync(path.join(skinsFolder,'skins'),path.join(noTextures,'skins'),{recursive:true});
+const withSkins=await serve([skinsFolder,modelsFolder]),without=await serve([modelsFolder]),failing=await serve([skinsFolder,modelsFolder],['--fail-skins']),missing=await serve([noTextures,modelsFolder]);
 const browser=await launch({width:1280,height:1200});
 try {
   const ready=expr=>browser.waitFor(expr,60000);
@@ -107,7 +112,20 @@ try {
   check('loading the saved outfit restores the skin',(await state()).skin==='skin-50205');
   await browser.eval('document.getElementById("reset").click()');await browser.sleep(1500);
   check('Reset all clears the skin',!(await state()).skin);
-  await browser.eval('document.getElementById("share").click()');await browser.sleep(400);
+  // export, import and Tmog codes keep the skin
+  await browser.eval(`location.hash='';1`);await browser.sleep(300);
+  await browser.eval(`location.hash=${JSON.stringify(outfitHash({race:3,skin:'skin-50205'}))}; 1`);await ready('window.__outfitter.outfit().race===3&&window.__outfitter.outfit().skin==='+JSON.stringify('skin-50205')+'&&window.__outfitter.appliedLook().length>10');await browser.sleep(1200);
+  await browser.eval('document.getElementById("share").click()');await browser.sleep(500);
+  const exported=await browser.eval('document.getElementById("outfit-code").value');
+  check('Share produces a link that carries the skin',/#outfit=/.test(exported)&&decodeURIComponent(exported.split('#outfit=')[1]).includes('skin-50205'),exported.slice(0,120));
+  await browser.eval('document.getElementById("exchange").close()');
+  await browser.eval('document.getElementById("skin-clear").click()');await browser.sleep(600);
+  await browser.eval(`document.getElementById("outfit-code").value=${JSON.stringify(exported)};document.getElementById("apply-code").click()`);await waitSkin('skin-50205');
+  check('importing that link restores the skin',(await state()).skin==='skin-50205');
+  await browser.eval('document.getElementById("import").click()');await browser.sleep(300);
+  const tmog=await browser.eval('document.getElementById("outfit-code").value');
+  await browser.eval(`document.getElementById("outfit-code").value=${JSON.stringify(tmog)};document.getElementById("apply-code").click()`);await browser.sleep(800);
+  check('importing a Tmog code (equipment only) keeps the chosen skin',/^T\.O\.L\./.test(tmog)&&(await state()).skin==='skin-50205');
 
   // backwards compatibility
   await open(outfitHash({}).replace('%22look%22%3A%7B%7D','%22look%22%3A%7B%7D'));
@@ -145,6 +163,23 @@ try {
   check('no script errors in the whole run',browser.consoleErrors.length===0,browser.consoleErrors.slice(0,3).join(' | '));
   const bad=browser.failedRequests.filter(u=>!/zamimg|wowhead|octowow\.st|favicon|\/api\/outfitter\/(item|assets\/.*\/meta\/armor)/.test(u));
   check('no failed requests to the test servers',bad.length===0,bad.slice(0,5).join(' | '));
+
+  // ---- a service whose skins route fails, and a catalogue whose textures are missing ----
+  const errorsBefore=browser.consoleErrors.length;
+  await browser.goto(`${failing}/outfitter/?debug`);
+  await browser.eval(`localStorage.clear(); location.hash=${JSON.stringify(outfitHash({skin:'skin-50291'}))}; location.reload(); 1`);
+  await ready('!!window.__outfitter&&!!window.__outfitter.actor()&&document.getElementById("model-status").hidden');await browser.sleep(1000);
+  check('a failing skins route hides the skin row and the model still loads in the default look',await browser.eval('document.getElementById("skin-row").hidden')&&(await state()).applied.length>0&&JSON.parse((await state()).applied)[1]===0);
+  await browser.goto(`${missing}/outfitter/?debug`);
+  await browser.eval(`localStorage.clear(); location.hash=${JSON.stringify(outfitHash({skin:'skin-50291'}))}; location.reload(); 1`);
+  await ready('!!window.__outfitter&&window.__outfitter.skins().length>0&&!!window.__outfitter.actor()');await browser.sleep(2500);
+  s=await state();
+  check('a skin whose texture files are missing leaves the page working and the skin chosen',s.skin==='skin-50291'&&(await browser.eval('typeof window.__outfitter.actor().setAppearance'))==='function',JSON.stringify(s));
+  check('the missing texture requests were made and failed without a script error',browser.failedRequests.some(u=>/\/textures\/99\d{5}\.webp/.test(u)));
+  await browser.eval('document.getElementById("skin-clear").click()');await browser.sleep(800);
+  check('Clear still restores the default look afterwards',!(await state()).skin&&(await state()).current==='Default appearance');
+  check('neither failure caused a script error',browser.consoleErrors.length===errorsBefore,browser.consoleErrors.slice(errorsBefore,errorsBefore+3).join(' | '));
+  browser.failedRequests.length=0;browser.consoleErrors.length=errorsBefore;
 } finally {
   await browser.close();
   for(const child of servers)child.kill();

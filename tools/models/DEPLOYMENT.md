@@ -63,3 +63,28 @@ sends `version.json` last. Check `models-version` and re-verify against the *old
 * The live build `8c2bbd319a49e0a6` was deployed before `--backup` existed. Its backup is the verified local copy described in section 0, which is complete for the bucket.
   Its original `helms.json` was overwritten in an earlier step and is the copy in that backup (checked against the live object).
 * Cloudflare keeps a limited number of Worker versions; a rollback needs the target version still listed by `npx wrangler versions list`.
+
+## 5. The Character Skins release: exact sequence (do not run until permission exists)
+
+Everything below is prepared and tested locally; **none of it has been run against production**. Needs, before step 1: OctoWoW's written agreement to publish converted client files, and
+`tools/models/PUBLISH_PERMISSION.json` created by the owner by hand for the exact build version of the folder to upload (`publish_guard.mjs`). Run every command in your own terminal.
+
+1. **Build the set** (client files under `D:\Octowow\Data`; the HD pack `patch-V` is skipped by default):
+   `python tools/models/build_overlay.py <Data> out/official-chars`, `python tools/models/item_overlay.py build <Data> out/official-items`,
+   `python tools/models/merge_overlays.py out/official-chars out/official-items out/publish-official`,
+   `python tools/models/skins.py build <Data> <WDB>/itemcache.wdb out/skins`,
+   `python tools/models/merge_overlays.py out/publish-official out/skins/overlay out/rc-combined` (stops on any key present in both with different content).
+2. **Validate**: `python tools/models/validate_overlay.py out/rc-combined out/validate-rc.json` (no missing reference beyond the 690 known helm `TXID` ones, no unsound file, manifest matches);
+   `node tools/models/ui_regression.mjs out/skins/overlay out/publish-official`; `node tools/models/skins_matrix.mjs out/skins/overlay out/publish-official`.
+3. **Back up live** (section 0) and re-verify the backup against the live Worker. Prove the rollback on a staging bucket (section 1, step 6).
+4. **Upload the bucket** (new keys and changed textures; `version.json` last, only if every file succeeded):
+   `node tools/models/upload_overlay.mjs out/rc-combined octobot-models --backup <new backup folder> --rate 3`. The old Worker ignores the `skins/` keys, so visitors see only the new
+   official textures. Check `models-version` and re-verify every key through the Worker against `out/rc-combined/manifest.json`.
+5. **Deploy the Worker** from the release commit: `cd cloudflare/population` then `npx wrangler deploy` (note the previous version id first: `npx wrangler deployments list`). The Worker now adds skin choices to
+   each body's customization and serves `/api/outfitter/skins`.
+6. **Publish the site** by merging the release candidate into `main` (GitHub Pages). Until the catalogue exists the skin row is hidden, so the order of steps 5 and 6 does not matter for visitors.
+7. **Live checks**: `curl .../api/outfitter/skins` lists 124 skins; open the Dressing Room, pick a skin on a Human, a Dwarf and a High Elf, switch sex (the skin must drop with a message), reload with the link,
+   save and load an outfit; confirm no failed requests in the browser's network tab. `node tools/models/ui_regression.mjs` runs against local servers only, so it is not a live test.
+8. **Roll back** (any step): Worker first (`npx wrangler rollback <previous id> -y`), then the bucket from the backup (`node tools/models/upload_overlay.mjs <backup> octobot-models --no-backup --force`).
+   **The skins keys are new and a rollback does not delete them**: with the *new* Worker they would stay active even under the old `version.json`. Roll the Worker back first, or remove
+   `skins/catalogue.json` (`npx wrangler r2 object delete octobot-models/skins/catalogue.json --remote`, owner only) to hide the feature at once.

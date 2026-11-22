@@ -97,3 +97,33 @@ still names `8c2bbd319a49e0a6`. The 12 objects were restored from the verified b
 2. A visual review of the outliers (the ~100 textures with a different layout) and a game comparison, if wanted.
 3. The 690 dangling `TXID` references (pre-existing).
 4. The Character Skins work stays on `feature/character-skins`; its client-derived assets are built locally and not deployed.
+
+## 9. Release candidate `release/character-skins-rc1` (2026-11-22)
+
+Merged `feature/character-skins` into the latest `origin/main` (21b4b4b, 14 commits that touch only Population, World Chat, the Hardcore Death Log and the bot): **no conflicts**, and the merge
+changes only Dressing Room, appearance-Worker, model-tooling and test files. The Worker keeps `origin/main`'s item-record fallback (Zam first, bucket when Zam has no record); the only line
+removed from `main` is the old `resetOverlayCache`, replaced by one that also clears the skin cache.
+
+| Suite | origin/main | release candidate |
+|---|---|---|
+| repository JS tests | 249 run, 10 fail | 267 run, 9 fail |
+| appearance Worker (`cloudflare/population`) | 39 pass | 43 pass |
+| `cloudflare/octometrics` | 160 run, 1 fail | 160 run, 1 fail (the same) |
+| Python model tests (real client) | n/a | 65 run, 0 fail, 2 skipped |
+| browser regression (`ui_regression.mjs`) | n/a | 43 of 43 |
+| skins matrix (`skins_matrix.mjs`) | n/a | 210 of 210 |
+
+* **No regressions.** The 9 failing JS tests are inherited and identical on `origin/main` (Darkmoon Faire, item-icon border, prices, Collector card, character name box, planner column width, scan status,
+  "Gear Planner" navigation label, tracker group name); the one failure `main` has that the candidate does not is the stale Dressing Room script-version test, which the candidate updates.
+* **The matrix** loads each of the 54 mapped looks through the real page and Worker with a helm, shoulders, a robe, a cloak and a weapon, one after another in one page (so every skin-only change on the same body
+  is exercised), and checks the live model carries exactly that skin, the gear is applied, no note says the skin was dropped and nothing failed to load; every fourth look changes a customisation choice (the skin survives)
+  and is then cleared (the default look returns); all 20 bodies load with gear and no skin. The browser regression adds race and sex switching, old outfits and links, export, import, Tmog codes, saved outfits,
+  invalid and unavailable skins, a service with no skins, a failing skins route, a catalogue whose texture files are missing, and a phone-width layout.
+* **Official-only compatibility.** The skins overlay merges with the official-only build without a key clash into one set (23,601 files, 9,535 textures); `validate_overlay.py` finds 0 unsound files, 0 manifest
+  differences, 0 orphans and the same 690 known dangling helm `TXID` references as the official-only build (no new ones). Every skin texture and shop picture comes from an official archive (none from a letter patch; the
+  HD pack would have replaced 100+ of them and was not read). Versioned loading and Worker routing were exercised by the runs above against the merged set; the skins keys are new, which changes the rollback
+  (section 5, step 8).
+* **Safeguards confirmed.** `PUBLISH_PERMISSION.json` does not exist and was not created or touched; the uploader refuses a live bucket without it (tests and a live-name dry run), the hook blocks raw live-bucket writes,
+  Worker deploys and writes to the permission file (tests), `CLAUDE.md` states the rule. No upload, Worker deploy or `version.json` change was made; the live Worker and bucket are as they were.
+* **Remaining mappings:** Dreadskull Clan I and Necromancy II (Night Elf) are unavailable; 6 Orc looks are "Probable match"; some female looks have no texture (see `README.md`); nothing is `Verified`.
+* A leftover headless browser from an interrupted run once saturated the CPU; `cdp.mjs` now kills its browser on any exit.

@@ -88,6 +88,7 @@ def validate(folder, log=print):
     skins = {int(k.split('/')[1].split('.')[0]) for k in files if k.startswith('skin/')}
     skels = {int(k.split('/')[1].split('.')[0]) for k in files if k.startswith('skel/')}
     used_t, used_m, used_s, used_k = set(), set(), set(), set()
+    choices_by_body, catalogue_path = {}, None
 
     def need(kind, ident, owner):
         have = {'texture': textures, 'model': models, 'skin': skins, 'skeleton': skels}[kind]
@@ -110,6 +111,21 @@ def validate(folder, log=print):
             for ident in t:
                 need('texture', ident, key)
                 used_t.add(ident)
+        elif key.startswith('skins/choices/') and key.endswith('.json'):
+            fragment = json.load(open(path, encoding='utf-8'))
+            for resource, lst in (fragment.get('TextureFiles') or {}).items():
+                for f in lst:
+                    need('texture', f['FileDataId'], key)
+                    used_t.add(f['FileDataId'])
+            known = set(map(str, fragment.get('TextureFiles') or {}))
+            for choice in fragment.get('Choices', []):
+                for element in choice.get('Elements', []):
+                    resource = (element.get('Material') or {}).get('MaterialResourcesID')
+                    if resource is not None and str(resource) not in known:
+                        report['unsound'].append(f'{key}: choice {choice.get("Id")} names resource {resource} that TextureFiles lacks')
+            choices_by_body[key.split('/')[-1][:-5]] = {c['Id'] for c in fragment.get('Choices', [])}
+        elif key == 'skins/catalogue.json':
+            catalogue_path = path
         elif key == 'helms.json':
             table = json.load(open(path, encoding='utf-8'))
             for display, entry in table.items():
@@ -149,6 +165,19 @@ def validate(folder, log=print):
                         raise ValueError('empty image')
             except Exception as error:
                 report['unsound'].append(f'{key}: does not decode ({error})')
+    if catalogue_path:                                       # the skin catalogue must agree with the choices files and the textures
+        for skin in json.load(open(catalogue_path, encoding='utf-8')).get('skins', []):
+            for variant in skin.get('variants', []):
+                owner = f'skins/catalogue.json {skin["id"]}'
+                if variant.get('choiceId') not in choices_by_body.get(str(variant.get('body')), set()):
+                    report['missing'].append(f'{owner}: choice {variant.get("choiceId")} is not in skins/choices/{variant.get("body")}.json')
+                for ident in (variant['texture'].get('textureFileId') if 'textureFileId' in variant['texture'] else variant.get('textureFileId'), variant['texture'].get('secondFileId')):
+                    if ident:
+                        need('texture', ident, owner)
+                        used_t.add(ident)
+            for ident in (skin.get('thumbnails') or {}).values():
+                need('texture', ident, f'skins/catalogue.json {skin["id"]} thumbnail')
+                used_t.add(ident)
     for kind, have, used, prefix, ext in (('texture', textures, used_t, 'textures', 'webp'), ('model', models, used_m, 'm2', 'm2'),
                                          ('skin', skins, used_s, 'skin', 'skin'), ('skeleton', skels, used_k, 'skel', 'skel')):
         report['orphans'] += [f'{prefix}/{i}.{ext}' for i in sorted(have - used)]

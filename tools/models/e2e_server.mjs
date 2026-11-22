@@ -20,7 +20,9 @@ const overlays=(args[0]||'').split(',').filter(Boolean).map(folder=>path.resolve
 const overlay=overlays[0];
 const port=Number(args[1]||8080);
 const noOverlay=process.argv.includes('--no-overlay');
-if(!overlay){console.error('usage: node tools/models/e2e_server.mjs <overlay folder[,more folders]> [port] [--no-overlay]');process.exit(2);}
+// --fail-skins answers the skins catalogue with a 503, to test the page against a failing service.
+const failSkins=process.argv.includes('--fail-skins');
+if(!overlay){console.error('usage: node tools/models/e2e_server.mjs <overlay folder[,more folders]> [port] [--no-overlay] [--fail-skins]');process.exit(2);}
 
 // A file-backed stand-in for an R2 bucket: exact keys only, no listing, never outside the folder.
 const bucket={async get(key){
@@ -36,6 +38,7 @@ http.createServer(async(req,res)=>{
  try {
   if(url.pathname==='/telemetry.json'){const body=JSON.stringify({endpoint:`http://127.0.0.1:${port}`});res.writeHead(200,{'content-type':'application/json'});return res.end(body);}
   if(url.pathname.startsWith('/api/outfitter/')){
+   if(failSkins&&url.pathname==='/api/outfitter/skins'){res.writeHead(503,{'content-type':'application/json'});return res.end('{"error":"unavailable"}');}
    const response=await outfitter(new Request(url,{method:req.method,headers:{}}),fetch,noOverlay?{}:{MODELS:bucket});
    log.push(`${response.status} ${url.pathname.replace('/api/outfitter/','')}`);
    // The Worker's own cache headers are passed through, so the browser behaves as it does against the deployed Worker (versioned URLs are cached

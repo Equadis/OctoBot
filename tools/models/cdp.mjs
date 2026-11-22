@@ -26,6 +26,9 @@ export async function launch({width=1280,height=1100}={}) {
   const child=spawn(exe,['--headless=new',`--remote-debugging-port=${port}`,`--user-data-dir=${profile}`,'--no-first-run','--no-default-browser-check','--disable-extensions',
     '--enable-unsafe-swiftshader','--use-angle=swiftshader','--ignore-gpu-blocklist','--disable-background-timer-throttling','--disable-renderer-backgrounding',
     `--window-size=${width},${height}`,'about:blank'],{stdio:'ignore',windowsHide:true});
+  // A browser must never outlive the script that started it (an interrupted run once left 27 of them running): kill it on any exit.
+  const killBrowser=()=>{try {if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});else child.kill('SIGKILL');} catch {}};
+  process.on('exit',killBrowser);for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{killBrowser();process.exit(130);});
   let target=null;
   for(let i=0;i<100&&!target;i++) {
     try {
