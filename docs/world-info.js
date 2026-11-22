@@ -480,7 +480,7 @@
     const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); note.textContent = 'Estimated clear · ' + basis; }
     else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; { const tm = document.createElement('sup'); tm.className = 'tm'; tm.textContent = '™'; if (out.append) out.append(tm); } note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
-    else { out.textContent = 'Overdue'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+    else { out.textContent = 'Overdue'; out.classList.add('dots'); note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
     colourConfidence(note, level);
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
