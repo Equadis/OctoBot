@@ -10,10 +10,10 @@
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
     { label: 'Character tools', links: [
       { id: 'sim', href: 'sim/', text: 'Gear Planner', beta: true },
-      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room', beta: true } ] },
+      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
       { id: 'world-info', href: 'world-info/', text: 'World Info' },
-      { id: 'auction-house', disabled: true, text: 'Auction House' },
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House' },
       { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] },
     { label: 'Guides', links: [
       { id: 'guides', disabled: true, text: 'Guides', tooltip: 'Under Construction' } ] }
