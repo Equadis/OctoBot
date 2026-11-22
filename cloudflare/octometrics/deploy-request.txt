@@ -1,1 +1,1 @@
-Production deployment: add the World Chat hardcore death log (2026-11-22).
+Production deployment: enable R2 Auction House snapshot routes with collection paused; staged migration data verified (2026-11-22).
