@@ -7,7 +7,8 @@ test('partial reference data covers missing combinations without promoting rows'
  assert.equal(r.totals.partialRows,b.totals.missingRows);
  assert.equal(r.totals.referenceFields,2280);
  assert.equal(r.totals.resourceConflicts,0);
- assert.equal(r.anomalyCandidates.length,3);
+ assert.equal(r.anomalyCandidates.length,b.totals.anomalies);
+ assert.equal(b.totals.anomalies,5);
  for(const p of r.resourceCandidates){
   assert.ok(p.supportingRaces.length>=2);
   assert.equal(p.liveVerified,false);

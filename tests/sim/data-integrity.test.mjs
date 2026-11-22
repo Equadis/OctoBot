@@ -6,7 +6,7 @@ import {releaseReadiness} from '../../docs/sim/core/combat-release-readiness.mjs
 
 test('integrity queue preserves every missing and anomalous base coordinate',()=>{
  const b=baseStatInventory(), q=buildIntegrityQueue(b);
- assert.equal(q.baseRows.length,b.totals.missingRows+b.totals.anomalies);
+ assert.equal(q.baseRows.length,b.totals.missingRows+b.totals.anomalies+b.totals.sourceConflicts);
  assert.equal(new Set(q.baseRows.map(r=>[r.race,r.classId,r.level].join(':'))).size,q.baseRows.length);
  assert.equal(q.totals.referenceBaseRowsNotLiveVerified,b.totals.referenceRows-b.totals.liveVerifiedRows);
  assert.equal(q.byClass.reduce((n,c)=>n+c.baseCaptureRows,0),q.baseRows.length);

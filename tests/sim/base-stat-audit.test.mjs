@@ -7,7 +7,7 @@ import {characterStats} from '../../docs/sim/core/character-stats.mjs';
 
 test('inventory covers every supported race/class/level and never fabricates missing rows',()=>{
  const audit=baseStatInventory();
- assert.deepEqual(audit.totals,{combinations:59,referenceCombinations:40,missingCombinations:19,referenceRows:2400,missingRows:1140,anomalies:3,liveVerifiedRows:0});
+ assert.deepEqual(audit.totals,{combinations:59,referenceCombinations:40,missingCombinations:19,referenceRows:2400,missingRows:1140,anomalies:5,sourceConflicts:2,liveVerifiedRows:0});
  for(const c of audit.combinations)for(let level=1;level<=60;level++){
   const p=baseStatProfile(c.race,c.classId,level),raw=BASE_STATS[c.race+':'+c.classId]?.[level-1];
   assert.deepEqual(p.row,raw||null);if(!raw)assert.equal(p.status,'missing');
@@ -16,6 +16,10 @@ test('inventory covers every supported race/class/level and never fabricates mis
  assert.equal(baseStatProfile('Human','warrior',19).status,'reference-anomaly');
  assert.equal(baseStatProfile('Undead','mage',1).status,'reference-anomaly');
  assert.equal(baseStatProfile('Undead','mage',2).status,'reference-anomaly');
+ assert.equal(baseStatProfile('Orc','rogue',19).status,'reference-anomaly');
+ assert.equal(baseStatProfile('Orc','rogue',20).status,'reference-anomaly');
+ assert.equal(baseStatProfile('Night Elf','druid',1).status,'reference-conflict');
+ assert.equal(baseStatProfile('Tauren','druid',1).status,'reference-conflict');
  assert.equal(baseStatProfile('Human','mage',61).status,'invalid');
  assert.equal(baseStatProfile('Goblin','paladin',60).status,'invalid');
 });

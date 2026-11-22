@@ -11,7 +11,7 @@ import {baseStatProfile} from './base-stat-audit.mjs?v=20261117-racial-audit1';
  * selection, a source tooltip, and an implemented combat effect are distinct. */
 export function prepareSimulation(input,talents,{lookup=()=>null,engine=null}={}){
  const build=validateBuild(input,talents);build.controls.buffIds=effectiveBuffIds(build.controls.buffIds,build.planning);const errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
- const baseAudit=baseStatProfile(build.race,build.classId,build.level);if(!baseAudit.row||baseAudit.status==='reference-anomaly')errors.push('Base attributes for this race/class/level are missing or anomalous.');
+ const baseAudit=baseStatProfile(build.race,build.classId,build.level);if(!baseAudit.row||baseAudit.status==='reference-anomaly'||baseAudit.status==='reference-conflict')errors.push('Base attributes for this race/class/level are missing, anomalous or disputed between sources.');
  if(!engine||engine.classId!==build.classId||!['implemented-unverified','validated'].includes(engine.status))errors.push(`The ${build.classId} combat engine is not implemented.`);
  errors.push(...trinketSwapEngineErrors(build,engine));
  errors.push(...petEngineErrors(build,engine,talents));
