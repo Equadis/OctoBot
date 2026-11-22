@@ -2,10 +2,12 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261117-names1';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-skins2';
+import {parseCatalogue,resolveSkin,filterSkins,categories,variantFor,raceName} from './skins.mjs?v=20261122-skins2';
+import {renderSkinCards} from './skins-ui.mjs?v=20261122-skins2';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[];
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='',appliedLook='';
 const metadata=new Map();
 // Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
 let approxNotes=new Map();
@@ -171,7 +173,7 @@ function safeRead(key,fallback){try{return JSON.parse(localStorage.getItem(key))
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(outfit));}catch{feedback('Browser storage is unavailable. Export your outfit to keep a copy.');}}
 function saveLibrary(){try{localStorage.setItem(SAVED,JSON.stringify(saved));return true;}catch{feedback('Could not save outfit. Export it to keep a copy.');return false;}}
 function sanitiseGear(value){const next=normalise(value);for(const {id,types} of SLOTS){const item=byId.get(next.gear[id]);if(next.gear[id]&&(!item||!types.includes(item.slot)))throw Error(`Unknown item or wrong slot: ${next.gear[id]}.`);}if(byId.get(next.gear[16])?.slot===17)delete next.gear[17];return next;}
-function commit(next,message){outfit=sanitiseGear(next);persist();renderSlots();renderItems();if(message)feedback(message);renderModel();}
+function commit(next,message){outfit=sanitiseGear(next);const problem=reconcileSkin();persist();renderSlots();renderItems();renderSkinRow();if(problem||message)feedback(problem||message);renderModel();}
 function renderRaces(){
  const box=$('race-picker');box.replaceChildren();
  for(const [id,name] of RACES){
@@ -461,11 +463,11 @@ async function loadLookOptions(chrModelId){
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
 // Diagnostics for testing, only with ?debug in the address: the live character actor and the current outfit.
-if(new URLSearchParams(location.search).has('debug'))window.__outfitter={actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
+if(new URLSearchParams(location.search).has('debug'))window.__outfitter={skins:()=>skinCatalogue,skinNote:()=>skinNote,appliedLook:()=>appliedLook,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
 // Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
 function pushAppearance(look){
  const actor=characterActor();if(!actor)return false;
- try{actor.setAppearance({options:lookPairs(lookOptions,look),sheathMain:actor.k,sheathOff:actor.x});return true;}catch{return false;}
+ try{actor.setAppearance({options:lookPairs(lookOptions,look,currentSkin().choiceId),sheathMain:actor.k,sheathOff:actor.x});if(look===outfit.look)appliedLook=lookKey();return true;}catch{return false;}
 }
 let openLookMenu=null;
 function closeLookMenu({revert=true}={}){
@@ -511,6 +513,66 @@ function renderLook(){
  }
 }
 // Appearance is part of the saved and shared outfit. The live model is updated in place so there is no reload.
+// ---- Character skins (donation-shop appearances) ----
+// A skin is a texture-only change of the body, applied as an extra choice of the Skin Color option (see skins.mjs). It is saved in the outfit as
+// `skin`; outfits made before skins existed have none and load with the default appearance.
+function lookKey(){return JSON.stringify([outfit.look,currentSkin().choiceId]);}
+function currentSkin(){return resolveSkin(skinCatalogue,outfit.skin,outfit.race,outfit.gender);}
+function skinAvailableInModel(choiceId){return lookOptions.some(option=>option.skinChoiceIds?.includes(choiceId));}
+// Drops a saved skin that does not fit the body (another race or sex) and returns the reason; it is never swapped for another skin.
+function reconcileSkin(){
+ if(!outfit.skin||!skinCatalogue.length)return '';
+ const {problem}=currentSkin();
+ if(!problem){skinNote='';return '';}
+ const next={...outfit};delete next.skin;outfit=next;skinNote=problem;return problem;
+}
+function renderSkinRow(){
+ const row=$('skin-row'),{skin}=currentSkin();
+ row.hidden=!skinCatalogue.length;
+ $('skin-current').textContent=skin?skin.name:'Default appearance';
+ $('skin-clear').hidden=!skin;
+ const note=$('skin-note');note.hidden=!skinNote;note.textContent=skinNote;
+}
+async function loadSkins(){
+ try{skinCatalogue=parseCatalogue(await getJson(`${endpoint}/api/outfitter/skins`));}catch{skinCatalogue=[];}
+ const before=outfit.skin;reconcileSkin();if(before!==outfit.skin)persist();renderSkinRow();
+}
+function applySkinChange(message){
+ persist();renderSkinRow();
+ const {choiceId}=currentSkin();
+ if(choiceId&&!skinAvailableInModel(choiceId)){renderModel();}
+ else if(!pushAppearance(outfit.look))renderModel();
+ if(message)feedback(message);
+}
+function pickSkin(skin){
+ if(!variantFor(skin,outfit.race,outfit.gender))return;
+ outfit={...outfit,skin:skin.id};skinNote='';
+ $('skins-dialog').close();applySkinChange(`${skin.name} applied.`);
+}
+function clearSkin(){
+ if(!outfit.skin)return;
+ const next={...outfit};delete next.skin;outfit=next;skinNote='';applySkinChange('Default appearance restored.');
+}
+function renderSkinList(){
+ const unlabelled=$('skins-unlabelled').checked,compatibleOnly=$('skins-compatible').checked;
+ const base={race:outfit.race,gender:outfit.gender,unlabelled};
+ const shown=filterSkins(skinCatalogue,{...base,query:$('skins-search').value,category:$('skins-category').value,compatibleOnly});
+ renderSkinCards($('skins-list'),shown,{race:outfit.race,gender:outfit.gender,selectedId:outfit.skin,thumbUrl:file=>`${assetBase}textures/${file}.webp`,
+  onPick:pickSkin,onBlocked:(skin,reason)=>{$('skins-status').textContent=`${skin.name}: ${reason}`;}});
+ const all=filterSkins(skinCatalogue,{...base,compatibleOnly:false}).length,fits=filterSkins(skinCatalogue,{...base,compatibleOnly:true}).length;
+ $('skins-status').textContent=compatibleOnly&&all>fits?`${shown.length} shown. ${all-fits} more are for other bodies or not available yet: untick "Fits this character" to see why.`:`${shown.length} shown.`;
+}
+function openSkins(){
+ const select=$('skins-category'),keep=select.value;
+ select.replaceChildren(new Option('All categories',''),...categories(skinCatalogue).map(name=>new Option(name,name)));select.value=[...select.options].some(o=>o.value===keep)?keep:'';
+ renderSkinList();$('skins-dialog').showModal();$('skins-search').focus();
+}
+function setupSkins(){
+ $('skins-open').onclick=openSkins;$('skins-close').onclick=()=>$('skins-dialog').close();$('skin-clear').onclick=clearSkin;
+ $('skins-default').onclick=()=>{clearSkin();$('skins-dialog').close();};
+ for(const id of ['skins-search','skins-category','skins-compatible','skins-unlabelled'])$(id).addEventListener(id==='skins-search'?'input':'change',renderSkinList);
+}
+
 function changeLook(look){
  outfit={...outfit,look};persist();renderLook();
  if(!pushAppearance(look))renderModel();
@@ -638,7 +700,11 @@ async function applyGearInPlace(){
 let builtFor='',appliedGear=new Map();
 async function renderModel(resetCamera=false,forceRebuild=false){
  const inPlace=!resetCamera&&!forceRebuild&&Boolean(viewer?.renderer?.actors?.[0]?.isLoaded?.())&&builtFor===`${outfit.race}-${outfit.gender}`;
- if(inPlace){await applyGearInPlace();return;}
+ if(inPlace){
+  // A saved outfit, shared link or import can change the look or the skin without changing the body; the model is kept, so push them here.
+  const key=lookKey();if(key!==appliedLook&&pushAppearance(outfit.look))appliedLook=key;
+  await applyGearInPlace();return;
+ }
  keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
  keptAnim=!skipKeptAnim&&characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;skipKeptAnim=false;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
@@ -651,6 +717,10 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   await preloadGeometry(assetBase,character.Model);
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
+  // A skin is only ever applied from the service's own texture; when the service has none the saved skin stays unapplied and says so.
+  {const wanted=resolveSkin(skinCatalogue,current.skin,current.race,current.gender);
+   skinNote=wanted.choiceId&&!skinAvailableInModel(wanted.choiceId)?`${wanted.skin.name} could not be applied: the appearance service has no texture for it.`:skinNote;renderSkinRow();}
+  appliedLook=JSON.stringify([current.look,resolveSkin(skinCatalogue,current.skin,current.race,current.gender).choiceId]);
   renderLook();
   const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
@@ -669,7 +739,7 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
-  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:assetBase,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:assetBase,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look,resolveSkin(skinCatalogue,current.skin,current.race,current.gender).choiceId)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   builtFor=`${current.race}-${current.gender}`;appliedGear=new Map(appearances.filter(Boolean));
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
@@ -720,7 +790,7 @@ async function start(){
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
   saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
   renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
-  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();renderItems();
+  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await loadSkins();renderItems();
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
 
@@ -748,7 +818,7 @@ async function start(){
   document.addEventListener('fullscreenchange',sync);sync();
  }
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
- $('look-reset').onclick=()=>changeLook({});
+ $('look-reset').onclick=()=>changeLook({});setupSkins();
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);chosenAnimation=name;};
  $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;const next=!animationPaused;try{actor.setAnimPaused(next);}catch{}showPlayState(next);};
  $('anim-prev').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?-5:-1);

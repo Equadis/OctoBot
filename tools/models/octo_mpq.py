@@ -42,6 +42,15 @@ def _decrypt(data, key):
     return out
 
 
+def _unlock(data, key, index):
+    """Decrypt one block or sector (key is None for a plain file). A trailing partial word is left as it is."""
+    if key is None or not data:
+        return data
+    whole = len(data) // 4 * 4
+    words = _decrypt(data[:whole], (key + index) & 0xFFFFFFFF)
+    return struct.pack('<%dI' % len(words), *words) + data[whole:]
+
+
 class Archive:
     def __init__(self, path):
         self.path = path
@@ -87,8 +96,11 @@ class Archive:
         if info is None:
             return None
         pos, packed, size, flags = info['pos'], info['packed'], info['size'], info['flags']
-        if flags & 0x10000:
-            raise NotImplementedError('encrypted file')
+        key = None
+        if flags & 0x10000:                    # encrypted file: the key comes from the file name (the part after the last backslash)
+            key = mpq_hash(name.replace('/', '\\').split('\\')[-1], 3)
+            if flags & 0x20000:                # FIX_KEY: also mixed with the block position and size
+                key = ((key + pos) ^ size) & 0xFFFFFFFF
 
         def unpack(chunk, expected):
             if len(chunk) >= expected:
@@ -105,28 +117,46 @@ class Archive:
         with open(self.path, 'rb') as f:
             f.seek(self.base + pos)
             if not flags & 0x200 and not flags & 0x1000000:
-                return f.read(size)
+                return _unlock(f.read(size), key, 0)[:size]
             if flags & 0x1000000:
-                return unpack(f.read(packed), size)
+                return unpack(_unlock(f.read(packed), key, 0), size)
             count = (size + self.sector - 1) // self.sector
-            offsets = struct.unpack('<%dI' % (count + 1), f.read(4 * (count + 1)))
+            raw = f.read(4 * (count + 1))
+            offsets = struct.unpack('<%dI' % (count + 1), _unlock(raw, None if key is None else (key - 1) & 0xFFFFFFFF, 0))
             out = bytearray()
             for k in range(count):
                 f.seek(self.base + pos + offsets[k])
-                out += unpack(f.read(offsets[k + 1] - offsets[k]), min(self.sector, size - k * self.sector))
+                out += unpack(_unlock(f.read(offsets[k + 1] - offsets[k]), key, k), min(self.sector, size - k * self.sector))
             return bytes(out)
 
+BASE_ORDER = ['base', 'dbc', 'speech', 'fonts', 'interface', 'misc', 'sound', 'wmo', 'terrain', 'texture', 'model']   # the order WoW.exe loads them
+
+
+def archive_rank(path):
+    """(rank, official) for an archive in a 1.12 Data folder; the higher rank wins. WoW.exe loads the base archives, then patch.MPQ, then patch-?.MPQ in
+    alphabetical order, so digits come before letters and later archives override earlier ones. The OctoWoW release is the base archives, patch.MPQ
+    and patch-1..9. A single-letter patch is something this machine's player installed on top (patch-V here is the Project Reforged HD pack): it
+    overrides official files but is not OctoWoW's own work, so a build that wants the game's own data must leave it out (official=False)."""
+    import re
+    stem = os.path.basename(path).lower().rsplit('.', 1)[0]
+    m = re.match(r'patch-(.)$', stem)
+    if m:
+        ch = m.group(1)
+        return (300 + int(ch), True) if ch.isdigit() else (400 + ord(ch.upper()), False)
+    if stem == 'patch':
+        return 200, True
+    if stem in BASE_ORDER:
+        return 100 + BASE_ORDER.index(stem), True
+    return 50, stem == 'backup'
+
+
 class Client:
-    """Every archive in a Data folder, searched newest first (patch-N.mpq, then patch.mpq, then the base archives)."""
+    """The archives in a Data folder, searched newest first by the 1.12 load order (patch-N, patch.MPQ, then the base archives).
+    Archives that are not part of the OctoWoW release (single-letter patches) are left out unless include_mods is set."""
 
-    def __init__(self, folder):
-        import re
-
-        def rank(path):
-            name = os.path.basename(path).lower()
-            m = re.match(r'patch-(\d+)\.mpq$', name)
-            return (3, int(m.group(1))) if m else (2, 0) if name == 'patch.mpq' else (1, 0)
-        paths = sorted(glob.glob(os.path.join(folder, '*.[mM][pP][qQ]')), key=rank, reverse=True)
+    def __init__(self, folder, include_mods=False):
+        paths = [p for p in glob.glob(os.path.join(folder, '*.[mM][pP][qQ]')) if include_mods or archive_rank(p)[1]]
+        paths.sort(key=lambda p: archive_rank(p)[0], reverse=True)
         self.archives = []
         for path in paths:
             try:
@@ -136,6 +166,13 @@ class Client:
 
     def has(self, name):
         return any(archive.find(name) for archive in self.archives)
+
+    def which(self, name):
+        """The file name of the archive that supplies `name` (the winner), or None."""
+        for archive in self.archives:
+            if archive.find(name):
+                return os.path.basename(archive.path)
+        return None
 
     def read(self, name):
         for archive in self.archives:

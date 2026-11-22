@@ -196,3 +196,10 @@ To enable it (manual, needs OctoWoW's agreement first; the converted files must 
 3. The `MODELS` binding is now in `wrangler.toml`; deploy with `npx wrangler deploy` from this folder. Uploading can be done with `node tools/models/upload_overlay.mjs <overlay folder> octobot-models` (resumable, uses your own wrangler login).
 
 The binding is in `wrangler.toml` but the deploy has to be run by you; it fails until the bucket exists. The tests (`tests/overlay.test.mjs`) use a fake bucket.
+
+## Character skins (appearance service)
+
+With the `MODELS` bucket bound, `skins/catalogue.json` (the skin list) and `skins/choices/<body>.json` (extra Skin Color choices for one body, body = race * 2 - 1 + gender) are
+read from the bucket. `/api/outfitter/skins` returns the catalogue (`{"version":1,"skins":[]}` when there is none). `meta/charactercustomization/<body>.json` has the body's choices
+appended to its Skin Color option; only ids in the invented ranges (choices from 9,950,000, resources from 9,970,000, textures from 9,900,000) are accepted, so a bad file cannot
+shadow a library choice, and any failure falls back to the unmerged answer. A body with no skins, or no bucket, behaves exactly as before. Tests: `tests/overlay.test.mjs`.

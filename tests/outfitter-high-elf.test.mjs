@@ -22,7 +22,7 @@ test('every asset URL comes from the single versioned base, built from the servi
  assert.match(source,/preloadGeometry\(assetBase,character\.Model\)/);
  assert.match(source,/contentPath:assetBase,/);
  assert.match(source,/getJson\(`\$\{assetBase\}meta\/charactercustomization\/\$\{chrModelId\}\.json`\)/);
- assert.match(source,/await loadAssetBase\(\);renderItems\(\);/,'the base is set before the first model is built');
+ assert.match(source,/await loadAssetBase\(\);(?:await loadSkins\(\);)?renderItems\(\);/,'the base is set before the first model is built');
 });
 
 test('the version is only accepted in the shape the service issues',()=>{
@@ -30,7 +30,7 @@ test('the version is only accepted in the shape the service issues',()=>{
 });
 
 test('changed scripts carry new version strings so returning visitors load them',()=>{
- assert.match(html,/outfitter\.mjs\?v=20261118-backdrop1/);
+ assert.match(html,/outfitter\.mjs\?v=20261122-skins2/);
  assert.match(source,/service\.mjs\?v=20261117-versioned1/);
 });
 

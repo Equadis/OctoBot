@@ -80,7 +80,41 @@ async function currentVersion(bucket) {
 }
 // helms.json maps a Classic helm display id to {"race:gender": model file id} for the races Zam has no helm models for.
 let helmCache={table:null,at:0};
-export function resetOverlayCache() {helmCache={table:null,at:0};versionCache={bucket:null,value:null,at:0};}
+let skinCache=new Map();
+export function resetOverlayCache() {helmCache={table:null,at:0};versionCache={bucket:null,value:null,at:0};skinCache=new Map();}
+// ---- Character skins (donation-shop skins) ------------------------------------------------------------------------------
+// skins/catalogue.json lists the skins; skins/choices/<body>.json holds, for one character body (race * 2 - 1 + gender), extra Skin Color choices
+// that point the base body texture at a skin's texture file. The Worker adds them to the body's charactercustomization JSON so the viewer applies
+// a skin exactly as it applies any skin colour. Ids are invented (choices 9,950,000 up, elements 9,960,000 up, resources 9,970,000 up, textures
+// 9,900,000 up); anything outside those ranges is dropped, so a bad bucket file cannot overwrite the library's own choices.
+const SKIN_CHOICE_FIRST=9950000,SKIN_RESOURCE_FIRST=9970000,SKIN_TEXTURE_FIRST=9900000;
+async function bucketJson(bucket,key,ttl=60000) {
+ const hit=skinCache.get(key);
+ if(hit&&hit.bucket===bucket&&Date.now()-hit.at<ttl)return hit.value;
+ let value=null;
+ try {const object=await bucket.get(key);if(object){const data=await new Response(object.body).json();if(data&&typeof data==='object'&&!Array.isArray(data))value=data;}} catch {value=null;}
+ skinCache.set(key,{bucket,value,at:Date.now()});
+ return value;
+}
+export function mergeSkinChoices(customization,fragment) {
+ if(!customization||typeof customization!=='object'||!Array.isArray(customization.Options)||!fragment||typeof fragment!=='object'||!Array.isArray(fragment.Choices))return customization;
+ const option=customization.Options.find(o=>/^skin colou?r$/i.test(String(o&&o.Name||'')));
+ if(!option||!Array.isArray(option.Choices))return customization;
+ const files=fragment.TextureFiles&&typeof fragment.TextureFiles==='object'?fragment.TextureFiles:{};
+ const goodFiles={};
+ for(const [resource,list] of Object.entries(files)) {
+  if(!/^\d+$/.test(resource)||Number(resource)<SKIN_RESOURCE_FIRST||!Array.isArray(list))continue;
+  const kept=list.filter(f=>f&&Number.isSafeInteger(f.FileDataId)&&f.FileDataId>=SKIN_TEXTURE_FIRST);
+  if(kept.length===list.length&&kept.length)goodFiles[resource]=kept;
+ }
+ const taken=new Set(option.Choices.map(c=>c&&c.Id));
+ const choices=fragment.Choices.filter(c=>c&&Number.isSafeInteger(c.Id)&&c.Id>=SKIN_CHOICE_FIRST&&!taken.has(c.Id)&&Array.isArray(c.Elements)
+  &&c.Elements.every(e=>!e.Material||goodFiles[String(e.Material.MaterialResourcesID)]));
+ if(!choices.length)return customization;
+ option.Choices=[...option.Choices,...choices];
+ customization.TextureFiles={...(customization.TextureFiles&&typeof customization.TextureFiles==='object'?customization.TextureFiles:{}),...goodFiles};
+ return customization;
+}
 async function helmTable(bucket) {
  if(Date.now()-helmCache.at<600000)return helmCache.table;
  let table=null;
@@ -137,12 +171,29 @@ export async function outfitter(request,fetcher=fetch,env={}) {
    const version=env&&env.MODELS?await currentVersion(env.MODELS):null;
    return new Response(JSON.stringify({version}),{headers:{...HEADERS,'content-type':'application/json','cache-control':SHORT}});
   }
+  if(url.pathname==='/api/outfitter/skins') {
+   const catalogue=env&&env.MODELS?await bucketJson(env.MODELS,'skins/catalogue.json'):null;
+   return new Response(JSON.stringify(catalogue&&Array.isArray(catalogue.skins)?catalogue:{version:1,skins:[]}),{headers:{...HEADERS,'content-type':'application/json','cache-control':SHORT}});
+  }
   const asset=assetRequest(url.pathname);
   if(!asset)return json({error:'not_found'},404);
   const {path,version}=asset,bucket=env&&env.MODELS,kind=overlayKind(path);
   const current=bucket?await currentVersion(bucket):null;
   // Only a versioned URL naming the build being served is cached for good; any other version is served but not cached.
   const cache=version?(current&&version===current?IMMUTABLE:'no-store'):kind?SHORT:ZAM_LONG;
+  const customPath=path.match(/^meta\/charactercustomization\/(\d+)\.json$/);
+  if(bucket&&customPath) {
+   // Skin choices for this body, if the bucket holds any. Any failure falls through to the unmerged answer below.
+   try {
+    const fragment=await bucketJson(bucket,`skins/choices/${customPath[1]}.json`);
+    if(fragment) {
+     let base=null;
+     if(kind==='meta') {const own=await bucket.get(path);base=own?await new Response(own.body).json():null;}
+     else {const response=await fetcher(ASSET_BASE+path,{redirect:'manual',signal:AbortSignal.timeout(20000),cf:{cacheTtl:604800,cacheEverything:true}});base=response.ok?await response.json():null;}
+     if(base&&mergeSkinChoices(base,fragment)) return new Response(JSON.stringify(base),{headers:{...HEADERS,'content-type':'application/json','cache-control':version?cache:SHORT}});
+    }
+   } catch {}
+  }
   if(kind==='file'||kind==='meta') {
    // The Goblin and High Elf come only from the converted set. They never fall back to Zam's models, which would show the wrong character.
    if(!bucket)return json({error:'models_unavailable',message:UNAVAILABLE},503);

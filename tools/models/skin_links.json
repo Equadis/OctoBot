@@ -1,0 +1,320 @@
+{
+ "_about": "Hand-curated links from the OctoWoW shop's skin tokens (item ids from the client's item cache) to the client's skin textures. The client does not say which token applies which texture (the server does), so every link records its basis and how sure it is. basis: 'name' = the texture file name and the token name agree; 'ordinal' = numbered series match in order (Wildhammer I-IV, wildhammershop1-4); 'visual' = compared by eye with the shop's own picture of that token (skin colour, marks, eye glow). confidence: 'high' = no other texture of the race looks like the picture; 'medium' = the best match, with one look-alike or a weaker sex; 'low' = several textures look the same as the picture and this is one of them. A link is evidence, not proof. Paths are client paths with forward slashes, matched case-insensitively. 'm' and 'f' are the male and female texture; 'alternates' are look-alike textures. When both a baked 'shop' texture and a CharSections row look the same, the baked shop texture is preferred. Tokens absent from this list (50223, 61106) have no texture that matches their picture. 'checked' = the date the skin's render in the real viewer was compared with the shop picture by eye (all linked tokens; not in game).",
+ "links": {
+  "50105": {
+   "f": "textures/bakednpctextures/scarlethumanshop.blp",
+   "basis": "name+visual",
+   "confidence": "high",
+   "note": "Scarlet Crusade: pale woman, matches the shop picture",
+   "checked": "2026-11-22"
+  },
+  "50106": {
+   "m": "textures/bakednpctextures/necrohumanshop.blp",
+   "f": "character/human/female/humanfemaleskin00_103evil.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "note": "Necromancy I; pale violet skin and purple marks match the pictures (the female link is the weaker one)",
+   "checked": "2026-11-22"
+  },
+  "50290": {
+   "f": "textures/bakednpctextures/azothahumanshop.blp",
+   "basis": "name+visual",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "50291": {
+   "m": "character/human/male/humanmaleskin00_104wizardfel.blp",
+   "basis": "name+visual",
+   "confidence": "high",
+   "note": "green tattoos, 'WizardFel'",
+   "checked": "2026-11-22"
+  },
+  "50292": {
+   "m": "character/human/male/humanmaleskin00_105wizardarcane.blp",
+   "basis": "name+visual",
+   "confidence": "medium",
+   "note": "violet 'WizardArcane' for the man. The woman in the picture is pale; the baked blue-paint texture is not (it rendered tan), so no female texture is linked",
+   "checked": "2026-11-22"
+  },
+  "81210": {
+   "m": "textures/bakednpctextures/deathknighthumanshop.blp",
+   "basis": "name+visual",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "83090": {
+   "m": "character/human/male/humanmale_magic.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "note": "Dalaran Legacy; the file is called Magic",
+   "checked": "2026-11-22"
+  },
+  "83091": {
+   "m": "character/human/male/humanmaleskin00_103necroblue.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "note": "Frost Affinity; blue tattoos, the file is called NecroBlue",
+   "checked": "2026-11-22"
+  },
+  "50204": {
+   "m": "textures/bakednpctextures/wildhammershop1.blp",
+   "basis": "ordinal",
+   "confidence": "medium",
+   "checked": "2026-11-22",
+   "f": "character/dwarf/female/dwarffemaleskin00_100.blp",
+   "note": "Wildhammer I: ordinal link for the man; the woman's tan skin with blue tattoos is the first of only two female dwarf skins (the other three Wildhammer tokens have no separate female texture)"
+  },
+  "50250": {
+   "m": "textures/bakednpctextures/wildhammershop2.blp",
+   "basis": "ordinal",
+   "confidence": "medium",
+   "checked": "2026-11-22"
+  },
+  "50251": {
+   "m": "textures/bakednpctextures/wildhammershop3.blp",
+   "basis": "ordinal",
+   "confidence": "medium",
+   "checked": "2026-11-22"
+  },
+  "50252": {
+   "m": "textures/bakednpctextures/wildhammershop4.blp",
+   "basis": "ordinal",
+   "confidence": "medium",
+   "checked": "2026-11-22"
+  },
+  "50205": {
+   "m": "textures/bakednpctextures/darkironshop.blp",
+   "basis": "name",
+   "confidence": "high",
+   "checked": "2026-11-22",
+   "f": "character/dwarf/female/dwarffemaleskin00_101.blp",
+   "note": "Dark Iron Clan: dark grey skin for both sexes"
+  },
+  "50206": {
+   "m": "character/dwarf/male/dwarfmaleskin00_102.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "alternates": [
+    "textures/bakednpctextures/earthenshop.blp"
+   ],
+   "note": "Earthen Dwarves: the pale green stone skin in the picture (the baked 'earthenshop' texture is dark and did not match)",
+   "checked": "2026-11-22"
+  },
+  "81229": {
+   "m": "textures/bakednpctextures/dwarfdeathknightshop.blp",
+   "basis": "name",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "61104": {
+   "m": "textures/bakednpctextures/demonelfshop.blp",
+   "basis": "name",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "61105": {
+   "m": "character/nightelf/male/nightelfmaleskin00_102illidan.blp",
+   "f": "character/nightelf/female/nightelffemaleskin00_104demonhunter.blp",
+   "basis": "name+visual",
+   "confidence": "high",
+   "note": "Demon Hunter: lavender-blue skin with tattoos for both sexes",
+   "checked": "2026-11-22"
+  },
+  "83092": {
+   "m": "textures/bakednpctextures/natureelfshop1.blp",
+   "basis": "ordinal",
+   "confidence": "medium",
+   "checked": "2026-11-22",
+   "f": "character/nightelf/female/nelf_dryad0.blp",
+   "note": "Nature I: pink skin with a yellow-green top; the woman is the pink 'dryad0' skin"
+  },
+  "83099": {
+   "m": "textures/bakednpctextures/natureelfshop3.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "note": "Nature II: pale grey-green skin; checked against renders, the shop3 and shop2 order is the reverse of the file numbers",
+   "checked": "2026-11-22"
+  },
+  "83100": {
+   "m": "textures/bakednpctextures/natureelfshop2.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "note": "Nature III: yellow-green skin",
+   "checked": "2026-11-22"
+  },
+  "51921": {
+   "f": "character/scourge/female/scourgebloodwidowskin00_00.blp",
+   "basis": "name",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "81256": {
+   "m": "character/tauren/male/taurenmaleskin00_21grimtotem.blp",
+   "f": "character/tauren/female/taurenfemaleskin00_20grimtotem.blp",
+   "basis": "name",
+   "confidence": "high",
+   "checked": "2026-11-22"
+  },
+  "81228": {
+   "m": "textures/bakednpctextures/spiritwalkertaurenshop.blp",
+   "basis": "name",
+   "confidence": "medium",
+   "note": "Spirit Walker: the pale blue-white tauren of the single shop picture; the shop also has brown male and female pictures for this item that no texture here matches",
+   "checked": "2026-11-22"
+  },
+  "81206": {
+   "m": "character/bloodelf/male/bloodelfmaleskin00_106darkranger.blp",
+   "f": "character/bloodelf/female/bloodelffemaleskin00_106darkranger.blp",
+   "basis": "name",
+   "confidence": "medium",
+   "alternates": [
+    "textures/bakednpctextures/rangershop.blp"
+   ],
+   "note": "Dark Ranger: names agree; the woman's picture is bluer than her texture (lighting), so medium",
+   "checked": "2026-11-22"
+  },
+  "81209": {
+   "m": "character/bloodelf/male/bloodelfmaleskin00_107bloodelf.blp",
+   "f": "character/bloodelf/female/bloodelffemaleskin00_105.blp",
+   "basis": "visual",
+   "confidence": "high",
+   "note": "the shop pictures show green glowing eyes; these are the only High Elf rows with the green eye glow",
+   "checked": "2026-11-22"
+  },
+  "51010": {
+   "m": "character/troll/male/trollmaleskin00_100.blp",
+   "f": "character/troll/female/trollfemaleskin00_100.blp",
+   "basis": "visual",
+   "confidence": "high",
+   "note": "Dark Trolls: the only purple troll skins, matching both pictures",
+   "checked": "2026-11-22"
+  },
+  "51011": {
+   "m": "character/troll/male/trollmaleskin00_101.blp",
+   "f": "character/troll/female/trollfemaleskin00_101.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "alternates": [
+    "textures/bakednpctextures/trollmaleshop2.blp"
+   ],
+   "note": "Frozen Trolls: cyan skin; the man has a look-alike baked texture",
+   "checked": "2026-11-22"
+  },
+  "81208": {
+   "m": "textures/bakednpctextures/zombietrollshop.blp",
+   "f": "character/troll/female/trollfemaleskin00_108.blp",
+   "basis": "visual",
+   "confidence": "high",
+   "alternates": [
+    "character/troll/male/trollmaleskin00_108.blp"
+   ],
+   "note": "Zul'Farrak Curse: the ribbed, mummified skin in the pictures",
+   "checked": "2026-11-22"
+  },
+  "50212": {
+   "m": "textures/bakednpctextures/lepershop.blp",
+   "f": "character/gnome/female/gnomefemaleskin00_102leper.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "alternates": [
+    "character/gnome/male/gnomemaleskin00_100leper.blp"
+   ],
+   "note": "Radioactive Fallout: green-yellow skin; the files are called Leper",
+   "checked": "2026-11-22"
+  },
+  "81230": {
+   "m": "textures/bakednpctextures/necrognomeshop.blp",
+   "f": "character/gnome/female/gnomefemaleskin00_100.blp",
+   "basis": "name+visual",
+   "confidence": "medium",
+   "alternates": [
+    "character/gnome/male/gnomemaleskin00_101necro.blp"
+   ],
+   "note": "Necromancy III: pale skin; the female link is by the dark make-up (weaker)",
+   "checked": "2026-11-22"
+  },
+  "51920": {
+   "m": "character/scourge/male/deathknightmaleskin00_00.blp",
+   "f": "textures/bakednpctextures/wightundeadshop.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "alternates": [
+    "textures/bakednpctextures/deathknightundeadshop.blp"
+   ],
+   "note": "Mark of Darkness: grey skin with red glowing eyes; the man's row carries the Scourge eye glow",
+   "checked": "2026-11-22"
+  },
+  "50209": {
+   "m": "character/orc/male/orcmaleskin00_103.blp",
+   "basis": "visual",
+   "confidence": "medium",
+   "alternates": [
+    "textures/bakednpctextures/orcmaleshop7.blp"
+   ],
+   "note": "Mag'har Heritage: tan-brown skin; the baked texture is a darker brown",
+   "checked": "2026-11-22"
+  },
+  "50220": {
+   "m": "textures/bakednpctextures/orcmaleshop4.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "character/orc/male/orcmaleskin00_101.blp"
+   ],
+   "note": "bright orange-red skin; two look-alikes",
+   "checked": "2026-11-22"
+  },
+  "50208": {
+   "m": "textures/bakednpctextures/orcmaleshop2.blp",
+   "f": "character/orc/female/orcfemaleskin00_101chaos.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "character/orc/male/orcmaleskin00_106chaos.blp"
+   ],
+   "note": "Burning Blade: dark red skin; the woman's row is the only red one",
+   "checked": "2026-11-22"
+  },
+  "50221": {
+   "m": "character/orc/male/orcmaleskin00_100.blp",
+   "f": "character/orc/female/orcfemaleskin00_100.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "textures/bakednpctextures/orcmaleshop5.blp"
+   ],
+   "note": "Blackrock Clan II: plain grey-blue skin; several look-alikes for the man",
+   "checked": "2026-11-22"
+  },
+  "50207": {
+   "m": "textures/bakednpctextures/orcmaleshop6.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "character/orc/male/orcmaleskin00_102.blp"
+   ],
+   "note": "Blackrock Clan I: plain grey-blue skin; several look-alikes",
+   "checked": "2026-11-22"
+  },
+  "50224": {
+   "m": "textures/bakednpctextures/orcmaleshop1.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "character/orc/male/orcmaleskin00_105.blp"
+   ],
+   "note": "Dreadskull Clan II: grey skin with yellow glowing eyes; look-alikes",
+   "checked": "2026-11-22"
+  },
+  "81255": {
+   "m": "textures/bakednpctextures/orcmaleshop3.blp",
+   "basis": "visual",
+   "confidence": "low",
+   "alternates": [
+    "character/orc/male/orcmaleskin00_107.blp"
+   ],
+   "note": "Dreadskull Clan III: grey skin with yellow glowing eyes; look-alikes",
+   "checked": "2026-11-22"
+  }
+ }
+}
