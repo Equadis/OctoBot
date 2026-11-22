@@ -16,7 +16,7 @@
       { id: 'auction-house', href: 'auction-house/', text: 'Auction House' },
       { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] },
     { label: 'Guides', links: [
-      { id: 'guides', disabled: true, text: 'Guides', tooltip: 'Under Construction' } ] }
+      { id: 'guides', href: 'guides/', text: 'Guides' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
