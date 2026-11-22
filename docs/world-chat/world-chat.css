@@ -29,3 +29,7 @@
 #chat-search::placeholder{color:var(--muted,#a1adbd);opacity:1}
 
 .chat-search-wrap{position:relative;min-width:190px;max-width:100%}.chat-search-wrap input{width:100%}.chat-search-options{position:absolute;z-index:50;top:calc(100% + 5px);left:0;width:290px;max-width:80vw;background:#202e40;border:1px solid #40546c;border-radius:6px;padding:5px;box-shadow:0 8px 22px #0006}.chat-search-options[hidden]{display:none}.chat-search-heading{padding:6px 8px;color:var(--muted,#a1adbd);font-size:11px}.chat-search-option{display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;background:none;color:#fff;border:0;border-radius:4px;padding:7px 8px;cursor:pointer;font:12px Arial,sans-serif}.chat-search-option:hover,.chat-search-option:focus-visible{background:#31465d;outline:none}.chat-search-option code{color:var(--gold,#f5d76e);font:12px monospace}.chat-search-option small{color:var(--muted,#a1adbd);font-size:11px}
+
+.death-panel{margin-top:14px}
+.death-panel .chat-scroll{height:auto;min-height:52px;max-height:220px}
+.death-announcement{color:#f7d96f;overflow-wrap:anywhere}

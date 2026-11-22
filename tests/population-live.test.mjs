@@ -72,6 +72,7 @@ function fixture(options={}){
   const requests=[];
   const fetch=async path=>{
     const url=String(path);requests.push(url);
+    if(url.endsWith('/api/realm-uptime'))return {ok:true,json:async()=>options.uptimeFeed||{}};
     if(url.includes('/api/status/history?')){
       if(failed)throw Error('Worker uptime monitoring temporarily unavailable');
       const since=Number(new URL(url).searchParams.get('since'));
@@ -115,7 +116,7 @@ function fixture(options={}){
   };
   const window={};
   const context=vm.createContext({
-    Date:FakeDate,URL,URLSearchParams,Intl,document,window,fetch,
+    Date:FakeDate,URL,URLSearchParams,Intl,AbortSignal,document,window,fetch,
     location:{hash:'server=all'},
     console:{warn(){},error(...e){throw Error(e.join(' '))}},
     setInterval:(handler,ms)=>{
@@ -397,84 +398,47 @@ test('legacy website-wide census is never shown as N\'Zoth population',async()=>
 });
 
 
-test('All Realms shows continuously advancing N\'Zoth uptime even after 12 hours',async()=>{
- const env=fixture();await settle();
- assert.equal(env.get('uptime-label').textContent,"N'Zoth uptime");
- assert.equal(env.get('uptime-freshness').textContent,'Estimated');
- const original=env.get('uptime').textContent;
- assert.notEqual(original,'NO DATA');
+test('all-realms uptime restarts on the last realm recovery and continues through monitoring gaps',async()=>{
+ const env=fixture();
+ const observe=(time,nzoth,others='online')=>({
+  timestamp:'2026-11-08T'+time+'Z',website:'available',
+  realms:{nzoth,cthun:others,yshaarj:others}
+ });
+ env.statusSamples.push(observe('00:40:00','online'),observe('00:45:00','offline'),
+  observe('00:46:00','offline'),observe('00:50:00','online'),observe('00:59:00','online'));
+ await settle();
+ assert.equal(env.get('uptime-label').textContent,'All Realms uptime');
+ assert.equal(env.get('uptime').textContent,'0D 0H 10M 0S');
+ assert.equal(env.get('uptime-freshness').textContent,'Estimated time all realms have been up');
+ env.get('server-select').fire('change',{target:{value:'cthun'}});
+ assert.equal(env.get('uptime-label').textContent,'Realm uptime');
+ assert.equal(env.get('uptime').textContent,'0D 0H 20M 0S');
+ await settle();
  env.advance(13*3600000);
- const tick=env.intervals.get(1000)?.[0];
- assert.equal(typeof tick,'function');
- tick();
- assert.notEqual(env.get('uptime').textContent,'NO DATA');
- assert.notEqual(env.get('uptime').textContent,original);
- assert.equal(env.get('uptime-freshness').textContent,'Estimated');
+ env.intervals.get(1000)[0]();
+ assert.equal(env.get('uptime').textContent,'0D 13H 20M 0S');
+ assert.equal(env.get('uptime-freshness').textContent,'Estimated · awaiting fresh status');
 });
 
-test('a single unconfirmed DOWN report temporarily hides uptime, then recovery preserves its start',async()=>{
- const env=fixture();await settle();
- env.statusSamples.push({
-  timestamp:'2026-11-08T00:59:00Z',website:'available',
-  realms:{nzoth:'offline'}
- });
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'NO DATA');
- assert.match(env.get('uptime-freshness').textContent,/clock preserved/);
- env.setWorkerFailed(true);
- env.advance(600000);
- await env.intervals.get(60000)?.[0]();await settle();
- env.intervals.get(1000)?.[0]();
- assert.equal(env.get('uptime').textContent,'NO DATA','A gap is hidden without resetting uptime');
- env.setWorkerFailed(false);
- env.statusSamples.push({
-  timestamp:'2026-11-08T01:10:00Z',website:'available',
-  realms:{nzoth:'online'}
- });
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'1D 3H 10M 0S',
-  'The 10-minute monitoring gap contributes to the original uptime');
- assert.equal(env.get('uptime-freshness').textContent,'Estimated');
+test('all-realms uptime prefers live in-game readings when available',async()=>{
+ const ref={observed_at:'2026-11-08T00:59:00Z',elapsed_seconds:7200};
+ const env=fixture({uptimeFeed:{"N'Zoth":ref,"Y'Shaarj":ref,"C'Thun":{...ref,elapsed_seconds:3600}}});
+ await settle();
+ assert.equal(env.get('uptime').textContent,'0D 1H 1M 0S');
 });
 
-test('explicit NO DATA gap displays NO DATA, then resumes the clock without losing time',async()=>{
- const env=fixture();await settle();
- env.statusSamples.push({
-  timestamp:'2026-11-08T00:59:00Z',website:'available',realms:{nzoth:'online'}
- });
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime-freshness').textContent,'Estimated');
- env.advance(60000);
- env.statusSamples.push({
-  timestamp:'2026-11-08T01:01:00Z',website:'available',realms:{nzoth:'unknown'}
- });
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'NO DATA');
- assert.equal(env.get('uptime-freshness').textContent,'Monitoring unavailable · clock preserved');
- env.advance(120000);
- env.statusSamples.push({
-  timestamp:'2026-11-08T01:03:00Z',website:'available',realms:{nzoth:'online'}
- });
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'1D 3H 3M 0S');
- assert.equal(env.get('uptime-freshness').textContent,'Estimated');
-});
-
-test('two explicit N\'Zoth offline observations interrupt uptime until a fresh in-game reference',async()=>{
- const env=fixture();await settle();
+test('a confirmed outage displays DOWN only until an online observation',async()=>{
+ const env=fixture();
  env.statusSamples.push(
-  {timestamp:'2026-11-08T00:45:00Z',website:'available',realms:{nzoth:'offline'}},
-  {timestamp:'2026-11-08T00:46:00Z',website:'available',realms:{nzoth:'offline'}}
+  {timestamp:'2026-11-08T00:45:00Z',website:'available',realms:{nzoth:'offline',cthun:'online',yshaarj:'online'}},
+  {timestamp:'2026-11-08T00:46:00Z',website:'available',realms:{nzoth:'offline',cthun:'online',yshaarj:'online'}}
  );
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'NO DATA');
- assert.equal(env.get('uptime-freshness').textContent,'Confirmed DOWN · new uptime reading needed');
- env.advance(60000);
- env.statusSamples.push({timestamp:'2026-11-08T01:01:00Z',website:'available',
-  realms:{nzoth:'online'}});
- await env.intervals.get(60000)?.[0]();await settle();
- assert.equal(env.get('uptime').textContent,'NO DATA',
-  'Confirmed downtime requires a new in-game uptime reference even after recovery');
+ await settle();
+ assert.equal(env.get('uptime').textContent,'DOWN');
+ env.statusSamples.push({timestamp:'2026-11-08T00:59:00Z',website:'available',
+  realms:{nzoth:'online',cthun:'online',yshaarj:'online'}});
+ await env.intervals.get(60000)[0]();
+ assert.equal(env.get('uptime').textContent,'0D 0H 1M 0S');
 });
 
 test('realm graph renders current real counts and yellow proportional backfill',async()=>{

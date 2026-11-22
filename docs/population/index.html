@@ -58,14 +58,15 @@
 <script src="../chart-data.js?v=20261116-running-average1"></script>
 <script src="../population-history.js"></script>
 <script src="../realm-estimates.js"></script>
-<script src="../uptime-clock.js"></script>
+<script src="../uptime-clock.js?v=20261122-realms"></script>
 <script src="../viewer-presence.js?v=20261113-live"></script>
 <script>
 'use strict';
 const D=window.PopulationData,E=window.RealmEstimates,U=window.OctoBotUptime,$=id=>document.getElementById(id),day=86400000;
 const periods=['1H','1D','1W','1M','1Y','YTD'],LAUNCH=Date.parse('2026-04-28T17:00:00Z');
+const UPTIME_FEED='https://octometrics.eqvoice.workers.dev/api/realm-uptime';
 const RAW_ROOT='https://raw.githubusercontent.com/Equadis/OctoBot/main/docs/';
-let period='1D',rows=[],estimatedRows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=null,uptimeStatusBusy=false,uptimeIncident=null;
+let period='1D',rows=[],estimatedRows=[],realms=[],releases=[],realm='all',now=Date.now(),start=0,windowEnd=now,customStart=null,missing=[],ceiling=4000,loadNumber=0,liveSnapshots={},uptimeReference={},telemetryEndpoint='',liveFeedSource='none',realmHistories=new Map(),livePollRunning=false,uptimeStatusRows=new Map(),uptimeStatusCursor=0,uptimeStatusBusy=false,uptimeClocks={};
 let fullLifespan=false,earliestPlotted=null,runningAverages=[];
 // Above the historical mean: green. More than 25% below: red. Otherwise: yellow.
 // A missing reading or baseline has no comparison colour.
@@ -108,94 +109,75 @@ function updateHeadline(){
 
 }
 function updateUptime(){
- const current=Date.now();
- const state=U.compute(realm,uptimeReference,current,uptimeIncident);
- // The only in-game uptime reference currently available is for N'Zoth.
- $('uptime-label').textContent=realm==='all'?"N'Zoth uptime":'Server uptime';
+ const state=U.summarize(uptimeClocks,realm,Date.now());
+ $('uptime-label').textContent=realm==='all'?'All Realms uptime':'Realm uptime';
+ $('uptime').style.color='';
  if(state.kind==='running'){
-  const monitor=U.monitorStatus([...uptimeStatusRows.values()],state.sourceRealm,state.anchor,current);
-  if(monitor.kind==='unknown'||monitor.kind==='uncertain'){
-   // Hide an unverifiable reading, but never reset its underlying uptime anchor.
-   $('uptime').textContent='NO DATA';
-   $('uptime').className='signal-yellow';
-   $('uptime').style.color='';
-   $('uptime-freshness').textContent=monitor.kind==='uncertain'
-     ?'Unconfirmed offline report · clock preserved'
-     :'Monitoring unavailable · clock preserved';
-  }else{
-   $('uptime').textContent=U.format(state.seconds);
-   $('uptime').className=state.seconds>7*86400?'signal-green':'signal-yellow';
-   $('uptime').style.color='';
-   $('uptime-freshness').textContent='Estimated';
-  }
+  $('uptime').textContent=U.format(state.seconds);
+  $('uptime').className=!state.stale&&state.seconds>7*86400?'signal-green':'signal-yellow';
+  $('uptime-freshness').textContent=state.stale?'Estimated · awaiting fresh status':
+   realm==='all'?'Estimated time all realms have been up':'Estimated';
  }else{
-  $('uptime').textContent='NO DATA';
-  $('uptime').className=state.kind==='interrupted'?'signal-red':'signal-yellow';
-  $('uptime').style.color='';
-  $('uptime-freshness').textContent=state.kind==='interrupted'
-    ?'Confirmed DOWN · new uptime reading needed':'No in-game uptime reference';
+  $('uptime').textContent=state.kind==='offline'?'DOWN':'NO DATA';
+  $('uptime').className=state.kind==='offline'?'signal-red':'signal-yellow';
+  $('uptime-freshness').textContent=state.kind==='offline'
+   ?'Awaiting a verified recovery':'Awaiting an online observation';
  }
 }
-function addUptimeStatus(rows,anchor){
+function addUptimeStatus(rows){
  if(!Array.isArray(rows))return;
+ const ids=realms.filter(realm=>realm.id!=='all').map(realm=>realm.id);
  for(const row of rows){
   const t=Date.parse(row?.timestamp);
-  if(!Number.isFinite(t)||t<=anchor||t>Date.now()+60000||
-     typeof row?.realms!=='object')continue;
-  const old=uptimeStatusRows.get(t);
-  // Prefer authoritative observations, but treat conflicting same-time sources as unknown.
-  if(old?.conflict)continue;
-  if(old?.website==='available'&&row.website==='available'&&
-     old.realms?.nzoth!==row.realms?.nzoth){
-   uptimeStatusRows.set(t,{timestamp:row.timestamp,website:'available',
-     realms:{...old.realms,nzoth:'unknown'},conflict:true});
-  }else if(!old||old.website!=='available'||row.website==='available'){
-   uptimeStatusRows.set(t,row);
-  }
+  if(!Number.isFinite(t)||t>Date.now()+60000||!row?.realms)continue;
+  uptimeStatusRows.set(t,U.mergeStatus(uptimeStatusRows.get(t),row,ids));
  }
 }
-// Read all available observations since the last in-game anchor. An outage
-// must remain detectable after the realm has recovered or a page is reopened.
+// Keep the history across refreshes so confirmed outages survive a reload.
 async function refreshUptimeEvidence(){
  if(uptimeStatusBusy)return;
- const anchor=Date.parse(uptimeReference.nzoth?.observed_at);
- if(!Number.isFinite(anchor))return;
  uptimeStatusBusy=true;
+ const sources=Promise.allSettled([
+  fetchLatestJson('status/history.json'),
+  fetchLatestJson('status/latest.json'),
+  fetch(UPTIME_FEED,{cache:'no-store',signal:AbortSignal.timeout(8000)}).then(r=>{
+   if(!r.ok)throw Error('Realm uptime HTTP '+r.status);
+   return r.json();
+  })
+ ]);
  try{
   if(telemetryEndpoint){
-   let since=uptimeStatusCursor===null?anchor:Math.max(anchor,uptimeStatusCursor);
    for(let page=0;page<24;page++){
-    const payload=await workerJson('/api/status/history?since='+Math.floor(since));
-    if(!payload||!Array.isArray(payload.samples))
-     throw Error('Invalid status-history response');
-    addUptimeStatus(payload.samples,anchor);
+    const payload=await workerJson('/api/status/history?since='+uptimeStatusCursor);
+    if(!Array.isArray(payload?.samples))throw Error('Invalid status-history response');
     const next=Number(payload.next_since);
-    if(!Number.isFinite(next)||next<since)
+    if(!Number.isSafeInteger(next)||next<uptimeStatusCursor||
+       (payload.has_more&&next===uptimeStatusCursor))
      throw Error('Invalid status-history cursor');
-    if(payload.has_more&&next<=since)
-     throw Error('Status-history pagination stalled');
-    since=next;
-    uptimeStatusCursor=since;
+    addUptimeStatus(payload.samples);
+    uptimeStatusCursor=next;
     if(!payload.has_more)break;
-    if(page===23)throw Error('Status-history page limit reached');
    }
   }
  }catch(error){console.warn('Live uptime status history unavailable',error);}
- try{
-  // GitHub observations remain an independent fallback during Worker outages.
-  const [history,latest]=await Promise.all([
-   fetchLatestJson('status/history.json'),
-   fetchLatestJson('status/latest.json')
-  ]);
-  addUptimeStatus(history,anchor);
-  if(latest?.sample)addUptimeStatus([latest.sample],anchor);
- }catch(error){console.warn('Backup uptime status history unavailable',error);}
- finally{
-  uptimeIncident=U.confirmedOffline(
-   [...uptimeStatusRows.values()], 'nzoth',anchor,Date.now());
-  uptimeStatusBusy=false;
-  updateUptime();
+ const [history,latest,game]=await sources;
+ if(game.status==='fulfilled'){
+  const names={nzoth:"N'Zoth",yshaarj:"Y'Shaarj",cthun:"C'Thun"};
+  for(const [id,name] of Object.entries(names)){
+   const reading=game.value?.[name],observedAt=Date.parse(reading?.observed_at);
+   const previous=Date.parse(uptimeReference[id]?.observed_at);
+   if(Number.isSafeInteger(reading?.elapsed_seconds)&&reading.elapsed_seconds>=0&&
+      observedAt<=Date.now()&&(!Number.isFinite(previous)||observedAt>previous))uptimeReference[id]=reading;
+  }
  }
+ if(history.status==='fulfilled')addUptimeStatus(history.value);
+ if(latest.status==='fulfilled'&&latest.value?.sample)addUptimeStatus([latest.value.sample]);
+ const samples=[...uptimeStatusRows].sort((a,b)=>a[0]-b[0]);
+ const current=Date.now();
+ uptimeClocks=Object.fromEntries(realms.filter(realm=>realm.id!=='all').map(({id})=>
+  [id,U.realmStatus(samples,id,uptimeReference[id],current)]));
+ uptimeStatusBusy=false;
+ updateUptime();
 }
 function workerUrl(path){return telemetryEndpoint+path;}
 async function workerJson(path){
