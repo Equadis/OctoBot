@@ -15,3 +15,13 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin
 
 .home-card-disabled,.home-card-disabled:hover{background:#26282c;border-color:#464950;transform:none;cursor:not-allowed}
 .home-card-disabled .home-card-title,.home-card-disabled .home-card-text{color:#a0a2a6}
+
+/* Dashboard card WoW icons: 64×64, aligned to the upper right. */
+.home-card{position:relative}
+.home-card-icon{position:absolute;top:22px;right:24px;display:block;width:64px;height:64px;object-fit:cover;border:1px solid #4b5b71;border-radius:5px;box-shadow:0 2px 8px #0006;box-sizing:border-box}
+.home-card-title{min-height:64px;box-sizing:border-box;padding-right:76px}
+.home-card-disabled .home-card-icon{filter:grayscale(1);opacity:.4}
+@media(max-width:560px){.home-card-icon{top:17px;right:17px}.home-card-title{min-height:64px;padding-right:76px}}
+
+/* Construction marker immediately following unfinished dashboard titles. */
+.home-construction-icon{font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif;font-size:19px;line-height:1;vertical-align:baseline;white-space:nowrap}

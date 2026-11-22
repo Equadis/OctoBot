@@ -4,6 +4,9 @@ import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./
 import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
 const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"DJ",DEV:"Developer"};
+const staffRoles=["DEV","GM","CM","DJ"];
+const enabledStaffRoles=new Set(staffRoles);
+const staffRoleFor=row=>Object.hasOwn(STAFF_LABELS,row.staffRole)?row.staffRole:"GM";
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -72,7 +75,7 @@ function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
   if(row.gm){
-   const role=Object.hasOwn(STAFF_LABELS,row.staffRole)?row.staffRole:"GM";
+   const role=staffRoleFor(row);
    const badge=node("span","chat-gm-tag","<"+role+"> ");
    badge.dataset.siteTip=STAFF_LABELS[role];
    if(/^#[0-9a-f]{6}$/i.test(row.staffColour))badge.style.color=row.staffColour;
@@ -96,7 +99,7 @@ function syncHistoryButton(key){
  byId(key+"-history-state").textContent=state.error||(state.ready?historyQuery?state.rows.length+" matching messages":state.rows.length+" messages loaded":"Loading history…");
 }
 function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
- const parent=byId(key),state=history[key],rows=state.rows;
+ const parent=byId(key),state=history[key],rows=key==="gm"?state.rows.filter(row=>enabledStaffRoles.has(staffRoleFor(row))):state.rows;
  syncHistoryButton(key);
  refreshKnownPlayers();
  refreshKnownClasses();
@@ -108,7 +111,7 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
  // Record the first visible row rather than relying on total height differences.
  const anchor=[...parent.children].find(e=>e.dataset.id&&e.getBoundingClientRect().bottom>top);
  const anchorId=anchor?.dataset.id,offset=anchor?anchor.getBoundingClientRect().top-top:0,before=parent.scrollTop;
- if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":historyQuery?"No messages match your search.":key==="gm"?"No recent verified staff messages.":"No recent public messages."));
+ if(!rows.length)empty(parent,state.error||(!state.ready?"Loading history…":key==="gm"&&state.rows.length?"No messages from the selected staff roles.":historyQuery?"No messages match your search.":key==="gm"?"No recent verified staff messages.":"No recent public messages."));
  else{
   const existing=new Map([...parent.children].filter(e=>e.dataset.id).map(e=>[e.dataset.id,e]));
   const keep=new Set(rows.map(r=>r.id));
@@ -126,7 +129,7 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
   else{const replacement=anchorId&&[...parent.children].find(e=>e.dataset.id===anchorId);
    parent.scrollTop=replacement?parent.scrollTop+replacement.getBoundingClientRect().top-parent.getBoundingClientRect().top-offset:before;}
  }
- byId(key+"-count").textContent=String(rows.length);syncHistoryButton(key);applyPlayerFocus();
+ syncHistoryButton(key);applyPlayerFocus();
 }
 async function fetchHistory(key,older=false){
  const state=history[key],token=historyGeneration,realm=select.value,q=historyQuery;
@@ -170,6 +173,14 @@ function mergeLiveHistory(key,incoming,render=true,preserveOverride){
 function resetHistory(query=historyQuery,load=true){
  historyGeneration++;historyQuery=query;
  for(const key of feeds){history[key]?.controller?.abort();history[key]=freshFeed();drawHistory(key);if(load)void fetchHistory(key);}
+}
+for(const button of document.querySelectorAll("[data-staff-role]")){
+ button.addEventListener("click",()=>{
+  const role=button.dataset.staffRole;
+  if(enabledStaffRoles.has(role))enabledStaffRoles.delete(role);else enabledStaffRoles.add(role);
+  button.setAttribute("aria-pressed",String(enabledStaffRoles.has(role)));
+  drawHistory("gm");
+ });
 }
 for(const key of feeds){
  byId(key+"-older").addEventListener("click",()=>void fetchHistory(key,history[key].ready));

@@ -33,3 +33,12 @@
 .death-panel{margin-top:14px}
 .death-panel .chat-scroll{height:auto;min-height:52px;max-height:220px}
 .death-announcement{color:#f7d96f;overflow-wrap:anywhere}
+
+/* Compact, independent staff role toggles in the panel header. */
+.staff-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 12px;border-bottom:1px solid var(--line)}
+.staff-panel-heading h2{padding:0;border:0;white-space:nowrap}
+.staff-role-filters{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.staff-role-filters button{font:600 10px Arial,sans-serif;letter-spacing:.02em;background:#263f5a;color:#ace5ee;border:1px solid #4d7796;border-radius:4px;padding:5px 6px;cursor:pointer;min-width:32px}
+.staff-role-filters button[aria-pressed="false"]{background:#18283a;color:#718399;border-color:#35485d;opacity:.65}
+.staff-role-filters button:hover{filter:brightness(1.2)}
+.staff-role-filters button:focus-visible{outline:2px solid #ace5ee;outline-offset:2px}

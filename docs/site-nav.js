@@ -9,12 +9,14 @@
       { id: 'population', href: 'population/#server=all', text: 'Population' },
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
     { label: 'Character tools', links: [
-      { id: 'sim', href: 'sim/', text: 'Gear Planner', beta: true },
-      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room', beta: true } ] },
+      { id: 'sim', href: 'sim/', text: 'Gear Planner' },
+      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' } ] },
     { label: 'World and economy', links: [
       { id: 'world-info', href: 'world-info/', text: 'World Info' },
-      { id: 'auction-house', disabled: true, text: 'Auction House' },
-      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] }
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House' },
+      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] },
+    { label: 'Guides', links: [
+      { id: 'guides', href: 'guides/', text: 'Guides' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
@@ -32,16 +34,10 @@
       group.links.forEach(function (link) {
         var a = doc.createElement('a');
         a.textContent = link.text;
-        if (link.beta) {
-          var badge = doc.createElement('span');
-          badge.className = 'nav-beta';
-          badge.textContent = 'BETA';
-          badge.setAttribute('style', 'display:inline-block;margin-left:6px;padding:1px 4px;border-radius:3px;background:#302c21;color:#e9cc67;font-size:9px;line-height:13px;letter-spacing:.04em');
-          a.appendChild(badge);
-        }
         if (link.disabled) {
           a.setAttribute('role', 'link');
           a.setAttribute('aria-disabled', 'true');
+          if (link.tooltip) { a.setAttribute('title', link.tooltip); a.setAttribute('data-tip', link.tooltip); }
         } else {
           a.setAttribute('href', base + link.href);
         }

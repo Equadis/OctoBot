@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en-GB"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="description" content="Auction House prices, listings and history from verified OctoBot scans.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OctoBot">
@@ -17,13 +18,14 @@
 <meta name="twitter:card" content="summary_large_image">
 <title>OctoBot · Auction House</title>
 <link rel="icon" href="../favicon.png" type="image/png">
-<link rel="stylesheet" href="../site-theme.css?v=20261120-maintenance">
-<link rel="stylesheet" href="auction.css?v=20261120-maintenance"><link rel="stylesheet" href="../quality-select.css?v=1">
-<script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-</head><body><main class="ah-maintenance-background" inert>
+<link rel="stylesheet" href="../site-theme.css?v=20261122-shared-construction">
+<link rel="stylesheet" href="auction.css?v=20261122-public-preview"><link rel="stylesheet" href="../quality-select.css?v=1">
+<script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script><script src="../viewer-presence.js?v=20261113-live" defer></script><script type="module" src="auction.js?v=20261122-public-preview"></script>
+</head><body><main>
 <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1 id="ah-realm-heading">Auction House</h1></div></div>
 <div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">–</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
 <nav class="page-nav" aria-label="Dashboard pages" data-current="auction-house"></nav><script src="../site-nav.js?v=20261120-tabs"></script>
+<div class="site-construction-banner" role="note"><strong>Under Construction</strong><span>This section is still in development. Features and information may be incomplete, unavailable or subject to change.</span></div>
 <div id="ah-status" role="status" aria-live="polite" class="ah-status"></div>
 <div class="ah-kpis"><div class="ah-kpi"><span>Scan status</span><strong id="scan-progress">–</strong><small id="last-scan">No completed scan</small></div><div class="ah-kpi"><span>Items indexed</span><strong id="item-count">–</strong></div><div class="ah-kpi"><span>Auctions indexed</span><strong id="auction-count" title="Unique auctions in the latest completed scan">–</strong></div><div class="ah-kpi"><span>Total historical auctions</span><strong id="historical-auction-count" title="Unique auction IDs observed in completed scans since retained tracking began">–</strong></div></div>
 
@@ -70,5 +72,4 @@
 </section>
 <p class="ah-caveat">Average prices use at least five distinct priced auctions, or four prior daily observations for sparse items. Trend arrows compare consecutive full scans. Auction expiry is indicative and may change as bids arrive. Seller names are not available from the auction data, so listings show the owner GUID.</p>
 </main>
-<div class="ah-maintenance-notice"><h1>CURRENTLY DISABLED.</h1></div>
 </body></html>
