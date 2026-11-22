@@ -14,7 +14,9 @@
     { label: 'World and economy', links: [
       { id: 'world-info', href: 'world-info/', text: 'World Info' },
       { id: 'auction-house', disabled: true, text: 'Auction House' },
-      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] }
+      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] },
+    { label: 'Guides', links: [
+      { id: 'guides', disabled: true, text: 'Guides', tooltip: 'Under Construction' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
@@ -42,6 +44,7 @@
         if (link.disabled) {
           a.setAttribute('role', 'link');
           a.setAttribute('aria-disabled', 'true');
+          if (link.tooltip) { a.setAttribute('title', link.tooltip); a.setAttribute('data-tip', link.tooltip); }
         } else {
           a.setAttribute('href', base + link.href);
         }
