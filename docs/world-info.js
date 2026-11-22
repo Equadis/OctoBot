@@ -464,7 +464,7 @@
       return;
     }
     if (clear.status === 'stale') { out.textContent = 'Stale'; note.textContent = 'Bufftracker data is out of date; no estimate is shown and no clear is assumed.'; return; }
-    if (clear.status === 'leaving') { out.textContent = 'Leaving'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
+    if (clear.status === 'leaving') { out.textContent = 'Leaving…'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
     if (clear.status === 'learning') {
       out.textContent = 'Learning'; out.classList.add('dots');
