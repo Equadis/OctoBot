@@ -23,6 +23,5 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin
 .home-card-disabled .home-card-icon{filter:grayscale(1);opacity:.4}
 @media(max-width:560px){.home-card-icon{top:17px;right:17px}.home-card-title{min-height:64px;padding-right:76px}}
 
-/* Construction marker at the trailing edge of unfinished dashboard cards. */
-.home-card-go{display:inline-flex;align-items:center;gap:7px}
-.home-construction-icon{font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif;font-size:18px;line-height:1;vertical-align:middle}
+/* Construction marker immediately following unfinished dashboard titles. */
+.home-construction-icon{font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif;font-size:19px;line-height:1;vertical-align:baseline;white-space:nowrap}
