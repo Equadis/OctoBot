@@ -193,3 +193,5 @@ check) none of these can be fixed from the client alone.
   Resetting the version pointer alone is **not** a rollback when keys keep their names (`helms.json`, textures).
 * The live build `8c2bbd319a49e0a6` was uploaded before this existed: its old `helms.json` was overwritten and is not recoverable except by rebuilding the previous
   commit. The Worker before that deployment is `1408876d-0345-4295-970d-53693bc16d1a`.
+
+See `DEPLOYMENT.md` for the full backup, replace, verify and rollback procedure, and `DEPLOYMENT_READINESS.md` for the state of the official-only replacement.

@@ -9,6 +9,9 @@
 // --rate is the most uploads started per second. Cloudflare's API allows about 1,200 requests per 5 minutes (4 a second) per user and answers
 // 429 above that, so the default is 3; a 429 is retried after a pause instead of failing the file.
 //
+// --force ignores what .uploaded.json remembers and sends every file again. A rollback needs it: a backup folder keeps its own record after a first
+// restore, so a second restore without --force would skip every file even if the bucket has changed since.
+//
 // Resumable: each uploaded file's sha256 is remembered in <overlay folder>/.uploaded.json, so a rerun only sends what is new or changed.
 // Nothing is uploaded without you running this yourself; the bucket must already exist (npx wrangler r2 bucket create <name>).
 import {exec} from 'node:child_process';
@@ -49,7 +52,7 @@ async function main(argv) {
  if(!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)){console.error('That does not look like a bucket name.');return 2;}
  const manifest=JSON.parse(await fs.readFile(path.join(folder,'manifest.json'),'utf8'));
  const stateFile=path.join(folder,'.uploaded.json');
- const uploaded=await fs.readFile(stateFile,'utf8').then(JSON.parse,()=>({}));
+ const uploaded=argv.includes('--force')?{}:await fs.readFile(stateFile,'utf8').then(JSON.parse,()=>({}));
  const todo=plan(manifest,uploaded);
  const total=todo.reduce((sum,f)=>sum+f.bytes,0);
  console.log(`${todo.length} of ${Object.keys(manifest.files).length} files to upload (${(total/1e6).toFixed(1)} MB) to bucket "${bucket}"${dry?' (dry run: nothing sent)':''}`);

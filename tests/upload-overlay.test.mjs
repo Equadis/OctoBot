@@ -39,3 +39,7 @@ test('only a key that is not in the bucket counts as "nothing to back up"',()=>{
  assert.equal(isMissingKey('network unreachable'),false);
  assert.equal(isMissingKey(''),false);
 });
+
+test('--force and the other switches never become positional arguments',()=>{
+ assert.deepEqual(positional(['backup','octobot-models','--no-backup','--force','--rate','3']),['backup','octobot-models']);
+});
