@@ -98,11 +98,11 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .page-nav{align-items:stretch}
 .page-nav .nav-group{display:flex;gap:6px}
 /* One tab size on every page: several pages style .page-nav a themselves (taller, wider padding), so pin the box here. */
-.page-nav .nav-group a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:38px;min-height:38px;min-width:0;padding:0 13px;font-size:12px;line-height:18px;white-space:nowrap}
+.page-nav .nav-group a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:42px;min-height:42px;min-width:0;padding:0 13px;font-size:14px;line-height:20px;white-space:nowrap}
 .page-nav .nav-group+.nav-group{margin-left:6px;padding-left:12px;border-left:1px solid var(--line)}
 @media(max-width:1000px){
  .page-nav{flex-direction:column;gap:8px}
- .page-nav .nav-group a{flex:1;height:auto;padding:8px 10px;white-space:normal;text-align:center}
+ .page-nav .nav-group a{flex:1;height:auto;padding:9px 10px;white-space:normal;text-align:center}
  .page-nav .nav-group+.nav-group{margin-left:0;padding-left:0;padding-top:8px;border-left:0;border-top:1px solid var(--line)}
 }
 
