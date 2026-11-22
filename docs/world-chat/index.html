@@ -26,5 +26,49 @@
 </div><div id="lfg"></div></section>
 <div class="chat-trade"><section class="chat-panel listings"><h2>Want to Buy <span id="wtb-count"></span></h2><div id="wtb"></div></section><section class="chat-panel listings"><h2>Want to Sell <span id="wts-count"></span></h2><div id="wts"></div></section></div>
 <section class="chat-panel death-panel"><h2>Hardcore Death Log <span>All realms</span></h2><div id="hardcore-deaths" class="chat-scroll" role="log" aria-live="off" aria-label="Hardcore death announcements"></div></section>
+<script>
+/* Keep the World Chat and Staff panels paired; other panels collapse independently.
+   Hidden panels retain their DOM and continue to receive live polling updates. */
+(function(){
+  const panels=[
+    {id:'world',selector:'.chat-feeds > .chat-panel:first-child',group:'chat'},
+    {id:'staff',selector:'.chat-feeds > .gm-panel',group:'chat'},
+    {id:'lfg',selector:'.chat-panel.listings:not(.chat-trade .chat-panel)',group:'lfg'},
+    {id:'buy',selector:'.chat-trade > .chat-panel:first-child',group:'buy'},
+    {id:'sell',selector:'.chat-trade > .chat-panel:last-child',group:'sell'},
+    {id:'deaths',selector:'.death-panel',group:'deaths'}
+  ];
+  const storageKey='octobot-world-chat-open-sections-v1';
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch{}
+  function apply(group,open){
+    for(const p of panels){
+      if(p.group!==group)continue;
+      const el=document.querySelector(p.selector);
+      if(!el)continue;
+      el.classList.toggle('chat-panel-collapsed',!open);
+      const toggle=el.querySelector('.chat-section-toggle');
+      if(toggle){toggle.textContent=open?'Close':'Open';toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',(open?'Close ':'Open ')+toggle.dataset.section);}
+    }
+  }
+  for(const p of panels){
+    const el=document.querySelector(p.selector);if(!el)continue;
+    const heading=el.querySelector(':scope > .staff-panel-heading')||el.querySelector(':scope > h2');
+    if(!heading)continue;
+    const name=(heading.querySelector('h2')||heading).firstChild?.textContent?.trim()||p.id;
+    const toggle=document.createElement('button');
+    toggle.type='button';toggle.className='chat-section-toggle';toggle.dataset.section=name;
+    if(heading.classList.contains('staff-panel-heading'))heading.append(toggle);
+    else heading.append(toggle);
+    toggle.addEventListener('click',()=>{
+      const isOpen=!el.classList.contains('chat-panel-collapsed');
+      saved[p.group]=!isOpen;
+      try{localStorage.setItem(storageKey,JSON.stringify(saved));}catch{}
+      apply(p.group,!isOpen);
+    });
+  }
+  for(const group of new Set(panels.map(p=>p.group)))apply(group,saved[group]!==false);
+})();
+</script>
 <p class="chat-muted">Public World chat and server death announcements. Chat history is retained for seven days. Search matches messages, player and guild names. Listings expire five minutes after their last message; repeated recruitment for the same dungeon refreshes the listing. Trade listings are player advertisements, not verified auctions. staff messages are identified by the server chat flag. Alpha: coverage and classification may be incomplete.</p>
 <footer><span>Times shown in UTC</span><span>Community tools for OctoWoW</span></footer></main></body></html>
