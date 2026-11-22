@@ -1,5 +1,5 @@
 // Character Skins panel: builds the card list. Pure DOM, no network and no page state, so outfitter.mjs stays in charge of the outfit.
-import { basisLabel, compatibility, genderName, raceName, thumbnailFor } from './skins.mjs?v=20261121-skins1';
+import { basisLabel, compatibility, confidenceLabel, genderName, raceName, thumbnailFor } from './skins.mjs?v=20261122-skins2';
 
 const STATUS_TEXT = { Recovered: '', 'Partially Recovered': 'Partly recovered', Unresolved: 'Unresolved', Verified: 'Verified' };
 
@@ -44,14 +44,15 @@ export function renderSkinCards(list, skins, { race, gender, selectedId, thumbUr
     const sexes = skin.genders.length === 2 ? 'male and female' : skin.genders.length === 1 ? genderName(skin.genders[0]) + ' only' : '';
     meta.textContent = [skin.races.map(raceName).join(', '), sexes].filter(Boolean).join(' · ');
     card.append(frame, name, meta);
-    const flags = [STATUS_TEXT[skin.status], !fit.ok ? (fit.unsupported ? 'Not available yet' : 'Does not fit') : ''].filter(Boolean);
+    const probable = skin.confidence === 'low';
+    const flags = [probable ? 'Probable match' : STATUS_TEXT[skin.status], !fit.ok ? (fit.unsupported ? 'Not available yet' : 'Does not fit') : ''].filter(Boolean);
     if (flags.length) {
       const chip = document.createElement('span');
       chip.className = 'skin-chip' + (fit.ok ? '' : ' warn');
       chip.textContent = flags.join(' · ');
       card.append(chip);
     }
-    const details = [fit.reason, basisLabel(skin.basis), skin.visualCheck !== 'none' ? 'Picture check: ' + skin.visualCheck : '', ...skin.missing]
+    const details = [fit.reason, basisLabel(skin.basis), confidenceLabel(skin.confidence), skin.visualCheck !== 'none' ? 'Picture check: ' + skin.visualCheck : '', ...skin.missing]
       .filter(Boolean).join(' ');
     card.title = details || skin.name;
     card.addEventListener('click', () => (fit.ok ? onPick(skin) : onBlocked(skin, fit.reason)));

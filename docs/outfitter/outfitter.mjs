@@ -2,12 +2,12 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261121-skins1';
-import {parseCatalogue,resolveSkin,filterSkins,categories,variantFor,raceName} from './skins.mjs?v=20261121-skins1';
-import {renderSkinCards} from './skins-ui.mjs?v=20261121-skins1';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-skins2';
+import {parseCatalogue,resolveSkin,filterSkins,categories,variantFor,raceName} from './skins.mjs?v=20261122-skins2';
+import {renderSkinCards} from './skins-ui.mjs?v=20261122-skins2';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='';
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='',appliedLook='';
 const metadata=new Map();
 // Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
 let approxNotes=new Map();
@@ -463,11 +463,11 @@ async function loadLookOptions(chrModelId){
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
 // Diagnostics for testing, only with ?debug in the address: the live character actor and the current outfit.
-if(new URLSearchParams(location.search).has('debug'))window.__outfitter={skins:()=>skinCatalogue,skinNote:()=>skinNote,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
+if(new URLSearchParams(location.search).has('debug'))window.__outfitter={skins:()=>skinCatalogue,skinNote:()=>skinNote,appliedLook:()=>appliedLook,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
 // Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
 function pushAppearance(look){
  const actor=characterActor();if(!actor)return false;
- try{actor.setAppearance({options:lookPairs(lookOptions,look,currentSkin().choiceId),sheathMain:actor.k,sheathOff:actor.x});return true;}catch{return false;}
+ try{actor.setAppearance({options:lookPairs(lookOptions,look,currentSkin().choiceId),sheathMain:actor.k,sheathOff:actor.x});if(look===outfit.look)appliedLook=lookKey();return true;}catch{return false;}
 }
 let openLookMenu=null;
 function closeLookMenu({revert=true}={}){
@@ -516,6 +516,7 @@ function renderLook(){
 // ---- Character skins (donation-shop appearances) ----
 // A skin is a texture-only change of the body, applied as an extra choice of the Skin Color option (see skins.mjs). It is saved in the outfit as
 // `skin`; outfits made before skins existed have none and load with the default appearance.
+function lookKey(){return JSON.stringify([outfit.look,currentSkin().choiceId]);}
 function currentSkin(){return resolveSkin(skinCatalogue,outfit.skin,outfit.race,outfit.gender);}
 function skinAvailableInModel(choiceId){return lookOptions.some(option=>option.skinChoiceIds?.includes(choiceId));}
 // Drops a saved skin that does not fit the body (another race or sex) and returns the reason; it is never swapped for another skin.
@@ -699,7 +700,11 @@ async function applyGearInPlace(){
 let builtFor='',appliedGear=new Map();
 async function renderModel(resetCamera=false,forceRebuild=false){
  const inPlace=!resetCamera&&!forceRebuild&&Boolean(viewer?.renderer?.actors?.[0]?.isLoaded?.())&&builtFor===`${outfit.race}-${outfit.gender}`;
- if(inPlace){await applyGearInPlace();return;}
+ if(inPlace){
+  // A saved outfit, shared link or import can change the look or the skin without changing the body; the model is kept, so push them here.
+  const key=lookKey();if(key!==appliedLook&&pushAppearance(outfit.look))appliedLook=key;
+  await applyGearInPlace();return;
+ }
  keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
  keptAnim=!skipKeptAnim&&characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;skipKeptAnim=false;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
@@ -715,6 +720,7 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   // A skin is only ever applied from the service's own texture; when the service has none the saved skin stays unapplied and says so.
   {const wanted=resolveSkin(skinCatalogue,current.skin,current.race,current.gender);
    skinNote=wanted.choiceId&&!skinAvailableInModel(wanted.choiceId)?`${wanted.skin.name} could not be applied: the appearance service has no texture for it.`:skinNote;renderSkinRow();}
+  appliedLook=JSON.stringify([current.look,resolveSkin(skinCatalogue,current.skin,current.race,current.gender).choiceId]);
   renderLook();
   const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{

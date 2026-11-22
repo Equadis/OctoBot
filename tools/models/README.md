@@ -167,13 +167,21 @@ Found by reading the client, not by assumption (`skins.py`, `skin_links.json`, `
 * `skins.py discover` writes `discovery.json` and `audit.md`; `skins.py build` also converts the textures and shop pictures to WebP (ids from 9,900,000),
   writes `skins/catalogue.json` and one `skins/choices/<body>.json` per body, a manifest and `version.json`. Statuses follow the equipment audit
   (Verified, Recovered, Partially Recovered, Unresolved). **No skin is Verified**: a link between a token and a texture is evidence, not proof.
-* `skin_links.json` records each link and its basis: `name` (file name and token name agree), `ordinal` (numbered series), `visual` (compared by eye with the
-  shop's own picture). 24 of the 40 tokens have a link; the other 16 (every Orc, Troll, Gnome and most Undead and High Elf tokens) have only candidate
-  textures, because their textures cannot be told apart from the pictures. Textures no token is linked to are offered as "Unlabelled client skins".
+* `skin_links.json` records each link with its basis (`name`, `ordinal` or `visual`, meaning compared by eye with the token's own shop picture) and how sure it is (`confidence`: **high** = no other
+  texture of the race looks like the picture, **medium** = best match with a look-alike or a weaker sex, **low** = several textures look the same and this is one of them). 38 of the 40 tokens are
+  linked (13 high, 19 medium, 6 low); every link was checked by rendering the skin in the real viewer next to the shop picture (`render_skins.mjs`, `skin_validation_sheet.py`), which caught and fixed
+  five wrong first guesses (Earthen Dwarves, Nature II and III, Demon Hunter, Mag'har) and one female link that rendered tan against a pale picture (Arcane Binder, dropped). The six low links are
+  all Orc men and women whose textures are near-identical (Blackrock Clan I and II, Burning Blade, Orc: Blackrock II, Dreadskull Clan II and III): the page marks them "Probable match".
+  Left unlinked because nothing matches their picture: **Dreadskull Clan I** (red skin with green glowing eyes) and **Necromancy II** (Night Elf, pale lavender; only look-alikes remain). Female looks the shop
+  pictures show but no texture could be told apart for: Wildhammer II to IV (only two female dwarf skins exist), Night Elf: Demon, Nature II and III, Dalaran Legacy, Spirit Walker (the shop also pictures
+  brown tauren for it that no texture here matches). Textures no token is linked to are offered as "Unlabelled client skins".
 * The Worker adds each body's skin choices to its Skin Color option (`mergeSkinChoices`), serves the catalogue at `/api/outfitter/skins`, and the page keeps the
   choice out of the ordinary appearance list. See `cloudflare/population/README.md` and `docs/outfitter/README.md`.
-* **Visually checked** (in the real viewer, compared with the shop picture, not in game): Mark of Fel Power (Human male), Mark of the Wildhammer Clan I
-  (Dwarf male, plausible). Everything else passed automated checks only.
+* **Checked:** all 54 linked token looks rendered in the real viewer and compared with the shop pictures by eye (0 failed requests, 0 script errors); every skin picks up its own texture file, and a skin
+  change on the same body reaches the live model (a bug found while doing this: only race or sex changes reloaded it). **Not checked:** in game, and the shop pictures wear equipment and the game's lighting,
+  so a render that resembles the picture is evidence, not proof. Nothing is `Verified`.
+* **Browser regression test:** `node tools/models/ui_regression.mjs <skins overlay> <model overlay>` drives the real page and Worker code in a headless Edge or Chrome (`cdp.mjs`) and runs 35 checks (panel,
+  search and filters, picking, saving, links, import, race and sex compatibility, old outfits, a service with no skins, a phone-width layout, no errors). It needs a built skins overlay.
 
 ### Unresolved equipment, by cause
 
@@ -195,3 +203,11 @@ check) none of these can be fixed from the client alone.
   commit. The Worker before that deployment is `1408876d-0345-4295-970d-53693bc16d1a`.
 
 See `DEPLOYMENT.md` for the full backup, replace, verify and rollback procedure, and `DEPLOYMENT_READINESS.md` for the state of the official-only replacement.
+
+## Keeping automated sessions away from production
+
+On 2026-11-22 a one-click "Yes, upload it" answer started an upload to the live bucket 17 seconds before a new instruction interrupted it (12 textures were written and restored). Three layers now
+stand in front of the live bucket and Worker: `publish_guard.mjs` (`upload_overlay.mjs` refuses any bucket that is not a private test bucket unless the owner has created
+`tools/models/PUBLISH_PERMISSION.json` by hand for exactly that build, naming who granted it and where OctoWoW agreed, with an expiry; a restore from a `--backup` folder is allowed),
+`.claude/hooks/protect-live-bucket.mjs` (a Claude Code hook that blocks raw `wrangler r2 object put|delete`, `wrangler deploy|rollback|delete` and any write to the permission file) and `CLAUDE.md`. They stop
+mistakes and automated sessions, not the owner, and a session that does not start in this repository does not load the hook.

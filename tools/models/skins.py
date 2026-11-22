@@ -128,6 +128,9 @@ def catalogue(found, links):
             missing.append(f'no {SEX_NAMES[sex]} texture linked' if link else f'no texture linked for the {SEX_NAMES[sex]} look')
         candidates = [] if variants else sorted(
             ({'path': t['path'], 'kind': t['kind'], 'sex': t['sex']} for k, t in textures.items() if t['race'] in races), key=lambda c: c['path'].lower())
+        confidence = link.get('confidence') if variants else None
+        if variants and confidence == 'low':
+            missing.append('several textures look the same as the shop picture; this is one of them')
         if variants and not missing:
             status = 'Recovered'
         elif variants:
@@ -138,10 +141,10 @@ def catalogue(found, links):
             'id': f'skin-{token_id}', 'name': item['name'], 'source': 'OctoWoW client (patch archives, item cache)', 'tokenItemId': token_id,
             'tokenSpellId': TOKEN_SPELL, 'races': races, 'category': RACES[races[0]] if len(races) == 1 else 'Other',
             'genders': sorted(wanted or have), 'mechanism': 'texture', 'variants': variants, 'candidates': candidates,
-            'mapping': {'basis': link.get('basis') if variants else None, 'note': link.get('note'), 'alternates': link.get('alternates', [])},
+            'mapping': {'basis': link.get('basis') if variants else None, 'confidence': confidence, 'note': link.get('note'), 'alternates': link.get('alternates', [])},
             'thumbnails': thumbs[token_id], 'missing': missing, 'status': status,
-            'verification': {'automated': bool(variants), 'visual': 'compared with the shop thumbnail by eye (not in game)'
-                             if variants and 'visual' in (link.get('basis') or '') else 'none'}})
+            'verification': {'automated': bool(variants), 'visual': f"render compared with the shop picture by eye on {link['checked']} (not in game)"
+                             if variants and link.get('checked') else 'none'}})
     for key, t in sorted(textures.items()):
         if key in used or t['race'] not in RACES:
             continue
@@ -149,7 +152,7 @@ def catalogue(found, links):
             'id': f'skin-u-{t["race"]}-{t["sex"]}-{stem(t["path"])}', 'name': f'Unlabelled skin: {stem(t["path"])}',
             'source': 'OctoWoW client (' + (t['archive'] or '?') + ')', 'tokenItemId': None, 'tokenSpellId': None, 'races': [t['race']],
             'category': RACES[t['race']], 'genders': [t['sex']], 'mechanism': 'texture', 'variants': [{'gender': t['sex'], 'texture': t}],
-            'candidates': [], 'mapping': {'basis': None, 'note': 'A skin the client holds but no shop token is linked to; its in-game name is unknown.',
+            'candidates': [], 'mapping': {'basis': None, 'confidence': None, 'note': 'A skin the client holds but no shop token is linked to; its in-game name is unknown.',
                                             'alternates': []}, 'thumbnails': {}, 'missing': ['shop token (name) unknown'],
             'status': 'Partially Recovered', 'verification': {'automated': True, 'visual': 'none'}})
     return skins

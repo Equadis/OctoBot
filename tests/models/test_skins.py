@@ -86,6 +86,13 @@ class Catalogue(unittest.TestCase):
         b = self.result['skin-2']
         self.assertEqual((b['status'], b['genders']), ('Recovered', [0]))
 
+    def test_a_low_confidence_link_is_applied_but_never_counted_as_recovered(self):
+        links = {1: {'m': 'character/human/male/a.blp', 'f': 'character/human/female/a.blp', 'basis': 'visual', 'confidence': 'low'}}
+        a = {s['id']: s for s in skins.catalogue(self.found, links)}['skin-1']
+        self.assertEqual((a['status'], len(a['variants']), a['mapping']['confidence']), ('Partially Recovered', 2, 'low'))
+        self.assertTrue(any('look the same' in m for m in a['missing']))
+        self.assertEqual(self.result['skin-1']['mapping']['confidence'], None, 'a link with no stated confidence carries none')
+
     def test_token_with_no_link_offers_candidates_but_applies_none(self):
         c = self.result['skin-3']
         self.assertEqual((c['status'], c['variants']), ('Partially Recovered', []))
@@ -118,6 +125,7 @@ class Links(unittest.TestCase):
         for token_id, link in data['links'].items():
             self.assertTrue(token_id.isdigit())
             self.assertIn(link['basis'], {'name', 'ordinal', 'visual', 'name+visual'}, token_id)
+            self.assertIn(link['confidence'], {'high', 'medium', 'low'}, token_id)
             self.assertTrue(link.get('m') or link.get('f'), token_id)
             for key in ('m', 'f'):
                 if link.get(key):

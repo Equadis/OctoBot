@@ -19,6 +19,7 @@ import {createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {checkPublish} from './publish_guard.mjs';
 
 export function contentType(key) {
  return key.endsWith('.json')?'application/json':key.endsWith('.webp')?'image/webp':'application/octet-stream';
@@ -51,6 +52,10 @@ async function main(argv) {
  const [folder,bucket]=[path.resolve(args[0]),args[1]];
  if(!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)){console.error('That does not look like a bucket name.');return 2;}
  const manifest=JSON.parse(await fs.readFile(path.join(folder,'manifest.json'),'utf8'));
+ // A live bucket is only written with the owner's permission file for exactly this build (publish_guard.mjs); test buckets and backup restores pass.
+ const build=await fs.readFile(path.join(folder,'version.json'),'utf8').then(text=>JSON.parse(text).version,()=>manifest.version||null);
+ const gate=checkPublish({bucket,build,manifest});
+ if(!gate.ok&&!dry){console.error(`Refusing to upload to "${bucket}": ${gate.reason}`);return 3;}
  const stateFile=path.join(folder,'.uploaded.json');
  const uploaded=argv.includes('--force')?{}:await fs.readFile(stateFile,'utf8').then(JSON.parse,()=>({}));
  const todo=plan(manifest,uploaded);

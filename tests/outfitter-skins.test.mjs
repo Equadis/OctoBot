@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {visibleOptions,lookPairs,SKIN_CHOICE_FIRST} from '../docs/outfitter/customization.mjs';
 import {emptyOutfit,normalise,encode,decode} from '../docs/outfitter/state.mjs';
-import {parseCatalogue,compatibility,resolveSkin,filterSkins,categories,thumbnailFor,sanitiseSkinId,variantFor,bodyId,raceOfBody} from '../docs/outfitter/skins.mjs';
+import {parseCatalogue,compatibility,resolveSkin,filterSkins,categories,thumbnailFor,sanitiseSkinId,variantFor,bodyId,raceOfBody,confidenceLabel,basisLabel} from '../docs/outfitter/skins.mjs';
 
 const variant=(gender,race,choiceId)=>({gender,body:bodyId(race,gender),choiceId});
 const raw={version:1,skins:[
@@ -107,4 +107,17 @@ test('the page wires the skins panel and tells the old and new service apart',()
   assert.match(html,/id="skin-row"[^>]*hidden/,'the skin row stays hidden until the service lists skins');
   assert.match(source,/api\/outfitter\/skins/);
   assert.match(source,/was removed|reconcileSkin/);
+});
+
+test('how sure a link is reaches the page and is described in words',()=>{
+  const parsed=parseCatalogue({skins:[
+    {id:'skin-1',name:'A',variants:[],mapping:{basis:'visual',confidence:'low'}},
+    {id:'skin-2',name:'B',variants:[],mapping:{basis:'name',confidence:'high'}},
+    {id:'skin-3',name:'C',variants:[],mapping:{basis:'name',confidence:'certain'}},
+    {id:'skin-4',name:'D',variants:[]}]});
+  assert.deepEqual(parsed.map(s=>s.confidence),['low','high',null,null],'only known levels are kept');
+  assert.match(confidenceLabel('low'),/Several textures look the same/);
+  assert.match(confidenceLabel('high'),/No other texture/);
+  assert.equal(confidenceLabel('certain'),'');
+  assert.match(basisLabel('visual'),/by eye/);
 });

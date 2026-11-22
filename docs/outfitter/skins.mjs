@@ -22,6 +22,12 @@ const BASIS_LABELS = {
   'name+visual': 'Matched by name and by eye with the shop picture',
 };
 export const basisLabel = basis => BASIS_LABELS[basis] || '';
+const CONFIDENCE_LABELS = {
+  high: 'No other texture looks like the shop picture.',
+  medium: 'The best match for the shop picture; a look-alike or a weaker match for one sex exists.',
+  low: 'Several textures look the same as the shop picture; this is one of them.',
+};
+export const confidenceLabel = confidence => CONFIDENCE_LABELS[confidence] || '';
 
 /** Keeps only well-formed skins from the service's answer. Unknown fields are ignored; a malformed entry is skipped, never repaired. */
 export function parseCatalogue(raw) {
@@ -47,6 +53,7 @@ export function parseCatalogue(raw) {
       labelled: Number.isSafeInteger(entry.tokenItemId),
       status: ['Verified', 'Recovered', 'Partially Recovered', 'Unresolved'].includes(entry.status) ? entry.status : 'Unresolved',
       basis: typeof entry.mapping?.basis === 'string' ? entry.mapping.basis : null,
+      confidence: ['high', 'medium', 'low'].includes(entry.mapping?.confidence) ? entry.mapping.confidence : null,
       missing: (Array.isArray(entry.missing) ? entry.missing : []).filter(m => typeof m === 'string').slice(0, 6),
       candidateCount: Array.isArray(entry.candidates) ? entry.candidates.length : 0,
       visualCheck: typeof entry.verification?.visual === 'string' ? entry.verification.visual : 'none',

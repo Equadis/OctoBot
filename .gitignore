@@ -17,3 +17,6 @@ tools/models/out/
 
 # Wrangler local state (may hold local copies of converted files; never commit)
 .wrangler/
+
+# The owner's permission to publish converted client files (see tools/models/publish_guard.mjs); never committed
+tools/models/PUBLISH_PERMISSION.json
