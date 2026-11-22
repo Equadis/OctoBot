@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {visibleOptions,lookPairs,SKIN_CHOICE_FIRST} from '../docs/outfitter/customization.mjs';
 import {emptyOutfit,normalise,encode,decode} from '../docs/outfitter/state.mjs';
-import {parseCatalogue,compatibility,resolveSkin,filterSkins,categories,thumbnailFor,sanitiseSkinId,variantFor,bodyId,raceOfBody,confidenceLabel,basisLabel} from '../docs/outfitter/skins.mjs';
+import {parseCatalogue,compatibility,resolveSkin,filterSkins,categories,thumbnailFor,skinsForBody,sanitiseSkinId,variantFor,bodyId,raceOfBody,confidenceLabel,basisLabel} from '../docs/outfitter/skins.mjs';
 
 const variant=(gender,race,choiceId)=>({gender,body:bodyId(race,gender),choiceId});
 const raw={version:1,skins:[
@@ -100,13 +100,23 @@ test('outfits keep a valid skin, old outfits have none, and links round-trip it'
   assert.ok(!encode(emptyOutfit()).includes('skin'),'links without a skin are unchanged');
 });
 
-test('the page wires the skins panel and tells the old and new service apart',()=>{
+test('the page has no skin dialog: Skin is the sixth Appearance button, built by the page script, with a note line',()=>{
   const html=readFileSync(new URL('../docs/outfitter/index.html',import.meta.url),'utf8');
   const source=readFileSync(new URL('../docs/outfitter/outfitter.mjs',import.meta.url),'utf8');
-  for(const id of ['skin-row','skins-open','skin-clear','skins-dialog','skins-search','skins-category','skins-compatible','skins-unlabelled','skins-list','skins-default'])assert.match(html,new RegExp(`id="${id}"`));
-  assert.match(html,/id="skin-row"[^>]*hidden/,'the skin row stays hidden until the service lists skins');
+  for(const id of ['skin-row','skins-open','skin-clear','skins-dialog','skins-search','skins-list'])assert.doesNotMatch(html,new RegExp(`id="${id}"`),`${id} was the old panel`);
+  assert.match(html,/id="skin-note"[^>]*hidden/);
+  assert.match(source,/function skinPill/);
+  assert.match(source,/id='skin-option'/);
   assert.match(source,/api\/outfitter\/skins/);
   assert.match(source,/was removed|reconcileSkin/);
+});
+
+test('the Skin dropdown lists only the shop skins that fit the race and sex, by name, and none for a body without any',()=>{
+  assert.deepEqual(skinsForBody(skins,1,0).map(s=>s.name),['Mark of Fel Power','Mark of Necromancy I']);
+  assert.deepEqual(skinsForBody(skins,1,1).map(s=>s.name),['Mark of Necromancy I'],'a skin with only a male look is not offered to a woman');
+  assert.deepEqual(skinsForBody(skins,3,0).map(s=>s.name),['Mark of the Wildhammer Clan I']);
+  assert.deepEqual(skinsForBody(skins,2,1),[]);
+  assert.ok(!skinsForBody(skins,1,0).some(s=>!s.labelled),'unlabelled client textures are not offered');
 });
 
 test('how sure a link is reaches the page and is described in words',()=>{

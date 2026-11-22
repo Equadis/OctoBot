@@ -19,7 +19,7 @@ export const findBrowser=()=>process.env.BROWSER_PATH||CANDIDATES.find(file=>fs.
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function freePort() {return new Promise((resolve,reject)=>{const server=net.createServer();server.listen(0,'127.0.0.1',()=>{const {port}=server.address();server.close(()=>resolve(port));});server.on('error',reject);});}
 
-export async function launch({width=1280,height=1100}={}) {
+export async function launch({width=1280,height=1100,scale=1}={}) {
   const exe=findBrowser();
   if(!exe)throw Error('No Edge or Chrome found; set BROWSER_PATH.');
   const port=await freePort(),profile=fs.mkdtempSync(path.join(os.tmpdir(),'octobot-cdp-'));
@@ -27,7 +27,14 @@ export async function launch({width=1280,height=1100}={}) {
     '--enable-unsafe-swiftshader','--use-angle=swiftshader','--ignore-gpu-blocklist','--disable-background-timer-throttling','--disable-renderer-backgrounding',
     `--window-size=${width},${height}`,'about:blank'],{stdio:'ignore',windowsHide:true});
   // A browser must never outlive the script that started it (an interrupted run once left 27 of them running): kill it on any exit.
-  const killBrowser=()=>{try {if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});else child.kill('SIGKILL');} catch {}};
+  // Edge can hand the real browser over to a process other than the one spawned, so killing child.pid is not enough: every process whose command line names this run's profile folder is killed.
+  const killBrowser=()=>{
+    try {if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});else child.kill('SIGKILL');} catch {}
+    try {
+      if(process.platform==='win32')execFileSync('powershell',['-NoProfile','-Command',`Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*${path.basename(profile)}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`],{stdio:'ignore'});
+      else execFileSync('pkill',['-9','-f',path.basename(profile)],{stdio:'ignore'});
+    } catch {}
+  };
   process.on('exit',killBrowser);for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{killBrowser();process.exit(130);});
   let target=null;
   for(let i=0;i<100&&!target;i++) {
@@ -55,7 +62,7 @@ export async function launch({width=1280,height=1100}={}) {
     if(message.method==='Network.responseReceived'&&message.params.response.status>=400)failedRequests.push(`${message.params.response.status} ${message.params.response.url}`);
   });
   await send('Page.enable');await send('Runtime.enable');await send('Network.enable');
-  await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+  await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:scale,mobile:false});
   const api={
     consoleErrors,failedRequests,requests,send,
     async goto(url) {
@@ -76,11 +83,11 @@ export async function launch({width=1280,height=1100}={}) {
       const {data}=await send('Page.captureScreenshot',{format:'png',...(clip?{clip:{...clip,scale:1}}:{})});
       return Buffer.from(data,'base64');
     },
-    async resize(w,h) {await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:w<600});},
+    async resize(w,h) {await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:scale,mobile:w<600});},
     sleep,
     async close() {
       try {socket.close();} catch {}
-      try {if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});else child.kill('SIGKILL');} catch {}
+      killBrowser();
       await sleep(400);
       try {fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:300});} catch {}
     },

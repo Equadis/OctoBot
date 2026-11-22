@@ -2,6 +2,7 @@
 import io
 import json
 import os
+import struct
 import sys
 import tempfile
 import unittest
@@ -55,6 +56,29 @@ class Validate(unittest.TestCase):
             build(folder, with_texture=False)
             missing = validate_overlay.validate(folder)['missing']
             self.assertTrue(any('texture 9900001' in m for m in missing) and any('thumbnail' in m for m in missing), missing)
+
+
+def tiny_model(blend, ops, shader):
+    """A chunked M2 with one material of the given blend mode, and a skin with one batch using it."""
+    header = bytearray(0x130)
+    struct.pack_into('<4sI', header, 0, b'MD20', 274)
+    struct.pack_into('<II', header, 0x70, 1, 0x130)           # materials: one (flags, blend)
+    md = bytes(header) + struct.pack('<HH', 0, blend)
+    m2 = b'MD21' + struct.pack('<I', len(md)) + md
+    skin = bytearray(64)
+    struct.pack_into('<II', skin, 0x24, 1, 64)
+    skin += struct.pack('<BbHHHHHHHHHHH', 16, 0, shader, 0, 0, 65535, 0, 0, ops, 0, 0, 0, 0)
+    return m2, bytes(skin)
+
+
+class BlendedBatches(unittest.TestCase):
+    def test_a_blended_single_texture_batch_needs_a_shader(self):
+        self.assertEqual(validate_overlay.blended_batches_without_shader(*tiny_model(4, 1, 0)), [(0, 4)])
+        self.assertEqual(validate_overlay.blended_batches_without_shader(*tiny_model(2, 1, 0)), [(0, 2)])
+
+    def test_the_cases_that_are_fine(self):
+        for blend, ops, shader in ((4, 1, 16), (0, 1, 0), (1, 1, 0), (4, 2, 0)):
+            self.assertEqual(validate_overlay.blended_batches_without_shader(*tiny_model(blend, ops, shader)), [], (blend, ops, shader))
 
 
 if __name__ == '__main__':

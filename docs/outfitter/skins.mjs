@@ -115,3 +115,8 @@ export function filterSkins(skins, { query = '', category = '', race = 0, gender
 export function thumbnailFor(skin, gender) {
   return skin?.thumbs[gender ? '_2' : '_1'] || skin?.thumbs['-'] || skin?.thumbs[gender ? '_1' : '_2'] || null;
 }
+
+/** The skins listed in the Skin dropdown for this body: the shop's own skins (named in the donation shop) that have a texture for this race and sex, by name. */
+export function skinsForBody(skins, race, gender) {
+  return skins.filter(s => s.labelled && variantFor(s, race, gender)).sort((a, b) => a.name.localeCompare(b.name, 'en'));
+}

@@ -47,6 +47,22 @@ def m2_refs(data):
     return skins, skel, tex
 
 
+def blended_batches_without_shader(m2, skin):
+    """Batches whose material is blended (alpha, additive, modulate: blend mode 2 or more) with one texture that still carry shader id 0. Blizzard's own files give those shader 16;
+    with 0 the batch draws opaque (glows, flames and glass became black squares). Returns the offending (batch, blend) pairs."""
+    md = m2[8:8 + struct.unpack_from('<I', m2, 4)[0]]
+    mn, mo = struct.unpack_from('<II', md, 0x70)
+    blends = [struct.unpack_from('<HH', md, mo + 4 * k)[1] for k in range(mn)]
+    bn, bo = struct.unpack_from('<II', skin, 0x24)
+    bad = []
+    for k in range(bn):
+        fields = struct.unpack_from('<BbHHHHHHHHHHH', skin, bo + 24 * k)
+        shader, material, ops = fields[2], fields[6], fields[8]
+        if ops <= 1 and material < len(blends) and blends[material] >= 2 and shader == 0:
+            bad.append((k, blends[material]))
+    return bad
+
+
 def record_refs(record):
     """(model ids, texture ids, problems) a record names. Resource ids are resolved through TextureFiles / ModelFiles."""
     models, textures, problems = set(), set(), []
@@ -144,6 +160,14 @@ def validate(folder, log=print):
             for ident in s:
                 need('skin', ident, key)
                 used_s.add(ident)
+                if ident in skins:
+                    try:
+                        bad = blended_batches_without_shader(open(path, 'rb').read(), open(files[f'skin/{ident}.skin'], 'rb').read())
+                    except (struct.error, ValueError, KeyError) as error:
+                        report['unsound'].append(f'{key}: skin {ident} cannot be read ({error})')
+                        bad = []
+                    for batch, blend in bad:
+                        report['unsound'].append(f'{key}: batch {batch} is blended (mode {blend}) but has shader id 0 and would draw opaque')
             for ident in k:
                 need('skeleton', ident, key)
                 used_k.add(ident)

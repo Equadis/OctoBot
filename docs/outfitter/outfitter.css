@@ -237,18 +237,9 @@
 
 .toolbar>.actions{margin-left:auto}
 
-/* Character skins */
-.skin-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 12px;font-size:13px}.skin-row[hidden],.skin-note[hidden]{display:none}
-.skin-label{color:#a6b5c6}.skin-current{color:var(--gold,#e8c67c)}.skin-open{padding:4px 12px}.skin-note{margin:-6px 0 12px;font-size:12px}
-.skins-dialog{width:min(880px,calc(100vw - 24px));max-height:calc(100vh - 32px);padding:16px 18px;color:#e5e9ef}.skins-dialog[open]{display:flex;flex-direction:column;gap:10px}
-.skins-head{display:flex;align-items:center;justify-content:space-between}.skins-head h2{margin:0;font-size:22px;font-weight:500;color:var(--gold,#e8c67c)}
-.skins-x{background:transparent;border:0;font-size:22px;line-height:1;padding:2px 8px;color:#aab7c7}.skins-intro{margin:0;font-size:12px}
-.skins-tools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px}.skins-tools input[type=search]{flex:1 1 200px;min-width:0}.skins-tools label{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.skins-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;overflow:auto;min-height:120px;padding:2px}
-.skin-card{display:flex;flex-direction:column;align-items:stretch;gap:4px;text-align:left;padding:6px;background:#162033;border:1px solid #343c49;border-radius:3px;color:inherit;font:inherit;cursor:pointer}
-.skin-card:hover,.skin-card:focus-visible{border-color:var(--gold,#e8c67c)}.skin-card.selected{border-color:var(--gold,#e8c67c);background:#2b2a22}.skin-card.blocked{opacity:.55}
-.skin-thumb{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;background:#0f1626;border-radius:2px;overflow:hidden;font-size:11px;color:#7f8da0;text-align:center}.skin-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.skin-name{font-size:12.5px;line-height:1.25;color:var(--gold,#e8c67c)}.skin-meta{font-size:11px;color:#a6b5c6;line-height:1.3}
-.skin-chip{align-self:flex-start;font-size:10.5px;padding:1px 6px;border:1px solid #4a5568;border-radius:9px;color:#c9d3df}.skin-chip.warn{border-color:#a8744a;color:#e8b98a}
-.skins-empty{grid-column:1/-1;margin:16px 0}.skins-dialog .actions{justify-content:flex-end}
-@media (max-width:560px){.skins-list{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}}
+/* Skin: the sixth Appearance button. Its list names the skins, so the button spans two columns and the list is a single column of names. */
+.skin-note{margin:-6px 0 12px;font-size:12px}.skin-note[hidden]{display:none}
+.look-option.skin-option{grid-column:span 2}.skin-option .look-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.look-menu.look-skin-menu{display:flex;flex-direction:column;min-width:100%;width:max-content;max-width:min(340px,calc(100vw - 32px))}
+.look-skin-menu .look-choice{height:28px;padding:0 10px;text-align:left;white-space:nowrap;flex:none}
+@media(max-width:580px){.look-option.skin-option{grid-column:1/-1}}

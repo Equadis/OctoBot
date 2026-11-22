@@ -190,6 +190,28 @@ slot, 17 are weapons in model version 257 (read with the 256 layout, plausibilit
 files, 2 name a texture the archives do not hold, 2 name a display id the client does not have. Apart from the version 257 weapons (needs a reader and a visual
 check) none of these can be fixed from the client alone.
 
+## Equipment placement and blended parts (2026-11-22)
+
+**What was looked at.** Where items sit on every body, for shields, off-hand items, one-hand and two-hand weapons, daggers, staves, polearms, fist weapons, bows, guns, crossbows, wands, thrown
+weapons and held-in-off-hand items, with library (Zam) items and client-recovered ones, front and side views, wielded and sheathed, with and without a skin (`render_gear.mjs`, `gear_sheet.py`).
+
+* **Attachment points are right.** Every body has the shield point (attachment 0) and the two hand points (1 and 2); the converted Goblin and High Elf bodies store them exactly as the library's own
+  models do (an absolute position equal to the bone's pivot: checked on Zam's Human, Goblin and Blood Elf models and the client's originals), the right hand is on the right and the left on the left,
+  and the shield point's distance from the left hand is inside the library's range on all 20 bodies (`placement_check.py`). The grip, rotation and scale of weapons are the same for library and recovered
+  items; hands wrap the grips on Human, Goblin, High Elf and Tauren. Shields sit on the outside of the left arm with their face outward, as the library's do, so from the front only their edge is
+  seen and the hand is behind it. Flagged by the numbers but the client's own data, not a conversion fault: the Goblin man's hands are at different heights (his stand pose), and the library's Tauren man
+  has an unusual right-hand point. No transform was changed.
+* **What was wrong: blended parts drew as opaque black squares.** The converter wrote shader id 0 for every batch. Blizzard's files give a single-texture batch whose material is blended (alpha, additive,
+  modulate, mod2x) shader 16 (measured over 700 library item models: blend 2, 4, 5 and 6 are 16, blend 0 is 0), and the viewer needs it: with 0 the transparency of glows, flames, glass and flags was lost. The
+  Archaeologist's Lantern (a held-in-off-hand item) showed a flat black square with its glow picture beside the hand. This touched about 1,000 item batches (lanterns, torches, orbs, glowing and flaming
+  weapons) and 520 helm batches. `m2v274.write_skin` now gives blended single-texture batches shader 16 (972 skin files changed; models, textures and records are byte-identical). Two-texture
+  batches are left at 0: the library uses several ids for them and the right one is not established (an experiment with 0x8001 changed the look but could not be judged).
+* **Tests for it.** `validate_overlay.py` fails a build that has a blended single-texture batch with shader 0; `artifact_scan.py` finds solid black patches in renders (the lantern's squares were 1,000
+  to 2,600 px, legitimate black fur stays under 500); `placement_matrix.mjs` renders a loadout matrix in the real page and runs both, and checks each loadout's equipment applied; `placement_check.py` is the static
+  attachment table.
+* **Not changed and not verifiable here:** the library's own models (Human to Troll bodies, their shields) come from Zam unchanged; where one of them clips a hand in the original game it does here.
+  Judging a grip is by eye, and nothing is checked in game.
+
 ## Publishing status and rollback
 
 * **Nothing from the skins work is uploaded or deployed.** The skins overlay is built under `tools/models/out/skins/overlay` and served only by

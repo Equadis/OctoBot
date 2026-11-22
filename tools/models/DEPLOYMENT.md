@@ -69,6 +69,8 @@ sends `version.json` last. Check `models-version` and re-verify against the *old
 Everything below is prepared and tested locally; **none of it has been run against production**. Needs, before step 1: OctoWoW's written agreement to publish converted client files, and
 `tools/models/PUBLISH_PERMISSION.json` created by the owner by hand for the exact build version of the folder to upload (`publish_guard.mjs`). Run every command in your own terminal.
 
+**Build versions after the blended-part fix (2026-11-22).** Models written before this date drew glows, flames, glass and flags as opaque black squares (`m2v274.write_skin` wrote shader id 0 for every batch). The official-only set rebuilt with the fix is `cfae21c1d3b5b2c0` (supersedes `87965b06bb43d4b2`: 972 `skin/*.skin` files differ, everything else is byte-identical) and the combined release set is `e073131f8ed6a1e9` (supersedes `99d527b265d60c45`). The live `8c2bbd319a49e0a6` has the same defect. The folders below are named `publish-official2` and `rc-combined2` for the rebuilt sets; the permission file, if the owner makes one, must name the version of the folder actually uploaded.
+
 1. **Build the set** (client files under `D:\Octowow\Data`; the HD pack `patch-V` is skipped by default):
    `python tools/models/build_overlay.py <Data> out/official-chars`, `python tools/models/item_overlay.py build <Data> out/official-items`,
    `python tools/models/merge_overlays.py out/official-chars out/official-items out/publish-official`,

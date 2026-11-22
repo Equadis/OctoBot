@@ -2,9 +2,8 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-skins2';
-import {parseCatalogue,resolveSkin,filterSkins,categories,variantFor,raceName} from './skins.mjs?v=20261122-skins2';
-import {renderSkinCards} from './skins-ui.mjs?v=20261122-skins2';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-skins3';
+import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261122-skins3';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
 let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='',appliedLook='';
@@ -498,7 +497,7 @@ function renderLook(){
  closeLookMenu({revert:false});
  const box=$('look-options');box.replaceChildren();
  if(!lookOptions.length){const p=document.createElement('p');p.className='muted';p.textContent='Appearance options are unavailable for this character.';box.append(p);$('look-reset').disabled=true;return;}
- $('look-reset').disabled=!Object.keys(outfit.look||{}).length;
+ $('look-reset').disabled=!Object.keys(outfit.look||{}).length&&!outfit.skin;
  for(const option of lookOptions){
   // One button per option: [‹] Name ........ number [›]. The arrows cycle; the middle opens the full list.
   const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
@@ -511,6 +510,7 @@ function renderLook(){
   const arrow=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.className='look-arrow';button.textContent=text;button.setAttribute('aria-label',`${label} ${option.name}`);button.onclick=()=>{closeLookMenu({revert:false});changeLook(stepLook(lookOptions,outfit.look,option.id,delta));};return button;};
   pill.append(arrow('Previous',-1,'‹'),main,arrow('Next',1,'›'));row.append(pill);box.append(row);
  }
+ if(skinCatalogue.length)box.append(skinPill());
 }
 // Appearance is part of the saved and shared outfit. The live model is updated in place so there is no reload.
 // ---- Character skins (donation-shop appearances) ----
@@ -526,12 +526,10 @@ function reconcileSkin(){
  if(!problem){skinNote='';return '';}
  const next={...outfit};delete next.skin;outfit=next;skinNote=problem;return problem;
 }
+// The Skin dropdown is the sixth button of the Appearance list (see renderLook); this keeps its note and its list up to date.
 function renderSkinRow(){
- const row=$('skin-row'),{skin}=currentSkin();
- row.hidden=!skinCatalogue.length;
- $('skin-current').textContent=skin?skin.name:'Default appearance';
- $('skin-clear').hidden=!skin;
  const note=$('skin-note');note.hidden=!skinNote;note.textContent=skinNote;
+ renderLook();
 }
 async function loadSkins(){
  try{skinCatalogue=parseCatalogue(await getJson(`${endpoint}/api/outfitter/skins`));}catch{skinCatalogue=[];}
@@ -544,35 +542,42 @@ function applySkinChange(message){
  else if(!pushAppearance(outfit.look))renderModel();
  if(message)feedback(message);
 }
-function pickSkin(skin){
- if(!variantFor(skin,outfit.race,outfit.gender))return;
- outfit={...outfit,skin:skin.id};skinNote='';
- $('skins-dialog').close();applySkinChange(`${skin.name} applied.`);
+function setSkin(id){
+ if(!id){clearSkin();return;}
+ const skin=skinCatalogue.find(candidate=>candidate.id===id);
+ if(!skin||!variantFor(skin,outfit.race,outfit.gender)||outfit.skin===id)return;
+ outfit={...outfit,skin:id};skinNote='';applySkinChange(`${skin.name} applied.`);
 }
 function clearSkin(){
  if(!outfit.skin)return;
- const next={...outfit};delete next.skin;outfit=next;skinNote='';applySkinChange('Default appearance restored.');
+ const next={...outfit};delete next.skin;outfit=next;skinNote='';applySkinChange('Skin removed.');
 }
-function renderSkinList(){
- const unlabelled=$('skins-unlabelled').checked,compatibleOnly=$('skins-compatible').checked;
- const base={race:outfit.race,gender:outfit.gender,unlabelled};
- const shown=filterSkins(skinCatalogue,{...base,query:$('skins-search').value,category:$('skins-category').value,compatibleOnly});
- renderSkinCards($('skins-list'),shown,{race:outfit.race,gender:outfit.gender,selectedId:outfit.skin,thumbUrl:file=>`${assetBase}textures/${file}.webp`,
-  onPick:pickSkin,onBlocked:(skin,reason)=>{$('skins-status').textContent=`${skin.name}: ${reason}`;}});
- const all=filterSkins(skinCatalogue,{...base,compatibleOnly:false}).length,fits=filterSkins(skinCatalogue,{...base,compatibleOnly:true}).length;
- $('skins-status').textContent=compatibleOnly&&all>fits?`${shown.length} shown. ${all-fits} more are for other bodies or not available yet: untick "Fits this character" to see why.`:`${shown.length} shown.`;
+// The sixth Appearance button: Skin, default None, then the donation-shop skins that fit this race and sex. It is not one of the model's own options,
+// so it has its own list; choosing applies the skin's texture as an extra Skin Color choice (skins.mjs) without touching the other five.
+function skinPill(){
+ const skins=skinsForBody(skinCatalogue,outfit.race,outfit.gender),choices=[{id:'',name:'None'},...skins.map(skin=>({id:skin.id,name:skin.name}))];
+ const current=currentSkin().skin&&skins.some(skin=>skin.id===outfit.skin)?outfit.skin:'';
+ const index=Math.max(0,choices.findIndex(choice=>choice.id===current));
+ const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
+ row.className='look-option skin-option';row.id='skin-option';pill.className='look-pill';
+ name.className='look-name';name.textContent='Skin';value.className='look-value';value.id='skin-value';value.textContent=choices[index].name;
+ main.type='button';main.className='look-main';main.id='skin-main';main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);main.append(name,value);
+ const choose=id=>{closeLookMenu({revert:false});setSkin(id);};
+ main.onclick=()=>{
+  if(openLookMenu&&openLookMenu.pill===pill){closeLookMenu();return;}
+  closeLookMenu();
+  const menu=document.createElement('div');menu.className='look-menu look-skin-menu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label','Skin');
+  for(const choice of choices){
+   const item=document.createElement('button');item.type='button';item.className='look-choice'+(choice.id===current?' selected':'');item.setAttribute('role','option');item.setAttribute('aria-selected',String(choice.id===current));
+   item.textContent=choice.name;item.dataset.skin=choice.id;item.onclick=()=>choose(choice.id);menu.append(item);
+  }
+  row.append(menu);pill.classList.add('open');openLookMenu={menu,pill,row};menu.querySelector('.selected')?.scrollIntoView({block:'nearest'});
+ };
+ const arrow=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.className='look-arrow';button.textContent=text;button.setAttribute('aria-label',`${label} Skin`);button.disabled=choices.length<2;
+  button.onclick=()=>choose(choices[(index+delta+choices.length)%choices.length].id);return button;};
+ pill.append(arrow('Previous',-1,'‹'),main,arrow('Next',1,'›'));row.append(pill);
+ return row;
 }
-function openSkins(){
- const select=$('skins-category'),keep=select.value;
- select.replaceChildren(new Option('All categories',''),...categories(skinCatalogue).map(name=>new Option(name,name)));select.value=[...select.options].some(o=>o.value===keep)?keep:'';
- renderSkinList();$('skins-dialog').showModal();$('skins-search').focus();
-}
-function setupSkins(){
- $('skins-open').onclick=openSkins;$('skins-close').onclick=()=>$('skins-dialog').close();$('skin-clear').onclick=clearSkin;
- $('skins-default').onclick=()=>{clearSkin();$('skins-dialog').close();};
- for(const id of ['skins-search','skins-category','skins-compatible','skins-unlabelled'])$(id).addEventListener(id==='skins-search'?'input':'change',renderSkinList);
-}
-
 function changeLook(look){
  outfit={...outfit,look};persist();renderLook();
  if(!pushAppearance(look))renderModel();
@@ -818,7 +823,7 @@ async function start(){
   document.addEventListener('fullscreenchange',sync);sync();
  }
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
- $('look-reset').onclick=()=>changeLook({});setupSkins();
+ $('look-reset').onclick=()=>{if(outfit.skin){const next={...outfit};delete next.skin;outfit=next;skinNote='';persist();renderSkinRow();}changeLook({});};
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);chosenAnimation=name;};
  $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;const next=!animationPaused;try{actor.setAnimPaused(next);}catch{}showPlayState(next);};
  $('anim-prev').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?-5:-1);

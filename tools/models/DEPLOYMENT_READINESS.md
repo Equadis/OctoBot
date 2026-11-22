@@ -127,3 +127,13 @@ removed from `main` is the old `resetOverlayCache`, replaced by one that also cl
   Worker deploys and writes to the permission file (tests), `CLAUDE.md` states the rule. No upload, Worker deploy or `version.json` change was made; the live Worker and bucket are as they were.
 * **Remaining mappings:** Dreadskull Clan I and Necromancy II (Night Elf) are unavailable; 6 Orc looks are "Probable match"; some female looks have no texture (see `README.md`); nothing is `Verified`.
 * A leftover headless browser from an interrupted run once saturated the CPU; `cdp.mjs` now kills its browser on any exit.
+
+## Update 2026-11-22: equipment placement, blended parts and the Skin dropdown
+
+* **Item placement:** attachment points, hands and shields are correct on all 20 bodies, normal and skin-applied (542 loadouts rendered in the real page, `placement_matrix.mjs`); no transform changed.
+  One real defect found and fixed: blended parts (glows, flames, glass) drew as opaque black squares because the converter wrote shader id 0 for every batch (`m2v274.write_skin`; 972 `skin/*.skin` files change).
+  The live build `8c2bbd319a49e0a6` and the earlier official-only build `87965b06bb43d4b2` have the defect. Rebuilt sets: official-only `cfae21c1d3b5b2c0`, combined release set `e073131f8ed6a1e9` (`out/publish-official2`, `out/rc-combined2`); validated with 0 unsound files and 0 manifest differences.
+  Known leftover: item 11904 (Spirit of Aquementas) shows a dark halo because the client's own model gives its glow disc an opaque, unlit material (one of 3,229 models); two-texture batches keep shader 0.
+* **Skin dropdown:** Skin is now the sixth Appearance button (default None, shop names, filtered by race and sex); the Character skins dialog is gone. Skin Color shows only the model's own colours.
+* **Tests:** browser regression 47 of 47, skins matrix 224 of 224, JS suite 377 of 386 (the same 9 failures as before this work, none in the Dressing Room), Worker 43 of 43, Python model tests 75 (3 skipped without client data).
+  The staging rollback test (`rollback_test.py`) needs a remote staging bucket and was not rerun: the uploader, backup and restore code did not change.

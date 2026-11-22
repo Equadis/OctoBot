@@ -62,9 +62,12 @@ try {
       await browser.sleep(1200);
       const after=await applied();
       check(`${label}: a customisation change keeps the skin`,changed&&after&&after[1]===job.choice&&(await browser.eval('window.__outfitter.outfit().skin'))===job.id,JSON.stringify({changed,after}));
-      await browser.eval('document.getElementById("skin-clear").click();1');await browser.sleep(1200);
+      // the Skin dropdown names this skin for this body, and None in it restores the default look
+      const shown=await browser.eval('(()=>{document.getElementById("skin-main").click();const names=[...document.querySelectorAll(".look-skin-menu .look-choice")].map(c=>c.textContent);document.querySelectorAll(".look-skin-menu .look-choice")[0].click();return {names,value:null};})()');
+      check(`${label}: the Skin dropdown lists it by name`,shown.names.includes(job.name)&&shown.names[0]==='None',JSON.stringify(shown.names));
+      await browser.sleep(1200);
       const cleared=await applied();
-      check(`${label}: clearing restores the default look`,cleared&&cleared[1]===0&&!(await browser.eval('window.__outfitter.outfit().skin')),JSON.stringify(cleared));
+      check(`${label}: None in the Skin dropdown restores the default look`,cleared&&cleared[1]===0&&!(await browser.eval('window.__outfitter.outfit().skin')),JSON.stringify(cleared));
     }
     if(n%10===0)console.log(`${n}/${jobs.length}`);
   }
