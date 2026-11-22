@@ -13,7 +13,7 @@ if(!out){console.error('usage: node tools/models/skin_dropdown_shot.mjs <skins o
 const port=await new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const {port}=s.address();s.close(()=>resolve(port));});});
 const server=spawn('node',[path.join(here,'e2e_server.mjs'),[skins,models].join(','),String(port)],{stdio:'ignore'});
 for(let i=0;i<50;i++) {try {if((await fetch(`http://127.0.0.1:${port}/api/outfitter/models-version`)).ok)break;} catch {}await new Promise(r=>setTimeout(r,200));}
-const browser=await launch({width:1280,height:2000});
+const browser=await launch({width:Number(process.env.SHOT_WIDTH||1280),height:2000});
 try {
   await browser.goto(`http://127.0.0.1:${port}/outfitter/?debug`);
   const hash='#outfit='+encodeURIComponent(JSON.stringify({version:1,race:Number(race),gender:Number(gender),gear:{},hideHead:false,hideBack:false,look:{}}));

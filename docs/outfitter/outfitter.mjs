@@ -319,7 +319,7 @@ const NOTE_LEGACY='No preview: the appearance service has not been updated to fi
 // First display ID in the list whose model files exist in the Classic library, or null.
 async function usableDisplay(data,slot){
  for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
-  const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
+  const path=[14,21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
   try{await getJson(`${assetBase}meta/${path}.json`);return displayId;}catch{}
  }
  return null;
@@ -561,7 +561,7 @@ function skinPill(){
  const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
  row.className='look-option skin-option';row.id='skin-option';pill.className='look-pill';
  name.className='look-name';name.textContent='Skin';value.className='look-value';value.id='skin-value';value.textContent=choices[index].name;
- main.type='button';main.className='look-main';main.id='skin-main';main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);main.append(name,value);
+ main.type='button';main.className='look-main';main.id='skin-main';main.title=choices[index].name;main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);main.append(name,value);
  const choose=id=>{closeLookMenu({revert:false});setSkin(id);};
  main.onclick=()=>{
   if(openLookMenu&&openLookMenu.pill===pill){closeLookMenu();return;}

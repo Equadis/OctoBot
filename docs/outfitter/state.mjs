@@ -48,7 +48,8 @@ export function encode(outfit) {return encodeURIComponent(JSON.stringify(normali
 export function decode(text) {if(text.length>8192)throw Error('Outfit link is too large.');return normalise(JSON.parse(decodeURIComponent(text)));}
 export function viewerSlot(slot,item) {
  if(slot===16)return 21;
- if(slot===17)return 22;
+ // Shields must go to the viewer as shields (14) so they sit on the arm's shield attachment; as an off-hand weapon (22) they were held at the hand like a sword.
+ if(slot===17)return item.slot===14?14:22;
  if(slot===18)return 26;
  return item.slot===20?5:item.slot;
 }

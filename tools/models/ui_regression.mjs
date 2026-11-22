@@ -50,6 +50,11 @@ try {
   let s=await state();
   const labels=await dropdowns();
   check('Skin is the sixth Appearance dropdown, after the five of the model',labels.length===6&&labels[5]==='Skin'&&!labels.slice(0,5).includes('Skin'),JSON.stringify(labels));
+  const geometry6=await browser.eval('JSON.stringify([...document.querySelectorAll("#look-options .look-option")].map(r=>{const b=r.getBoundingClientRect();return {left:Math.round(b.left),top:Math.round(b.top),width:Math.round(b.width)}}))').then(JSON.parse);
+  check('the six Appearance buttons are the same width and sit on one row',geometry6.length===6&&geometry6.every(g=>Math.abs(g.width-geometry6[0].width)<=1&&g.top===geometry6[0].top),JSON.stringify(geometry6));
+  const ownColours=await browser.eval('fetch("/api/outfitter/assets/meta/charactercustomization/1.json").then(r=>r.json()).then(d=>d.Options.find(o=>o.Name==="Skin Color").Choices.filter(c=>c.Id<9950000).length)');
+  const pillMenu=async()=>{await browser.eval('document.querySelector("#look-options .look-option .look-main").click()');const n=await browser.eval('document.querySelectorAll(".look-menu .look-choice").length');await browser.eval('document.querySelector("#look-options .look-option .look-main").click()');return n;};
+  check('the Skin Color list holds only the model own colours, none of the skins',await pillMenu()===ownColours&&ownColours>0&&ownColours<20,String(ownColours));
   check('there is no skin dialog or old Character skin row',await browser.eval('!document.getElementById("skins-dialog")&&!document.getElementById("skin-row")&&!document.getElementById("skins-open")'));
   check('the catalogue has the shop tokens',(await browser.eval('window.__outfitter.skins().filter(s=>s.labelled).length'))>=40);
   check('the default is None',s.current==='None'&&!s.skin);
@@ -127,6 +132,12 @@ try {
   const tmog=await browser.eval('document.getElementById("outfit-code").value');
   await browser.eval(`document.getElementById("outfit-code").value=${JSON.stringify(tmog)};document.getElementById("apply-code").click()`);await browser.sleep(800);
   check('importing a Tmog code (equipment only) keeps the chosen skin',/^T\.O\.L\./.test(tmog)&&(await state()).skin==='skin-50205');
+
+  // a shield goes to the viewer as a shield (slot 14, the arm's shield attachment); a one-hand weapon in the off hand and a held item stay off-hand items (22)
+  await open(outfitHash({gear:{16:25,17:1168}}));
+  await browser.eval('window.__shieldProbe=1');await ready('window.__outfitter.applied().length>=2');
+  const slots=await browser.eval('JSON.stringify(window.__outfitter.applied().map(a=>a[0]).sort((a,b)=>a-b))').then(JSON.parse);
+  check('a shield is applied as a shield (14), not as an off-hand weapon (22), beside the main-hand sword (21)',JSON.stringify(slots)==='[14,21]',JSON.stringify(slots));
 
   // backwards compatibility
   await open(outfitHash({}).replace('%22look%22%3A%7B%7D','%22look%22%3A%7B%7D'));
