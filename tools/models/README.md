@@ -228,8 +228,10 @@ See `DEPLOYMENT.md` for the full backup, replace, verify and rollback procedure,
 
 ## Keeping automated sessions away from production
 
-On 2026-11-22 a one-click "Yes, upload it" answer started an upload to the live bucket 17 seconds before a new instruction interrupted it (12 textures were written and restored). Three layers now
-stand in front of the live bucket and Worker: `publish_guard.mjs` (`upload_overlay.mjs` refuses any bucket that is not a private test bucket unless the owner has created
-`tools/models/PUBLISH_PERMISSION.json` by hand for exactly that build, naming who granted it and where OctoWoW agreed, with an expiry; a restore from a `--backup` folder is allowed),
-`.claude/hooks/protect-live-bucket.mjs` (a Claude Code hook that blocks raw `wrangler r2 object put|delete`, `wrangler deploy|rollback|delete` and any write to the permission file) and `CLAUDE.md`. They stop
-mistakes and automated sessions, not the owner, and a session that does not start in this repository does not load the hook.
+On 2026-11-22 a one-click "Yes, upload it" answer started an upload to the live bucket 17 seconds before a new instruction interrupted it (12 textures were written and restored). OctoWoW has since
+confirmed that the owner may use and redistribute the converted models and textures and that no permission document is needed, so the gate asks for a deliberate act, not a file. Three layers stand in
+front of the live bucket and Worker: `publish_guard.mjs` (`upload_overlay.mjs` refuses any bucket that is not a private test bucket unless the command says `--owner-confirmed <the folder's exact build>`
+and `--backup <folder>`; a restore from a `--backup` folder is allowed; a hand-made `PUBLISH_PERMISSION.json` for that build is still accepted), `.claude/hooks/protect-live-bucket.mjs` (a Claude Code
+hook that blocks raw `wrangler r2 object put|delete` and `wrangler deploy|rollback|delete` unless the command carries `OCTOBOT_OWNER_CONFIRMED=<build>`, and blocks any write to the permission file)
+and `CLAUDE.md` (a session may add the flag or marker only when the owner's own chat message tells it to publish that build). They stop mistakes and automated sessions acting on a button answer, not
+the owner, and a session that does not start in this repository does not load the hook. `--hold-version` uploads everything except `version.json`, so the new build can be tested before it is switched on.

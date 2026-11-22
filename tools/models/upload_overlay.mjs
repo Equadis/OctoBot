@@ -1,6 +1,6 @@
 // Uploads a folder made by build_overlay.py to a private Cloudflare R2 bucket, key for key, using wrangler (so it uses your own Cloudflare login).
 //
-//   node tools/models/upload_overlay.mjs <overlay folder> <bucket name> (--backup <folder> | --no-backup) [--concurrency 8] [--rate 3] [--dry-run]
+//   node tools/models/upload_overlay.mjs <overlay folder> <bucket name> (--backup <folder> | --no-backup) [--concurrency 8] [--rate 3] [--dry-run] [--hold-version]
 // --backup downloads the object a key already has in the bucket into <folder> before overwriting it (a new key has nothing to save), and writes
 // <folder>/manifest.json in this tool's own format, so the previous state of every overwritten key, version.json included, can be put back with
 //   node tools/models/upload_overlay.mjs <folder> <bucket name> --no-backup
@@ -13,13 +13,15 @@
 // restore, so a second restore without --force would skip every file even if the bucket has changed since.
 //
 // Resumable: each uploaded file's sha256 is remembered in <overlay folder>/.uploaded.json, so a rerun only sends what is new or changed.
+// --hold-version uploads everything except version.json (the switch that makes visitors use the new build); run again without it to activate. A backup folder may be reused by that second run.
+// A live bucket also needs --owner-confirmed <the folder's build> (publish_guard.mjs).
 // Nothing is uploaded without you running this yourself; the bucket must already exist (npx wrangler r2 bucket create <name>).
 import {exec} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {checkPublish} from './publish_guard.mjs';
+import {checkPublish,isTestBucket,isRestoreFolder} from './publish_guard.mjs';
 
 export function contentType(key) {
  return key.endsWith('.json')?'application/json':key.endsWith('.webp')?'image/webp':'application/octet-stream';
@@ -30,7 +32,7 @@ export function plan(manifest,uploaded={}) {
  return Object.entries(manifest.files||{}).filter(([key,info])=>/^[A-Za-z0-9_./-]+$/.test(key)&&!key.includes('..')&&uploaded[key]!==info.sha256).map(([key,info])=>({key,sha256:info.sha256,bytes:info.bytes})).sort((a,b)=>(a.key==='version.json')-(b.key==='version.json'));
 }
 // Flags that take a value; everything else starting with -- is a switch. What is left are the positional arguments.
-const VALUE_FLAGS=['--concurrency','--rate','--backup'];
+const VALUE_FLAGS=['--concurrency','--rate','--backup','--owner-confirmed'];
 export function positional(argv) {
  const out=[];
  for(let i=0;i<argv.length;i++){if(VALUE_FLAGS.includes(argv[i])){i++;continue;}if(!argv[i].startsWith('--'))out.push(argv[i]);}
@@ -52,10 +54,12 @@ async function main(argv) {
  const [folder,bucket]=[path.resolve(args[0]),args[1]];
  if(!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)){console.error('That does not look like a bucket name.');return 2;}
  const manifest=JSON.parse(await fs.readFile(path.join(folder,'manifest.json'),'utf8'));
- // A live bucket is only written with the owner's permission file for exactly this build (publish_guard.mjs); test buckets and backup restores pass.
+ // A live bucket is only written with --owner-confirmed <this folder's exact build> and --backup (or the owner's permission file for this build); see publish_guard.mjs. Test buckets and backup restores pass.
  const build=await fs.readFile(path.join(folder,'version.json'),'utf8').then(text=>JSON.parse(text).version,()=>manifest.version||null);
- const gate=checkPublish({bucket,build,manifest});
+ const confirmedAt=argv.indexOf('--owner-confirmed'),confirmed=confirmedAt>=0?(argv[confirmedAt+1]||''):null;
+ const gate=checkPublish({bucket,build,manifest,confirmed,backup:Boolean(backupDir)});
  if(!gate.ok&&!dry){console.error(`Refusing to upload to "${bucket}": ${gate.reason}`);return 3;}
+ console.log(`gate: ${gate.why||'dry run'} (bucket ${bucket}, build ${build})`);
  const stateFile=path.join(folder,'.uploaded.json');
  const uploaded=argv.includes('--force')?{}:await fs.readFile(stateFile,'utf8').then(JSON.parse,()=>({}));
  const todo=plan(manifest,uploaded);
@@ -93,9 +97,13 @@ async function main(argv) {
   }
  }
  await Promise.all(Array.from({length:workers},()=>worker(rest)));
- if(!failed.length){next=0;await worker(last);}else console.log('  version.json NOT uploaded because some files failed; rerun to finish.');
+ const hold=argv.includes('--hold-version');
+ if(failed.length)console.log('  version.json NOT uploaded because some files failed; rerun to finish.');
+ else if(hold&&last.length)console.log('  version.json HELD back (--hold-version): the new build is not active yet. Run the same command without --hold-version to activate it.');
+ else {next=0;await worker(last);}
  await fs.writeFile(stateFile,JSON.stringify(uploaded));
- if(backupDir){await fs.writeFile(path.join(backupDir,'manifest.json'),JSON.stringify({files:saved,note:'previous bucket content of every overwritten key'},null,1));console.log(`  backed up ${Object.keys(saved).length} existing objects to ${backupDir}; restore with: node tools/models/upload_overlay.mjs ${backupDir} ${bucket} --no-backup`);}
+ if(backupDir&&gate.ok&&!isTestBucket(bucket)&&!isRestoreFolder(manifest))await fs.writeFile(path.join(backupDir,'publish-record.json'),JSON.stringify({bucket,build,gate:gate.why,at:new Date().toISOString(),uploaded:done,failed:failed.length},null,1));
+ if(backupDir){const before=await fs.readFile(path.join(backupDir,'manifest.json'),'utf8').then(text=>JSON.parse(text).files||{},()=>({}));Object.assign(saved,{...before,...saved});await fs.writeFile(path.join(backupDir,'manifest.json'),JSON.stringify({files:saved,note:'previous bucket content of every overwritten key'},null,1));console.log(`  backed up ${Object.keys(saved).length} existing objects to ${backupDir}; restore with: node tools/models/upload_overlay.mjs ${backupDir} ${bucket} --no-backup`);}
  console.log(`uploaded ${done} of ${todo.length}, failed ${failed.length}`);
  failed.slice(0,5).forEach(line=>console.log('  FAILED',line));
  return failed.length?1:0;

@@ -64,10 +64,10 @@ sends `version.json` last. Check `models-version` and re-verify against the *old
   Its original `helms.json` was overwritten in an earlier step and is the copy in that backup (checked against the live object).
 * Cloudflare keeps a limited number of Worker versions; a rollback needs the target version still listed by `npx wrangler versions list`.
 
-## 5. The Character Skins release: exact sequence (do not run until permission exists)
+## 5. The Character Skins release: exact sequence
 
-Everything below is prepared and tested locally; **none of it has been run against production**. Needs, before step 1: OctoWoW's written agreement to publish converted client files, and
-`tools/models/PUBLISH_PERMISSION.json` created by the owner by hand for the exact build version of the folder to upload (`publish_guard.mjs`). Run every command in your own terminal.
+OctoWoW has confirmed that the owner may use and redistribute the converted files and that no permission document is needed. A live upload still has to be deliberate: `upload_overlay.mjs` needs
+`--owner-confirmed <the folder's exact build> --backup <folder>` (`publish_guard.mjs`), and a Worker deploy from an agent session needs `OCTOBOT_OWNER_CONFIRMED=<build>` in the command.
 
 **Build versions after the blended-part fix (2026-11-22).** Models written before this date drew glows, flames, glass and flags as opaque black squares (`m2v274.write_skin` wrote shader id 0 for every batch). The official-only set rebuilt with the fix is `cfae21c1d3b5b2c0` (supersedes `87965b06bb43d4b2`: 972 `skin/*.skin` files differ, everything else is byte-identical) and the combined release set is `e073131f8ed6a1e9` (supersedes `99d527b265d60c45`). The live `8c2bbd319a49e0a6` has the same defect. The folders below are named `publish-official2` and `rc-combined2` for the rebuilt sets; the permission file, if the owner makes one, must name the version of the folder actually uploaded.
 
@@ -80,8 +80,8 @@ Everything below is prepared and tested locally; **none of it has been run again
    `node tools/models/ui_regression.mjs out/skins/overlay out/publish-official`; `node tools/models/skins_matrix.mjs out/skins/overlay out/publish-official`.
 3. **Back up live** (section 0) and re-verify the backup against the live Worker. Prove the rollback on a staging bucket (section 1, step 6).
 4. **Upload the bucket** (new keys and changed textures; `version.json` last, only if every file succeeded):
-   `node tools/models/upload_overlay.mjs out/rc-combined octobot-models --backup <new backup folder> --rate 3`. The old Worker ignores the `skins/` keys, so visitors see only the new
-   official textures. Check `models-version` and re-verify every key through the Worker against `out/rc-combined/manifest.json`.
+   `node tools/models/upload_overlay.mjs out/rc-combined2 octobot-models --backup <new backup folder> --owner-confirmed <build> --hold-version --rate 3` (everything except `version.json`), then, after the Worker is deployed and checked, the same command without `--hold-version` to activate the build. The old Worker ignores the `skins/` keys, so visitors see only the new
+   official textures. Check `models-version` and re-verify every key through the Worker against `out/rc-combined2/manifest.json`.
 5. **Deploy the Worker** from the release commit: `cd cloudflare/population` then `npx wrangler deploy` (note the previous version id first: `npx wrangler deployments list`). The Worker now adds skin choices to
    each body's customization and serves `/api/outfitter/skins`.
 6. **Publish the site** by merging the release candidate into `main` (GitHub Pages). Until the catalogue exists the skin row is hidden, so the order of steps 5 and 6 does not matter for visitors.
