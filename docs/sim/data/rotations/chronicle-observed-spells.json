@@ -11,20 +11,20 @@
  "note": "Observation only. Does not establish rank, learn level, coefficients or availability.",
  "observedCandidates": [
   {
-   "abilityKey": "hunter:steady-shot",
-   "classId": "hunter",
-   "spellId": 3668,
-   "label": "Steady Shot",
-   "hits": 604,
-   "distinctCasters": 2
-  },
-  {
    "abilityKey": "paladin:holy-strike",
    "classId": "paladin",
    "spellId": 10332,
    "label": "Holy Strike",
    "hits": 2,
-   "distinctCasters": 1
+   "distinctCasters": 1,
+   "review": {
+    "verdict": "name-matches-deprecated",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 7,
+    "dbLevel": 99,
+    "source": "https://octowow.st/db/?spell=10332",
+    "reviewedOn": "2026-11-22"
+   }
   },
   {
    "abilityKey": "paladin:holy-strike",
@@ -32,7 +32,15 @@
    "spellId": 10333,
    "label": "Holy Strike",
    "hits": 905,
-   "distinctCasters": 5
+   "distinctCasters": 5,
+   "review": {
+    "verdict": "name-matches-deprecated",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 8,
+    "dbLevel": 99,
+    "source": "https://octowow.st/db/?spell=10333",
+    "reviewedOn": "2026-11-22"
+   }
   },
   {
    "abilityKey": "warlock:power-overwhelming",
@@ -40,7 +48,32 @@
    "spellId": 51714,
    "label": "Power Overwhelming",
    "hits": 1912,
-   "distinctCasters": 3
+   "distinctCasters": 3,
+   "review": {
+    "verdict": "name-matches",
+    "dbName": "Power Overwhelming",
+    "dbLevel": 40,
+    "source": "https://octowow.st/db/?spell=51714",
+    "reviewedOn": "2026-11-22"
+   }
+  }
+ ],
+ "disputedObserved": [
+  {
+   "abilityKey": "hunter:steady-shot",
+   "classId": "hunter",
+   "spellId": 3668,
+   "label": "Steady Shot",
+   "hits": 604,
+   "distinctCasters": 2,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDTrueshot",
+    "dbRank": 5,
+    "reason": "database names this ID a different spell than the Chronicle label",
+    "source": "https://octowow.st/db/?spell=3668",
+    "reviewedOn": "2026-11-22"
+   }
   }
  ],
  "unmappedObserved": [

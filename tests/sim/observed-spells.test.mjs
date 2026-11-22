@@ -11,7 +11,8 @@ test('registry exposes Chronicle-observed spell IDs per ability as read-only evi
  const holy=ROTATION_REGISTRY.paladin.abilityRegistry['paladin:holy-strike'];
  assert.deepEqual(holy.observedSpells.map(s=>s.spellId).sort((a,b)=>a-b),[10332,10333]);
  assert.equal(holy.observedSpells.find(s=>s.spellId===10333).hits,905);
- assert.equal(ROTATION_REGISTRY.hunter.abilityRegistry['hunter:steady-shot'].observedSpells[0].spellId,3668);
+ assert.deepEqual(ROTATION_REGISTRY.hunter.abilityRegistry['hunter:steady-shot'].observedSpells,[],'disputed Steady Shot 3668 is not exposed');
+ assert.equal(holy.observedSpells.find(s=>s.spellId===10333).dbName,'zzOLDHoly Strike');
  assert.equal(ROTATION_REGISTRY.warrior.abilityRegistry['warrior:bloodthirst'].observedSpells.length,0);
 });
 
@@ -26,13 +27,15 @@ test('wiring leaves published identities untouched: an observation never changes
    assert.ok(!('rank' in seen)&&!('minLevel' in seen),`${ability.id} observation carries rank/level`);
   }
  }
- assert.equal(checked,4);
+ assert.equal(checked,3);
 });
 
-test('Holy Strike and Steady Shot IDs are observed but still absent from published identities',()=>{
- const holy=ROTATION_REGISTRY.paladin.abilityRegistry['paladin:holy-strike'],steady=ROTATION_REGISTRY.hunter.abilityRegistry['hunter:steady-shot'];
+test('Holy Strike is observed but still absent from published identities; disputed Steady Shot 3668 is recorded, not exposed',()=>{
+ const holy=ROTATION_REGISTRY.paladin.abilityRegistry['paladin:holy-strike'];
  assert.ok(!holy.spellIds.includes(10333)&&!(holy.candidateSpells??[]).some(c=>c.id===10333));
- assert.ok(!steady.spellIds.includes(3668)&&!(steady.candidateSpells??[]).some(c=>c.id===3668));
+ assert.deepEqual(json.disputedObserved.map(c=>[c.abilityKey,c.spellId]),[['hunter:steady-shot',3668]]);
+ assert.equal(json.disputedObserved[0].review.verdict,'disputed');
+ assert.ok(json.observedCandidates.every(c=>c.review?.source?.startsWith('https://octowow.st/db/?spell=')));
 });
 
 test('registry module matches the committed evidence JSON and carries provenance',()=>{

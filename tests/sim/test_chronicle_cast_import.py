@@ -97,6 +97,8 @@ class ChronicleCastImportTests(unittest.TestCase):
         keys = {r["key"] for r in json.loads((base / "ability-evidence.json").read_text())["records"]}
         pairs = {(c["abilityKey"], c["spellId"]) for c in observed["observedCandidates"]}
         self.assertIn(("paladin:holy-strike", 10333), pairs)
+        self.assertNotIn(("hunter:steady-shot", 3668), pairs)
+        self.assertEqual([(c["abilityKey"], c["spellId"]) for c in observed["disputedObserved"]], [("hunter:steady-shot", 3668)])
         self.assertTrue({k for k, _ in pairs} <= keys)
         self.assertTrue(all("rank" not in c for c in observed["observedCandidates"]))
         known = chronicle.load_known_spells(base / "ability-evidence.json", base / "chronicle-observed-spells.json")
