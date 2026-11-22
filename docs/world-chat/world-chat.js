@@ -295,43 +295,44 @@ function drawListings(){
     updateTimers(parent,now);
   }
 }
-let deathRows=[],deathRequest=null;
+const deathsByRealm=new Map();
+let deathRequest=null;
 async function pollDeaths(){
  if(deathRequest||document.hidden)return;
- const parent=byId("hardcore-deaths"),realm=select.value,token=generation;
+ const parent=byId("hardcore-deaths");
  const request=deathRequest=new AbortController();
  const timeout=setTimeout(()=>request.abort(),8000);
  try{
-  const after=deathRows.at(0)?.id??0;
-  const params=new URLSearchParams({realm,after:String(after)});
-  const response=await fetch(API+"/deaths?"+params,{signal:request.signal,cache:"no-store"});
-  if(!response.ok)throw Error("Death log unavailable");
-  const data=await response.json();
-  if(token!==generation)return;
-  if(data.realm!==realm||!Array.isArray(data.items))throw Error("Invalid death log");
-  if(after&&!data.items.length)return;
-  deathRows=[...data.items,...deathRows].slice(0,100);
-  if(!deathRows.length){empty(parent,"No hardcore death announcements recorded yet.");return;}
-  const ordered=deathRows.toSorted((a,b)=>Date.parse(b.time)-Date.parse(a.time)||b.id-a.id);
-  parent.replaceChildren(...ordered.map(row=>{
+  const results=await Promise.allSettled(realms.map(async realm=>{
+   const previous=deathsByRealm.get(realm)??[];
+   const params=new URLSearchParams({realm,after:String(previous[0]?.id??0)});
+   const response=await fetch(API+"/deaths?"+params,{signal:request.signal,cache:"no-store"});
+   if(!response.ok)throw Error("Death log unavailable");
+   const data=await response.json();
+   if(data.realm!==realm||!Array.isArray(data.items))throw Error("Invalid death log");
+   if(!deathsByRealm.has(realm)||data.items.length){
+    deathsByRealm.set(realm,[...data.items.map(row=>({...row,realm})),...previous].slice(0,100));
+    return true;
+   }
+   return false;
+  }));
+  const rows=[...deathsByRealm.values()].flat().sort((a,b)=>Date.parse(b.time)-Date.parse(a.time)||b.id-a.id).slice(0,100);
+  if(!rows.length){
+   const failed=results.some(result=>result.status==="rejected");
+   empty(parent,failed?"Some death feeds are unavailable. Retrying…":"No hardcore death announcements recorded yet.");
+   return;
+  }
+  if(!results.some(result=>result.status==="fulfilled"&&result.value))return;
+  parent.replaceChildren(...rows.map(row=>{
    const entry=node("div","chat-line");
    const time=new Date(row.time).toISOString().slice(11,19);
-   entry.append(node("span","chat-time","["+time+"]"),node("span","death-announcement",row.text));
+   entry.append(node("span","chat-time","["+time+"]"),node("span","death-announcement","["+row.realm+"] "+row.text));
    return entry;
   }));
- }catch{
-  if(token===generation&&!deathRows.length)empty(parent,"Hardcore death log unavailable. Retrying…");
  }finally{
   clearTimeout(timeout);
-  if(deathRequest===request)deathRequest=null;
+  deathRequest=null;
  }
-}
-function resetDeaths(){
- deathRequest?.abort();
- deathRequest=null;
- deathRows=[];
- empty(byId("hardcore-deaths"),"Loading death announcements…");
- void pollDeaths();
 }
 function reset(){current=null;primed=false;known.clear();knownPlayers.clear();knownClasses.clear();focusedPlayer="";closeItemPopup();lastLfgKey="";for(const k of Object.keys(tradeSignatures))delete tradeSignatures[k];for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
@@ -350,6 +351,6 @@ async function poll(){
   }catch{if(token===generation)status("error","Feed unavailable · retrying");}
   finally{clearTimeout(timeout);requesting=false;if(token!==generation)void poll();}
 }
-select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);window.history.replaceState(null,"",u);clearTimeout(searchTimer);reset();resetDeaths();resetHistory(historyQuery);status("waiting","Connecting…");void poll();});
+select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);window.history.replaceState(null,"",u);clearTimeout(searchTimer);reset();resetHistory(historyQuery);status("waiting","Connecting…");void poll();});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)void pollDeaths();});
-reset();resetDeaths();resetHistory();void poll();setInterval(()=>void pollDeaths(),30000);setInterval(()=>void poll(),5000);setInterval(drawListings,1000);
+reset();empty(byId("hardcore-deaths"),"Loading death announcements…");void pollDeaths();resetHistory();void poll();setInterval(()=>void pollDeaths(),30000);setInterval(()=>void poll(),5000);setInterval(drawListings,1000);
