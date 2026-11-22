@@ -16,7 +16,7 @@ export function decodeWorldPacket(channel,sender,text,raw){
 export function createWorldChat({account,config,log,getWorld}){
   const sources={"N\u0027Zoth":["OBPVEDMFA","OBPVEDMFH"],"Y\u0027Shaarj":[],"C\u0027Thun":[]};
   const enabled=process.env.WORLD_CHAT_ENABLED==="true"&&sources[account.realmName]?.includes(account.account.toUpperCase())&&!!config.pushUrl&&!!config.pushToken;
-  let queue=[],timer=null,busy=false,seen=false,stopped=false,lookupCount=0,lastWarn=0,retryAt=0,backoff=10000;
+  let queue=[],timer=null,busy=false,seen=false,stopped=false,lookupCount=0,lastWarn=0,retryAt=0,backoff=10000,lastSuccessfulUpload=0;
   const names=new Map(),pending=new Map(),guildCache=new Map(),guildRequests=new Map(),guildOut=new Map();
   let guildBusy=false,lastLookup=0;
   function queueGuild(guid,name){
@@ -72,12 +72,15 @@ export function createWorldChat({account,config,log,getWorld}){
     const messages=queue.splice(0,20);
     for(const [key,item] of guildOut)if(item.time<now-100000)guildOut.delete(key);
     const guilds=[...guildOut.entries()].slice(0,10);
+    // Preserve the 45-second live-status window without writing empty batches every five seconds.
+    // A heartbeat at least every 30 seconds leaves margin for network delays.
+    if(!messages.length && !guilds.length && now-lastSuccessfulUpload<30000){busy=false;return;}
     for(const [key] of guilds)guildOut.delete(key);
     function retryGuilds(){for(const [key,item] of guilds)if(!guildOut.has(key))guildOut.set(key,item);}
     try{
       const url=new URL(config.pushUrl);url.pathname="/api/world-chat/ingest";url.search="";url.hash="";
       const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+config.pushToken},body:JSON.stringify({realm:account.realmName,account:account.account,channel:"world",messages,guilds:guilds.map(([,item])=>item)}),signal:AbortSignal.timeout(7000)});
-      if(response.ok){backoff=10000;retryAt=0;}else{if(response.status>=500||response.status===429){queue=[...messages,...queue].slice(-250);retryGuilds();retryAt=Date.now()+backoff;backoff=Math.min(backoff*2,120000);}if(now-lastWarn>60000){lastWarn=now;log.warn("World Chat alpha: ingest HTTP "+response.status);}}
+      if(response.ok){backoff=10000;retryAt=0;lastSuccessfulUpload=Date.now();}else{if(response.status>=500||response.status===429){queue=[...messages,...queue].slice(-250);retryGuilds();retryAt=Date.now()+backoff;backoff=Math.min(backoff*2,120000);}if(now-lastWarn>60000){lastWarn=now;log.warn("World Chat alpha: ingest HTTP "+response.status);}}
     }catch{queue=[...messages,...queue].slice(-250);retryGuilds();retryAt=Date.now()+backoff;backoff=Math.min(backoff*2,120000);}
     finally{busy=false;}
   }
