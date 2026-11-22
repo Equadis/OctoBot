@@ -3,7 +3,7 @@ import {appendChatMessage} from "./chat-links.mjs?v=3";
 import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
 import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
-const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"Disc Jockey",DEV:"Developer"};
+const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"DJ",DEV:"Developer"};
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
