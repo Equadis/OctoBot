@@ -1,1 +1,1 @@
-Production deployment: restore World Chat staff history and badges (2026-11-21).
+Production deployment: add the World Chat hardcore death log (2026-11-22).

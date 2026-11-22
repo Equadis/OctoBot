@@ -3,6 +3,7 @@ import {appendChatMessage} from "./chat-links.mjs?v=3";
 import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
 import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
+const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"Disc Jockey",DEV:"Developer"};
 const API="https://octometrics.eqvoice.workers.dev/api/world-chat";
 const byId=id=>document.getElementById(id);
 const realms=["N'Zoth","Y'Shaarj","C'Thun"], select=byId("realm");
@@ -71,8 +72,9 @@ function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
   if(row.gm){
-   const role=["GM","CM","DJ","DEV"].includes(row.staffRole)?row.staffRole:"GM";
+   const role=Object.hasOwn(STAFF_LABELS,row.staffRole)?row.staffRole:"GM";
    const badge=node("span","chat-gm-tag","<"+role+"> ");
+   badge.dataset.siteTip=STAFF_LABELS[role];
    if(/^#[0-9a-f]{6}$/i.test(row.staffColour))badge.style.color=row.staffColour;
    content.append(badge);
   }
@@ -293,6 +295,44 @@ function drawListings(){
     updateTimers(parent,now);
   }
 }
+let deathRows=[],deathRequest=null;
+async function pollDeaths(){
+ if(deathRequest||document.hidden)return;
+ const parent=byId("hardcore-deaths"),realm=select.value,token=generation;
+ const request=deathRequest=new AbortController();
+ const timeout=setTimeout(()=>request.abort(),8000);
+ try{
+  const after=deathRows.at(0)?.id??0;
+  const params=new URLSearchParams({realm,after:String(after)});
+  const response=await fetch(API+"/deaths?"+params,{signal:request.signal,cache:"no-store"});
+  if(!response.ok)throw Error("Death log unavailable");
+  const data=await response.json();
+  if(token!==generation)return;
+  if(data.realm!==realm||!Array.isArray(data.items))throw Error("Invalid death log");
+  if(after&&!data.items.length)return;
+  deathRows=[...data.items,...deathRows].slice(0,100);
+  if(!deathRows.length){empty(parent,"No hardcore death announcements recorded yet.");return;}
+  const ordered=deathRows.toSorted((a,b)=>Date.parse(b.time)-Date.parse(a.time)||b.id-a.id);
+  parent.replaceChildren(...ordered.map(row=>{
+   const entry=node("div","chat-line");
+   const time=new Date(row.time).toISOString().slice(11,19);
+   entry.append(node("span","chat-time","["+time+"]"),node("span","death-announcement",row.text));
+   return entry;
+  }));
+ }catch{
+  if(token===generation&&!deathRows.length)empty(parent,"Hardcore death log unavailable. Retrying…");
+ }finally{
+  clearTimeout(timeout);
+  if(deathRequest===request)deathRequest=null;
+ }
+}
+function resetDeaths(){
+ deathRequest?.abort();
+ deathRequest=null;
+ deathRows=[];
+ empty(byId("hardcore-deaths"),"Loading death announcements…");
+ void pollDeaths();
+}
 function reset(){current=null;primed=false;known.clear();knownPlayers.clear();knownClasses.clear();focusedPlayer="";closeItemPopup();lastLfgKey="";for(const k of Object.keys(tradeSignatures))delete tradeSignatures[k];for(const key of ["lfg","wtb","wts"]){empty(byId(key),"Waiting for verified data…");byId(key+"-count").textContent="";}byId("last-updated").textContent="";}
 async function poll(){
   if(requesting)return;requesting=true;
@@ -310,5 +350,6 @@ async function poll(){
   }catch{if(token===generation)status("error","Feed unavailable · retrying");}
   finally{clearTimeout(timeout);requesting=false;if(token!==generation)void poll();}
 }
-select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);window.history.replaceState(null,"",u);clearTimeout(searchTimer);reset();resetHistory(historyQuery);status("waiting","Connecting…");void poll();});
-reset();resetHistory();void poll();setInterval(()=>void poll(),5000);setInterval(drawListings,1000);
+select.addEventListener("change",()=>{generation++;controller?.abort();const u=new URL(location.href);u.searchParams.set("realm",select.value);window.history.replaceState(null,"",u);clearTimeout(searchTimer);reset();resetDeaths();resetHistory(historyQuery);status("waiting","Connecting…");void poll();});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)void pollDeaths();});
+reset();resetDeaths();resetHistory();void poll();setInterval(()=>void pollDeaths(),30000);setInterval(()=>void poll(),5000);setInterval(drawListings,1000);
