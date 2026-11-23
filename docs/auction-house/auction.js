@@ -282,11 +282,11 @@ async function fillDetail(cell,item,unavailable){
         const history=await request('/api/auction/history/'+id+'?'+params);
         const days=Array.isArray(history.history)?history.history:[];
         hist.body.replaceChildren();
-        const chart=buildChart(document,days,item.historical_avg??null);
+        const chart=buildChart(document,days);
         const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
         const summary=el('div',null,'ah-history-summary');
         if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
-        if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans'+(item.historical_avg!=null?'; the dashed line is the current average-price reference.':'.'),'ah-chart-note'));}
+        if(chart){const layout=el('div',null,'ah-history-layout');layout.append(chart,summary);hist.body.append(layout);hist.body.append(el('p','Daily lowest unit buyout from completed scans.','ah-chart-note'));}
         else hist.body.append(el('p','Not enough history for a chart yet: '+days.length+' day'+(days.length===1?'':'s')+' observed, at least '+MIN_POINTS+' needed.','ah-muted'));
         if(!chart&&values.length)hist.body.append(summary);
         if(days.length){
