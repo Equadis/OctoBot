@@ -20,11 +20,18 @@
   <title>OctoBot · Gear Planner &amp; DPS Simulator</title>
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css?v=20261115-blue1">
+<<<<<<< ours
   <link rel="stylesheet" href="../quality-select.css?v=1">
   <link rel="stylesheet" href="combat-layout.css?v=20261118-polish2">
   <script type="module" src="planner.mjs?v=20261117-picker3"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261120-maintenance">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
+=======
+  <link rel="stylesheet" href="combat-layout.css?v=20261123-bg1">
+  <script type="module" src="planner.mjs?v=20261123-bg1"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261116-hdr1">
+<script src="../site-tooltips.js?v=20261116-tips1" defer></script>
+>>>>>>> theirs
 </head>
 <body>
 <main>
@@ -59,27 +66,6 @@
         </div>
         <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div><details class="appearance-slots"><summary>Appearance</summary><div id="slots-appearance" class="weapons extra-slots"></div></details>
       </section>
-
-        <section class="card" id="buffs" aria-labelledby="buffs-heading">
-          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
-          <div id="buff-list"></div>
-        </section>
-      </div>
-      <div class="planner-column right-column">
-    <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div><button id="clear-talents" class="panel-reset" type="button" aria-label="Reset talents">Reset</button></div>
-
-      <div id="talent-trees" class="talent-trees"></div>
-    </section>
-        <section class="card" id="rotation" aria-labelledby="rotation-heading">
-          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><button id="reset-rotation" class="panel-reset" type="button" aria-label="Reset rotation">Reset</button></div>
-          <label class="field rotation-preset-field">Preset<select id="rotation-preset"></select></label>
-          <p id="rotation-description" class="rotation-description"></p>
-          <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
-          <div id="rotation-rows"></div>
-          <select id="rotation-add" aria-label="Add ability"><option value="">Add ability…</option></select>
-          <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
-        </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
           <div class="card-heading"><h2 id="settings-heading">Settings</h2><button id="reset-settings" class="panel-reset" type="button" aria-label="Reset settings">Reset</button></div>
           <div class="fight-controls">
@@ -104,6 +90,26 @@
           <button disabled class="run-button" title="Combat engines are not implemented yet.">Run Simulation</button><div id="simulation-output"></div>
         </section>
         <section class="card" id="combat-log" aria-labelledby="log-heading"><div class="card-heading"><h2 id="log-heading">Combat Log</h2><button id="reset-combat-log" class="panel-reset" type="button" aria-label="Reset combat log">Reset</button></div><div id="combat-log-output"><p class="small muted">Run a simulation to see the combat log.</p></div></section>
+      </div>
+      <div class="planner-column right-column">
+    <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
+      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div><button id="clear-talents" class="panel-reset" type="button" aria-label="Reset talents">Reset</button></div>
+
+      <div id="talent-trees" class="talent-trees"></div>
+    </section>
+        <section class="card" id="buffs" aria-labelledby="buffs-heading">
+          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
+          <div id="buff-list"></div>
+        </section>
+        <section class="card" id="rotation" aria-labelledby="rotation-heading">
+          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><button id="reset-rotation" class="panel-reset" type="button" aria-label="Reset rotation">Reset</button></div>
+          <label class="field rotation-preset-field">Preset<select id="rotation-preset"></select></label>
+          <p id="rotation-description" class="rotation-description"></p>
+          <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
+          <div id="rotation-rows"></div>
+          <select id="rotation-add" aria-label="Add ability"><option value="">Add ability…</option></select>
+          <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
+        </section>
       </div>
     </div>
   </div>

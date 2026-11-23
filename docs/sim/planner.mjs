@@ -204,6 +204,8 @@ function createTalents() {
   for (const tree of data.trees) {
     const section = element('section', 'talent-tree');
     section.setAttribute('aria-label', `${tree.name} talents`);
+    section.classList.add('has-bg');
+    section.style.setProperty('--tree-bg', `url("talent-backgrounds/${classId}-${tree.index}.webp")`);
     const heading = element('div', 'tree-heading');
     const total = element('span'); total.id = `tree-total-${tree.index}`;
     heading.append(element('h3', '', tree.name), total);
