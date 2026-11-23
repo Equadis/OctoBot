@@ -396,9 +396,14 @@ The heading date is the UTC date on which the period ends (for example `24th Nov
 
 Counts and completed awards persist in the bot database. On first installation,
 tracking starts immediately and the first award occurs at the next 17:00 boundary
-(so that first period may be partial). Messages sent while the bot is offline are
-not backfilled. A restart catches up the latest completed period once, rather than
-posting a backlog of old awards. Failed role changes and announcement edits retry;
+(so that first period may be partial). Messages missed while the bot is offline or reconnecting are recovered from Discord
+history (deduplicated by message ID, excluded channels/threads honoured). The award waits
+until the full 24h window has been reconciled, and retries if history cannot be read;
+permission-denied channels are logged and skipped. A lost database cannot repeat an award:
+an existing announcement in the channel is adopted. `DATABASE_PATH` must be absolute and on
+the persistent volume (Railway: `/data/octobot.db`); startup logs a CRITICAL line otherwise.
+`/chatterstatus` (admin) shows tracking health and the provisional leaderboard. A restart
+catches up the latest period once, rather than posting a backlog of old awards. Failed role changes and announcement edits retry;
 a saved announcement is edited again rather than intentionally reposted.
 
 Override `DAILY_CHATTER_ROLE_ID` and `DAILY_CHATTER_CHANNEL_ID` in `.env`, or set either
