@@ -233,7 +233,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 @media(min-width:561px){.planner-view .paperdoll{grid-template-columns:114px minmax(0,1fr) 114px;column-gap:8px}}
 /* Desktop layout: gear, then talents (full width), then consumables beside rotation / settings / results / combat log. */
 @media(min-width:941px){
- .planner-view .planner-grid{grid-template-columns:minmax(260px,.55fr) minmax(0,1.45fr);grid-template-areas:"gear gear" "talents talents" "buffs rotation" "buffs settings" "buffs results" "buffs log";gap:18px;align-items:start;max-width:none}
+ .planner-view .planner-grid{grid-template-columns:minmax(0,2fr) minmax(0,3fr);grid-template-areas:"gear gear" "talents talents" "buffs rotation" "buffs settings" "buffs results" "buffs log";gap:18px;align-items:start;max-width:none}
  .planner-view .left-column,.planner-view .right-column{display:contents}
  .planner-view #equipment{grid-area:gear}.planner-view #talents{grid-area:talents}.planner-view #buffs{grid-area:buffs}
  .planner-view #rotation{grid-area:rotation}.planner-view #build-settings{grid-area:settings}.planner-view #simulation{grid-area:results}.planner-view #combat-log{grid-area:log}
