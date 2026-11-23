@@ -155,13 +155,15 @@ const plus=(map,k,v)=>{map[k]=(map[k]||0)+v;};
 const noNegative=n=>Math.max(0,n);
 const rel=(pct)=>1+pct/100;
 const reduction=(pct)=>Math.max(0,1-pct/100);
-const statAlias={criticalChance:'crit',criticalDamage:'criticalDamagePct',spellCostReductionPct:'manaCostReductionPct',pushbackResistancePct:'pushbackAvoidancePct'};
+export const ABILITY_STAT_ALIASES={criticalChance:'crit',manaGainedPct:'manaGainPct',criticalDamage:'criticalDamagePct',spellCostReductionPct:'manaCostReductionPct',pushbackResistancePct:'pushbackAvoidancePct'};
+const statAlias=ABILITY_STAT_ALIASES;
 const isDamage=t=>['melee','ranged','spell','periodic','unknown'].includes(t);
 const isHealing=t=>['heal','heal-periodic'].includes(t);
 export function abilityProfiles(classId){return (ABILITIES[classId]||[]).map(p=>({...p,tags:[...p.tags]}));}
-export function calculateAbilityTalentEffects(audit,profile,baseline={}){
- const modifiers={},matched=[];
- if(!audit?.active)return {profile,modifiers,matched,values:{}};
+/** Ability-scoped talent effects that apply to one profile, after stat aliasing. Shared with the combat verification tools. */
+export function matchedAbilityEffects(audit,profile){
+ const out=[];
+ if(!audit?.active)return out;
  const tags=new Set(profile.tags);
  for(const effect of audit.abilityEffects||[]){
   const scopes=Array.isArray(effect.scope)?effect.scope:[effect.scope];
@@ -172,8 +174,14 @@ export function calculateAbilityTalentEffects(audit,profile,baseline={}){
   // selected talent is counted at most once even if two scope tags match.
   if((stat==='damagePct'||stat==='criticalDamagePct')&&!isDamage(profile.type))continue;
   if((stat==='healingPct'||stat==='periodicHealingPct')&&!isHealing(profile.type))continue;
-  plus(modifiers,stat,effect.amount);matched.push({talent:effect.name,stat,value:effect.amount});
+  out.push({talent:effect.name,talentId:effect.talentId,stat,value:effect.amount});
  }
+ return out;
+}
+export function calculateAbilityTalentEffects(audit,profile,baseline={}){
+ const modifiers={},matched=[];
+ if(!audit?.active)return {profile,modifiers,matched,values:{}};
+ for(const effect of matchedAbilityEffects(audit,profile)){plus(modifiers,effect.stat,effect.value);matched.push({talent:effect.talent,stat:effect.stat,value:effect.value});}
  const get=k=>modifiers[k]||0;
  const damagePct=get('damagePct')+(isDamage(profile.type)?get('damageAndHealingPct'):0);
  const healingPct=get('healingPct')+get('periodicHealingPct')+(isHealing(profile.type)?get('damageAndHealingPct'):0);

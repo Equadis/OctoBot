@@ -18,15 +18,19 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Implemented but unverified | An effect or hook exists, but numerics are not verified against the published parameters or it only reaches the ability estimates |
 | Partially implemented | Some rules are applied and others are pending, unattached to any ability, recorded but never computed, or not observed |
 | Missing implementation | No rule has an observable effect and no combat hook exists |
+| Conflicting or disputed | The compiled combat action changed by an amount that differs from the published rule |
+
+A talent whose rules are all ability-scoped is also compiled with and without the talent at every rank (`tools/sim/combat-verification.mjs`); if every compared field (cast time, cost, cooldown, damage or healing multiplier, crit chance, crit multiplier, miss chance, Life Tap mana factor) changes by exactly the published amount, it is counted as verified.
 
 ## Totals
 
 | Classification | Talents |
 |---|---|
-| Verified and functioning | 18 |
-| Implemented but unverified | 232 |
-| Partially implemented | 62 |
-| Missing implementation | 164 |
+| Conflicting or disputed | 0 |
+| Verified and functioning | 72 |
+| Implemented but unverified | 179 |
+| Partially implemented | 63 |
+| Missing implementation | 162 |
 | Total | 476 |
 
 1 talents carry a disputed-source hint; 0 have a data-structure issue; 125 use spell IDs in the custom range (40000 and above); 240 reach combat input.
@@ -35,15 +39,15 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Class | Talents | Verified | Unverified | Partial | Missing | Reach combat input | Hard-wired combat hooks | Talents with pending rules |
 |---|---|---|---|---|---|---|---|---|
-| warrior | 54 | 3 | 20 | 8 | 23 | 22 | 4 | 24 |
-| paladin | 49 | 4 | 24 | 7 | 14 | 20 | 9 | 20 |
-| hunter | 55 | 2 | 34 | 6 | 13 | 34 | 15 | 24 |
-| rogue | 56 | 5 | 17 | 11 | 23 | 21 | 5 | 34 |
-| priest | 52 | 1 | 25 | 5 | 21 | 28 | 8 | 21 |
-| shaman | 49 | 2 | 25 | 8 | 14 | 27 | 10 | 19 |
-| mage | 55 | 0 | 32 | 2 | 21 | 31 | 13 | 29 |
-| warlock | 52 | 0 | 27 | 6 | 19 | 25 | 9 | 20 |
-| druid | 54 | 1 | 28 | 9 | 16 | 32 | 10 | 24 |
+| warrior | 54 | 5 | 19 | 8 | 22 | 22 | 4 | 24 |
+| paladin | 49 | 6 | 21 | 7 | 15 | 20 | 9 | 20 |
+| hunter | 55 | 4 | 32 | 6 | 13 | 34 | 15 | 24 |
+| rogue | 56 | 9 | 14 | 11 | 22 | 21 | 5 | 34 |
+| priest | 52 | 11 | 15 | 5 | 21 | 28 | 8 | 21 |
+| shaman | 49 | 9 | 18 | 8 | 14 | 27 | 10 | 19 |
+| mage | 55 | 8 | 23 | 3 | 21 | 31 | 13 | 29 |
+| warlock | 52 | 11 | 17 | 6 | 18 | 25 | 9 | 20 |
+| druid | 54 | 9 | 20 | 9 | 16 | 32 | 10 | 24 |
 
 ## Integrity flags (talents affected)
 
@@ -51,7 +55,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 |---|---|---|
 | pending-rule | 215 | A rule is declared pending in the audit data: the mechanic is not implemented |
 | unattached-scope | 46 | The rule's scope matches no ability profile, so it can never be applied |
-| recorded-not-computed | 49 | The stat is recorded but never read by the ability calculator |
+| recorded-not-computed | 48 | The stat is recorded but never read by the ability calculator |
 | rule-effect-not-observed | 0 | A sheet-type rule produced no observable change |
 | claims-sheet-but-not-observed | 0 | Planner coverage says "sheet" but no output changes |
 | conditional-not-modelled | 164 | Planner coverage says proc or conditional: not modelled |
@@ -64,6 +68,50 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | custom-id-range | 125 | Spell IDs in the custom OctoWoW range: no vanilla reference |
 | disputed-hint | 1 | Notes mention a conflict or disputed source |
 
+## Unapplied rules: disposition
+
+108 rules are recorded but not applied by the ability calculator (recorded-not-computed 55, unattached-scope 53). Each has a recorded disposition in `tools/sim/talent-findings.mjs`; none is approximated.
+
+| Disposition | Rules |
+|---|---|
+| unsupported-dimension | 84 |
+| needs-event-model | 11 |
+| needs-resource-model | 4 |
+| needs-debuff-model | 3 |
+| covered-by-another-rule | 2 |
+| needs-pet-model | 2 |
+| disputed-identity | 1 |
+| needs-ability-model | 1 |
+
+| Dimension | Rules |
+|---|---|
+| survivability | 17 |
+| buff provider strength | 14 |
+| crowd control | 12 |
+| pet and summon | 10 |
+| resource generation | 10 |
+| casting interruption | 9 |
+| area geometry | 6 |
+| threat | 6 |
+| mana regeneration while casting | 4 |
+| movement | 4 |
+| enemy debuff | 3 |
+| party aura | 2 |
+| pet ability timing | 2 |
+| shield charges | 2 |
+| aura stacks | 1 |
+| disputed ability | 1 |
+| enemy mana | 1 |
+| execute rage scaling | 1 |
+| self-healing | 1 |
+| shapeshifting | 1 |
+| totem timing | 1 |
+
+## Integration defects fixed
+
+- **Improved Life Tap** (warlock 341): The talent rule records its bonus as manaGainedPct, but the Life Tap compiler reads manaGainPct, so the +10/20% mana award never reached combat. Fix: Alias manaGainedPct to manaGainPct in talent-calculations.mjs (ABILITY_STAT_ALIASES). Test: `tests/sim/talent-integration.test.mjs`.
+- **Resource overflow check (exposed by the Improved Life Tap fix)** (warlock 341): With a fractional mana award (424 x 1.1) on a large pool, overflow computed as (current + gain) - max exceeded the gain by floating-point rounding and resourceThroughput rejected the event as invalid. Fix: combat-statistics.mjs accepts overflow within 1e-9 relative of the gain and clamps it to the gain; genuinely larger overflow is still rejected. Test: `tests/sim/talent-integration.test.mjs`.
+
 ## Verified combat behaviour (deterministic tests)
 
 - Talent 222: tests/sim/combat-conditional-talents.test.mjs (Elemental Devastation: owner landed melee crit grants 3/6/9 spell hit for 10 s, expires)
@@ -74,7 +122,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
-| Improved Heroic Strike (56, 3) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Heroic Strike (56, 3) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Tactical Mastery (57, 5) | T0 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
 | Improved Rend (58, 2) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
 | Improved Charge (59, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
@@ -84,7 +132,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Improved Overpower (63, 2) | T2 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
 | Deep Wounds (64, 3) | T2, needs Improved Rend 2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Two-Handed Weapon Specialization (65, 3) | T3 | sheet | snapshot, sheet | Implemented but unverified | no-combat-hook |
-| Impale (66, 2) | T3, needs Deep Wounds 3 | partial | sheet, ability x13 | Missing implementation | recorded-not-computed, no-combat-hook |
+| Impale (66, 2) | T3, needs Deep Wounds 3 | partial | sheet, ability x13 | Verified and functioning | no-combat-hook |
 | Master of Arms (67, 5) | T4, needs Master Strike 1 | partial | snapshot, sheet | Partially implemented | pending-rule, no-combat-hook, custom-id-range |
 | Sweeping Strikes (68, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Boundless Anger (69, 3) | T4 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook, custom-id-range |
@@ -148,9 +196,9 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Divine Strength (444, 5) | T0 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Divine Intellect (445, 5) | T0 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Holy Judgement (446, 3) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
-| Spiritual Focus (447, 2) | T1 | partial | sheet | Implemented but unverified | planner-estimate-only, no-combat-hook |
+| Spiritual Focus (447, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Improved Seal of Righteousness (448, 5) | T1 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
-| Healing Light (449, 3) | T2 | partial | sheet, ability x3 | Implemented but unverified | no-combat-hook |
+| Healing Light (449, 3) | T2 | partial | sheet, ability x3 | Verified and functioning | no-combat-hook |
 | Sanctity Aura (450, 1) | T2 | partial | sheet | Partially implemented | unattached-scope, planner-estimate-only, no-combat-hook |
 | Improved Lay on Hands (451, 2) | T2 | partial | sheet, ability x1 | Partially implemented | pending-rule, recorded-not-computed, planner-estimate-only, no-combat-hook |
 | Unyielding Faith (452, 2) | T2 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
@@ -159,7 +207,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Ironclad (455, 2) | T3 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook, custom-id-range |
 | Divine Favor (456, 5) | T4, needs Holy Shock 1 | partial | sheet, ability x2 | Implemented but unverified | planner-estimate-only, no-combat-hook, custom-id-range, prerequisite-in-same-or-higher-tier |
 | Holy Shock (457, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Holy Power (458, 3) | T5 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Holy Power (458, 3) | T5 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Blessed Strikes (459, 5) | T5, needs Holy Shock 1 | partial | sheet, ability x1, hook | Partially implemented | pending-rule, recorded-not-computed, custom-id-range |
 | Daybreak (460, 1) | T6, needs Holy Shock 1 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 
@@ -236,7 +284,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Improved Concussive Shot (412, 5) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Efficiency (413, 5) | T0 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
+| Efficiency (413, 5) | T0 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook |
 | Improved Stings (414, 5) | T1 | partial | sheet, ability x1 | Partially implemented | recorded-not-computed, no-combat-hook |
 | Lethal Shots (415, 5) | T1 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
 | Hawk Eye (416, 2) | T2 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
@@ -257,7 +305,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Improved Slaying (392, 3) | T0 | partial | sheet | Implemented but unverified | planner-estimate-only, no-combat-hook, custom-id-range |
-| Resourcefulness (393, 5) | T0 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook, custom-id-range |
+| Resourcefulness (393, 5) | T0 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook, custom-id-range |
 | Swift Reflexes (394, 2) | T0 | sheet | snapshot, sheet, ability x6 | Verified and functioning | no-combat-hook |
 | Entrapment (395, 3) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Savage Strikes (396, 2) | T1 | partial | snapshot, sheet, ability x5 | Implemented but unverified | no-combat-hook |
@@ -283,7 +331,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
-| Improved Eviscerate (128, 3) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Eviscerate (128, 3) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Remorseless Attacks (129, 2) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Malice (130, 5) | T0 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Ruthlessness (131, 3) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
@@ -291,7 +339,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Improved Blade Tactics (133, 3) | T1 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
 | Relentless Strikes (134, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Throwing Weapon Specialization (135, 2) | T2 | partial | sheet, ability x2 | Implemented but unverified | planner-estimate-only, no-combat-hook |
-| Lethality (136, 5) | T2, needs Malice 5 | partial | sheet, ability x8 | Missing implementation | recorded-not-computed, no-combat-hook |
+| Lethality (136, 5) | T2, needs Malice 5 | partial | sheet, ability x8 | Verified and functioning | no-combat-hook |
 | Taste for Blood (137, 2) | T3 | partial | sheet, ability x1 | Partially implemented | pending-rule, no-combat-hook |
 | Vile Poisons (138, 3) | T3 | partial | sheet, ability x1 | Partially implemented | unattached-scope, planner-estimate-only, no-combat-hook |
 | Improved Poisons (139, 3) | T3 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook |
@@ -322,7 +370,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Hack and Slash (123, 2) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Weapon Expertise (124, 2) | T4 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Blade Rush (125, 2) | T5, needs Surprise Attack 1 | partial | snapshot, sheet | Partially implemented | pending-rule, no-combat-hook, custom-id-range |
-| Aggression (126, 3) | T5 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
+| Aggression (126, 3) | T5 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Adrenaline Rush (127, 1) | T6 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 
 ### Subtlety
@@ -342,7 +390,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Cloaked in Shadows (156, 2) | T3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 | Blackjack (157, 2) | T3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Blinding Haze (158, 3) | T3 | partial | sheet, ability x1 | Partially implemented | pending-rule, planner-estimate-only, no-combat-hook, custom-id-range |
-| Dirty Deeds (159, 2) | T4 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Dirty Deeds (159, 2) | T4 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Preparation (160, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Shadow of Death (161, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 | Bloody Mess (162, 2) | T4, needs Hemorrhage 1 | partial | sheet, ability x1 | Partially implemented | unattached-scope, no-combat-hook, custom-id-range |
@@ -357,8 +405,8 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Wand Specialization (166, 2) | T0 | partial | sheet, ability x2 | Implemented but unverified | planner-estimate-only, no-combat-hook |
-| Piercing Light (167, 3) | T0 | partial | sheet, ability x13 | Implemented but unverified | no-combat-hook, custom-id-range |
-| Mental Agility (168, 5) | T0 | partial | sheet, ability x13 | Implemented but unverified | no-combat-hook |
+| Piercing Light (167, 3) | T0 | partial | sheet, ability x13 | Verified and functioning | no-combat-hook, custom-id-range |
+| Mental Agility (168, 5) | T0 | partial | sheet, ability x13 | Verified and functioning | no-combat-hook |
 | Silent Resolve (169, 5) | T1 | partial | sheet, ability x23 | Implemented but unverified | no-combat-hook |
 | Unbreakable Will (170, 5) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
 | Blessed Concentration (171, 2) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
@@ -379,22 +427,22 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
-| Improved Renew (184, 3) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Renew (184, 3) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Holy Focus (185, 2) | T0 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
-| Divinity (186, 5) | T0 | partial | sheet, ability x13 | Implemented but unverified | no-combat-hook |
-| Divine Fury (187, 5) | T1 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
+| Divinity (186, 5) | T0 | partial | sheet, ability x13 | Verified and functioning | no-combat-hook |
+| Divine Fury (187, 5) | T1 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Spell Warding (188, 3) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
 | Holy Reach (189, 2) | T1 | partial | sheet, ability x3, hook | Partially implemented | recorded-not-computed |
 | Blessed Recovery (190, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Inspiration (191, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Holy Nova (192, 1) | T2 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Empowered Recovery (193, 2) | T3, needs Improved Renew 3 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook, custom-id-range |
-| Improved Healing (194, 3) | T3 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
+| Improved Healing (194, 3) | T3 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Spiritual Guidance (195, 5) | T3 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Book of Prayer (196, 2) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Spirit of Redemption (197, 1) | T4 | partial | snapshot, sheet | Partially implemented | pending-rule, no-combat-hook |
 | Reservoir of Light (198, 3) | T4 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook, custom-id-range |
-| Spiritual Healing (199, 5) | T5 | partial | sheet, ability x7 | Implemented but unverified | no-combat-hook |
+| Spiritual Healing (199, 5) | T5 | partial | sheet, ability x7 | Verified and functioning | no-combat-hook |
 | Ascendance (200, 1) | T6, needs Spirit of Redemption 1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 
 ### Shadow
@@ -402,10 +450,10 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Spirit Tap (201, 5) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Improved Mind Blast (202, 5) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Mind Blast (202, 5) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Shadow Affinity (203, 3) | T1 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
 | Improved Shadow Word: Pain (204, 2) | T1 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
-| Shadow Focus (205, 5) | T1 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
+| Shadow Focus (205, 5) | T1 | partial | sheet, ability x6 | Verified and functioning | no-combat-hook |
 | Blackout (206, 5) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Improved Psychic Scream (207, 2) | T2 | partial | sheet, ability x1 | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Improved Fade (208, 2) | T2 | partial | sheet, ability x1, hook | Partially implemented | unattached-scope |
@@ -416,7 +464,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Silence (213, 1) | T4, needs Improved Psychic Scream 2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Vampiric Embrace (214, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Vampiric Touch (215, 2) | T4, needs Vampiric Embrace 1 | partial | sheet, hook | Partially implemented | pending-rule, recorded-not-computed, custom-id-range, prerequisite-in-same-or-higher-tier |
-| Darkness (216, 5) | T5 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
+| Darkness (216, 5) | T5 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Shadowform (217, 1) | T6, needs Vampiric Embrace 1 | partial | sheet, hook | Partially implemented | pending-rule |
 
 ## Shaman
@@ -425,14 +473,14 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
-| Convection (218, 5) | T0 | partial | sheet, ability x8 | Implemented but unverified | no-combat-hook |
-| Concussion (219, 5) | T0 | partial | sheet, ability x11 | Implemented but unverified | no-combat-hook |
+| Convection (218, 5) | T0 | partial | sheet, ability x8 | Verified and functioning | no-combat-hook |
+| Concussion (219, 5) | T0 | partial | sheet, ability x11 | Verified and functioning | no-combat-hook |
 | Earth's Grasp (220, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Elemental Warding (221, 3) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
 | Elemental Devastation (222, 3) | T1 | partial | snapshot, sheet, hook | Partially implemented | pending-rule |
 | Elemental Focus (223, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
-| Reverberation (224, 3) | T2 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
-| Call of Thunder (225, 5) | T2 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Reverberation (224, 3) | T2 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
+| Call of Thunder (225, 5) | T2 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Improved Molten Blast (226, 2) | T2 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 | Improved Fire Totems (227, 2) | T3 | partial | sheet, ability x2 | Partially implemented | recorded-not-computed, no-combat-hook |
 | Call of Earth (228, 2) | T3 | partial | sheet, hook | Implemented but unverified | recorded-not-computed, custom-id-range |
@@ -440,7 +488,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Storm Reach (230, 2) | T4 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
 | Elemental Mastery (231, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Elemental Fury (232, 2) | T4 | partial | sheet, ability x11 | Partially implemented | pending-rule, no-combat-hook, custom-id-range |
-| Lightning Mastery (233, 5) | T5, needs Call of Thunder 5 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Lightning Mastery (233, 5) | T5, needs Call of Thunder 5 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Earthquake (234, 1) | T6, needs Elemental Mastery 1 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 
 ### Enhancement
@@ -469,10 +517,10 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Improved Healing Wave (235, 5) | T0 | partial | sheet | Missing implementation | pending-rule, no-combat-hook |
-| Tidal Focus (236, 5) | T0 | partial | sheet, ability x11 | Implemented but unverified | no-combat-hook |
+| Tidal Focus (236, 5) | T0 | partial | sheet, ability x11 | Verified and functioning | no-combat-hook |
 | Improved Reincarnation (237, 2) | T1 | partial | sheet, ability x1 | Partially implemented | recorded-not-computed, planner-estimate-only, no-combat-hook |
 | Ancestral Healing (238, 3) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Tidal Mastery (239, 5) | T1 | partial | sheet, ability x5 | Implemented but unverified | no-combat-hook |
+| Tidal Mastery (239, 5) | T1 | partial | sheet, ability x5 | Verified and functioning | no-combat-hook |
 | Healing Way (240, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Healing Focus (241, 2) | T2 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Totemic Mastery (242, 1) | T2 | partial | sheet, ability x5 | Partially implemented | recorded-not-computed, planner-estimate-only, no-combat-hook |
@@ -515,22 +563,22 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
-| Improved Fireball (1, 5) | T0 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Improved Fireball (1, 5) | T0 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Impact (2, 5) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Ignite (3, 5) | T1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Flame Throwing (4, 2) | T1 | partial | sheet, ability x9, hook | Partially implemented | recorded-not-computed |
 | Improved Fire Blast (5, 3) | T1 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
-| Incinerate (6, 2) | T2 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Incinerate (6, 2) | T2 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Improved Flamestrike (7, 3) | T2 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
 | Pyroblast (8, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Burning Soul (9, 2) | T2 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
+| Burning Soul (9, 2) | T2 | partial | sheet, ability x9 | Partially implemented | recorded-not-computed, no-combat-hook |
 | Fire Vulnerability (10, 3) | T3 | partial | sheet | Missing implementation | pending-rule, no-combat-hook |
 | Improved Fire Ward (11, 2) | T3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Master of Elements (12, 3) | T3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Blast Wave (13, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
-| Critical Mass (14, 3) | T4 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
+| Critical Mass (14, 3) | T4 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook |
 | Hot Streak (15, 2) | T4, needs Pyroblast 1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
-| Fire Power (16, 5) | T5 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
+| Fire Power (16, 5) | T5 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook |
 | Combustion (17, 1) | T6, needs Critical Mass 3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 
 ### Frost
@@ -538,13 +586,13 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Frost Warding (18, 2) | T0 | partial | sheet | Missing implementation | pending-rule, recorded-not-computed, no-combat-hook |
-| Improved Frostbolt (19, 5) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
-| Elemental Precision (20, 3) | T0 | partial | sheet, ability x14 | Implemented but unverified | no-combat-hook |
-| Piercing Ice (21, 3) | T1 | partial | sheet, ability x5 | Implemented but unverified | no-combat-hook |
+| Improved Frostbolt (19, 5) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
+| Elemental Precision (20, 3) | T0 | partial | sheet, ability x14 | Verified and functioning | no-combat-hook |
+| Piercing Ice (21, 3) | T1 | partial | sheet, ability x5 | Verified and functioning | no-combat-hook |
 | Frostbite (22, 3) | T1 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Improved Frost Nova (23, 2) | T1 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
 | Permafrost (24, 3) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
-| Ice Shards (25, 5) | T2 | partial | sheet, ability x5 | Implemented but unverified | no-combat-hook |
+| Ice Shards (25, 5) | T2 | partial | sheet, ability x5 | Verified and functioning | no-combat-hook |
 | Cold Snap (26, 1) | T2 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Improved Blizzard (27, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Arctic Reach (28, 2) | T3 | partial | sheet, ability x3 | Partially implemented | recorded-not-computed, no-combat-hook |
@@ -564,12 +612,12 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Suppression (337, 5) | T0 | partial | sheet, ability x12 | Implemented but unverified | no-combat-hook |
-| Improved Corruption (338, 5) | T0 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Corruption (338, 5) | T0 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Improved Curse of Weakness (339, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Resilient Shadows (340, 3) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook, custom-id-range |
-| Improved Life Tap (341, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
+| Improved Life Tap (341, 2) | T1 | partial | sheet | Verified and functioning | planner-estimate-only, no-combat-hook |
 | Improved Drains (342, 2) | T1 | partial | sheet, hook | Implemented but unverified | recorded-not-computed, custom-id-range |
-| Improved Curse of Agony (343, 3) | T2 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Curse of Agony (343, 3) | T2 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Fel Concentration (344, 2) | T2 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Curse of Exhaustion (345, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Grim Reach (346, 2) | T3 | partial | sheet, ability x12 | Implemented but unverified | no-combat-hook |
@@ -579,7 +627,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Siphon Life (350, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Improved Curse of Exhaustion (351, 2) | T4, needs Curse of Exhaustion 1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Malediction (352, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
-| Shadow Mastery (353, 5) | T5 | partial | sheet, ability x10 | Implemented but unverified | no-combat-hook |
+| Shadow Mastery (353, 5) | T5 | partial | sheet, ability x10 | Verified and functioning | no-combat-hook |
 | Dark Harvest (354, 1) | T6, needs Shadow Mastery 5 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 
 ### Demonology
@@ -610,20 +658,20 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Shadow Vulnerability (321, 5) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Cataclysm (322, 5) | T0 | partial | sheet, ability x8 | Implemented but unverified | no-combat-hook |
+| Cataclysm (322, 5) | T0 | partial | sheet, ability x8 | Verified and functioning | no-combat-hook |
 | Demonic Swiftness (323, 2) | T1 | partial | sheet, pet | Missing implementation | unattached-scope, no-combat-hook, custom-id-range |
-| Bane (324, 5) | T1 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
+| Bane (324, 5) | T1 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Aftermath (325, 3) | T1 | partial | sheet, ability x1 | Partially implemented | pending-rule, planner-estimate-only, no-combat-hook |
 | Intensity (326, 2) | T2 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Shadowburn (327, 1) | T2 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
-| Devastation (328, 5) | T2 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
+| Devastation (328, 5) | T2 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook |
 | Pyroclasm (329, 2) | T3, needs Intensity 2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Destructive Reach (330, 2) | T3 | partial | sheet, ability x8 | Partially implemented | recorded-not-computed, no-combat-hook |
-| Improved Searing Pain (331, 5) | T3 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Searing Pain (331, 5) | T3 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Improved Soul Fire (332, 2) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
-| Improved Immolate (333, 5) | T4 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
-| Ruin (334, 1) | T4, needs Devastation 5 | partial | sheet, ability x9 | Implemented but unverified | no-combat-hook |
-| Emberstorm (335, 5) | T5 | partial | sheet, ability x7 | Implemented but unverified | no-combat-hook |
+| Improved Immolate (333, 5) | T4 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
+| Ruin (334, 1) | T4, needs Devastation 5 | partial | sheet, ability x9 | Verified and functioning | no-combat-hook |
+| Emberstorm (335, 5) | T5 | partial | sheet, ability x7 | Verified and functioning | no-combat-hook |
 | Conflagrate (336, 1) | T6, needs Improved Immolate 5 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 
 ## Druid
@@ -637,14 +685,14 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 | Improved Nature's Grasp (303, 4) | T0, needs Nature's Grasp 1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, prerequisite-in-same-or-higher-tier |
 | Sylvan Blessing (304, 2) | T0 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Guidance of the Dream (305, 3) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook, custom-id-range |
-| Improved Moonfire (306, 2) | T1 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook |
+| Improved Moonfire (306, 2) | T1 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Natural Weapons (307, 3) | T1 | partial | snapshot, sheet, ability x8 | Implemented but unverified | no-combat-hook, custom-id-range |
 | Natural Shapeshifter (308, 3) | T1 | partial | sheet, hook | Implemented but unverified | unattached-scope |
-| Moonfury (309, 3) | T2 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
+| Moonfury (309, 3) | T2 | partial | sheet, ability x6 | Verified and functioning | no-combat-hook |
 | Omen of Clarity (310, 1) | T2, needs Natural Weapons 3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Nature's Reach (311, 2) | T2 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
-| Vengeance (312, 5) | T3, needs Improved Moonfire 2 | partial | sheet, ability x3 | Implemented but unverified | no-combat-hook |
-| Moonglow (313, 3) | T3 | partial | sheet, ability x10 | Implemented but unverified | no-combat-hook |
+| Vengeance (312, 5) | T3, needs Improved Moonfire 2 | partial | sheet, ability x3 | Verified and functioning | no-combat-hook |
+| Moonglow (313, 3) | T3 | partial | sheet, ability x10 | Verified and functioning | no-combat-hook |
 | Owlkin Frenzy (314, 3) | T4, needs Moonkin Form 1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range, prerequisite-in-same-or-higher-tier |
 | Moonkin Form (315, 1) | T4 | partial | snapshot, sheet | Partially implemented | pending-rule, no-combat-hook |
 | Nature's Grace (316, 1) | T4, needs Moonglow 3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
@@ -682,17 +730,17 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 |---|---|---|---|---|---|
 | Improved Mark of the Wild (285, 5) | T0 | partial | sheet | Partially implemented | unattached-scope, sheet-only, no-combat-hook |
 | Furor (286, 5) | T0 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
-| Improved Healing Touch (287, 5) | T1 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Healing Touch (287, 5) | T1 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Nature's Focus (288, 5) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Subtlety (289, 5) | T1 | partial | sheet, ability x8 | Implemented but unverified | no-combat-hook |
 | Swiftmend (290, 1) | T2 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Genesis (291, 3) | T2 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
 | Reflection (292, 3) | T2 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
-| Gift of Nature (293, 5) | T3 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
-| Tranquil Spirit (294, 5) | T3 | partial | sheet, ability x3 | Implemented but unverified | no-combat-hook |
+| Gift of Nature (293, 5) | T3 | partial | sheet, ability x6 | Verified and functioning | no-combat-hook |
+| Tranquil Spirit (294, 5) | T3 | partial | sheet, ability x3 | Verified and functioning | no-combat-hook |
 | Aessina's Bloom (295, 2) | T4, needs Improved Healing Touch 5 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Nature's Swiftness (296, 1) | T4, needs Genesis 3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Preservation (297, 3) | T4 | partial | sheet | Implemented but unverified | planner-estimate-only, no-combat-hook, custom-id-range |
-| Improved Regrowth (298, 5) | T5, needs Gift of Nature 5 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
+| Improved Regrowth (298, 5) | T5, needs Gift of Nature 5 | partial | sheet, ability x1 | Verified and functioning | no-combat-hook |
 | Improved Tranquility (299, 2) | T5 | partial | sheet, ability x1 | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Tree of Life Form (300, 1) | T6, needs Improved Regrowth 5 | partial | sheet | Missing implementation | pending-rule, no-combat-hook, custom-id-range |

@@ -17,16 +17,19 @@ import {dirname,join} from 'node:path';
 import {getTalentAudit} from '../../docs/sim/core/talent-audits.mjs';
 import {newBuild} from '../../docs/sim/core/builds.mjs';
 import {characterStats} from '../../docs/sim/core/character-stats.mjs';
-import {abilityProfiles,calculateAbilityTalentEffects} from '../../docs/sim/core/talent-calculations.mjs';
+import {abilityProfiles,calculateAbilityTalentEffects,ABILITY_STAT_ALIASES} from '../../docs/sim/core/talent-calculations.mjs';
 import {REFERENCE_RANKS} from '../../docs/sim/core/combat-reference-ranks.mjs';
 import {abilityKey} from '../../docs/sim/core/rotations/registry.mjs';
 import {validateTalents} from '../../docs/sim/core/talents.mjs';
 import {CLASS_OPTIONS} from '../../docs/sim/core/class-options.mjs';
+import {verifyTalentInCombat} from './combat-verification.mjs';
+import {classifyFinding,INTEGRATION_FIXES} from './talent-findings.mjs';
 
 const ROOT=join(dirname(fileURLToPath(import.meta.url)),'..','..');
 export const CLASSES=['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'];
 // Stats read by calculateAbilityTalentEffects (and its aliases). Anything else is recorded but never computed there.
-export const ABILITY_STATS_READ=new Set(['resistReductionPct','rangeIncreaseYards','rangeIncreasePct','threatPct','threatReductionPct','hastePct','absorbPct','damagePct','damageAndHealingPct','healingPct','periodicHealingPct','manaCostReductionPct','castSpeedPct','criticalDamagePct','castTimeReductionSeconds','cooldownReductionSeconds','cooldownReductionMinutes','hit','crit','rageCostReduction','rageEnergyCostReduction','energyCostReduction','cooldownReductionPct','globalCooldownReductionSeconds','durationIncreaseSeconds','durationPct','criticalChance','spellCostReductionPct','pushbackResistancePct']);
+export const ABILITY_STATS_READ=new Set(['resistReductionPct','rangeIncreaseYards','rangeIncreasePct','threatPct','threatReductionPct','hastePct','absorbPct','damagePct','damageAndHealingPct','healingPct','periodicHealingPct','manaCostReductionPct','castSpeedPct','criticalDamagePct','castTimeReductionSeconds','cooldownReductionSeconds','cooldownReductionMinutes','hit','crit','rageCostReduction','rageEnergyCostReduction','energyCostReduction','cooldownReductionPct','globalCooldownReductionSeconds','durationIncreaseSeconds','durationPct','criticalChance','spellCostReductionPct','manaGainPct']);
+const statRead=stat=>ABILITY_STATS_READ.has(stat)||ABILITY_STATS_READ.has(ABILITY_STAT_ALIASES[stat]);
 // Talents whose combat behaviour is verified by a deterministic simulation test in this repository.
 // Each entry names the test that proves it. Add to this list only together with such a test.
 export const VERIFIED_COMBAT_HOOKS={
@@ -174,10 +177,11 @@ export function buildTalentAudit(){
     if(rule.kind==='pending')state='pending';
     else if(['scoped','spell'].includes(rule.kind)){
      const attaches=scopes.some(s=>tags.has(s));
-     state=!attaches?'unattached-scope':!ABILITY_STATS_READ.has(rule.stat)?'recorded-not-computed':'applied-ability-model';
+     state=!attaches?'unattached-scope':!statRead(rule.stat)?'recorded-not-computed':'applied-ability-model';
     }else state=(snapPaths.size||rowPaths.size||petPaths.size)?'applied-sheet':'not-observed';
     return {kind:rule.kind,stat:rule.stat??null,scope:scopes.length?scopes:null,note:rule.kind==='pending'?rule.note:undefined,state};
    });
+   const findings=ruleStates.map((st,i)=>({st,rule:rules[i]})).filter(x=>['recorded-not-computed','unattached-scope'].includes(x.st.state)).map(x=>({stat:x.st.stat,scope:x.st.scope,state:x.st.state,...classifyFinding(c,t.id,x.rule)}));
    const hookFiles=scanHooks(id),testFiles=scanTests(t.name,id);
    const affected=[...abilityHits.entries()].map(([name,s])=>({ability:name,compiledRank:compiled[c]?.has(abilityKey(c,name))??false,changedValues:[...s].sort()})).sort((a,b)=>a.ability.localeCompare(b.ability));
    const compiledAffected=affected.filter(a=>a.compiledRank).map(a=>a.ability);
@@ -200,6 +204,9 @@ export function buildTalentAudit(){
    if(disputed)flags.push('disputed-hint');
    const {issues,notes}=legalityChecks(d,t);
    issues.forEach(x=>flags.push('data-issue: '+x));notes.forEach(x=>flags.push(x));
+   const cv=verifyTalentInCombat(c,t,audit);
+   if(cv.status==='mismatch')flags.push('combat-result-differs-from-rule');
+   findings.filter(f=>f.disposition==='unclassified').forEach(()=>flags.push('unclassified-finding'));
    let classification;
    if(applied===0&&!hookFiles.length)classification='missing';
    else if(applied===0)classification='implemented-unverified';
@@ -207,6 +214,9 @@ export function buildTalentAudit(){
    else if(snapPaths.size>0&&cov.status==='sheet'&&['proportional-to-published-parameter','proportional-within-rounding'].includes(scaling))classification='verified-functioning';
    else classification='implemented-unverified';
    if(VERIFIED_COMBAT_HOOKS[id]&&unapplied===0&&hookFiles.length)classification='verified-functioning';
+   // Compiled-combat comparison: every rule is applied and the compiled action changed by exactly the published amount at every rank.
+   if(cv.status==='confirmed'&&unapplied===0&&applied>0)classification='verified-functioning';
+   if(cv.status==='mismatch')classification='conflicting-or-disputed';
    rows.push({
     classId:c,tree:tree(t.tree),treeIndex:t.tree,id:t.id,name:t.name,spellIds:t.spellIds,maxRanks:t.maxRanks,
     tier:t.row,column:t.column,pointsRequiredInTree:t.row*5,
@@ -216,6 +226,8 @@ export function buildTalentAudit(){
     observed:{snapshotPaths:[...snapPaths].sort(),sheetRows:[...rowPaths].sort(),petPaths:[...petPaths].sort(),affectedAbilities:affected,rankScaling:scaling,variants:[...observedVariants]},
     combatHookFiles:hookFiles,existingTestFiles:testFiles,
     verifiedCombatTest:VERIFIED_COMBAT_HOOKS[id]??null,
+    combatVerification:{status:cv.status,reason:cv.reason??null,fieldsChecked:cv.statsChecked,abilitiesChecked:[...new Set(cv.abilities.filter(a=>a.checks).map(a=>a.ability))]},
+    findings,
     reachesCombatInput:reachesCombat,
     classification,disputedHint:disputed,flags
    });
@@ -239,7 +251,17 @@ export function summarise(rows){
  return classes;
 }
 
-const LABEL={'verified-functioning':'Verified and functioning','implemented-unverified':'Implemented but unverified','partial':'Partially implemented','missing':'Missing implementation'};
+export function summariseFindings(rows){
+ const byState={},byDisposition={},byDimension={};let total=0;
+ for(const r of rows)for(const f of r.findings){
+  total++;byState[f.state]=(byState[f.state]||0)+1;byDisposition[f.disposition]=(byDisposition[f.disposition]||0)+1;byDimension[f.dimension]=(byDimension[f.dimension]||0)+1;
+ }
+ const sort=o=>Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])));
+ return {total,byState:sort(byState),byDisposition:sort(byDisposition),byDimension:sort(byDimension),
+  combatVerification:rows.reduce((o,r)=>{o[r.combatVerification.status]=(o[r.combatVerification.status]||0)+1;return o;},{})};
+}
+
+const LABEL={'conflicting-or-disputed':'Conflicting or disputed','verified-functioning':'Verified and functioning','implemented-unverified':'Implemented but unverified','partial':'Partially implemented','missing':'Missing implementation'};
 export function markdown(report){
  const {rows,summary,unknownHookIds}=report,out=[];
  const total=k=>rows.filter(r=>r.classification===k).length;
@@ -255,7 +277,9 @@ export function markdown(report){
   '| Verified and functioning | Every rule is applied, the effect scales in proportion to the published per-rank parameter, and it reaches combat input (sheet/snapshot), or a deterministic combat test is named in the report |',
   '| Implemented but unverified | An effect or hook exists, but numerics are not verified against the published parameters or it only reaches the ability estimates |',
   '| Partially implemented | Some rules are applied and others are pending, unattached to any ability, recorded but never computed, or not observed |',
-  '| Missing implementation | No rule has an observable effect and no combat hook exists |','',
+  '| Missing implementation | No rule has an observable effect and no combat hook exists |',
+  '| Conflicting or disputed | The compiled combat action changed by an amount that differs from the published rule |','',
+  'A talent whose rules are all ability-scoped is also compiled with and without the talent at every rank (`tools/sim/combat-verification.mjs`); if every compared field (cast time, cost, cooldown, damage or healing multiplier, crit chance, crit multiplier, miss chance, Life Tap mana factor) changes by exactly the published amount, it is counted as verified.','',
   '## Totals','','| Classification | Talents |','|---|---|',
   ...Object.entries(LABEL).map(([k,v])=>`| ${v} | ${total(k)} |`),
   `| Total | ${rows.length} |`,'',
@@ -267,6 +291,10 @@ export function markdown(report){
  const meaning={'pending-rule':'A rule is declared pending in the audit data: the mechanic is not implemented','unattached-scope':'The rule\'s scope matches no ability profile, so it can never be applied','recorded-not-computed':'The stat is recorded but never read by the ability calculator','rule-effect-not-observed':'A sheet-type rule produced no observable change','claims-sheet-but-not-observed':'Planner coverage says "sheet" but no output changes','conditional-not-modelled':'Planner coverage says proc or conditional: not modelled','sheet-only':'Changes sheet rows or pet data but no combat snapshot field, hook or compiled ability','planner-estimate-only':'Applied in ability estimates only for abilities with no compiled combat rank','prerequisite-in-same-or-higher-tier':'The prerequisite sits in the same or a higher tier than the talent (an OctoWoW layout feature; acyclic and enforced by validateTalents)','scaling-non-monotonic':'Observed effect does not grow with rank','no-combat-hook':'No combat module reads this talent by ID','scaling-differs-from-parameter':'Observed scaling differs from the published per-rank parameter','custom-id-range':'Spell IDs in the custom OctoWoW range: no vanilla reference','disputed-hint':'Notes mention a conflict or disputed source'};
  const flagCount={};for(const r of rows)for(const f of r.flags)if(!f.startsWith('data-issue'))flagCount[f]=(flagCount[f]||0)+1;
  for(const [f,m] of Object.entries(meaning))out.push(`| ${f} | ${flagCount[f]||0} | ${m} |`);
+  const fs=report.findingSummary;
+ out.push('','## Unapplied rules: disposition','',`${fs.total} rules are recorded but not applied by the ability calculator (${Object.entries(fs.byState).map(([k,v])=>k+' '+v).join(', ')}). Each has a recorded disposition in \`tools/sim/talent-findings.mjs\`; none is approximated.`,'','| Disposition | Rules |','|---|---|',...Object.entries(fs.byDisposition).map(([k,v])=>`| ${k} | ${v} |`),'','| Dimension | Rules |','|---|---|',...Object.entries(fs.byDimension).map(([k,v])=>`| ${k} | ${v} |`));
+ out.push('','## Integration defects fixed','');
+ for(const f of report.integrationFixes)out.push(`- **${f.name}** (${f.classId} ${f.talentId}): ${f.defect} Fix: ${f.fix} Test: \`${f.test}\`.`);
  if(unknownHookIds.length)out.push('',`Combat code reads talent IDs that match no talent: ${unknownHookIds.join(', ')}.`);
  out.push('','## Verified combat behaviour (deterministic tests)','');
  for(const [id,why] of Object.entries(VERIFIED_COMBAT_HOOKS))out.push(`- Talent ${id}: ${why}`);
@@ -288,7 +316,7 @@ export function buildReport(){
  const {rows,unknownHookIds}=buildTalentAudit();
  return {schema:'octosim-talent-audit-v1',talentCount:rows.length,treeCount:new Set(rows.map(r=>r.classId+':'+r.treeIndex)).size,
   note:'Observed evidence only. UI support is separate from combat implementation; see TALENT-AUDIT.md.',
-  summary:summarise(rows),unknownHookIds,rows};
+  summary:summarise(rows),findingSummary:summariseFindings(rows),integrationFixes:INTEGRATION_FIXES,unknownHookIds,rows};
 }
 
 if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){

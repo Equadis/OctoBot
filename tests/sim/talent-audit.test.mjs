@@ -126,19 +126,20 @@ test('per-class coverage report: counts add up and agree with the rows',()=>{
  assert.deepEqual(summarise(committed.rows),committed.summary);
 });
 
-test('talents that the sheet does not apply are never presented as verified (UI support is not combat support)',()=>{
+test('planner coverage alone never makes a talent verified: partial or conditional planner talents need compiled-combat or test evidence',()=>{
  for(const r of committed.rows){
-  if(r.plannerCoverage.status!=='sheet')assert.notEqual(r.classification,'verified-functioning',`${r.classId}:${r.name} is conditional or partial in the planner`);
+  if(r.plannerCoverage.status!=='sheet'&&r.classification==='verified-functioning')assert.ok(r.combatVerification.status==='confirmed'||r.verifiedCombatTest,`${r.classId}:${r.name} is conditional or partial in the planner and has no combat evidence`);
   if(r.flags.includes('sheet-only')||r.flags.includes('planner-estimate-only'))assert.ok(!r.reachesCombatInput,r.name);
  }
 });
 
-test('verified talents reach the combat input with effect proportional to the published per-rank parameter',()=>{
+test('verified talents have observed combat evidence: a snapshot channel with proportional scaling, a named test, or an exact compiled-action match',()=>{
  const verified=committed.rows.filter(r=>r.classification==='verified-functioning');
- assert.ok(verified.length>=10);
+ assert.ok(verified.length>=60);
  for(const r of verified){
-  assert.ok(r.observed.snapshotPaths.length>0,r.name);
-  if(!r.verifiedCombatTest)assert.ok(['proportional-to-published-parameter','proportional-within-rounding'].includes(r.observed.rankScaling),`${r.name} ${r.observed.rankScaling}`);
+  const compiled=r.combatVerification.status==='confirmed';
+  assert.ok(r.observed.snapshotPaths.length>0||compiled||r.verifiedCombatTest,`${r.classId}:${r.name} has no observed combat evidence`);
+  if(!r.verifiedCombatTest&&!compiled)assert.ok(['proportional-to-published-parameter','proportional-within-rounding'].includes(r.observed.rankScaling),`${r.name} ${r.observed.rankScaling}`);
  }
 });
 
