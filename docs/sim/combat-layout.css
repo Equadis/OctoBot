@@ -210,7 +210,6 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 /* Left rail: just outside the content column on wide screens (16px clear of the page edge of the content), 10px from the window edge otherwise */
 .planner-view .actions{left:max(10px,calc((100vw - 1180px)/2 - 148px))}
 
-<<<<<<< ours
 /* Independent, accessible disclosure arrows for each character stat group. */
 .planner-view .character-stat-group>.character-stat-toggle::-webkit-details-marker{display:none}
 .planner-view .character-stat-group>.character-stat-toggle::before{content:'▸';display:inline-block;margin-right:5px;color:#9db1c9;transition:transform .15s ease}
@@ -225,15 +224,11 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 @media(prefers-reduced-motion:reduce){.planner-view .character-stat-group>.character-stat-toggle::before{transition:none}}
 
 #item-dialog .item-row:has(.q0) img,#item-dialog .item-preview:has(.q0) img{border-color:var(--quality-0)}
-=======
+
 /* Talent tree backgrounds (Blizzard talent-frame artwork), dimmed so nodes and text stay readable. */
 .planner-view .talent-tree.has-bg{position:relative;isolation:isolate;overflow:hidden;background:#172230}
 .planner-view .talent-tree.has-bg::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(rgba(14,22,33,.42),rgba(14,22,33,.42)),var(--tree-bg) center top/cover no-repeat}
 
-/* Gear slot columns match the Dressing Room (114px). */
-@media(min-width:561px){.planner-view .paperdoll{grid-template-columns:114px minmax(0,1fr) 114px;column-gap:12px}}
-
-/* Give the talents panel more room: the gear column only needs its slot columns plus a compact stats column. */
+/* Gear slot columns match the Dressing Room (114px); talents panel gets more room. */
+@media(min-width:561px){.planner-view .paperdoll{grid-template-columns:114px minmax(0,1fr) 114px;column-gap:8px}}
 @media(min-width:941px){.planner-view .planner-grid{grid-template-columns:minmax(400px,.7fr) minmax(0,1.5fr);gap:14px}}
-@media(min-width:561px){.planner-view .paperdoll{column-gap:8px}}
->>>>>>> theirs
