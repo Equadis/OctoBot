@@ -46,17 +46,30 @@ test('the planner wires refresh and navigation as specified, and never uses loca
  assert.doesNotMatch(code,/rememberPlannerView\([^)]*localStorage\)|rememberedPlannerView\(localStorage\)/);
  assert.match(code,/addEventListener\('pagehide',saveUiState\)|addEventListener\('pagehide', saveUiState\)/);
 });
-test('class tiles are large, equal and artwork backed, and the gear columns share one height',()=>{
+test('class tiles follow the dashboard card layout and the gear columns share one height',()=>{
  const css=read('sim/combat-layout.css'),code=read('sim/planner.mjs');
  assert.match(css,/#class-selection \.class-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\);gap:18px\}/);
- assert.match(css,/\.class-card\.has-art\{[^}]*min-height:210px/);
- assert.match(code,/CLASS_ART = Object\.freeze\(\{ warrior: 0, paladin: 0, hunter: 0, rogue: 0, priest: 0, shaman: 0, mage: 1, warlock: 2, druid: 0 \}\)/);
+ assert.match(code,/card\.append\(element\('span', 'class-card-title', cls\.name\), gameIcon\(`classicon_\$\{cls\.id\}`, 'class-card-icon'\)\)/);
+ assert.match(code,/element\('span', 'class-card-go', 'Open →'\)/);
+ assert.doesNotMatch(code,/Open planner|card-arrow/,'no sub-line and no stray arrow');
+ const home=read('home.css');
+ assert.match(home,/\.home-card-icon\{position:absolute;top:22px;right:24px;display:block;width:64px;height:64px/);
+ assert.match(css,/\.class-card\.art-card \.class-card-icon\{position:absolute;top:22px;right:24px;display:block;width:64px;height:64px/,'same icon size and position as the dashboard');
+ assert.match(css,/\.class-card\.art-card\{display:flex;flex-direction:column;min-height:168px;padding:24px 26px/);
  assert.match(css,/@media\(min-width:1200px\)\{[^}]*\.gear-workspace\{align-items:stretch\}[\s\S]*?contain:size/);
  assert.match(css,/\.character-summary #gear-stats\{flex:1 1 0;min-height:0;[^}]*overflow-y:auto/,'stats scroll inside the class panel');
  assert.match(css,/\.gear-preview\{overflow-y:auto/);
- assert.match(css,/#item-selector \.item-results\{background:#152030;[^}]*scrollbar-color:#66758c #1b293c/,'item list matches the Dressing Room');
+ assert.match(css,/#item-selector \.item-results\{background:var\(--bg-control\);[^}]*scrollbar-color:#66758c #1b293c/,'item list matches the Dressing Room');
  assert.match(css,/\.slot \.item-name\.ah-name-clip\{[^}]*white-space:nowrap/);
  assert.match(code,/item-name ah-name-clip/);
+});
+test('class tiles and talent trees share one artwork treatment: fills the box, blurred on its own layer, overlay on top',()=>{
+ const css=read('sim/combat-layout.css'),code=read('sim/planner.mjs');
+ assert.match(css,/\.art-card::before\{content:"";position:absolute;inset:calc\(-1 \* var\(--art-bleed,10px\)\);z-index:-2;background:var\(--art\) var\(--art-pos,50% 30%\)\/cover no-repeat;filter:blur\(var\(--art-blur,3px\)\)/);
+ assert.match(css,/\.art-card::after\{content:"";position:absolute;inset:0;z-index:-1;background:var\(--art-overlay/);
+ assert.match(code,/section\.classList\.add\('art-card'\)/);
+ assert.match(code,/card\.classList\.add\('art-card'\)/);
+ for(const cls of ['druid','hunter','mage','paladin','priest','rogue','shaman','warlock','warrior'])assert.match(code,new RegExp(cls+': \\['));
 });
 test('Dressing Room Reset all shares the navigation row',()=>{
  const html=read('outfitter/index.html');

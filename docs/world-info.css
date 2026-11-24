@@ -95,7 +95,7 @@ section{min-width:0}
 .calendar-title .muted{margin:9px 0 0}
 .calendar-controls{display:flex;align-items:center;gap:7px}
 .calendar-controls strong{font-size:12px;font-weight:500;color:#d9e1ec;min-width:132px;text-align:center}
-button{font:inherit;border:1px solid var(--line);border-radius:4px;background:#233044;color:#c5d1e0;padding:7px 11px;cursor:pointer;font-size:12px}
+button{font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);color:#c5d1e0;padding:7px 11px;cursor:pointer;font-size:12px}
 button:hover{border-color:var(--gold);color:var(--gold)}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .calendar-controls button{min-width:32px}
@@ -170,7 +170,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .world-grid.two.bottom-grid{grid-template-columns:fit-content(480px) minmax(0,1fr);align-items:start}
 @media(max-width:780px){.world-grid.two.bottom-grid{grid-template-columns:minmax(0,1fr)}}
 .heading-actions{display:flex;align-items:center;gap:8px;flex:none}
-.panel-arrow{width:28px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:#182333;border:1px solid #39465a;border-radius:4px;color:#a0b1c8;cursor:pointer}
+.panel-arrow{width:28px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-control);border:1px solid #39465a;border-radius:4px;color:#a0b1c8;cursor:pointer}
 .panel-arrow:hover,.panel-arrow:focus-visible{border-color:#9d8a35;color:#f4d65c}
 .panel-arrow span{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor}
 .panel-arrow[aria-expanded=true] span{transform:rotate(180deg)}
@@ -264,12 +264,6 @@ small:empty,.evidence:empty{display:none}
 .sound-note{margin:10px 0 0;font-size:12px;color:#6fe08f}
 .sound-note:empty{display:none}
 .sound-fine{margin:10px 0 0;font-size:11px;color:#8898ac;line-height:1.5}
-
-/* Loading states: trailing dots appear one by one (nothing, . .. ...) without changing the element's text.
-   The three dots are always there but clipped to a width that grows in four steps, which animates reliably everywhere. */
-.dots::after{content:"...";display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:0;animation:loading-dots 1.2s steps(4,end) infinite}
-@keyframes loading-dots{to{width:1.13em}}
-@media (prefers-reduced-motion:reduce){.dots::after{animation:none;width:auto}}
 
 /* Edge of Madness: countdown urgency changes as its next rotation approaches. */
 .zg-panel #eom-countdown.rotation-safe{color:#78dfa6}

@@ -13,7 +13,7 @@ import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseT
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi } from './ui-state.mjs?v=1';
 import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
-import { itemPicker } from './item-picker.mjs?v=20261125-refine1';
+import { itemPicker } from './item-picker.mjs?v=20261125-theme1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
@@ -73,21 +73,18 @@ function gameIcon(name, className = '', source = null) {
 }
 
 // Class tile artwork reuses the talent tree backgrounds (one signature tree per class); they are small WebP files, cached after first use.
-const CLASS_ART = Object.freeze({ warrior: 0, paladin: 0, hunter: 0, rogue: 0, priest: 0, shaman: 0, mage: 1, warlock: 2, druid: 0 });
+const CLASS_ART = Object.freeze({ warrior: [0, '50% 22%'], paladin: [0, '50% 28%'], hunter: [1, '50% 45%'], rogue: [1, '50% 40%'], priest: [0, '50% 30%'], shaman: [0, '50% 30%'], mage: [1, '50% 40%'], warlock: [2, '50% 35%'], druid: [0, '50% 25%'] });
 function createClasses() {
   if ($('class-grid').childElementCount) return;
   for (const cls of CLASSES) {
     const card = element(cls.available ? 'a' : 'div', `class-card${cls.available ? ' available' : ' planned'}`);
     card.style.setProperty('--class-colour', cls.colour);
-    if (cls.id in CLASS_ART) { card.classList.add('has-art'); card.style.setProperty('--tile-art', `url("talent-backgrounds/${cls.id}-${CLASS_ART[cls.id]}.webp")`); }
+    if (cls.id in CLASS_ART) { const [tree, position] = CLASS_ART[cls.id]; card.classList.add('art-card'); card.style.setProperty('--art', `url("talent-backgrounds/${cls.id}-${tree}.webp")`); card.style.setProperty('--art-pos', position); }
     if (cls.available) card.href = `?class=${cls.id}`;
     else card.setAttribute('aria-disabled', 'true');
-    const title = element('div', 'class-card-title');
-    title.append(element('strong', '', cls.name));
-    const text = element('div', 'class-card-copy');
-    text.append(title, element('span', 'class-card-note', cls.available ? 'Open planner' : 'Not available yet'));
-    card.append(gameIcon(`classicon_${cls.id}`, 'class-card-icon'), text);
-    if (cls.available) card.append(element('span', 'card-arrow', '→'));
+    // Same arrangement as the dashboard cards: name top left, icon top right, "Open →" bottom right.
+    card.append(element('span', 'class-card-title', cls.name), gameIcon(`classicon_${cls.id}`, 'class-card-icon'));
+    if (cls.available) card.append(element('span', 'class-card-go', 'Open →'));
     $('class-grid').append(card);
   }
 }
@@ -225,8 +222,8 @@ function createTalents() {
   for (const tree of data.trees) {
     const section = element('section', 'talent-tree');
     section.setAttribute('aria-label', `${tree.name} talents`);
-    section.classList.add('has-bg');
-    section.style.setProperty('--tree-bg', `url("talent-backgrounds/${classId}-${tree.index}.webp")`);
+    section.classList.add('art-card');
+    section.style.setProperty('--art', `url("talent-backgrounds/${classId}-${tree.index}.webp")`);
     const heading = element('div', 'tree-heading');
     const total = element('span'); total.id = `tree-total-${tree.index}`;
     heading.append(element('h3', '', tree.name), total);

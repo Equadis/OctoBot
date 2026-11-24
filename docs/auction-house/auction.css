@@ -27,12 +27,12 @@
 .ah-actions{flex-direction:row;gap:8px;margin-left:auto}
 .ah-realm-actions{align-items:flex-end;flex-wrap:wrap}.ah-realm-actions #ah-realm{min-width:150px}
 @media(max-width:560px){.ah-realm-actions>.ah-field{flex:1 1 100%}.ah-realm-actions #ah-realm{width:100%;min-width:0}}
-.ah-filters input:not([type=checkbox]),.ah-filters select,.ah-btn{box-sizing:border-box;height:38px;min-height:38px;padding:0 12px;background:#182333;border:1px solid var(--line);border-radius:4px;color:#dce5ee;font:inherit;font-size:12px}
+.ah-filters input:not([type=checkbox]),.ah-filters select,.ah-btn{box-sizing:border-box;height:38px;min-height:38px;padding:0 12px;background:var(--bg-control);border:1px solid var(--line);border-radius:4px;color:#dce5ee;font:inherit;font-size:12px}
 .ah-filters input:not([type=checkbox]){width:100%;min-width:90px}
 .ah-filters select{min-width:150px;max-width:100%}
 .ah-filters select:disabled,.ah-filters input:disabled{opacity:.45}
 .ah-filters input:focus-visible,.ah-filters select:focus-visible,.ah-btn:focus-visible,.tool-btn:focus-visible,.ah-star:focus-visible,.ah-expand:focus-visible{outline:2px solid #9d8a35;outline-offset:1px}
-.ah-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#1f2b3b;color:#bec9d8;cursor:pointer;white-space:nowrap}
+.ah-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--bg-control);color:#bec9d8;cursor:pointer;white-space:nowrap}
 .ah-btn:hover:not(:disabled),.ah-btn:focus-visible{background:#2b332e;border-color:var(--gold);color:#f4d65c}
 .ah-btn[aria-pressed=true],.ah-btn[aria-expanded=true]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
 .ah-btn:disabled{opacity:.4;cursor:default}
@@ -54,7 +54,7 @@
 .ah-hint{font-size:12px;line-height:1.6;color:#9fadbf;margin:10px 0}
 .ah-saved{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .ah-chips{display:flex;flex-wrap:wrap;gap:6px}
-.ah-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:4px;background:#1f2b3b;font-size:12px;overflow:hidden}
+.ah-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);font-size:12px;overflow:hidden}
 .ah-chip button{background:none;border:0;color:#bec9d8;font:inherit;cursor:pointer;padding:0 10px;height:30px}
 .ah-chip button:hover,.ah-chip button:focus-visible{color:#f4d65c;background:#2b332e}
 .ah-chip .ah-chip-remove{border-left:1px solid var(--line);padding:0 8px;color:#98a6b8}
@@ -127,7 +127,7 @@
 .ah-stats div{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
 .ah-stats dt{font-size:11px;color:#9fadbf;margin:0 0 4px}.ah-stats dd{margin:0;font-size:13px;font-weight:600;color:var(--gold)}
 .ah-stats dd small{font-weight:400;color:#98a6b8;display:block;margin-top:2px}
-.ah-detail details{border:1px solid var(--line);border-radius:4px;margin:8px 0;background:#182333}
+.ah-detail details{border:1px solid var(--line);border-radius:4px;margin:8px 0;background:var(--bg-control)}
 .ah-detail summary{cursor:pointer;padding:9px 12px;font-size:12px;font-weight:600;color:#dce3ed}
 .ah-detail summary:hover,.ah-detail summary:focus-visible{color:#f4d65c}
 .ah-detail details>div{padding:0 12px 12px;overflow:auto}
@@ -177,7 +177,7 @@
 .ah-scroll>table>tbody>tr.ah-entry>td{overflow:hidden;text-overflow:ellipsis}
 .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){overflow:visible}
 .ah-detail-inner .ah-db-link{display:inline-block;margin:8px 0 4px;color:#e8c67c;font-size:12px}
-.ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#1f2b3b;border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
+.ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--bg-panel);border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
 .ah-roll-detail strong{color:#efce47}
 .ah-roll-detail span{color:#9fe0bd}
 .ah-roll-detail small{color:#8995a6;font-size:10px;font-weight:400;line-height:1.4;width:100%}
