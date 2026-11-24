@@ -10,7 +10,7 @@ main,.planner-view main{width:100%;max-width:1180px;margin:0 auto}
 .site-header h1,.planner-view .site-header h1{color:#e5e9ef;font-size:28px;font-weight:500;line-height:30px;margin:5px 0 0}
 .site-header .header-status{display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:nowrap;flex:none}
 .site-header .badge,.planner-view .site-header .badge{font-size:10px;line-height:14px;letter-spacing:.05em;color:#e9cc67;background:#302c21;padding:7px 10px;border-radius:4px;white-space:nowrap}
-.page-nav,.planner-view .page-nav{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin:18px 0 22px}
+.page-nav,.planner-view .page-nav{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin:18px 0 18px;padding-bottom:18px;border-bottom:1px solid var(--line)}
 .page-nav a,.planner-view .page-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:145px;min-height:38px;padding:9px 16px;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);color:#bec9d8;font-size:12px;line-height:18px;text-decoration:none}
 .page-nav a[aria-current=page],.planner-view .page-nav a[aria-current=page]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
 .page-nav a:hover,.page-nav a:focus-visible{background:#2b332e;border-color:var(--gold);color:#f4d65c}
@@ -139,11 +139,12 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 @media(prefers-reduced-motion:reduce){.dots::after{animation:none;clip-path:none}}
 
 /* Shared action toolbar (Gear Planner and Dressing Room): actions on the left, status message and Reset all on the right. */
-.app-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 0 18px}
+.app-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 0 18px;min-height:34px}
 .app-toolbar-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:0 1 auto;min-width:0}
 .app-toolbar-status{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:1 1 0;min-width:0;margin-left:auto}
 .app-toolbar-status [role=status]{margin:0;min-width:0;font-size:11px;text-align:right;overflow-wrap:anywhere}
 .app-toolbar-status [role=status]:empty{display:none}
+.app-toolbar #feedback{margin:0;min-height:0;padding:0;font-size:11px;line-height:1.35}
 .app-toolbar button,.app-toolbar a.app-btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);color:#c2cddd;font:inherit;font-size:12px;line-height:1.2;text-decoration:none;white-space:nowrap;cursor:pointer}
 .app-toolbar button:hover:not(:disabled),.app-toolbar a.app-btn:hover,.app-toolbar button:focus-visible,.app-toolbar a.app-btn:focus-visible{border-color:var(--gold);color:#f4d65c}
 .app-toolbar .reset-all{flex:none;color:#ff746c;border-color:#88413b;background:#352326}
