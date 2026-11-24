@@ -25,7 +25,7 @@ test('all five character stat groups start expanded and can be independently col
   for(const name of ['Base Stats','Melee','Melee vs Target','Defence','Spell']){
     assert.ok(stats.includes("group('"+name+"'"),'missing '+name+' stats');
   }
-  assert.match(planner,/const collapsedStatGroups = new Set\(\)/);
+  assert.match(planner,/const collapsedStatGroups = new Set\(savedUi\?\.collapsedStats\|\|\[\]\)/);
   assert.match(planner,/element\('details','character-stat-group'\)/);
   assert.match(planner,/section\.open=!collapsedStatGroups\.has\(group\.name\)/);
   assert.match(planner,/element\('summary','character-stat-toggle',group\.name\)/);

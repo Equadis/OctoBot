@@ -33,7 +33,7 @@ test('the preview shows the selected enchant without changing item data',()=>{
  assert.match(picker,/function previewEnchant\(item\)/);
  assert.match(picker,/\$\('item-enchant'\)\.addEventListener\('change',\(\)=>\{[^}]*repaintPreview\(\)/);
  assert.doesNotMatch(picker.slice(picker.indexOf('function paintPreview'),picker.indexOf('async function previewItem')),/details\[[^\]]+\]\s*=/,'the preview never writes to item data');
- assert.match(planner,/openItem\('head'\)/,'a slot is always selected so the selector is never empty');
+ assert.match(planner,/openItem\(startSlot,/);assert.match(planner,/: 'head';/,'a slot is always selected so the selector is never empty');
 });
 test('Buffs & Debuffs start expanded and the tall panel cannot stretch the gaps between the others',()=>{
  assert.doesNotMatch(planner,/starts minimised/);

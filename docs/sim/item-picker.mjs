@@ -46,6 +46,15 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   })().finally(()=>pending.delete(item.id)));
   return pending.get(item.id);
  }
+ // Filter state can be saved and restored when the visitor leaves the page and comes back.
+ function filterState(){return {search:$('item-reference').value,sort:$('item-sort').value,quality:$('item-quality').value,direction};}
+ function applyFilters(filters){
+  if(!filters)return;
+  if(typeof filters.search==='string')$('item-reference').value=filters.search.slice(0,200);
+  if([...$('item-sort').options].some(option=>option.value===filters.sort))$('item-sort').value=filters.sort;
+  if([...$('item-quality').options].some(option=>option.value===filters.quality))$('item-quality').value=filters.quality;
+  if(filters.direction==='asc'||filters.direction==='desc'){direction=filters.direction;$('item-direction').textContent=direction==='desc'?'▼':'▲';$('item-direction').setAttribute('aria-label',`Sort direction: ${direction==='desc'?'descending':'ascending'}`);$('item-direction').title=direction==='desc'?'Descending':'Ascending';}
+ }
  function error(message=''){$('item-error').textContent=message;}
  function updateEnchants(){
   const build=selectionBuild(), equipped=build.gear[slot], item=equipped&&items?.find(item=>item.id===equipped.id);
@@ -151,8 +160,9 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  $('item-enchant').addEventListener('change',()=>{const equipped=selectionBuild().gear[slot],item=equipped&&items?.find(item=>item.id===equipped.id);repaintPreview();if(item)selectItem(item,$('item-enchant').value,false);});
  $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);updateEnchants();refreshEquipped();repaintPreview();error();});
   return {
+  filters:filterState,
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
+  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';applyFilters(options.filters);$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
   async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},

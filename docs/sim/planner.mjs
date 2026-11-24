@@ -11,7 +11,9 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
-import { itemPicker } from './item-picker.mjs?v=20261124-inline3';
+import { consumeReload, markInternalReload, clearUi, loadUi, saveUi } from './ui-state.mjs?v=1';
+import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
+import { itemPicker } from './item-picker.mjs?v=20261125-refine1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
@@ -26,9 +28,18 @@ try{
  if(kept.length!==location.search.replace(/^\?/,'').split('&').filter(Boolean).length)history.replaceState(history.state,'',location.pathname+(kept.length?'?'+kept.join('&'):'')+location.hash);
 }catch{}
 // Opening the planner without ?class= always shows the class selection; each class's saved gear (per-class drafts) is untouched.
-const selectedView=plannerView(location.href,null);
+// Moving between OctoBot pages keeps the planner view (sessionStorage); a refresh or a new session opens the class selector.
+// Saved builds live in localStorage and are not affected either way.
+let tabStorage=null;try{tabStorage=sessionStorage;}catch{}
+const reloaded=consumeReload(tabStorage,performance.getEntriesByType?.('navigation')?.[0]?.type);
+const sharedLink=location.hash.startsWith('#build=');
+if(reloaded&&!sharedLink)clearUi(tabStorage);
+const sessionView=reloaded?null:(tabStorage?rememberedPlannerView(tabStorage):null);
+const selectedView=reloaded&&!sharedLink?'classes':plannerView(location.href,sessionView);
 const classId=selectedView==='classes'?'warrior':selectedView;
-try{rememberPlannerView(selectedView,localStorage);}catch{}
+try{if(tabStorage)rememberPlannerView(selectedView,tabStorage);}catch{}
+if(reloaded&&!sharedLink&&selectedView==='classes'){try{history.replaceState(null,'',location.pathname+'?classes');}catch{}}
+const savedUi=selectedView==='classes'||!tabStorage?null:loadUi(tabStorage,classId);
 if(selectedView!=='classes'){
  const canonical=new URL(location.href);if(!canonical.searchParams.has('class')){canonical.searchParams.set('class',classId);history.replaceState(null,'',canonical);}
 }
@@ -39,7 +50,7 @@ let picker, config, settingsControls, swapControls;
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 // Remember folded stat sections while gear, talents and buffs trigger character-sheet rerenders.
-const collapsedStatGroups = new Set();
+const collapsedStatGroups = new Set(savedUi?.collapsedStats||[]);
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -61,11 +72,14 @@ function gameIcon(name, className = '', source = null) {
   return image;
 }
 
+// Class tile artwork reuses the talent tree backgrounds (one signature tree per class); they are small WebP files, cached after first use.
+const CLASS_ART = Object.freeze({ warrior: 0, paladin: 0, hunter: 0, rogue: 0, priest: 0, shaman: 0, mage: 1, warlock: 2, druid: 0 });
 function createClasses() {
   if ($('class-grid').childElementCount) return;
   for (const cls of CLASSES) {
     const card = element(cls.available ? 'a' : 'div', `class-card${cls.available ? ' available' : ' planned'}`);
     card.style.setProperty('--class-colour', cls.colour);
+    if (cls.id in CLASS_ART) { card.classList.add('has-art'); card.style.setProperty('--tile-art', `url("talent-backgrounds/${cls.id}-${CLASS_ART[cls.id]}.webp")`); }
     if (cls.available) card.href = `?class=${cls.id}`;
     else card.setAttribute('aria-disabled', 'true');
     const title = element('div', 'class-card-title');
@@ -122,7 +136,10 @@ function createSlots() {
     const button = element('button');
     button.type = 'button';
     button.setAttribute('aria-label', `Edit ${name}`);
-    const itemName = element('span', 'item-name', 'Empty');
+    // One line only: a name too long for the slot pans sideways, using the Auction House animation.
+    const itemName = element('span', 'item-name ah-name-clip');
+    const itemText = element('span', 'ah-name-text', 'Empty');
+    itemName.append(itemText);
     const copy = element('span', 'slot-copy');
     copy.append(element('span', 'slot-name', name), itemName);
     button.append(gameIcon(SLOT_ICONS[slot], 'slot-icon'), copy);
@@ -139,7 +156,7 @@ function createSlots() {
     if(enchantLabel)attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
     container.dataset.slot = slot;
     container.append(...(enchantLabel?[button, enchantLabel]:[button]));
-    slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
+    slotElements.set(slot, { container, itemName, itemText, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     const extra=['ammo','quiver'].includes(slot);
@@ -261,13 +278,13 @@ function render() {
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, image, enchantLabel }] of slotElements) {
+  for (const [slot, { container, itemName, itemText, image, enchantLabel }] of slotElements) {
     const item = build.gear[slot];
     const metadata = item && picker?.lookup(item.id);
-    itemName.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
+    itemText.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
     image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
-    if (metadata) itemName.className = `item-name q${metadata.quality}`;
-    else itemName.className = 'item-name';
+    if (metadata) itemName.className = `item-name ah-name-clip q${metadata.quality}`;
+    else itemName.className = 'item-name ah-name-clip';
     const enchant=ENCHANTS.find(enchant=>enchant.id===item?.enchantId);
     if(enchantLabel){
     enchantLabel.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
@@ -316,6 +333,7 @@ function render() {
     return section;
   }));
   $('gear-stats').title=sheet.sourceNote;config?.refreshCompatibility();
+  scheduleScrollingNames($('equipment'));
 }
 
 function talentTooltip(talent) {
@@ -359,10 +377,43 @@ function markActiveSlot(active) {
   for (const [slot, { container }] of slotElements) container.classList.toggle('slot-active', slot === active);
 }
 
-function openItem(slot) {
+let activeSlot = 'head';
+function openItem(slot, options = {}) {
+  activeSlot = slot;
   markActiveSlot(slot);
-  picker.open(slot);
+  picker.open(slot, options);
 }
+
+// Remember what the visitor was looking at so that leaving for another OctoBot page and coming back feels unchanged.
+function captureUi() {
+  const panels = {}, groups = {};
+  for (const card of document.querySelectorAll('.planner-column > section.card')) panels[card.id] = !$(`${card.id}-body`)?.hidden;
+  for (const body of document.querySelectorAll('.buff-group-body')) groups[body.id.replace(/^buff-group-/, '')] = !body.hidden;
+  return {
+    slot: activeSlot, filters: picker?.filters?.(), panels, groups,
+    optionsOpen: document.querySelector('.character-options')?.open ?? null,
+    collapsedStats: [...collapsedStatGroups], scrollY: window.scrollY, itemScroll: $('item-results')?.scrollTop || 0,
+  };
+}
+function restoreUi(state) {
+  if (!state) return;
+  for (const [id, open] of Object.entries(state.panels)) {
+    const body = $(`${id}-body`), toggle = body && document.querySelector(`[aria-controls="${id}-body"]`);
+    if (body && toggle) { body.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); }
+  }
+  for (const [id, open] of Object.entries(state.groups)) {
+    const body = document.getElementById(`buff-group-${id}`), toggle = body && document.querySelector(`[aria-controls="buff-group-${id}"]`);
+    if (body && toggle) { body.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); }
+  }
+  if (state.optionsOpen !== null && document.querySelector('.character-options')) document.querySelector('.character-options').open = state.optionsOpen;
+  scheduleScrollingNames(document);
+  // Scroll positions are restored once the page and the item list have had time to lay out.
+  for (const delay of [150, 700]) setTimeout(() => { window.scrollTo(0, state.scrollY); if (delay > 150 && $('item-results')) $('item-results').scrollTop = state.itemScroll; }, delay);
+}
+function saveUiState() { if (tabStorage && selectedView !== 'classes' && picker) saveUi(tabStorage, classId, captureUi()); }
+if (typeof ResizeObserver === 'function') new ResizeObserver(() => scheduleScrollingNames($('equipment'))).observe($('equipment'));
+window.addEventListener('pagehide', saveUiState);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveUiState(); });
 
 async function showSavedBuilds(){
   const entries=await library.list();
@@ -556,7 +607,9 @@ async function initialise() {
       catch (error) { invalidShare = error.message; }
     }
     applyBuild(build, message);
-    openItem('head');
+    const startSlot = savedUi?.slot && SLOTS[savedUi.slot] && slotAllowed(classId, savedUi.slot) ? savedUi.slot : 'head';
+    openItem(startSlot, savedUi?.filters ? { filters: savedUi.filters } : {});
+    restoreUi(savedUi);
     if (invalidShare) feedback(invalidShare, true);
     $('planner').hidden = false;
   } catch (error) {
@@ -567,11 +620,12 @@ async function initialise() {
 
 function restoreNavigation() {
   if (plannerView(location.href, selectedView) !== selectedView) {
+    markInternalReload(tabStorage);
     location.reload();
     return;
   }
   // Back/forward cache restores do not re-run this module.
-  try{rememberPlannerView(selectedView,localStorage);}catch{}
+  try{if(tabStorage)rememberPlannerView(selectedView,tabStorage);}catch{}
 }
 window.addEventListener('hashchange', restoreNavigation);
 window.addEventListener('popstate', restoreNavigation);

@@ -298,3 +298,40 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view .gear-character .character-summary{padding:10px 4px;gap:8px}
 .planner-view .gear-character .character-summary #gear-stats{width:100%;margin-top:6px}
 .planner-view .gear-character .gear-stat{gap:4px}
+
+/* ===== Class selector: large character-selection tiles with class artwork ===== */
+#class-selection .class-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.class-card.has-art{position:relative;isolation:isolate;overflow:hidden;min-height:210px;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:4px;padding:18px 20px;border-radius:8px;background:#141d2b;transition:border-color .15s ease,box-shadow .15s ease}
+.class-card.has-art::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(9,14,24,.2) 0%,rgba(9,14,24,.86) 80%),var(--tile-art) center 28%/cover no-repeat;transition:transform .3s ease}
+.class-card.has-art.available{padding-right:20px}
+.class-card.has-art .class-card-icon{position:absolute;top:16px;left:18px;width:62px;height:62px;border-radius:6px;border:2px solid var(--class-colour,#63718a);box-shadow:0 3px 12px #0008}
+.class-card.has-art .class-card-copy{width:100%;flex:none;margin-top:auto}
+.class-card.has-art .class-card-title strong{font-size:26px;letter-spacing:.01em;text-shadow:0 2px 8px #000a}
+.class-card.has-art .class-card-note{margin-top:3px;font-size:12px;color:#c3cddd}
+.class-card.has-art .card-arrow{top:18px;right:18px;font-size:18px}
+.class-card.has-art:hover,.class-card.has-art:focus-visible{border-color:var(--class-colour,#e5c342);box-shadow:0 6px 22px #0007,0 0 0 1px var(--class-colour,#e5c342) inset}
+.class-card.has-art:hover::before,.class-card.has-art:focus-visible::before{transform:scale(1.04)}
+@media(prefers-reduced-motion:reduce){.class-card.has-art::before,.class-card.has-art{transition:none}.class-card.has-art:hover::before,.class-card.has-art:focus-visible::before{transform:none}}
+@media(max-width:780px){#class-selection .class-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.class-card.has-art{min-height:170px;padding:14px}.class-card.has-art .class-card-title strong{font-size:21px}.class-card.has-art .class-card-icon{width:50px;height:50px;top:12px;left:12px}}
+@media(max-width:480px){#class-selection .class-grid{grid-template-columns:minmax(0,1fr)}.class-card.has-art{min-height:140px}}
+
+/* ===== Gear workspace: one shared height, set by the character column; nothing else may stretch it ===== */
+@media(min-width:1200px){
+ .planner-view .gear-workspace{align-items:stretch}
+ .planner-view .gear-selector,.planner-view .gear-preview{position:static;height:auto;min-height:0;contain:size}
+}
+.planner-view .gear-preview{overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}
+@media(min-width:561px){
+ .planner-view .gear-character .character-summary{contain:size;display:flex;flex-direction:column;align-items:center;min-height:0;overflow:hidden}
+ .planner-view .gear-character .character-summary>*{flex:none}
+ .planner-view .gear-character .character-summary #gear-stats{flex:1 1 0;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#66758c #1b293c}
+}
+@media(max-width:1199px){.planner-view .gear-selector,.planner-view .gear-preview{height:min(720px,85vh)}}
+@media(max-width:760px){.planner-view .gear-selector,.planner-view .gear-preview{height:560px}}
+
+/* Item list matches the Dressing Room list: its background, scrollbar, row colours and separators. */
+.planner-view #item-selector .item-results{background:#152030;border:0;border-radius:0;scrollbar-color:#66758c #1b293c;scrollbar-gutter:stable}
+
+/* Equipped item names stay on one line and pan sideways when too long. */
+.planner-view .slot .item-name.ah-name-clip{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-overflow:clip;text-align:center}
+.planner-view .slot .item-name .ah-name-text{display:inline-block;white-space:nowrap}
