@@ -13,11 +13,11 @@ import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseT
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi } from './ui-state.mjs?v=1';
 import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
-import { itemPicker } from './item-picker.mjs?v=20261125-theme1';
+import { itemPicker } from './item-picker.mjs?v=20261126-toolbar1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
-import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261124-tips2';
+import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
 const $ = id => document.getElementById(id);
@@ -141,12 +141,12 @@ function createSlots() {
     copy.append(element('span', 'slot-name', name), itemName);
     button.append(gameIcon(SLOT_ICONS[slot], 'slot-icon'), copy);
     button.addEventListener('click', () => openItem(slot));
-    attachTooltip(button, async () => {
-      const item = build.gear[slot];
-      if (!item) return {title:SLOTS[slot],lines:['Empty']};
-      const metadata = await picker.inspect(item.id);
-      return equipmentTooltip(metadata, item);
-    });
+    // Hovering (or focusing) an equipped item shows it, with its enchant, in the item preview; leaving restores the previous preview.
+    // It never changes the selected slot, the filters or the build.
+    for (const [start, end] of [['mouseenter', 'mouseleave'], ['focus', 'blur']]) {
+      button.addEventListener(start, () => picker?.hoverEquipped(slot));
+      button.addEventListener(end, () => picker?.endHover());
+    }
     // Trinkets cannot be enchanted, so they get no enchant line at all.
     const enchantable=!['trinket1','trinket2'].includes(slot);
     const enchantLabel=enchantable?element('span','slot-enchant','No enchant'):null;
@@ -587,7 +587,6 @@ async function initialise() {
     data = await response.json();
     if(data.classId!==classId||!Array.isArray(data.talents)||data.talents.length<30||data.trees.length!==3)throw new Error('Incomplete class talent data.');
     library=buildLibrary(classId,value=>validateBuild(value,data),{legacyValidate:value=>restoreLegacyBuild(value,data).build});
-    document.querySelector('.rail-brand span').textContent=`${currentClass.name} Build Planner`;
     document.querySelector('.character-summary>strong').textContent=currentClass.name;
     for(const image of document.querySelectorAll('.class-mark,.rail-class-icon')){image.src=iconUrl(`classicon_${classId}`);image.alt=currentClass.name;}
     createSlots();

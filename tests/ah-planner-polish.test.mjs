@@ -100,7 +100,7 @@ test('Race and Level are the same height, and Race is a narrow control',()=>{
 });
 
 test('the button row is Save, Load, Share, Export, Import',()=>{
-  const row=read('sim/index.html').match(/<div class="actions">[\s\S]*?<\/div>\s*\n/)[0];
+  const row=read('sim/index.html').match(/<div class="app-toolbar-actions">[\s\S]*?<\/div>/)[0];
   const ids=[...row.matchAll(/<button id="([a-z-]+)"/g)].map(m=>m[1]);
   assert.deepEqual(ids,['save-build','load-build','share-build','export-build','import-build']);
 });

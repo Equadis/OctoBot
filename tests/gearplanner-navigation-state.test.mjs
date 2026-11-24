@@ -71,8 +71,3 @@ test('class tiles and talent trees share one artwork treatment: fills the box, b
  assert.match(code,/card\.classList\.add\('art-card'\)/);
  for(const cls of ['druid','hunter','mage','paladin','priest','rogue','shaman','warlock','warrior'])assert.match(code,new RegExp(cls+': \\['));
 });
-test('Dressing Room Reset all shares the navigation row',()=>{
- const html=read('outfitter/index.html');
- assert.match(html,/<div class="planner-topbar"><nav class="page-nav"[^>]*><\/nav><script[^>]*><\/script><div class="planner-actions-status"><button id="reset" class="reset-all">Reset all<\/button>/);
- assert.doesNotMatch(html,/<div class="toolbar">/);
-});

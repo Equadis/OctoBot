@@ -869,7 +869,9 @@ async function start(){
   if(copied)feedback('Link copied to clipboard');
   else{$('outfit-code').value=url;$('exchange-status').textContent='The link could not be copied automatically. Select and copy it.';$('exchange').showModal();$('outfit-code').select();}
  };
- $('import').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
+ // Export shows the current outfit's Tmog code; Import opens the same dialog empty, ready for a pasted code or link.
+ $('export').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
+ $('import').onclick=()=>{$('outfit-code').value='';$('exchange-status').textContent='Paste a Tmog code (T.O.L.) or an OctoBot outfit link, then choose Import outfit.';$('exchange').showModal();$('outfit-code').focus();};
  $('copy-code').onclick=()=>copy($('outfit-code').value,'Code copied.');$('apply-code').onclick=()=>{try{commit(fromText($('outfit-code').value),'Outfit imported.');$('exchange').close();}catch(error){$('exchange-status').textContent=error.message;}};
  window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#outfit=')){try{commit(decode(location.hash.slice(8)),'Shared outfit loaded.');}catch(error){feedback(error.message);}}});
  const modelResize=new ResizeObserver(()=>{const wrap=$('model').parentElement,width=wrap.clientWidth,height=wrap.clientHeight;if(width&&height)viewer?.renderer?.onResize?.(width,height,width/height);});

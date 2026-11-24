@@ -137,3 +137,17 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .dots::after{content:"...";display:inline-block;white-space:nowrap;clip-path:inset(0 100% 0 0);animation:ellipsis-dots 3s step-end infinite}
 @keyframes ellipsis-dots{0%{clip-path:inset(0 100% 0 0)}25%{clip-path:inset(0 66.6667% 0 0)}50%{clip-path:inset(0 33.3333% 0 0)}75%{clip-path:inset(0 0 0 0)}}
 @media(prefers-reduced-motion:reduce){.dots::after{animation:none;clip-path:none}}
+
+/* Shared action toolbar (Gear Planner and Dressing Room): actions on the left, status message and Reset all on the right. */
+.app-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 0 18px}
+.app-toolbar-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:0 1 auto;min-width:0}
+.app-toolbar-status{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:1 1 0;min-width:0;margin-left:auto}
+.app-toolbar-status [role=status]{margin:0;min-width:0;font-size:11px;text-align:right;overflow-wrap:anywhere}
+.app-toolbar-status [role=status]:empty{display:none}
+.app-toolbar button,.app-toolbar a.app-btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);color:#c2cddd;font:inherit;font-size:12px;line-height:1.2;text-decoration:none;white-space:nowrap;cursor:pointer}
+.app-toolbar button:hover:not(:disabled),.app-toolbar a.app-btn:hover,.app-toolbar button:focus-visible,.app-toolbar a.app-btn:focus-visible{border-color:var(--gold);color:#f4d65c}
+.app-toolbar .reset-all{flex:none;color:#ff746c;border-color:#88413b;background:#352326}
+.app-toolbar .reset-all:hover:not(:disabled),.app-toolbar .reset-all:focus-visible{background:#4a292b;border-color:#c35c51;color:#ff746c}
+.app-toolbar .reset-all:focus-visible{outline:2px solid #ff998f;outline-offset:3px}
+@media(max-width:560px){.app-toolbar-status{flex-basis:100%;order:3;justify-content:space-between}.app-toolbar button,.app-toolbar a.app-btn{padding:0 11px}}
+

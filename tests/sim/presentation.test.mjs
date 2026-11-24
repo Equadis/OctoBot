@@ -33,5 +33,5 @@ test('footer keeps credits and external links use safe new tabs',()=>{
  const html=readFileSync(new URL('../../docs/sim/index.html',import.meta.url),'utf8');const footer=html.match(/<footer>([\s\S]*?)<\/footer>/)[1];
  for(const link of footer.matchAll(/<a ([^>]+)>/g)){assert.match(link[1],/target="_blank"/);assert.match(link[1],/rel="noopener noreferrer"/);}
  for(const address of ['https://github.com/Equadis/OctoBot','https://thrunk112.github.io/WarriorSim-TurtleWoW/turtle.html','https://www.combatgum.app/','https://github.com/isfir/wowsims-turtle','https://github.com/Barwaat/huntersim2-twow'])assert.ok(footer.includes(address));
- assert.match(footer,/Based on forks of/);assert.match(html,/class="all-classes" href="\?classes"/);
+ assert.match(footer,/Based on forks of/);assert.match(html,/class="app-btn" href="\?classes"/);
 });

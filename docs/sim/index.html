@@ -19,17 +19,17 @@
 <meta name="twitter:card" content="summary_large_image">
   <title>OctoBot · Gear Planner &amp; DPS Simulator</title>
   <link rel="icon" href="../favicon.png" type="image/png">
-  <link rel="stylesheet" href="planner.css?v=20261125-theme2">
+  <link rel="stylesheet" href="planner.css?v=20261126-toolbar2">
   <link rel="stylesheet" href="../quality-select.css?v=20261125-theme2">
-  <link rel="stylesheet" href="combat-layout.css?v=20261125-theme2">
-  <script type="module" src="planner.mjs?v=20261125-theme2"></script>
-<link rel="stylesheet" href="../site-theme.css?v=20261125-theme2">
+  <link rel="stylesheet" href="combat-layout.css?v=20261126-toolbar2">
+  <script type="module" src="planner.mjs?v=20261126-toolbar2"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261126-toolbar2">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
 <body>
 <main>
   <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home" title="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>Gear Planner &amp; DPS Simulator <span class="release-beta" style="display:inline-block;vertical-align:middle;margin-left:6px;padding:2px 5px;border-radius:3px;background:#302c21;color:#e9cc67;font-size:10px;line-height:14px;letter-spacing:.05em;font-weight:600">BETA</span></h1></div></div><div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
-  <div class="planner-topbar"><nav class="page-nav" aria-label="Dashboard pages" data-current="sim"></nav><script src="../site-nav.js?v=20261120-tabs"></script><div class="planner-actions-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" type="button" hidden>Reset all</button></div></div>
+  <nav class="page-nav" aria-label="Dashboard pages" data-current="sim"></nav><script src="../site-nav.js?v=20261120-tabs"></script>
   <section id="class-selection" aria-labelledby="classes-title">
     <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
     <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>
@@ -38,8 +38,9 @@
   <div id="startup-error" class="notice error" role="alert" hidden></div>
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
   <div id="planner" hidden>
-    <div class="toolbar">
-      <div class="actions"><div class="rail-brand"><strong>OctoSim</strong><span>Warrior Build Planner</span></div><a class="all-classes" href="?classes">← All classes</a><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="share-build">Share Build</button><button id="export-build">Export Build</button><button id="import-build">Import Build</button></div>
+    <div class="app-toolbar" role="toolbar" aria-label="Build actions">
+      <div class="app-toolbar-actions"><a class="app-btn" href="?classes">← All classes</a><button id="save-build" type="button">Save Build</button><button id="load-build" type="button">Load Build</button><button id="share-build" type="button">Share Build</button><button id="export-build" type="button">Export Build</button><button id="import-build" type="button">Import Build</button></div>
+      <div class="app-toolbar-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" class="reset-all" type="button" hidden>Reset all</button></div>
     </div>
     <div class="planner-grid">
       <div class="planner-column left-column">

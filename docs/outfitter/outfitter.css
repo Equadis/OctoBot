@@ -239,7 +239,6 @@
 /* Character-local race and body controls. */
 .character-pickers{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px;margin:12px 0 16px}.character-pickers .race-picker{flex-wrap:wrap}.toolbar:empty,#feedback:empty{display:none}.result:has(.quality-0) img{border-color:var(--quality-0)}
 
-.toolbar>.actions{margin-left:auto}
 
 /* Skin: a drop-down on its own row under the model's five buttons, as wide as the longest skin name (an invisible copy of it sets the width). */
 .skin-note{margin:-6px 0 12px;font-size:12px}.skin-note[hidden]{display:none}
@@ -260,9 +259,3 @@
 .shared-card .saved-name{display:flex;flex-direction:column;gap:2px}
 .shared-time{display:block;font-size:10px;color:#8a9bad;font-weight:400}
 .shared-card .shared-copy{display:block;width:100%;margin-top:5px;padding:5px 8px;font-size:11px}
-
-/* Reset all shares the navigation row, as in the Gear Planner. */
-.planner-topbar{display:flex;align-items:center;gap:12px;position:relative}
-.planner-topbar .page-nav{flex:1;min-width:0}
-.planner-topbar .planner-actions-status{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:none}
-@media(max-width:560px){.planner-topbar{flex-wrap:wrap;gap:4px}.planner-topbar .page-nav{flex-basis:100%}.planner-topbar .planner-actions-status{margin-left:auto;margin-bottom:14px}}

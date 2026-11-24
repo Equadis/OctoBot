@@ -20,7 +20,7 @@ const shortStats=item=>{
 
 export function itemPicker({getBuild,onEquip,onClear}) {
  const $=id=>document.getElementById(id);
- let active=false,items=null,details={},references={},slot=null,loading=null,previewed=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),equipVersion=0,session=0;
+ let hovering=null,hoverToken=0,active=false,items=null,details={},references={},slot=null,loading=null,previewed=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),equipVersion=0,session=0;
  let selectionContext={};
  const selectionBuild=()=>selectionContext.getBuild?.()||getBuild();
  const CACHE_KEY='octosim.item-details.v2',pending=new Map();
@@ -69,10 +69,13 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  }
  // The enchant shown with a previewed item is the one in the Item Enchant dropdown, when it fits that item. Display only: item data and character stats are untouched.
  function previewEnchant(item){
-  const id=$('item-enchant').value;if(!id||!item)return null;
-  const build=selectionBuild();return enchantsForSlot(slot,build.classId,item,build.level).some(enchant=>enchant.id===id)?ENCHANTS.find(enchant=>enchant.id===id)||null:null;
+  // While an equipped item is hovered, its own slot and enchant are shown; otherwise the Item Enchant dropdown decides.
+  const hovered=hovering&&item&&hovering.item.id===item.id;
+  const id=hovered?hovering.enchantId:$('item-enchant').value,slotKey=hovered?hovering.slot:slot;
+  if(!id||!item)return null;
+  const build=selectionBuild();return enchantsForSlot(slotKey,build.classId,item,build.level).some(enchant=>enchant.id===id)?ENCHANTS.find(enchant=>enchant.id===id)||null:null;
  }
- function repaintPreview(){if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');}
+ function repaintPreview(){if(hovering)return paintHovered();if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');}
  function paintPreview(item,source=null,state=''){
   const preview=$('item-preview');preview.replaceChildren();preview.setAttribute('aria-busy',String(state==='Loading…'));
   const header=node('div',undefined,'item-preview-header'),image=node('img');image.src=iconUrl(item.icon);image.alt='';
@@ -91,13 +94,13 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   if(!item)return;
   clearTimeout(previewTimer);const version=++previewVersion;previewed=item;error();
   for(const [id,row] of rowElements){const active=id===item.id;row.classList.toggle('previewed',active);row.setAttribute('aria-selected',String(selectionBuild().gear[slot]?.id===id));row.tabIndex=active?0:-1;}
-  paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
+  if(!hovering)paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
   try{
    const source=await detail(item);if(version!==previewVersion || !active)return;
    const reason=detailRestriction(item,source,selectionBuild(),slot); 
-   paintPreview(item,source);if(reason)error(reason);
+   if(!hovering)paintPreview(item,source);if(reason)error(reason);
    const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
-  }catch(failure){if(version!==previewVersion || !active)return; paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
+  }catch(failure){if(version!==previewVersion || !active)return; if(!hovering)paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
   if(!items)return;
@@ -130,6 +133,19 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   if(item)previewItem(item);
   else{++previewVersion;previewed=null;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
  }
+ // Hovering an equipped item shows it, with its enchant, in the same preview panel; leaving restores whatever was shown before.
+ function paintHovered(){const {item}=hovering;paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');}
+ function hoverEquipped(slotKey){
+  const equipped=getBuild().gear[slotKey],item=equipped&&items?.find(entry=>entry.id===equipped.id);
+  if(!item)return;
+  const token=++hoverToken;hovering={item,slot:slotKey,enchantId:equipped.enchantId||''};paintHovered();
+  if(!details[item.id])detail(item).then(()=>{if(hovering&&token===hoverToken)paintHovered();}).catch(()=>{if(hovering&&token===hoverToken)paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');});
+ }
+ function endHover(){
+  if(!hovering)return;hovering=null;++hoverToken;
+  if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');
+  else $('item-preview').replaceChildren(node('p','Select an item.','muted'));
+ }
  // Keeps the list, the clear button and the enchant list in step with the equipped item without redrawing (or rescrolling) the list.
  function refreshEquipped(){
   const build=selectionBuild(),equippedId=build.gear[slot]?.id;
@@ -160,7 +176,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  $('item-enchant').addEventListener('change',()=>{const equipped=selectionBuild().gear[slot],item=equipped&&items?.find(item=>item.id===equipped.id);repaintPreview();if(item)selectItem(item,$('item-enchant').value,false);});
  $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);updateEnchants();refreshEquipped();repaintPreview();error();});
   return {
-  filters:filterState,
+  filters:filterState,hoverEquipped,endHover,
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
   async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';applyFilters(options.filters);$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
