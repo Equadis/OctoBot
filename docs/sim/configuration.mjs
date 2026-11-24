@@ -4,6 +4,8 @@ import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rot
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
 import {CONSUMABLES,CONSUMABLE_BY_ID,LEGACY_GROUPS,consumableGroup,consumablesConflict,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261124-consumes2';
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=1';
+import {buffIcon,consumableIcon} from './core/icons.mjs?v=1';
+import {iconUrl} from './core/interface.mjs?v=20261112-navigation1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
 import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261114-groups1';
 import { attachTooltip } from './tooltip.mjs?v=20261124-tips2';
@@ -29,7 +31,9 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
   for(const id of controls.consumableIds||[])if(id!==item.id&&consumablesConflict(item,CONSUMABLE_BY_ID.get(id)))names.push(CONSUMABLE_BY_ID.get(id).name);
   return names;};
  // A one-line name that pans sideways when it does not fit (the Auction House animation).
- const nameCell=text=>{const cell=node('span',undefined,'buff-name ah-name-clip');cell.append(node('span',text,'ah-name-text'));return cell;};
+ // An icon sits to the left of the name (a blank slot of the same size when there is none, so labels stay aligned).
+ const iconCell=name=>{const image=node('img',undefined,name?'row-icon':'row-icon blank');image.alt='';image.width=16;image.height=16;if(name){image.src=iconUrl(name);image.loading='lazy';image.addEventListener('error',()=>image.classList.add('blank'));}return image;};
+ const nameCell=(text,icon)=>{const wrap=node('span',undefined,'buff-name-wrap'),cell=node('span',undefined,'buff-name ah-name-clip');cell.append(node('span',text,'ah-name-text'));wrap.append(iconCell(icon),cell);return wrap;};
  // The checkbox sits in a wrapper so its tooltip still works while the checkbox itself is disabled.
  const boxCell=input=>{const box=node('span',undefined,'buff-box');box.append(input);input.addEventListener('click',event=>{if(input.getAttribute('aria-disabled')==='true')event.preventDefault();});return box;};
  const conflictTip=(conflicts,fallback)=>conflicts.length?{title:'Does not stack with:',lines:conflicts.map(name=>`• ${name}`)}:fallback();
@@ -65,7 +69,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
   for(const option of group.options){
    if(option.classes&&!option.classes.includes(classId)||option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(classId))continue;
    const label=node('label',undefined,'buff-row');const input=node('input');input.type='checkbox';input.value=option.id;
-   const name=nameCell(option.name),effect=node('span',option.effect,'buff-effect');label.append(boxCell(input),name,effect);
+   const name=nameCell(option.name,buffIcon(option)),effect=node('span',option.effect,'buff-effect');label.append(boxCell(input),name,effect);
    input.addEventListener('change',()=>{
     let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
@@ -96,7 +100,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
   for(const item of candidates){
    const row=node('label',undefined,'buff-row'),input=node('input');input.type='checkbox';input.checked=selected.includes(item.id);input.value=String(item.id);
    paintRow(row,input,null,consumableConflicts(item));
-   const text=nameCell(item.name),effect=node('span',item.requiredLevel?`Lv ${item.requiredLevel}`:'','buff-effect');row.append(boxCell(input),text,effect);
+   const text=nameCell(item.name,consumableIcon(item)),effect=node('span',item.requiredLevel?`Lv ${item.requiredLevel}`:'','buff-effect');row.append(boxCell(input),text,effect);
    input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderChecks();});
    const itemTip=()=>({title:item.name,lines:[...item.effects,stackingNote(item),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]});
    attachTooltip(row,itemTip);attachTooltip(row.querySelector('.buff-box'),()=>conflictTip(consumableConflicts(item),itemTip));list.append(row);

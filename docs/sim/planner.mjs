@@ -3,7 +3,8 @@ import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
 import {equipmentErrors} from './core/items.mjs?v=20261117-picker2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
-import {setupRacePicker} from './race-picker.mjs?v=2';
+import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=3';
+import {optionIcon, optionHasIcons, professionIcon} from './core/icons.mjs?v=1';
 let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261117-picker2';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
@@ -16,7 +17,7 @@ import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
 import { itemPicker } from './item-picker.mjs?v=20261126-toolbar1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261114-groups1';
+import { configuration } from './configuration.mjs?v=20261127-icons1';
 import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
@@ -437,23 +438,29 @@ function createClassOptions(){
     else{input.type='number';input.min=option.min;input.max=option.max;}
     input.addEventListener('change',()=>{try{const value=option.values?input.value:Number(input.value);const controls={...build.controls};if(value!=='None'&&['mhPoison','mhImbue','ohPoison'].includes(option.key))controls.buffIds=controls.buffIds.filter(id=>id!==`wizard-oil-${option.key==='ohPoison'?'oh':'mh'}`);applyBuild({...build,controls,classOptions:{...build.classOptions,[option.key]:value}},'Class options updated.');config.render();}catch(error){feedback(error.message,true);renderClassOptions();}});
     label.append(input);$('class-options').append(label);
+    // Seals, auras, stances, forms, poisons, pets and similar choices show their icon beside the name, in the list and when closed.
+    if(option.values&&optionHasIcons(option.key))optionPickers.set(option.key,setupIconSelect(document,input,{label:option.label,iconFor:value=>{const name=optionIcon(option.key,value);return name?iconUrl(name):null;}}));
   }
 }
-function renderClassOptions(){for(const option of CLASS_OPTIONS[classId])$(`class-option-${option.key}`).value=build.classOptions[option.key];}
+const optionPickers=new Map();
+function renderClassOptions(){for(const option of CLASS_OPTIONS[classId]){$(`class-option-${option.key}`).value=build.classOptions[option.key];optionPickers.get(option.key)?.sync();}}
 
+const professionPickers=[];
+function skillIcon(name){const image=element('img','row-icon');image.src=iconUrl(name);image.alt='';image.width=16;image.height=16;image.loading='lazy';image.addEventListener('error',()=>image.classList.add('blank'));return image;}
 function createSkills(){
   const container=$('profession-controls');
   for(let index=0;index<2;index++){
     const row=element('div','profession-row'),label=element('label','field',`Profession ${index+1}`),select=element('select');select.id=`profession-${index}`;select.setAttribute('aria-label',`Profession ${index+1}`);
     for(const name of ['',...PRIMARY_PROFESSIONS]){const option=element('option','',name||'None');option.value=name;select.append(option);}
     const rankLabel=element('label','field','Skill'),rank=element('input');rank.type='number';rank.min=1;rank.max=300;rank.id=`profession-rank-${index}`;rank.setAttribute('aria-label',`Profession ${index+1} skill`);label.append(select);rankLabel.append(rank);row.append(label,rankLabel);container.append(row);
+    professionPickers.push(setupIconSelect(document,select,{label:`Profession ${index+1}`,iconFor:name=>{const icon=professionIcon(name);return icon?iconUrl(icon):null;}}));
     for(const field of [select,rank])field.addEventListener('change',updateSkills);
   }
-  for(const name of SECONDARY_SKILLS){const label=element('label','field',name),rank=element('input');rank.id=`skill-${name.replaceAll(' ','-')}`;rank.type='number';rank.min=0;rank.max=300;label.append(rank);container.append(label);rank.addEventListener('change',updateSkills);}
+  for(const name of SECONDARY_SKILLS){const label=element('label','field',name),rank=element('input');if(professionIcon(name))label.prepend(skillIcon(professionIcon(name)));rank.id=`skill-${name.replaceAll(' ','-')}`;rank.type='number';rank.min=0;rank.max=300;label.append(rank);container.append(label);rank.addEventListener('change',updateSkills);}
 }
 function renderSkills(){
   const selected=Object.keys(build.skills).filter(name=>PRIMARY_PROFESSIONS.includes(name));
-  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';$(`profession-rank-${i}`).value=build.skills[selected[i]]||300;$(`profession-rank-${i}`).disabled=!selected[i];}
+  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';professionPickers[i]?.sync();$(`profession-rank-${i}`).value=build.skills[selected[i]]||300;$(`profession-rank-${i}`).disabled=!selected[i];}
   for(const name of SECONDARY_SKILLS)$(`skill-${name.replaceAll(' ','-')}`).value=build.skills[name]||0;
 }
 async function updateSkills(){

@@ -259,3 +259,6 @@
 .shared-card .saved-name{display:flex;flex-direction:column;gap:2px}
 .shared-time{display:block;font-size:10px;color:#8a9bad;font-weight:400}
 .shared-card .shared-copy{display:block;width:100%;margin-top:5px;padding:5px 8px;font-size:11px}
+
+/* The item list carries the standard button border. */
+.browser .results{border:1px solid var(--line);border-radius:4px}

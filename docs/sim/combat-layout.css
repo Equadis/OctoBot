@@ -336,3 +336,19 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 /* Equipped item names stay on one line and pan sideways when too long. */
 .planner-view .slot .item-name.ah-name-clip{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-overflow:clip;text-align:center}
 .planner-view .slot .item-name .ah-name-text{display:inline-block;white-space:nowrap}
+
+/* Item list and item preview carry the standard button border (1px --line, 4px radius); the preview sits on the control colour. */
+.planner-view #item-selector .item-results{border:1px solid var(--line);border-radius:4px}
+.planner-view .gear-preview{border:1px solid var(--line);border-radius:4px;background:var(--bg-control);padding:12px}
+.planner-view .gear-preview .item-preview{padding:0}
+/* The sort direction is a plain arrow in the count row, not a boxed button. */
+.planner-view #item-selector #item-direction{border:0;background:transparent;box-shadow:none;min-width:0;min-height:0;padding:0 2px;font-size:13px;line-height:1;color:var(--muted)}
+.planner-view #item-selector #item-direction:hover,.planner-view #item-selector #item-direction:focus-visible{color:#f4d65c;background:transparent}
+
+/* Inline icons in lists: sized to sit with the 11px row text. */
+.row-icon{display:inline-block;width:16px;height:16px;flex:none;object-fit:cover;border:1px solid #4a5a70;border-radius:2px;box-sizing:border-box;vertical-align:middle;background:#101a29}
+.row-icon.blank{visibility:hidden}
+label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
+.buff-row .buff-name-wrap{display:flex;align-items:center;gap:6px;min-width:0}
+.buff-row .buff-name-wrap>.buff-name{flex:1 1 0}
+.rp-faces img,.rp-faces .rp-blank{width:20px;height:20px}

@@ -34,7 +34,7 @@ test('Race, character name and Level share a row without an extra portrait colum
 test('the race dropdown shows one portrait to the left of every race, like the Dressing Room background picker',()=>{
   const picker=read('sim/race-picker.mjs'),js=read('sim/planner.mjs'),css=read('sim/combat-layout.css');
   assert.match(picker,/for\(const sex of \['male'\]\)/,'one portrait per race');
-  assert.match(picker,/frag\.append\(portraits\(doc,race\),label\)/,'portraits come before the race name');
+  assert.match(picker,/frag\.append\(portraits\(doc,race,iconFor\),label\)/,'portraits come before the race name');
   assert.match(picker,/role="listbox"|setAttribute\('role','listbox'\)/);
   assert.match(picker,/e\.key==='Escape'/);
   assert.match(picker,/select\.addEventListener\('change',sync\)/,'the hidden select stays the source of truth');
