@@ -303,7 +303,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 
 /* ===== Class selector: tiles laid out like the dashboard cards (name top left, icon top right, "Open →" bottom right) ===== */
 #class-selection .class-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.class-card.art-card{display:flex;flex-direction:column;min-height:168px;padding:24px 26px;gap:10px;border:1px solid var(--class-colour,#39465a);border-radius:6px;background:var(--bg-panel);color:#d4dfed;text-decoration:none;--art-overlay:linear-gradient(180deg,rgb(24,35,51) 0%,rgba(24,35,51,.94) 9%,rgba(24,35,51,.76) 17%,rgba(24,35,51,.4) 25%,rgba(24,35,51,.12) 30%,rgba(24,35,51,0) 33%),linear-gradient(180deg,rgba(9,14,24,.22) 0%,rgba(9,14,24,.7) 100%);transition:border-color .12s,box-shadow .12s,transform .12s}
+.class-card.art-card{display:flex;flex-direction:column;min-height:168px;padding:24px 26px;gap:10px;border:1px solid var(--class-colour,#39465a);border-radius:6px;background:var(--bg-panel);color:#d4dfed;text-decoration:none;--art-overlay:rgba(0, 0, 255, 0.2);transition:border-color .12s,box-shadow .12s,transform .12s}
 .class-card.art-card.available{padding:24px 26px}
 .class-card.art-card .class-card-title{display:block;min-height:64px;box-sizing:border-box;padding-right:76px;font-family:var(--title-font,Georgia,serif);font-weight:700;font-size:30px;line-height:1.25;color:var(--class-colour);white-space:nowrap;text-shadow:0 2px 8px #000a}
 .class-card.art-card .class-card-icon{position:absolute;top:22px;right:24px;display:block;width:64px;height:64px;box-sizing:border-box;object-fit:cover;border:1px solid #4b5b71;border-radius:5px;box-shadow:0 2px 8px #0006}
