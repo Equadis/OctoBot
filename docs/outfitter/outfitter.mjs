@@ -179,11 +179,18 @@ function sanitiseGear(value){const next=normalise(value);for(const {id,types} of
 function commit(next,message){outfit=sanitiseGear(next);const problem=reconcileSkin();persist();renderSlots();renderItems();renderSkinRow();if(problem||message)feedback(problem||message);renderModel();}
 function renderRaces(){
  const box=$('race-picker');box.replaceChildren();
- for(const [id,name] of RACES){
+ for(const [faction,ids] of [['Alliance',[1,3,4,7,10]],['Horde',[2,5,6,8,9]]]){
+  const group=document.createElement('div'),heading=document.createElement('span'),buttons=document.createElement('div');
+  group.className='race-faction';group.setAttribute('role','group');group.setAttribute('aria-label',faction);
+  heading.className='race-faction-heading';heading.textContent=faction;
+  buttons.className='race-picker race-faction-buttons';group.append(heading,buttons);box.append(group);
+  for(const id of ids){
+   const name=RACES.find(([raceId])=>raceId===id)[1];
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.race===id));
   img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png?v=20261114`;button.append(img);
-  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id,look:{}});};box.append(button);
+  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id,look:{}});};buttons.append(button);
+  }
  }
  $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
 }

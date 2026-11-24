@@ -269,3 +269,13 @@
 .item-row-name>.ah-name-clip:first-child{text-overflow:clip}
 .result .item-description.ah-name-clip{text-overflow:clip}
 
+
+/* Faction grouping is scoped to race selection; the Body picker keeps its existing layout. */
+#race-picker.faction-picker{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.race-faction{display:flex;flex-direction:column;gap:4px;min-width:0}
+.race-faction+.race-faction{border-left:1px solid #354256;padding-left:8px}
+.race-faction-heading{font-size:11px;color:var(--text-muted,#a8b5c8);line-height:1.2}
+#race-picker .race-faction-buttons{gap:6px;flex-wrap:wrap}
+/* Align Body icons with the race icons below their faction headings. */
+.character-pickers .body-picker{padding-top:17px}
+@media(max-width:560px){.race-faction+.race-faction{border-left:0;padding-left:0}}
