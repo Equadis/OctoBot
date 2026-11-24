@@ -17,7 +17,7 @@ test('filters sit in a two-by-two grid in the requested order with the requested
  const labels=[...form.matchAll(/<label class="field[^"]*">([^<]+)</g)].map(match=>match[1]);
  assert.deepEqual(labels,['Search Items','Item Enchant','Sort by','Quality']);
  assert.match(form,/placeholder="Item name or ID"/);
- assert.match(form,/<option value="">— None —<\/option>/);
+ assert.match(form,/<option value="">None<\/option>/);
  assert.match(form,/<option value="">All qualities<\/option>/);
  assert.match(css,/\.item-filter-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
@@ -50,4 +50,29 @@ test('consumables are one line, named All Consumables, grey only the name when b
  assert.match(css,/grid-template-columns:13px minmax\(0,calc\(50% - 13px\)\) minmax\(0,1fr\)/,'names take at most half the width');
  assert.match(config,/ah-name-clip/);assert.match(read('site-theme.css'),/@keyframes ah-name-pan/);
  assert.match(read('auction-house/auction.js'),/scrolling-names\.mjs/,'the Auction House uses the same helper');
+});
+
+const stripMarkup=value=>value;
+test('stat signs never read "+-"',async()=>{
+ const {fixSigns}=await import('../docs/sim/core/signs.mjs');
+ assert.equal(fixSigns('+-20 Shadow Resistance'),'-20 Shadow Resistance');
+ assert.equal(fixSigns('+7 Fire Resistance\n+ -5 Stamina'),'+7 Fire Resistance\n-5 Stamina');
+ assert.equal(stripMarkup(fixSigns('+15 Agility')),'+15 Agility');
+ assert.match(picker,/const signed=value=>`\$\{Number\(value\)<0\?'-':'\+'\}/);
+});
+test('shirt and tabard, trinket enchants and the em-dashed None are gone, and no talent text sits in the class panel',()=>{
+ assert.doesNotMatch(html,/Appearance<\/summary>|slots-appearance/);
+ assert.match(planner,/\['shirt', 'tabard'\]\.includes\(slot\)\) continue/);
+ assert.match(planner,/const enchantable=!\['trinket1','trinket2'\]\.includes\(slot\)/);
+ assert.match(picker,/field-hidden/);
+ assert.doesNotMatch(html+picker,/— None —/);
+ assert.doesNotMatch(html,/id="talent-split"|id="points-left"|id="equipment-count"/);
+ assert.doesNotMatch(planner,/talent-split|slots planned/);
+ assert.match(html,/class="character-summary">[\s\S]*?id="gear-stats"[\s\S]*?<\/div>\s*<div id="slots-right"/,'stats sit inside the central class panel');
+});
+test('the selector and preview are flat, with no nested dark panels or heavy borders',()=>{
+ assert.match(css,/\.gear-selector,\.planner-view \.gear-preview\{border:0;background:transparent/);
+ assert.match(css,/#item-selector \.item-results\{background:transparent;border:0/);
+ assert.match(css,/\.gear-preview \.item-full-tooltip\{background:transparent;border:0/);
+ assert.match(read('sim/tooltip.mjs'),/tooltipText/,'equipped-slot hover shows the full item tooltip');
 });

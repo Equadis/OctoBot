@@ -1,5 +1,5 @@
 import {TRINKET_SWAP_MODES,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
-import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261113-swaps1';
+import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261124-tips2';
 import {SLOT_ICONS,iconUrl} from './core/interface.mjs?v=20261112-navigation1';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const SHORT={rogue:'VT',hunter:'FD'};

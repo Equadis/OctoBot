@@ -1,4 +1,5 @@
 import {ENCHANTS} from './core/equipment-options.mjs?v=20261113-swaps1';
+import {fixSigns} from './core/signs.mjs?v=1';
 // Plain-text, viewport-clamped tooltips shared by equipment and talents.
 const tooltip=document.createElement('div');tooltip.id='planner-tooltip';tooltip.className='planner-tooltip';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;document.body.append(tooltip);
 let generation=0,anchor=null,point=null,activeContent=null;
@@ -39,7 +40,9 @@ export function refreshTooltip(){if(activeContent && !tooltip.hidden){const cont
 
 export function equipmentTooltip(metadata, fallback={}) {
   if(!metadata)return {title:fallback.label || `Item #${fallback.id}`,lines:['Details unavailable.']};
-  const summary=(metadata.summary || `Item level ${metadata.level || 0} · Requires level ${metadata.reqlevel || 0}`).split('\n').filter((line,index)=>index!==0 || line!==metadata.name).join('\n');
+  // The full database tooltip (stats, requirements, effects) is preferred, as in the item preview beside the selector.
+  const full=Boolean(metadata.tooltipText);
+  const summary=(metadata.tooltipText || metadata.summary || `Item level ${metadata.level || 0} · Requires level ${metadata.reqlevel || 0}`).split('\n').filter((line,index)=>line.trim()&&(index!==0 || line!==metadata.name));
   const enchant=ENCHANTS.find(enchant=>enchant.id===fallback.enchantId);
-  return {title:metadata.name,lines:[summary,...(Array.isArray(metadata.effects)?metadata.effects:[]),...(enchant?[`Enchant: ${enchant.name}`]:[])]};
+  return {title:metadata.name,lines:[...summary.map(fixSigns),...(!full&&Array.isArray(metadata.effects)?metadata.effects:[]),...(enchant?[`Enchanted: ${enchant.name.replace(/\s*\((?:MH|OH)\)/g,'')}`]:[])]};
 }

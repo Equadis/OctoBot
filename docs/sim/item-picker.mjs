@@ -2,18 +2,20 @@ import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
 import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
 import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
+import {fixSigns} from './core/signs.mjs?v=1';
 import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
+const signed=value=>`${Number(value)<0?'-':'+'}${Math.abs(Number(value))}`;
 const shortStats=item=>{
  const labels={Strength:'Str',Agility:'Agi',Stamina:'Sta',Intellect:'Int',Spirit:'Spirit',Armour:'armour'};
- const parts=Object.entries(item.attributes||{}).map(([key,value])=>`+${value} ${labels[key]||key}`);
- if(item.armor!==undefined && !item.attributes?.Armour)parts.push(`+${item.armor} armour`);
- if(item.ammunitionDps!==undefined)parts.push(`+${item.ammunitionDps} ranged DPS`);
+ const parts=Object.entries(item.attributes||{}).map(([key,value])=>`${signed(value)} ${labels[key]||key}`);
+ if(item.armor!==undefined && !item.attributes?.Armour)parts.push(`${signed(item.armor)} armour`);
+ if(item.ammunitionDps!==undefined)parts.push(`${signed(item.ammunitionDps)} ranged DPS`);
  if(item.dps!==undefined)parts.push(`${item.dps} DPS`);
  if(item.speed!==undefined)parts.push(`${item.speed.toFixed(2)} speed`);
  if(item.effects?.length)parts.push(...item.effects.map(effect=>effect.replace(/^Equip:\s*/,'')));
- return parts.join(', ') || (item.reqlevel>0?`Requires level ${item.reqlevel}`:'');
+ return fixSigns(parts.join(', ')) || (item.reqlevel>0?`Requires level ${item.reqlevel}`:'');
 };
 
 export function itemPicker({getBuild,onEquip,onClear}) {
@@ -49,10 +51,12 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   const build=selectionBuild(), equipped=build.gear[slot], item=equipped&&items?.find(item=>item.id===equipped.id);
   const current=equipped?.enchantId||'';
   const options=item?enchantChoicesForSlot(slot,build.classId,item,build.level):[];
-  const empty=node('option','— None —');empty.value='';$('item-enchant').replaceChildren(empty);
+  const empty=node('option','None');empty.value='';$('item-enchant').replaceChildren(empty);
   for(const enchant of options){const option=node('option',enchant.displayName);option.value=enchant.id;option.disabled=enchant.disabled;$('item-enchant').append(option);}
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
   $('item-enchant').disabled=!options.length;
+  // Trinkets (and any slot without enchants) show no enchant control; the grid cell stays so the filters do not shift.
+  $('item-enchant').closest('.field').classList.toggle('field-hidden',slot==='trinket1'||slot==='trinket2'||(!!selectionContext.heading&&!options.length));
  }
  // The enchant shown with a previewed item is the one in the Item Enchant dropdown, when it fits that item. Display only: item data and character stats are untouched.
  function previewEnchant(item){
@@ -65,8 +69,8 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   const header=node('div',undefined,'item-preview-header'),image=node('img');image.src=iconUrl(item.icon);image.alt='';
   const text=node('div');text.append(node('h3',item.name,`q${item.quality}`),node('span',`Item Level ${item.level || 0}`,'small muted'));header.append(image,text);preview.append(header);
   const tooltip=node('div',undefined,'item-full-tooltip');
-  const lines=(source?.tooltipText || source?.summary || `${item.name}\nRequires level ${item.reqlevel || 0}\n${shortStats(item)}`).split('\n').filter(line=>line.trim());
-  if(!source?.tooltipText && source?.effects)lines.push(...source.effects);
+  const lines=fixSigns(source?.tooltipText || source?.summary || `${item.name}\nRequires level ${item.reqlevel || 0}\n${shortStats(item)}`).split('\n').filter(line=>line.trim());
+  if(!source?.tooltipText && source?.effects)lines.push(...source.effects.map(fixSigns));
   let setEffect=false;
   for(const [index,line] of lines.entries()){if(/^\(\d+\) Set:/.test(line.trim()))setEffect=true;if(/^["“]/.test(line.trim()))setEffect=false;tooltip.append(node('div',line,index===0?`q${item.quality}`:setEffect||/^(Equip:|Use:|Chance on hit:)/.test(line.trim())?'item-effect':''));}
   const enchant=previewEnchant(item);

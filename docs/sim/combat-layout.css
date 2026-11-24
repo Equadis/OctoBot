@@ -284,3 +284,17 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
  .planner-view .gear-workspace{grid-template-columns:minmax(0,1fr)}
  .planner-view .gear-selector,.planner-view .gear-preview{position:static;height:560px}
 }
+
+/* ===== Flatter gear workspace: no nested dark panels, less padding, more room for the character column ===== */
+.planner-view .equipment-card{padding:12px}
+.planner-view .gear-workspace{gap:14px}
+.planner-view .gear-selector,.planner-view .gear-preview{border:0;background:transparent;border-radius:0;padding:0}
+.planner-view .gear-selector{padding-right:2px}
+.planner-view #item-selector .item-results{background:transparent;border:0;border-radius:0;border-top:1px solid #2c384a}
+.planner-view .gear-preview .item-preview{padding:0 2px 0 0}
+.planner-view .gear-preview .item-full-tooltip{background:transparent;border:0;padding:6px 0 0}
+.planner-view .field-hidden{visibility:hidden}
+.planner-view .paperdoll{column-gap:6px}
+.planner-view .gear-character .character-summary{padding:10px 4px;gap:8px}
+.planner-view .gear-character .character-summary #gear-stats{width:100%;margin-top:6px}
+.planner-view .gear-character .gear-stat{gap:4px}

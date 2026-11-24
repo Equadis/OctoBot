@@ -6,7 +6,7 @@ import {CONSUMABLES,CONSUMABLE_BY_ID,LEGACY_GROUPS,consumableGroup,consumablesCo
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
 import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261114-groups1';
-import { attachTooltip } from './tooltip.mjs?v=20261113-swaps1';
+import { attachTooltip } from './tooltip.mjs?v=20261124-tips2';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,click,label)=>{const b=node('button',text);b.type='button';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',click);return b;};

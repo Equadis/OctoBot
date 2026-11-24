@@ -11,11 +11,11 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
-import { itemPicker } from './item-picker.mjs?v=20261124-inline1';
+import { itemPicker } from './item-picker.mjs?v=20261124-inline3';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
-import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
+import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261124-tips2';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
 const $ = id => document.getElementById(id);
@@ -116,6 +116,8 @@ function applyBuild(candidate, message, legacy=false) {
 
 function createSlots() {
   for (const [slot, name] of Object.entries(SLOTS)) {
+    // Shirt and tabard are appearance-only and are not planned here.
+    if (['shirt', 'tabard'].includes(slot)) continue;
     const container = element('div', 'slot');
     const button = element('button');
     button.type = 'button';
@@ -131,17 +133,19 @@ function createSlots() {
       const metadata = await picker.inspect(item.id);
       return equipmentTooltip(metadata, item);
     });
-    const enchantLabel=element('span','slot-enchant','No enchant');
-    attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
+    // Trinkets cannot be enchanted, so they get no enchant line at all.
+    const enchantable=!['trinket1','trinket2'].includes(slot);
+    const enchantLabel=enchantable?element('span','slot-enchant','No enchant'):null;
+    if(enchantLabel)attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
     container.dataset.slot = slot;
-    container.append(button, enchantLabel);
+    container.append(...(enchantLabel?[button, enchantLabel]:[button]));
     slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
-    const extra=['ammo','quiver'].includes(slot),appearance=['shirt','tabard'].includes(slot);
+    const extra=['ammo','quiver'].includes(slot);
     if(!slotAllowed(classId,slot))container.hidden=true;
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
-    $(appearance?'slots-appearance':extra?'slots-ammo':weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
+    $(extra?'slots-ammo':weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
   }
 }
 
@@ -249,11 +253,8 @@ function render() {
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);
   $('character-description').textContent = `${build.race} · Level ${build.level}`;
-  $('talent-split').textContent = totals.join(' / ');
-  $('points-left').textContent = `${Math.max(0, build.level - 9) - spent} points left`;
   $('talents-total').textContent=totals.join(' / ');
   $('talents-points-left').textContent=`Points left: ${Math.max(0,build.level-9)-spent}`;
-  $('equipment-count').textContent = `${Object.keys(build.gear).length} / ${Object.keys(SLOTS).filter(slot=>slotAllowed(classId,slot)).length} slots planned`;
   $('tree-summary').replaceChildren(...data.trees.map(tree => {
     const row = element('div', '', tree.name);
     row.append(element('strong', '', String(totals[tree.index])));
@@ -268,10 +269,12 @@ function render() {
     if (metadata) itemName.className = `item-name q${metadata.quality}`;
     else itemName.className = 'item-name';
     const enchant=ENCHANTS.find(enchant=>enchant.id===item?.enchantId);
+    if(enchantLabel){
     enchantLabel.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
     enchantLabel.dataset.tone=bonusTone(enchantLabel.textContent);
     enchantLabel.tabIndex=enchant?0:-1;
     enchantLabel.classList.toggle('enchanted',Boolean(item?.enchantId));
+    }
     itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
     container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
