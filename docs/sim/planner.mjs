@@ -9,7 +9,7 @@ import {optionIcon, optionHasIcons} from './core/icons.mjs?v=20261202-buildnames
 let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
-import { classDefinition, SECONDARY_SKILLS } from './core/classes.mjs?v=20261202-buildnames2';
+import { classDefinition } from './core/classes.mjs?v=20261202-buildnames2';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261202-buildnames2';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261202-buildnames2';
@@ -124,7 +124,7 @@ function applyBuild(candidate, message, legacy=false) {
   persistDraft();
   config?.render();
   settingsControls?.render();
-  renderSkills();
+
   renderClassOptions();
   render();
   picker?.verifyGear().then(warnings => { if (warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); render(); }).catch(() => {});
@@ -488,17 +488,6 @@ function renderClassOptions(){
   const energy=$('class-option-startingEnergy');if(energy)energy.max=String(energyCap());
 }
 
-function createSkills(){
-  for(const name of SECONDARY_SKILLS){
-    const label=element('label','field',name),input=element('input');
-    input.id='skill-'+name.toLowerCase().replaceAll(' ','-');input.type='number';input.min=0;input.max=300;input.step=1;
-    input.addEventListener('change',async()=>{try{const skills={...build.skills,[name]:Number(input.value)};const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Skills updated.');}catch(error){feedback(error.message,true);renderSkills();}});
-    label.append(input);$('secondary-skills').append(label);
-  }
-}
-function renderSkills(){
-  for(const name of SECONDARY_SKILLS)$('skill-'+name.toLowerCase().replaceAll(' ','-')).value=build.skills[name]||0;
-}
 
 function wireControls() {
   // Every dialog: the × button, Escape (native), and a click on the backdrop all close it.
@@ -642,7 +631,7 @@ async function initialise() {
     for(const image of document.querySelectorAll('.class-mark,.rail-class-icon')){image.src=iconUrl(`classicon_${classId}`);image.alt=currentClass.name;}
     createSlots();
     if(['paladin','druid','shaman'].includes(classId)){$('slots-weapons').setAttribute('aria-label','Weapons and relic');const slot=$('slots-weapons').querySelector('.slot:last-child');slot.querySelector('.slot-name').textContent='Relic';slot.querySelector('button').setAttribute('aria-label','Edit Relic');}
-    createTalents(); createSkills(); createClassOptions(); wireControls(); createDisclosures();
+    createTalents(); createClassOptions(); wireControls(); createDisclosures();
     let message = 'Planner ready.';
     try {
       const stored = pendingBuild ? null : (localStorage.getItem(DRAFT_KEY) || (classId==='warrior'?localStorage.getItem('octosim.planner.draft.v1'):null));
