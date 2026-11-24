@@ -1,6 +1,6 @@
 import {validEnchant} from './equipment-options.mjs?v=20261130-ui2';
 import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
-import { classDefinition } from './classes.mjs?v=20261112-audit1';
+import { classDefinition } from './classes.mjs?v=20261201-ui3';
 // Database listing filters are preliminary. Equipping requires the source detail masks.
 export const SLOT_TYPES = Object.freeze({ head:[1],neck:[2],shoulder:[3],back:[16],chest:[5,20],wrist:[9],hands:[10],waist:[6],legs:[7],feet:[8],ring1:[11],ring2:[11],trinket1:[12],trinket2:[12],mainhand:[13,17,21],offhand:[13,14,22,23],ranged:[15,25,26,28],shirt:[4],tabard:[19],ammo:[24],quiver:[18] });
 export const RACES = RACE_MASKS;

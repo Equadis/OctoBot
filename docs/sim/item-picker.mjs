@@ -1,6 +1,6 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
 import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261130-ui2';
-import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
+import {SLOTS} from './core/builds.mjs?v=20261201-ui3';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {fixSigns} from './core/signs.mjs?v=1';
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';

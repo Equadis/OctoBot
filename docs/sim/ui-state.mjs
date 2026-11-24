@@ -33,3 +33,16 @@ export function sanitiseUi(value){
 }
 export function loadUi(storage,classId){try{return sanitiseUi(JSON.parse(storage.getItem(uiKey(classId))));}catch{return null;}}
 export function saveUi(storage,classId,state){try{storage.setItem(uiKey(classId),JSON.stringify(state));}catch{}}
+// A saved build picked in another class's planner: carried across the navigation in this tab and applied by the target planner.
+export const PENDING_BUILD_KEY='octosim.pending-build.v1';
+export function setPendingBuild(storage,{classId,build}){try{storage.setItem(PENDING_BUILD_KEY,JSON.stringify({classId,build}));}catch{}}
+export function takePendingBuild(storage,classId){
+  try{
+    const raw=storage?.getItem(PENDING_BUILD_KEY);if(!raw)return null;
+    const pending=JSON.parse(raw);
+    if(pending?.classId!==classId)return null;           // meant for a different planner; leave it alone
+    storage.removeItem(PENDING_BUILD_KEY);
+    return pending.build&&typeof pending.build==='object'?pending:null;
+  }catch{try{storage?.removeItem(PENDING_BUILD_KEY);}catch{}return null;}
+}
+

@@ -15,8 +15,8 @@ test('Race, name, and Level appear in the same row in that order',()=>{
   const html=read('sim/index.html');
   const row=html.match(/<div class="character-controls">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(row,'character controls exist');
-  assert.ok(row.indexOf('id="character-race"')<row.indexOf('id="character-name"'));
-  assert.ok(row.indexOf('id="character-name"')<row.indexOf('id="character-level"'));
+  assert.ok(row.indexOf('id="character-race"')<row.indexOf('id="build-name"'));
+  assert.ok(row.indexOf('id="build-name"')<row.indexOf('id="character-level"'));
   assert.equal((row.match(/class="field/g)||[]).length,3);
 });
 

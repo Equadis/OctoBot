@@ -1,13 +1,13 @@
-import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261130-ui2';
+import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
 import {CONSUMABLES,CONSUMABLE_BY_ID,LEGACY_GROUPS,consumableGroup,consumablesConflict,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261130-ui2';
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
-import {buffIcon,consumableIcon} from './core/icons.mjs?v=1';
+import {buffIcon,consumableIcon} from './core/icons.mjs?v=20261201-ui3';
 import {iconUrl} from './core/interface.mjs?v=20261112-navigation1';
 import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
-import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261130-ui2';
+import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261201-ui3';
 import { attachTooltip } from './tooltip.mjs?v=20261124-tips2';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

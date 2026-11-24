@@ -3,6 +3,7 @@ import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
+import {wireDialogs} from '../dialogs.mjs?v=1';
 import {sanitiseShared,addShared,removeShared,sharedAgo} from './shared.mjs?v=1';
 import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-states1';
 import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261130-ui2';
@@ -818,6 +819,7 @@ function shareUrl(){const url=new URL(location.href);url.search='';url.hash='out
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
+ wireDialogs(document);
  setupBackdrops();setupInfoTips();setupWeaponControls();setupScrub();
  try{
   const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalog unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);

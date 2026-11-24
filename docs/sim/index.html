@@ -21,9 +21,9 @@
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css?v=20261126-toolbar2">
   <link rel="stylesheet" href="../quality-select.css?v=20261125-theme2">
-  <link rel="stylesheet" href="combat-layout.css?v=20261130-ui2">
-  <script type="module" src="planner.mjs?v=20261130-ui2"></script>
-<link rel="stylesheet" href="../site-theme.css?v=20261130-ui2">
+  <link rel="stylesheet" href="combat-layout.css?v=20261201-ui3">
+  <script type="module" src="planner.mjs?v=20261201-ui3"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
 <body>
@@ -49,12 +49,16 @@
         <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span><button id="reset-gear" class="panel-reset" type="button" aria-label="Reset gear">Reset</button></div>
         <div class="gear-workspace">
         <div class="gear-col gear-character">
-        <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field character-name-field">Character name<input id="character-name" maxlength="24" autocomplete="off" placeholder="Name your character"></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
+        <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field character-name-field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off" placeholder="Name this build"></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
         <details class="character-options">
-          <summary>Build details</summary>
-          <label class="field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off"></label>
-          <div id="profession-controls" class="profession-controls"></div><div class="build-summary" id="tree-summary"></div>
-          <p id="storage-status" class="small muted">Build changes are kept in this browser.</p>
+          <summary class="collapse-toggle">Build details</summary>
+          <div class="details-row row-character">
+            <label class="field">Character name<input id="character-name" maxlength="24" autocomplete="off" placeholder="Name"></label>
+            <label class="field">Gender<select id="character-gender"><option value="male">Male</option><option value="female">Female</option></select></label>
+            <div id="profession-primary" class="profession-primary"></div>
+          </div>
+          <div id="profession-secondary" class="details-row row-secondary"></div>
+          <div class="build-summary" id="tree-summary" hidden></div><p id="storage-status" hidden>Build changes are kept in this browser.</p>
         </details>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
@@ -129,7 +133,7 @@
   <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a></span><span class="source-credits">Based on forks of <a href="https://thrunk112.github.io/WarriorSim-TurtleWoW/turtle.html" target="_blank" rel="noopener noreferrer">TurtleSim</a> and <a href="https://www.combatgum.app/" target="_blank" rel="noopener noreferrer">Combat Gum</a>. <span class="reference-forks">(<a href="https://github.com/isfir/wowsims-turtle" target="_blank" rel="noopener noreferrer">WoWSims Turtle</a> · <a href="https://github.com/Barwaat/huntersim2-twow" target="_blank" rel="noopener noreferrer">HunterSim Turtle</a>)</span></span></footer>
 </main>
 <dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" required autocomplete="off"></label><div class="save-actions"><button type="submit">Save</button><span id="save-error" class="error" role="status" aria-live="polite"></span></div></form></dialog>
-<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off"></label><div class="library-actions"><button id="export-library" type="button">Export class builds</button><button id="import-library" type="button">Import class builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
+<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><div class="saved-filters"><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off" placeholder="Build, character or class"></label><label class="field">Class<select id="saved-class-filter"><option value="">All classes</option></select></label></div><div class="library-actions"><button id="export-library" type="button">Export builds</button><button id="import-library" type="button">Import builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>
 <input id="import-library-file" type="file" accept=".json,application/json" hidden>
 <input id="import-file" type="file" accept=".json,application/json" hidden>

@@ -26,7 +26,7 @@ export const OPTION_ICONS=Object.freeze({
 export const PROFESSION_ICONS=Object.freeze({
  Alchemy:'trade_alchemy',Blacksmithing:'trade_blacksmithing',Enchanting:'trade_engraving',Engineering:'trade_engineering',Herbalism:'trade_herbalism',
  Leatherworking:'trade_leatherworking',Mining:'trade_mining',Skinning:'inv_misc_pelt_wolf_01',Tailoring:'trade_tailoring',Jewelcrafting:'inv_misc_gem_01',
- Cooking:'inv_misc_food_15','First Aid':'spell_holy_sealofsalvation',Fishing:'trade_fishing',
+ Cooking:'inv_misc_food_15','First Aid':'spell_holy_sealofsalvation',Fishing:'trade_fishing',Survival:'ability_hunter_survivalinstincts',Gardening:'inv_misc_flower_02',
 });
 const byBuff=new Map(CONSUMABLES.filter(item=>item.buffId&&/^[a-z0-9_]+$/i.test(item.icon||'')).map(item=>[item.buffId,item.icon]));
 const byName=new Map(CONSUMABLES.filter(item=>/^[a-z0-9_]+$/i.test(item.icon||'')).map(item=>[item.name.replace(/[’]/g,"'"),item.icon]));

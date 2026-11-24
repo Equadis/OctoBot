@@ -16,12 +16,12 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="OctoBot: Dressing Room. Preview 3D characters, experiment with equipment and save or share transmog outfits.">
 <meta name="twitter:card" content="summary_large_image">
-<title>OctoBot · Dressing Room</title><link rel="icon" href="../favicon.png"><link rel="stylesheet" href="outfitter.css?v=20261130-ui2"><link rel="stylesheet" href="../quality-select.css?v=20261125-theme1">
+<title>OctoBot · Dressing Room</title><link rel="icon" href="../favicon.png"><link rel="stylesheet" href="outfitter.css?v=20261201-ui3"><link rel="stylesheet" href="../quality-select.css?v=20261125-theme1">
 <script>window.WH={debug:function(){},defaultAnimation:'Stand',WebP:{getImageExtension:function(){return '.webp'}}};</script>
 <script defer src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script defer src="https://wow.zamimg.com/modelviewer/classic/deployment/viewer/35ee72d/viewer.min.js"></script>
-<script type="module" src="outfitter.mjs?v=20261130-ui2"></script>
-<link rel="stylesheet" href="../site-theme.css?v=20261130-ui2">
+<script type="module" src="outfitter.mjs?v=20261201-ui3"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
 <body><main>
@@ -46,7 +46,7 @@
 <footer>Outfit workflow and T.O.L. compatibility based on <a href="https://github.com/Otari98/Tmog" target="_blank" rel="noopener">Otari98 / Tmog</a>. Equipment from the <a href="https://octowow.st/db/" target="_blank" rel="noopener">OctoWoW database</a>. 3D rendering by Wowhead / Zam. Optional backgrounds are Blizzard Entertainment artwork from <a href="https://wowpedia.fandom.com/wiki/Dressing_room" target="_blank" rel="noopener">Wowpedia</a>. Custom server models may be unavailable; item selection is for appearance planning and does not verify in-game transmog eligibility.</footer>
 </main>
 <dialog id="exchange"><form method="dialog"><div class="section-heading"><h2>Import / Export</h2><button aria-label="Close">×</button></div><label for="outfit-code">Tmog code (T.O.L.) or OctoBot outfit link</label><textarea id="outfit-code" rows="6" spellcheck="false"></textarea><p id="exchange-status" role="status"></p><div class="actions"><button type="button" id="copy-code">Copy code</button><button type="button" id="apply-code">Import outfit</button></div></form></dialog>
-<dialog id="crop-dialog" class="crop-dialog"><form id="crop-form" method="dialog"><h2>Crop your photo</h2><p class="muted">Drag to move the picture, scroll or use the slider to zoom. The frame has the same shape as the character viewer.</p><div class="crop-stage"><canvas id="crop-canvas" width="420" height="460" aria-label="Photo crop preview"></canvas></div><label class="crop-zoom">Zoom<input id="crop-zoom" type="range" min="100" max="400" value="100" step="1"></label><div class="actions"><button type="button" id="crop-cancel">Cancel</button><button type="submit" id="crop-apply">Use this crop</button></div></form></dialog>
+<dialog id="crop-dialog" class="crop-dialog" data-no-backdrop-close><form id="crop-form" method="dialog"><h2>Crop your photo</h2><p class="muted">Drag to move the picture, scroll or use the slider to zoom. The frame has the same shape as the character viewer.</p><div class="crop-stage"><canvas id="crop-canvas" width="420" height="460" aria-label="Photo crop preview"></canvas></div><label class="crop-zoom">Zoom<input id="crop-zoom" type="range" min="100" max="400" value="100" step="1"></label><div class="actions"><button type="button" id="crop-cancel">Cancel</button><button type="submit" id="crop-apply">Use this crop</button></div></form></dialog>
 <dialog id="share-dialog"><form id="share-form"><h2>Share outfit</h2><label for="share-name">Outfit name</label><input id="share-name" maxlength="80" required><div class="actions"><button type="button" id="cancel-share">Cancel</button><button type="submit">Share</button></div></form></dialog>
 <dialog id="save-dialog"><form id="save-form"><h2>Save outfit</h2><label for="outfit-name">Outfit name</label><input id="outfit-name" maxlength="80" required><div class="actions"><button type="button" id="cancel-save">Cancel</button><button type="submit">Save outfit</button></div></form></dialog>
 <script src="../viewer-presence.js" defer></script>

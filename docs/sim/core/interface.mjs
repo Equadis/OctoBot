@@ -1,4 +1,4 @@
-import { CLASS_DEFINITIONS } from './classes.mjs?v=20261112-audit1';
+import { CLASS_DEFINITIONS } from './classes.mjs?v=20261201-ui3';
 export const CLASSES=Object.freeze(CLASS_DEFINITIONS.map(cls=>({...cls,available:true})));
 
 export const SLOT_ICONS = Object.freeze({

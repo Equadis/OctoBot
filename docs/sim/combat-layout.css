@@ -367,3 +367,38 @@ label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
 .planner-view #item-selector .item-row .item-description.ah-name-clip{text-overflow:clip}
 .planner-view .buff-row .buff-effect.ah-name-clip{text-overflow:clip}
 
+/* ===== Compact Character fields: Race, Build name, Level; then expandable Build details in two rows ===== */
+.planner-view .gear-character .character-controls{display:grid;grid-template-columns:minmax(0,132px) minmax(0,1fr) 54px;gap:8px;margin:0 0 6px}
+.planner-view .gear-character .character-controls .field{margin:0;min-width:0}
+.planner-view .gear-character .character-controls .field>input,.planner-view .gear-character .character-controls .field>select{width:100%}
+.planner-view .gear-character .character-options{margin:0 0 8px}
+.planner-view .gear-character .character-options>summary.collapse-toggle{margin:2px 0 8px;font-size:12px;color:#c8d2e2;width:auto}
+.planner-view .details-row{display:grid;gap:6px;align-items:end;margin:0 0 8px}
+.planner-view .details-row.row-character{grid-template-columns:minmax(0,.92fr) minmax(0,.78fr) minmax(0,1.15fr) minmax(0,1.15fr)}
+.planner-view .profession-primary{display:contents}
+.planner-view .details-row.row-secondary{grid-template-columns:repeat(5,minmax(0,1fr))}
+.planner-view .details-row .field{margin:0;min-width:0;font-size:10px}
+.planner-view .details-row .field input,.planner-view .details-row .field select{width:100%;min-width:0;padding:5px 6px;font-size:11px;height:30px;box-sizing:border-box}
+.planner-view .profession-slot{display:grid;gap:4px;min-width:0}
+.planner-view .profession-slot>.field-caption{font-size:10px;color:var(--muted)}
+.planner-view .profession-slot-inputs{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:4px;align-items:center;min-width:0}
+.planner-view .profession-slot-inputs>input{width:100%;min-width:0;padding:5px 3px;font-size:11px;height:30px;text-align:center;box-sizing:border-box}
+.planner-view .profession-slot-inputs .rp-button{height:30px;padding:0 5px;gap:4px;font-size:11px}
+.planner-view .profession-slot-inputs .rp-faces img,.planner-view .profession-slot-inputs .rp-blank{width:16px;height:16px}
+.planner-view .profession-slot-inputs .rp-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.planner-view .profession-slot-inputs .rp-caret{display:none}
+.planner-view .skill-field .skill-name{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;font-size:10px}
+.planner-view .skill-field .row-icon{margin:0;flex:none}
+@media(max-width:560px){.planner-view .details-row.row-character{grid-template-columns:repeat(2,minmax(0,1fr))}.planner-view .details-row.row-secondary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* The preview scrolls on its own only when it overflows, and hands the wheel back to the page at its ends. */
+.planner-view .gear-preview{overscroll-behavior:auto}
+
+/* Saved Builds: every class in one list, with the class icon and the class colour on the name. */
+#load-dialog .saved-filters{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:10px;margin-bottom:8px}
+#load-dialog .saved-filters .field{margin:0;min-width:0}
+#load-dialog .saved-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:10px}
+#load-dialog .saved-class-icon{width:20px;height:20px}
+#load-dialog .saved-label{display:grid;min-width:0}
+#load-dialog .saved-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#load-dialog .saved-label small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
