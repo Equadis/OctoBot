@@ -4,15 +4,15 @@ import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261
 import {equipmentErrors} from './core/items.mjs?v=20261130-ui2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=20261130-ui2';
-import { raceIconUrl } from './race-icons.mjs?v=20261202-profs1';
-import {optionIcon, optionHasIcons, professionIcon} from './core/icons.mjs?v=20261202-profs1';
+import { raceIconUrl } from './race-icons.mjs?v=20261202-buildnames2';
+import {optionIcon, optionHasIcons} from './core/icons.mjs?v=20261202-buildnames2';
 let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261202-profs1';
-import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261201-ui3';
+import { classDefinition, SECONDARY_SKILLS } from './core/classes.mjs?v=20261202-buildnames2';
+import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261202-buildnames2';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261201-ui3';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261202-buildnames2';
 import { maxEnergy, reconcileStartingEnergy } from './core/resources.mjs?v=1';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi, takePendingBuild, setPendingBuild } from './ui-state.mjs?v=20261201-ui3';
 import { wireDialogs } from '../dialogs.mjs?v=1';
@@ -120,8 +120,7 @@ function applyBuild(candidate, message, legacy=false) {
   $('character-level').value = build.level;
   $('character-race').value = build.race;
   racePicker?.sync();
-  $('character-name').value = build.characterName || '';
-  $('character-gender').value = build.gender || 'male';
+
   persistDraft();
   config?.render();
   settingsControls?.render();
@@ -439,7 +438,7 @@ async function showSavedBuilds(){
     if(only&&entry.classId!==only)return false;
     if(!query)return true;
     const cls=classDefinition(entry.classId);
-    return [entry.name,entry.build?.characterName||'',cls.name].some(text=>String(text).toLowerCase().includes(query));
+    return [entry.name,cls.name].some(text=>String(text).toLowerCase().includes(query));
   });
   if(!entries.length)container.append(element('p','muted','No named builds saved yet. Use Save to keep a build in this browser.'));
   else if(!shown.length)container.append(element('p','muted','No saved builds match this search.'));
@@ -448,7 +447,7 @@ async function showSavedBuilds(){
     row.style.setProperty('--class-colour',cls.colour);
     const icon=gameIcon(`classicon_${entry.classId}`,'row-icon saved-class-icon');icon.alt=cls.name;
     const label=element('span','saved-label'),title=element('span','saved-title',entry.name);title.style.color=cls.colour;
-    label.append(title,element('small','',`${entry.build?.characterName?entry.build.characterName+' · ':''}Level ${entry.build?.level??'?'} ${cls.name} · ${new Date(entry.savedAt).toLocaleDateString()}`));
+    label.append(title,element('small','',`Level ${entry.build?.level??'?'} ${cls.name} · ${new Date(entry.savedAt).toLocaleDateString()}`));
     const actions=element('div','saved-actions');
     const load=element('button','','Load');load.type='button';
     load.addEventListener('click',async()=>{
@@ -465,7 +464,7 @@ async function showSavedBuilds(){
     actions.append(load);
     if(!entry.legacy){
       const remove=element('button','delete-build','Delete');remove.type='button';remove.setAttribute('aria-label',`Delete ${entry.name}`);
-      remove.addEventListener('click',async()=>{try{await library.removeFrom(entry.classId,entry.name);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.type='button';undo.addEventListener('click',async()=>{try{await library.putRecord(entry);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);}catch(error){feedback(error.message,true);}});
+      remove.addEventListener('click',async()=>{try{await library.removeFrom(entry.classId,entry.id);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.type='button';undo.addEventListener('click',async()=>{try{await library.putRecord(entry);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);}catch(error){feedback(error.message,true);}});
       actions.append(remove);
     }
     row.append(icon,label,actions);container.append(row);
@@ -489,29 +488,16 @@ function renderClassOptions(){
   const energy=$('class-option-startingEnergy');if(energy)energy.max=String(energyCap());
 }
 
-const professionPickers=[];
-function skillIcon(name){const image=element('img','row-icon');image.src=iconUrl(name);image.alt='';image.width=16;image.height=16;image.loading='lazy';image.addEventListener('error',()=>image.classList.add('blank'));return image;}
 function createSkills(){
-  // Two primary professions, chosen from a list. Having one means skill 300; there is no skill level to type.
-  const primary=$('profession-primary');
-  for(let index=0;index<2;index++){
-    const slot=element('div','profession-slot'),caption=element('span','field-caption',`Profession ${index+1}`),controls=element('div','profession-slot-inputs'),select=element('select');
-    select.id=`profession-${index}`;select.setAttribute('aria-label',`Profession ${index+1}`);
-    for(const name of ['',...PRIMARY_PROFESSIONS]){const option=element('option','',name||'None');option.value=name;select.append(option);}
-    controls.append(select);slot.append(caption,controls);primary.append(slot);
-    professionPickers.push(setupIconSelect(document,select,{label:`Profession ${index+1}`,iconFor:name=>{const icon=professionIcon(name);return icon?iconUrl(icon):null;}}));
-    select.addEventListener('change',updateSkills);
+  for(const name of SECONDARY_SKILLS){
+    const label=element('label','field',name),input=element('input');
+    input.id='skill-'+name.toLowerCase().replaceAll(' ','-');input.type='number';input.min=0;input.max=300;input.step=1;
+    input.addEventListener('change',async()=>{try{const skills={...build.skills,[name]:Number(input.value)};const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Skills updated.');}catch(error){feedback(error.message,true);renderSkills();}});
+    label.append(input);$('secondary-skills').append(label);
   }
 }
 function renderSkills(){
-  const selected=Object.keys(build.skills).filter(name=>PRIMARY_PROFESSIONS.includes(name));
-  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';professionPickers[i]?.sync();}
-}
-async function updateSkills(){
-  // Saved secondary skills (Cooking, First Aid, Fishing) are no longer edited here, but builds that have them keep them.
-  const skills=Object.fromEntries(Object.entries(build.skills).filter(([name])=>!PRIMARY_PROFESSIONS.includes(name)));
-  for(let i=0;i<2;i++){const name=$(`profession-${i}`).value;if(name){if(skills[name]){feedback('Select different primary professions.',true);renderSkills();return;}skills[name]=build.skills[name]||300;}}
-  try{const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Professions updated.');}catch(error){feedback(error.message,true);renderSkills();}
+  for(const name of SECONDARY_SKILLS)$('skill-'+name.toLowerCase().replaceAll(' ','-')).value=build.skills[name]||0;
 }
 
 function wireControls() {
@@ -535,7 +521,7 @@ function wireControls() {
   $('reset-results').addEventListener('click',()=>{$('simulation-output').replaceChildren();feedback('Results reset.');});
   $('reset-combat-log').addEventListener('click',()=>{$('combat-log-output').replaceChildren(element('p','small muted','Run a simulation to see the combat log.'));feedback('Combat log reset.');});
   config=configuration({getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker?.lookup(id),onChange:controls=>{const classOptions={...build.classOptions};if(controls.buffIds.includes('wizard-oil-mh')){if(classId==='rogue')classOptions.mhPoison='None';if(classId==='shaman')classOptions.mhImbue='None';}if(controls.buffIds.includes('wizard-oil-oh')&&classId==='rogue')classOptions.ohPoison='None';build=validateBuild({...build,classOptions,controls},data);renderClassOptions();persistDraft();render();}});
-  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level'], ['character-name', 'characterName']]) {
+  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', async () => {
       try {
         const restored=restoreLegacyBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
@@ -547,24 +533,18 @@ function wireControls() {
       } catch (error) { $(id).value = build[key]; feedback(error.message, true); }
     });
   }
-  // Gender only changes the race portraits and is kept with the build (male is the default and is not stored).
-  $('character-gender').addEventListener('change', () => {
-    const next = { ...build }; if ($('character-gender').value === 'female') next.gender = 'female'; else delete next.gender;
-    try { build = validateBuild(next, data); persistDraft(); racePicker?.sync(); render(); feedback('Build updated.'); }
-    catch (error) { $('character-gender').value = build.gender || 'male'; feedback(error.message, true); }
-  });
   let levelTimer;
   $('character-level').addEventListener('input', () => { clearTimeout(levelTimer); levelTimer = setTimeout(() => $('character-level').dispatchEvent(new Event('change')), 300); });
   const resetAll=()=>applyBuild(newBuild(classId),'Build reset. Named saved builds are still available.');
   $('reset-all').hidden=false;
   $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
-    try{$('save-name').value=defaultSaveName($('character-name').value, $('build-name').value);$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
+    try{$('save-name').value=defaultSaveName($('build-name').value, build.race, classId, build.level);$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
     catch(error){feedback(error.message,true);}
   });
   $('save-form').addEventListener('submit',async event=>{
     event.preventDefault();
-    try{const next=validateBuild({...build,characterName:$('character-name').value.trim(),name:$('save-name').value.trim()},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
+    try{const next=validateBuild({...build,name:defaultSaveName($('save-name').value,build.race,classId,build.level)},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
     catch(error){$('save-error').textContent=error.message;}
   });
   $('load-build').addEventListener('click',async()=>{try{$('saved-build-search').value='';$('saved-class-filter').value='';$('saved-library-status').textContent='';await showSavedBuilds();$('load-dialog').showModal();}catch(error){feedback(error.message,true);}});

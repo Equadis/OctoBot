@@ -5,12 +5,11 @@ import { newBuild, validateBuild, encodeBuild, decodeBuild, parseItemReference }
 const data = JSON.parse(await readFile(new URL('../../docs/sim/data/talents/warrior.json', import.meta.url)));
 import {BUILDS_PER_CLASS,BUILD_LIMIT_MESSAGE,defaultSaveName} from '../../docs/sim/core/build-library.mjs';
 
-test('build saves default to character – build, with no duplicate prefix',()=>{
- assert.equal(defaultSaveName('Fang','Combat Swords'),'Fang – Combat Swords');
- assert.equal(defaultSaveName(' Fang ',' Combat Swords '),'Fang – Combat Swords');
- assert.equal(defaultSaveName('Fang','Fang – Combat Swords'),'Fang – Combat Swords');
- assert.equal(defaultSaveName('','Combat Swords'),'Combat Swords');
- assert.ok(defaultSaveName('X'.repeat(24),'Y'.repeat(80)).length<=80);
+test('build names are independent of character names and have a fallback',()=>{
+ assert.equal(defaultSaveName(' Combat Swords ','Human','rogue',60),'Combat Swords');
+ assert.equal(defaultSaveName('','Human','rogue',60),'Human Rogue – Level 60');
+ assert.equal(defaultSaveName('   ','Orc','warrior',42),'Orc Warrior – Level 42');
+ assert.equal(defaultSaveName('X'.repeat(90),'Orc','warrior',60).length,80);
 });
 test('ten builds per class, with an inline limit message and no saved build counters',async()=>{
  assert.equal(BUILDS_PER_CLASS,10);
@@ -19,7 +18,7 @@ test('ten builds per class, with an inline limit message and no saved build coun
  const planner=await readFile(new URL('../../docs/sim/planner.mjs',import.meta.url),'utf8');
  assert.doesNotMatch(html,/id="(?:save-build-count|saved-build-count)"/);
  assert.match(html,/<div class="save-actions"><button type="submit">Save<\/button><span id="save-error" class="error"/);
- assert.ok(planner.includes("defaultSaveName($('character-name').value, $('build-name').value)"));
+ assert.ok(planner.includes("defaultSaveName($('build-name').value, build.race, classId, build.level)"));
  assert.doesNotMatch(planner,/\d+ \/ \$\{BUILDS_PER_CLASS\}/);
 });
 
@@ -46,3 +45,5 @@ test('equipment references accept only IDs or official HTTPS database item links
     assert.throws(() => parseItemReference(value));
   }
 });
+
+test('legacy character metadata is ignored but gender and secondary skills survive',()=>{const value=validateBuild({...newBuild(),characterName:'Old Name',gender:'female',skills:{Cooking:100,Survival:50,Gardening:25}},data);assert.equal(value.characterName,undefined);assert.equal(value.gender,'female');assert.deepEqual(value.skills,{Cooking:100,Survival:50,Gardening:25});});
