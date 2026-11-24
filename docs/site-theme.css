@@ -152,3 +152,12 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .app-toolbar .reset-all:focus-visible{outline:2px solid #ff998f;outline-offset:3px}
 @media(max-width:560px){.app-toolbar-status{flex-basis:100%;order:3;justify-content:space-between}.app-toolbar button,.app-toolbar a.app-btn{padding:0 11px}}
 
+/* The (i) information icon: muted grey everywhere, brighter on hover or focus. Pages only add positioning. */
+.info-i{width:16px;height:16px;box-sizing:border-box;border:1px solid #5b6b82;border-radius:50%;color:var(--muted);font:italic 700 11px/14px Georgia,serif;text-align:center;cursor:help;user-select:none;flex:none}
+.info-i:hover,.info-i:focus-visible{border-color:#c0ccda;color:#e5e9ef;outline:0}
+.info-i[data-kind=invisible]{border-style:dashed}
+
+/* External database link used in item lists (Gear Planner and Dressing Room): "DB ↗", always blue, same size and click area. */
+.ext-db-link{display:inline-block;flex:none;padding:4px 6px;color:#7ebbf0;font-size:10px;line-height:1.2;text-decoration:none;white-space:nowrap;cursor:pointer}
+.ext-db-link:hover,.ext-db-link:focus-visible{color:#a9d3f8;text-decoration:underline;outline:0}
+

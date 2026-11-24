@@ -115,7 +115,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const image=node('img');image.src=iconUrl(item.icon);image.alt='';image.loading='lazy';
    const copy=node('div',undefined,'item-row-copy'),name=node('div',undefined,'item-row-name');name.append(node('span',item.name,`q${item.quality}`),node('span',`[${item.level || 0}]`,'item-level'));
    copy.append(name,node('div',shortStats({...item,...references[item.id],...details[item.id]}),'item-description'));
-   const link=node('a','Octo DB','item-db-link');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',event=>event.stopPropagation());
+   const link=node('a','DB ↗','item-db-link ext-db-link');link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',event=>event.stopPropagation());
    row.append(image,copy,link);
    row.addEventListener('click',()=>selectItem(item));
    row.addEventListener('mouseenter',()=>{clearTimeout(previewTimer);previewTimer=setTimeout(()=>{if(previewed?.id!==item.id)previewItem(item);},220);});

@@ -8,7 +8,7 @@ const sim=read('sim/index.html'),room=read('outfitter/index.html'),theme=read('s
 test('the Gear Planner has a horizontal toolbar in the specified order and no sidebar',()=>{
  const toolbar=sim.match(/<div class="app-toolbar"[\s\S]*?<\/div>\s*<div class="app-toolbar-status">[\s\S]*?<\/div>\s*<\/div>/)[0];
  const labels=[...toolbar.matchAll(/<(?:a|button)[^>]*>([^<]+)<\/(?:a|button)>/g)].map(m=>m[1]);
- assert.deepEqual(labels,['← All classes','Save Build','Load Build','Share Build','Export Build','Import Build','Reset all']);
+ assert.deepEqual(labels,['← All classes','Save','Load','Share','Export','Import','Reset all']);
  assert.match(toolbar,/<div class="app-toolbar-status"><p id="feedback" role="status" aria-live="polite"><\/p><button id="reset-all" class="reset-all"/,'status and Reset all sit on the right');
  assert.ok(sim.indexOf('data-current="sim"')<sim.indexOf('app-toolbar')&&sim.indexOf('app-toolbar')<sim.indexOf('id="equipment"'),'between the tabs and the Character section');
  assert.doesNotMatch(sim,/rail-brand|OctoSim|class="actions"|planner-topbar|planner-actions-status/);

@@ -193,8 +193,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 /* Empty notes take no space; the explanatory text lives behind the small (i) at the bottom right of each block */
 .world-panel{position:relative}
 small:empty,.evidence:empty{display:none}
-.info-i{position:absolute;right:12px;bottom:10px;width:16px;height:16px;border:1px solid #5b6b82;border-radius:50%;color:#8fa0b6;font:italic 700 11px/14px Georgia,serif;text-align:center;cursor:help;user-select:none}
-.info-i:hover,.info-i:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
+.info-i{position:absolute;right:12px;bottom:10px}
 .info-i::after{content:attr(data-tip);position:absolute;right:-6px;bottom:24px;width:min(300px,70vw);padding:9px 11px;background:#0e1623;border:1px solid #39465a;border-radius:6px;color:#c6d0dc;font:400 11px/1.55 system-ui,sans-serif;text-align:left;box-shadow:0 8px 22px rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;z-index:5}
 .info-i:hover::after,.info-i:focus::after{opacity:1;visibility:visible}
 .world-panel{padding-bottom:30px}

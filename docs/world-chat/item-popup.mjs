@@ -1,5 +1,5 @@
 import {richItemTooltip} from "../auction-house/item-presentation.mjs?v=20261118-details2";
-import {itemAuctionHref} from "./chat-interactions.mjs?v=1";
+import {itemAuctionHref,itemDatabaseHref} from "./chat-interactions.mjs?v=2";
 // A single viewport-clamped, pinned-or-hover item popup. No player-supplied HTML is rendered.
 export function installItemPopup(){
  const popup=document.createElement("div");popup.id="chat-item-popup";popup.className="chat-item-popup";popup.hidden=true;document.body.append(popup);
@@ -27,10 +27,15 @@ export function installItemPopup(){
   }
   if(pinned){
    const actions=make("div","","chat-item-actions");
-   for(const [label,href] of [["Open in AH ↗",itemAuctionHref(id)],["Open in DB ↗","https://octowow.st/db/?item="+id]]){
-    const a=make("a",label);a.href=href;a.target="_blank";a.rel="noopener noreferrer";actions.append(a);
+   const realm=document.getElementById("realm")?.value||"";
+   // Auction House stays inside OctoBot (same tab); the OctoWoW database is external and opens in a new tab.
+   for(const [label,href,external] of [["Open in AH ↗",itemAuctionHref(id,realm),false],["Open in DB ↗",itemDatabaseHref(id),true]]){
+    if(!href)continue;
+    const a=make("a",label);a.href=href;if(external){a.target="_blank";a.rel="noopener noreferrer";}
+    // Opening a link must never reach the chat row or anything underneath the popup.
+    a.addEventListener("click",e=>e.stopPropagation());actions.append(a);
    }
-   popup.append(actions,make("p","Auction House data: N'Zoth (Normal).","chat-item-note"));
+   popup.append(actions,make("p","Auction House data: "+(realm||"N'Zoth")+" (Normal).","chat-item-note"));
   }
   popup.classList.toggle("is-pinned",pinned);popup.setAttribute("role",pinned?"dialog":"tooltip");popup.setAttribute("aria-label",label);popup.hidden=false;place();
  }

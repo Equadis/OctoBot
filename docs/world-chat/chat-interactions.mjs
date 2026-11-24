@@ -23,9 +23,17 @@ export function mentionParts(text,known){
 export function rowInFocus(author,mentions,focused){
  return !focused||playerKey(author)===focused||mentions.includes(focused);
 }
-export function itemAuctionHref(id){
+// The Auction House opens on this exact item (by ID, not by name) in the realm the chat is showing.
+export function itemAuctionHref(id,realm=""){
  if(!Number.isSafeInteger(id)||id<=0||id>2147483647)return null;
- return "../auction-house/?q="+id;
+ const params=new URLSearchParams();
+ if(realm&&["N'Zoth","Y'Shaarj","C'Thun"].includes(realm))params.set("realm",realm);
+ params.set("q",String(id));params.set("open",String(id));
+ return "../auction-house/?"+params.toString();
+}
+export function itemDatabaseHref(id){
+ if(!Number.isSafeInteger(id)||id<=0||id>2147483647)return null;
+ return "https://octowow.st/db/?item="+id;
 }
 export function auctionSearchFromURL(url){
  const query=new URL(url).searchParams.get("q")??"";

@@ -30,7 +30,7 @@ test('the version is only accepted in the shape the service issues',()=>{
 });
 
 test('changed scripts carry new version strings so returning visitors load them',()=>{
- assert.match(html,/outfitter\.mjs\?v=20261126-toolbar1/);
+ assert.match(html,/outfitter\.mjs\?v=20261129-ui1/);
  assert.match(source,/service\.mjs\?v=20261117-versioned1/);
 });
 

@@ -1,7 +1,7 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs?v=3";
-import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=1";
-import {installItemPopup} from "./item-popup.mjs?v=20261118-details2";
+import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=2";
+import {installItemPopup} from "./item-popup.mjs?v=20261129-ui1";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
 const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"DJ",DEV:"Developer"};
 const staffRoles=["DEV","GM","CM","DJ"];

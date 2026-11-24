@@ -8,7 +8,7 @@ import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
 import {buildChart,MIN_POINTS} from './chart.mjs?v=20261118-history1';
-import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=1';
+import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=2';
 
 // A different API origin is honoured only when the page itself is served from this machine (used for local testing against fixtures).
 const override=new URLSearchParams(location.search).get('api');

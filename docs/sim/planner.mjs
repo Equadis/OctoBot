@@ -14,7 +14,7 @@ import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseT
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi } from './ui-state.mjs?v=1';
 import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
-import { itemPicker } from './item-picker.mjs?v=20261126-toolbar1';
+import { itemPicker } from './item-picker.mjs?v=20261129-ui1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261127-icons1';

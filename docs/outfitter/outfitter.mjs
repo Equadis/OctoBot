@@ -295,13 +295,14 @@ function renderItems(){
  const results=$('results'),scrollTop=results.scrollTop,focusedId=results.contains(document.activeElement)?document.activeElement.dataset.itemId:null;results.replaceChildren();
  for(const item of rows){
   const row=document.createElement('div');row.className='result'+(outfit.gear[selectedSlot]===item.id?' equipped':'');const thumbnail=image(item);thumbnail.loading='lazy';row.append(thumbnail);
-  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);button.setAttribute('aria-label',`Try on ${item.name}`);
+  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);// The whole row is the target, padding and thumbnail included; links and info icons keep their own actions.
+  row.addEventListener('click',event=>{if(event.target.closest('a,.info-i,button'))return;button.click();});button.setAttribute('aria-label',`Try on ${item.name}`);
   const title=document.createElement('span'),name=document.createElement('span'),level=document.createElement('span'),detail=document.createElement('span');
   title.className='item-row-name';name.className=`quality-${item.quality}`;name.textContent=item.name;level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
   detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
-  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
+  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.className='ext-db-link';link.target='_blank';link.rel='noopener noreferrer';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
  }
  queueScan();
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
