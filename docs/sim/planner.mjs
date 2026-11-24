@@ -11,7 +11,7 @@ import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/c
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
-import { itemPicker } from './item-picker.mjs?v=20261117-picker3';
+import { itemPicker } from './item-picker.mjs?v=20261124-inline1';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261114-groups1';
@@ -351,7 +351,13 @@ function downloadJson(value,filename){
   const link=element('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+// The selector beside the character panel always shows one slot; the matching slot is highlighted.
+function markActiveSlot(active) {
+  for (const [slot, { container }] of slotElements) container.classList.toggle('slot-active', slot === active);
+}
+
 function openItem(slot) {
+  markActiveSlot(slot);
   picker.open(slot);
 }
 
@@ -407,7 +413,6 @@ async function updateSkills(){
 }
 
 function wireControls() {
-  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
   picker = itemPicker({
     getBuild: () => ({...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,item])=>[slot,{...item,twoHanded:picker?.lookup(item.id)?.slot===17,subclass:picker?.lookup(item.id)?.subclass}]))}),
     onEquip: (slot,item) => {
@@ -418,7 +423,7 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];if(slot==='ranged'){delete build.gear.ammo;delete build.gear.quiver;}persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
-  swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>picker.open(slot,options),inspect:id=>picker.inspect(id)});
+  swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>{markActiveSlot(null);return picker.open(slot,options);},inspect:id=>picker.inspect(id)});
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
   $('clear-talents').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'talents'),'Talents reset.'));
@@ -514,8 +519,6 @@ function createDisclosures() {
     toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-controls',body.id);
     toggle.addEventListener('click',()=>{body.hidden=!body.hidden;toggle.setAttribute('aria-expanded',String(!body.hidden));});
     title.replaceChildren(toggle);
-    // Buffs & Debuffs starts minimised, like each of its categories.
-    if(card.id==='buffs'){body.hidden=true;toggle.setAttribute('aria-expanded','false');}
   }
 }
 
@@ -550,6 +553,7 @@ async function initialise() {
       catch (error) { invalidShare = error.message; }
     }
     applyBuild(build, message);
+    openItem('head');
     if (invalidShare) feedback(invalidShare, true);
     $('planner').hidden = false;
   } catch (error) {

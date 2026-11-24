@@ -275,7 +275,7 @@ test('the full Auction House row expands on click and keyboard without navigatio
  assert.match(css,/\.ah-scroll>table\{[^}]*table-layout:fixed/);
  assert.doesNotMatch(css,/min-width:1040px/);
  assert.match(css,/@media\(max-width:1060px\)/,'rows become cards at narrower widths');
- assert.match(css,/@keyframes ah-name-pan/,'long names glide then return');
+ assert.match(read('site-theme.css'),/@keyframes ah-name-pan/,'long names glide then return (shared with the Gear Planner)');
  assert.match(css,/prefers-reduced-motion:reduce/);
 });
 

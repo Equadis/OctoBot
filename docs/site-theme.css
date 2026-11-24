@@ -125,3 +125,9 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 .site-construction-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 0 16px;border:1px solid #8b7640;border-radius:6px;background:#302d22;color:#e8ddba;font-size:13px;line-height:1.5}
 .site-construction-banner strong{color:#f4d65c;font-size:15px;white-space:nowrap}
 .site-construction-banner span{flex:1;min-width:220px}
+
+/* Names too long for their box pan sideways (Auction House and Gear Planner). */
+.ah-name-text{display:inline-block;white-space:nowrap;will-change:transform}
+.ah-name-clip.ah-scroll-name .ah-name-text{animation:ah-name-pan var(--name-duration,10s) linear infinite}
+@keyframes ah-name-pan{0%,12%{transform:translateX(0)}88%,93%{transform:translateX(calc(-1 * var(--name-distance,0px)))}93.01%,100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.ah-name-clip.ah-scroll-name .ah-name-text{animation:none}}

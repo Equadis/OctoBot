@@ -2,6 +2,7 @@
 import {parseSnapshotQuery,querySnapshot} from "./snapshot-query.mjs?v=1";
 import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
+import {measureScrollingNames} from '../scrolling-names.mjs?v=1';
 import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261120-hourly';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
 import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
@@ -123,14 +124,7 @@ function prepareSortHeaders(table,scope='items'){
  updateSortHeaders(table);
 }
 
-function measureNames(root){
- for(const clip of root.querySelectorAll('.ah-name-clip')){
-  const text=clip.firstElementChild,overflow=Math.max(0,text.scrollWidth-clip.clientWidth);
-  clip.classList.toggle('ah-scroll-name',overflow>2);
-  clip.style.setProperty('--name-distance',overflow+'px');
-  clip.style.setProperty('--name-duration',Math.max(7,Math.min(24,5+overflow/22))+'s');
- }
-}
+function measureNames(root){measureScrollingNames(root);}
 function scheduleNames(root){if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>measureNames(root));}
 window.addEventListener('resize',()=>measureNames(document));
 

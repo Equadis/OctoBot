@@ -4,9 +4,9 @@ import {readFileSync} from 'node:fs';
 
 const read=path=>readFileSync(new URL('../docs/'+path,import.meta.url),'utf8');
 
-test('the desktop planner gives Character and Buffs a wider column without scaling any content',()=>{
+test('the desktop planner stacks Character and Talents, then Buffs (2/5) beside Rotation, Settings, Results and Combat Log (3/5)',()=>{
   const css=read('sim/combat-layout.css');
-  assert.match(css,/\.planner-view \.planner-grid\{grid-template-columns:minmax\(400px,1\.15fr\) minmax\(0,1\.5fr\)/);
+  assert.match(css,/\.planner-view \.planner-grid\{grid-template-columns:minmax\(0,2fr\) minmax\(0,3fr\);grid-template-areas:"gear gear" "talents talents" "buffs rotation" "buffs settings" "buffs results" "buffs log" "buffs \."/);
   assert.match(css,/@media\(max-width:940px\)\{\.planner-view \.planner-grid\{grid-template-columns:minmax\(0,1fr\)\}/);
   assert.match(css,/\.character-controls\{display:grid;grid-template-columns:132px minmax\(0,1fr\) 58px/);
 });

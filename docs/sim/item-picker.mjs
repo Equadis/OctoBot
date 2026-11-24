@@ -2,7 +2,7 @@ import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
 import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
 import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
-import {SORT_OPTIONS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
+import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
 
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const shortStats=item=>{
@@ -18,7 +18,7 @@ const shortStats=item=>{
 
 export function itemPicker({getBuild,onEquip,onClear}) {
  const $=id=>document.getElementById(id);
- let items=null,details={},references={},slot=null,loading=null,previewed=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),equipVersion=0,session=0;
+ let active=false,items=null,details={},references={},slot=null,loading=null,previewed=null,direction='desc',previewVersion=0,previewTimer=null,candidates=[],rowElements=new Map(),equipVersion=0,session=0;
  let selectionContext={};
  const selectionBuild=()=>selectionContext.getBuild?.()||getBuild();
  const CACHE_KEY='octosim.item-details.v2',pending=new Map();
@@ -54,6 +54,12 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
   $('item-enchant').disabled=!options.length;
  }
+ // The enchant shown with a previewed item is the one in the Item Enchant dropdown, when it fits that item. Display only: item data and character stats are untouched.
+ function previewEnchant(item){
+  const id=$('item-enchant').value;if(!id||!item)return null;
+  const build=selectionBuild();return enchantsForSlot(slot,build.classId,item,build.level).some(enchant=>enchant.id===id)?ENCHANTS.find(enchant=>enchant.id===id)||null:null;
+ }
+ function repaintPreview(){if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');}
  function paintPreview(item,source=null,state=''){
   const preview=$('item-preview');preview.replaceChildren();preview.setAttribute('aria-busy',String(state==='Loading…'));
   const header=node('div',undefined,'item-preview-header'),image=node('img');image.src=iconUrl(item.icon);image.alt='';
@@ -63,6 +69,8 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   if(!source?.tooltipText && source?.effects)lines.push(...source.effects);
   let setEffect=false;
   for(const [index,line] of lines.entries()){if(/^\(\d+\) Set:/.test(line.trim()))setEffect=true;if(/^["“]/.test(line.trim()))setEffect=false;tooltip.append(node('div',line,index===0?`q${item.quality}`:setEffect||/^(Equip:|Use:|Chance on hit:)/.test(line.trim())?'item-effect':''));}
+  const enchant=previewEnchant(item);
+  if(enchant)tooltip.append(node('div',`Enchanted: ${enchant.name.replace(/\s*\((?:MH|OH)\)/g,'')}`,'item-enchant'));
   preview.append(tooltip);
   if(state)preview.append(node('p',state,'item-preview-status'));
  }
@@ -72,11 +80,11 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   for(const [id,row] of rowElements){const active=id===item.id;row.classList.toggle('previewed',active);row.setAttribute('aria-selected',String(selectionBuild().gear[slot]?.id===id));row.tabIndex=active?0:-1;}
   paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');
   try{
-   const source=await detail(item);if(version!==previewVersion || !$('item-dialog').open)return;
+   const source=await detail(item);if(version!==previewVersion || !active)return;
    const reason=detailRestriction(item,source,selectionBuild(),slot); 
    paintPreview(item,source);if(reason)error(reason);
    const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
-  }catch(failure){if(version!==previewVersion || !$('item-dialog').open)return; paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
+  }catch(failure){if(version!==previewVersion || !active)return; paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
   if(!items)return;
@@ -109,11 +117,17 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   if(item)previewItem(item);
   else{++previewVersion;previewed=null;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
  }
+ // Keeps the list, the clear button and the enchant list in step with the equipped item without redrawing (or rescrolling) the list.
+ function refreshEquipped(){
+  const build=selectionBuild(),equippedId=build.gear[slot]?.id;
+  for(const [id,row] of rowElements){row.classList.toggle('equipped',id===equippedId);row.setAttribute('aria-selected',String(id===equippedId));}
+  $('clear-item').disabled=!equippedId;
+ }
  async function selectItem(item,explicitEnchant,close=true){
-  if(!item||!$('item-dialog').open)return;
+  if(!item||!active)return;
   clearTimeout(previewTimer);
   const request=++equipVersion, activeSession=session, targetSlot=slot, context=selectionContext;
-  const current=()=>request===equipVersion&&activeSession===session&&$('item-dialog').open;
+  const current=()=>request===equipVersion&&activeSession===session&&active;
   try{
    const source=await detail(item);if(!current())return;
    const build=selectionBuild(), reason=detailRestriction(item,source,build,targetSlot);
@@ -123,19 +137,18 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const enchantId=options.some(enchant=>enchant.id===wanted)?wanted:'';
    if(explicitEnchant&&enchantId!==explicitEnchant){error('This enchant is unavailable in the current phase or incompatible with this slot.');updateEnchants();return;}
    (context.onEquip||onEquip)(targetSlot,{id:item.id,label:(source.name||item.name).slice(0,80),enchantId,twoHanded:(source.slot||item.slot)===17});
-   if(close)$('item-dialog').close();else{updateEnchants();error();}
+   updateEnchants();refreshEquipped();repaintPreview();error();
   }catch(failure){if(current()){error('Official item restrictions could not be verified. '+failure.message);updateEnchants();}}
  }
  $('item-form').addEventListener('submit',event=>{event.preventDefault();clearTimeout(searchTimer);search();});
  let searchTimer;$('item-reference').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(search,180);});
  for(const id of ['item-quality','item-sort'])$(id).addEventListener('change',search);
- $('item-direction').addEventListener('click',()=>{direction=direction==='desc'?'asc':'desc';$('item-direction').textContent=direction==='desc'?'Descending ▼':'Ascending ▲';search();});
- $('item-enchant').addEventListener('change',()=>{const equipped=selectionBuild().gear[slot],item=equipped&&items?.find(item=>item.id===equipped.id);if(item)selectItem(item,$('item-enchant').value,false);});
- $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);$('item-dialog').close();});
- $('item-dialog').addEventListener('close',()=>{if($('item-dialog').open)return;++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);});
- return {
+ $('item-direction').addEventListener('click',()=>{direction=direction==='desc'?'asc':'desc';$('item-direction').textContent=direction==='desc'?'▼':'▲';$('item-direction').setAttribute('aria-label',`Sort direction: ${direction==='desc'?'descending':'ascending'}`);$('item-direction').title=direction==='desc'?'Descending':'Ascending';search();});
+ $('item-enchant').addEventListener('change',()=>{const equipped=selectionBuild().gear[slot],item=equipped&&items?.find(item=>item.id===equipped.id);repaintPreview();if(item)selectItem(item,$('item-enchant').value,false);});
+ $('clear-item').addEventListener('click',()=>{(selectionContext.onClear||onClear)(slot);updateEnchants();refreshEquipped();repaintPreview();error();});
+  return {
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';$('item-dialog-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];$('item-dialog').showModal();try{await load();if(activeSession!==session||!$('item-dialog').open)return;updateEnchants();search();}catch(failure){if(activeSession===session&&$('item-dialog').open)error(failure.message);}},
+  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
   async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},

@@ -255,3 +255,8 @@
 .info-i[data-kind="invisible"]{border-style:dashed;color:#7a8a9f}
 .info-i[data-kind="missing"],.info-i[data-kind="unresolved"],.info-i[data-kind="incomplete"],.info-i[data-kind="estimated"]{border-color:#c9ae33;color:#f4d65c}
 .info-i[data-kind="error"]{border-color:#a8504a;color:#f09a92}
+
+.shared-panel.panel{margin-top:18px}
+.shared-card .saved-name{display:flex;flex-direction:column;gap:2px}
+.shared-time{display:block;font-size:10px;color:#8a9bad;font-weight:400}
+.shared-card .shared-copy{display:block;width:100%;margin-top:5px;padding:5px 8px;font-size:11px}

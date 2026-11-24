@@ -101,3 +101,7 @@ an explicit service-update message.
 The icon takes its kind from the first words of its note: *No visible appearance* (grey, dashed: the game client defines nothing to draw, so the preview shows nothing, as the game does), *Missing model*, *Unresolved metadata*, *Incomplete model* and *Estimated preview* (amber),
 and *Service error* (red). The recovery build's `meta/octobot/appearance-states.json` decides the first four for the pairs it lists, without a lookup or an estimate; an incomplete model keeps its model and gains the warning, naming the sex that lacks a texture.
 `appearance.mjs` holds the pure rules; tests in `tests/outfitter-appearance-states.test.mjs` and `tools/models/ui_regression.mjs`.
+
+## Sharing and Recently Shared
+
+Share asks for a name (same dialog as Save), copies the link and shows "Link copied to clipboard" only once the browser has copied it. If the clipboard is blocked, the link is offered for manual copying instead and no confirmation is shown. Every successful share is kept in **Recently Shared**, directly below Saved outfits: newest first, up to 30, stored in this browser under `octobot-outfits-shared-v1` (separate from Saved). Each entry keeps its name, full outfit, link and time and can be loaded, copied again or removed. Sharing an identical outfit again renames and moves the existing entry rather than adding a duplicate. Logic lives in `shared.mjs`.

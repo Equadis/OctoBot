@@ -3,7 +3,7 @@ import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
 import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
 import {validateBuild} from './builds.mjs?v=20261113-swaps1';
 import {equipmentErrors} from './items.mjs?v=20261114-ammo2';
-import {consumableEngineErrors} from './consumables.mjs?v=20261112-consumes1';
+import {consumableEngineErrors} from './consumables.mjs?v=20261124-consumes2';
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */

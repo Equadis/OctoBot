@@ -2,12 +2,13 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
+import {sanitiseShared,addShared,removeShared,sharedAgo} from './shared.mjs?v=1';
 import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-states1';
 import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261122-states1';
 import {stateKey,parseStates,stateNote,infoKind,NOTES} from './appearance.mjs?v=20261122-states1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
-const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],skinCatalogue=[],skinNote='',appliedLook='';
+const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',SHARED='octobot-outfits-shared-v1';
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],shared=[],skinCatalogue=[],skinNote='',appliedLook='';
 const metadata=new Map();
 // Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
 let approxNotes=new Map();
@@ -792,6 +793,25 @@ function renderSaved(){
   card.append(load,remove);target.append(card);
  });
 }
+function saveShared(){try{localStorage.setItem(SHARED,JSON.stringify(shared));return true;}catch{feedback('Could not store the Recently Shared list in this browser.');return false;}}
+function renderShared(){
+ const target=$('shared-outfits');target.replaceChildren();
+ if(!shared.length){const p=document.createElement('span');p.className='muted';p.textContent='Nothing shared yet. Use Share to name an outfit and copy its link.';target.append(p);}
+ for(const entry of shared){
+  const card=document.createElement('div');card.className='saved-card shared-card';
+  const load=document.createElement('button');load.type='button';load.className='saved-load';load.setAttribute('aria-label',`Load ${entry.name}`);
+  const preview=document.createElement('span');preview.className='saved-preview';
+  if(entry.snapshot){const img=document.createElement('img');img.alt='';img.src=entry.snapshot;preview.append(img);}else preview.classList.add('empty');
+  const label=document.createElement('span');label.className='saved-name';label.textContent=entry.name;
+  const when=document.createElement('time');when.className='shared-time';when.dateTime=new Date(entry.sharedAt).toISOString();when.textContent=sharedAgo(entry.sharedAt);label.append(when);
+  load.append(preview,label);load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};
+  const remove=document.createElement('button');remove.type='button';remove.className='saved-remove';remove.textContent='×';remove.setAttribute('aria-label',`Remove ${entry.name} from Recently Shared`);
+  remove.onclick=()=>{shared=removeShared(shared,entry);saveShared();renderShared();};
+  const copyLink=document.createElement('button');copyLink.type='button';copyLink.className='shared-copy';copyLink.textContent='Copy link';copyLink.setAttribute('aria-label',`Copy the link for ${entry.name}`);
+  copyLink.onclick=()=>copy(entry.url,'Link copied to clipboard');
+  card.append(load,remove,copyLink);target.append(card);
+ }
+}
 function shareUrl(){const url=new URL(location.href);url.search='';url.hash='outfit='+encode(outfit);return url.href;}
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
@@ -802,8 +822,8 @@ async function start(){
   let message='';
   try{outfit=sanitiseGear(safeRead(STORAGE,emptyOutfit()));}catch{outfit=emptyOutfit();message='The previous outfit could not be restored. Import a saved code to recover it.';}
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
-  saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
-  renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
+  saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);shared=sanitiseShared(safeRead(SHARED,[]));
+  renderSlots();renderTypes();renderItems();renderSaved();renderShared();feedback(message);
   try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await Promise.all([loadSkins(),loadAppearanceStates()]);renderItems();
   renderModel();
  }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
@@ -839,7 +859,16 @@ async function start(){
  $('anim-next').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?5:1);
  $('save').onclick=()=>{$('outfit-name').value='';$('save-dialog').showModal();$('outfit-name').focus();};$('cancel-save').onclick=()=>$('save-dialog').close();
  $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const snapshot=captureSnapshot(),entry={name,outfit:structuredClone(outfit),...(snapshot?{snapshot}:{})},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
- $('share').onclick=()=>copy(shareUrl(),'Outfit link copied.');
+ $('share').onclick=()=>{$('share-name').value='';$('share-dialog').showModal();$('share-name').focus();};$('cancel-share').onclick=()=>$('share-dialog').close();
+ $('share-form').onsubmit=async event=>{
+  event.preventDefault();const name=$('share-name').value.trim();if(!name)return;
+  const url=shareUrl(),snapshot=captureSnapshot();
+  let copied=true;try{await navigator.clipboard.writeText(url);}catch{copied=false;}
+  shared=addShared(shared,{name,outfit:outfit,url,snapshot});saveShared();renderShared();$('share-dialog').close();
+  // The confirmation is only shown once the browser has really copied the link; otherwise the link is offered for manual copying.
+  if(copied)feedback('Link copied to clipboard');
+  else{$('outfit-code').value=url;$('exchange-status').textContent='The link could not be copied automatically. Select and copy it.';$('exchange').showModal();$('outfit-code').select();}
+ };
  $('import').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
  $('copy-code').onclick=()=>copy($('outfit-code').value,'Code copied.');$('apply-code').onclick=()=>{try{commit(fromText($('outfit-code').value),'Outfit imported.');$('exchange').close();}catch(error){$('exchange-status').textContent=error.message;}};
  window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#outfit=')){try{commit(decode(location.hash.slice(8)),'Shared outfit loaded.');}catch(error){feedback(error.message);}}});
