@@ -21,8 +21,8 @@
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css?v=20261126-toolbar2">
   <link rel="stylesheet" href="../quality-select.css?v=20261125-theme2">
-  <link rel="stylesheet" href="combat-layout.css?v=20261201-ui3">
-  <script type="module" src="planner.mjs?v=20261201-ui3"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261202-profs1">
+  <script type="module" src="planner.mjs?v=20261202-profs1"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
@@ -50,16 +50,14 @@
         <div class="gear-workspace">
         <div class="gear-col gear-character">
         <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field character-name-field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off" placeholder="Name this build"></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
-        <details class="character-options">
-          <summary class="collapse-toggle">Build details</summary>
+        <div class="character-options">
           <div class="details-row row-character">
             <label class="field">Character name<input id="character-name" maxlength="24" autocomplete="off" placeholder="Name"></label>
-            <label class="field">Gender<select id="character-gender"><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label class="field">Gender<select id="character-gender"><option value="male">♂ Male</option><option value="female">♀ Female</option></select></label>
             <div id="profession-primary" class="profession-primary"></div>
           </div>
-          <div id="profession-secondary" class="details-row row-secondary"></div>
           <div class="build-summary" id="tree-summary" hidden></div><p id="storage-status" hidden>Build changes are kept in this browser.</p>
-        </details>
+        </div>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
           <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div id="gear-stats" class="gear-stats" aria-label="Character statistics"></div></div>

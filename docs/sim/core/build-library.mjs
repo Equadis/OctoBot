@@ -1,4 +1,4 @@
-import { classDefinition } from './classes.mjs?v=20261201-ui3';
+import { classDefinition } from './classes.mjs?v=20261202-profs1';
 export const BUILDS_PER_CLASS=10;
 export const BUILD_LIMIT_MESSAGE='You cannot save any more builds for this class.';
 /** Default save name uses character and build name without repeated prefixes. */

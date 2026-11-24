@@ -4,12 +4,12 @@ import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261
 import {equipmentErrors} from './core/items.mjs?v=20261130-ui2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
 import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=20261130-ui2';
-import { raceIconUrl } from './race-icons.mjs?v=20261201-ui3';
-import {optionIcon, optionHasIcons, professionIcon} from './core/icons.mjs?v=20261201-ui3';
+import { raceIconUrl } from './race-icons.mjs?v=20261202-profs1';
+import {optionIcon, optionHasIcons, professionIcon} from './core/icons.mjs?v=20261202-profs1';
 let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261201-ui3';
+import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261202-profs1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261201-ui3';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261201-ui3';
@@ -492,33 +492,26 @@ function renderClassOptions(){
 const professionPickers=[];
 function skillIcon(name){const image=element('img','row-icon');image.src=iconUrl(name);image.alt='';image.width=16;image.height=16;image.loading='lazy';image.addEventListener('error',()=>image.classList.add('blank'));return image;}
 function createSkills(){
-  const primary=$('profession-primary'),secondary=$('profession-secondary');
+  // Two primary professions, chosen from a list. Having one means skill 300; there is no skill level to type.
+  const primary=$('profession-primary');
   for(let index=0;index<2;index++){
     const slot=element('div','profession-slot'),caption=element('span','field-caption',`Profession ${index+1}`),controls=element('div','profession-slot-inputs'),select=element('select');
     select.id=`profession-${index}`;select.setAttribute('aria-label',`Profession ${index+1}`);
     for(const name of ['',...PRIMARY_PROFESSIONS]){const option=element('option','',name||'None');option.value=name;select.append(option);}
-    const rank=element('input');rank.type='number';rank.min=1;rank.max=300;rank.id=`profession-rank-${index}`;rank.setAttribute('aria-label',`Profession ${index+1} skill`);
-    controls.append(select,rank);slot.append(caption,controls);primary.append(slot);
+    controls.append(select);slot.append(caption,controls);primary.append(slot);
     professionPickers.push(setupIconSelect(document,select,{label:`Profession ${index+1}`,iconFor:name=>{const icon=professionIcon(name);return icon?iconUrl(icon):null;}}));
-    for(const field of [select,rank])field.addEventListener('change',updateSkills);
-  }
-  for(const name of SECONDARY_SKILLS){
-    const label=element('label','field skill-field'),title=element('span','skill-name'),rank=element('input');
-    if(professionIcon(name))title.append(skillIcon(professionIcon(name)));title.append(document.createTextNode(name));
-    rank.id=`skill-${name.replaceAll(' ','-')}`;rank.type='number';rank.min=0;rank.max=300;rank.setAttribute('aria-label',`${name} skill`);
-    label.append(title,rank);secondary.append(label);rank.addEventListener('change',updateSkills);
+    select.addEventListener('change',updateSkills);
   }
 }
 function renderSkills(){
   const selected=Object.keys(build.skills).filter(name=>PRIMARY_PROFESSIONS.includes(name));
-  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';professionPickers[i]?.sync();$(`profession-rank-${i}`).value=build.skills[selected[i]]||300;$(`profession-rank-${i}`).disabled=!selected[i];}
-  for(const name of SECONDARY_SKILLS)$(`skill-${name.replaceAll(' ','-')}`).value=build.skills[name]||0;
+  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';professionPickers[i]?.sync();}
 }
 async function updateSkills(){
-  const skills={};
-  for(let i=0;i<2;i++){const name=$(`profession-${i}`).value;if(name){if(skills[name]){feedback('Select different primary professions.',true);renderSkills();return;}skills[name]=Number($(`profession-rank-${i}`).value);}}
-  for(const name of SECONDARY_SKILLS){const rank=Number($(`skill-${name.replaceAll(' ','-')}`).value);if(rank)skills[name]=rank;}
-  try{const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Profession skills updated.');}catch(error){feedback(error.message,true);renderSkills();}
+  // Saved secondary skills (Cooking, First Aid, Fishing) are no longer edited here, but builds that have them keep them.
+  const skills=Object.fromEntries(Object.entries(build.skills).filter(([name])=>!PRIMARY_PROFESSIONS.includes(name)));
+  for(let i=0;i<2;i++){const name=$(`profession-${i}`).value;if(name){if(skills[name]){feedback('Select different primary professions.',true);renderSkills();return;}skills[name]=build.skills[name]||300;}}
+  try{const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Professions updated.');}catch(error){feedback(error.message,true);renderSkills();}
 }
 
 function wireControls() {

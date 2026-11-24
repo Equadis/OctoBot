@@ -402,3 +402,9 @@ label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
 #load-dialog .saved-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #load-dialog .saved-label small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Build fields: always shown (no toggle). Character name gets the room the skill boxes used to take; profession lists have no skill input. */
+.planner-view .details-row.row-character{grid-template-columns:minmax(0,1.4fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,1.2fr)}
+.planner-view .profession-slot-inputs{grid-template-columns:minmax(0,1fr)}
+.planner-view .profession-slot-inputs .rp-blank{background:transparent}
+.planner-view .profession-slot-inputs .rp-caret{display:none}
+

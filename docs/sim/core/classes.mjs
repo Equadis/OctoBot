@@ -16,4 +16,4 @@ export const CLASS_IDS=Object.freeze(CLASS_DEFINITIONS.map(c=>c.id));
 export function classDefinition(id){const value=CLASS_DEFINITIONS.find(c=>c.id===id);if(!value)throw new Error('Unsupported class.');return value;}
 
 export const PRIMARY_PROFESSIONS=Object.freeze(['Alchemy','Blacksmithing','Enchanting','Engineering','Herbalism','Leatherworking','Mining','Skinning','Tailoring','Jewelcrafting']);
-export const SECONDARY_SKILLS=Object.freeze(['Cooking','First Aid','Fishing','Survival','Gardening']);
+export const SECONDARY_SKILLS=Object.freeze(['Cooking','First Aid','Fishing']);
