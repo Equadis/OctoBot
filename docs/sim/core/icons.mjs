@@ -1,6 +1,6 @@
 // Icon names (Wowhead / Blizzard icon set) for gameplay entries shown in lists and dropdowns.
 // Consumables and food take their icon from the item data through their shared buff id; spells and auras are listed here.
-import {CONSUMABLES} from './consumables.mjs?v=20261124-consumes2';
+import {CONSUMABLES} from './consumables.mjs?v=20261130-ui2';
 
 export const BUFF_ICONS=Object.freeze({
  'battle-shout':'ability_warrior_battleshout',might:'spell_holy_fistofjustice',kings:'spell_magic_magearmor',wild:'spell_nature_regeneration',

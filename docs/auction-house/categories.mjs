@@ -11,7 +11,7 @@ export const AMMUNITION=Object.freeze([t(2,'Arrows'),t(3,'Bullets')]);
 export const QUIVER=Object.freeze([t(2,'Quivers'),t(3,'Ammo pouches')]);
 export const CATEGORIES=Object.freeze([
   Object.freeze({id:2,name:'Weapons',subclasses:WEAPON}),
-  Object.freeze({id:4,name:'Armour',subclasses:ARMOUR}),
+  Object.freeze({id:4,name:'Armor',subclasses:ARMOUR}),
   Object.freeze({id:9,name:'Recipes',subclasses:RECIPE}),
   Object.freeze({id:0,name:'Consumables',subclasses:null}),
   Object.freeze({id:7,name:'Trade goods',subclasses:null}),

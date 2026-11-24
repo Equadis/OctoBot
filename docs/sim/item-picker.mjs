@@ -1,16 +1,19 @@
 import {postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swaps1';
-import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261117-picker2';
+import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRestriction,equipmentErrors} from './core/items.mjs?v=20261130-ui2';
 import {SLOTS} from './core/builds.mjs?v=20261117-picker2';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {fixSigns} from './core/signs.mjs?v=1';
-import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261117-picker3';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
+import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261130-ui2';
 
+// Single-line text that pans sideways when it does not fit (the Auction House effect); stationary when it fits.
+const clip=(tag,text,cls='')=>{const outer=document.createElement(tag);outer.className=('ah-name-clip '+cls).trim();const inner=document.createElement('span');inner.className='ah-name-text';inner.textContent=text;outer.append(inner);return outer;};
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const signed=value=>`${Number(value)<0?'-':'+'}${Math.abs(Number(value))}`;
 const shortStats=item=>{
- const labels={Strength:'Str',Agility:'Agi',Stamina:'Sta',Intellect:'Int',Spirit:'Spirit',Armour:'armour'};
+ const labels={Strength:'Str',Agility:'Agi',Stamina:'Sta',Intellect:'Int',Spirit:'Spirit',Armour:'armor'};
  const parts=Object.entries(item.attributes||{}).map(([key,value])=>`${signed(value)} ${labels[key]||key}`);
- if(item.armor!==undefined && !item.attributes?.Armour)parts.push(`${signed(item.armor)} armour`);
+ if(item.armor!==undefined && !item.attributes?.Armour)parts.push(`${signed(item.armor)} armor`);
  if(item.ammunitionDps!==undefined)parts.push(`${signed(item.ammunitionDps)} ranged DPS`);
  if(item.dps!==undefined)parts.push(`${item.dps} DPS`);
  if(item.speed!==undefined)parts.push(`${item.speed.toFixed(2)} speed`);
@@ -24,12 +27,14 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  let selectionContext={};
  const selectionBuild=()=>selectionContext.getBuild?.()||getBuild();
  const CACHE_KEY='octosim.item-details.v2',pending=new Map();
+ // Names are re-measured whenever the list changes size (a window resize, the column width changing).
+ if(typeof ResizeObserver==='function')new ResizeObserver(()=>scheduleScrollingNames($('item-results'))).observe($('item-results'));
  for(const [value,label] of SORT_OPTIONS){const option=node('option',label);option.value=value;$('item-sort').append(option);}
  async function load(){
   if(items)return;if(loading)return loading;
   loading=(async()=>{
    const responses=await Promise.all(['equipment.json','details.json','catalogue-manifest.json','reference-tooltips.json','details-supplement.json'].map(name=>fetch(new URL(`./data/items/${name}?v=20261111-picker1`,import.meta.url),{cache:'no-cache'})));
-   if(responses.some(response=>!response.ok))throw new Error('The equipment catalogue could not load.');
+   if(responses.some(response=>!response.ok))throw new Error('The equipment catalog could not load.');
    const [catalogue,bundled,manifest,referenceData,supplement]=await Promise.all(responses.map(response=>response.json()));details={...supplement,...bundled};references=referenceData.items;
    try{for(const entry of JSON.parse(localStorage.getItem(CACHE_KEY)||'[]').slice(-128)){const d=entry.detail;if(Date.now()-entry.savedAt<86400000 && Number.isInteger(d?.id) && Number.isInteger(d.classMask) && Number.isInteger(d.raceMask) && Array.isArray(d.requirements) && typeof d.summary==='string' && d.source===`https://octowow.st/db/?item=${d.id}`)if(!details[d.id])details[d.id]=d;}}catch{}
    items=catalogue.map(item=>({...item,...(details[item.id]?{name:details[item.id].name,slot:details[item.id].slot,reqlevel:details[item.id].requiredLevel}:{}),icon:/^[a-z0-9_]+$/i.test(item.icon||'')?item.icon:'inv_misc_questionmark'}));$('catalogue-status').textContent=`${manifest.equipmentCount.toLocaleString()} equipment records`;
@@ -99,7 +104,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const source=await detail(item);if(version!==previewVersion || !active)return;
    const reason=detailRestriction(item,source,selectionBuild(),slot); 
    if(!hovering)paintPreview(item,source);if(reason)error(reason);
-   const row=rowElements.get(item.id);if(row)row.querySelector('.item-description').textContent=shortStats({...item,...source});
+   const row=rowElements.get(item.id);if(row){const text=row.querySelector('.item-description .ah-name-text');if(text){text.textContent=shortStats({...item,...source});scheduleScrollingNames(row);}}
   }catch(failure){if(version!==previewVersion || !active)return; if(!hovering)paintPreview(item,references[item.id],references[item.id]?'Combat Gum reference':'Full item details are unavailable.');error('Official item restrictions could not be verified. This item cannot be equipped.');}
  }
  function search(){
@@ -113,8 +118,8 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    const row=node('div',undefined,'item-row');row.setAttribute('role','option');row.setAttribute('aria-selected',String(build.gear[slot]?.id===item.id));row.tabIndex=-1;
    row.classList.toggle('equipped',build.gear[slot]?.id===item.id);
    const image=node('img');image.src=iconUrl(item.icon);image.alt='';image.loading='lazy';
-   const copy=node('div',undefined,'item-row-copy'),name=node('div',undefined,'item-row-name');name.append(node('span',item.name,`q${item.quality}`),node('span',`[${item.level || 0}]`,'item-level'));
-   copy.append(name,node('div',shortStats({...item,...references[item.id],...details[item.id]}),'item-description'));
+   const copy=node('div',undefined,'item-row-copy'),name=node('div',undefined,'item-row-name');name.append(clip('span',item.name,`q${item.quality}`),node('span',`[${item.level || 0}]`,'item-level'));
+   copy.append(name,clip('div',shortStats({...item,...references[item.id],...details[item.id]}),'item-description'));
    const link=node('a','DB ↗','item-db-link ext-db-link');link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',event=>event.stopPropagation());
    row.append(image,copy,link);
    row.addEventListener('click',()=>selectItem(item));
@@ -128,7 +133,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
    });
    rowElements.set(item.id,row);fragment.append(row);
   }
-  $('item-results').replaceChildren(fragment);$('item-results').scrollTop=0;
+  $('item-results').replaceChildren(fragment);$('item-results').scrollTop=0;scheduleScrollingNames($('item-results'));
   const item=candidates.find(item=>item.id===previewed?.id) || candidates.find(item=>item.id===build.gear[slot]?.id) || candidates[0];
   if(item)previewItem(item);
   else{++previewVersion;previewed=null;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
@@ -183,6 +188,6 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
   async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},
   async verifyCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(candidate.trinketSwap?.enabled)errors.push(...equipmentErrors(postSwapBuild(candidate),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;}).map(e=>({...e,slot:'Swap '+e.slot})));if(errors.length)throw new Error(errors.map(e=>`${e.slot}: ${e.reason}`).join(' '));return candidate;},
-  async verifyGear(){await load();const build=getBuild(),invalid=[];for(const [slot,equipped] of Object.entries(build.gear)){const item=items.find(item=>item.id===equipped.id);const reason=item?listingRestriction(item,build,slot)||(details[item.id]&&detailRestriction(item,details[item.id],build,slot)):'Item is absent from the catalogue.';if(reason)invalid.push(`${slot}: ${reason}`);}return invalid;},
+  async verifyGear(){await load();const build=getBuild(),invalid=[];for(const [slot,equipped] of Object.entries(build.gear)){const item=items.find(item=>item.id===equipped.id);const reason=item?listingRestriction(item,build,slot)||(details[item.id]&&detailRestriction(item,details[item.id],build,slot)):'Item is absent from the catalog.';if(reason)invalid.push(`${slot}: ${reason}`);}return invalid;},
  };
 }

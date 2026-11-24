@@ -46,7 +46,7 @@ test('hovering an equipped item drives the right-hand preview and nothing else',
  assert.match(picker,/if\(!hovering\)paintPreview/,'a slow detail load cannot overwrite the hovered item');
 });
 test('class cards fade #182333 from the top edge to clear by about 31% of the height, beneath the text, icon and border',()=>{
- assert.match(css,/--art-overlay:linear-gradient\(180deg,rgba\(24,35,51,\.95\) 0%,.*?rgba\(24,35,51,0\) 31%\),linear-gradient/);
+ assert.match(css,/--art-overlay:linear-gradient\(180deg,rgb\(24,35,51\) 0%,.*?rgba\(24,35,51,0\) 33%\),linear-gradient/);
  assert.match(css,/\.art-card::after\{content:"";position:absolute;inset:0;z-index:-1;/,'overlay layer is behind the content');
  assert.match(css,/\.art-card::before\{[^}]*z-index:-2/,'artwork is behind the overlay');
 });

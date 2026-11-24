@@ -22,9 +22,9 @@ test('Combat Gum, Human Rogue 80/130/75 level 60 with Weapon Skill Book: every s
   assert.deepEqual(r['Base Stats'], { Strength: '80', Agility: '130', Stamina: '75' });
   assert.equal(r.Melee['Wep Skill'], '305 | 305'); assert.equal(r.Melee.Power, '310'); assert.equal(r.Melee['WS Crit'], '+0.20%'); assert.equal(r.Melee['Crit Chance'], '4.68%');
   const t = r['Melee vs Target'];
-  assert.deepEqual([t['Miss %'], t['Yellow Miss %'], t['Dodge %'], t['Spell Miss %'], t['Glance Dmg'], t['Crit Cap'], t['Eff. Crit'], t.Armour, t['Phys Reduced']],
+  assert.deepEqual([t['Miss %'], t['Yellow Miss %'], t['Dodge %'], t['Spell Miss %'], t['Glance Dmg'], t['Crit Cap'], t['Eff. Crit'], t.Armor, t['Phys Reduced']],
     ['7.0% | 7.0%', '7.0%', '6.0% | 6.0%', '17.0%', '75% | 75%', '47.0% | 47.0%', '1.68% | 1.68%', '4211', '43.4%']);
-  assert.deepEqual([r.Defence.Health, r.Defence['Parry %'], r.Defence['Dodge %'], r.Defence.Armour], ['2093', '5.0%', '9.0%', '260']);
+  assert.deepEqual([r.Defense.Health, r.Defense['Parry %'], r.Defense['Dodge %'], r.Defense.Armor], ['2093', '5.0%', '9.0%', '260']);
 });
 
 test('Combat Gum race matrix (Rogue, level 60, naked): stats, power, crit and health agree for seven races', () => {
@@ -33,7 +33,7 @@ test('Combat Gum race matrix (Rogue, level 60, naked): stats, power, crit and he
     ['Undead', 79, 128, 76, 307, 4.61, 2103], ['Troll', 81, 132, 76, 313, 4.75, 2103], ['Night Elf', 77, 135, 74, 312, 4.86, 2083]];
   for (const [race, str, agi, sta, power, crit, health] of observed) {
     const b = newBuild('rogue'); b.race = race; b.controls.buffIds = ['skill-book']; const r = rows(b);
-    assert.deepEqual([r['Base Stats'].Strength, r['Base Stats'].Agility, r['Base Stats'].Stamina, r.Melee.Power, r.Defence.Health], [String(str), String(agi), String(sta), String(power), String(health)], race);
+    assert.deepEqual([r['Base Stats'].Strength, r['Base Stats'].Agility, r['Base Stats'].Stamina, r.Melee.Power, r.Defense.Health], [String(str), String(agi), String(sta), String(power), String(health)], race);
     near(pct(r.Melee['Crit Chance']), crit, 0.011, `${race} crit`);
   }
 });
@@ -76,7 +76,7 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
     assert.equal(+r.Melee.Power, Math.round(apFlat[cls] + str * apPerStr[cls] + agi * apPerAgi[cls]), `${cls} attack power`);
     const stance = cls === 'warrior' && b.classOptions.stance === 'Berserker' ? 3 : 0;
     near(pct(r.Melee['Crit Chance'].split('|')[0]), baseCrit[cls] + agi * critAgi[cls] + stance, 0.011, `${cls} crit`);
-    near(pct(r.Defence['Dodge %']), baseCrit[cls] + agi * dodgeAgi[cls] + (racialPassives(b.race).dodge || 0), 0.06, `${cls} dodge`);
+    near(pct(r.Defense['Dodge %']), baseCrit[cls] + agi * dodgeAgi[cls] + (racialPassives(b.race).dodge || 0), 0.06, `${cls} dodge`);
   }
 });
 
@@ -84,7 +84,7 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
 
 test('racial passives match the OctoWoW database (read 2026-11-15): Night Elf Quickness is +1% dodge (spell 20582), not haste', () => {
   const b = newBuild('rogue'); b.race = 'Night Elf'; b.controls.buffIds = ['skill-book']; const r = rows(b);
-  assert.equal(r.Defence['Dodge %'], '10.3%');   // 135 agility / 14.5 = 9.3, plus the 1% racial
+  assert.equal(r.Defense['Dodge %'], '10.3%');   // 135 agility / 14.5 = 9.3, plus the 1% racial
   assert.equal(r.Melee.Haste, '0.0%');           // Combat Gum shows +1% haste here instead; the database spell says dodge
 });
 
@@ -114,7 +114,7 @@ test('Goblin and High Elf base stats: Combat Gum shows numbers, the planner show
 });
 
 test('class base stats: the Vanilla (cmangos) table differs from WoWSims Turtle for Mage and Priest health and mana', { todo: 'Mage health 1360 vs 1370, mana 1273 vs 1213; Priest health 1387 vs 1397, mana 1436 vs 1376; several spirit and intellect values differ by 2 to 6' }, () => {
-  const b = newBuild('mage'); b.race = 'Human'; assert.equal(rows(b).Defence.Health, '1370');
+  const b = newBuild('mage'); b.race = 'Human'; assert.equal(rows(b).Defense.Health, '1370');
 });
 
 test('Gnome Intellect: the Vanilla base table appears to include Expansive Mind already, so the planner may apply the +5% twice', { todo: 'Gnome Mage sheet shows 139; WoWSims Turtle raw 128 x 1.05 = 134. The cmangos table values equal raw x 1.05 for Human Spirit (all six classes) and most Gnome Intellect values. Needs one in-game or Combat Gum caster sheet to settle.' }, () => {

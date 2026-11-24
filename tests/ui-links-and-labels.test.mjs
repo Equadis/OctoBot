@@ -42,3 +42,19 @@ test('Gear Planner and Dressing Room share one blue "DB ↗" link, and Dressing 
  const code=read('outfitter/outfitter.mjs');
  assert.match(code,/row\.addEventListener\('click',event=>\{if\(event\.target\.closest\('a,\.info-i,button'\)\)return;button\.click\(\);\}\)/,'nested links and info icons keep their own action');
 });
+
+import {dayKey,dayLabel,startsDay} from '../docs/world-chat/chat-interactions.mjs';
+test('World Chat date separators come from message times: one per UTC day, none duplicated',()=>{
+ const at=iso=>({time:iso});
+ const rows=[at('2026-11-23T23:59:58Z'),at('2026-11-23T23:59:59Z'),at('2026-11-24T00:00:01Z'),at('2026-11-24T10:00:00Z'),at('2026-11-25T00:00:00Z')];
+ assert.deepEqual(startsDay(rows),[true,false,true,false,true]);
+ assert.deepEqual(startsDay([]),[]);
+ assert.deepEqual(startsDay(rows.slice(1,3)),[true,true],'loading older rows or filtering recomputes the boundaries');
+ assert.equal(dayKey(rows[2]),'2026-11-24');
+ assert.equal(dayLabel('2026-11-24'),'24 November 2026');
+ assert.equal(dayLabel('2026-03-05'),'5 March 2026');
+ const chat=readFileSync(new URL('../docs/world-chat/world-chat.js',import.meta.url),'utf8');
+ assert.match(chat,/if\(starts\[i\]\)next\.append\(daySeparator\(dayKey\(row\)\)\)/);
+ assert.match(chat,/focusSignature\(row\)\+\(starts\[i\]\?"\|day:"\+dayKey\(row\):""\)/,'a row whose day boundary changes is redrawn');
+ assert.match(readFileSync(new URL('../docs/world-chat/world-chat.css',import.meta.url),'utf8'),/\.chat-day::before,\.chat-day::after\{content:"";flex:1;height:1px;background:var\(--line\)\}/);
+});

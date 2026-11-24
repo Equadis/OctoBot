@@ -7,7 +7,7 @@ import {ENCHANTS} from '../../docs/sim/core/equipment-options.mjs';
 const base='https://equadis.github.io/OctoBot/sim/';
 test('reference stat colour categories are presentation-only and group-aware',()=>{
  for(const [group,label,value,tone] of [
-  ['Base Stats','Strength','80','normal'],['Melee','Damage','207-245 | 103-114','normal'],['Melee','WS Crit','+0.20%','positive'],['Melee','WS Crit','-0.20%','negative'],['Melee','Armor Pen','0','muted'],['Melee','Hit Rating','0%','normal'],['Melee vs Target','Miss %','7.0% | 7.0%','negative'],['Melee vs Target','Glance Dmg','75% | 75%','warning'],['Melee vs Target','Eff. Crit','1.68% | 1.68%','positive'],['Melee vs Target','Armour','4211','negative'],['Defence','Armour','260','normal'],['Spell','Spell Crit','0.00%','normal'],['Spell','Fortune','0%','muted'],['Base Stats','Strength','—','muted']])assert.equal(statTone(group,label,value),tone,`${group}: ${label}`);
+  ['Base Stats','Strength','80','normal'],['Melee','Damage','207-245 | 103-114','normal'],['Melee','WS Crit','+0.20%','positive'],['Melee','WS Crit','-0.20%','negative'],['Melee','Armor Pen','0','muted'],['Melee','Hit Rating','0%','normal'],['Melee vs Target','Miss %','7.0% | 7.0%','negative'],['Melee vs Target','Glance Dmg','75% | 75%','warning'],['Melee vs Target','Eff. Crit','1.68% | 1.68%','positive'],['Melee vs Target','Armor','4211','negative'],['Defense','Armor','260','normal'],['Spell','Spell Crit','0.00%','normal'],['Spell','Fortune','0%','muted'],['Base Stats','Strength','—','muted']])assert.equal(statTone(group,label,value),tone,`${group}: ${label}`);
 });
 test('enchant display retains all bonuses and schools without mutating source names',()=>{
  const snapshot=JSON.stringify(ENCHANTS);

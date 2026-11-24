@@ -41,7 +41,7 @@ export function parseSnapshotQuery(params) {
  const keys=params.has('keys')?new Set((params.get('keys')||'').split(',').filter(Boolean)):null;
  if(keys&&(keys.size>100||[...keys].some(key=>!/^\d{1,10}:(?:\d{1,10}:\d{1,10}:\d{1,10})?$/.test(key)||Number(key.split(':')[0])<1)))return {error:'invalid keys'};
  const owner=(params.get('owner')||'').trim(), time=params.get('time_left')||'';
- if(owner&&!/^\d{1,20}$/.test(owner))return {error:'invalid owner'};
+ if(owner&&!/^\d{1,20}$/.test(owner)&&!/^\p{L}{1,24}$/u.test(owner))return {error:'invalid owner'};
  if(time&&!Object.hasOwn(ranges,time))return {error:'invalid time_left'};
  const buyout=params.get('has_buyout')==='1';
  return {
@@ -76,7 +76,7 @@ export function selectItemListing(item,listings){
 export function querySnapshot(catalogue,query,groups,now=Date.now()){
  const {criteria,q,exact,keys,gear,listingFiltered,listingCriteria,owner,buyout,time,sort,direction,limit,offset}=query;
  const matchesListing=row=>{
-  if((owner&&row.owner_guid!==owner)||(buyout&&row.unit_buyout==null))return false;
+  if((owner&&!(/^\d+$/.test(owner)?row.owner_guid===owner:String(row.owner_name||'').toLowerCase().includes(owner.toLowerCase())))||(buyout&&row.unit_buyout==null))return false;
   if(!listingCriteria.every(([field,op,value])=>
    matches(field==='unit_bid'?effectiveBid(row)/row.quantity:row[field],op,value)))return false;
   if(!time)return true;

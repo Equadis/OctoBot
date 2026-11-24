@@ -264,4 +264,8 @@
 .slots .slot>button,.slots .slot>button *{cursor:pointer}
 .result .ext-db-link,.result .info-i{cursor:pointer}
 .result .info-i{cursor:help}
+.item-row-name>.ah-name-clip{flex:0 1 auto;min-width:0;max-width:100%}
+.result .item-description.ah-name-clip{display:block;min-width:0}
+.item-row-name>.ah-name-clip:first-child{text-overflow:clip}
+.result .item-description.ah-name-clip{text-overflow:clip}
 

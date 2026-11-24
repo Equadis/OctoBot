@@ -2,9 +2,10 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
 import {sanitiseShared,addShared,removeShared,sharedAgo} from './shared.mjs?v=1';
 import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-states1';
-import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261122-states1';
+import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261130-ui2';
 import {stateKey,parseStates,stateNote,infoKind,NOTES} from './appearance.mjs?v=20261122-states1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
 const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',SHARED='octobot-outfits-shared-v1';
@@ -298,13 +299,13 @@ function renderItems(){
   const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);// The whole row is the target, padding and thumbnail included; links and info icons keep their own actions.
   row.addEventListener('click',event=>{if(event.target.closest('a,.info-i,button'))return;button.click();});button.setAttribute('aria-label',`Try on ${item.name}`);
   const title=document.createElement('span'),name=document.createElement('span'),level=document.createElement('span'),detail=document.createElement('span');
-  title.className='item-row-name';name.className=`quality-${item.quality}`;name.textContent=item.name;level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
-  detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
+  title.className='item-row-name';name.className=`ah-name-clip quality-${item.quality}`;{const t=document.createElement('span');t.className='ah-name-text';t.textContent=item.name;name.append(t);}level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
+  detail.className='item-description ah-name-clip';{const t=document.createElement('span');t.className='ah-name-text';t.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;detail.append(t);}button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
   const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.className='ext-db-link';link.target='_blank';link.rel='noopener noreferrer';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
  }
- queueScan();
+ queueScan();scheduleScrollingNames(results);
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
 }
@@ -819,7 +820,7 @@ function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.'
 async function start(){
  setupBackdrops();setupInfoTips();setupWeaponControls();setupScrub();
  try{
-  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
+  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalog unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
   let message='';
   try{outfit=sanitiseGear(safeRead(STORAGE,emptyOutfit()));}catch{outfit=emptyOutfit();message='The previous outfit could not be restored. Import a saved code to recover it.';}
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
@@ -827,7 +828,7 @@ async function start(){
   renderSlots();renderTypes();renderItems();renderSaved();renderShared();feedback(message);
   try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await Promise.all([loadSkins(),loadAppearanceStates()]);renderItems();
   renderModel();
- }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
+ }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalog. Reload the page to try again.';return;}
 
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});

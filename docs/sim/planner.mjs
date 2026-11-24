@@ -1,23 +1,23 @@
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
-import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
-import {equipmentErrors} from './core/items.mjs?v=20261117-picker2';
+import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261130-ui2';
+import {equipmentErrors} from './core/items.mjs?v=20261130-ui2';
 import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
-import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=3';
+import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=20261130-ui2';
 import {optionIcon, optionHasIcons, professionIcon} from './core/icons.mjs?v=1';
 let racePicker = null;
-import {characterStats} from './core/character-stats.mjs?v=20261117-picker2';
-import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261112-rotations1';
+import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
+import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261130-ui2';
 import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
 import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-picker2';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi } from './ui-state.mjs?v=1';
-import { scheduleScrollingNames } from '../scrolling-names.mjs?v=1';
-import { itemPicker } from './item-picker.mjs?v=20261129-ui1';
-import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-picker3';
+import { scheduleScrollingNames } from '../scrolling-names.mjs?v=20261130-ui2';
+import { itemPicker } from './item-picker.mjs?v=20261130-ui2';
+import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261130-ui2';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261127-icons1';
+import { configuration } from './configuration.mjs?v=20261130-ui2';
 import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 
@@ -150,11 +150,13 @@ function createSlots() {
     }
     // Trinkets cannot be enchanted, so they get no enchant line at all.
     const enchantable=!['trinket1','trinket2'].includes(slot);
-    const enchantLabel=enchantable?element('span','slot-enchant','No enchant'):null;
+    const enchantLabel=enchantable?element('span','slot-enchant ah-name-clip'):null;
+    const enchantText=enchantable?element('span','ah-name-text','No enchant'):null;
+    if(enchantLabel)enchantLabel.append(enchantText);
     if(enchantLabel)attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
     container.dataset.slot = slot;
     container.append(...(enchantLabel?[button, enchantLabel]:[button]));
-    slotElements.set(slot, { container, itemName, itemText, enchantLabel, image: button.querySelector('img') });
+    slotElements.set(slot, { container, itemName, itemText, enchantLabel, enchantText, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
     const extra=['ammo','quiver'].includes(slot);
@@ -276,7 +278,7 @@ function render() {
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, itemText, image, enchantLabel }] of slotElements) {
+  for (const [slot, { container, itemName, itemText, image, enchantLabel, enchantText }] of slotElements) {
     const item = build.gear[slot];
     const metadata = item && picker?.lookup(item.id);
     itemText.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
@@ -285,8 +287,8 @@ function render() {
     else itemName.className = 'item-name ah-name-clip';
     const enchant=ENCHANTS.find(enchant=>enchant.id===item?.enchantId);
     if(enchantLabel){
-    enchantLabel.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
-    enchantLabel.dataset.tone=bonusTone(enchantLabel.textContent);
+    enchantText.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
+    enchantLabel.dataset.tone=bonusTone(enchantText.textContent);
     enchantLabel.tabIndex=enchant?0:-1;
     enchantLabel.classList.toggle('enchanted',Boolean(item?.enchantId));
     }

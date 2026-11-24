@@ -22,7 +22,7 @@ test('Race, name, and Level appear in the same row in that order',()=>{
 
 test('all five character stat groups start expanded and can be independently collapsed across rerenders',()=>{
   const stats=read('sim/core/character-stats.mjs'),planner=read('sim/planner.mjs'),css=read('sim/combat-layout.css');
-  for(const name of ['Base Stats','Melee','Melee vs Target','Defence','Spell']){
+  for(const name of ['Base Stats','Melee','Melee vs Target','Defense','Spell']){
     assert.ok(stats.includes("group('"+name+"'"),'missing '+name+' stats');
   }
   assert.match(planner,/const collapsedStatGroups = new Set\(savedUi\?\.collapsedStats\|\|\[\]\)/);

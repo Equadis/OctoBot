@@ -232,8 +232,21 @@ async function readApi(url,env){
    const itemId=apiId(detail[2]);if(!itemId)return bad('invalid item');
    const variant=(url.searchParams.get('variant')||'').slice(0,90);
    if(detail[1]==='item'){
-     const rows=await all(db,"SELECT l.auction_id,l.item_id,l.variant,l.quantity,l.start_bid,l.current_bid,l.min_next_bid,l.buyout,l.owner_guid,s.character_name owner_name,l.time_left_ms,l.captured_at,f.first_seen_at,CASE WHEN l.buyout>0 THEN CAST(l.buyout AS REAL)/l.quantity END unit_buyout FROM ah_listings l LEFT JOIN ah_first_seen f ON f.auction_id=l.auction_id LEFT JOIN ah_seller_names s ON s.owner_guid=l.owner_guid WHERE l.scan_id=? AND l.item_id=? AND l.variant=? ORDER BY unit_buyout IS NULL,unit_buyout ASC,l.auction_id LIMIT 200",scan.scan_id,itemId,variant);
-     return respond({listings:rows,scan_id:scan.scan_id,limited:rows.length===200});
+     // Optional paging: ?limit=20&offset=0 returns one page plus the total, so the first view reads 20 rows instead of 200.
+     // Without ?limit the response is unchanged (up to the 200 cheapest auctions), which keeps older pages working.
+     const paged=url.searchParams.has('limit');
+     const limit=paged?Math.min(50,Math.max(1,Number.parseInt(url.searchParams.get('limit'),10)||20)):200;
+     const offset=paged?Math.min(1000,Math.max(0,Number.parseInt(url.searchParams.get('offset')||'0',10)||0)):0;
+     const sellerText=(url.searchParams.get('owner')||'').trim();
+     const sellerGuid=/^\d{1,20}$/.test(sellerText);
+     if(sellerText&&!sellerGuid&&!/^\p{L}{1,24}$/u.test(sellerText))return bad('invalid owner');
+     // A seller can be a numeric GUID (exact) or part of a character name (case-insensitive, letters only so no LIKE wildcards can appear).
+     const sellerSql=!sellerText?'':sellerGuid?' AND l.owner_guid=?':' AND l.owner_guid IN (SELECT owner_guid FROM ah_seller_names WHERE character_name LIKE ?)';
+     const sellerBind=!sellerText?[]:[sellerGuid?sellerText:'%'+sellerText+'%'];
+     const rows=await all(db,"SELECT l.auction_id,l.item_id,l.variant,l.quantity,l.start_bid,l.current_bid,l.min_next_bid,l.buyout,l.owner_guid,s.character_name owner_name,l.time_left_ms,l.captured_at,f.first_seen_at,CASE WHEN l.buyout>0 THEN CAST(l.buyout AS REAL)/l.quantity END unit_buyout FROM ah_listings l LEFT JOIN ah_first_seen f ON f.auction_id=l.auction_id LEFT JOIN ah_seller_names s ON s.owner_guid=l.owner_guid WHERE l.scan_id=? AND l.item_id=? AND l.variant=?"+sellerSql+" ORDER BY unit_buyout IS NULL,unit_buyout ASC,l.auction_id LIMIT ? OFFSET ?",scan.scan_id,itemId,variant,...sellerBind,limit,offset);
+     if(!paged)return respond({listings:rows,scan_id:scan.scan_id,limited:rows.length===200});
+     const total=offset===0&&rows.length<limit?rows.length:(await first(db,"SELECT COUNT(*) n FROM ah_listings l WHERE l.scan_id=? AND l.item_id=? AND l.variant=?"+sellerSql,scan.scan_id,itemId,variant,...sellerBind)).n;
+     return respond({listings:rows,scan_id:scan.scan_id,total,limit,offset,has_more:offset+rows.length<total,limited:false});
    }
    const rows=await all(db,"SELECT day,representative_unit,quantity,listings FROM ah_daily WHERE item_id=? AND variant=? ORDER BY day DESC LIMIT 90",itemId,variant);
    return respond({history:rows});

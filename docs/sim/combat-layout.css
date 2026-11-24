@@ -303,7 +303,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 
 /* ===== Class selector: tiles laid out like the dashboard cards (name top left, icon top right, "Open →" bottom right) ===== */
 #class-selection .class-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.class-card.art-card{display:flex;flex-direction:column;min-height:168px;padding:24px 26px;gap:10px;border:1px solid var(--class-colour,#39465a);border-radius:6px;background:var(--bg-panel);color:#d4dfed;text-decoration:none;--art-overlay:linear-gradient(180deg,rgba(24,35,51,.95) 0%,rgba(24,35,51,.64) 12%,rgba(24,35,51,.26) 23%,rgba(24,35,51,0) 31%),linear-gradient(180deg,rgba(9,14,24,.22) 0%,rgba(9,14,24,.7) 100%);transition:border-color .12s,box-shadow .12s,transform .12s}
+.class-card.art-card{display:flex;flex-direction:column;min-height:168px;padding:24px 26px;gap:10px;border:1px solid var(--class-colour,#39465a);border-radius:6px;background:var(--bg-panel);color:#d4dfed;text-decoration:none;--art-overlay:linear-gradient(180deg,rgb(24,35,51) 0%,rgba(24,35,51,.94) 9%,rgba(24,35,51,.76) 17%,rgba(24,35,51,.4) 25%,rgba(24,35,51,.12) 30%,rgba(24,35,51,0) 33%),linear-gradient(180deg,rgba(9,14,24,.22) 0%,rgba(9,14,24,.7) 100%);transition:border-color .12s,box-shadow .12s,transform .12s}
 .class-card.art-card.available{padding:24px 26px}
 .class-card.art-card .class-card-title{display:block;min-height:64px;box-sizing:border-box;padding-right:76px;font-family:var(--title-font,Georgia,serif);font-weight:700;font-size:30px;line-height:1.25;color:var(--class-colour);white-space:nowrap;text-shadow:0 2px 8px #000a}
 .class-card.art-card .class-card-icon{position:absolute;top:22px;right:24px;display:block;width:64px;height:64px;box-sizing:border-box;object-fit:cover;border:1px solid #4b5b71;border-radius:5px;box-shadow:0 2px 8px #0006}
@@ -352,3 +352,18 @@ label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
 .buff-row .buff-name-wrap{display:flex;align-items:center;gap:6px;min-width:0}
 .buff-row .buff-name-wrap>.buff-name{flex:1 1 0}
 .rp-faces img,.rp-faces .rp-blank{width:20px;height:20px}
+
+/* Talent tree titles are 4pt larger than before (11px, or 13px on narrow screens). */
+.planner-view .tree-heading h3{font-size:calc(11px + 4pt)}
+@media(max-width:700px){.planner-view .tree-heading h3{font-size:calc(13px + 4pt)}}
+.planner-view .tree-heading{min-height:34px}
+
+/* Compact single-line labels pan sideways when they overflow (Auction House effect), and stay still when they fit. */
+.planner-view .item-row-name>.ah-name-clip{flex:0 1 auto;min-width:0;max-width:100%}
+.planner-view #item-selector .item-row .item-description.ah-name-clip{display:block;min-width:0}
+.planner-view .slot-enchant.ah-name-clip{display:block;white-space:nowrap;overflow:hidden;overflow-wrap:normal}
+.planner-view .buff-row .buff-effect.ah-name-clip{display:block;min-width:0}
+.planner-view .item-row-name>.ah-name-clip{text-overflow:clip}
+.planner-view #item-selector .item-row .item-description.ah-name-clip{text-overflow:clip}
+.planner-view .buff-row .buff-effect.ah-name-clip{text-overflow:clip}
+

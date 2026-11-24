@@ -39,3 +39,9 @@ export function auctionSearchFromURL(url){
  const query=new URL(url).searchParams.get("q")??"";
  return query.trim().slice(0,80);
 }
+// Date separators are derived from message times, in UTC like the timestamps, and are never stored with the messages.
+export const dayKey=row=>new Date(row.time).toISOString().slice(0,10);
+export const dayLabel=key=>new Date(key+"T00:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+// True for each row that begins a new calendar day in the order the rows are shown (and for the first row of the list).
+export const startsDay=rows=>rows.map((row,i)=>i===0||dayKey(rows[i-1])!==dayKey(row));
+

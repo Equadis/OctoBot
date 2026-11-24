@@ -98,10 +98,10 @@ Run `node --test tests/sim/*.test.mjs` and `python -m unittest discover -s tests
 
 - **Assassination | Noxious Assault (Rupture)** — `assassination-noxious-rupture`; dps; preserved legacy ID.
 - **Assassination | Noxious Assault (No Rupture)** — `assassination-noxious`; dps; preserved legacy ID.
-- **Assassination | Noxious Assault Expose Armour (Rupture)** — `assassination-noxious-expose-rupture`; dps; preserved legacy ID.
-- **Assassination | Noxious Assault Expose Armour (No Rupture)** — `assassination-noxious-expose`; dps; preserved legacy ID.
+- **Assassination | Noxious Assault Expose Armor (Rupture)** — `assassination-noxious-expose-rupture`; dps; preserved legacy ID.
+- **Assassination | Noxious Assault Expose Armor (No Rupture)** — `assassination-noxious-expose`; dps; preserved legacy ID.
 - **Assassination | Noxious Assault (Cold Blood)** — `assassination-noxious-cold-blood`; dps.
-- **Assassination | Noxious Assault Expose Armour (Cold Blood)** — `assassination-noxious-expose-cold-blood`; dps.
+- **Assassination | Noxious Assault Expose Armor (Cold Blood)** — `assassination-noxious-expose-cold-blood`; dps.
 - **Combat | 1Cp Eviscerate Spam** — `combat-spam`; dps; preserved legacy ID.
 - **Combat | Sinister Strike AR (Rupture)** — `combat-sinister-ar-rupture`; dps; preserved legacy ID.
 - **Combat | Sinister Strike AR (No Rupture)** — `combat-sinister-ar`; dps; preserved legacy ID.
@@ -111,13 +111,13 @@ Run `node --test tests/sim/*.test.mjs` and `python -m unittest discover -s tests
 - **Combat | Backstab AR (No Rupture)** — `combat-backstab-ar`; dps; preserved legacy ID.
 - **Combat | Backstab Envenom (Rupture)** — `combat-backstab-envenom-rupture`; dps; preserved legacy ID.
 - **Combat | Backstab Envenom (No Rupture)** — `combat-backstab-envenom`; dps; preserved legacy ID.
-- **Combat | Sinister Strike Envenom (Expose Armour)** — `combat-sinister-envenom-expose`; dps.
-- **Combat | Sinister Strike AR (Expose Armour)** — `combat-sinister-ar-expose`; dps.
-- **Combat | Backstab Envenom (Expose Armour)** — `combat-backstab-envenom-expose`; dps.
-- **Combat | Backstab AR (Expose Armour)** — `combat-backstab-ar-expose`; dps.
+- **Combat | Sinister Strike Envenom (Expose Armor)** — `combat-sinister-envenom-expose`; dps.
+- **Combat | Sinister Strike AR (Expose Armor)** — `combat-sinister-ar-expose`; dps.
+- **Combat | Backstab Envenom (Expose Armor)** — `combat-backstab-envenom-expose`; dps.
+- **Combat | Backstab AR (Expose Armor)** — `combat-backstab-ar-expose`; dps.
 - **Combat | Blade Flurry (Cleave)** — `combat-blade-flurry-cleave`; dps.
-- **Subtlety | Hemorrhage (Expose Armour)** — `subtlety-hemorrhage-expose`; dps; preserved legacy ID.
-- **Subtlety | Hemorrhage (No Expose Armour)** — `subtlety-hemorrhage`; dps; preserved legacy ID.
+- **Subtlety | Hemorrhage (Expose Armor)** — `subtlety-hemorrhage-expose`; dps; preserved legacy ID.
+- **Subtlety | Hemorrhage (No Expose Armor)** — `subtlety-hemorrhage`; dps; preserved legacy ID.
 - **Subtlety | Hemorrhage (Mark for Death)** — `subtlety-hemorrhage-mark-death`; dps.
 - **Subtlety | Hemorrhage (Shadow of Death Burst)** — `subtlety-shadow-death-burst`; dps.
 

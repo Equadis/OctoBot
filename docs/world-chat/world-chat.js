@@ -1,6 +1,6 @@
 import {catalog,byTag,classInfo,analyseRecruitment,filterListings,normalise} from "./lfg-catalog.mjs";
 import {appendChatMessage} from "./chat-links.mjs?v=3";
-import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus} from "./chat-interactions.mjs?v=2";
+import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus,dayKey,dayLabel,startsDay} from "./chat-interactions.mjs?v=3";
 import {installItemPopup} from "./item-popup.mjs?v=20261129-ui1";
 import {historyPageSize,mergeChat,cursorFor,mergeHistoryWindow,historyErrorMessage,liveFallback,SEARCH_OPTIONS} from "./chat-history.mjs?v=20261120-search";
 const STAFF_LABELS={GM:"Game Master",CM:"Community Manager",DJ:"DJ",DEV:"Developer"};
@@ -71,6 +71,8 @@ function colourAuthor(author,row){
  if(row.gm)return;
  author.style.color=classInfo[resolvedClass(row)]?.[1]??"#9D9D9D";
 }
+// A Discord-style date line: the day logic lives in chat-interactions.mjs.
+function daySeparator(key){const e=node("div","chat-day",dayLabel(key));e.setAttribute("role","separator");e.dataset.day=key;return e;}
 function appendChatLine(parent,row,withTime=true){
   if(withTime)parent.append(node("span","chat-time","["+new Date(row.time).toISOString().slice(11,19)+"]"));
   const content=node("span","chat-content");
@@ -103,7 +105,8 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
  syncHistoryButton(key);
  refreshKnownPlayers();
  refreshKnownClasses();
- const rowSignatures=rows.map(focusSignature);
+ const starts=startsDay(rows);
+ const rowSignatures=rows.map((row,i)=>focusSignature(row)+(starts[i]?"|day:"+dayKey(row):""));
  const signature=JSON.stringify([state.ready,state.error,rowSignatures]);
  if(!forceBottom&&state.signature===signature)return;state.signature=signature;
  const atBottom=forceBottom||!preserveTop&&parent.scrollHeight-parent.scrollTop-parent.clientHeight<45;
@@ -120,7 +123,7 @@ function drawHistory(key,{forceBottom=false,preserveTop=false}={}){
   for(let i=0;i<rows.length;i++){
    const row=rows[i];let line=existing.get(row.id);
    if(!line||line.dataset.signature!==rowSignatures[i]){
-    const next=node("div","chat-line");next.dataset.id=row.id;next.dataset.author=playerKey(row.author);next.dataset.signature=rowSignatures[i];appendChatLine(next,row);
+    const next=node("div","chat-line");next.dataset.id=row.id;next.dataset.author=playerKey(row.author);next.dataset.signature=rowSignatures[i];if(starts[i])next.append(daySeparator(dayKey(row)));appendChatLine(next,row);
     if(line?.parentNode===parent)line.replaceWith(next);line=next;
    }
    if(parent.children[i]!==line)parent.insertBefore(line,parent.children[i]??null);
@@ -261,7 +264,7 @@ function drawLfg(now){
   const arrow=node("span","lfg-arrow",collapsed.has(tag)?"▸":"▾"),icon=node("img","lfg-icon");icon.alt="";icon.loading="lazy";icon.src="https://wow.zamimg.com/images/wow/icons/small/"+(meta?.icon??"inv_misc_questionmark")+".jpg";
   const label=node("span","lfg-group-label");label.append(node("strong","",meta?.name??tag));
   if(meta?.min)label.append(node("span","lfg-meta",(meta.min===meta.max?meta.min:meta.min+"–"+meta.max)+(meta.size?" · "+meta.size+" players":"")+(meta.kind==="worldboss"?" · World boss":"")));
-  header.append(arrow,icon,label,node("span","lfg-group-count",String(entries.length)));
+  header.append(icon,label,arrow,node("span","lfg-group-count",String(entries.length)));
   header.addEventListener("click",()=>{if(collapsed.has(tag))collapsed.delete(tag);else collapsed.add(tag);save();lastLfgKey="";drawLfg(Date.now());parent.querySelectorAll(".lfg-group-header").forEach(b=>{if(b.dataset.tag===tag)b.focus({preventScroll:true});});});
   section.append(header);
   if(!collapsed.has(tag)){
@@ -334,9 +337,11 @@ async function pollDeaths(){
    return;
   }
   if(!results.some(result=>result.status==="fulfilled"&&result.value))return;
-  parent.replaceChildren(...rows.map(row=>{
+  const deathStarts=startsDay(rows);
+  parent.replaceChildren(...rows.map((row,i)=>{
    const entry=node("div","chat-line");
    const time=new Date(row.time).toISOString().slice(11,19);
+   if(deathStarts[i])entry.append(daySeparator(dayKey(row)));
    entry.append(node("span","chat-time","["+time+"]"),node("span","death-announcement","["+row.realm+"] "+row.text));
    return entry;
   }));

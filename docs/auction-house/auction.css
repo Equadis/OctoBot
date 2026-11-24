@@ -242,4 +242,13 @@
 #last-scan.ah-time-yellow{color:#ffff00}
 #last-scan.ah-time-red{color:#ff0000}
 
+/* Auction listings: Load More under the table; price history tooltip and active point. */
+.ah-load-more{display:block;margin:12px auto 4px;min-width:160px}
+.ah-load-more:disabled{opacity:.6;cursor:default}
+.ah-chart{touch-action:pan-y}
+.ah-chart-dot.active{fill:#fff;stroke:#e8c67c;stroke-width:2}
+.ah-chart-tip{display:grid;gap:3px;pointer-events:none;z-index:1100}
+.ah-chart-tip strong{color:#e8c67c;font-size:12px}
+.ah-chart-tip .ah-chart-tip-label{color:#98a6b8;font-size:10px}
+.ah-section-head h2 .collapse-toggle{font-size:15px;font-weight:600}
 

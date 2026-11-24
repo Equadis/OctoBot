@@ -96,7 +96,7 @@ export function consumablesConflict(a,b){
 export function stackingNote(item){
  const fact=explicitStacking(item);
  if(fact.group)return `Stacking: only one ${fact.group} effect, confirmed by the official item tooltip.`;
- if(consumableGroup(item))return 'Stacking: reference replacement group; OctoWoW-specific behaviour is not independently verified.';
+ if(consumableGroup(item))return 'Stacking: reference replacement group; OctoWoW-specific behavior is not independently verified.';
  return 'Stacking: OctoWoW-specific interactions are unresolved. A shared cooldown alone does not mean mutually exclusive buffs.';
 }
 // Fixed display order must not depend on current selection.

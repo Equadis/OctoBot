@@ -1,14 +1,14 @@
 /* OctoBot Auction House. Item filters use the versioned catalogue when available. */
-import {parseSnapshotQuery,querySnapshot} from "./snapshot-query.mjs?v=1";
-import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261118-details2';
+import {parseSnapshotQuery,querySnapshot} from "./snapshot-query.mjs?v=20261130-ui2";
+import {displayItemName,variantDetails,variantLines,richItemTooltip} from './item-presentation.mjs?v=20261130-ui2';
 import {attachTooltip} from '../sim/tooltip.mjs?v=20261117-notes1';
-import {measureScrollingNames} from '../scrolling-names.mjs?v=1';
+import {measureScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
 import {money,moneyParts,pct,listingMarketPct,marketClass,trend,left,timeClass,bidAmount,scanStatus,lastScanClass,indexCoverage,indexedClass,dateTime,count} from './format.mjs?v=20261120-hourly';
 import {CATEGORIES,SLOTS,TIME_LEFT,RARITIES,subclassOptions} from './categories.mjs';
-import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261118-avg-price';
+import {DEFAULTS,SORT_DEFAULT_DIR,COLUMN_SORTS,nextColumnSort,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved} from './filters.mjs?v=20261130-ui2';
 import {loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,keyOf,MAX_FAVOURITES} from './favourites.mjs';
-import {buildChart,MIN_POINTS} from './chart.mjs?v=20261118-history1';
-import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=2';
+import {buildChart,MIN_POINTS} from './chart.mjs?v=20261130-ui2';
+import {auctionSearchFromURL} from '../world-chat/chat-interactions.mjs?v=3';
 
 // A different API origin is honoured only when the page itself is served from this machine (used for local testing against fixtures).
 const override=new URLSearchParams(location.search).get('api');
@@ -85,7 +85,7 @@ async function requestItems(params,signal){
 }
 const qualityClass=q=>{const n=Number(q);return q!=null&&Number.isInteger(n)&&n>=0&&n<=6?'ah-q'+n:'ah-q1';};
 const itemName=item=>displayItemName(item);
-const COLUMNS=['Favourite','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'];
+const COLUMNS=['Favorite','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'];
 
 /** Keyboard-accessible headers for full-result (server-side) ordering. */
 function sortForTable(table){return table.dataset.sortScope==='favourites'?state.favSort:state.filters;}
@@ -134,8 +134,8 @@ function syncStar(button,item){
   const on=isFavourite(state.fav,item),name=itemName(item);
   button.textContent=on?'★':'☆';
   button.setAttribute('aria-pressed',String(on));
-  button.setAttribute('aria-label',(on?'Remove ':'Add ')+name+(on?' from':' to')+' favourites');
-  button.title=on?'Remove from favourites':'Add to favourites';
+  button.setAttribute('aria-label',(on?'Remove ':'Add ')+name+(on?' from':' to')+' favorites');
+  button.title=on?'Remove from favorites':'Add to favorites';
 }
 function syncAllStars(){
   for(const [button,item] of stars){if(!button.isConnected){stars.delete(button);continue;}syncStar(button,item);}
@@ -152,9 +152,9 @@ function starButton(item){
   button.addEventListener('click',event=>{
     event.stopPropagation();
     const result=toggleFavourite(state.fav,snapshot);
-    if(result.full){note('You can track up to '+MAX_FAVOURITES+' favourite items. Remove one to add another.');return;}
+    if(result.full){note('You can track up to '+MAX_FAVOURITES+' favorite items. Remove one to add another.');return;}
     state.fav=result.list;
-    if(!saveFavourites(storage,state.fav))note('Favourites could not be saved in this browser (storage is unavailable), so they will be lost when you leave the page.');
+    if(!saveFavourites(storage,state.fav))note('Favorites could not be saved in this browser (storage is unavailable), so they will be lost when you leave the page.');
     syncAllStars();
     void refreshFavourites();
     if(state.filters.favourites_only)void refreshItems();
@@ -181,7 +181,7 @@ function itemCell(item){
 
 /** One table row (plus an expandable detail row), used by both the results table and the favourites overview. */
 function appendItemRow(body,item,{unavailable=false,error=false}={}){
-  const tr=el('tr',null,'ah-entry');tr.tabIndex=0;tr.setAttribute('role','button');
+  const tr=el('tr',null,'ah-entry');tr.dataset.itemId=String(item.item_id);tr.tabIndex=0;tr.setAttribute('role','button');
   tr.setAttribute('aria-expanded','false');
   tr.setAttribute('aria-label','Show details for '+itemName(item));
   td(tr).append(starButton(item));
@@ -189,7 +189,7 @@ function appendItemRow(body,item,{unavailable=false,error=false}={}){
   const expand=el('span','▸','ah-expand');expand.setAttribute('aria-hidden','true');
   wrap.append(expand,itemCell(item));cell.append(wrap);tr.append(cell);
   if(unavailable){
-    td(tr,error?'Latest data is unavailable, so this item’s current prices cannot be shown.':'Not listed in the latest completed scan. It stays in your favourites.','ah-unavailable').colSpan=COLS-2;
+    td(tr,error?'Latest data is unavailable, so this item’s current prices cannot be shown.':'Not listed in the latest completed scan. It stays in your favorites.','ah-unavailable').colSpan=COLS-2;
   }else{
     td(tr,item.quantity??'–');td(tr,item.listings??'–');moneyTd(tr,item.unit_buyout);
     moneyTd(tr,item.stack_buyout);
@@ -220,7 +220,44 @@ function stat(label,value){
   const box=el('div'),dt=el('dt',label),dd=el('dd',value);
   box.append(dt,dd);return box;
 }
-function section(title,open){const d=el('details');if(open)d.open=true;d.append(el('summary',title));const body=el('div');d.append(body);return {d,body};}
+
+/* ---------- price history tooltip ---------- */
+const LISTING_PAGE=20;
+const formatDay=day=>{const d=new Date(day+'T00:00:00Z');return Number.isNaN(d.getTime())?day:d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});};
+let chartTip=null;
+// One themed tooltip for every chart. It reads the points already drawn (no extra requests) and snaps to the nearest day, so mouse and touch both work.
+function wireChartTooltip(svg){
+  const dots=[...svg.querySelectorAll('.ah-chart-dot')];
+  if(!dots.length)return;
+  if(!chartTip){chartTip=el('div',null,'planner-tooltip ah-chart-tip');chartTip.hidden=true;chartTip.setAttribute('role','tooltip');document.body.append(chartTip);}
+  const tip=chartTip;let active=null;
+  const hide=()=>{tip.hidden=true;if(active){active.classList.remove('active');active.setAttribute('r','3');}active=null;};
+  const nearest=event=>{
+    const ctm=svg.getScreenCTM();if(!ctm)return null;
+    const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;
+    const x=point.matrixTransform(ctm.inverse()).x;
+    let best=null,distance=Infinity;
+    for(const dot of dots){const d=Math.abs(Number(dot.getAttribute('cx'))-x);if(d<distance){distance=d;best=dot;}}
+    return best;
+  };
+  const show=dot=>{
+    if(active!==dot){
+      hide();active=dot;dot.classList.add('active');dot.setAttribute('r','5');
+      tip.replaceChildren(el('strong',formatDay(dot.dataset.day)),el('span','Lowest unit buyout','ah-chart-tip-label'),moneyNode(Number(dot.dataset.value)));
+    }
+    tip.hidden=false;
+    const box=dot.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+    tip.style.left=Math.max(8,Math.min(box.left+box.width/2-w/2,innerWidth-w-8))+'px';
+    tip.style.top=(box.top-h-12>=8?box.top-h-12:Math.min(box.bottom+12,innerHeight-h-8))+'px';
+  };
+  const onPointer=event=>{const dot=nearest(event);if(dot)show(dot);};
+  svg.addEventListener('pointermove',onPointer);
+  svg.addEventListener('pointerdown',onPointer);
+  svg.addEventListener('pointerleave',event=>{if(event.pointerType!=='touch')hide();});
+  document.addEventListener('pointerdown',event=>{if(!svg.contains(event.target))hide();});
+  window.addEventListener('scroll',hide,{passive:true});
+}
+function section(title,open){const d=el('details');if(open)d.open=true;d.append(el('summary',title,'collapse-toggle'));const body=el('div');d.append(body);return {d,body};}
 function simpleTable(headings,rows){
   const table=el('table'),head=el('tr');
   headings.forEach(h=>head.append(el('th',h)));
@@ -234,7 +271,9 @@ async function fillDetail(cell,item,unavailable){
   if(state.scan.catalogue&&state.scan.id)params.set('scan_id',state.scan.id);
   const id=encodeURIComponent(item.item_id);
   try{
-    const listings=unavailable?{listings:[]}:await request('/api/auction/item/'+id+'?'+params);
+    const listParams=new URLSearchParams(params);listParams.set('limit',String(LISTING_PAGE));listParams.set('offset','0');
+    const sellerFilter=String(state.filters.owner||'').trim();if(sellerFilter)listParams.set('owner',sellerFilter);
+    const listings=unavailable?{listings:[]}:await request('/api/auction/item/'+id+'?'+listParams);
     const stats=el('dl',null,'ah-stats');
     if(!unavailable){
       stats.append(stat('Lowest unit buyout',item.unit_buyout==null?'No buyout listed':moneyNode(item.unit_buyout)));
@@ -266,10 +305,10 @@ async function fillDetail(cell,item,unavailable){
     parts.push(dbLink);
     if(state.listingFiltered&&!unavailable)parts.push(el('p','Totals above reflect your active price, stack and time filters. The listings below are every auction for this item.','ah-muted'));
     // price history
-    const hist=section('Price history',false);
+    const hist=section('Price history',true);
     let historyLoaded=false;
-    hist.d.addEventListener('toggle',async()=>{
-      if(!hist.d.open||historyLoaded)return;
+    const loadHistory=async()=>{
+      if(historyLoaded)return;
       historyLoaded=true;
       hist.body.replaceChildren(el('p','Loading price history…','ah-muted'));
       try{
@@ -277,6 +316,7 @@ async function fillDetail(cell,item,unavailable){
         const days=Array.isArray(history.history)?history.history:[];
         hist.body.replaceChildren();
         const chart=buildChart(document,days);
+        if(chart)wireChartTooltip(chart);
         const values=days.map(d=>d.representative_unit).filter(v=>v!=null&&Number.isFinite(Number(v))&&Number(v)>0).map(Number);
         const summary=el('div',null,'ah-history-summary');
         if(values.length){for(const [label,value,colour] of [['All-time high',Math.max(...values),'red'],['Average price',Math.round(values.reduce((a,b)=>a+b,0)/values.length),'yellow'],['All-time low',Math.min(...values),'green']]){const row=el('div',null,'ah-history-stat');row.append(el('span',label+':','ah-time-'+colour),moneyNode(value));summary.append(row);}summary.append(el('small','Based on retained daily lowest unit buyouts.','ah-muted'));}
@@ -292,20 +332,56 @@ async function fillDetail(cell,item,unavailable){
         historyLoaded=false;
         hist.body.replaceChildren(el('p','Price history is unavailable. Close and reopen to retry.','ah-muted'));
       }
-    });
+    };
+    hist.d.addEventListener('toggle',()=>{if(hist.d.open)void loadHistory();});
     parts.push(hist.d);
+    if(hist.d.open)void loadHistory();
     // individual auctions
     if(!unavailable){
-      const rows=listings.listings||[];
-      const auctions=section('Auction listings ('+rows.length+(listings.limited?'+':'')+')',true);
-      if(!rows.length)auctions.body.append(el('p','No listings are available for this item.','ah-muted'));
-      else auctions.body.append(simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left'],
-        rows.map(r=>{
-          const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
-          const average=item.historical_avg;
-          return [r.owner_name||'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),marketNode(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
-        })));
-      if(listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
+      // First 20 cheapest auctions. Newer API versions page on the server (?limit/?offset); an older one returns its whole list
+      // (up to 200) once, which is then shown 20 at a time without any further request.
+      const headings=['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left'];
+      const serverPaged=typeof listings.has_more==='boolean';
+      const pool=listings.listings||[];
+      const seen=new Set();let shown=0,hasMore=false,loading=false;
+      const total=serverPaged?listings.total:pool.length;
+      const auctions=section('Auction listings ('+count(total)+(!serverPaged&&listings.limited?'+':'')+')',true);
+      const listingCells=r=>{
+        const bid=Number(r.current_bid)>0?bidAmount(r.current_bid,null,r.buyout,r.unit_buyout):null;
+        const average=item.historical_avg;
+        return [r.owner_name||'Unknown',r.quantity,moneyNode(r.unit_buyout),r.buyout>0?moneyNode(r.buyout):'–',bid===null?'–':moneyNode(bid),moneyNode(average),marketNode(listingMarketPct(r.unit_buyout,average)),timeNode(r.time_left_ms,r.captured_at)];
+      };
+      if(!pool.length)auctions.body.append(el('p',state.filters.owner?'No listings from this seller for this item.':'No listings are available for this item.','ah-muted'));
+      else{
+        const table=simpleTable(headings,[]),tbody=table.tBodies[0];
+        const more=el('button','Load More','ah-btn ah-load-more');more.type='button';more.hidden=true;
+        const appendRows=rows=>{
+          for(const r of rows){
+            if(r.auction_id!=null){if(seen.has(r.auction_id))continue;seen.add(r.auction_id);}
+            const line=el('tr');listingCells(r).forEach((v,i)=>{const c=td(line,v);c.dataset.label=headings[i];});tbody.append(line);shown++;
+          }
+        };
+        const refresh=()=>{more.hidden=!hasMore;};
+        if(serverPaged){appendRows(pool);hasMore=listings.has_more===true;}
+        else{appendRows(pool.slice(0,LISTING_PAGE));hasMore=shown<pool.length;}
+        more.addEventListener('click',async()=>{
+          if(loading||!hasMore)return;
+          loading=true;more.disabled=true;more.textContent='Loading…';
+          try{
+            if(serverPaged){
+              const next=await request('/api/auction/item/'+id+'?'+new URLSearchParams({...Object.fromEntries(listParams),offset:String(shown)}));
+              appendRows(next.listings||[]);hasMore=next.has_more===true&&(next.listings||[]).length>0;
+            }else{
+              appendRows(pool.slice(shown,shown+LISTING_PAGE));hasMore=shown<pool.length;
+            }
+            more.textContent='Load More';
+          }catch{more.textContent='Could not load more. Try again.';}
+          finally{loading=false;more.disabled=false;refresh();}
+        });
+        refresh();
+        auctions.body.append(table,more);
+      }
+      if(!serverPaged&&listings.limited)auctions.body.append(el('p','Showing the 200 cheapest auctions.','ah-chart-note'));
       parts.push(auctions.d);
     }
     const inner=el('div',null,'ah-detail-inner');inner.append(...parts);cell.replaceChildren(inner);
@@ -318,7 +394,7 @@ function renderRows(data,{favouritesOnlyEmpty=false}={}){
   const items=Array.isArray(data.items)?data.items:[];
   state.listingFiltered=Boolean(data.listing_filtered);
   if(!items.length){
-    const tr=el('tr'),cell=td(tr,favouritesOnlyEmpty?'You have no favourite items yet. Select the star beside any item to add it.':
+    const tr=el('tr'),cell=td(tr,favouritesOnlyEmpty?'You have no favorite items yet. Select the star beside any item to add it.':
       (activeFilters(state.filters).length?'No items match these filters in the latest completed scan.':'No matching records in the latest completed scan.'),'ah-empty');
     cell.colSpan=COLS;body.append(tr);
   }
@@ -353,7 +429,7 @@ async function refreshFavourites(){
   const controller=favouriteRequest=new AbortController();
   $('fav-count').textContent=String(state.fav.length);
   if(!state.fav.length){
-    body.replaceChildren(el('p','No favourites yet. Select the star beside any item to track it here, with its latest price, quantity, market % and trend. Favourites are saved in this browser.','ah-muted ah-empty-fav'));
+    body.replaceChildren(el('p','No favorites yet. Select the star beside any item to track it here, with its latest price, quantity, market % and trend. Favorites are saved in this browser.','ah-muted ah-empty-fav'));
     return;
   }
   let data=null;
@@ -365,7 +441,7 @@ async function refreshFavourites(){
   const found=new Map((data?.items||[]).map(i=>[keyOf(i),i]));
   if(data){state.fav=refreshSnapshots(state.fav,data.items);saveFavourites(storage,state.fav);}
   const table=el('table'),head=el('tr');
-  ['','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'].forEach((h,i)=>{const th=el('th',h);if(i===0){th.className='ah-col-star';th.append(el('span','Favourite','sr-only'));}head.append(th);});
+  ['','Item','Available','Listings','Unit price','Stack price','Current bid','Avg. price','Market %','Trend','Time left'].forEach((h,i)=>{const th=el('th',h);if(i===0){th.className='ah-col-star';th.append(el('span','Favorite','sr-only'));}head.append(th);});
   const thead=el('thead');thead.append(head);table.append(thead);
   const tbody=el('tbody');
   // The API orders all listed favourites by the selected metric; unavailable ones follow by name.
@@ -401,8 +477,8 @@ async function refreshSummary(){
     const itemCount=$('item-count'),coverage=indexCoverage(s.items_with_metadata,s.item_count);
     itemCount.textContent=count(s.item_count);
     itemCount.className=indexedClass(s.items_with_metadata,s.item_count)||'';
-    itemCount.title=coverage===null?'Catalogue coverage unavailable':
-      'Catalogue metadata: '+count(s.items_with_metadata)+' of '+count(s.item_count)+' item variants ('+(coverage*100).toFixed(1)+'%)';
+    itemCount.title=coverage===null?'Catalog coverage unavailable':
+      'Catalog metadata: '+count(s.items_with_metadata)+' of '+count(s.item_count)+' item variants ('+(coverage*100).toFixed(1)+'%)';
     // Only a problem is worth a line of text; a healthy snapshot shows its time in the cards above.
     note(s.completed_at?'':'No data \u2013 no completed Auction House scan has been verified.');
   }catch{note('Auction House feed unavailable – no data is being invented.');}
@@ -500,7 +576,7 @@ function bind(){
   });
   $('fav-collapse').addEventListener('click',()=>{
     const hide=$('fav-body').hidden===false;
-    $('fav-body').hidden=hide;$('fav-collapse').textContent=hide?'Show':'Hide';$('fav-collapse').setAttribute('aria-expanded',String(!hide));
+    $('fav-body').hidden=hide;$('fav-collapse').setAttribute('aria-expanded',String(!hide));
     try{storage?.setItem('octobot.auction.favourites.collapsed',hide?'1':'0');}catch{/* optional convenience only */}
   });
   try{if(storage?.getItem('octobot.auction.favourites.collapsed')==='1')$('fav-collapse').click();}catch{/* ignore */}
@@ -509,6 +585,8 @@ populate();bind();renderSaved();
 state.filters.q=auctionSearchFromURL(location.href);
 writeFilters();
 await refreshAll();
+// A link from World Chat opens straight onto that item's listings (?open=<item id>).
+{const wanted=new URLSearchParams(location.search).get('open');if(/^\d{1,10}$/.test(wanted||'')){const row=$('items').querySelector('tr.ah-entry[data-item-id="'+wanted+'"]');if(row&&row.getAttribute('aria-expanded')!=='true')row.click();}}
 let polling=false;
 async function pollSnapshot(){
   if(document.hidden||polling)return;

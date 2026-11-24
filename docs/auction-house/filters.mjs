@@ -27,7 +27,7 @@ export function nextColumnSort(current,key){
 const NARROWING=['q','quality','item_class','item_subclass','slot','min_level','max_level','gear','exact','min_quantity','stack','max_unit_buyout','max_unit_bid','has_buyout','time_left','owner','min_market_pct','max_market_pct','favourites_only'];
 const LABELS={q:'Name',quality:'Rarity',item_class:'Category',item_subclass:'Subcategory',slot:'Slot',min_level:'Min level',max_level:'Max level',gear:'Equipment only',exact:'Exact name',
   min_quantity:'Min quantity',stack:'Stack size',max_unit_buyout:'Max unit buyout',max_unit_bid:'Max unit bid',has_buyout:'Has buyout',time_left:'Time left',owner:'Seller',
-  min_market_pct:'Min market %',max_market_pct:'Max market %',favourites_only:'Favourites only'};
+  min_market_pct:'Min market %',max_market_pct:'Max market %',favourites_only:'Favorites only'};
 const INTS={quality:[0,8],item_class:[0,20],item_subclass:[0,30],slot:[0,40],min_level:[0,70],max_level:[0,70],min_quantity:[1,10000000],stack:[1,100000],min_market_pct:[0,1000000],max_market_pct:[0,1000000]};
 const MONEY=['max_unit_buyout','max_unit_bid'];
 
@@ -43,7 +43,7 @@ export function validate(f){
   for(const field of MONEY)if(parseMoney(f[field])===null)errors[field]=LABELS[field]+' must look like 2g 50s, 75s 5c or a number of copper.';
   if(!errors.min_level&&!errors.max_level&&f.min_level!==''&&f.max_level!==''&&Number(f.min_level)>Number(f.max_level))errors.max_level='Maximum level is below the minimum.';
   if(!errors.min_market_pct&&!errors.max_market_pct&&f.min_market_pct!==''&&f.max_market_pct!==''&&Number(f.min_market_pct)>Number(f.max_market_pct))errors.max_market_pct='Maximum market % is below the minimum.';
-  if(f.owner&&!/^\d{1,20}$/.test(String(f.owner).trim()))errors.owner='Seller must be a numeric owner GUID.';
+  if(f.owner&&!/^(?:\d{1,20}|\p{L}{1,24})$/u.test(String(f.owner).trim()))errors.owner='Seller must be a character name (letters only) or a numeric GUID.';
   if(f.item_subclass!==''&&f.item_class==='')errors.item_subclass='Choose a category first.';
   return errors;
 }

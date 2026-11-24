@@ -50,7 +50,7 @@ export function itemTooltip(item){
    "Item ID: "+itemId,
    ...variantLines(item),
    ...(v.hasVariant&&v.bonuses.length?["Random enchantment from Classic DBC reference."]:[]),
-   known?"Name and rarity from the OctoWoW catalogue snapshot.":"Item details not found in the available catalogue."
+   known?"Name and rarity from the OctoWoW catalog snapshot.":"Item details not found in the available catalog."
  ].join("\n");
 }
 const baseCache=new Map();
@@ -103,7 +103,7 @@ export async function richItemTooltip(item){
  if(rollStats.length)lines.push("Variant effects",...rollStats);
  notes.push(...details.filter(line=>line.startsWith("Unmapped random enchantment")));
  if(v.hasVariant&&v.bonuses.length)notes.push("Standard Classic DBC reference; custom values may differ.");
- if(!lines.length)notes.push("Full item attributes are not available in the catalogue.");
+ if(!lines.length)notes.push("Full item attributes are not available in the catalog.");
  if(base?.source==="OctoWoW DB"||base?.source==="OctoWoW DB snapshot")notes.push("Base stats: "+base.source+".");
  else if(raw)notes.push("Base stats: Gear Planner reference.");
  return {title,lines,notes};

@@ -163,7 +163,7 @@ test("every filter at once stays under D1's 100 bound-parameter limit",()=>{
 
 test("invalid filter values are rejected, not ignored",{skip},async()=>{
  const e=await fresh();
- for(const bad of ["quality=-1","quality=9","quality=x","min_level=71","item_class=99","slot=41","stack=0","stack=1.5","max_unit_buyout=-5","max_unit_buyout=1e12","owner=abc","time_left=x","sort=password"])
+ for(const bad of ["quality=-1","quality=9","quality=x","min_level=71","item_class=99","slot=41","stack=0","stack=1.5","max_unit_buyout=-5","max_unit_buyout=1e12","owner=a1","time_left=x","sort=password"])
   assert.equal((await q(e,bad)).status,400,bad);
 });
 
@@ -294,4 +294,33 @@ test("early average uses distinct priced auction IDs, screens high outliers only
  assert.equal(sword.average_source,"recent_listings");assert.equal(sword.average_samples,10);assert.equal(sword.average_excluded,1);assert.equal(sword.historical_avg,100);assert.equal(sword.market_pct,100);assert.equal(sword.listings,10);
  assert.equal(items.find(i=>i.item_id===1002).average_samples,4,"rescan is not an independent listing");
  const filtered=(await q(e,"max_unit_buyout=100&q=Iron+Sword")).json.items[0];assert.equal(filtered.historical_avg,100);assert.equal(filtered.listings,9);
+});
+
+test("the seller filter takes a GUID or part of a character name, and item listings page on the server",{skip},async()=>{
+ const e=env();n=0;
+ const many=[];for(let i=0;i<45;i++)many.push(L(1001,{variant:"0:0:0",buyout:1000+i*10,owner_guid:i<40?"5":"6"}));
+ await scan(e,"ah_filters_paging","2026-11-11",many);
+ assert.equal((await post(e,"seller-names",{scan_id:"ah_filters_paging",sellers:[{owner_guid:"5",character_name:"Bluebell"},{owner_guid:"6",character_name:"Moss"}]})).status,200);
+ // Items list: GUID is exact; a name is partial and case-insensitive; anything else is rejected.
+ assert.deepEqual(ids(await q(e,"owner=5")),["1001"]);
+ assert.deepEqual(ids(await q(e,"owner=BLUE")),["1001"]);
+ assert.deepEqual(ids(await q(e,"owner=ossy")),[]);
+ assert.equal((await q(e,"owner=a_b")).status,400);
+ assert.equal((await q(e,"owner=%25")).status,400);
+ // Item listings: ?limit pages with a total; no ?limit keeps the earlier response shape.
+ const legacy=(await get(e,"item/1001?variant=0:0:0")).json;
+ assert.equal(legacy.listings.length,45);assert.equal(legacy.total,undefined);
+ const first=(await get(e,"item/1001?variant=0:0:0&limit=20")).json;
+ assert.equal(first.listings.length,20);assert.equal(first.total,45);assert.equal(first.has_more,true);assert.equal(first.offset,0);
+ const second=(await get(e,"item/1001?variant=0:0:0&limit=20&offset=20")).json;
+ assert.equal(second.listings.length,20);assert.equal(second.has_more,true);
+ const last=(await get(e,"item/1001?variant=0:0:0&limit=20&offset=40")).json;
+ assert.equal(last.listings.length,5);assert.equal(last.has_more,false);
+ const all=[...first.listings,...second.listings,...last.listings].map(l=>l.auction_id);
+ assert.equal(new Set(all).size,45,"no listing repeats across pages");
+ assert.deepEqual(all,legacy.listings.map(l=>l.auction_id),"pages follow the same price order");
+ const moss=(await get(e,"item/1001?variant=0:0:0&limit=20&owner=moss")).json;
+ assert.equal(moss.total,5);assert.equal(moss.listings.length,5);assert.equal(moss.has_more,false);
+ assert.equal((await get(e,"item/1001?variant=0:0:0&limit=20&owner=5")).json.total,40);
+ assert.equal((await get(e,"item/1001?variant=0:0:0&owner=a1")).status,400);
 });

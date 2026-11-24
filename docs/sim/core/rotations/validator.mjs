@@ -1,4 +1,4 @@
-import {CLASS_OPTIONS} from '../class-options.mjs?v=20261112-rotations1';
+import {CLASS_OPTIONS} from '../class-options.mjs?v=20261130-ui2';
 import {TALENT_REFERENCES} from './talent-references.mjs?v=20261112-rotations1';
 import {rotationProfileData,abilityKey,COMMON_METRICS} from './registry.mjs?v=20261112-rotations1';
 import {CONDITION_DEFINITIONS,CONDITION_OPERATORS} from './conditions.mjs?v=20261112-rotations1';

@@ -10,7 +10,7 @@ export const CLASS_OPTIONS=Object.freeze({
  druid:[choice('form','Form',['Humanoid','Moonkin','Cat','Bear']),choice('catBuilder','Cat Builder',['Shred','Claw']),mana(),number('startingEnergy','Starting Energy',100,0,100),number('startingRage','Starting Rage',0,0,100)],
  shaman:[choice('mhImbue','Weapon Imbue',['None','Windfury Weapon','Flametongue Weapon','Rockbiter Weapon','Frostbrand Weapon']),mana()],
  hunter:[choice('aspect','Aspect',['None','Aspect of the Hawk','Aspect of the Monkey','Aspect of the Wild','Aspect of the Wolf']),choice('pet','Pet',['None','Cat','Wolf','Wind Serpent','Raptor','Boar','Bear']),number('petLevel','Pet Level',60,1,60),mana()],
- mage:[choice('armour','Armour',['None','Mage Armor','Ice Armor','Frost Armor']),mana()],
+ mage:[choice('armour','Armor',['None','Mage Armor','Ice Armor','Frost Armor']),mana()],
  warlock:[choice('pet','Demon',['None','Imp','Voidwalker','Succubus','Felhunter','Felguard','Doomguard']),choice('curse','Assigned Curse',['Curse of Agony','Curse of the Elements','Curse of Shadow','Curse of Recklessness','None']),mana(),number('soulShards','Soul Shards',10,0,100)],
  priest:[choice('form','Form',['Humanoid','Shadowform']),choice('useVampiricEmbrace','Vampiric Embrace',['Off','On']),mana()],
 });

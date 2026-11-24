@@ -1,4 +1,4 @@
-import {validEnchant} from './equipment-options.mjs?v=20261117-picker2';
+import {validEnchant} from './equipment-options.mjs?v=20261130-ui2';
 import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
 import { classDefinition } from './classes.mjs?v=20261112-audit1';
 // Database listing filters are preliminary. Equipping requires the source detail masks.
@@ -24,16 +24,16 @@ export function listingRestriction(item, build, slot) {
   if(item.classs===2&&['mainhand','offhand'].includes(slot)&&[2,3,16,18,19].includes(item.subclass))return 'A ranged weapon cannot be equipped in a melee slot.';
   if(item.classs===2&&slot==='offhand'&&[1,5,6,8,10,20].includes(item.subclass))return 'A two-handed weapon cannot be equipped in the off hand.';
   if (item.classs === 2 && !cls.weapons.includes(item.subclass) && !(item.subclass===20 && (build.skills?.Fishing||0)>0)) return `Weapon type cannot be used by a ${cls.name}.`;
-  if(item.classs===4&&item.subclass===4&&cls.armour===4&&build.level<40)return 'Plate armour requires level 40.';
-  if(item.classs===4&&item.subclass===3&&cls.armour===3&&build.level<40)return 'Mail armour requires level 40.';
+  if(item.classs===4&&item.subclass===4&&cls.armour===4&&build.level<40)return 'Plate armor requires level 40.';
+  if(item.classs===4&&item.subclass===3&&cls.armour===3&&build.level<40)return 'Mail armor requires level 40.';
   if(item.classs===4){
     const maxArmour=build.level<40&&cls.armour>=3?cls.armour-1:cls.armour;
     const shield=item.subclass===6&&['warrior','paladin','shaman'].includes(cls.id);
     const relic=item.slot===28&&item.subclass===cls.relicSubclass;
-    if(!(item.subclass===0||(item.subclass>=1&&item.subclass<=maxArmour)||shield||relic))return `Armour type cannot be used by a ${cls.name}.`;
+    if(!(item.subclass===0||(item.subclass>=1&&item.subclass<=maxArmour)||shield||relic))return `Armor type cannot be used by a ${cls.name}.`;
   }
   if (item.classs === 2 && item.subclass === 6 && build.level < 20) return 'Polearms require level 20.';
-  if (item.classs === 4 && item.subclass === 4 && build.level < 40) return 'Plate armour requires level 40.';
+  if (item.classs === 4 && item.subclass === 4 && build.level < 40) return 'Plate armor requires level 40.';
   if (slot === 'offhand' && item.classs === 2 && (!cls.dualWieldLevel||build.level<cls.dualWieldLevel)) return cls.dualWieldLevel?`Dual wield requires level ${cls.dualWieldLevel}.`:'This class cannot dual wield.';
   if(slot==='ranged' && (cls.relicSubclass!==null ? item.slot!==28||item.subclass!==cls.relicSubclass : item.slot===28))return 'This ranged slot type cannot be used by this class.';
   if (slot === 'offhand' && build.gear.mainhand?.twoHanded) return 'Clear the two-handed main hand first.';

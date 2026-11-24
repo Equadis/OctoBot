@@ -76,7 +76,9 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now(),precom
   const timeLeft=get('time_left');
   if(timeLeft!==null&&timeLeft!==''&&!Object.hasOwn(TIME_BUCKETS,timeLeft))return bad('invalid time_left');
   const owner=(get('owner')||'').trim();
-  if(owner&&!/^\d{1,20}$/.test(owner))return bad('invalid owner');
+  // The seller is a numeric GUID (exact) or part of a character name (letters only, case-insensitive).
+  const ownerIsGuid=/^\d{1,20}$/.test(owner);
+  if(owner&&!ownerIsGuid&&!/^\p{L}{1,24}$/u.test(owner))return bad('invalid owner');
   const keys=parseKeys(get('keys'));
   if(keys===null)return bad('invalid keys');
   const hasKeys=get('keys')!==null;                       // keys present but empty = "favourites only, with none"
@@ -88,7 +90,7 @@ export function buildItemsQuery(params,scan,previousScanId,now=Date.now(),precom
   if(ints.max_unit_bid!==undefined){lw.push('CAST(CASE WHEN current_bid>0 THEN current_bid ELSE start_bid END AS REAL)/quantity<=?');lb.push(ints.max_unit_bid);}
   if(ints.stack!==undefined){lw.push('quantity=?');lb.push(ints.stack);}
   if(flag('has_buyout'))lw.push('buyout>0');
-  if(owner){lw.push('owner_guid=?');lb.push(owner);}
+  if(owner){if(ownerIsGuid){lw.push('owner_guid=?');lb.push(owner);}else{lw.push('owner_guid IN (SELECT owner_guid FROM ah_seller_names WHERE character_name LIKE ?)');lb.push('%'+owner+'%');}}
   if(timeLeft){const [lo,hi]=TIME_BUCKETS[timeLeft];
     const remaining="(time_left_ms-MAX(0,ROUND((julianday(?)-julianday(captured_at))*86400000)))";
     const at=new Date(now).toISOString();

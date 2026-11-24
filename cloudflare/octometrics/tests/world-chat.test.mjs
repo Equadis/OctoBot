@@ -257,7 +257,8 @@ test("DGG-style focus is case-insensitive and includes whole-name mentions, not 
  assert.deepEqual(mentionParts("@Newplayer",new Set()),[{text:"@Newplayer",player:"newplayer"}]);
 });
 test("item menu AH links seed the existing search field with a numeric item ID",()=>{
- assert.equal(itemAuctionHref(16712),"../auction-house/?q=16712");
+ assert.equal(itemAuctionHref(16712),"../auction-house/?q=16712&open=16712");
+ assert.equal(itemAuctionHref(16712,"Y'Shaarj"),"../auction-house/?realm=Y%27Shaarj&q=16712&open=16712");
  assert.equal(itemAuctionHref(-1),null);
  assert.equal(auctionSearchFromURL("https://equadis.github.io/OctoBot/auction-house/?q=16712"),"16712");
 });

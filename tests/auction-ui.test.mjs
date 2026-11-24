@@ -82,7 +82,9 @@ test('validation catches impossible combinations before any request is made',()=
   assert.ok(validate({...DEFAULTS,min_level:'71'}).min_level);
   assert.ok(validate({...DEFAULTS,stack:'0'}).stack);
   assert.ok(validate({...DEFAULTS,max_unit_buyout:'lots'}).max_unit_buyout);
-  assert.ok(validate({...DEFAULTS,owner:'Bob'}).owner);
+  assert.equal(validate({...DEFAULTS,owner:'Bob'}).owner,undefined,'a character name is a valid seller');
+  assert.equal(validate({...DEFAULTS,owner:'1234567'}).owner,undefined,'a numeric GUID is a valid seller');
+  assert.ok(validate({...DEFAULTS,owner:'Bob_1'}).owner);
   assert.ok(validate({...DEFAULTS,min_market_pct:'90',max_market_pct:'20'}).max_market_pct);
   assert.ok(validate({...DEFAULTS,item_subclass:'3'}).item_subclass,'a subcategory needs a category');
   assert.deepEqual(validate({...DEFAULTS,item_class:'2',item_subclass:'3',min_level:'1',max_level:'60'}),{});
@@ -255,12 +257,17 @@ test('the rarity dropdown and item names use the shared rarity colours',()=>{
   assert.match(css,/\.ah-q0 \.ah-name-text,\.ah-q1 \.ah-name-text,\.ah-q2 \.ah-name-text,\.ah-q3 \.ah-name-text,\.ah-q4 \.ah-name-text,\.ah-q5 \.ah-name-text,\.ah-q6 \.ah-name-text\{color:var\(--item-quality\)\}/);
   for(let q=0;q<=6;q++)assert.ok(css.includes(`.ah-q${q}{--item-quality:var(--quality-${q})}`),'rarity variable for quality '+q);
 });
-test('the page uses UK English and the shared palette instead of one-off colours',()=>{
-  const css=read('auction-house/auction.css'),text=read('auction-house/index.html')+read('auction-house/auction.js');
-  assert.doesNotMatch(text,/\b(favorite|favorites|armor|gray|catalog)\b/i);
+test('the page uses American English and the shared palette instead of one-off colours',()=>{
+  const css=read('auction-house/auction.css'),html=read('auction-house/index.html'),script=read('auction-house/auction.js');
+  // Visible text only: identifiers, storage keys and API paths keep their names.
+  const visible=[...html.matchAll(/>([^<>{}]*)</g)].map(m=>m[1]).join(' ');
+  assert.doesNotMatch(visible,/favourite|catalogue|armour|colour/i);
+  assert.match(visible,/Favorite items/);
+  for(const phrase of ['Add to favorites','Remove from favorites','No favorites yet','Catalog coverage unavailable'])assert.ok(script.includes(phrase),phrase);
+  for(const phrase of ['to favourites','No favourites yet','Catalogue coverage'])assert.ok(!script.includes(phrase),phrase);
   for(const old of ['#172232','#46546a'])assert.ok(!css.includes(old),'retired one-off shade '+old);
   assert.match(css,/\.ah-btn\[aria-pressed=true\][^{]*\{[^}]*#3a3827[^}]*#f4d65c/,'pressed buttons use the active navigation colours');
-  assert.match(text,/lang="en-GB"/);
+  assert.match(html,/lang="en-US"/);
 });
 
 test('the full Auction House row expands on click and keyboard without navigation',()=>{
@@ -316,7 +323,7 @@ test('trend colours share the countdown palette and sorting has accessible label
 });
 test('expanded auction listings omit starting bid and minimum next bid columns and cells',()=>{
  const js=read('auction-house/auction.js');
- assert.ok(js.includes("simpleTable(['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left']"));
+ assert.ok(js.includes("const headings=['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left']"));
  assert.doesNotMatch(js,/moneyNode\(r\.(?:start_bid|min_next_bid)\)/);
 });
 

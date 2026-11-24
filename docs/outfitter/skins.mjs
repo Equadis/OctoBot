@@ -70,7 +70,7 @@ export function variantFor(skin, race, gender) {
 
 /** Can this skin be worn by this body? When it cannot, `reason` says why in words the page can show. Nothing is ever substituted. */
 export function compatibility(skin, race, gender) {
-  if (!skin) return { ok: false, reason: 'This skin is not in the catalogue.' };
+  if (!skin) return { ok: false, reason: 'This skin is not in the catalog.' };
   if (!skin.variants.length) {
     return { ok: false, unsupported: true, reason: skin.labelled
       ? 'The game names this skin, but its texture has not been identified yet, so it cannot be previewed.'
