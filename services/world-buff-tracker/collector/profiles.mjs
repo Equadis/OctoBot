@@ -6,7 +6,7 @@ export const PROFILES=Object.freeze({
  OBPVEDMFH:{account:"OBPVEDMFH",realmName:"N'Zoth",role:"dmfh",dmf:"mulgore",info:{period:20,offset:10},chat:{period:5,offset:3}},
  OBPVEAH:{account:"OBPVEAH",realmName:"N'Zoth",role:"ah",auction:true,info:{period:10,offset:2}},
  OBPVPSW:{account:"OBPVPSW",realmName:"Y'Shaarj",role:"sw",auction:true,info:{period:10,offset:4}},
- OVHCSW:{account:"OBHCSW",realmName:"C'Thun",role:"sw",info:{period:10,offset:8}}
+ OVHCSW:{account:"OBHCSW",realmName:"C'Thun",role:"sw",info:{period:10,offset:9}}
 });
 export function getProfile(env=process.env){
  const key=(env.COLLECTOR_PROFILE||env.RAILWAY_SERVICE_NAME||"").toUpperCase();
