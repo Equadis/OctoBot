@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import hashlib
+import json
+import re
+from copy import deepcopy
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 
 import discord
+
+from octobot.discord_api import DeferredDiscordRequest, background_api, collect
 
 from .announcements import AnnouncementClient
 from .auth import AuthProbe, AuthProbeResult
@@ -59,6 +65,9 @@ ALERT_EMBED_TITLES = frozenset({
     "⚪ OctoWoW outage confirmed",
 })
 STATUS_MESSAGE_SCAN_LIMIT = 50
+STATUS_PUBLISH_INTERVAL = 60
+STATUS_REFRESH_INTERVAL = 900
+DISCORD_FAILURES = (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError)
 
 
 class Monitor:
@@ -84,15 +93,31 @@ class Monitor:
         self._announcement_lock = asyncio.Lock()
         self._patch_note_lock = asyncio.Lock()
         self._last_health_signature = None
-        # Channel ids already reported as missing, so a wrong id in .env is logged
-        # once rather than every poll.
-        self._unreachable_channels: set[int] = set()
+        self.api = background_api(bot)
+        self._standing_lock = asyncio.Lock()
+        self._published = {}
+        self._pending_diagnostic = None
+        self._standing_recovery = {}
+        self._publish_lock = asyncio.Lock()
+        self._publish_ready = asyncio.Event()
+        self._next_snapshot = None
+        self._last_published_check = None
+        self._forum_delivery = {}
+        self._forum_publish_ready = asyncio.Event()
+        self._forum_delivery_lock = asyncio.Lock()
+
+    def invalidate_message(self, channel_id, message_id):
+        for key, (_, _, published_channel, published_id, _) in tuple(self._published.items()):
+            if channel_id == published_channel and message_id == published_id:
+                self._standing_recovery[key] = self._published.pop(key)
 
     def start(self) -> None:
         if self._tasks:
             return
         self._tasks = [
             asyncio.create_task(self._status_loop(), name="status-monitor"),
+            asyncio.create_task(self._status_publish_loop(), name="status-publisher"),
+            asyncio.create_task(self._forum_publish_loop(), name="forum-publisher"),
             asyncio.create_task(
                 self._announcement_loop(), name="announcement-monitor"
             ),
@@ -114,22 +139,47 @@ class Monitor:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
-                await self.check_status()
+                self._next_snapshot = await self.check_status(publish=False)
+                self._publish_ready.set()
             except asyncio.CancelledError:
                 raise
             except Exception:
                 LOGGER.exception("Unexpected error in status monitor")
             await asyncio.sleep(self.config.status_poll_seconds)
+    async def _status_publish_loop(self) -> None:
+        while not self.bot.is_closed():
+            await self._publish_ready.wait()
+            self._publish_ready.clear()
+            try:
+                await self._publish_status(self._next_snapshot)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                LOGGER.exception("Unexpected error publishing Discord status")
+
+    async def _publish_status(self, snapshot):
+        async with self._publish_lock:
+            checked_at = snapshot.official.checked_at
+            if self._last_published_check and checked_at < self._last_published_check:
+                return
+            self._last_published_check = checked_at
+            await self._update_status_message(snapshot)
+            await self._send_diagnostic_if_health_changed(snapshot)
+            await self._send_pending_incident_alerts(snapshot.official)
+            await self._send_pending_auth_incident_alerts()
+            await self._send_pending_report_incident_alerts(snapshot)
+            await self._recover_standing_messages()
+
     async def _send_auth_diagnostic(
         self,
         result: AuthProbeResult,
-    ) -> None:
+    ) -> bool:
         channel_id = self.config.alert_channel_id or self.config.status_channel_id
 
         if channel_id is None:
-            return
+            return True
 
-        await self.upsert_standing_message(
+        return await self.upsert_standing_message(
             channel_id,
             f"auth_diagnostic_message_id:{channel_id}",
             authcheck_embed(result),
@@ -160,17 +210,17 @@ class Monitor:
         )
         self._last_health_signature = health_signature
 
-        if not health_changed:
-            return
-
-        diagnostic = await self.probe_authentication()
-        await self._send_auth_diagnostic(diagnostic)
+        if health_changed:
+            self._pending_diagnostic = await self.probe_authentication()
+        if self._pending_diagnostic is not None:
+            if await self._send_auth_diagnostic(self._pending_diagnostic):
+                self._pending_diagnostic = None
 
     async def _announcement_loop(self) -> None:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
-                await self.check_announcements()
+                await self.check_announcements(publish=False)
             except asyncio.CancelledError:
                 raise
             except Exception:
@@ -181,14 +231,14 @@ class Monitor:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
-                await self.check_patch_notes()
+                await self.check_patch_notes(publish=False)
             except asyncio.CancelledError:
                 raise
             except Exception:
                 LOGGER.exception("Unexpected error in patch note monitor")
             await asyncio.sleep(self.config.announcement_poll_seconds)
 
-    async def check_status(self) -> CombinedStatusSnapshot:
+    async def check_status(self, *, publish=True) -> CombinedStatusSnapshot:
         async with self._status_lock:
             status_result, auth_result = await asyncio.gather(
                 self.status_client.fetch(), self.auth_probe.probe()
@@ -215,12 +265,9 @@ class Monitor:
             snapshot = combine_status(
                 official, connectivity, reports, authentication
             )
-            await self._update_status_message(snapshot)
-            await self._send_diagnostic_if_health_changed(snapshot)
-            await self._send_pending_incident_alerts(official)
-            await self._send_pending_auth_incident_alerts()
-            await self._send_pending_report_incident_alerts(snapshot)
-            return snapshot
+        if publish:
+            await self._publish_status(snapshot)
+        return snapshot
 
     async def probe_authentication(self) -> AuthProbeResult:
         """Run a diagnostic probe without changing confirmed or historical state."""
@@ -246,14 +293,8 @@ class Monitor:
                 official, connectivity, reports, authentication
             )
 
-            await self._update_status_message(snapshot)
-            await self._send_diagnostic_if_health_changed(snapshot)
-
-            await self._send_pending_incident_alerts(official)
-            await self._send_pending_auth_incident_alerts()
-            await self._send_pending_report_incident_alerts(snapshot)
-
-            return snapshot
+        await self._publish_status(snapshot)
+        return snapshot
 
     async def make_status_embed(
         self, snapshot: CombinedStatusSnapshot
@@ -277,16 +318,16 @@ class Monitor:
             auth_recovery_confirmations=self.config.auth_recovery_confirmations,
         )
 
-    async def check_announcements(self) -> None:
+    async def check_announcements(self, *, publish=True) -> None:
         await self._check_forum(
             client=self.announcement_client,
             kind="announcement",
             channel_id=self.config.announcement_channel_id,
             lock=self._announcement_lock,
-            ping_role_id=self.config.announcement_ping_role_id,
+            ping_role_id=self.config.announcement_ping_role_id, publish=publish,
         )
 
-    async def check_patch_notes(self) -> None:
+    async def check_patch_notes(self, *, publish=True) -> None:
         if self.patch_note_client is None:
             return
         await self._check_forum(
@@ -294,7 +335,7 @@ class Monitor:
             kind="patch_note",
             channel_id=self.config.patch_note_channel_id,
             lock=self._patch_note_lock,
-            ping_role_id=self.config.patch_note_ping_role_id,
+            ping_role_id=self.config.patch_note_ping_role_id, publish=publish,
         )
 
     async def _check_forum(
@@ -305,14 +346,14 @@ class Monitor:
         channel_id: int | None,
         lock: asyncio.Lock,
         ping_role_id: int | None = None,
+        publish: bool = True,
     ) -> None:
         """Store new topics from one forum and post the ones not yet delivered."""
         async with lock:
             topics = await client.fetch_topics()
-            if not topics:
-                return
-
             if not await self.database.announcements_initialized(kind):
+                if not topics:
+                    return
                 # First run: treat everything already on the forum as seen, so the
                 # channel is not flooded with the whole back catalogue.
                 await self.database.seed_announcements(topics, kind)
@@ -325,26 +366,40 @@ class Monitor:
                 enriched = await client.enrich(topic)
                 await self.database.store_announcement(enriched, kind=kind)
 
-            if channel_id is None:
-                return
+        if channel_id is None:
+            return
+        if publish:
+            await self._publish_forum(kind, channel_id, ping_role_id)
+        else:
+            self._forum_delivery[kind] = (channel_id, ping_role_id)
+            self._forum_publish_ready.set()
 
+    async def _forum_publish_loop(self):
+        while not self.bot.is_closed():
+            await self._forum_publish_ready.wait()
+            self._forum_publish_ready.clear()
+            for kind, (channel_id, ping_role_id) in tuple(self._forum_delivery.items()):
+                try:
+                    await self._publish_forum(kind, channel_id, ping_role_id)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    LOGGER.exception("Unexpected error publishing Discord forum updates kind=%s", kind)
+
+    async def _publish_forum(self, kind, channel_id, ping_role_id):
+        async with self._forum_delivery_lock:
             for announcement in await self.database.pending_announcements(kind):
                 pages = announcement_embeds(announcement, kind=kind)
-                progress = await self.database.announcement_delivery_progress(
-                    announcement.topic_id
-                )
-                delivery_failed = False
+                progress = await self.database.announcement_delivery_progress(announcement.topic_id)
                 for page_number, embed in enumerate(pages[progress:], start=progress + 1):
                     # Only the opening page pings, so a long post notifies once.
                     ping = ping_role_id if page_number == 1 else None
-                    if not await self._send_embed(channel_id, embed, ping_role_id=ping):
-                        delivery_failed = True
-                        break
-                    await self.database.mark_announcement_page_sent(
-                        announcement.topic_id, page_number
-                    )
-                if delivery_failed:
-                    break
+                    nonce = hashlib.sha256(
+                        f"{kind}:{channel_id}:{announcement.topic_id}:{page_number}".encode()
+                    ).hexdigest()[:24]
+                    if not await self._send_embed(channel_id, embed, ping_role_id=ping, nonce=nonce):
+                        return
+                    await self.database.mark_announcement_page_sent(announcement.topic_id, page_number)
                 await self.database.mark_announcement_sent(announcement.topic_id)
 
     async def latest_announcement(self):
@@ -366,48 +421,23 @@ class Monitor:
         return enriched
 
     async def _get_channel(self, channel_id: int) -> object | None:
-        channel = self.bot.get_channel(channel_id)
-        if channel is not None:
-            self._unreachable_channels.discard(channel_id)
-            return channel
         try:
-            channel = await self.bot.fetch_channel(channel_id)
+            return await self.api.resolve_channel(self.bot, channel_id)
         except discord.NotFound:
-            # A deleted channel or a wrong id in .env: it will not fix itself, and
-            # the status poll asks every few seconds, so say it once and stay quiet.
-            self._report_unreachable_channel(
-                channel_id,
-                "Channel %s does not exist. Check the channel ids in .env.",
-            )
-            return None
+            LOGGER.error("Channel %s does not exist. Check the channel ids in .env.", channel_id)
         except discord.Forbidden:
-            self._report_unreachable_channel(
-                channel_id,
-                "No access to channel %s. Check the bot's permissions there.",
-            )
-            return None
-        except discord.HTTPException:
-            LOGGER.warning("Could not reach Discord channel %s; will retry", channel_id)
-            return None
-        self._unreachable_channels.discard(channel_id)
-        return channel
-
-    def _report_unreachable_channel(self, channel_id: int, message: str) -> None:
-        """Log a misconfigured channel once, not on every poll."""
-        if channel_id in self._unreachable_channels:
-            LOGGER.debug(message, channel_id)
-            return
-        self._unreachable_channels.add(channel_id)
-        LOGGER.error(message, channel_id)
+            LOGGER.error("No access to channel %s. Check the bot's permissions there.", channel_id)
+        except DeferredDiscordRequest:
+            LOGGER.debug("Discord channel lookup deferred channel=%s", channel_id)
+        except DISCORD_FAILURES:
+            LOGGER.warning("Discord channel lookup failed channel=%s", channel_id)
+        return None
 
     async def _send_embed(
-        self, channel_id: int, embed: discord.Embed, *, ping_role_id: int | None = None
+        self, channel_id: int, embed: discord.Embed, *, ping_role_id: int | None = None, nonce: str | None = None,
     ) -> bool:
         channel = await self._get_channel(channel_id)
         if channel is None or not hasattr(channel, "send"):
-            self._report_unreachable_channel(
-                channel_id, "Discord channel %s cannot receive messages"
-            )
             return False
         content = f"<@&{ping_role_id}>" if ping_role_id is not None else None
         allowed_mentions = (
@@ -419,10 +449,11 @@ class Monitor:
             else discord.AllowedMentions.none()
         )
         try:
-            await channel.send(content=content, embed=embed, allowed_mentions=allowed_mentions)
+            await self.api.call("channel_send", channel_id, lambda: channel.send(
+                content=content, embed=embed, allowed_mentions=allowed_mentions, nonce=nonce,
+            ))
             return True
-        except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not send a message to channel %s", channel_id)
+        except DISCORD_FAILURES:
             return False
 
     async def _update_status_message(
@@ -437,6 +468,7 @@ class Monitor:
             await self.make_status_embed(snapshot),
             STATUS_EMBED_TITLES,
             label="status",
+            urgent=snapshot is not None and self._health_signature(snapshot) != self._last_health_signature,
         )
 
     async def upsert_standing_message(
@@ -447,84 +479,97 @@ class Monitor:
         titles: frozenset[str],
         *,
         label: str,
+        urgent: bool = False,
     ) -> bool:
-        """Keep exactly one message of this kind in the channel, edited in place.
-
-        The stored id is used first. When it is gone (new database, cleared
-        metadata, deleted message) the monitor adopts its own earlier message of
-        the same kind and deletes any duplicates, so the channel converges on one.
-        """
-        channel = await self._get_channel(channel_id)
-        if channel is None or not hasattr(channel, "send"):
-            self._report_unreachable_channel(
-                channel_id, "Channel %s cannot receive messages"
-            )
-            return False
-
-        message_id = await self.database.get_metadata(metadata_key)
-        if message_id and hasattr(channel, "fetch_message"):
-            try:
-                message = await channel.fetch_message(int(message_id))
-                await message.edit(embed=embed)
-                return True
-            except discord.NotFound:
-                LOGGER.warning("The %s message is gone; looking for another", label)
-            except (discord.Forbidden, discord.HTTPException, ValueError):
-                LOGGER.exception("Could not update the %s message", label)
+        """Edit one persistent message, adopting an existing copy during recovery."""
+        payload = deepcopy(embed.to_dict())
+        payload.pop("timestamp", None)
+        for field in payload.get("fields", ()):
+            if field["name"] == "Authentication":
+                field["value"] = re.sub(r" · \d+ ms", "", field["value"])
+            elif field["name"] == "Response latency":
+                field["value"] = "observed" if field["value"] != "N/A" else "N/A"
+            elif field["name"] in {"Current official uptime", "Current official interruption", "Official uptime"}:
+                field["value"] = ""
+            elif field["value"].startswith("Ongoing since"):
+                field["value"] = field["value"].split(" (", 1)[0]
+        signature = json.dumps(payload, sort_keys=True)
+        async with self._standing_lock:
+            previous = self._published.get(metadata_key)
+            if previous:
+                old_signature, published_at, _, _, _ = previous
+                elapsed = self.api.clock() - published_at
+                if old_signature == signature and (label != "status" or elapsed < STATUS_REFRESH_INTERVAL):
+                    self.api.count("standing_message", "unchanged")
+                    return True
+                if label == "status" and not urgent and elapsed < STATUS_PUBLISH_INTERVAL:
+                    self.api.count("standing_message", "coalesced")
+                    return False
+            channel = await self._get_channel(channel_id)
+            if channel is None or not hasattr(channel, "send"):
                 return False
-
-        existing = await self._find_standing_message(channel, titles, label)
-        if existing is not None:
             try:
-                await existing.edit(embed=embed)
-                await self.database.set_metadata(metadata_key, str(existing.id))
-                LOGGER.info("Reused the existing %s message %s", label, existing.id)
-                return True
-            except (discord.Forbidden, discord.HTTPException):
-                LOGGER.exception("Could not reuse the existing %s message", label)
+                message_id = await self._write_standing_message(channel, metadata_key, titles, embed)
+            except DISCORD_FAILURES:
                 return False
-
-        try:
-            message = await channel.send(embed=embed)
-            await self.database.set_metadata(metadata_key, str(message.id))
+            self._standing_recovery.pop(metadata_key, None)
+            self._published[metadata_key] = (signature, self.api.clock(), channel_id, message_id, embed)
+            self.api.count("standing_message", "published")
             return True
-        except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not create the %s message", label)
-            return False
 
-    async def _find_standing_message(
-        self, channel: object, titles: frozenset[str], label: str
-    ):
-        """The bot's own message of this kind, with any duplicates removed.
+    async def _write_standing_message(self, channel, key, titles, embed):
+        message_id = await self.database.get_metadata(key)
+        if message_id and message_id.isdecimal():
+            partial = channel.get_partial_message(int(message_id))
+            try:
+                await self.api.call("message_edit", channel.id, lambda: partial.edit(embed=embed), cache_missing=False)
+            except discord.NotFound as exc:
+                if exc.code == 10003:  # Unknown Channel rather than Unknown Message.
+                    raise
+            else:
+                return int(message_id)
 
-        Returns the newest one found, or None. Older copies are deleted, so a channel
-        that already accumulated several is tidied up on the next poll.
-        """
+        existing = await self._find_standing_message(channel, titles)
+        if existing is not None:
+            await self.api.call("message_edit", channel.id, lambda: existing.edit(embed=embed), cache_missing=False)
+            message_id = existing.id
+        else:
+            # Discord's enforced nonce covers an ambiguous send within its deduplication window.
+            nonce = hashlib.sha256(f"{key}:{message_id}".encode()).hexdigest()[:24]
+            message = await self.api.call("channel_send", channel.id, lambda: channel.send(embed=embed, nonce=nonce))
+            message_id = message.id
+        await self.database.set_metadata(key, str(message_id))
+        return message_id
+
+    async def _find_standing_message(self, channel, titles):
         me = self.bot.user
         if me is None or not hasattr(channel, "history"):
             return None
-        found = []
-        try:
-            async for message in channel.history(limit=STATUS_MESSAGE_SCAN_LIMIT):
-                if message.author.id != me.id or not message.embeds:
-                    continue
-                if (message.embeds[0].title or "") in titles:
-                    found.append(message)
-        except (discord.Forbidden, discord.HTTPException):
-            LOGGER.exception("Could not read channel %s looking for the %s message", channel, label)
-            return None
+        messages = await self.api.call(
+            "channel_history", channel.id, lambda: collect(channel.history(limit=STATUS_MESSAGE_SCAN_LIMIT))
+        )
+        found = [
+            message for message in messages
+            if message.author.id == me.id and message.embeds and message.embeds[0].title in titles
+        ]
         if not found:
             return None
-
-        newest, *stale = found  # history() yields newest first.
+        newest, *stale = found
         for message in stale:
             try:
-                await message.delete()
-            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-                LOGGER.warning("Could not remove the duplicate %s message %s", label, message.id)
-        if stale:
-            LOGGER.info("Removed %s duplicate %s message(s)", len(stale), label)
+                await self.api.call("message_delete", channel.id, message.delete, cache_missing=False)
+            except DISCORD_FAILURES:
+                break
         return newest
+
+    async def _recover_standing_messages(self):
+        for key, (_, _, channel_id, _, embed) in tuple(self._standing_recovery.items()):
+            if key.startswith("alert_message_id:"):
+                await self._upsert_alert(channel_id, embed)
+            elif key.startswith("auth_diagnostic_message_id:"):
+                await self.upsert_standing_message(
+                    channel_id, key, embed, AUTH_DIAGNOSTIC_TITLES, label="authentication diagnostic",
+                )
 
     async def _upsert_alert(self, channel_id: int, embed: discord.Embed) -> bool:
         """Show the newest incident alert in one standing message."""

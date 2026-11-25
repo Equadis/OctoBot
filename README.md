@@ -120,7 +120,7 @@ The common `docs/chart-interactions.js` module implements these interactions usi
 - Status dashboard and alerts
 - `/status`, `/uptime`, `/incidents`
 - The status channel holds one message of each kind, edited in place rather than reposted: the server status embed, the latest incident/report alert, and the latest authentication diagnostic. If a stored message id is lost, the bot adopts its own earlier message of that kind and deletes any duplicates.
-- `STATUS_POLL_SECONDS` sets how often the status message is refreshed.
+- `STATUS_POLL_SECONDS` sets the upstream polling interval. In Discord, ordinary status changes are coalesced for up to 60 seconds, meaningful health transitions can publish on the next check, and an unchanged status refreshes after 15 minutes.
 - Official announcement monitoring and `/announcement`
 - Patch note monitoring and `/patchnote` — reads the Patch Notes and Changelog forum and posts each new topic to `DISCORD_PATCH_NOTE_CHANNEL_ID` (defaults to the announcement channel)
 - Automatic forum posts ping a role: `DISCORD_ANNOUNCEMENT_PING_ROLE_ID` for announcements and `DISCORD_PATCH_NOTE_PING_ROLE_ID` for patch notes. A post split across several embeds pings only on its opening page, and the `/announcement` and `/patchnote` commands never ping.
@@ -394,22 +394,56 @@ then edited to show the winner, runners-up and role mentions. Both requests disa
 all mention notifications. Only available places are shown if fewer than three qualify.
 The heading date is the UTC date on which the period ends (for example `24th Nov`).
 
-Counts and completed awards persist in the bot database. On first installation,
-tracking starts immediately and the first award occurs at the next 17:00 boundary
-(so that first period may be partial). Messages missed while the bot is offline or reconnecting are recovered from Discord
-history (deduplicated by message ID, excluded channels/threads honoured). The award waits
-until the full 24h window has been reconciled, and retries if history cannot be read;
-permission-denied channels are logged and skipped. A lost database cannot repeat an award:
-an existing announcement in the channel is adopted. `DATABASE_PATH` must be absolute and on
-the persistent volume (Railway: `/data/octobot.db`); startup logs a CRITICAL line otherwise.
-`/chatterstatus` (admin) shows tracking health and the provisional leaderboard. A restart
-catches up the latest period once, rather than posting a backlog of old awards. Failed role changes and announcement edits retry;
-a saved announcement is edited again rather than intentionally reposted.
+Counts and completed awards persist in SQLite. Daily Chatter uses UTC windows
+ending at 17:00. Gateway messages are recorded immediately and history recovery
+fills gaps. Each bounded history batch saves its cursor and deduplicates by
+Discord message ID. The award waits for a complete window and shows the top
+three members. The bot verifies the guild member cache and removes all previous
+Exalted holders before granting it to the winner.
 
-Override `DAILY_CHATTER_ROLE_ID` and `DAILY_CHATTER_CHANNEL_ID` in `.env`, or set either
-blank to disable the feature. The bot needs **Manage Roles**, its highest role above
-Exalted, **View Channel / Send Messages** in the announcement channel, and **Server
-Members Intent** enabled. Deploy the updated code and restart the bot to activate.
+The bot needs **View Channel** and **Read Message History** in eligible
+channels and threads. An inaccessible eligible resource delays the award until
+the bot can read it. Exclusions still apply to their threads. For archived private
+threads, Discord exposes threads the bot has joined unless it has **Manage Threads**.
+History for a deleted channel or message may be unavailable from Discord after a
+gap. `/chatterstatus` shows the provisional leaderboard and reconciliation health.
+
+Set `DAILY_CHATTER_ROLE_ID` and `DAILY_CHATTER_CHANNEL_ID` in the environment.
+The announcement channel also requires **Send Messages**. Keep **Server Members
+Intent** enabled and give the bot **Manage Roles** with its highest role above
+Exalted and eligible recipients. A restart targets the most recent award
+boundary. An incomplete award resumes its saved state, including a previously
+sent placeholder awaiting final mentions.
+
+### Railway production recovery
+
+The moderation service starts with `python main.py`. Keep one production
+replica, mount `octobot-moderation-data` at `/data`, and set
+`DATABASE_PATH=/data/octobot.db`. On Railway, OctoBot exits before authenticating
+if its configured SQLite path is outside the mounted volume. The database
+upgrade adds tables and metadata without rewriting moderation history or
+completed chatter awards.
+
+Use **On Failure** with one retry for unexpected process exits. Set deployment
+overlap to zero and allow 30 seconds of draining for SIGTERM cleanup. The
+application handles transient login failures in-process. Cloudflare 1015 uses
+a minimum four-hour delay, and startup 429 cooldowns survive restarts on the
+volume. Invalid credentials and permanent authentication failures stop the bot.
+Ordinary starts skip Discord command registration when the stored schema
+matches. Use the start argument `--sync-commands` for one planned start to
+force guild command registration, then restore the standard start command.
+
+1. Review the patch and take a backup of the attached SQLite volume. Verify its
+   mount, the database setting, the single replica, and the absence of other
+   clients running the production token.
+2. After approval and expiry of any active retry deadline, deploy the reviewed
+   commit once. Watch for `Discord authentication succeeded`, then
+   `OctoBot logged in`. If a 429 returns, let the saved cooldown run and retain
+   the log timestamps for Railway or Discord support.
+3. On a successful login, verify `/chatterstatus`, the guild command registry,
+   a harmless moderation command such as `/help`, and the standing status
+   message. Review the reconciliation and request summaries before treating
+   the incident as resolved.
 
 ### v1.0.30 radio announcements
 

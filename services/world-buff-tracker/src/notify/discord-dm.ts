@@ -15,6 +15,7 @@ export const DISCORD_MESSAGE_LIMIT = 2_000;
 export interface DiscordResponse {
   readonly ok: boolean;
   readonly status: number;
+  readonly headers?: Pick<Headers, "get">;
   json(): Promise<unknown>;
   text(): Promise<string>;
 }
@@ -75,6 +76,8 @@ function readChannelId(value: unknown): string | null {
 export class DiscordDmSender {
   readonly #botToken: string | null;
   readonly #fetch: DiscordFetch;
+  readonly #cooldowns = new Map<string, number>();
+  #globalUntil = 0;
 
   constructor(botToken: string | null, fetchImpl: DiscordFetch = defaultFetch) {
     this.#botToken = botToken && botToken.length > 0 ? botToken : null;
@@ -89,6 +92,58 @@ export class DiscordDmSender {
     return { Authorization: `Bot ${token}`, "Content-Type": "application/json" };
   }
 
+  async #request(route: string, url: string, init: Parameters<DiscordFetch>[1]): Promise<DiscordResponse> {
+    const now = Date.now();
+    const bucket = route.startsWith("dm:") ? "dm" : route;
+    if (now < Math.max(this.#globalUntil, this.#cooldowns.get(route) ?? 0, this.#cooldowns.get(bucket) ?? 0)) {
+      // Callers should retry on their usual schedule and keep any saved widget ID.
+      throw new Error("Discord request is in cooldown");
+    }
+    const response = await this.#fetch(url, init);
+    const finished = Date.now();
+    if (response.status === 401) {
+      this.#globalUntil = Infinity; // The instance's configured token cannot change.
+    } else if (response.status === 403) {
+      this.#cooldowns.set(route, finished + 5 * 60_000);
+    } else if (response.status === 404 && (route.startsWith("post:") || route.startsWith("dm:"))) {
+      // A missing message on edit must remain distinguishable so its widget can recover.
+      this.#cooldowns.set(route, finished + 15 * 60_000);
+    } else if (response.status === 429) {
+      const headers = response.headers;
+      const edge = headers?.get("Content-Type")?.includes("text/html") ?? false;
+      const payload: unknown = edge ? null : await response.json().catch(() => null);
+      const retryHeader = headers?.get("Retry-After");
+      const headerNumber = Number(retryHeader);
+      const headerSeconds = retryHeader && !Number.isFinite(headerNumber)
+        ? (Date.parse(retryHeader) - finished) / 1000
+        : headerNumber;
+      const retryValue = payload && typeof payload === "object" && "retry_after" in payload
+        ? Number(payload.retry_after)
+        : 0;
+      const delay = Math.max(
+        edge ? 4 * 60 * 60 : 30,
+        Number.isFinite(headerSeconds) ? headerSeconds : 0,
+        Number.isFinite(retryValue) ? retryValue : 0,
+      );
+      const until = finished + delay * 1000;
+      if (edge || headers?.get("X-RateLimit-Global") === "true" || headers?.get("X-RateLimit-Scope") === "global"
+        || (payload && typeof payload === "object" && "global" in payload && payload.global === true)) {
+        this.#globalUntil = Math.max(this.#globalUntil, until);
+      } else {
+        this.#cooldowns.set(bucket, Math.max(this.#cooldowns.get(bucket) ?? 0, until));
+      }
+    } else if (response.ok) {
+      if ((this.#cooldowns.get(route) ?? 0) <= finished) this.#cooldowns.delete(route);
+    }
+    // Drop expired entries when a busy process has accumulated recipient IDs.
+    if (this.#cooldowns.size > 1000) {
+      for (const [key, until] of this.#cooldowns) {
+        if (until <= finished) this.#cooldowns.delete(key);
+      }
+    }
+    return response;
+  }
+
   /** Post a plain message to a channel the bot can see (by id). `roleMentions` are role ids
    *  to actually ping — they must be repeated in `allowed_mentions` or Discord suppresses the
    *  ping. Used for the Onyxia notification channel (with @alliance/@horde) and feedback. */
@@ -99,7 +154,7 @@ export class DiscordDmSender {
         ? { content, allowed_mentions: { roles: [...roleMentions] } }
         : { content };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}/messages`, {
+      const response = await this.#request(`post:${channelId}`, `${API}/channels/${channelId}/messages`, {
         method: "POST",
         headers: this.#headers(this.#botToken),
         body: JSON.stringify(payload),
@@ -115,7 +170,7 @@ export class DiscordDmSender {
   async createChannelMessage(channelId: string, message: ChannelMessage): Promise<CreateResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}/messages`, {
+      const response = await this.#request(`post:${channelId}`, `${API}/channels/${channelId}/messages`, {
         method: "POST",
         headers: this.#headers(this.#botToken),
         body: JSON.stringify(message),
@@ -137,7 +192,7 @@ export class DiscordDmSender {
   ): Promise<DmResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}/messages/${messageId}`, {
+      const response = await this.#request(`edit:${channelId}`, `${API}/channels/${channelId}/messages/${messageId}`, {
         method: "PATCH",
         headers: this.#headers(this.#botToken),
         body: JSON.stringify(message),
@@ -154,7 +209,7 @@ export class DiscordDmSender {
   async deleteChannelMessage(channelId: string, messageId: string): Promise<DmResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}/messages/${messageId}`, {
+      const response = await this.#request(`delete:${channelId}`, `${API}/channels/${channelId}/messages/${messageId}`, {
         method: "DELETE",
         headers: this.#headers(this.#botToken),
         body: "",
@@ -170,7 +225,7 @@ export class DiscordDmSender {
   async pinChannelMessage(channelId: string, messageId: string): Promise<DmResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}/messages/pins/${messageId}`, {
+      const response = await this.#request(`pin:${channelId}`, `${API}/channels/${channelId}/messages/pins/${messageId}`, {
         method: "PUT",
         headers: this.#headers(this.#botToken),
         body: "",
@@ -187,7 +242,7 @@ export class DiscordDmSender {
   async renameChannel(channelId: string, name: string): Promise<DmResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const response = await this.#fetch(`${API}/channels/${channelId}`, {
+      const response = await this.#request(`rename:${channelId}`, `${API}/channels/${channelId}`, {
         method: "PATCH",
         headers: this.#headers(this.#botToken),
         body: JSON.stringify({ name }),
@@ -201,7 +256,7 @@ export class DiscordDmSender {
   async send(discordUserId: string, content: string): Promise<DmResult> {
     if (!this.#botToken) return { ok: false, kind: "not-configured" };
     try {
-      const channelResponse = await this.#fetch(`${API}/users/@me/channels`, {
+      const channelResponse = await this.#request(`dm:${discordUserId}`, `${API}/users/@me/channels`, {
         method: "POST",
         headers: this.#headers(this.#botToken),
         body: JSON.stringify({ recipient_id: discordUserId }),

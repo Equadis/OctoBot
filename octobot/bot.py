@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import argparse
+import asyncio
 import logging
+import os
+from contextlib import AsyncExitStack
 from datetime import timedelta
 from typing import Literal
 
@@ -9,6 +13,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from octobot.command_sync import sync_commands
+from octobot.discord_api import DeferredDiscordRequest, DiscordAPI
+from octobot.lifecycle import serve
 from octotracker.announcements import PATCH_NOTES_URL, AnnouncementClient
 from octotracker.auth import AuthProbe
 from octotracker.config import Config
@@ -83,8 +90,10 @@ MODERATION_HELP_DESCRIPTIONS: dict[str, str] = {
 
 
 class OctoBot(commands.Bot):
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, *, force_command_sync: bool = False):
         self.config = config
+        self.force_command_sync = force_command_sync
+        self.discord_api = DiscordAPI()
         self.guild = discord.Object(id=config.guild_id)
         self.database = TrackerDatabase(config.database_path)
         self.tracker_database = self.database
@@ -96,6 +105,7 @@ class OctoBot(commands.Bot):
         self.monitor: Monitor | None = None
         self.radio_client: RadioClient | None = None
         self.radio_monitor: RadioMonitor | None = None
+        self._command_sync_task: asyncio.Task | None = None
 
         intents = discord.Intents.default()
         # Required for /history to index message text from guild message events.
@@ -104,7 +114,7 @@ class OctoBot(commands.Bot):
         # Required for role cleanup (member role updates and listing members).
         # Enable Server Members Intent in the Discord Developer Portal as well.
         intents.members = True
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(command_prefix="!", intents=intents, http_trace=self.discord_api.trace_config())
 
         command_definitions = (
             ("status", "Check the current OctoWoW server status.", self.status_command),
@@ -206,17 +216,25 @@ class OctoBot(commands.Bot):
             client=self.radio_client,
         )
 
-        # Remove the old global development commands and keep exactly one guild copy.
-        self.tree.clear_commands(guild=None)
-        await self.tree.sync()
-        synced = await self.tree.sync(guild=self.guild)
-        LOGGER.info(
-            "Synced %s guild command(s) to server %s",
-            len(synced),
-            self.config.guild_id,
-        )
         self.monitor.start()
         self.radio_monitor.start()
+        self._command_sync_task = asyncio.create_task(self._sync_commands(), name="discord-command-sync")
+
+    async def _sync_commands(self) -> None:
+        await self.wait_until_ready()
+        while True:
+            try:
+                await sync_commands(
+                    self.tree, self.database, self.application_id, self.guild,
+                    force=self.force_command_sync, api=self.discord_api,
+                )
+            except (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError) as exc:
+                if getattr(exc, "status", None) in (401, 403, 404):
+                    LOGGER.error("Discord command synchronisation blocked status=%s", exc.status)
+                    return
+                await asyncio.sleep(60)
+            else:
+                return
 
     async def _seed_moderation_defaults(self) -> None:
         """Seed OctoCop role/settings defaults without overwriting later /settings changes."""
@@ -284,18 +302,51 @@ class OctoBot(commands.Bot):
             )
         )
 
-    async def close(self) -> None:
-        if self.get_cog("DailyChatterCog") is not None:
-            await self.remove_cog("DailyChatterCog")
-        if self.radio_monitor is not None:
-            await self.radio_monitor.stop()
+    async def on_guild_channel_update(self, before, after) -> None:
+        self.discord_api.invalidate_channel(after.id)
+
+    async def on_guild_channel_delete(self, channel) -> None:
+        self.discord_api.invalidate_channel(channel.id)
+
+    async def on_guild_role_update(self, before, after) -> None:
+        if before.permissions != after.permissions or before.position != after.position:
+            self._invalidate_guild_permissions(after.guild)
+
+    async def on_member_update(self, before, after) -> None:
+        if self.user is not None and after.id == self.user.id and before.roles != after.roles:
+            self._invalidate_guild_permissions(after.guild)
+
+    def _invalidate_guild_permissions(self, guild) -> None:
+        for channel in guild.channels:
+            self.discord_api.invalidate_channel(channel.id)
+        self.discord_api.invalidate_roles(guild.id)
+
+    async def on_raw_message_delete(self, payload) -> None:
         if self.monitor is not None:
-            await self.monitor.stop()
-        if self.session is not None and not self.session.closed:
-            await self.session.close()
-        await self.moderation_database.close()
-        await self.database.close()
-        await super().close()
+            self.monitor.invalidate_message(payload.channel_id, payload.message_id)
+
+    async def on_raw_bulk_message_delete(self, payload) -> None:
+        if self.monitor is not None:
+            for message_id in payload.message_ids:
+                self.monitor.invalidate_message(payload.channel_id, message_id)
+
+    async def _stop_command_sync(self) -> None:
+        if self._command_sync_task is not None:
+            self._command_sync_task.cancel()
+            await asyncio.gather(self._command_sync_task, return_exceptions=True)
+
+    async def close(self) -> None:
+        async with AsyncExitStack() as cleanup:
+            cleanup.push_async_callback(self.database.close)
+            cleanup.push_async_callback(self.moderation_database.close)
+            if self.session is not None:
+                cleanup.push_async_callback(self.session.close)
+            cleanup.push_async_callback(super().close)
+            cleanup.push_async_callback(self._stop_command_sync)
+            if self.monitor is not None:
+                cleanup.push_async_callback(self.monitor.stop)
+            if self.radio_monitor is not None:
+                cleanup.push_async_callback(self.radio_monitor.stop)
 
     async def status_command(self, interaction: discord.Interaction) -> None:
         if not await self._require_command_access(interaction, "status"):
@@ -797,9 +848,28 @@ def main() -> None:
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    config = Config.from_env()
-    bot = OctoBot(config)
-    bot.run(config.token, log_handler=None)
+    # discord.py's native retry warnings embed full URLs. Our trace records
+    # the HTTP method and status only, including native retries.
+    logging.getLogger("discord.http").setLevel(logging.ERROR)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sync-commands", action="store_true")
+    args = parser.parse_args()
+    try:
+        config = Config.from_env()
+        config.validate_database_path()
+    except RuntimeError as exc:
+        LOGGER.error("Startup configuration rejected: %s", exc)
+        return
+    LOGGER.info("SQLite path=%s railway=%s", config.database_path.resolve(),
+                bool(os.getenv("RAILWAY_ENVIRONMENT_ID")))
+    cooldown = config.database_path.with_suffix(".discord-cooldown") if os.getenv("RAILWAY_VOLUME_MOUNT_PATH") else None
+    try:
+        asyncio.run(serve(
+            lambda: OctoBot(config, force_command_sync=args.sync_commands),
+            config.token, cooldown_path=cooldown,
+        ))
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

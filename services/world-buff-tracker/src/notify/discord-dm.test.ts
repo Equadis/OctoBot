@@ -6,6 +6,39 @@ function res(ok: boolean, status: number, body: unknown = {}): DiscordResponse {
 }
 
 describe("DiscordDmSender", () => {
+  it("backs off only the affected route and channel after a shared 429", async () => {
+    const time = vi.spyOn(Date, "now").mockReturnValue(0);
+    try {
+      const fetchImpl = vi.fn<DiscordFetch>()
+        .mockResolvedValueOnce({
+          ...res(false, 429),
+          headers: new Headers({ "Retry-After": "200", "X-RateLimit-Scope": "shared" }),
+        })
+        .mockResolvedValue(res(true, 200));
+      const sender = new DiscordDmSender("tok", fetchImpl);
+      expect(await sender.postToChannel("a", "hello")).toMatchObject({ status: 429 });
+      expect(await sender.postToChannel("a", "hello")).toMatchObject({ ok: false });
+      expect(await sender.postToChannel("b", "hello")).toEqual({ ok: true });
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      time.mockReturnValue(200_000);
+      expect(await sender.postToChannel("a", "hello")).toEqual({ ok: true });
+      expect(fetchImpl).toHaveBeenCalledTimes(3);
+    } finally {
+      time.mockRestore();
+    }
+  });
+
+  it("defers other channels after a Cloudflare HTML 429", async () => {
+    const fetchImpl = vi.fn<DiscordFetch>().mockResolvedValue({
+      ...res(false, 429),
+      headers: new Headers({ "Content-Type": "text/html" }),
+    });
+    const sender = new DiscordDmSender("tok", fetchImpl);
+    expect(await sender.postToChannel("a", "hello")).toMatchObject({ status: 429 });
+    expect(await sender.editChannelMessage("b", "some-id", { content: "hi" })).toMatchObject({ ok: false });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it("reports not-configured without a token", async () => {
     const result = await new DiscordDmSender(null).send("123", "hi");
     expect(result).toEqual({ ok: false, kind: "not-configured" });

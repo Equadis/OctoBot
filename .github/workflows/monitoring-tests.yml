@@ -7,8 +7,8 @@ on:
     paths:
       - 'docs/**'
       - 'tools/**'
-      - 'octotracker/status.py'
-      - 'octotracker/auth.py'
+      - 'octotracker/**'
+      - 'octocop/**'
       - 'octobot/**'
       - 'tests/**'
       - 'cloudflare/population/**'
@@ -17,8 +17,8 @@ on:
     branches: [main]
     paths:
       - 'tools/**'
-      - 'octotracker/status.py'
-      - 'octotracker/auth.py'
+      - 'octotracker/**'
+      - 'octocop/**'
       - 'octobot/**'
       - 'tests/**'
       - 'cloudflare/population/**'
@@ -51,6 +51,11 @@ jobs:
         run: python -m unittest discover -s tests/sim -p 'test_*.py'
       - name: Test All Realms census reclassification
         run: python -m unittest discover -s tests -p 'test_population_reclassification.py'
+      - name: Test Discord lifecycle, rate limits and reconciliation
+        run: >-
+          PYTHONPATH=tests python -m unittest
+          test_discord_resilience test_daily_chatter test_status_message
+          test_radio_v4 test_migrations test_role_cleanup test_timeout_cleanup
       - name: Test Discord /serverinfo options and links
         run: python -m unittest discover -s tests -p 'test_serverinfo.py'
       - name: Test real Population history backfill

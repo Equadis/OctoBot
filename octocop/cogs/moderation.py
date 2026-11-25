@@ -10,6 +10,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from octobot.discord_api import DeferredDiscordRequest, background_api
+
 from ..duration import (
     MAX_CLEAR_MESSAGES,
     DurationError,
@@ -35,7 +37,7 @@ log = logging.getLogger(__name__)
 
 # Cleanup runs while the moderator waits, so it is bounded: channels are purged
 # concurrently, each capped at this many messages.
-CLEANUP_CONCURRENCY = 8
+CLEANUP_CONCURRENCY = 2
 CLEANUP_PER_CHANNEL_LIMIT = 200
 # A time-based /clear still stops after this many messages, so a quiet hour cannot
 # turn into a thousand-message purge by accident.
@@ -49,6 +51,7 @@ class TimeoutRefused(Exception):
 class ModerationCog(commands.Cog):
     def __init__(self, bot: "OctoBot"):
         self.bot = bot
+        self.api = background_api(bot)
 
 
     async def _index_message(self, message: discord.Message) -> None:
@@ -278,18 +281,16 @@ class ModerationCog(commands.Cog):
         async def purge_channel(channel) -> int:
             async with semaphore:
                 try:
-                    removed = await channel.purge(
+                    removed = await self.api.call("timeout_cleanup", channel.id, lambda: channel.purge(
                         limit=CLEANUP_PER_CHANNEL_LIMIT,
                         check=lambda message: message.author.id == user.id,
                         after=cutoff,
                         oldest_first=False,
                         bulk=True,
                         reason=reason,
-                    )
-                except (discord.Forbidden, discord.HTTPException):
-                    log.exception(
-                        "Failed to clean up channel %s in guild %s", channel.id, guild.id
-                    )
+                    ))
+                except (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError):
+                    log.warning("Timeout cleanup unavailable for channel %s", channel.id)
                     return -1
                 return len(removed)
 

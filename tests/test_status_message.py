@@ -46,13 +46,14 @@ class _Channel:
         self.missing = missing or set()
         self.sent: list = []
 
-    async def fetch_message(self, message_id: int):
-        if message_id in self.missing:
+    def get_partial_message(self, message_id: int):
+        async def edit(**kwargs):
+            if message_id not in self.missing:
+                for message in self.messages:
+                    if message.id == message_id:
+                        return await message.edit(**kwargs)
             raise discord.NotFound(SimpleNamespace(status=404, reason="x"), "gone")
-        for message in self.messages:
-            if message.id == message_id:
-                return message
-        raise discord.NotFound(SimpleNamespace(status=404, reason="x"), "gone")
+        return SimpleNamespace(edit=edit)
 
     async def history(self, limit: int = 50):
         for message in self.messages[:limit]:
@@ -119,7 +120,29 @@ class StatusMessageTests(unittest.IsolatedAsyncioTestCase):
         for _ in range(5):
             await monitor._update_status_message(None)
         self.assertEqual(channel.sent, [])
-        self.assertEqual(len(existing.edits), 5)
+        self.assertEqual(len(existing.edits), 1)
+
+    async def test_raw_delete_triggers_recovery_even_when_embed_is_unchanged(self) -> None:
+        channel = _Channel()
+        monitor = self.monitor(channel)
+        await monitor._update_status_message(None)
+        original = channel.messages.pop()
+        monitor.invalidate_message(CHANNEL, original.id)
+        await monitor._update_status_message(None)
+        self.assertEqual(len(channel.sent), 2)
+        self.assertNotEqual(await self.db.get_metadata(self.key), str(original.id))
+
+    async def test_unreadable_history_never_causes_a_duplicate_post(self) -> None:
+        class UnreadableChannel(_Channel):
+            def history(self, limit=50):
+                raise discord.Forbidden(SimpleNamespace(status=403, reason="x"), "not readable")
+
+        channel = UnreadableChannel([_Message(42)])
+        monitor = self.monitor(channel)
+        await monitor._update_status_message(None)
+        await monitor._update_status_message(None)
+        self.assertEqual(channel.sent, [])
+        self.assertIsNone(await self.db.get_metadata(self.key))
 
     async def test_a_lost_id_adopts_the_message_already_there(self) -> None:
         # A fresh database, or cleared metadata, must not add a second message.
@@ -272,11 +295,19 @@ class MissingChannelTests(unittest.IsolatedAsyncioTestCase):
     async def test_a_transient_failure_keeps_warning_and_can_recover(self) -> None:
         flaky = discord.HTTPException(SimpleNamespace(status=500, reason="x"), "boom")
         monitor = self.monitor(flaky)
+        now = 0
+        monitor.api.clock = lambda: now
         with self.assertLogs("octotracker.monitor", level="WARNING") as captured:
             for _ in range(3):
                 self.assertIsNone(await monitor._get_channel(CHANNEL))
-        # Not silenced: a transient fault may clear, unlike a wrong id.
-        self.assertEqual(len(captured.records), 3)
+        self.assertEqual(len(captured.records), 1)
+
+        async def recovered(channel_id):
+            return _Channel()
+
+        monitor.bot.fetch_channel = recovered
+        now = 30
+        self.assertIsNotNone(await monitor._get_channel(CHANNEL))
 
 
 if __name__ == "__main__":
