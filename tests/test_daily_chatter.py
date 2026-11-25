@@ -9,6 +9,8 @@ from unittest.mock import AsyncMock, patch
 
 import discord
 
+from octobot.discord_api import DeferredDiscordRequest
+
 from octobot.daily_chatter import (
     ChatterStore, DailyChatterCog, ReconciliationIncomplete, announcement,
     check_database_path, day_label, latest_boundary, messages_label,
@@ -32,18 +34,34 @@ class FakeChannel:
     def __init__(self, cid, messages=(), parent_id=None, error=None, archived=()):
         self.id, self.parent_id, self.error = cid, parent_id, error
         self.messages, self.archived = list(messages), list(archived)
+        self.requests = []
+        self.archive_requests = []
 
     def history(self, limit=None, after=None, before=None, oldest_first=True):
+        self.requests.append(after)
+
         async def gen():
             if self.error:
                 raise self.error
-            for m in sorted(self.messages, key=lambda m: m.created_at):
-                if (after is None or m.created_at > after) and (before is None or m.created_at < before):
-                    yield m
+            messages = sorted(self.messages, key=lambda m: (m.created_at, m.id), reverse=not oldest_first)
+            if isinstance(after, discord.Object):
+                messages = [m for m in messages if self.snowflake(m) > after.id]
+            elif after is not None:
+                messages = [m for m in messages if m.created_at > after]
+            if before is not None:
+                messages = [m for m in messages if m.created_at < before]
+            for message in messages[:limit]:
+                yield message
         return gen()
 
-    def archived_threads(self, limit=None):
-        return _gen(self.archived)
+    @staticmethod
+    def snowflake(message):
+        return message.id if message.id > 1 << 40 else discord.utils.time_snowflake(message.created_at) + message.id
+
+    def archived_threads(self, limit=None, before=None):
+        self.archive_requests.append(before)
+        threads = self.archived if before is None else [t for t in self.archived if t.archive_timestamp < before]
+        return _gen(threads[:limit])
 
 
 def fake_message(mid, uid, when, channel, *, bot=False, webhook=None, system=False):
@@ -84,7 +102,14 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self.store.counts(END), [(10, 1), (20, 1)])
 
     async def make_cog(self):
-        role = NS(id=777)
+        class FakeRole:
+            id = 777
+
+            @property
+            def members(self):
+                return [member for member in members if self in member.roles and member.id not in departed]
+
+        role = FakeRole()
         events = []
         members = []
         for uid, has_role in [(1, False), (2, True), (3, True)]:
@@ -98,10 +123,7 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
             member.remove_roles = AsyncMock(side_effect=remove)
             member.add_roles = AsyncMock(side_effect=add)
             members.append(member)
-        async def fetch_members(limit):
-            for member in members:
-                yield member
-        self.departed = set()
+        self.departed = departed = set()
         by_id = {m.id: m for m in members}
 
         async def fetch_member(uid):
@@ -109,10 +131,16 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
                 return by_id[uid]
             raise http_error(discord.NotFound, 404)
         self.channels = []
-        guild = NS(id=123, get_role=lambda rid: role, fetch_members=fetch_members,
+        guild = NS(id=123, get_role=lambda rid: role, chunked=False,
                    get_member=lambda uid: None, fetch_member=fetch_member,
                    text_channels=self.channels, voice_channels=[], stage_channels=[],
                    forum_channels=[], threads=[])
+
+        async def chunk():
+            guild.chunked = True
+            guild.get_member = lambda uid: by_id.get(uid) if uid not in departed else None
+
+        guild.chunk = AsyncMock(side_effect=chunk)
         self.guild = guild
         message = NS(id=999, edit=AsyncMock())
         channel = NS(guild=guild, send=AsyncMock(return_value=message),
@@ -290,7 +318,7 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         main.error = RuntimeError('must not be rescanned')  # marker prevents a second scan
         await cog.reconcile_window(self.guild, END)
 
-    async def test_inaccessible_channel_does_not_block_but_transient_failure_does(self):
+    async def test_inaccessible_and_transient_channels_both_delay_award(self):
         cog, events, members, channel, _ = await self.make_cog()
         locked = FakeChannel(10, error=http_error(discord.Forbidden, 403))
         flaky = FakeChannel(11, error=http_error(discord.HTTPException, 500))
@@ -301,6 +329,12 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         channel.send.assert_not_awaited()
         self.assertIsNone(await self.store.run(END))  # nothing frozen from partial data
         flaky.error = None
+        cog.api.invalidate_channel(flaky.id)
+        with self.assertRaises(ReconciliationIncomplete):
+            await cog.award(END)
+        self.assertEqual(len(locked.requests), 1)
+        locked.error = None
+        cog.api.invalidate_channel(locked.id)
         await cog.award(END)
         self.assertTrue((await self.store.run(END))[2])
         self.assertEqual(channel.send.await_count, 1)
@@ -398,6 +432,114 @@ class DailyChatterTests(unittest.IsolatedAsyncioTestCase):
         await cog.run_catchup(self.guild)
         self.assertIsNotNone(cog.catchup_from)
         flaky.error = None
+        cog.api.clock = lambda: float("inf")
+        await cog.run_catchup(self.guild)
+        self.assertIsNone(cog.catchup_from)
+
+    async def test_message_pages_resume_after_reopening_database(self):
+        cog, *_ = await self.make_cog()
+        main = FakeChannel(10)
+        self.channels.append(main)
+        start = END - timedelta(days=1)
+        main.messages = [
+            fake_message(discord.utils.time_snowflake(start + timedelta(seconds=n)), 7,
+                         start + timedelta(seconds=n), main)
+            for n in range(5)
+        ]
+        with patch("octobot.daily_chatter.HISTORY_PAGE", 2), patch("octobot.daily_chatter.RECONCILIATION_REQUESTS", 2):
+            first = await cog.backfill(self.guild, start, END)
+            self.assertTrue(first.pending)
+            self.assertEqual(first.recovered, 2)
+            await self.store.close()
+            await self.store.connect()
+            second = await cog.backfill(self.guild, start, END)
+            self.assertTrue(second.complete)
+        self.assertEqual([req.id for req in main.requests[1:]], [main.messages[1].id, main.messages[3].id])
+        self.assertEqual(dict(await self.store.counts(END))[7], 5)
+
+    async def test_archive_discovery_resumes_without_rescanning_finished_pages(self):
+        cog, *_ = await self.make_cog()
+        parent = FakeChannel(10)
+        self.channels.append(parent)
+        for offset in range(1, 4):
+            thread = FakeChannel(10 + offset, parent_id=10)
+            thread.archive_timestamp = END - timedelta(hours=offset)
+            parent.archived.append(thread)
+        start = END - timedelta(days=1)
+        with patch("octobot.daily_chatter.HISTORY_PAGE", 2), patch("octobot.daily_chatter.RECONCILIATION_REQUESTS", 1):
+            self.assertTrue((await cog.backfill(self.guild, start, END)).pending)
+            await self.store.close()
+            await self.store.connect()
+            self.assertTrue((await cog.backfill(self.guild, start, END)).pending)
+        self.assertEqual(parent.archive_requests, [None, parent.archived[1].archive_timestamp])
+
+    async def test_ambiguous_send_adopts_silent_placeholder(self):
+        cog, events, _, channel, message = await self.make_cog()
+
+        async def delivered_then_disconnected(content, **kwargs):
+            channel.history = lambda **kw: _gen([NS(id=message.id, author=NS(id=555), content=content)])
+            raise ConnectionResetError
+
+        channel.send.side_effect = delivered_then_disconnected
+        with self.assertRaises(ConnectionResetError):
+            await cog.award(END)
+        await cog.award(END)
+        self.assertEqual(channel.send.await_count, 1)
+        self.assertEqual(events.count(("add", 1)), 1)
+        self.assertTrue((await self.store.run(END))[2])
+
+    async def test_old_checkpoint_preserves_counts_and_recovers_exact_boundary(self):
+        cog, *_ = await self.make_cog()
+        start = END - timedelta(days=1)
+        main = FakeChannel(12)
+        self.channels.append(main)
+        await self.store.db.execute(
+            "CREATE TABLE daily_chatter_reconciled (guild_id, channel_id, start_at, end_at)"
+        )
+        await self.store.db.execute(
+            "INSERT INTO daily_chatter_reconciled VALUES (?, ?, ?, ?)",
+            (123, main.id, start.timestamp(), END.timestamp()),
+        )
+        await self.store.db.commit()
+        await self.store.close()
+        await self.store.connect()
+        main.messages = [fake_message(discord.utils.time_snowflake(start), 3, start, main)]
+        await cog.reconcile_window(self.guild, END)
+        self.assertEqual(await self.store.counts(END), [(1, 2), (2, 1), (3, 1)])
+        async with self.store.db.execute("SELECT COUNT(*) FROM daily_chatter_reconciled") as cursor:
+            self.assertEqual((await cursor.fetchone())[0], 1)
+
+    async def test_incomplete_member_chunk_cannot_grant_exalted(self):
+        cog, events, _, channel, _ = await self.make_cog()
+        self.guild.chunk.side_effect = None
+        self.guild.chunk.return_value = []
+        with self.assertRaises(DeferredDiscordRequest):
+            await cog.award(END)
+        self.assertEqual(events, [])
+        channel.send.assert_not_awaited()
+
+    async def test_member_cache_is_reused_after_announcement_failure(self):
+        cog, events, members, channel, message = await self.make_cog()
+        message.edit.side_effect = [RuntimeError("no response"), None]
+        with self.assertRaises(RuntimeError):
+            await cog.award(END)
+        await self.store.close()
+        await self.store.connect()
+        await cog.award(END)
+        self.guild.chunk.assert_awaited_once()
+        self.assertEqual(events, [("remove", 2), ("remove", 3), ("add", 1)])
+        self.assertEqual([member.id for member in members if member.roles], [1])
+        channel.send.assert_awaited_once()
+
+    async def test_gateway_disconnect_queues_followup_for_an_in_progress_backfill(self):
+        cog, *_ = await self.make_cog()
+        now = datetime.now(UTC)
+        cog.catchup_from = now - timedelta(minutes=3)
+        cog._catchup_end = now - timedelta(minutes=1)
+        await cog.on_disconnect()
+        followup = cog._followup_from
+        await cog.run_catchup(self.guild)
+        self.assertEqual(cog.catchup_from, followup)
         await cog.run_catchup(self.guild)
         self.assertIsNone(cog.catchup_from)
 

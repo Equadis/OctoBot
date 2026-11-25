@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
-from contextlib import suppress
 from datetime import timedelta
 
 import discord
+
+from octobot.discord_api import DeferredDiscordRequest, background_api
 
 from .config import Config
 from .database import Database, RadioOccurrence
@@ -60,10 +62,13 @@ class RadioMonitor:
         client: RadioClient,
     ):
         self.bot = bot
+        self.api = background_api(bot)
         self.config = config
         self.database = database
         self.client = client
-        self._task: asyncio.Task[None] | None = None
+        self._tasks: list[asyncio.Task[None]] = []
+        self._publish_ready = asyncio.Event()
+        self._latest = None
         self._lock = asyncio.Lock()
         self.dj_streams = (
             parse_dj_streams(config.radio_dj_streams)
@@ -72,7 +77,7 @@ class RadioMonitor:
         )
 
     def start(self) -> None:
-        if self._task is not None:
+        if self._tasks:
             return
         if not self.config.radio_enabled:
             LOGGER.info("Radio monitoring is disabled by configuration")
@@ -80,49 +85,60 @@ class RadioMonitor:
         if self.config.radio_channel_id is None:
             LOGGER.info("Radio monitoring is disabled because no channel is configured")
             return
-        self._task = asyncio.create_task(self._loop(), name="radio-monitor")
+        self._tasks = [
+            asyncio.create_task(self._loop(), name="radio-monitor"),
+            asyncio.create_task(self._publish_loop(), name="radio-publisher"),
+        ]
 
     async def stop(self) -> None:
-        task, self._task = self._task, None
-        if task is None:
-            return
-        task.cancel()
-        with suppress(asyncio.CancelledError):
-            await task
+        tasks, self._tasks = self._tasks, []
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _loop(self) -> None:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
-                await self.check()
+                await self.check(publish=False)
             except asyncio.CancelledError:
                 raise
             except Exception:
                 LOGGER.exception("Unexpected error in radio monitor")
             await asyncio.sleep(self.config.radio_poll_seconds)
 
-    async def check(self) -> RadioSnapshot:
+    async def check(self, *, publish=True) -> RadioSnapshot:
+        snapshot = await self.client.fetch()
+        state, _ = await self.database.apply_radio_snapshot(snapshot, self.config.radio_go_live_confirmations)
+        if publish:
+            await self._publish(snapshot, state)
+        else:
+            self._latest = (snapshot, state)
+            self._publish_ready.set()
+        return snapshot
+
+    async def _publish_loop(self) -> None:
+        while not self.bot.is_closed():
+            await self._publish_ready.wait()
+            self._publish_ready.clear()
+            try:
+                await self._publish(*self._latest)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                LOGGER.exception("Unexpected error publishing Discord radio alerts")
+
+    async def _publish(self, snapshot, state) -> None:
         async with self._lock:
-            snapshot = await self.client.fetch()
-            state, _ = await self.database.apply_radio_snapshot(
-                snapshot, self.config.radio_go_live_confirmations
-            )
             if snapshot.source_ok and snapshot.schedule_available:
                 await self._announce_scheduled_shows(snapshot)
-            # Never deliver a stale "now live" alert after the source has already
-            # moved back to AutoDJ/offline. Only the currently confirmed live
-            # occurrence is eligible for delivery.
+            # Deliver a live alert only for the currently confirmed occurrence.
             if (
-                self.config.radio_live_alerts
-                and snapshot.source_ok
-                and snapshot.is_live
-                and state.current_state == LIVE
-                and state.current_occurrence_key is not None
+                self.config.radio_live_alerts and snapshot.source_ok and snapshot.is_live
+                and state.current_state == LIVE and state.current_occurrence_key is not None
+                and (self._latest is None or self._latest[1].current_occurrence_key == state.current_occurrence_key)
             ):
-                await self._send_pending_notifications(
-                    state.current_occurrence_key
-                )
-            return snapshot
+                await self._send_pending_notifications(state.current_occurrence_key)
 
     def _due_scheduled_shows(self, snapshot: RadioSnapshot) -> list[RadioShow]:
         """Scheduled shows whose start time has just passed and are not too far in."""
@@ -195,13 +211,11 @@ class RadioMonitor:
         return ids
 
     async def _resolve_channel(self, channel_id: int):
-        channel = self.bot.get_channel(channel_id)
-        if channel is None:
-            try:
-                channel = await self.bot.fetch_channel(channel_id)
-            except (discord.Forbidden, discord.NotFound, discord.HTTPException):
-                LOGGER.exception("Could not access radio channel %s", channel_id)
-                return None
+        try:
+            channel = await self.api.resolve_channel(self.bot, channel_id)
+        except (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError):
+            self.api.count("radio_channel", "unavailable")
+            return None
         if not hasattr(channel, "send"):
             LOGGER.error("Radio channel %s cannot receive messages", channel_id)
             return None
@@ -271,11 +285,17 @@ class RadioMonitor:
         discord_url = f"https://discord.com/channels/{self.config.guild_id}/{self.config.radio_discord_channel_id}"
         role_id = self.config.radio_ping_role_id
         first_message_id: int | None = None
-        sent_any = False
+        failed = False
 
         for index, channel_id in enumerate(self.announce_channel_ids):
+            key = f"radio_delivery:{occurrence.occurrence_key}:{channel_id}"
+            sent = await self.database.get_metadata(key)
+            if sent:
+                first_message_id = first_message_id or int(sent)
+                continue
             channel = await self._resolve_channel(channel_id)
             if channel is None:
+                failed = True
                 continue
             ping_here = index == 0 and role_id is not None
             allowed_mentions = (
@@ -289,17 +309,19 @@ class RadioMonitor:
                 else discord.AllowedMentions.none()
             )
             try:
-                message = await channel.send(
+                nonce = hashlib.sha256(f"radio:{occurrence.occurrence_key}:{channel_id}".encode()).hexdigest()[:24]
+                message = await self.api.call("channel_send", channel_id, lambda: channel.send(
                     content=radio_notification_message(
                         occurrence.title, role_id if ping_here else None, self.client.public_url, twitch_url, discord_url
                     ),
                     allowed_mentions=allowed_mentions,
                     suppress_embeds=True,
-                )
-            except (discord.Forbidden, discord.HTTPException):
-                LOGGER.exception("Could not send radio notification to %s", channel_id)
+                    nonce=nonce,
+                ))
+            except (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError):
+                self.api.count("radio_notification", "unavailable")
+                failed = True
                 continue
-            sent_any = True
-            if first_message_id is None:
-                first_message_id = message.id
-        return first_message_id if sent_any else None
+            await self.database.set_metadata(key, str(message.id))
+            first_message_id = first_message_id or message.id
+        return None if failed else first_message_id

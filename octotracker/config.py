@@ -201,9 +201,22 @@ class Config:
     report_degraded_threshold: int = 3
     database_path: Path = PROJECT_ROOT / "data" / "octobot.db"
 
+    def validate_database_path(self) -> None:
+        mount = os.getenv("RAILWAY_VOLUME_MOUNT_PATH")
+        if not mount and not os.getenv("RAILWAY_ENVIRONMENT_ID"):
+            return
+        if not mount:
+            raise RuntimeError("Railway must attach the persistent volume before OctoBot starts")
+        root = Path(mount).resolve()
+        path = self.database_path.resolve()
+        if not self.database_path.is_absolute() or root not in path.parents:
+            raise RuntimeError("DATABASE_PATH must be absolute and inside the Railway volume")
+        if not root.is_dir() or not os.access(root, os.W_OK):
+            raise RuntimeError("Railway database volume is unavailable or not writable")
+
     @classmethod
     def from_env(cls) -> "Config":
-        load_dotenv(PROJECT_ROOT / ".env", override=True)
+        load_dotenv(PROJECT_ROOT / ".env", override=not os.getenv("RAILWAY_ENVIRONMENT_ID"))
 
         token = os.getenv("DISCORD_TOKEN", "").strip()
         if not token:

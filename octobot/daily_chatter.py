@@ -13,6 +13,7 @@ Reliability model
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -25,11 +26,19 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
+from octobot.discord_api import (
+    DeferredDiscordRequest, background_api, collect, complete_member_cache,
+    ensure_member_cache, retry_delay, role_manageable,
+)
+
 log = logging.getLogger(__name__)
 UTC = timezone.utc
 EXCLUDED_CHANNEL_IDS = frozenset({1547025818914525254, 1547064843909988433})
 HEARTBEAT_OVERLAP = timedelta(minutes=1)
 RETENTION = timedelta(days=3)
+HISTORY_PAGE = 100
+RECONCILIATION_REQUESTS = 40
+DISCORD_FAILURES = (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError)
 ANNOUNCEMENT_PREFIX = "# Top Daily Chatter:"
 
 
@@ -106,16 +115,22 @@ class ReconciliationIncomplete(RuntimeError):
     """Raised when the 24h window could not be fully read from Discord."""
 
 
+class ReconciliationPending(ReconciliationIncomplete):
+    """The request budget is used up and the next batch can continue."""
+
+
 @dataclass
 class BackfillResult:
     scanned: int = 0
     recovered: int = 0
-    inaccessible: list = field(default_factory=list)  # permanent (Forbidden)
+    inaccessible: list = field(default_factory=list)
+    pending: bool = False
+    requests: int = 0
     failed: list = field(default_factory=list)  # transient; window is incomplete
 
     @property
     def complete(self) -> bool:
-        return not self.failed
+        return not (self.failed or self.inaccessible or self.pending)
 
 
 class ChatterStore:
@@ -143,10 +158,16 @@ class ChatterStore:
                 guild_id INTEGER NOT NULL, key TEXT NOT NULL, value TEXT,
                 PRIMARY KEY(guild_id, key)
             );
-            CREATE TABLE IF NOT EXISTS daily_chatter_reconciled (
+            CREATE TABLE IF NOT EXISTS daily_chatter_coverage (
                 guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
                 start_at REAL NOT NULL, end_at REAL NOT NULL,
                 PRIMARY KEY(guild_id, channel_id, start_at, end_at)
+            );
+            CREATE TABLE IF NOT EXISTS daily_chatter_progress (
+                guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
+                start_at REAL NOT NULL, end_at REAL NOT NULL, source TEXT NOT NULL,
+                progress TEXT NOT NULL,
+                PRIMARY KEY(guild_id, channel_id, start_at, end_at, source)
             );
         """)
         # No "assume the latest award is done" seeding any more: a fresh database
@@ -165,15 +186,42 @@ class ChatterStore:
         return cursor.rowcount > 0
 
     async def record_many(self, messages) -> int:
-        inserted = 0
-        for message in messages:
-            cursor = await self.db.execute(
-                "INSERT OR IGNORE INTO daily_chatter_messages VALUES (?, ?, ?, ?)",
-                (message.id, self.guild_id, message.author.id, message.created_at.timestamp()),
-            )
-            inserted += max(cursor.rowcount, 0)
+        cursor = await self.db.executemany(
+            "INSERT OR IGNORE INTO daily_chatter_messages VALUES (?, ?, ?, ?)",
+            [(message.id, self.guild_id, message.author.id, message.created_at.timestamp())
+             for message in messages],
+        )
         await self.db.commit()
-        return inserted
+        return cursor.rowcount
+
+    async def progress(self, channel_id, start, end, source):
+        async with self.db.execute(
+            "SELECT progress FROM daily_chatter_progress "
+            "WHERE guild_id=? AND channel_id=? AND start_at=? AND end_at=? AND source=?",
+            (self.guild_id, channel_id, start.timestamp(), end.timestamp(), source),
+        ) as cursor:
+            row = await cursor.fetchone()
+        return json.loads(row[0]) if row else None
+
+    async def set_progress(self, channel_id, start, end, source, value):
+        await self.db.execute(
+            "INSERT OR REPLACE INTO daily_chatter_progress VALUES (?, ?, ?, ?, ?, ?)",
+            (self.guild_id, channel_id, start.timestamp(), end.timestamp(), source, json.dumps(value)),
+        )
+        await self.db.commit()
+
+    async def coverage_until(self, channel_id, start, end):
+        cursor_at = start.timestamp()
+        async with self.db.execute(
+            "SELECT start_at, end_at FROM daily_chatter_coverage "
+            "WHERE guild_id=? AND channel_id=? AND end_at>? AND start_at<? ORDER BY start_at",
+            (self.guild_id, channel_id, cursor_at, end.timestamp()),
+        ) as cursor:
+            async for left, right in cursor:
+                if left > cursor_at:
+                    break
+                cursor_at = max(cursor_at, right)
+        return datetime.fromtimestamp(min(cursor_at, end.timestamp()), UTC)
 
     async def counts(self, end):
         async with self.db.execute(
@@ -207,7 +255,7 @@ class ChatterStore:
 
     async def is_reconciled(self, channel_id, start, end) -> bool:
         async with self.db.execute(
-            "SELECT 1 FROM daily_chatter_reconciled "
+            "SELECT 1 FROM daily_chatter_coverage "
             "WHERE guild_id=? AND channel_id=? AND start_at=? AND end_at=?",
             (self.guild_id, channel_id, start.timestamp(), end.timestamp()),
         ) as cursor:
@@ -215,7 +263,7 @@ class ChatterStore:
 
     async def mark_reconciled(self, channel_id, start, end):
         await self.db.execute(
-            "INSERT OR IGNORE INTO daily_chatter_reconciled VALUES (?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO daily_chatter_coverage VALUES (?, ?, ?, ?)",
             (self.guild_id, channel_id, start.timestamp(), end.timestamp()),
         )
         await self.db.commit()
@@ -239,7 +287,18 @@ class ChatterStore:
             (self.guild_id, (end - RETENTION).timestamp()),
         )
         await self.db.execute(
-            "DELETE FROM daily_chatter_reconciled WHERE guild_id=? AND end_at<?",
+            "DELETE FROM daily_chatter_coverage WHERE guild_id=? AND end_at<?",
+            (self.guild_id, (end - RETENTION).timestamp()),
+        )
+        await self.db.execute(
+            "DELETE FROM daily_chatter_progress WHERE guild_id=? AND end_at<?",
+            (self.guild_id, (end - RETENTION).timestamp()),
+        )
+        await self.db.execute(
+            "DELETE FROM daily_chatter_state WHERE guild_id=? "
+            "AND substr(key, 1, instr(key, ':') - 1) IN "
+            "('announcement_checked', 'announcement_search', 'award_roles', 'award_send') "
+            "AND CAST(substr(key, instr(key, ':') + 1) AS INTEGER) < ?",
             (self.guild_id, (end - RETENTION).timestamp()),
         )
         await self.db.commit()
@@ -252,11 +311,20 @@ class ChatterStore:
     async def close(self):
         if self.db is not None:
             await self.db.close()
+            self.db = None
 
 
 class DailyChatterCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.api = background_api(bot)
+        self._catchup_end = None
+        self._followup_from = None
+        self._chatter_retry = {}
+        self._archive_channels = {}
+        self._archive_cache_window = None
+        self._role_observations = {}
+        self._observation_end = None
         self.store = ChatterStore(bot.config.database_path, bot.config.guild_id)
         self.lock = asyncio.Lock()  # serialises award/backfill, NOT live recording
         self.enabled = bool(bot.config.daily_chatter_role_id and bot.config.daily_chatter_channel_id)
@@ -275,9 +343,16 @@ class DailyChatterCog(commands.Cog):
             await self.store.connect()
             now = datetime.now(UTC)
             floor = latest_boundary(now) - timedelta(days=1)
-            alive = await self.store.get_state("alive_at")
+            alive = await self.store.get_state("gateway_checkpoint_v2")
             since = (datetime.fromtimestamp(float(alive), UTC) - HEARTBEAT_OVERLAP) if alive else floor
             self.catchup_from = max(since, floor)
+            pending = await self.store.get_state("catchup_interval")
+            if pending:
+                left, right = json.loads(pending)
+                if left >= floor.timestamp():
+                    self.catchup_from = datetime.fromtimestamp(left, UTC)
+                    self._catchup_end = datetime.fromtimestamp(right, UTC)
+                    self._followup_from = self._catchup_end - HEARTBEAT_OVERLAP
             log.info("Daily chatter will backfill history from %s", self.catchup_from.isoformat())
             self.refresh.start()
 
@@ -294,8 +369,25 @@ class DailyChatterCog(commands.Cog):
     @commands.Cog.listener()
     async def on_disconnect(self):
         # Events can be lost across a gateway reconnect: re-scan from just before it.
-        if self.enabled and self.catchup_from is None:
-            self.catchup_from = datetime.now(UTC) - HEARTBEAT_OVERLAP
+        if self.enabled:
+            self._role_observations.clear()
+            self._request_catchup(datetime.now(UTC) - HEARTBEAT_OVERLAP)
+
+    def _request_catchup(self, start):
+        if self._catchup_end is None:
+            self.catchup_from = min(self.catchup_from or start, start)
+        else:
+            self._followup_from = min(self._followup_from or start, start)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if not self.enabled or after.guild.id != self.bot.config.guild_id:
+            return
+        role_id = self.bot.config.daily_chatter_role_id
+        previous = any(role.id == role_id for role in before.roles)
+        current = any(role.id == role_id for role in after.roles)
+        if previous != current:
+            self._role_observations.pop(after.id, None)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -305,11 +397,9 @@ class DailyChatterCog(commands.Cog):
             await self.store.record(message)
         except Exception as exc:  # never lose a message silently
             self.record_failures += 1
-            self.last_error = f"record failed: {exc!r}"
-            log.exception("Daily chatter could not record message %s", message.id)
-            # The history backfill will pick it up from the checkpoint.
-            created = message.created_at - HEARTBEAT_OVERLAP
-            self.catchup_from = min(self.catchup_from or created, created)
+            self.last_error = f"record failed: {type(exc).__name__}"
+            log.error("Daily chatter could not record a gateway message error=%s", type(exc).__name__)
+            self._request_catchup(message.created_at - HEARTBEAT_OVERLAP)
 
     # ---- member resolution -------------------------------------------------
 
@@ -323,9 +413,11 @@ class DailyChatterCog(commands.Cog):
         found = {}
         for uid in user_ids:
             member = guild.get_member(uid) if hasattr(guild, "get_member") else None
-            if member is None and hasattr(guild, "fetch_member"):
+            if member is None and not complete_member_cache(guild) and hasattr(guild, "fetch_member"):
                 try:
-                    member = await guild.fetch_member(uid)
+                    member = await self.api.call(
+                        "member_lookup", (guild.id, uid), lambda: guild.fetch_member(uid), cache_missing=False,
+                    )
                 except discord.NotFound:
                     member = None
             if member is not None and not member.bot:
@@ -344,105 +436,225 @@ class DailyChatterCog(commands.Cog):
 
     # ---- history reconciliation -------------------------------------------
 
-    async def eligible_channels(self, guild, start, result):
-        channels, seen = [], set()
+    @staticmethod
+    def _can_read(channel, guild):
+        if not hasattr(channel, "permissions_for") or getattr(guild, "me", None) is None:
+            return True
+        permissions = channel.permissions_for(guild.me)
+        return permissions.view_channel and permissions.read_message_history
 
-        def add(channel):
-            if channel.id not in seen and not is_excluded_channel(channel):
-                seen.add(channel.id)
-                channels.append(channel)
-
-        for channel in [*getattr(guild, "text_channels", []), *getattr(guild, "voice_channels", []),
-                        *getattr(guild, "stage_channels", [])]:
-            add(channel)
-        for thread in getattr(guild, "threads", []):
-            add(thread)
-        parents = [*getattr(guild, "text_channels", []), *getattr(guild, "forum_channels", [])]
-        for parent in parents:
-            if is_excluded_channel(parent):
-                continue
+    async def _read_archive(self, parent, kind, options, start, end, result):
+        saved = await self.store.progress(parent.id, start, end, kind)
+        cursor, ids, done = saved or (None, [], False)
+        while not done:
+            if result.requests >= RECONCILIATION_REQUESTS:
+                result.pending = True
+                break
+            params = dict(options)
+            if cursor is not None:
+                params["before"] = discord.Object(id=int(cursor)) if kind == "joined" else datetime.fromisoformat(cursor)
+            result.requests += 1
             try:
-                async for thread in parent.archived_threads(limit=None):
-                    stamp = getattr(thread, "archive_timestamp", None)
-                    if stamp is not None and stamp < start:
-                        break  # newest-archived first: nothing older can hold window messages
-                    add(thread)
+                page = await self.api.call(
+                    "archive_history_" + kind, parent.id,
+                    lambda: collect(parent.archived_threads(limit=HISTORY_PAGE, **params)),
+                )
+            except discord.NotFound:
+                return []
             except discord.Forbidden:
                 result.inaccessible.append(parent.id)
-            except (discord.HTTPException, OSError, asyncio.TimeoutError):
+                break
+            except DISCORD_FAILURES:
                 result.failed.append(parent.id)
+                break
+            done = len(page) < HISTORY_PAGE
+            for thread in page:
+                stamp = getattr(thread, "archive_timestamp", None)
+                # Joined-private threads are sorted by creation ID.
+                if stamp is not None and stamp < start:
+                    if kind != "joined":
+                        done = True
+                        break
+                    continue
+                if not is_excluded_channel(thread):
+                    self._archive_channels[thread.id] = thread
+                    ids.append(thread.id)
+            if not done:
+                next_cursor = str(page[-1].id) if kind == "joined" else page[-1].archive_timestamp.isoformat()
+                if next_cursor == cursor:
+                    result.failed.append(parent.id)
+                    break
+                cursor = next_cursor
+            ids = list(dict.fromkeys(ids))
+            await self.store.set_progress(parent.id, start, end, kind, [cursor, ids, done])
+        return ids
+
+    async def eligible_channels(self, guild, start, end, result):
+        text_channels = getattr(guild, "text_channels", [])
+        parents = [*text_channels, *getattr(guild, "forum_channels", [])]
+        channels = {
+            channel.id: channel
+            for channel in [*text_channels, *getattr(guild, "voice_channels", []),
+                            *getattr(guild, "stage_channels", []), *getattr(guild, "threads", [])]
+            if not is_excluded_channel(channel)
+            and (getattr(channel, "created_at", None) is None or channel.created_at < end)
+        }
+        saved_active = await self.store.progress(guild.id, start, end, "active_threads") or []
+        active_ids = {
+            thread.id for thread in getattr(guild, "threads", []) if thread.id in channels
+        }
+        if active_ids - set(saved_active):
+            await self.store.set_progress(guild.id, start, end, "active_threads", sorted(active_ids | set(saved_active)))
+        archived = {thread_id: None for thread_id in saved_active if thread_id not in channels}
+        for parent in parents:
+            if is_excluded_channel(parent) or not hasattr(parent, "archived_threads"):
+                continue
+            if getattr(parent, "created_at", start) >= end:
+                continue
+            if not self._can_read(parent, guild):
+                result.inaccessible.append(parent.id)
+                continue
+            kinds = [("public", {})]
+            if isinstance(parent, discord.TextChannel) and guild.me is not None:
+                if parent.permissions_for(guild.me).manage_threads:
+                    kinds.append(("private", {"private": True}))
+                else:
+                    kinds.append(("joined", {"private": True, "joined": True}))
+            for kind, options in kinds:
+                for thread_id in await self._read_archive(parent, kind, options, start, end, result):
+                    if thread_id not in channels:
+                        archived[thread_id] = self._archive_channels.get(thread_id)
+        channels.update(archived)
         return channels
 
-    async def backfill(self, guild, start, end, *, mark_window=None) -> BackfillResult:
-        """Record every eligible message in [start, end) found in Discord history.
-
-        mark_window=(win_start, win_end) records per-channel completion so a closed
-        window is never rescanned after a successful pass.
-        """
+    async def backfill(self, guild, start, end) -> BackfillResult:
+        """Scan bounded pages, committing their messages before advancing the cursor."""
         result = BackfillResult()
-        channels = await self.eligible_channels(guild, start, result)
-        for channel in channels:
-            if mark_window and await self.store.is_reconciled(channel.id, *mark_window):
+        window = latest_boundary(end)
+        if self._archive_cache_window != window:
+            self._archive_channels.clear()
+            self._archive_cache_window = window
+        channels = await self.eligible_channels(guild, start, end, result)
+        for channel_id, channel in channels.items():
+            left = await self.store.coverage_until(channel_id, start, end)
+            if left == end:
                 continue
-            batch = []
+            if result.requests >= RECONCILIATION_REQUESTS:
+                result.pending = True
+                break
             try:
-                async for message in channel.history(limit=None, after=start, before=end, oldest_first=True):
-                    result.scanned += 1
-                    if is_eligible_message(message, self.bot.config.guild_id):
-                        batch.append(message)
-                result.recovered += await self.store.record_many(batch)
-                if mark_window:
-                    await self.store.mark_reconciled(channel.id, *mark_window)
-            except discord.Forbidden:
-                result.inaccessible.append(channel.id)
+                if channel is None:
+                    result.requests += 1
+                    channel = await self.api.call(
+                        "channel_lookup", channel_id, lambda: self.bot.fetch_channel(channel_id)
+                    )
+                    self._archive_channels[channel_id] = channel
+                if not self._can_read(channel, guild):
+                    result.inaccessible.append(channel_id)
+                    continue
+                await self._read_history(channel, left, end, result)
             except discord.NotFound:
-                continue  # channel/thread deleted meanwhile
-            except (discord.HTTPException, OSError, asyncio.TimeoutError) as exc:
-                # Keep what was fetched so far; the channel stays un-marked and is retried.
-                result.recovered += await self.store.record_many(batch)
-                result.failed.append(channel.id)
-                log.warning("Daily chatter history read failed for channel %s: %r", channel.id, exc)
+                # Discord distinguishes deleted channels from every other history error.
+                await self.store.mark_reconciled(channel_id, left, end)
+            except discord.Forbidden:
+                result.inaccessible.append(channel_id)
+            except DISCORD_FAILURES:
+                result.failed.append(channel_id)
         self.last_backfill = result
         log.info(
-            "Daily chatter backfill %s..%s: scanned=%d recovered=%d inaccessible=%s failed=%s",
-            start.isoformat(), end.isoformat(), result.scanned, result.recovered,
-            result.inaccessible, result.failed,
+            "Daily chatter backfill start=%s end=%s requests=%d scanned=%d recovered=%d "
+            "inaccessible=%d failed=%d pending=%s",
+            start.isoformat(), end.isoformat(), result.requests, result.scanned, result.recovered,
+            len(result.inaccessible), len(result.failed), result.pending,
         )
         return result
+
+    async def _read_history(self, channel, start, end, result):
+        cursor = await self.store.progress(channel.id, start, end, "history")
+        if cursor is None:
+            cursor = discord.utils.time_snowflake(start, high=False) - 1
+        while result.requests < RECONCILIATION_REQUESTS:
+            result.requests += 1
+            page = await self.api.call(
+                "channel_history", channel.id, lambda: collect(channel.history(
+                    limit=HISTORY_PAGE, after=discord.Object(id=cursor), before=end, oldest_first=True,
+                )),
+            )
+            result.scanned += len(page)
+            result.recovered += await self.store.record_many(
+                message for message in page if is_eligible_message(message, self.bot.config.guild_id)
+            )
+            if len(page) < HISTORY_PAGE:
+                await self.store.mark_reconciled(channel.id, start, end)
+                return
+            cursor = page[-1].id
+            await self.store.set_progress(channel.id, start, end, "history", cursor)
+        result.pending = True
 
     async def run_catchup(self, guild):
         if self.catchup_from is None:
             return
-        started, now = self.catchup_from, datetime.now(UTC)
-        result = await self.backfill(guild, started, now + timedelta(seconds=1))
+        started = self.catchup_from
+        if self._catchup_end is None:
+            self._catchup_end = datetime.now(UTC)
+            await self.store.set_state(
+                "catchup_interval", json.dumps([started.timestamp(), self._catchup_end.timestamp()]),
+            )
+        result = await self.backfill(guild, started, self._catchup_end)
         if result.complete:
-            # Only clear if nothing newer asked for an earlier scan meanwhile.
-            if self.catchup_from == started:
-                self.catchup_from = None
-        else:
-            self.last_error = f"catch-up incomplete for channels {result.failed}"
+            followup = self._followup_from
+            # Commit the recovered boundary before clearing the interval. A crash
+            # between these writes can repeat a small, deduplicated overlap.
+            checkpoint = min(followup or self._catchup_end, self._catchup_end)
+            await self.store.set_state("gateway_checkpoint_v2", checkpoint.timestamp())
+            await self.store.set_state("catchup_interval", None)
+            self._catchup_end = None
+            self.catchup_from, self._followup_from = self._followup_from, None
+        return result
 
     async def reconcile_window(self, guild, end):
         start = end - timedelta(days=1)
-        result = await self.backfill(guild, start, end, mark_window=(start, end))
-        if not result.complete:
+        result = await self.backfill(guild, start, end)
+        if result.inaccessible or result.failed:
             raise ReconciliationIncomplete(
-                f"history for {len(result.failed)} channel(s) could not be read: {result.failed}"
+                f"{len(result.inaccessible)} inaccessible, {len(result.failed)} failed"
             )
+        if result.pending:
+            raise ReconciliationPending("history has more pages to reconcile")
         return result
 
     # ---- announcement lookup (idempotency across lost databases) ----------
 
-    async def find_announcement(self, channel, end):
+    async def find_announcement(self, channel, end, *, after=None):
         me = getattr(self.bot, "user", None)
         if me is None or not hasattr(channel, "history"):
             return None
         label = f"({day_label(end)})"
-        async for message in channel.history(limit=50, after=end, oldest_first=False):
-            if (message.author.id == me.id and message.content.startswith(ANNOUNCEMENT_PREFIX)
-                    and label in message.content.splitlines()[0]):
-                return message
-        return None
+        start = after or end
+        channel_id = self.bot.config.daily_chatter_channel_id
+        key = f"announcement_search:{int(end.timestamp())}:{start.timestamp()}"
+        saved = await self.store.get_state(key)
+        right, cursor = json.loads(saved) if saved else (
+            datetime.now(UTC).timestamp(), discord.utils.time_snowflake(start, high=False) - 1,
+        )
+        for _ in range(4):
+            messages = await self.api.call(
+                "channel_history", channel_id, lambda: collect(channel.history(
+                    limit=HISTORY_PAGE, after=discord.Object(id=cursor), oldest_first=True,
+                    before=datetime.fromtimestamp(right, UTC),
+                )),
+            )
+            for message in messages:
+                if (message.author.id == me.id and message.content.startswith(ANNOUNCEMENT_PREFIX)
+                        and label in message.content.splitlines()[0]):
+                    await self.store.set_state(key, None)
+                    return message
+            if len(messages) < HISTORY_PAGE:
+                await self.store.set_state(key, None)
+                return None
+            cursor = messages[-1].id
+            await self.store.set_state(key, json.dumps([right, cursor]))
+        raise ReconciliationPending("announcement history has more pages to check")
 
     # ---- previews / diagnostics -------------------------------------------
 
@@ -513,29 +725,47 @@ class DailyChatterCog(commands.Cog):
 
     @tasks.loop(seconds=30)
     async def refresh(self):
+        if self.lock.locked():
+            return
+        async with self.lock:
+            guild = self.bot.get_guild(self.bot.config.guild_id)
+            if guild is None or getattr(guild, "unavailable", False) or not self.bot.is_ready():
+                return
+            now = datetime.now(UTC)
+            await self._scheduled("award", lambda: self.award(latest_boundary(now)))
+            if self.catchup_from is not None:
+                await self._scheduled("catchup", lambda: self.run_catchup(guild))
+            if self.catchup_from is None:
+                await self.store.set_state("gateway_checkpoint_v2", now.timestamp())
+
+    async def _scheduled(self, name, action):
+        attempts, retry_at = self._chatter_retry.get(name, (0, 0))
+        if self.api.clock() < retry_at:
+            return
         try:
-            async with self.lock:
-                guild = self.bot.get_guild(self.bot.config.guild_id)
-                if guild is not None:
-                    await self.run_catchup(guild)
-                    if self.catchup_from is None:
-                        await self.store.set_state("alive_at", datetime.now(UTC).timestamp())
-                await self.award(latest_boundary(datetime.now(UTC)))
-        except ReconciliationIncomplete as exc:
-            reason = str(exc)
-            if reason != self.delay_reason:
-                log.warning("Daily chatter award delayed: %s", reason)
-            self.delay_reason = reason
-            await self.store.set_state("delay_reason", reason)
+            result = await action()
+            if isinstance(result, BackfillResult) and (result.inaccessible or result.failed):
+                raise ReconciliationIncomplete("gateway catch-up is waiting for inaccessible or failed Discord resources")
         except Exception as exc:
-            self.last_error = repr(exc)
-            log.exception("Daily chatter handover failed; retrying in 30 seconds")
+            progressing = isinstance(exc, ReconciliationPending)
+            delay = 0 if progressing else retry_delay(attempts)
+            self._chatter_retry[name] = (0 if progressing else attempts + 1, self.api.clock() + delay)
+            reason = str(exc) if isinstance(exc, ReconciliationIncomplete) else type(exc).__name__
+            if name == "award":
+                self.delay_reason = reason
+            self.last_error = reason
+            log.warning("Daily chatter deferred operation=%s reason=%s retry_s=%.0f", name, reason, delay)
+        else:
+            self._chatter_retry.pop(name, None)
 
     @refresh.before_loop
     async def before_refresh(self):
         await self.bot.wait_until_ready()
 
     async def award(self, end):
+        if self._observation_end != end:
+            self._observation_end = end
+            self._role_observations.clear()
         state = await self.store.run(end)
         if state and state[2]:
             return
@@ -545,66 +775,118 @@ class DailyChatterCog(commands.Cog):
         role = guild.get_role(self.bot.config.daily_chatter_role_id)
         if role is None:
             raise RuntimeError("Daily chatter role is missing")
-        channel = self.bot.get_channel(self.bot.config.daily_chatter_channel_id)
-        if channel is None:
-            channel = await self.bot.fetch_channel(self.bot.config.daily_chatter_channel_id)
+        channel = await self.api.resolve_channel(self.bot, self.bot.config.daily_chatter_channel_id)
         if channel.guild.id != guild.id:
             raise RuntimeError("Daily chatter channel must be in the configured guild")
+        announcement_key = f"announcement_checked:{int(end.timestamp())}"
         if state is None:
-            # A lost/fresh database must not repeat an award that was already posted.
-            existing = await self.find_announcement(channel, end)
-            if existing is not None:
-                log.warning("Daily chatter award for %s already announced (message %s); adopting it",
-                            end.isoformat(), existing.id)
-                await self.store.save(end, [], existing.id, completed=True)
-                return
-            # Never rank an unverified window: this raises if history is unreadable.
+            checked = await self.store.get_state(announcement_key)
+            if checked is None:
+                existing = await self.find_announcement(channel, end)
+                if existing is not None and self._is_final_announcement(existing):
+                    await self.store.save(end, [], existing.id, completed=True)
+                    return
+                checked = str(existing.id) if existing is not None else "none"
+                await self.store.set_state(announcement_key, checked)
             await self.reconcile_window(guild, end)
             ranking = await self.build_ranking(guild, end)
-            total, unique, top = await self.store.summary(end)
-            last = await self.store.last_message_at()
-            log.info("Daily chatter window ending %s: messages=%d unique_users=%d top3=%s last_recorded=%s",
-                     end.isoformat(), total, unique, top, last.isoformat() if last else None)
-            await self.store.save(end, ranking)
-            message_id = None
+            total, unique, _ = await self.store.summary(end)
+            log.info("Daily chatter window end=%s messages=%d unique_users=%d", end.isoformat(), total, unique)
+            message_id = int(checked) if checked.isdecimal() else None
+            await self.store.save(end, ranking, message_id)
         else:
             ranking, message_id, _ = state
+
         self.delay_reason = None
-        # Fetch everyone: role.members may be incomplete after a cold start.
-        members = {member.id: member async for member in guild.fetch_members(limit=None)}
-        # A member who leaves before a retry cannot retain the day's award.
+        if not role_manageable(guild, role):
+            raise ReconciliationIncomplete("the bot cannot manage the Daily Chatter role")
+        await ensure_member_cache(guild, self.api)
+        members = list(role.members)
+        # Rebuild from the reconciled counts if any leading member has left.
         valid = await self.resolve_members(guild, [uid for uid, _ in ranking])
+        if len(valid) != len(ranking):
+            ranking = await self.build_ranking(guild, end)
+            valid = await self.resolve_members(guild, [uid for uid, _ in ranking])
         ranking = [entry for entry in ranking if entry[0] in valid]
-        for uid, member in valid.items():
-            members.setdefault(uid, member)
-        winner = members[ranking[0][0]] if ranking else None
-        # Remove ALL stale holders before adding the new winner. If removal fails,
-        # abort and retry without ever granting a second copy of the role.
-        for member in members.values():
-            if role in member.roles and (winner is None or member.id != winner.id):
-                await member.remove_roles(role, reason="Daily top chatter: previous award expired")
-        if winner is not None and role not in winner.roles:
-            await winner.add_roles(role, reason="Daily top chatter: most messages in the 24h period")
-        if ranking:
-            if message_id is None:
-                message = await channel.send(
-                    announcement(ranking, end, role.id, mentions=False),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                    silent=True,
+        winner = valid[ranking[0][0]] if ranking else None
+        winners_key = f"award_roles:{int(end.timestamp())}"
+        progress = json.loads(await self.store.get_state(winners_key) or "{}")
+        removed = set(progress.get("removed", ()))
+        for member in members:
+            if self._role_observations.get(member.id) is False or (winner is not None and member.id == winner.id):
+                continue
+            if not role_manageable(guild, role, member):
+                raise ReconciliationIncomplete("the bot cannot remove Exalted from a current holder")
+            try:
+                await self.api.call(
+                    "role_remove", (guild.id, role.id), lambda: member.remove_roles(
+                        role, reason="Daily top chatter: previous award expired",
+                    ), cache_missing=False,
                 )
-                message_id = message.id
+            except discord.NotFound as exc:
+                if exc.code != 10007:  # Unknown Member: departure also removes the role.
+                    raise
+            self._role_observations[member.id] = False
+            removed.add(member.id)
+            progress["removed"] = sorted(removed)
+            await self.store.set_state(winners_key, json.dumps(progress))
+        if any(
+            (winner is None or holder.id != winner.id) and self._role_observations.get(holder.id) is not False
+            for holder in role.members
+        ):
+            raise ReconciliationIncomplete("another member acquired Exalted during the handover")
+        if winner is not None and role not in winner.roles and not self._role_observations.get(winner.id):
+            if not role_manageable(guild, role, winner):
+                raise ReconciliationIncomplete("the bot cannot grant Exalted to the winner")
+            await self.api.call(
+                "role_add", (guild.id, role.id),
+                lambda: winner.add_roles(role, reason="Daily top chatter: most messages in the 24h period"),
+                cache_missing=False,
+            )
+            self._role_observations[winner.id] = True
+            progress["granted"] = winner.id
+            await self.store.set_state(winners_key, json.dumps(progress))
+        if ranking:
+            channel_id = self.bot.config.daily_chatter_channel_id
+            if message_id is None:
+                # A send may have succeeded before its response or SQLite write failed.
+                # Keep the date and title in the silent placeholder so it can be adopted.
+                send_key = f"award_send:{int(end.timestamp())}"
+                previous_send = await self.store.get_state(send_key)
+                existing = None
+                if previous_send is not None:
+                    start = datetime.fromtimestamp(float(previous_send), UTC)
+                    existing = await self.find_announcement(channel, end, after=start)
+                if existing is None:
+                    await self.store.set_state(send_key, (datetime.now(UTC) - HEARTBEAT_OVERLAP).timestamp())
+                    nonce = hashlib.sha256(f"chatter:{guild.id}:{end.timestamp()}".encode()).hexdigest()[:24]
+                    existing = await self.api.call("channel_send", channel_id, lambda: channel.send(
+                        announcement(ranking, end, role.id, mentions=False),
+                        allowed_mentions=discord.AllowedMentions.none(), silent=True, nonce=nonce,
+                    ))
+                message_id = existing.id
                 await self.store.save(end, ranking, message_id)
-            else:
-                message = channel.get_partial_message(message_id)
+            message = channel.get_partial_message(message_id)
             # Listing the exact users lets Discord attach their profiles to the message so
             # clients render names instead of "@unknown-user"; the message was sent
             # silently and the role is never allowed to ping.
-            await message.edit(
-                content=announcement(ranking, end, role.id, mentions=True),
-                allowed_mentions=discord.AllowedMentions(
-                    everyone=False, roles=False, replied_user=False,
-                    users=[discord.Object(id=uid) for uid, _ in ranking],
-                ),
-            )
+            try:
+                await self.api.call("message_edit", channel_id, lambda: message.edit(
+                    content=announcement(ranking, end, role.id, mentions=True),
+                    allowed_mentions=discord.AllowedMentions(
+                        everyone=False, roles=False, replied_user=False,
+                        users=[discord.Object(id=uid) for uid, _ in ranking],
+                    ),
+                ), cache_missing=False)
+            except discord.NotFound as exc:
+                if exc.code != 10008:
+                    raise
+                await self.store.save(end, ranking)
+                raise ReconciliationIncomplete("the saved Daily Chatter message was deleted") from None
         await self.store.save(end, ranking, message_id, completed=True)
+        self._role_observations.clear()
         await self.store.set_state("delay_reason", None)
+
+    @staticmethod
+    def _is_final_announcement(message):
+        return "<@" in message.content.partition("\n")[0]
