@@ -203,3 +203,31 @@ With the `MODELS` bucket bound, `skins/catalogue.json` (the skin list) and `skin
 read from the bucket. `/api/outfitter/skins` returns the catalogue (`{"version":1,"skins":[]}` when there is none). `meta/charactercustomization/<body>.json` has the body's choices
 appended to its Skin Color option; only ids in the invented ranges (choices from 9,950,000, resources from 9,970,000, textures from 9,900,000) are accepted, so a bad file cannot
 shadow a library choice, and any failure falls back to the unmerged answer. A body with no skins, or no bucket, behaves exactly as before. Tests: `tests/overlay.test.mjs`.
+
+## Launcher snapshot: `GET /api/snapshot`
+
+One small read-only object for desktop launchers (EqUpdater 3), instead of two requests:
+
+```json
+{"schema":1,"source":"cloudflare-minute","cadence_s":60,
+ "population":{"all":{"timestamp":"...","online":1234,"source":"official census"},"nzoth":{...}},
+ "status":{"timestamp":"...","website":"available","realms":{"nzoth":"online",...},"tcp":"reachable","auth":"responsive","latency_ms":812,"source_error":null}}
+```
+
+`population` is exactly what `/api/latest` returns and `status` is exactly `/api/status/latest`'s `sample` (or `null`), each
+with its own timestamp, so a client decides for itself what is stale and never mistakes "I could not fetch" for "the server is down".
+
+**Additive and free of new infrastructure.** No migration, binding, cron, bucket or secret; the existing endpoints and the
+Worker's public contract are untouched (their tests still pass). It does the same two `SELECT`s the existing endpoints do.
+Aggregates only: no player identifier.
+
+**Cost, honestly.** A Worker invocation is billed per request wherever it is answered, and `workers.dev` cannot cache Worker
+output at the edge (see Cloudflare's Cache API notes), so this does not make the request count flat. What it does:
+one request replaces two; a conditional request (`If-None-Match`) that is still current is answered `304` from isolate
+memory without touching D1; and within an isolate D1 is read at most once per 15 s however many requests arrive. A launcher
+asks once a minute while it is focused and not at all while minimised. A truly flat cost needs the same JSON served as a
+cached static object (a custom domain in front of a public R2 object, or Workers static assets), which is new infrastructure
+and was deliberately not added here.
+
+Deploy with the usual `npx wrangler deploy` when you choose to; until then a launcher gets a 404 and falls back to the GitHub
+Pages files (`live.json`, `status/latest.json`), which GitHub refreshes only when its scheduler runs.
