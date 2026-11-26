@@ -14,7 +14,8 @@
     { label: 'World and economy', links: [
       { id: 'world-info', href: 'world-info/', text: 'World Info' },
       { id: 'auction-house', href: 'auction-house/', text: 'Auction House' },
-      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' } ] },
+      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' },
+      { id: 'entity-viewer', href: 'entity-viewer/', text: 'Entity Viewer' } ] },
     { label: 'Guides', links: [
       { id: 'guides', href: 'guides/', text: 'Guides' } ] }
   ];
