@@ -18,12 +18,16 @@ test("fresh event validation",()=>{
 });
 test("GM flag is packet metadata, not message text",()=>{
  const text="|c1000ccff<GM> fake|r",name=Buffer.from("world\0"),msg=Buffer.from(text+"\0"),body=Buffer.alloc(5+name.length+4+8+4+msg.length+1);
- name.copy(body,5);const p=5+name.length+4;body.writeBigUInt64LE(42n,p);body.writeUInt32LE(msg.length,p+8);msg.copy(body,p+12);
+ body[0]=0x0e;name.copy(body,5);const p=5+name.length+4;body.writeBigUInt64LE(42n,p);body.writeUInt32LE(msg.length,p+8);msg.copy(body,p+12);
  for(const decode of [decodeWorldPacket,decodeLegacyWorldPacket]){
   for(const tag of [0,1,2,3,4]){
    body[body.length-1]=tag;
    assert.equal(decode("world",42n,text,body).gm,tag===3);
   }
+  for(const type of [0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x0a,0x1a,0xff]){
+   body[0]=type;assert.equal(decode("world",42n,text,body),null,`private or non-channel type ${type}`);
+  }
+  body[0]=0x0e;
   assert.equal(decode("guild",42n,text,body),null);
   assert.equal(decode("world",43n,text,body),null);
   body.writeUInt32LE(0xffffffff,1);
