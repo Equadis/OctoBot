@@ -79,6 +79,8 @@ const after=await api(path+"/settings");
 if(JSON.stringify(after.bindings.map(b=>b.name).sort())!==JSON.stringify(keepNames))throw Error("Post-deploy binding check failed");
 console.log("Existing bindings preserved.");
 await query(await readFile(new URL("migrations/0008_world_chat_staff_repair.sql",folder),"utf8"));
+await query(await readFile(new URL("migrations/0014_world_chat_privacy_cleanup.sql",folder),"utf8"));
+console.log("Reported private chat archive records removed (idempotent cleanup).");
 const health=await fetch('https://octometrics.eqvoice.workers.dev/health',{signal:AbortSignal.timeout(20000)});
 if(!health.ok||!(await health.json()).ok)throw Error('OctoMetrics health check failed');
 const auctionPaused=variable('AUCTION_API_PAUSED')==='true'||variable('AUCTION_PUBLIC_PAUSED')==='true';
