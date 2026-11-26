@@ -25,3 +25,12 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin
 
 /* Construction marker immediately following unfinished dashboard titles. */
 .home-construction-icon{font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif;font-size:19px;line-height:1;vertical-align:baseline;white-space:nowrap}
+
+/* Dashboard groups occupy separate rows with consistent card widths. */
+.home-groups{display:grid;gap:24px}
+.home-group-title{font-family:var(--title-font);font-size:22px;font-weight:700;color:var(--gold,#e8c67c);margin-bottom:12px}
+.home-group:not([open])>.home-group-title{margin-bottom:0}
+.home-group .home-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.home-group .home-card-title{white-space:normal;overflow-wrap:normal;font-size:clamp(20px,2vw,30px)}
+@media(max-width:1050px){.home-group .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.home-group .home-grid{grid-template-columns:minmax(0,1fr)}}
