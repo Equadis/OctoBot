@@ -67,11 +67,13 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
  let now=Date.now();const actual=Date.now;Date.now=()=>now;
  try{
   const line=(id,authorKey,message,gm=false,time=now)=>({id:"12345678-1234-1234-1234-"+String(id).padStart(12,"0"),authorKey,author:"Player"+authorKey,message,gm,time});
-  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only",guilds=[])=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages,guilds})}),env);
+  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only",guilds=[])=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m})),guilds})}),env);
   const read=async(realm="N'Zoth")=>(await worldChatRoute(new Request(base+"?realm="+encodeURIComponent(realm)),env)).json();
   assert.equal((await read()).status,"waiting");
   assert.equal((await send([], "N'Zoth","OBPVESW","Bearer no")).status,401);
   assert.equal((await send([], "N'Zoth","OBPVPORG")).status,400);
+  assert.equal((await send([{...line(999,"1","private"),chatType:0x06}])).status,400);
+  assert.equal((await send([{...line(999,"1","private"),channel:"guild"}])).status,400);
   const first=line(1,"1","LFM WC");
   assert.equal((await send([first,line(2,"2","LFG WC"),line(3,"3","<GM> fake"),line(4,"4","announcement",true),line(5,"5","WTB linen")])).status,202);
   await send([first]);
@@ -126,7 +128,7 @@ test("item markup survives real SQL storage and listing refresh; legacy plain te
  const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
  const now=Date.now(),id=i=>"12345678-1234-1234-1234-"+String(i).padStart(12,"0");
  const line=(i,message)=>({id:id(i),time:now+i,authorKey:"1",author:"Player",gm:false,message});
- const send=messages=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm:"N'Zoth",account:"OBPVESW",channel:"world",messages})}),env);
+ const send=messages=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm:"N'Zoth",account:"OBPVESW",channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m}))})}),env);
  try{
   assert.equal((await send([line(1,"WTB [Shadowcraft Gloves]"),line(2,"WTB |cff0070dd|Hitem:16712:0:0:0|h[Shadowcraft Gloves]|h|r")])).status,202);
   const data=await (await worldChatRoute(new Request(base),env)).json();
@@ -145,7 +147,7 @@ test("live and archived staff display verified role badges, while player markup 
  }));
  try{
   const ingest=await worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({
-   realm:"N'Zoth",account:"OBPVEDMFA",channel:"world",messages
+   realm:"N'Zoth",account:"OBPVEDMFA",channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m}))
   })}),env);
   assert.equal(ingest.status,202);
   const read=async path=>(await worldChatRoute(new Request(base+path),env)).json();
