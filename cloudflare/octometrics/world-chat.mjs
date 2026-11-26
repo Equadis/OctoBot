@@ -100,7 +100,7 @@ export async function worldChatRoute(request,env){
     }
     const searchRows=[];
     for(const raw of payload.messages){
-      const l=validLine(raw,now);if(!l)return reply({error:"invalid public chat message"},400);
+      const l=validLine(raw,now);if(!l||raw.channel!=="world"||raw.chatType!==0x0e)return reply({error:"invalid public chat message"},400);
       // A retry keeps its original receipt; a second observation from the same source
       // must not consume the same canonical message twice.
       statements.push(db.prepare(`INSERT OR IGNORE INTO world_chat_receipts(realm,id,source,canonical_id,observed_ms)
