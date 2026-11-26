@@ -171,3 +171,9 @@ body .section-title h2,body .panel-head h3,body .world-panel h2,body .world-pane
 summary.collapse-toggle{display:flex}
 summary.collapse-toggle::-webkit-details-marker{display:none}
 .ah-name-clip{overflow:hidden;white-space:nowrap;text-overflow:clip}
+
+/* Shared navigation group headings and native disclosure controls. */
+.page-nav .nav-group{display:block;min-width:0}
+.page-nav .nav-group-title{font-size:12px;font-weight:600;color:var(--muted,#a0b1c8);margin:0 0 7px}
+.page-nav .nav-group:not([open])>.nav-group-title{margin-bottom:0}
+.page-nav .nav-group-links{display:flex;gap:6px;flex-wrap:wrap}
