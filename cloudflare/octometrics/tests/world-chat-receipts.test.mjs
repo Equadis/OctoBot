@@ -17,7 +17,7 @@ test("cross-source receipts pair observations one-to-one without suppressing sam
  const id=n=>"12345678-1234-1234-1234-"+String(n).padStart(12,"0");
  const line=(n,time=now,authorKey="1",message="LFM WC",gm=false)=>({id:id(n),authorKey,author:"Player"+authorKey,message,gm,time});
  const send=async(account,messages,realm="N'Zoth")=>{
-  const response=await worldChatRoute(new Request(url+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm,account,channel:"world",messages})}),env);
+  const response=await worldChatRoute(new Request(url+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm,account,channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m}))})}),env);
   assert.equal(response.status,202);
  };
  const ids=()=>sql.prepare("SELECT id FROM world_chat_messages WHERE realm=? ORDER BY id").all("N'Zoth").map(x=>x.id);
