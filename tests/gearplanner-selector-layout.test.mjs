@@ -34,13 +34,19 @@ test('hover panning uses the actual overflow at a constant speed and stops flagg
  const classes=new Set(), properties=new Map();
  let textWidth=136;
  const label={
-  firstElementChild:{getBoundingClientRect:()=>({width:textWidth})},
+  firstElementChild:{},
   closest:()=>true,
   getBoundingClientRect:()=>({width:100}),
   classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},
   style:{setProperty:(name,value)=>properties.set(name,value)},
  };
- const root={querySelectorAll:()=>[label]};
+ const root={
+  querySelectorAll:()=>[label],
+  createRange:()=>({
+   selectNodeContents:node=>assert.equal(node,label.firstElementChild),
+   getBoundingClientRect:()=>({width:textWidth}),
+  }),
+ };
  measureScrollingNames(root);
  assert.ok(classes.has('hover-scroll-name'));
  assert.equal(properties.get('--name-distance'),'36px');
@@ -52,8 +58,9 @@ test('hover panning uses the actual overflow at a constant speed and stops flagg
  textWidth=100;
  measureScrollingNames(root);
  assert.equal(classes.has('hover-scroll-name'),false);
- assert.match(css,/\.ah-name-clip\{[^}]*text-overflow:ellipsis/);
- assert.match(css,/\.hover-scroll-name:hover>\.ah-name-text\{animation:planner-name-pan var\(--name-duration\) linear forwards/);
+ assert.match(css,/\.ah-name-clip>\.ah-name-text\{[^}]*overflow:hidden;text-overflow:ellipsis/);
+ assert.match(css,/\.hover-scroll-name:hover>\.ah-name-text\{[^}]*overflow:visible;[^}]*text-overflow:clip;[^}]*animation:planner-name-pan var\(--name-duration\) linear forwards/);
+ assert.match(css,/@keyframes planner-name-pan\{[^\n]*transform:translateX\(calc\(-1 \* var\(--name-distance\)\)\)/);
 });
 test('the count is left and the sort arrow right, descending by default, and the list scrolls on its own',()=>{
  assert.match(html,/class="item-count-row"><span id="item-count"[^>]*><\/span><button id="item-direction"[^>]*>▼<\/button>/);

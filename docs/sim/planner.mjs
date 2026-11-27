@@ -1,4 +1,4 @@
-import {trinketSwapControls} from './trinket-swaps.mjs?v=20261202-hover-pan';
+import {trinketSwapControls} from './trinket-swaps.mjs?v=20261202-pan-paint';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261130-ui2';
 import {equipmentErrors} from './core/items.mjs?v=20261130-ui2';
@@ -16,11 +16,11 @@ import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacy
 import { maxEnergy, reconcileStartingEnergy } from './core/resources.mjs?v=1';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi, takePendingBuild, setPendingBuild } from './ui-state.mjs?v=20261201-ui3';
 import { wireDialogs } from '../dialogs.mjs?v=1';
-import { scheduleScrollingNames } from '../scrolling-names.mjs?v=20261202-hover-pan';
-import { itemPicker } from './item-picker.mjs?v=20261202-item-picker';
+import { scheduleScrollingNames } from '../scrolling-names.mjs?v=20261202-pan-paint';
+import { itemPicker } from './item-picker.mjs?v=20261202-pan-paint';
 import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261130-ui2';
 import { settings } from './settings.mjs?v=20261112-polish2';
-import { configuration } from './configuration.mjs?v=20261202-hover-pan';
+import { configuration } from './configuration.mjs?v=20261202-pan-paint';
 import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
 import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
 

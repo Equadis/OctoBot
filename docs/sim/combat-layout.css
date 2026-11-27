@@ -366,14 +366,17 @@ label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
 .planner-view #item-selector .item-row .item-description.ah-name-clip{display:block;min-width:0}
 .planner-view .slot-enchant.ah-name-clip{display:block;white-space:nowrap;overflow:hidden;overflow-wrap:normal;text-align:var(--name-align,center)}
 .planner-view .buff-row .buff-effect.ah-name-clip{display:block;min-width:0}
-[data-name-pan="hover"] .ah-name-clip{overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-overflow:ellipsis}
-[data-name-pan="hover"] .ah-name-clip>.ah-name-text{display:inline;position:relative;will-change:auto;animation:none}
-[data-name-pan="hover"] .ah-name-clip.hover-scroll-name{overflow:clip;--name-align:left;text-align:var(--name-align)}
+[data-name-pan="hover"] .ah-name-clip{overflow:hidden;white-space:nowrap;overflow-wrap:normal}
+[data-name-pan="hover"] .ah-name-clip>.ah-name-text{display:block;overflow:hidden;text-overflow:ellipsis;will-change:auto}
+[data-name-pan="hover"] .ah-name-clip.hover-scroll-name{--name-align:left;text-align:var(--name-align)}
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
- [data-name-pan="hover"] .ah-name-clip.hover-scroll-name:hover{text-overflow:clip}
- [data-name-pan="hover"] .ah-name-clip.hover-scroll-name:hover>.ah-name-text{animation:planner-name-pan var(--name-duration) linear forwards}
+ [data-name-pan="hover"] .ah-name-clip.hover-scroll-name:hover>.ah-name-text{
+  overflow:visible;
+  text-overflow:clip;
+  animation:planner-name-pan var(--name-duration) linear forwards;
+ }
 }
-@keyframes planner-name-pan{from{left:0}to{left:calc(-1 * var(--name-distance))}}
+@keyframes planner-name-pan{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--name-distance)))}}
 
 /* ===== Compact Character fields: Race, Build name, Level; then expandable Build details in two rows ===== */
 .planner-view .gear-character .character-controls{display:grid;grid-template-columns:minmax(0,132px) minmax(0,1fr) 54px;gap:8px;margin:0 0 6px}

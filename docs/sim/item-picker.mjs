@@ -3,7 +3,7 @@ import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRes
 import {SLOTS} from './core/builds.mjs?v=20261201-ui3';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {fixSigns} from './core/signs.mjs?v=1';
-import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261202-hover-pan';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261202-pan-paint';
 import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261202-item-picker';
 
 // Single-line labels that reveal their overflow on hover.
