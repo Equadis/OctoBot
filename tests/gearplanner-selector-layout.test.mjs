@@ -1,6 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {SORT_OPTIONS} from '../docs/sim/core/equipment-options.mjs';
+import {measureScrollingNames} from '../docs/scrolling-names.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
 const html=read('sim/index.html'),css=read('sim/combat-layout.css'),config=read('sim/configuration.mjs'),picker=read('sim/item-picker.mjs'),planner=read('sim/planner.mjs');
@@ -12,14 +14,46 @@ test('the item selector sits beside the character and preview in three equal col
  assert.match(css,/@media\(max-width:1199px\)[\s\S]*?\.gear-character\{grid-column:1\/-1\}/,'narrower screens stack the character above the selector and preview');
  assert.match(css,/@media\(max-width:760px\)[\s\S]*?\.gear-workspace\{grid-template-columns:minmax\(0,1fr\)\}/);
 });
-test('filters sit in a two-by-two grid in the requested order with the requested labels',()=>{
+test('search, quality and sorting share a row of equal-height controls',()=>{
  const form=html.slice(html.indexOf('<form id="item-form"'),html.indexOf('</form>',html.indexOf('<form id="item-form"')));
- const labels=[...form.matchAll(/<label class="field[^"]*">([^<]+)</g)].map(match=>match[1]);
- assert.deepEqual(labels,['Search Items','Item Enchant','Sort by','Quality']);
+ const labels=[...form.matchAll(/<label class="field">([^<]+)</g)].map(match=>match[1]);
+ assert.deepEqual(labels,['Search','Quality','Sort by']);
  assert.match(form,/placeholder="Item name or ID"/);
- assert.match(form,/<option value="">None<\/option>/);
  assert.match(form,/<option value="">All qualities<\/option>/);
- assert.match(css,/\.item-filter-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.item-filter-grid\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+ assert.match(css,/\.item-filter-grid input,\.planner-view \.item-filter-grid select\{[^}]*height:34px/);
+ assert.deepEqual(SORT_OPTIONS[0],['new','New Items']);
+});
+test('the enchant control is part of the preview header and survives preview updates',()=>{
+ const start=html.indexOf('class="item-preview-top"'),end=html.indexOf('id="item-preview-details"');
+ assert.ok(start>html.indexOf('id="item-preview"')&&end>start);
+ assert.match(html.slice(start,end),/id="item-preview-summary"[\s\S]*id="item-enchant"/);
+ assert.match(picker,/\$\('item-preview-summary'\)\.replaceChildren\(header\)/);
+});
+test('hover panning uses the actual overflow at a constant speed and stops flagging names that fit',()=>{
+ const classes=new Set(), properties=new Map();
+ let textWidth=136;
+ const label={
+  firstElementChild:{getBoundingClientRect:()=>({width:textWidth})},
+  closest:()=>true,
+  getBoundingClientRect:()=>({width:100}),
+  classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},
+  style:{setProperty:(name,value)=>properties.set(name,value)},
+ };
+ const root={querySelectorAll:()=>[label]};
+ measureScrollingNames(root);
+ assert.ok(classes.has('hover-scroll-name'));
+ assert.equal(properties.get('--name-distance'),'36px');
+ const duration=parseFloat(properties.get('--name-duration'));
+ textWidth=172;
+ measureScrollingNames(root);
+ assert.equal(properties.get('--name-distance'),'72px');
+ assert.equal(parseFloat(properties.get('--name-duration')),2*duration);
+ textWidth=100;
+ measureScrollingNames(root);
+ assert.equal(classes.has('hover-scroll-name'),false);
+ assert.match(css,/\.ah-name-clip\{[^}]*text-overflow:ellipsis/);
+ assert.match(css,/\.hover-scroll-name:hover>\.ah-name-text\{animation:planner-name-pan var\(--name-duration\) linear forwards/);
 });
 test('the count is left and the sort arrow right, descending by default, and the list scrolls on its own',()=>{
  assert.match(html,/class="item-count-row"><span id="item-count"[^>]*><\/span><button id="item-direction"[^>]*>▼<\/button>/);
@@ -64,7 +98,7 @@ test('shirt and tabard, trinket enchants and the em-dashed None are gone, and no
  assert.doesNotMatch(html,/Appearance<\/summary>|slots-appearance/);
  assert.match(planner,/\['shirt', 'tabard'\]\.includes\(slot\)\) continue/);
  assert.match(planner,/const enchantable=!\['trinket1','trinket2'\]\.includes\(slot\)/);
- assert.match(picker,/field-hidden/);
+ assert.match(picker,/\.hidden=slot==='trinket1'\|\|slot==='trinket2'/);
  assert.doesNotMatch(html+picker,/— None —/);
  assert.doesNotMatch(html,/id="talent-split"|id="points-left"|id="equipment-count"/);
  assert.doesNotMatch(planner,/talent-split|slots planned/);

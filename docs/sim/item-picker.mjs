@@ -3,10 +3,10 @@ import {filterItems,listingBuild,detailRestriction,detailFromDocument,listingRes
 import {SLOTS} from './core/builds.mjs?v=20261201-ui3';
 import {iconUrl} from './core/interface.mjs?v=20261112-display1';
 import {fixSigns} from './core/signs.mjs?v=1';
-import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
-import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261130-ui2';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261202-hover-pan';
+import {SORT_OPTIONS,ENCHANTS,enchantsForSlot,enchantChoicesForSlot,sortEquipment} from './core/equipment-options.mjs?v=20261202-item-picker';
 
-// Single-line text that pans sideways when it does not fit (the Auction House effect); stationary when it fits.
+// Single-line labels that reveal their overflow on hover.
 const clip=(tag,text,cls='')=>{const outer=document.createElement(tag);outer.className=('ah-name-clip '+cls).trim();const inner=document.createElement('span');inner.className='ah-name-text';inner.textContent=text;outer.append(inner);return outer;};
 const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
 const signed=value=>`${Number(value)<0?'-':'+'}${Math.abs(Number(value))}`;
@@ -69,8 +69,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   for(const enchant of options){const option=node('option',enchant.displayName);option.value=enchant.id;option.disabled=enchant.disabled;$('item-enchant').append(option);}
   $('item-enchant').value=options.some(enchant=>enchant.id===current)?current:'';
   $('item-enchant').disabled=!options.length;
-  // Trinkets (and any slot without enchants) show no enchant control; the grid cell stays so the filters do not shift.
-  $('item-enchant').closest('.field').classList.toggle('field-hidden',slot==='trinket1'||slot==='trinket2'||(!!selectionContext.heading&&!options.length));
+  $('item-enchant').closest('.field').hidden=slot==='trinket1'||slot==='trinket2'||(!!selectionContext.heading&&!options.length);
  }
  // The enchant shown with a previewed item is the one in the Item Enchant dropdown, when it fits that item. Display only: item data and character stats are untouched.
  function previewEnchant(item){
@@ -81,10 +80,17 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   const build=selectionBuild();return enchantsForSlot(slotKey,build.classId,item,build.level).some(enchant=>enchant.id===id)?ENCHANTS.find(enchant=>enchant.id===id)||null:null;
  }
  function repaintPreview(){if(hovering)return paintHovered();if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');}
+ function showPreviewMessage(message){
+  $('item-preview-summary').replaceChildren(node('p',message,'muted'));
+  $('item-preview-details').replaceChildren();
+  $('item-preview-details').setAttribute('aria-busy','false');
+ }
  function paintPreview(item,source=null,state=''){
-  const preview=$('item-preview');preview.replaceChildren();preview.setAttribute('aria-busy',String(state==='Loading…'));
+  const preview=$('item-preview-details');preview.setAttribute('aria-busy',String(state==='Loading…'));
   const header=node('div',undefined,'item-preview-header'),image=node('img');image.src=iconUrl(item.icon);image.alt='';
-  const text=node('div');text.append(node('h3',item.name,`q${item.quality}`),node('span',`Item Level ${item.level || 0}`,'small muted'));header.append(image,text);preview.append(header);
+  const text=node('div');text.append(clip('h3',item.name,`q${item.quality}`),node('span',`Item Level ${item.level || 0}`,'small muted'));header.append(image,text);
+  $('item-preview-summary').replaceChildren(header);
+  scheduleScrollingNames(header);
   const tooltip=node('div',undefined,'item-full-tooltip');
   const lines=fixSigns(source?.tooltipText || source?.summary || `${item.name}\nRequires level ${item.reqlevel || 0}\n${shortStats(item)}`).split('\n').filter(line=>line.trim());
   if(!source?.tooltipText && source?.effects)lines.push(...source.effects.map(fixSigns));
@@ -92,7 +98,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   for(const [index,line] of lines.entries()){if(/^\(\d+\) Set:/.test(line.trim()))setEffect=true;if(/^["“]/.test(line.trim()))setEffect=false;tooltip.append(node('div',line,index===0?`q${item.quality}`:setEffect||/^(Equip:|Use:|Chance on hit:)/.test(line.trim())?'item-effect':''));}
   const enchant=previewEnchant(item);
   if(enchant)tooltip.append(node('div',`Enchanted: ${enchant.name.replace(/\s*\((?:MH|OH)\)/g,'')}`,'item-enchant'));
-  preview.append(tooltip);
+  preview.replaceChildren(tooltip);
   if(state)preview.append(node('p',state,'item-preview-status'));
  }
  async function previewItem(item){
@@ -136,7 +142,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   $('item-results').replaceChildren(fragment);$('item-results').scrollTop=0;scheduleScrollingNames($('item-results'));
   const item=candidates.find(item=>item.id===previewed?.id) || candidates.find(item=>item.id===build.gear[slot]?.id) || candidates[0];
   if(item)previewItem(item);
-  else{++previewVersion;previewed=null;$('item-preview').replaceChildren(node('p','No matching items.','muted'));}
+  else{++previewVersion;previewed=null;showPreviewMessage('No matching items.');}
  }
  // Hovering an equipped item shows it, with its enchant, in the same preview panel; leaving restores whatever was shown before.
  function paintHovered(){const {item}=hovering;paintPreview(item,details[item.id]||references[item.id],details[item.id]?'':'Loading…');}
@@ -149,7 +155,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
  function endHover(){
   if(!hovering)return;hovering=null;++hoverToken;
   if(previewed)paintPreview(previewed,details[previewed.id]||references[previewed.id],details[previewed.id]?'':'Loading…');
-  else $('item-preview').replaceChildren(node('p','Select an item.','muted'));
+  else showPreviewMessage('Select an item.');
  }
  // Keeps the list, the clear button and the enchant list in step with the equipped item without redrawing (or rescrolling) the list.
  function refreshEquipped(){
@@ -183,7 +189,7 @@ export function itemPicker({getBuild,onEquip,onClear}) {
   return {
   filters:filterState,hoverEquipped,endHover,
   async inspect(id){await load();const item=items.find(item=>item.id===id);if(!item)return null;try{return {...item,...await detail(item)};}catch{return {...item,summary:`Item level ${item.level || 0} · Requires level ${item.reqlevel || 0}\nFull details unavailable.`};}},
-  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';applyFilters(options.filters);$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();$('item-preview').replaceChildren();$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
+  async open(nextSlot,options={}){selectionContext=options;if(!SLOTS[nextSlot])throw new Error('Unknown slot.');slot=nextSlot;const activeSession=++session;++equipVersion;++previewVersion;clearTimeout(previewTimer);clearTimeout(searchTimer);previewed=null;$('item-reference').value='';applyFilters(options.filters);$('item-selector-heading').textContent=options.heading||SLOTS[slot];error();$('item-count').textContent='Loading…';$('item-results').replaceChildren();showPreviewMessage('Loading…');$('item-enchant').value='';$('item-enchant').disabled=true;$('clear-item').disabled=!selectionBuild().gear[slot];active=true;try{await load();if(activeSession!==session||!active)return;updateEnchants();search();}catch(failure){if(activeSession===session&&active)error(failure.message);}},
   usable(slot,id){const item=items?.find(item=>item.id===id);return Boolean(item && details[id] && !detailRestriction(item,details[id],getBuild(),slot));},
   lookup(id){const item=items?.find(item=>item.id===id);return item?{...item,...details[id]}:null;},
   async repairCandidate(candidate){await load();for(const ref of [...Object.values(candidate.gear),...Object.values(candidate.trinketSwap?.gear||{})]){const item=items.find(i=>i.id===ref.id);if(item)try{await detail(item);}catch{}}const errors=equipmentErrors(candidate,id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});const repaired=structuredClone(candidate);for(const e of errors)delete repaired.gear[e.slot];const changes=errors.map(e=>`${e.slot}: ${e.reason}`);if(repaired.trinketSwap?.enabled){const swapErrors=equipmentErrors(postSwapBuild(repaired),id=>{const item=items.find(i=>i.id===id);return item&&details[id]?{...item,...details[id]}:null;});if(swapErrors.length){repaired.trinketSwap.enabled=false;changes.push(...swapErrors.map(e=>`Trinket swap disabled: ${e.slot}: ${e.reason}`));}}return {build:repaired,changes};},

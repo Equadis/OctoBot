@@ -152,7 +152,7 @@ body{padding-top:26px}.site-header{padding-bottom:18px}.brand{color:#9ba8bc}.bad
 .planner-view #slots-left .slot button{grid-template-columns:33px minmax(0,1fr)}
 .planner-view #slots-left .slot .slot-icon{grid-column:1;grid-row:1}
 .planner-view #slots-left .slot .slot-name{grid-column:2;grid-row:1}
-.planner-view #slots-left .slot .item-name{grid-column:1/-1;grid-row:2;text-align:center}
+.planner-view #slots-left .slot .item-name{grid-column:1/-1;grid-row:2;text-align:var(--name-align,center)}
 /* Only placeholder text loses italics; actual item names retain their styling. */
 .planner-view .slot:not(.has-item) .item-name{font-style:normal}
 @media(max-width:480px){.planner-view #slots-left .slot button{grid-template-columns:30px minmax(0,1fr)}}
@@ -260,9 +260,9 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view .gear-preview .item-preview{border:0;padding:14px;overflow:visible;min-height:0}
 .planner-view .item-selector-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
 .planner-view .item-selector-heading h3{margin:0;font-size:15px;color:var(--gold)}
-.planner-view .item-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 10px;flex:none}
+.planner-view .item-filter-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,clamp(88px,29%,112px)) minmax(0,clamp(96px,32%,124px));gap:8px;align-items:end;flex:none}
 .planner-view .item-filter-grid .field{margin:0;min-width:0;font-size:11px}
-.planner-view .item-filter-grid input,.planner-view .item-filter-grid select{width:100%;min-width:0}
+.planner-view .item-filter-grid input,.planner-view .item-filter-grid select{box-sizing:border-box;width:100%;min-width:0;height:34px;padding-inline:6px;text-transform:none}
 .planner-view .item-count-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;font-size:11px;color:var(--muted)}
 .planner-view #item-selector #item-direction{width:auto;flex:none;min-width:30px;padding:2px 10px;font-size:11px;line-height:1.3}
 .planner-view #item-error{flex:none;margin:0;font-size:11px}.planner-view #item-error:empty{display:none}
@@ -295,7 +295,11 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view #item-selector .item-results{background:transparent;border:0;border-radius:0;border-top:1px solid #2c384a}
 .planner-view .gear-preview .item-preview{padding:0 2px 0 0}
 .planner-view .gear-preview .item-full-tooltip{background:transparent;border:0;padding:6px 0 0}
-.planner-view .field-hidden{visibility:hidden}
+.planner-view .item-preview-top{display:flex;align-items:flex-start;gap:10px}
+.planner-view #item-preview-summary{flex:1;min-width:0}
+.planner-view .item-preview-top .enchant-field{flex:0 0 clamp(100px,36%,150px);min-width:0;margin:0}
+.planner-view .item-preview-header img{flex:none}
+.planner-view .item-preview-header>div{min-width:0}
 .planner-view .paperdoll{column-gap:6px}
 .planner-view .gear-character .character-summary{padding:10px 4px;gap:8px}
 .planner-view .gear-character .character-summary #gear-stats{width:100%;margin-top:6px}
@@ -334,8 +338,7 @@ footer{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:
 .planner-view #item-selector .item-results{background:var(--bg-control);border:0;border-radius:0;scrollbar-color:#66758c #1b293c;scrollbar-gutter:stable}
 
 /* Equipped item names stay on one line and pan sideways when too long. */
-.planner-view .slot .item-name.ah-name-clip{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-overflow:clip;text-align:center}
-.planner-view .slot .item-name .ah-name-text{display:inline-block;white-space:nowrap}
+.planner-view .slot .item-name.ah-name-clip{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-align:var(--name-align,center)}
 
 /* Item list and item preview carry the standard button border (1px --line, 4px radius); the preview sits on the control colour. */
 .planner-view #item-selector .item-results{border:1px solid var(--line);border-radius:4px}
@@ -358,14 +361,19 @@ label.field>.row-icon{margin-right:5px;position:relative;top:-1px}
 @media(max-width:700px){.planner-view .tree-heading h3{font-size:calc(13px + 4pt)}}
 .planner-view .tree-heading{min-height:34px}
 
-/* Compact single-line labels pan sideways when they overflow (Auction House effect), and stay still when they fit. */
+/* Keep compact labels on one line and pan overflowing text only while the pointer is over the label. */
 .planner-view .item-row-name>.ah-name-clip{flex:0 1 auto;min-width:0;max-width:100%}
 .planner-view #item-selector .item-row .item-description.ah-name-clip{display:block;min-width:0}
-.planner-view .slot-enchant.ah-name-clip{display:block;white-space:nowrap;overflow:hidden;overflow-wrap:normal}
+.planner-view .slot-enchant.ah-name-clip{display:block;white-space:nowrap;overflow:hidden;overflow-wrap:normal;text-align:var(--name-align,center)}
 .planner-view .buff-row .buff-effect.ah-name-clip{display:block;min-width:0}
-.planner-view .item-row-name>.ah-name-clip{text-overflow:clip}
-.planner-view #item-selector .item-row .item-description.ah-name-clip{text-overflow:clip}
-.planner-view .buff-row .buff-effect.ah-name-clip{text-overflow:clip}
+[data-name-pan="hover"] .ah-name-clip{overflow:hidden;white-space:nowrap;overflow-wrap:normal;text-overflow:ellipsis}
+[data-name-pan="hover"] .ah-name-clip>.ah-name-text{display:inline;position:relative;will-change:auto;animation:none}
+[data-name-pan="hover"] .ah-name-clip.hover-scroll-name{overflow:clip;--name-align:left;text-align:var(--name-align)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ [data-name-pan="hover"] .ah-name-clip.hover-scroll-name:hover{text-overflow:clip}
+ [data-name-pan="hover"] .ah-name-clip.hover-scroll-name:hover>.ah-name-text{animation:planner-name-pan var(--name-duration) linear forwards}
+}
+@keyframes planner-name-pan{from{left:0}to{left:calc(-1 * var(--name-distance))}}
 
 /* ===== Compact Character fields: Race, Build name, Level; then expandable Build details in two rows ===== */
 .planner-view .gear-character .character-controls{display:grid;grid-template-columns:minmax(0,132px) minmax(0,1fr) 54px;gap:8px;margin:0 0 6px}

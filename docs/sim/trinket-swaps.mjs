@@ -1,6 +1,7 @@
 import {TRINKET_SWAP_MODES,postSwapBuild} from './core/trinket-swaps.mjs?v=20261113-swap-label1';
 import {attachTooltip,equipmentTooltip} from './tooltip.mjs?v=20261124-tips2';
 import {SLOT_ICONS,iconUrl} from './core/interface.mjs?v=20261112-navigation1';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261202-hover-pan';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const SHORT={rogue:'VT',hunter:'FD'};
 // Swap controls sit directly under the trinket slots in the gear panel, as in Combat Gum.
@@ -23,9 +24,10 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
   const container=node('div',undefined,'slot swap-slot'),button=node('button');button.type='button';
   const name=`${SHORT[getBuild().classId]} ${number}`;button.setAttribute('aria-label',`Edit ${mode.label}: Trinket ${number}`);
   const icon=node('img','','slot-icon');icon.src=iconUrl(SLOT_ICONS[slot]);icon.alt='';icon.decoding='async';icon.referrerPolicy='no-referrer';
-  const itemName=node('span','Empty','item-name'),copy=node('span',undefined,'slot-copy');copy.append(node('span',name,'slot-name'),itemName);
+  const itemName=node('span',undefined,'item-name ah-name-clip'),itemText=node('span','Empty','ah-name-text'),copy=node('span',undefined,'slot-copy');
+  itemName.append(itemText);copy.append(node('span',name,'slot-name'),itemName);
   button.append(icon,copy);container.append(button);slotsWrap.append(container);
-  slots.set(slot,{container,itemName,icon});
+  slots.set(slot,{container,itemName,itemText,icon});
   button.addEventListener('click',()=>openPicker(slot,{
    getBuild:()=>postSwapBuild(getBuild()),
    onEquip:(_slot,item)=>save({gear:{...getBuild().trinketSwap.gear,[slot]:{id:item.id,label:item.label}}}),
@@ -45,17 +47,19 @@ export function trinketSwapControls({getBuild,onChange,openPicker,inspect}){
   slotsWrap.hidden=!swap.enabled;
   for(const [slot,view] of slots){
    const ref=swap.gear[slot];
-   view.itemName.textContent=ref?.label||'Empty';view.container.classList.toggle('has-item',Boolean(ref));
-   if(!ref){view.icon.src=iconUrl(SLOT_ICONS[slot]);view.itemName.className='item-name';delete view.container.dataset.quality;continue;}
+   view.itemText.textContent=ref?.label||'Empty';view.container.classList.toggle('has-item',Boolean(ref));
+   if(!ref){view.icon.src=iconUrl(SLOT_ICONS[slot]);view.itemName.className='item-name ah-name-clip';delete view.container.dataset.quality;continue;}
    view.container.dataset.quality='1';
    Promise.resolve(inspect(ref.id)).then(meta=>{
     if(swap.gear[slot]?.id!==ref.id||!meta)return;
     if(meta.icon)view.icon.src=iconUrl(meta.icon);
     view.container.dataset.quality=String(meta.quality??1);
-    view.itemName.className=`item-name q${meta.quality??1}`;
-    if(meta.name)view.itemName.textContent=meta.name;
+    view.itemName.className=`item-name ah-name-clip q${meta.quality??1}`;
+    if(meta.name)view.itemText.textContent=meta.name;
+    scheduleScrollingNames(view.container);
    }).catch(()=>{});
   }
+  scheduleScrollingNames(slotsWrap);
  }
  render();return {render};
 }

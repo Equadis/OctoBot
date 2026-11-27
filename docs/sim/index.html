@@ -21,8 +21,8 @@
   <link rel="icon" href="../favicon.png" type="image/png">
   <link rel="stylesheet" href="planner.css?v=20261126-toolbar2">
   <link rel="stylesheet" href="../quality-select.css?v=20261125-theme2">
-  <link rel="stylesheet" href="combat-layout.css?v=20261202-buildnames3">
-  <script type="module" src="planner.mjs?v=20261202-buildnames3"></script>
+  <link rel="stylesheet" href="combat-layout.css?v=20261202-item-picker">
+  <script type="module" src="planner.mjs?v=20261202-item-picker"></script>
 <link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
@@ -38,7 +38,7 @@
 
   <div id="startup-error" class="notice error" role="alert" hidden></div>
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
-  <div id="planner" hidden>
+  <div id="planner" data-name-pan="hover" hidden>
     <div class="app-toolbar" role="toolbar" aria-label="Build actions">
       <div class="app-toolbar-actions"><a class="app-btn" href="?classes">← All classes</a><button id="save-build" type="button">Save</button><button id="load-build" type="button">Load</button><button id="share-build" type="button">Share</button><button id="export-build" type="button">Export</button><button id="import-build" type="button">Import</button></div>
       <div class="app-toolbar-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" class="reset-all" type="button" hidden>Reset all</button></div>
@@ -63,16 +63,23 @@
         <section class="gear-col gear-selector" id="item-selector" aria-labelledby="item-selector-heading">
           <div class="item-selector-heading"><h3 id="item-selector-heading">Head</h3><button id="clear-item" class="panel-reset" type="button">Clear slot</button></div>
           <form id="item-form" class="item-filter-grid" role="search" aria-label="Equipment filters">
-            <label class="field">Search Items<input id="item-reference" maxlength="200" placeholder="Item name or ID" aria-label="Search items" autocomplete="off"></label>
-            <label class="field enchant-field">Item Enchant<select id="item-enchant"><option value="">None</option></select></label>
-            <label class="field">Sort by<select id="item-sort"></select></label>
+            <label class="field">Search<input id="item-reference" maxlength="200" placeholder="Item name or ID" aria-label="Search items" autocomplete="off"></label>
             <label class="field">Quality<select id="item-quality" class="quality-select"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
+            <label class="field">Sort by<select id="item-sort"></select></label>
           </form>
           <div class="item-count-row"><span id="item-count" role="status" aria-live="polite"></span><button id="item-direction" type="button" class="sort-direction" aria-label="Sort direction: descending" title="Descending">▼</button></div>
           <p id="item-error" class="error" role="alert"></p>
           <div id="item-results" class="item-results" role="listbox" aria-label="Items"></div>
         </section>
-        <section class="gear-col gear-preview" aria-label="Item preview"><section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section></section>
+        <section class="gear-col gear-preview" aria-label="Item preview">
+          <section id="item-preview" class="item-preview" aria-label="Item details">
+            <div class="item-preview-top">
+              <div id="item-preview-summary"><p class="muted">Select an item.</p></div>
+              <label class="field enchant-field">Item Enchant<select id="item-enchant" disabled><option value="">None</option></select></label>
+            </div>
+            <div id="item-preview-details" aria-live="polite"></div>
+          </section>
+        </section>
         </div>
       </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
