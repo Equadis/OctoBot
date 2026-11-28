@@ -219,6 +219,19 @@ class Database:
             await self.db.execute(
                 "ALTER TABLE guild_settings ADD COLUMN autoreply_cooldown_seconds INTEGER NOT NULL DEFAULT 60"
             )
+        if "entity_links_enabled" not in guild_columns:
+            await self.db.execute(
+                "ALTER TABLE guild_settings ADD COLUMN entity_links_enabled INTEGER NOT NULL DEFAULT 1"
+            )
+        await self.db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS entity_link_disabled_channels (
+                guild_id INTEGER NOT NULL,
+                channel_id INTEGER NOT NULL,
+                PRIMARY KEY (guild_id, channel_id)
+            )
+            """
+        )
         if "lockdown_seconds" not in guild_columns:
             await self.db.execute(
                 "ALTER TABLE guild_settings ADD COLUMN lockdown_seconds INTEGER NOT NULL DEFAULT 1800"
@@ -379,6 +392,34 @@ class Database:
             params = (guild_id, since.isoformat())
         async with self.db.execute(query, params) as cur:
             return int((await cur.fetchone())["count"])
+
+    async def set_entity_links_enabled(self, guild_id: int, enabled: bool) -> None:
+        await self.ensure_guild(guild_id)
+        await self.db.execute(
+            "UPDATE guild_settings SET entity_links_enabled = ? WHERE guild_id = ?",
+            (int(enabled), guild_id),
+        )
+        await self.db.commit()
+
+    async def set_entity_link_channel(self, guild_id: int, channel_id: int, enabled: bool) -> None:
+        if enabled:
+            await self.db.execute(
+                "DELETE FROM entity_link_disabled_channels WHERE guild_id = ? AND channel_id = ?",
+                (guild_id, channel_id),
+            )
+        else:
+            await self.db.execute(
+                "INSERT OR IGNORE INTO entity_link_disabled_channels(guild_id, channel_id) VALUES (?, ?)",
+                (guild_id, channel_id),
+            )
+        await self.db.commit()
+
+    async def list_entity_link_disabled_channels(self, guild_id: int) -> list[int]:
+        async with self.db.execute(
+            "SELECT channel_id FROM entity_link_disabled_channels WHERE guild_id = ? ORDER BY channel_id",
+            (guild_id,),
+        ) as cur:
+            return [int(row["channel_id"]) for row in await cur.fetchall()]
 
     async def set_dm_setting(self, guild_id: int, setting: str, enabled: bool) -> None:
         if setting not in {"dm_warnings", "dm_timeouts", "dm_bans"}:

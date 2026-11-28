@@ -20,3 +20,6 @@ tools/models/out/
 
 # The owner's permission to publish converted client files (see tools/models/publish_guard.mjs); never committed
 tools/models/PUBLISH_PERMISSION.json
+
+# Entity database build cache (raw official pages)
+.entity-cache/

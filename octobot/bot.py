@@ -183,6 +183,8 @@ class OctoBot(commands.Bot):
         await self.add_cog(LockdownCog(self), guild=self.guild)
         await self.add_cog(AutoReplyCog(self), guild=self.guild)
         await self.add_cog(InviteFilterCog(self), guild=self.guild)
+        from octobot.entity_linking.cog import EntityLinkingCog
+        await self.add_cog(EntityLinkingCog(self))
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=self.config.request_timeout_seconds),
             headers={"User-Agent": "OctoBot/1.0 (+OctoWoW Discord bot)"},
