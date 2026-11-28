@@ -2,6 +2,14 @@
 
 Written 28 November 2026 against `feat/octosim-merge-main` (PR #79). Figures come from `node tools/sim/audit-talents.mjs`, `docs/sim/data/talents/audit-report.json` and the existing audit scripts. Run Simulation stays disabled. Nothing here is a claim that any DPS number matches OctoWoW.
 
+## Batch 1 status (28 November 2026)
+
+| Task | Result |
+|---|---|
+| M1 | Verified talents 72 to 80 (missing 162 to 161). Two audit defects fixed: (1) `VERIFIED_COMBAT_HOOKS` never promoted anything, because a pending rule always counted as unapplied, so even its one entry (Elemental Devastation) stayed "partial"; a pending rule now counts as applied only for talents in that map, and the map is guarded by a test that each entry names a real test titled `Talent <id> <name>:`. (2) Pet-only talents are measured against their rank parameter. New deterministic rank sweeps in `tests/sim/talent-hook-verification.test.mjs` and `tests/sim/combat-talent-triggers.test.mjs` cover Elemental Devastation, Unleashed Fury, Bestial Discipline, Ferocity, Spirit Bond, Illumination, Shatter and Enrage. The tests fail when the hook's number is changed (checked by mutation for Shatter and Illumination). 75 hooked talents remain unverified; each still needs its own rank sweep. |
+| M3 | Re-scoped, not done. The 94 "unattached" and "recorded" rules are mostly not label problems: of 108 audit findings, 84 are `unsupported-dimension` (survivability, crowd control, interruption, movement, buff strength, threat, area geometry: outside DPS scope until M9) and 24 need an event or resource model (M2, M5). Nothing in that set was safe to "fix" by relabelling. |
+| M2 | Slice done: `docs/sim/core/combat-talent-triggers.mjs` (declarative spec, magnitudes read from `rankParameters`, duration and event checked against the published description by test). Enrage (new, owner struck by a critical hit) and Elemental Devastation (migrated, same behaviour) run through it and are wired into the class runtime and the reference adapter. Flurry, Redoubt, Setup, Swift Aspects and the rest are not done: they need engine support (swing-charge haste, block-chance aura, combo-point API, aspect state) before a spec can be added. |
+
 ## What "verified" means in the talent audit
 
 `verified-functioning` (72 of 476) means all of the following, observed by running the planner and combat-adapter code (see `docs/sim/TALENT-AUDIT.md`):

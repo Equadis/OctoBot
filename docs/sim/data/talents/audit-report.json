@@ -12,25 +12,25 @@
     "Protection"
    ],
    "byClassification": {
-    "verified-functioning": 5,
-    "missing": 22,
+    "verified-functioning": 6,
+    "missing": 21,
     "implemented-unverified": 19,
     "partial": 8
    },
    "byFlag": {
-    "no-combat-hook": 50,
+    "no-combat-hook": 49,
     "unattached-scope": 5,
     "recorded-not-computed": 7,
     "sheet-only": 5,
-    "pending-rule": 24,
+    "pending-rule": 23,
     "conditional-not-modelled": 16,
     "custom-id-range": 13,
     "planner-estimate-only": 5,
     "prerequisite-in-same-or-higher-tier": 1
    },
-   "reachesCombat": 22,
-   "withHook": 4,
-   "pendingTalents": 24
+   "reachesCombat": 23,
+   "withHook": 5,
+   "pendingTalents": 23
   },
   "paladin": {
    "talents": 49,
@@ -40,14 +40,14 @@
     "Retribution"
    ],
    "byClassification": {
-    "verified-functioning": 6,
+    "verified-functioning": 7,
     "missing": 15,
-    "implemented-unverified": 21,
+    "implemented-unverified": 20,
     "partial": 7
    },
    "byFlag": {
     "no-combat-hook": 40,
-    "pending-rule": 20,
+    "pending-rule": 19,
     "conditional-not-modelled": 16,
     "custom-id-range": 12,
     "recorded-not-computed": 6,
@@ -58,7 +58,7 @@
    },
    "reachesCombat": 20,
    "withHook": 9,
-   "pendingTalents": 20
+   "pendingTalents": 19
   },
   "hunter": {
    "talents": 55,
@@ -69,9 +69,9 @@
    ],
    "byClassification": {
     "missing": 13,
-    "implemented-unverified": 32,
+    "implemented-unverified": 28,
     "partial": 6,
-    "verified-functioning": 4
+    "verified-functioning": 8
    },
    "byFlag": {
     "pending-rule": 24,
@@ -151,16 +151,16 @@
     "Restoration"
    ],
    "byClassification": {
-    "verified-functioning": 9,
+    "verified-functioning": 10,
     "missing": 14,
-    "partial": 8,
-    "implemented-unverified": 18
+    "implemented-unverified": 18,
+    "partial": 7
    },
    "byFlag": {
     "no-combat-hook": 39,
     "recorded-not-computed": 8,
     "unattached-scope": 4,
-    "pending-rule": 19,
+    "pending-rule": 18,
     "conditional-not-modelled": 13,
     "custom-id-range": 16,
     "sheet-only": 4,
@@ -168,7 +168,7 @@
    },
    "reachesCombat": 27,
    "withHook": 10,
-   "pendingTalents": 19
+   "pendingTalents": 18
   },
   "mage": {
    "talents": 55,
@@ -178,9 +178,9 @@
     "Frost"
    ],
    "byClassification": {
-    "implemented-unverified": 23,
+    "implemented-unverified": 22,
     "missing": 21,
-    "verified-functioning": 8,
+    "verified-functioning": 9,
     "partial": 3
    },
    "byFlag": {
@@ -188,14 +188,14 @@
     "no-combat-hook": 42,
     "recorded-not-computed": 6,
     "planner-estimate-only": 1,
-    "pending-rule": 29,
+    "pending-rule": 28,
     "conditional-not-modelled": 23,
     "unattached-scope": 3,
     "custom-id-range": 8
    },
    "reachesCombat": 31,
    "withHook": 13,
-   "pendingTalents": 29
+   "pendingTalents": 28
   },
   "warlock": {
    "talents": 52,
@@ -2999,7 +2999,7 @@
      "stat": null,
      "scope": null,
      "note": "Enrage 8-second melee-damage proc requires received critical-hit events and uptime",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -3038,12 +3038,15 @@
      "option outdoors=Unspecified"
     ]
    },
-   "combatHookFiles": [],
+   "combatHookFiles": [
+    "docs/sim/core/combat-talent-triggers.mjs"
+   ],
    "existingTestFiles": [
     "tests/sim/combat-class-runtime.test.mjs",
-    "tests/sim/combat-rank-compiler.test.mjs"
+    "tests/sim/combat-rank-compiler.test.mjs",
+    "tests/sim/combat-talent-triggers.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -3051,13 +3054,11 @@
     "abilitiesChecked": []
    },
    "findings": [],
-   "reachesCombatInput": false,
-   "classification": "missing",
+   "reachesCombatInput": true,
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
-    "conditional-not-modelled",
-    "no-combat-hook"
+    "conditional-not-modelled"
    ]
   },
   {
@@ -6789,7 +6790,7 @@
      "stat": null,
      "scope": null,
      "note": "Illumination refunds mana on healing crits; requires spell cast and resource events",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -6839,8 +6840,10 @@
    "combatHookFiles": [
     "docs/sim/core/combat-rank-compiler.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -6849,10 +6852,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled"
    ]
   },
@@ -7139,7 +7141,8 @@
    },
    "combatHookFiles": [],
    "existingTestFiles": [
-    "tests/sim/combat-rank-compiler.test.mjs"
+    "tests/sim/combat-rank-compiler.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -11764,9 +11767,10 @@
    ],
    "existingTestFiles": [
     "tests/sim/combat-companion-reference.test.mjs",
-    "tests/sim/pet-audit.test.mjs"
+    "tests/sim/pet-audit.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Unleashed Fury: pet damage multiplier at every rank equals the published percentage)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -11775,7 +11779,7 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": []
   },
@@ -11875,9 +11879,10 @@
     "docs/sim/core/combat-companion-reference.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-companion-reference.test.mjs"
+    "tests/sim/combat-companion-reference.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Bestial Discipline: pet focus per tick and special cooldown at every rank equal the published values)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -11886,7 +11891,7 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": []
   },
@@ -12085,9 +12090,10 @@
     "docs/sim/core/combat-companion-reference.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-companion-reference.test.mjs"
+    "tests/sim/combat-companion-reference.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Ferocity: pet critical chance on eligible normal hits at every rank equals the published percentage)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -12096,7 +12102,7 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": []
   },
@@ -12633,9 +12639,10 @@
    ],
    "existingTestFiles": [
     "tests/sim/combat-companion-reference.test.mjs",
-    "tests/sim/pet-audit.test.mjs"
+    "tests/sim/pet-audit.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -12644,7 +12651,7 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": []
   },
@@ -29955,7 +29962,7 @@
      "stat": null,
      "scope": null,
      "note": "Melee-crit-triggered additional spell hit is a 10-second proc: rank 1/2/3 gives +3/+6/+9%, not passive",
-     "state": "pending"
+     "state": "applied-combat-hook"
     },
     {
      "kind": "spell",
@@ -30029,12 +30036,15 @@
     ]
    },
    "combatHookFiles": [
-    "docs/sim/core/combat-conditional-talents.mjs"
+    "docs/sim/core/combat-conditional-talents.mjs",
+    "docs/sim/core/combat-talent-triggers.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-conditional-talents.test.mjs"
+    "tests/sim/combat-conditional-talents.test.mjs",
+    "tests/sim/combat-talent-triggers.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": "tests/sim/combat-conditional-talents.test.mjs (Elemental Devastation: owner landed melee crit grants 3/6/9 spell hit for 10 s, expires)",
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Elemental Devastation: owner landed melee crit grants the published spell hit per rank for 10 s, then expires; other events do nothing)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -30043,11 +30053,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "partial",
+   "classification": "verified-functioning",
    "disputedHint": false,
-   "flags": [
-    "pending-rule"
-   ]
+   "flags": []
   },
   {
    "classId": "shaman",
@@ -37122,6 +37130,7 @@
     "tests/sim/combat-reference-rotation.test.mjs",
     "tests/sim/combat-rogue-cooldowns.test.mjs",
     "tests/sim/combat-scoped-equipment.test.mjs",
+    "tests/sim/combat-talent-triggers.test.mjs",
     "tests/sim/combat-warlock-channels.test.mjs",
     "tests/sim/equipment-layout.test.mjs",
     "tests/sim/evidence-review.test.mjs",
@@ -37131,6 +37140,7 @@
     "tests/sim/mvp-talent-sheet.test.mjs",
     "tests/sim/presentation.test.mjs",
     "tests/sim/reference-parity.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs",
     "tests/sim/talent-integration.test.mjs",
     "tests/sim/talents.test.mjs"
    ],
@@ -40578,7 +40588,7 @@
      "stat": null,
      "scope": null,
      "note": "Shatter's critical bonus only applies to frozen targets",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -40626,9 +40636,10 @@
    "existingTestFiles": [
     "tests/sim/combat-mage-frost.test.mjs",
     "tests/sim/combat-mage-icicles.test.mjs",
-    "tests/sim/combat-rank-compiler.test.mjs"
+    "tests/sim/combat-rank-compiler.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -40637,11 +40648,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
-   "flags": [
-    "pending-rule"
-   ]
+   "flags": []
   },
   {
    "classId": "mage",
@@ -46631,7 +46640,9 @@
    },
    "combatHookFiles": [],
    "existingTestFiles": [
-    "tests/sim/combat-conditional-talents.test.mjs"
+    "tests/sim/combat-conditional-talents.test.mjs",
+    "tests/sim/combat-talent-triggers.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -50224,7 +50235,9 @@
     ]
    },
    "combatHookFiles": [],
-   "existingTestFiles": [],
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
    "verifiedCombatTest": null,
    "combatVerification": {
     "status": "inconclusive",

@@ -33,7 +33,14 @@ const statRead=stat=>ABILITY_STATS_READ.has(stat)||ABILITY_STATS_READ.has(ABILIT
 // Talents whose combat behaviour is verified by a deterministic simulation test in this repository.
 // Each entry names the test that proves it. Add to this list only together with such a test.
 export const VERIFIED_COMBAT_HOOKS={
- '222':'tests/sim/combat-conditional-talents.test.mjs (Elemental Devastation: owner landed melee crit grants 3/6/9 spell hit for 10 s, expires)'
+ '222':'tests/sim/talent-hook-verification.test.mjs (Elemental Devastation: owner landed melee crit grants the published spell hit per rank for 10 s, then expires; other events do nothing)',
+ '381':'tests/sim/talent-hook-verification.test.mjs (Unleashed Fury: pet damage multiplier at every rank equals the published percentage)',
+ '382':'tests/sim/talent-hook-verification.test.mjs (Bestial Discipline: pet focus per tick and special cooldown at every rank equal the published values)',
+ '384':'tests/sim/talent-hook-verification.test.mjs (Ferocity: pet critical chance on eligible normal hits at every rank equals the published percentage)',
+ '389':'tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)',
+ '101':'tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)',
+ '454':'tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)',
+ '30':'tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)'
 };
 // Gear and form variants. Weapon, shield and form talents only act when the matching equipment or form is present,
 // so each talent is probed against every variant and compared with that variant's own baseline.
@@ -84,7 +91,9 @@ const sources=(dir,re)=>readdirSync(join(ROOT,dir)).filter(f=>re.test(f)).sort()
 
 function scanHooks(id){
  const a=new RegExp(`talents\\??\\.?\\[\\s*['"\`]?${id}['"\`]?\\s*\\]`),b=new RegExp(`hunterRank\\(build,\\s*${id}\\b`);
- return COMBAT_SOURCES.filter(([,text])=>a.test(text)||b.test(text)).map(([f])=>f);
+ // A declarative spec in combat-talent-triggers.mjs names its talent as `talentId:<id>`.
+ const c=new RegExp(`\\btalentId\\s*:\\s*${id}\\b`);
+ return COMBAT_SOURCES.filter(([,text])=>a.test(text)||b.test(text)||c.test(text)).map(([f])=>f);
 }
 function scanTests(name,id){
  const quoted=[`'${name}'`,`"${name}"`,`\`${name}\``,name.replace(/'/g,'’')];
@@ -141,8 +150,13 @@ export function buildTalentAudit(){
      sp.forEach(p=>snapPaths.add(p));rp.forEach(p=>rowPaths.add(p));pp.forEach(p=>petPaths.add(p));
      // Percent-of-stat talents are measured on the primary stat itself: derived values (mana, crit) round again.
      const used=sp.some(p=>p.startsWith('primary.'))?sp.filter(p=>p.startsWith('primary.')):sp;
+     // A talent that only changes the companion (pet) is measured on the pet paths instead, against the same published parameter.
+     const petOnly=!sp.length&&pp.length;
+     const numeric=(from,to,paths)=>paths.filter(p=>typeof to[p]==='number'&&typeof from[p]==='number');
+     if(petOnly){const np=numeric(bases[vi].pet,pet,pp);pathDeltas[vi].push(Object.fromEntries(np.map(p=>[p,Math.abs(pet[p]-bases[vi].pet[p])])));magnitudes[vi].push(np.reduce((n,p)=>n+Math.abs(pet[p]-bases[vi].pet[p]),0));}
+     else{
      pathDeltas[vi].push(Object.fromEntries(used.filter(p=>typeof snap[p]==='number'&&typeof bases[vi].snap[p]==='number').map(p=>[p,Math.abs(snap[p]-bases[vi].snap[p])])));
-     magnitudes[vi].push(used.reduce((n,p)=>n+(typeof snap[p]==='number'&&typeof bases[vi].snap[p]==='number'?Math.abs(snap[p]-bases[vi].snap[p]):0),0));
+     magnitudes[vi].push(used.reduce((n,p)=>n+(typeof snap[p]==='number'&&typeof bases[vi].snap[p]==='number'?Math.abs(snap[p]-bases[vi].snap[p]):0),0));}
      if(vi===0)profiles.forEach((p,i)=>{
       const ch=changedPaths(baseValues[i],flatten(calculateAbilityTalentEffects(cs.talentAudit,p,SAMPLE).values));
       if(ch.length){const e=abilityHits.get(p.name)??new Set();ch.forEach(x=>e.add(x));abilityHits.set(p.name,e);}
@@ -171,10 +185,13 @@ export function buildTalentAudit(){
      scaling=deltas.every((x,i)=>Math.abs(x/deltas[0]-want[i])<1e-6)?'proportional-to-published-parameter':deltas.every((x,i)=>Math.abs(x-deltas[0]*want[i])<=1+1e-9)?'proportional-within-rounding':'differs-from-published-parameter';
     }else scaling='changes-without-single-numeric-parameter';
    }
+   const hookFiles=scanHooks(id);
+   // A pending rule describes an event-driven mechanic. It counts as applied only when VERIFIED_COMBAT_HOOKS names a deterministic combat test for this talent.
+   const hookVerified=Boolean(VERIFIED_COMBAT_HOOKS[id])&&hookFiles.length>0;
    const ruleStates=rules.map(rule=>{
     const scopes=Array.isArray(rule.scope)?rule.scope:rule.scope?[rule.scope]:[];
     let state;
-    if(rule.kind==='pending')state='pending';
+    if(rule.kind==='pending')state=hookVerified?'applied-combat-hook':'pending';
     else if(['scoped','spell'].includes(rule.kind)){
      const attaches=scopes.some(s=>tags.has(s));
      state=!attaches?'unattached-scope':!statRead(rule.stat)?'recorded-not-computed':'applied-ability-model';
@@ -182,7 +199,7 @@ export function buildTalentAudit(){
     return {kind:rule.kind,stat:rule.stat??null,scope:scopes.length?scopes:null,note:rule.kind==='pending'?rule.note:undefined,state};
    });
    const findings=ruleStates.map((st,i)=>({st,rule:rules[i]})).filter(x=>['recorded-not-computed','unattached-scope'].includes(x.st.state)).map(x=>({stat:x.st.stat,scope:x.st.scope,state:x.st.state,...classifyFinding(c,t.id,x.rule)}));
-   const hookFiles=scanHooks(id),testFiles=scanTests(t.name,id);
+   const testFiles=scanTests(t.name,id);
    const affected=[...abilityHits.entries()].map(([name,s])=>({ability:name,compiledRank:compiled[c]?.has(abilityKey(c,name))??false,changedValues:[...s].sort()})).sort((a,b)=>a.ability.localeCompare(b.ability));
    const compiledAffected=affected.filter(a=>a.compiledRank).map(a=>a.ability);
    const reachesCombat=snapPaths.size>0||compiledAffected.length>0||hookFiles.length>0;
@@ -212,6 +229,7 @@ export function buildTalentAudit(){
    else if(applied===0)classification='implemented-unverified';
    else if(unapplied>0)classification='partial';
    else if(snapPaths.size>0&&cov.status==='sheet'&&['proportional-to-published-parameter','proportional-within-rounding'].includes(scaling))classification='verified-functioning';
+   else if(snapPaths.size===0&&petPaths.size>0&&ruleStates.every(x=>x.state==='applied-sheet')&&['proportional-to-published-parameter','proportional-within-rounding'].includes(scaling))classification='verified-functioning';
    else classification='implemented-unverified';
    if(VERIFIED_COMBAT_HOOKS[id]&&unapplied===0&&hookFiles.length)classification='verified-functioning';
    // Compiled-combat comparison: every rule is applied and the compiled action changed by exactly the published amount at every rank.
@@ -274,7 +292,7 @@ export function markdown(report){
   'UI support (the allocation editor, rank text, prerequisites) is separate and covered by tests of `validateTalents`. It does not imply any combat effect.','',
   '## Classification rules','',
   '| Class | Meaning |','|---|---|',
-  '| Verified and functioning | Every rule is applied, the effect scales in proportion to the published per-rank parameter, and it reaches combat input (sheet/snapshot), or a deterministic combat test is named in the report |',
+  '| Verified and functioning | Every rule is applied, the effect scales in proportion to the published per-rank parameter, and it reaches combat input (sheet/snapshot), or a deterministic combat test is named in the report. A rule declared pending (an event-driven mechanic) counts as applied only for talents listed in `VERIFIED_COMBAT_HOOKS`, whose named test sweeps every rank against the published `rankParameters`. Pet-only talents are measured on the pet paths against the same parameter. This is consistency with the talent data, not a comparison with OctoWoW |',
   '| Implemented but unverified | An effect or hook exists, but numerics are not verified against the published parameters or it only reaches the ability estimates |',
   '| Partially implemented | Some rules are applied and others are pending, unattached to any ability, recorded but never computed, or not observed |',
   '| Missing implementation | No rule has an observable effect and no combat hook exists |',

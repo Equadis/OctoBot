@@ -14,7 +14,7 @@ UI support (the allocation editor, rank text, prerequisites) is separate and cov
 
 | Class | Meaning |
 |---|---|
-| Verified and functioning | Every rule is applied, the effect scales in proportion to the published per-rank parameter, and it reaches combat input (sheet/snapshot), or a deterministic combat test is named in the report |
+| Verified and functioning | Every rule is applied, the effect scales in proportion to the published per-rank parameter, and it reaches combat input (sheet/snapshot), or a deterministic combat test is named in the report. A rule declared pending (an event-driven mechanic) counts as applied only for talents listed in `VERIFIED_COMBAT_HOOKS`, whose named test sweeps every rank against the published `rankParameters`. Pet-only talents are measured on the pet paths against the same parameter. This is consistency with the talent data, not a comparison with OctoWoW |
 | Implemented but unverified | An effect or hook exists, but numerics are not verified against the published parameters or it only reaches the ability estimates |
 | Partially implemented | Some rules are applied and others are pending, unattached to any ability, recorded but never computed, or not observed |
 | Missing implementation | No rule has an observable effect and no combat hook exists |
@@ -27,25 +27,25 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Classification | Talents |
 |---|---|
 | Conflicting or disputed | 0 |
-| Verified and functioning | 72 |
-| Implemented but unverified | 179 |
-| Partially implemented | 63 |
-| Missing implementation | 162 |
+| Verified and functioning | 80 |
+| Implemented but unverified | 173 |
+| Partially implemented | 62 |
+| Missing implementation | 161 |
 | Total | 476 |
 
-1 talents carry a disputed-source hint; 0 have a data-structure issue; 125 use spell IDs in the custom range (40000 and above); 240 reach combat input.
+1 talents carry a disputed-source hint; 0 have a data-structure issue; 125 use spell IDs in the custom range (40000 and above); 241 reach combat input.
 
 ## Per-class coverage
 
 | Class | Talents | Verified | Unverified | Partial | Missing | Reach combat input | Hard-wired combat hooks | Talents with pending rules |
 |---|---|---|---|---|---|---|---|---|
-| warrior | 54 | 5 | 19 | 8 | 22 | 22 | 4 | 24 |
-| paladin | 49 | 6 | 21 | 7 | 15 | 20 | 9 | 20 |
-| hunter | 55 | 4 | 32 | 6 | 13 | 34 | 15 | 24 |
+| warrior | 54 | 6 | 19 | 8 | 21 | 23 | 5 | 23 |
+| paladin | 49 | 7 | 20 | 7 | 15 | 20 | 9 | 19 |
+| hunter | 55 | 8 | 28 | 6 | 13 | 34 | 15 | 24 |
 | rogue | 56 | 9 | 14 | 11 | 22 | 21 | 5 | 34 |
 | priest | 52 | 11 | 15 | 5 | 21 | 28 | 8 | 21 |
-| shaman | 49 | 9 | 18 | 8 | 14 | 27 | 10 | 19 |
-| mage | 55 | 8 | 23 | 3 | 21 | 31 | 13 | 29 |
+| shaman | 49 | 10 | 18 | 7 | 14 | 27 | 10 | 18 |
+| mage | 55 | 9 | 22 | 3 | 21 | 31 | 13 | 28 |
 | warlock | 52 | 11 | 17 | 6 | 18 | 25 | 9 | 20 |
 | druid | 54 | 9 | 20 | 9 | 16 | 32 | 10 | 24 |
 
@@ -53,7 +53,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 
 | Flag | Talents | Meaning |
 |---|---|---|
-| pending-rule | 215 | A rule is declared pending in the audit data: the mechanic is not implemented |
+| pending-rule | 211 | A rule is declared pending in the audit data: the mechanic is not implemented |
 | unattached-scope | 46 | The rule's scope matches no ability profile, so it can never be applied |
 | recorded-not-computed | 48 | The stat is recorded but never read by the ability calculator |
 | rule-effect-not-observed | 0 | A sheet-type rule produced no observable change |
@@ -63,7 +63,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | planner-estimate-only | 39 | Applied in ability estimates only for abilities with no compiled combat rank |
 | prerequisite-in-same-or-higher-tier | 8 | The prerequisite sits in the same or a higher tier than the talent (an OctoWoW layout feature; acyclic and enforced by validateTalents) |
 | scaling-non-monotonic | 0 | Observed effect does not grow with rank |
-| no-combat-hook | 393 | No combat module reads this talent by ID |
+| no-combat-hook | 392 | No combat module reads this talent by ID |
 | scaling-differs-from-parameter | 0 | Observed scaling differs from the published per-rank parameter |
 | custom-id-range | 125 | Spell IDs in the custom OctoWoW range: no vanilla reference |
 | disputed-hint | 1 | Notes mention a conflict or disputed source |
@@ -114,7 +114,14 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 
 ## Verified combat behaviour (deterministic tests)
 
-- Talent 222: tests/sim/combat-conditional-talents.test.mjs (Elemental Devastation: owner landed melee crit grants 3/6/9 spell hit for 10 s, expires)
+- Talent 30: tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)
+- Talent 101: tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)
+- Talent 222: tests/sim/talent-hook-verification.test.mjs (Elemental Devastation: owner landed melee crit grants the published spell hit per rank for 10 s, then expires; other events do nothing)
+- Talent 381: tests/sim/talent-hook-verification.test.mjs (Unleashed Fury: pet damage multiplier at every rank equals the published percentage)
+- Talent 382: tests/sim/talent-hook-verification.test.mjs (Bestial Discipline: pet focus per tick and special cooldown at every rank equal the published values)
+- Talent 384: tests/sim/talent-hook-verification.test.mjs (Ferocity: pet critical chance on eligible normal hits at every rank equals the published percentage)
+- Talent 389: tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)
+- Talent 454: tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)
 
 ## Warrior
 
@@ -153,7 +160,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Piercing Howl (98, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Blood Craze (99, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Battlefield Mobility (100, 2) | T3 | partial | sheet, ability x3 | Implemented but unverified | planner-estimate-only, no-combat-hook |
-| Enrage (101, 5) | T3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
+| Enrage (101, 5) | T3 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled |
 | Improved Pummel (102, 2) | T3 | partial | sheet, ability x1 | Partially implemented | pending-rule, recorded-not-computed, planner-estimate-only, no-combat-hook, custom-id-range |
 | Ravager (103, 3) | T4 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook, custom-id-range |
 | Death Wish (104, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
@@ -203,7 +210,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Improved Lay on Hands (451, 2) | T2 | partial | sheet, ability x1 | Partially implemented | pending-rule, recorded-not-computed, planner-estimate-only, no-combat-hook |
 | Unyielding Faith (452, 2) | T2 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
 | Improved Concentration Aura (453, 3) | T3 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
-| Illumination (454, 5) | T3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
+| Illumination (454, 5) | T3 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled |
 | Ironclad (455, 2) | T3 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook, custom-id-range |
 | Divine Favor (456, 5) | T4, needs Holy Shock 1 | partial | sheet, ability x2 | Implemented but unverified | planner-estimate-only, no-combat-hook, custom-id-range, prerequisite-in-same-or-higher-tier |
 | Holy Shock (457, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
@@ -267,15 +274,15 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Improved Revive Pet (378, 2) | T1 | partial | sheet, ability x1 | Partially implemented | unattached-scope, planner-estimate-only, no-combat-hook |
 | Pathfinding (379, 2) | T2 | partial | sheet | Partially implemented | unattached-scope, sheet-only, no-combat-hook |
 | Coordinated Assault (380, 1) | T2 | proc-or-conditional | sheet, pet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
-| Unleashed Fury (381, 5) | T2 | partial | sheet, pet, hook | Implemented but unverified | - |
-| Bestial Discipline (382, 2) | T3 | partial | sheet, pet, hook | Implemented but unverified | - |
+| Unleashed Fury (381, 5) | T2 | partial | sheet, pet, hook | Verified and functioning | - |
+| Bestial Discipline (382, 2) | T3 | partial | sheet, pet, hook | Verified and functioning | - |
 | Improved Mend Pet (383, 2) | T3 | partial | sheet, ability x1, hook | Partially implemented | pending-rule |
-| Ferocity (384, 5) | T3 | partial | sheet, pet, hook | Implemented but unverified | - |
+| Ferocity (384, 5) | T3 | partial | sheet, pet, hook | Verified and functioning | - |
 | Scent of Blood (385, 3) | T4 | proc-or-conditional | sheet, pet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 | Bestial Wrath (386, 1) | T4, needs Scent of Blood 3 | proc-or-conditional | sheet, pet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, prerequisite-in-same-or-higher-tier |
 | Intimidation (387, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Bestial Precision (388, 2) | T5 | partial | sheet, pet | Implemented but unverified | sheet-only, no-combat-hook, custom-id-range |
-| Spirit Bond (389, 2) | T5 | partial | sheet, pet, hook | Implemented but unverified | - |
+| Spirit Bond (389, 2) | T5 | partial | sheet, pet, hook | Verified and functioning | - |
 | Frenzy (390, 5) | T5, needs Ferocity 5 | proc-or-conditional | sheet, pet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |
 | Kill Command (391, 1) | T6, needs Spirit Bond 2 | proc-or-conditional | sheet, pet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 
@@ -477,7 +484,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Concussion (219, 5) | T0 | partial | sheet, ability x11 | Verified and functioning | no-combat-hook |
 | Earth's Grasp (220, 2) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
 | Elemental Warding (221, 3) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook |
-| Elemental Devastation (222, 3) | T1 | partial | snapshot, sheet, hook | Partially implemented | pending-rule |
+| Elemental Devastation (222, 3) | T1 | partial | snapshot, sheet, hook | Verified and functioning | - |
 | Elemental Focus (223, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Reverberation (224, 3) | T2 | partial | sheet, ability x4 | Verified and functioning | no-combat-hook |
 | Call of Thunder (225, 5) | T2 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
@@ -597,7 +604,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Improved Blizzard (27, 3) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Arctic Reach (28, 2) | T3 | partial | sheet, ability x3 | Partially implemented | recorded-not-computed, no-combat-hook |
 | Frost Channeling (29, 3) | T3 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
-| Shatter (30, 5) | T3, needs Improved Frost Nova 2 | partial | sheet, hook | Implemented but unverified | pending-rule |
+| Shatter (30, 5) | T3, needs Improved Frost Nova 2 | partial | sheet, hook | Verified and functioning | - |
 | Ice Block (31, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Icicles (32, 1) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
 | Improved Cone of Cold (33, 3) | T4 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
