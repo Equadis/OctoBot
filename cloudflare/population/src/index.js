@@ -1,5 +1,6 @@
 import {outfitter} from './outfitter.js';
 import {collectStatus,statusLatest,statusHistory,cleanOldStatus} from './status.js';
+import {snapshotResponse} from './snapshot.js';
 /**
  * OctoBot minute-by-minute population recorder.
  * Deployed to Cloudflare Workers with D1. No GitHub token required.
@@ -130,6 +131,7 @@ const worker={
     const row=await env.DB.prepare("SELECT COUNT(*) AS viewers FROM viewer_presence WHERE page='population' AND last_seen_ms>=?").bind(Date.now()-90000).first();
     return json({viewers:row?.viewers??0,window_seconds:90});
    }
+   if(url.pathname==='/api/snapshot')return await snapshotResponse(request,env);
    if(url.pathname==='/api/status/latest')return json(await statusLatest(env));
    if(url.pathname==='/api/status/history'){
     const since=Number(url.searchParams.get('since')||Date.now()-90*86400000);
