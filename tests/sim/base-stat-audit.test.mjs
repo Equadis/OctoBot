@@ -35,5 +35,5 @@ test('missing race/class data stays unavailable with gear or buffs',()=>{
  const r=characterStats(b,{talents:[]},{chest:{attributes:{Stamina:40},effects:[]}});
  assert.equal(r.baseAudit.status,'missing');
  const groups=Object.fromEntries(r.groups.map(x=>[x.name,Object.fromEntries(x.rows.map(y=>[y.label,y.value]))]));
- assert.equal(groups['Base Stats'].Stamina,'—');assert.equal(groups.Defence.Health,'—');assert.equal(groups['Base Stat Audit']['Source status'],'missing');
+ assert.equal(groups['Base Stats'].Stamina,'—');assert.equal(groups.Defense.Health,'—');assert.equal(groups['Base Stat Audit']['Source status'],'missing');
 });

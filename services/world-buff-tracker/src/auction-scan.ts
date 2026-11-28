@@ -27,6 +27,8 @@ export class AuctionScanCursor{
    if(remaining<0||result.auctions.length!==expected)
     throw new Error("Missing or unexpected auction page rows; rescan");
   }
+  if(this.live&&result.auctions.length<AUCTION_PAGE_SIZE&&this.retrieved+result.auctions.length<result.total)
+   throw new Error("Auction traversal ended before the reported live total");
   const onPage=new Set<number>();
   for(const row of result.auctions){
    if(!Number.isSafeInteger(row.auction_id)||row.auction_id<1||

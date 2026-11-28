@@ -20,7 +20,10 @@ test('equipping a two-hander clears off-hand and rejects wrong slots',()=>{
  assert.throws(()=>equip(outfit,1,{id:19364,slot:17}));
  assert.equal(viewerSlot(15,{slot:16}),16);
  assert.equal(viewerSlot(16,{slot:17}),21);
- assert.equal(viewerSlot(17,{slot:14}),22);
+ assert.equal(viewerSlot(17,{slot:14}),14,'a shield is sent as a shield so it sits on the shield attachment, not in the hand');
+ assert.equal(viewerSlot(17,{slot:22}),22);
+ assert.equal(viewerSlot(17,{slot:23}),22);
+ assert.equal(viewerSlot(17,{slot:13}),22);
  assert.equal(viewerSlot(5,{slot:20}),5);
 });
 test('browser searches name and ID, separates inventory slots, and combines filters',()=>{

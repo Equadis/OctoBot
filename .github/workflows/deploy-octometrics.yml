@@ -1,0 +1,34 @@
+name: Deploy OctoMetrics Worker
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-octometrics.yml'
+      - 'cloudflare/octometrics/deploy-worker.mjs'
+      - 'cloudflare/octometrics/deploy-request.txt'
+permissions:
+  contents: read
+concurrency:
+  group: octometrics-production-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Seller and pricing regression checks
+        run: |
+          node --test cloudflare/octometrics/tests/auction-pricing.test.mjs cloudflare/octometrics/tests/auction-filters.test.mjs cloudflare/octometrics/tests/auction-pvp.test.mjs
+      - name: Cross-collector World Chat regression checks
+        run: node --test cloudflare/octometrics/tests/world-chat-receipts.test.mjs
+      - name: Apply additive seller schema and deploy existing Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node cloudflare/octometrics/deploy-worker.mjs

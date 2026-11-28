@@ -46,5 +46,21 @@ class TrackTimes(unittest.TestCase):
         self.assertIn(b'\x00\x00\x00\x00\x32\x00\x00\x00', bytes(blob.buf), 'times 0 and 50')
 
 
+DATA = os.environ.get('OCTO_DATA_DIR')
+
+
+@unittest.skipUnless(DATA and os.path.isdir(DATA), 'set OCTO_DATA_DIR to the client Data folder')
+class BlendedBatchesGetAShader(unittest.TestCase):
+    def test_the_lanterns_glow_batches_are_blended_and_get_shader_16(self):
+        import struct
+        import octo_mpq
+        data = octo_mpq.Client(DATA).read('Item\ObjectComponents\Weapon\Misc_1H_Lantern_B_01.m2')
+        files, _ = m2v274.convert(data, 9841300)
+        skin = files['skin/9841301.skin']
+        count, offset = struct.unpack_from('<II', skin, 0x24)
+        shaders = [struct.unpack_from('<BbHHHHHHHHHHH', skin, offset + 24 * k)[2] for k in range(count)]
+        self.assertEqual(sorted(shaders), [0, 0, 16, 16])   # two opaque or alpha-key batches, two additive ones
+
+
 if __name__ == '__main__':
     unittest.main()

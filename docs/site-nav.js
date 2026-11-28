@@ -5,16 +5,19 @@
 (function (root) {
   'use strict';
   var GROUPS = [
-    { label: 'Server monitoring', links: [
+    { label: 'Metrics', links: [
       { id: 'population', href: 'population/#server=all', text: 'Population' },
       { id: 'status', href: 'status/', text: 'Server Status' } ] },
-    { label: 'Character tools', links: [
-      { id: 'sim', beta: true, href: 'sim/', text: 'Gear Planner' },
-      { id: 'outfitter', beta: true, href: 'outfitter/', text: 'Dressing Room' } ] },
-    { label: 'World and economy', links: [
-      { id: 'world-info', beta: true, href: 'world-info/', text: 'World Info' },
-      { id: 'auction-house', beta: true, href: 'auction-house/', text: 'Auction House' },
-      { id: 'world-chat', alpha: true, href: 'world-chat/', text: 'World Chat' } ] }
+    { label: 'Gear and Items', links: [
+      { id: 'sim', href: 'sim/', text: 'Gear Planner' },
+      { id: 'outfitter', href: 'outfitter/', text: 'Dressing Room' },
+      { id: 'entity-viewer', href: 'entity-viewer/', text: 'Entity Viewer' } ] },
+    { label: 'World Data', links: [
+      { id: 'world-info', href: 'world-info/', text: 'World Info' },
+      { id: 'world-chat', href: 'world-chat/', text: 'World Chat' },
+      { id: 'auction-house', href: 'auction-house/', text: 'Auction House' } ] },
+    { label: 'Other', links: [
+      { id: 'guides', href: 'guides/', text: 'Guides' } ] }
   ];
   function siteRoot() {
     var script = root.document && root.document.currentScript;
@@ -25,28 +28,31 @@
     var doc = nav.ownerDocument, current = nav.getAttribute('data-current');
     while (nav.firstChild) nav.removeChild(nav.firstChild);
     GROUPS.forEach(function (group) {
-      var box = doc.createElement('div');
+      var box = doc.createElement('details');
+      box.open = true;
       box.className = 'nav-group';
       box.setAttribute('role', 'group');
       box.setAttribute('aria-label', group.label);
+      var heading = doc.createElement('summary');
+      heading.className = 'collapse-toggle nav-group-title';
+      heading.textContent = group.label;
+      box.appendChild(heading);
+      var links = doc.createElement('div');
+      links.className = 'nav-group-links';
       group.links.forEach(function (link) {
         var a = doc.createElement('a');
-        // The current page links to itself without repeating the hash (matches the previous markup).
-        a.setAttribute('href', base + link.href);
         a.textContent = link.text;
-        if (link.beta || link.alpha) {
-          var beta = doc.createElement('span');
-          beta.className = 'nav-beta';
-          beta.textContent = link.alpha ? 'ALPHA' : 'BETA';
-          beta.setAttribute('data-site-tip', link.alpha ? 'Alpha: live coverage and classification may be incomplete.' : 'This section is currently in beta, results may not be 100% accurate.');
-          beta.setAttribute('aria-label', link.alpha ? 'ALPHA: coverage may be incomplete.' : 'BETA: This section is currently in beta, results may not be 100% accurate.');
-          a.appendChild(beta);
-          // Show the same explanation when the tab is reached by keyboard.
-          a.setAttribute('data-site-tip', link.alpha ? 'Alpha: live coverage and classification may be incomplete.' : 'This section is currently in beta, results may not be 100% accurate.');
+        if (link.disabled) {
+          a.setAttribute('role', 'link');
+          a.setAttribute('aria-disabled', 'true');
+          if (link.tooltip) { a.setAttribute('title', link.tooltip); a.setAttribute('data-tip', link.tooltip); }
+        } else {
+          a.setAttribute('href', base + link.href);
         }
         if (link.id === current) a.setAttribute('aria-current', 'page');
-        box.appendChild(a);
+        links.appendChild(a);
       });
+      box.appendChild(links);
       nav.appendChild(box);
     });
   }

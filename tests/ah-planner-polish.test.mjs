@@ -51,13 +51,13 @@ test('Auction House time-left colours follow 30m red, 2h orange, 8h yellow, 24h 
   assert.equal(timeClass(3*H,seen,t0+H+1),'ah-time-orange');
   assert.equal(timeClass(72*H,seen,t0+1),'ah-time-blue','a 72h auction remains blue after a second');
   const css=read('auction-house/auction.css');
-  for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff9218',yellow:'#ffff00',green:'#1eff00',blue:'#2992ff'}))
+  for(const [colour,hex] of Object.entries({red:'#ff0000',orange:'#ff8000',yellow:'#ffff00',green:'#00ff00',blue:'#0080ff'}))
     assert.ok(css.includes('.ah-auction-time.ah-time-'+colour+'{color:'+hex+'}'),'specific auction countdown colour for '+colour);
   const js=read('auction-house/auction.js');
   assert.match(js,/cls\?'ah-auction-time '\+cls:'ah-auction-time'/,'all countdowns are styled without recolouring status indicators');
 });
 
-test('a bid that just repeats the stack or unit price shows a hyphen; the "(start)" label is gone',()=>{
+test('a bid that just repeats the stack or unit price shows an en dash; the "(start)" label is gone',()=>{
   assert.equal(bidAmount(0,500,500,500),null,'start bid equal to the stack price');
   assert.equal(bidAmount(0,50,500,50),null,'start bid equal to the unit price');
   assert.equal(bidAmount(300,50,500,50),300,'a real current bid is shown');
@@ -66,7 +66,7 @@ test('a bid that just repeats the stack or unit price shows a hyphen; the "(star
   assert.equal(bidAmount(0,40,null,null),40,'no buyout to compare with');
   assert.equal(bidAmount(0,0.5,1,0.5),null,'fractional unit prices compare exactly');
   assert.doesNotMatch(read('auction-house/auction.js'),/\(start\)/);
-  assert.match(read('auction-house/auction.js'),/if\(bid===null\)td\(tr,'-'\)/);
+  assert.match(read('auction-house/auction.js'),/if\(bid===null\)td\(tr,'–'\)/);
 });
 
 test('item icons have a rarity-coloured border and glow, like the Dressing Room and Gear Planner slots',()=>{
@@ -100,7 +100,7 @@ test('Race and Level are the same height, and Race is a narrow control',()=>{
 });
 
 test('the button row is Save, Load, Share, Export, Import',()=>{
-  const row=read('sim/index.html').match(/<div class="actions">[\s\S]*?<\/div>\s*\n/)[0];
+  const row=read('sim/index.html').match(/<div class="app-toolbar-actions">[\s\S]*?<\/div>/)[0];
   const ids=[...row.matchAll(/<button id="([a-z-]+)"/g)].map(m=>m[1]);
   assert.deepEqual(ids,['save-build','load-build','share-build','export-build','import-build']);
 });

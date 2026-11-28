@@ -1,0 +1,5 @@
+-- Target the three owner-reported private messages by author and exact UTC second.
+-- Do not preserve private message text in source control or deployment logs.
+DELETE FROM world_chat_search_text WHERE (realm,id) IN (SELECT realm,id FROM world_chat_messages WHERE lower(author)='rooky' AND gm=1 AND (observed_ms BETWEEN 1795663021000 AND 1795663021999 OR observed_ms BETWEEN 1795663071000 AND 1795663071999 OR observed_ms BETWEEN 1795663243000 AND 1795663243999));
+DELETE FROM world_chat_receipts WHERE (realm,canonical_id) IN (SELECT realm,id FROM world_chat_messages WHERE lower(author)='rooky' AND gm=1 AND (observed_ms BETWEEN 1795663021000 AND 1795663021999 OR observed_ms BETWEEN 1795663071000 AND 1795663071999 OR observed_ms BETWEEN 1795663243000 AND 1795663243999));
+DELETE FROM world_chat_messages WHERE lower(author)='rooky' AND gm=1 AND (observed_ms BETWEEN 1795663021000 AND 1795663021999 OR observed_ms BETWEEN 1795663071000 AND 1795663071999 OR observed_ms BETWEEN 1795663243000 AND 1795663243999);

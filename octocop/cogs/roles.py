@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+
+from octobot.discord_api import (
+    DeferredDiscordRequest, background_api, ensure_member_cache, role_manageable,
+)
 
 if TYPE_CHECKING:
     from octobot.bot import OctoBot
@@ -22,6 +27,8 @@ class RoleCleanupCog(commands.Cog):
 
     def __init__(self, bot: "OctoBot"):
         self.bot = bot
+        self.api = background_api(bot)
+        self._bulk_lock = asyncio.Lock()
 
     @property
     def _remove_role_id(self) -> int | None:
@@ -51,13 +58,22 @@ class RoleCleanupCog(commands.Cog):
             return None
         has_base = base_role in member.roles
         has_level = self._has_any(member, levels)
-        if has_level and has_base:
-            await member.remove_roles(base_role, reason=reason[:512])
+        if has_base != has_level:
+            return None
+        if not role_manageable(member.guild, base_role, member):
+            raise DeferredDiscordRequest("The bot cannot modify this member's base role")
+        key = (member.guild.id, base_id)
+        if has_base:
+            await self.api.call(
+                "role_remove", key, lambda: member.remove_roles(base_role, reason=reason[:512]),
+                cache_missing=False,
+            )
             return "removed"
-        if not has_level and not has_base:
-            await member.add_roles(base_role, reason=reason[:512])
-            return "granted"
-        return None
+        await self.api.call(
+            "role_add", key, lambda: member.add_roles(base_role, reason=reason[:512]),
+            cache_missing=False,
+        )
+        return "granted"
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
@@ -72,6 +88,8 @@ class RoleCleanupCog(commands.Cog):
             action = await self.reconcile(
                 after, "OctoBot role cleanup | base role follows the levelled roles"
             )
+        except DeferredDiscordRequest:
+            return
         except discord.Forbidden:
             log.warning(
                 "Cannot change role %s on %s: missing Manage Roles or the role is above mine",
@@ -79,8 +97,8 @@ class RoleCleanupCog(commands.Cog):
                 after.id,
             )
             return
-        except discord.HTTPException:
-            log.exception("Failed to reconcile roles for %s", after.id)
+        except (discord.HTTPException, discord.RateLimited, OSError, TimeoutError):
+            log.warning("Failed to reconcile roles for member %s", after.id)
             return
         if action == "removed":
             log.info("Removed base role %s from %s", self._remove_role_id, after.id)
@@ -118,27 +136,42 @@ class RoleCleanupCog(commands.Cog):
             )
             return
 
-        # A full member walk can take a while on a large server; acknowledge first.
-        await interaction.response.defer(ephemeral=True, thinking=True)
+        if not role_manageable(guild, base_role):
+            await interaction.response.send_message(
+                "OctoBot needs Manage Roles and a role above the base role.", ephemeral=True,
+            )
+            return
+        if self._bulk_lock.locked():
+            await interaction.response.send_message(
+                "A role reconciliation is already running.", ephemeral=True,
+            )
+            return
+        async with self._bulk_lock:
+            await interaction.response.defer(ephemeral=True, thinking=True)
+            await self._run_rolefix(interaction, guild, base_role)
+
+    async def _run_rolefix(self, interaction, guild, base_role):
         checked = removed = granted = failed = 0
         reason = f"OctoBot /rolefix by {interaction.user} ({interaction.user.id})"[:512]
+        errors = (discord.HTTPException, discord.RateLimited, DeferredDiscordRequest, OSError, TimeoutError)
         try:
-            async for member in guild.fetch_members(limit=None):
+            await ensure_member_cache(guild, self.api)
+            for member in guild.members:
                 if member.bot:
                     continue
                 checked += 1
                 try:
                     action = await self.reconcile(member, reason)
+                except errors:
+                    failed += 1
+                else:
                     if action == "removed":
                         removed += 1
                     elif action == "granted":
                         granted += 1
-                except (discord.Forbidden, discord.HTTPException):
-                    failed += 1
-                    log.exception("Failed to fix roles for %s during /rolefix", member.id)
-        except discord.HTTPException as exc:
+        except errors:
             await interaction.followup.send(
-                f"Discord rejected the member list: `{exc}`. Check that the **Server Members Intent** is enabled.",
+                "The server member list is unavailable. Check the Server Members Intent and try again later.",
                 ephemeral=True,
             )
             return
@@ -146,8 +179,8 @@ class RoleCleanupCog(commands.Cog):
         await interaction.followup.send(
             f"Checked **{checked}** members.\n"
             f"Removed {base_role.mention} from **{removed}** who have a levelled role.\n"
-            f"Gave {base_role.mention} to **{granted}** who had no roles at all."
-            + (f"\n**{failed}** change(s) failed; see the bot log." if failed else ""),
+            f"Gave {base_role.mention} to **{granted}** with no levelled role."
+            + (f"\n**{failed}** change(s) could not be applied." if failed else ""),
             ephemeral=True,
             allowed_mentions=discord.AllowedMentions.none(),
         )

@@ -9,7 +9,7 @@ test("catalogue tooltip describes sourced fields without making up item attribut
 test("unresolved item IDs retain honest placeholders",()=>{
  const text=itemTooltip({item_id:12345,item_name:null,quality:null});
  assert.match(text,/Item #12345/);assert.match(text,/Rarity: unavailable/);
- assert.match(text,/not found in the available catalogue/);
+ assert.match(text,/not found in the available catalog/);
 });
 test("artifact rarity is not mislabeled as legendary",()=>{
  assert.match(itemTooltip({item_id:123,item_name:"Example",quality:6}),/Rarity: Artifact/);

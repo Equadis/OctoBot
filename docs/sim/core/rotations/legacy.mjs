@@ -437,7 +437,7 @@ export const LEGACY_PROFILES={
       },
       {
         "id": "assassination-noxious-expose-rupture",
-        "name": "Assassination | Noxious Assault Expose Armour (Rupture)",
+        "name": "Assassination | Noxious Assault Expose Armor (Rupture)",
         "description": "Noxious Assault builder; Envenom and Slice and Dice upkeep, then finishers.",
         "rows": [
           {
@@ -573,7 +573,7 @@ export const LEGACY_PROFILES={
       },
       {
         "id": "assassination-noxious-expose",
-        "name": "Assassination | Noxious Assault Expose Armour (No Rupture)",
+        "name": "Assassination | Noxious Assault Expose Armor (No Rupture)",
         "description": "Noxious Assault builder; Envenom and Slice and Dice upkeep, then finishers.",
         "rows": [
           {
@@ -1562,7 +1562,7 @@ export const LEGACY_PROFILES={
       },
       {
         "id": "subtlety-hemorrhage-expose",
-        "name": "Subtlety | Hemorrhage (Expose Armour)",
+        "name": "Subtlety | Hemorrhage (Expose Armor)",
         "description": "Garrote opener, Slice and Dice and Rupture upkeep, Hemorrhage builder.",
         "rows": [
           {
@@ -1641,7 +1641,7 @@ export const LEGACY_PROFILES={
       },
       {
         "id": "subtlety-hemorrhage",
-        "name": "Subtlety | Hemorrhage (No Expose Armour)",
+        "name": "Subtlety | Hemorrhage (No Expose Armor)",
         "description": "Garrote opener, Slice and Dice and Rupture upkeep, Hemorrhage builder.",
         "rows": [
           {

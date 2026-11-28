@@ -11,7 +11,7 @@ MIGRATION = (ROOT / "migrations/0002_auction.sql").read_text()
 WORKER = (ROOT / "auction.mjs").read_text()
 
 def extracted_sql(prefix):
-    match = re.search(r'db\.prepare\("(' + re.escape(prefix) + r'[^"]*)"\)\.bind', WORKER)
+    match = re.search(r'db\.prepare\("(' + re.escape(prefix) + r'[^"]*)"\)\s*\.bind', WORKER)
     if not match:
         raise AssertionError("Worker SQL not found: " + prefix)
     return match.group(1)
@@ -49,19 +49,19 @@ class AuctionSqlTests(unittest.TestCase):
         self.insert_listing(10, 0, 0, 1)
         self.insert_listing(11, 0, 1000, 1)
         self.insert_listing(12, 0, 1400, 2)
-        self.db.execute(extracted_sql("INSERT INTO ah_item_points"), ("scan_alpha",)*3)
+        self.db.execute(extracted_sql("INSERT INTO ah_item_points"), ("scan_alpha",)*4)
         actual = self.db.execute("""SELECT cheapest_auction_id,unit_buyout,quantity,listings
                    FROM ah_item_points WHERE scan_id=? AND item_id=?""", ("scan_alpha",19019)).fetchone()
         self.assertEqual(actual, (12,700.0,4,3))
         self.db.execute(extracted_sql("INSERT INTO ah_daily"),
-                        ("2026-11-16T12:05:00Z", "scan_alpha", "scan_alpha"))
+                        ("2026-11-16T12:05:00Z", "scan_alpha", "scan_alpha", "scan_alpha"))
         day = self.db.execute("SELECT representative_unit FROM ah_daily WHERE item_id=19019").fetchone()
         self.assertEqual(day, (700.0,))
 
     def test_no_buyout_never_becomes_a_bargain_price(self):
         self.insert_listing(25, 0, 0, 1)
         self.insert_listing(26, 0, None, 2)
-        self.db.execute(extracted_sql("INSERT INTO ah_item_points"), ("scan_alpha",)*3)
+        self.db.execute(extracted_sql("INSERT INTO ah_item_points"), ("scan_alpha",)*4)
         auction_id, price = self.db.execute("SELECT cheapest_auction_id,unit_buyout FROM ah_item_points").fetchone()
         self.assertIn(auction_id, (25,26))
         self.assertIsNone(price)

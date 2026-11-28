@@ -23,9 +23,9 @@ test('Combat Gum naked Human Rogue fixture, with documented mastery-scope diverg
   // Combat Gum showed 305 | 305, +0.20% WS Crit and 4.68% crit while naked. No mastery applies without an equipped weapon here.
   assert.equal(r.Melee['Wep Skill'], '300 | 300'); assert.equal(r.Melee.Power, '310'); assert.equal(r.Melee['WS Crit'], '+0.00%'); assert.equal(r.Melee['Crit Chance'], '4.48%');
   const t = r['Melee vs Target'];
-  assert.deepEqual([t['Miss %'], t['Yellow Miss %'], t['Dodge %'], t['Spell Miss %'], t['Glance Dmg'], t['Crit Cap'], t['Eff. Crit'], t.Armour, t['Phys Reduced']],
+  assert.deepEqual([t['Miss %'], t['Yellow Miss %'], t['Dodge %'], t['Spell Miss %'], t['Glance Dmg'], t['Crit Cap'], t['Eff. Crit'], t.Armor, t['Phys Reduced']],
     ['8.0% | 8.0%', '8.0%', '6.5% | 6.5%', '17.0%', '65% | 65%', '45.5% | 45.5%', '1.48% | 1.48%', '4211', '43.4%']);
-  assert.deepEqual([r.Defence.Health, r.Defence['Parry %'], r.Defence['Dodge %'], r.Defence.Armour], ['2093', '5.0%', '9.0%', '260']);
+  assert.deepEqual([r.Defense.Health, r.Defense['Parry %'], r.Defense['Dodge %'], r.Defense.Armor], ['2093', '5.0%', '9.0%', '260']);
 });
 
 test('Combat Gum race matrix (Rogue, level 60, naked): stats, power and health agree; naked crit excludes assumed mastery', () => {
@@ -34,7 +34,7 @@ test('Combat Gum race matrix (Rogue, level 60, naked): stats, power and health a
     ['Undead', 79, 128, 76, 307, 4.61, 2103], ['Troll', 81, 132, 76, 313, 4.75, 2103], ['Night Elf', 77, 135, 74, 312, 4.86, 2083]];
   for (const [race, str, agi, sta, power, crit, health] of observed) {
     const b = newBuild('rogue'); b.race = race; b.controls.buffIds = ['skill-book']; const r = rows(b);
-    assert.deepEqual([r['Base Stats'].Strength, r['Base Stats'].Agility, r['Base Stats'].Stamina, r.Melee.Power, r.Defence.Health], [String(str), String(agi), String(sta), String(power), String(health)], race);
+    assert.deepEqual([r['Base Stats'].Strength, r['Base Stats'].Agility, r['Base Stats'].Stamina, r.Melee.Power, r.Defense.Health], [String(str), String(agi), String(sta), String(power), String(health)], race);
     near(pct(r.Melee['Crit Chance']), crit - 0.20, 0.011, `${race} crit without assumed mastery`);
   }
 });
@@ -77,7 +77,7 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
     assert.equal(+r.Melee.Power, Math.round(apFlat[cls] + str * apPerStr[cls] + agi * apPerAgi[cls]), `${cls} attack power`);
     const stance = cls === 'warrior' && b.classOptions.stance === 'Berserker' ? 3 : 0;
     near(pct(r.Melee['Crit Chance'].split('|')[0]), baseCrit[cls] + agi * critAgi[cls] + stance, 0.011, `${cls} crit`);
-    near(pct(r.Defence['Dodge %']), baseCrit[cls] + agi * dodgeAgi[cls] + (racialPassives(b.race).dodge || 0), 0.06, `${cls} dodge`);
+    near(pct(r.Defense['Dodge %']), baseCrit[cls] + agi * dodgeAgi[cls] + (racialPassives(b.race).dodge || 0), 0.06, `${cls} dodge`);
   }
 });
 
@@ -85,7 +85,7 @@ test('class coefficients match WoWSims Turtle base_stats.go: attack power, crit 
 
 test('racial passives match the OctoWoW database (read 2026-11-15): Night Elf Quickness is +1% dodge (spell 20582), not haste', () => {
   const b = newBuild('rogue'); b.race = 'Night Elf'; b.controls.buffIds = ['skill-book']; const r = rows(b);
-  assert.equal(r.Defence['Dodge %'], '10.3%');   // 135 agility / 14.5 = 9.3, plus the 1% racial
+  assert.equal(r.Defense['Dodge %'], '10.3%');   // 135 agility / 14.5 = 9.3, plus the 1% racial
   assert.equal(r.Melee.Haste, '0.0%');           // Combat Gum shows +1% haste here instead; the database spell says dodge
 });
 

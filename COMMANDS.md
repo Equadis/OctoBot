@@ -66,6 +66,10 @@ Public tracker commands. Admins can restrict any of them to specific roles with 
 | `/authcheck` | Immediate diagnostic of the OctoWoW authentication endpoint. Only works in the designated channel. |
 | `/help` | Lists only the commands you can use. |
 
+### Game links (no command needed)
+
+Type `[item:Name]`, `[quest:Name]`, `[spell:Name]`, `[talent:Name]` (also `npc`, `recipe`, `object`, `zone`, `enchant`, `set`, `faction`, `boss`) or a numeric ID such as `[item:19019]` anywhere in a message. OctoBot replies, without pinging you, with a compact embed linking the official OctoWoW database. Up to three links per message; ambiguous names show a menu that only you can use (it expires after two minutes); a three-second cooldown applies per person. Names are case-insensitive and tolerate punctuation, apostrophes and small typos; for spell ranks add `Rank 2`, e.g. `[spell:Sinister Strike Rank 2]`. Nothing is posted when there is no reliable match. Editing or deleting your message updates or removes the reply. Code blocks are ignored. Which entity types are covered is in `docs/entity-linking.md`.
+
 Automatic: the radio role is pinged at each scheduled show's start, and a member who gains the newer membership role loses the legacy one. The `/nextshows` list is available on demand, not posted at show end.
 
 ---
@@ -198,6 +202,8 @@ These require Discord **Administrator** (or server owner); bot role profiles do 
 | `/settings dm-warnings true\|false` | DM users when warned. |
 | `/settings dm-timeouts true\|false` | DM users when timed out. |
 | `/settings dm-bans true\|false` | DM users when banned. |
+| `/settings entity-links true\|false` | Turn `[item:Name]` game links on or off for the whole server. |
+| `/settings entity-links-channel channel true\|false` | Turn game links on or off in one channel, thread or forum (threads follow their parent). |
 | `/settings view role` | Show a role's bot permissions and timeout limit. |
 
 ### Tracker access

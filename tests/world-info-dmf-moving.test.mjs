@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const js=readFileSync(new URL('../docs/world-info.js',import.meta.url),'utf8');
+const body=js.slice(js.indexOf('  function dmfMoving('),js.indexOf('  function renderDmf()'));
+const MINUTE=60000,now=Date.now(),iso=ms=>new Date(ms).toISOString();
+const moving=vm.runInNewContext(body+'\ndmfMoving',{MINUTE,DMF_MOVING_GAP_MS:3*MINUTE,DMF_HEARTBEAT_MS:3*MINUTE,validPast:(v,n)=>Number.isFinite(v)&&v>0&&v<=n+MINUTE,time:Date.parse,object:v=>v&&typeof v==='object'?v:null});
+const observer=(status='online',at=now-30000)=>({collectorStatus:status,lastHeartbeatAt:iso(at)});
+const dmf=(observedAt=now-4*MINUTE,elwynn=observer(),mulgore=observer())=>({observedAt,sites:{elwynn,mulgore}});
+test('moving requires sustained absence following a known sighting and two current observers',()=>{assert.equal(moving(dmf(),now,true),true);assert.equal(moving(dmf(now-2*MINUTE),now,true),false);assert.equal(moving(dmf(null),now,true),false);assert.equal(moving(dmf(now-4*MINUTE,observer('offline')),now,true),false);assert.equal(moving(dmf(now-7*MINUTE,observer('online',now-4*MINUTE)),now,true),false);assert.equal(moving(dmf(),now,false),false);assert.equal(moving(dmf(now-4*MINUTE,observer('online',now-3*MINUTE)),now,true),false);});

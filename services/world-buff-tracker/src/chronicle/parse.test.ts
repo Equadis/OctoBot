@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanOnyxiaKills, hasCleanOnyxiaKill, parseChronicleResponse } from "./parse.js";
+import { cleanOnyxiaKills, cleanFinalBossKills, hasCleanOnyxiaKill, parseChronicleResponse } from "./parse.js";
 import type { ChronicleLog } from "./types.js";
 
 /** A log shaped like Chronicle's /recent, overridable per test. */
@@ -84,5 +84,18 @@ describe("cleanOnyxiaKills", () => {
     const kills = cleanOnyxiaKills(logs, "N'Zoth");
     expect(kills).toHaveLength(1);
     expect(kills[0]!.guild).toBeNull();
+  });
+});
+
+describe("Nefarian final boss evidence", () => {
+  it("requires a clean Nefarian boss kill in the intended realm; ignores earlier bosses and wipes", () => {
+    const logs = parseChronicleResponse({ instances: [
+      rawLog({id:"kill", encounters:[{name:"Razorgore",boss:true,kill_type:"clean"},{name:"Nefarian",boss:true,kill_type:"clean"}]}),
+      rawLog({id:"early", encounters:[{name:"Razorgore",boss:true,kill_type:"clean"}]}),
+      rawLog({id:"wipe", encounters:[{name:"Nefarian",boss:true,kill_type:"wipe"}]}),
+      rawLog({id:"other", realm_name:"Y'Shaarj", encounters:[{name:"Nefarian",boss:true,kill_type:"clean"}]})
+    ]});
+    expect(cleanFinalBossKills(logs,"N'Zoth","Nefarian").map(k=>k.logId)).toEqual(["kill"]);
+    expect(cleanFinalBossKills(logs,"N'Zoth","Onyxia")).toEqual([]);
   });
 });

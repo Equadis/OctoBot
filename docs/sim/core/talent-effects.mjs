@@ -8,7 +8,7 @@
  * pending, instead of being treated as permanent or silently dropped.
  */
 import {getTalentAudit} from './talent-audits.mjs?v=20261117-mvp1';
-import {BUFF_STATS,effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
+import {BUFF_STATS,effectiveBuffIds} from './buffs.mjs?v=20261128-merge1';
 
 const WEAPONS={
   axe:[0,1], mace:[4,5], sword:[7,8], dagger:[15], fist:[13],

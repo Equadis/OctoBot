@@ -1,8 +1,8 @@
-import {BUFF_CONFLICTS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit4';
+import {BUFF_CONFLICTS,normaliseBuffs} from './buffs.mjs?v=20261128-merge1';
 import {consumableEffectAudit} from './consumable-effects.mjs?v=20261117-buff-audit4';
 import {CONSUMABLE_DATA} from './consumable-data.mjs?v=20261112-consumes1';
-import {classDefinition} from './classes.mjs?v=20261112-audit1';
-import {isManaClass,validRace,RACE_MASKS,CLASS_RESOURCES} from './class-rules.mjs?v=20261112-audit1';
+import {classDefinition} from './classes.mjs?v=20261128-merge1';
+import {isManaClass,validRace,RACE_MASKS,CLASS_RESOURCES} from './class-rules.mjs?v=20261128-merge1';
 const canonical=name=>name.toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]/g,'');
 const ALIASES={'Elixir of the Mongoose':'mongoose','Elixir of Greater Agility':'greater-agility','Ground Scorpok Assay':'scorpok','Winterfall Firewater':'firewater','Juju Might':'juju-might','Elixir of Giants':'giants','Juju Power':'juju-power','Dreamshard Elixir':'dreamshard','Concoction of the Emerald Mongoose':'emerald-mongoose','Concoction of the Dreamwater':'dreamwater','Concoction of the Arcane Giant':'arcane-giant','Elixir of Brute Force':'brute-force','Flask of Supreme Power':'supreme-power',Dreamtonic:'dreamtonic','Greater Arcane Elixir':'greater-arcane','Elixir of Greater Nature Power':'nature-power','Elixir of Greater Firepower':'firepower','Dragonbreath Chili':'chili',"Danonzo's Tel'Abim Medley":'medley','Sour Mountain Berry':'berry','Squid Eel Skewer':'skewer','Crunchy Sandwept Carrots':'carrots',"Dirge's Kickin' Chimaerok Chops":'chimaerek','Le Fishe Au Chocolat':'fishe',"Medivh's Merlot":'merlot','Rumsey Rum Black Label':'rum','Juju Flurry':'flurry','Potion of Quickness':'quickness','Thistle Tea':'tea'};
 const alias=new Map(Object.entries(ALIASES).map(([name,id])=>[canonical(name),id]));
@@ -71,7 +71,7 @@ export function consumableEngineErrors(build,supportedIds=[]){return (build.cont
 // The manual groups preserve the existing Combat Gum-derived replacement policy.
  // These are not confirmations of server aura stacking. Compound items can
  // belong to several groups; do not collapse pairwise conflicts transitively.
-const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],'school-elixir-firepower':['firepower'],'school-elixir-nature power':['nature-power'],drink:['merlot','rum'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
+export const LEGACY_GROUPS={'agility-elixir':['mongoose','greater-agility','emerald-mongoose'],'strength-elixir':['giants','juju-power','arcane-giant'],'arcane-elixir':['greater-arcane','arcane-giant'],flask:['supreme-power'],'school-elixir-firepower':['firepower'],'school-elixir-nature power':['nature-power'],drink:['merlot','rum'],food:['chili','medley','berry','skewer','carrots','chimaerek','fishe']};
 const SHARED_ITEMS=new Map();
 for(const item of CONSUMABLES)if(item.buffId&&item.verified){
  const entries=SHARED_ITEMS.get(item.buffId)||[];entries.push(item);SHARED_ITEMS.set(item.buffId,entries);
@@ -153,7 +153,7 @@ export function stackingInventory(){
 export function stackingNote(item){
  const fact=explicitStacking(item);
  if(fact.group)return `Stacking: only one ${fact.group} effect, confirmed by the official item tooltip.`;
- if(consumableGroup(item))return 'Stacking: reference replacement group; OctoWoW-specific behaviour is not independently verified.';
+ if(consumableGroup(item))return 'Stacking: reference replacement group; OctoWoW-specific behavior is not independently verified.';
  return 'Stacking: OctoWoW-specific interactions are unresolved. A shared cooldown alone does not mean mutually exclusive buffs.';
 }
 // Fixed display order must not depend on current selection.

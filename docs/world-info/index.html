@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
+<meta name="description" content="OctoBot world information: Onyxia and Blackwing Lair raid activity, raid resets, Rallying Cry drops, Darkmoon Faire and Edge of Madness.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OctoBot">
 <meta property="og:title" content="OctoBot — World Info">
@@ -19,11 +19,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <title>OctoBot · World Info – N&#39;Zoth</title>
 <link rel="icon" href="../favicon.png" type="image/png">
-<link rel="stylesheet" href="../site-theme.css?v=20261116-q2">
+<link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../site-tooltips.js?v=20261116-tips1" defer></script>
-<link rel="stylesheet" href="../world-info.css?v=20261117-guild-rotation2">
-<script src="../raid-sounds.js?v=20261116-snd3" defer></script>
-<script src="../world-info.js?v=20261117-guild-rotation2" defer></script>
+<link rel="stylesheet" href="../world-info.css?v=20261129-ui1">
+<script src="../raid-sounds.js?v=20261119-no-tooltip" defer></script>
+<script src="../world-info.js?v=20261125-theme1" defer></script>
 <script src="../viewer-presence.js?v=20261111-theme1" defer></script>
 </head>
 <body><main>
@@ -31,14 +31,14 @@
   <div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home" title="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>World Info – N&#39;Zoth</h1></div></div>
   <div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">–</span><span class="sr-only"> active viewers across the dashboard</span></span></div>
 </header>
-<nav class="page-nav" aria-label="Dashboard pages" data-current="world-info"></nav><script src="../site-nav.js?v=20261117-chat1"></script>
+<nav class="page-nav" aria-label="Dashboard pages" data-current="world-info"></nav><script src="../site-nav.js?v=20261120-tabs"></script>
 <div class="world-intro">
   <p class="muted">N'Zoth world events · Live observations where available, estimates clearly labelled.</p>
-  <span class="source-label" id="source-status" class="source-label dots" role="status" aria-live="polite">Connecting to OctoMetrics</span>
+  <span id="source-status" class="source-label dots" role="status" aria-live="polite">Connecting to OctoMetrics</span>
 </div>
 
 <section aria-labelledby="raids-heading">
-  <div class="section-title"><h2 id="raids-heading">Raid Activity</h2><span class="section-tools"><span class="muted">Updated from in-game /who observations</span><button type="button" id="sound-toggle" class="sound-button" aria-expanded="false" aria-controls="sound-panel" title="Sound alerts for raid events"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg><span>Sound alerts</span><strong id="sound-state">Off</strong></button></span></div>
+  <div class="section-title"><h2 id="raids-heading">Raid Activity</h2><span class="section-tools"><span class="muted">Updated from in-game /who observations</span><button type="button" id="sound-toggle" class="sound-button" aria-expanded="false" aria-controls="sound-panel"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg><span>Sound alerts</span><strong id="sound-state">Off</strong></button></span></div>
   <div id="sound-panel" class="sound-panel" hidden></div>
   <div class="world-grid two">
     <article class="world-panel raid-onyxia" aria-labelledby="ony-heading">
@@ -70,6 +70,8 @@
     </article>
   </div>
 </section>
+
+
 
 <section aria-labelledby="buff-heading">
   <div class="section-title"><h2 id="buff-heading">Rallying Cry of the Dragonslayer</h2><span class="muted">Onyxia and Nefarian head drops share this buff</span></div>
@@ -107,12 +109,69 @@
     <div class="calendar-body" id="calendar-body" hidden>
   <div class="calendar-title"><p class="muted">Classic Era / Pacific rotation · Not yet verified for OctoWoW</p><div class="calendar-controls"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="calendar-next" aria-label="Next month">›</button><button type="button" id="calendar-today">Today</button></div></div>
   <div class="madness-calendar" id="madness-calendar" aria-label="Edge of Madness boss rotation calendar"></div>
-  <div class="rotation-key" id="rotation-key" aria-label="Boss colour key"></div>
+  <div class="rotation-key" id="rotation-key" aria-label="Boss color key"></div>
   <p class="source-note">Source: <a href="https://edgeofmadnesscalendar.com/era/calendar" target="_blank" rel="noopener noreferrer">Edge of Madness Calendar</a> · <a href="https://edgeofmadnesscalendar.com/api/era" target="_blank" rel="noopener noreferrer">Classic Era API</a>. The retail/Classic Era schedule may not match OctoWoW. Verify against the tablets in Zul'Gurub.</p>
     </div>
   </section>
 </div>
 
+
+<section id="raid-resets" aria-labelledby="raid-resets-heading">
+  <div class="section-title"><h2 id="raid-resets-heading">Raid Reset Schedule</h2><span class="muted">All realms · 02:00 UTC</span></div>
+  <div class="world-grid raid-reset-grid">
+    <article class="world-panel raid-reset raid-reset-blackwing-lair" aria-labelledby="raid-reset-blackwing-lair-heading">
+      <h3 id="raid-reset-blackwing-lair-heading"><a href="https://octowow.st/db/?zone=2677">Blackwing Lair</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-blackwing-lair-countdown">–</strong>
+          <small><time id="raid-reset-blackwing-lair-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-molten-core" aria-labelledby="raid-reset-molten-core-heading">
+      <h3 id="raid-reset-molten-core-heading"><a href="https://octowow.st/db/?zone=2717">Molten Core</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-molten-core-countdown">–</strong>
+          <small><time id="raid-reset-molten-core-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-onyxias-lair" aria-labelledby="raid-reset-onyxias-lair-heading">
+      <h3 id="raid-reset-onyxias-lair-heading"><a href="https://octowow.st/db/?zone=2159">Onyxia's Lair</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-onyxias-lair-countdown">–</strong>
+          <small><time id="raid-reset-onyxias-lair-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-lower-karazhan-halls" aria-labelledby="raid-reset-lower-karazhan-halls-heading">
+      <h3 id="raid-reset-lower-karazhan-halls-heading"><a href="https://octowow.st/db/?search=Lower%20Karazhan%20Halls">Lower Karazhan Halls</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-lower-karazhan-halls-countdown">–</strong>
+          <small><time id="raid-reset-lower-karazhan-halls-date">–</time></small>
+        </div>
+      </div>
+    </article>
+    <article class="world-panel raid-reset raid-reset-zul-gurub" aria-labelledby="raid-reset-zul-gurub-heading">
+      <h3 id="raid-reset-zul-gurub-heading"><a href="https://octowow.st/db/?zone=1977">Zul'Gurub</a></h3>
+      <div class="buff-grid">
+        <div>
+          <span class="field-label">Next reset</span>
+          <strong class="clock mono" role="timer" id="raid-reset-zul-gurub-countdown">–</strong>
+          <small><time id="raid-reset-zul-gurub-date">–</time></small>
+        </div>
+      </div>
+    </article>
+  </div>
+  <p class="raid-reset-sources muted"><a href="https://octowow.st/forum/viewtopic.php?t=2816">Weekly reset notes</a> · <a href="https://octotimers.com/">Rotating reset dates</a> · <a href="https://octo.chronicleclassic.com/leaderboards/speedruns">Raid artwork via Chronicle</a></p>
+</section>
 
 <footer><span>Timers are shown in UTC · Data is not guaranteed complete</span><span><a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a> · Community world tracker</span></footer>
 <noscript><p class="disclaimer">Enable JavaScript to display live world information and the calendar.</p></noscript>

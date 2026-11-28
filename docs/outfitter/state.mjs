@@ -1,4 +1,5 @@
 import {sanitiseLook} from './customization.mjs';
+import {sanitiseSkinId} from './skins.mjs';
 // Browser implementation of Tmog's slot/outfit workflow and T.O.L. interchange.
 // Inventory-slot IDs differ from the inventory-type IDs used by the 3D viewer.
 export const SLOTS = [
@@ -16,6 +17,8 @@ export function normalise(value) {
  if(value.gender===1) next.gender=1;
  next.hideHead=value.hideHead===true;next.hideBack=value.hideBack===true;
  next.look=sanitiseLook(value.look);
+ // A donation-shop skin is optional and absent from every outfit made before skins existed; those load with the default appearance.
+ const skin=sanitiseSkinId(value.skin);if(skin)next.skin=skin;
  for(const {id} of SLOTS) {const item=Number(value.gear?.[id]);if(Number.isSafeInteger(item)&&item>0&&item<=1000000)next.gear[id]=item;}
  return next;
 }
@@ -45,7 +48,8 @@ export function encode(outfit) {return encodeURIComponent(JSON.stringify(normali
 export function decode(text) {if(text.length>8192)throw Error('Outfit link is too large.');return normalise(JSON.parse(decodeURIComponent(text)));}
 export function viewerSlot(slot,item) {
  if(slot===16)return 21;
- if(slot===17)return 22;
+ // Shields must go to the viewer as shields (14) so they sit on the arm's shield attachment; as an off-hand weapon (22) they were held at the hand like a sword.
+ if(slot===17)return item.slot===14?14:22;
  if(slot===18)return 26;
  return item.slot===20?5:item.slot;
 }

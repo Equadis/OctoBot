@@ -1,4 +1,4 @@
-import {isInstancedRaid} from './targets.mjs?v=20261117-buff-audit4';
+import {isInstancedRaid} from './targets.mjs?v=20261128-merge1';
 // Independently modelled from UI experiments, Combat Gum Alpha v3.01, 2026-11-12.
 // See data/reference/combatgum-buff-observations.json. This is a planning baseline,
 // not proof of OctoWoW server behaviour. Last selection wins, including imports.

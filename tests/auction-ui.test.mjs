@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {keyOf,loadFavourites,saveFavourites,toggleFavourite,isFavourite,refreshSnapshots,apiKeys,MAX_FAVOURITES,STORAGE_KEY} from '../docs/auction-house/favourites.mjs';
 import {DEFAULTS,validate,buildParams,activeFilters,advancedCount,reset,loadSaved,saveSearches,addSaved,removeSaved,SORTS,MAX_SAVED} from '../docs/auction-house/filters.mjs';
 import {CATEGORIES,OBSERVED_SUBCLASSES,SLOTS,subclassOptions} from '../docs/auction-house/categories.mjs';
-import {money,parseMoney,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
+import {money,parseMoney,listingMarketPct,marketClass,trend,remaining,left,timeClass,pct,scanAge,scanStatus,lastScanClass,indexCoverage,indexedClass} from '../docs/auction-house/format.mjs';
 import {layout} from '../docs/auction-house/chart.mjs';
 
 const read=p=>readFileSync(new URL('../docs/'+p,import.meta.url),'utf8');
@@ -82,7 +82,9 @@ test('validation catches impossible combinations before any request is made',()=
   assert.ok(validate({...DEFAULTS,min_level:'71'}).min_level);
   assert.ok(validate({...DEFAULTS,stack:'0'}).stack);
   assert.ok(validate({...DEFAULTS,max_unit_buyout:'lots'}).max_unit_buyout);
-  assert.ok(validate({...DEFAULTS,owner:'Bob'}).owner);
+  assert.equal(validate({...DEFAULTS,owner:'Bob'}).owner,undefined,'a character name is a valid seller');
+  assert.equal(validate({...DEFAULTS,owner:'1234567'}).owner,undefined,'a numeric GUID is a valid seller');
+  assert.ok(validate({...DEFAULTS,owner:'Bob_1'}).owner);
   assert.ok(validate({...DEFAULTS,min_market_pct:'90',max_market_pct:'20'}).max_market_pct);
   assert.ok(validate({...DEFAULTS,item_subclass:'3'}).item_subclass,'a subcategory needs a category');
   assert.deepEqual(validate({...DEFAULTS,item_class:'2',item_subclass:'3',min_level:'1',max_level:'60'}),{});
@@ -157,10 +159,9 @@ test('money is copper-based and money input parses the same units back',()=>{
   assert.equal(parseMoney('2g 50s'),25000);assert.equal(parseMoney('1g20s5c'),12005);assert.equal(parseMoney('75s'),7500);assert.equal(parseMoney('300'),300);
   assert.equal(parseMoney(''),undefined);assert.equal(parseMoney('g'),null);assert.equal(parseMoney('1.5g'),null);assert.equal(parseMoney('99999999999'),null);
 });
-test('trend arrows follow the 10% and 25% thresholds, and market % is plain',()=>{
-  const arrows=[[null,'\u2013'],[9.99,'\u2192'],[-9.99,'\u2192'],[10,'\u2191'],[24.99,'\u2191'],[25,'\u2191\u2191'],[-10,'\u2193'],[-24.99,'\u2193'],[-25,'\u2193\u2193']];
-  for(const [n,label] of arrows)assert.equal(trend(n).label,label,String(n));
-  assert.equal(trend(30).className,'ah-change-up');assert.equal(trend(-30).className,'ah-change-down');
+test('trend arrows follow symmetric 5%, 10%, and 25% thresholds and seven colours',()=>{
+  const arrows=[[null,'–','ah-change-unknown'],[0,'→','ah-change-neutral'],[4.99,'→','ah-change-neutral'],[-4.99,'→','ah-change-neutral'],[5,'↗︎','ah-change-up-slight'],[9.99,'↗︎','ah-change-up-slight'],[-5,'↘︎','ah-change-down-slight'],[-9.99,'↘︎','ah-change-down-slight'],[10,'↑','ah-change-up'],[24.99,'↑','ah-change-up'],[25,'↑↑','ah-change-up-strong'],[-10,'↓','ah-change-down'],[-24.99,'↓','ah-change-down'],[-25,'↓↓','ah-change-down-strong']];
+  for(const [n,label,cls] of arrows){assert.equal(trend(n).label,label,String(n));assert.equal(trend(n).className,cls,String(n));}
   assert.equal(pct(250),'250.0%');assert.equal(pct(null),'No data');
 });
 test('remaining time is an estimate and says so when unknown',()=>{
@@ -256,12 +257,17 @@ test('the rarity dropdown and item names use the shared rarity colours',()=>{
   assert.match(css,/\.ah-q0 \.ah-name-text,\.ah-q1 \.ah-name-text,\.ah-q2 \.ah-name-text,\.ah-q3 \.ah-name-text,\.ah-q4 \.ah-name-text,\.ah-q5 \.ah-name-text,\.ah-q6 \.ah-name-text\{color:var\(--item-quality\)\}/);
   for(let q=0;q<=6;q++)assert.ok(css.includes(`.ah-q${q}{--item-quality:var(--quality-${q})}`),'rarity variable for quality '+q);
 });
-test('the page uses UK English and the shared palette instead of one-off colours',()=>{
-  const css=read('auction-house/auction.css'),text=read('auction-house/index.html')+read('auction-house/auction.js');
-  assert.doesNotMatch(text,/\b(favorite|favorites|armor|gray|catalog)\b/i);
+test('the page uses American English and the shared palette instead of one-off colours',()=>{
+  const css=read('auction-house/auction.css'),html=read('auction-house/index.html'),script=read('auction-house/auction.js');
+  // Visible text only: identifiers, storage keys and API paths keep their names.
+  const visible=[...html.matchAll(/>([^<>{}]*)</g)].map(m=>m[1]).join(' ');
+  assert.doesNotMatch(visible,/favourite|catalogue|armour|colour/i);
+  assert.match(visible,/Favorite items/);
+  for(const phrase of ['Add to favorites','Remove from favorites','No favorites yet','Catalog coverage unavailable'])assert.ok(script.includes(phrase),phrase);
+  for(const phrase of ['to favourites','No favourites yet','Catalogue coverage'])assert.ok(!script.includes(phrase),phrase);
   for(const old of ['#172232','#46546a'])assert.ok(!css.includes(old),'retired one-off shade '+old);
   assert.match(css,/\.ah-btn\[aria-pressed=true\][^{]*\{[^}]*#3a3827[^}]*#f4d65c/,'pressed buttons use the active navigation colours');
-  assert.match(text,/lang="en-GB"/);
+  assert.match(html,/lang="en-US"/);
 });
 
 test('the full Auction House row expands on click and keyboard without navigation',()=>{
@@ -276,7 +282,7 @@ test('the full Auction House row expands on click and keyboard without navigatio
  assert.match(css,/\.ah-scroll>table\{[^}]*table-layout:fixed/);
  assert.doesNotMatch(css,/min-width:1040px/);
  assert.match(css,/@media\(max-width:1060px\)/,'rows become cards at narrower widths');
- assert.match(css,/@keyframes ah-name-pan/,'long names glide then return');
+ assert.match(read('site-theme.css'),/@keyframes ah-name-pan/,'long names glide then return (shared with the Gear Planner)');
  assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
@@ -287,6 +293,63 @@ test("auction countdown colours use upper duration bands and 72h remains blue as
  assert.equal(timeClass(72*H,seen,now+1000),"ah-time-blue");
  assert.equal(timeClass(null,seen,now),null);
  assert.equal(timeClass(H,seen,now+2*H),null);
- for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff9218",yellow:"#ffff00",green:"#1eff00",blue:"#2992ff"}))
+ for(const [colour,hex] of Object.entries({red:"#ff0000",orange:"#ff8000",yellow:"#ffff00",green:"#00ff00",blue:"#0080ff"}))
   assert.ok(read("auction-house/auction.css").includes(".ah-auction-time.ah-time-"+colour+"{color:"+hex+"}"));
+});
+
+test("Auction House KPIs order scan status, item count, active auctions and historical total",()=>{
+ const html=read("auction-house/index.html"),js=read("auction-house/auction.js"),css=read("auction-house/auction.css");
+ const ids=["scan-progress","last-scan","item-count","auction-count","historical-auction-count"];
+ for(const [i,id] of ids.entries()){
+  assert.ok(html.includes('id="'+id+'"'));
+  if(i)assert.ok(html.indexOf('id="'+ids[i-1]+'"')<html.indexOf('id="'+id+'"'));
+ }
+ assert.match(html,/<small id="last-scan">/);
+ assert.match(css,/\.ah-kpi small\{font-size:11px;color:#9fadbf;/);
+ assert.ok(js.includes("count(s.total_historical_auctions)"));
+ assert.ok(js.includes("'Last scan: '+dateTime(s.completed_at)"));
+ assert.ok(js.includes("last.className=lastScanClass"));
+});
+
+
+test('trend colours share the countdown palette and sorting has accessible labels without hover titles',()=>{
+ const css=read('auction-house/auction.css'),js=read('auction-house/auction.js');
+ const palette={"up-strong":"#ff0000","up":"#ff8000","up-slight":"#ffff00","neutral":"#ffffff","down-slight":"#dfff00","down":"#00ff00","down-strong":"#0080ff"};
+ for(const [key,hex] of Object.entries(palette))assert.ok(css.includes('.ah-scroll td.ah-change-'+key+',.ah-stats .ah-change-'+key+'{color:'+hex+'}'),key);
+ assert.ok(css.includes('font-size:calc(1em + 2pt)'));
+ assert.ok(js.includes("button.setAttribute('aria-label',action)"));
+ assert.ok(!js.includes('button.title=action'));
+ assert.ok(!js.includes('tc.title='));
+});
+test('expanded auction listings omit starting bid and minimum next bid columns and cells',()=>{
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes("const headings=['Seller','Quantity','Unit price','Stack price','Current bid','Avg. price','Market %','Time left']"));
+ assert.doesNotMatch(js,/moneyNode\(r\.(?:start_bid|min_next_bid)\)/);
+});
+
+
+test('each auction listing uses its own unit buyout for market percent and missing bids show an en dash',()=>{
+ assert.equal(listingMarketPct(75,100),75);
+ assert.equal(listingMarketPct(150,100),150);
+ assert.equal(listingMarketPct(0.5,1),50);
+ for(const [unit,avg] of [[null,100],[100,null],[100,0],[0,100],[NaN,20],[30,Infinity]])assert.equal(listingMarketPct(unit,avg),null);
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes("bid===null?'–':moneyNode(bid)"));
+ assert.ok(js.includes('marketNode(listingMarketPct(r.unit_buyout,average))'));
+});
+
+
+test('auction and favourites tables share equal metric column widths',()=>{
+ const css=read('auction-house/auction.css');
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(1){width:30px;box-sizing:border-box}'));
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(2){width:20%;box-sizing:border-box}'));
+ assert.ok(css.includes('.ah-scroll>table>thead th:nth-child(n+3){width:auto}'));
+ assert.doesNotMatch(css,/\.ah-scroll>table>thead th:nth-child\((?:[3-9]|10|11)\)\{width:/);
+});
+
+test('market value colours reflect the displayed percentage and missing data stays neutral',()=>{
+ for(const [value,expected] of [[null,'unknown'],[NaN,'unknown'],[49.9,'blue'],[50,'green'],[74.9,'green'],[75,'yellow-green'],[89.9,'yellow-green'],[90,'white'],[100,'white'],[110,'white'],[110.1,'yellow'],[124.9,'yellow'],[125,'orange'],[150,'orange'],[150.1,'red'],[300,'red'],[300.1,'dark-red']]) assert.equal(marketClass(value),'ah-market-'+expected);
+ const js=read('auction-house/auction.js');
+ assert.ok(js.includes('td(tr,marketNode(item.market_pct))'));
+ assert.ok(js.includes("stat('Market %',marketNode(item.market_pct))"));
 });

@@ -1,0 +1,112 @@
+name: Activate verified R2 Auction House imports
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type ACTIVATE to publish prepared N Zoth and Y Shaarj auction snapshots'
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/activate-auction-r2-import.yml'
+permissions:
+  contents: read
+concurrency:
+  group: octometrics-auction-import
+  cancel-in-progress: false
+jobs:
+  activate:
+    if: github.event_name == 'push' || inputs.confirm == 'ACTIVATE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '823592d7e68e3220a2b75f3f9c72515e' }}
+      AUCTION_ADMIN_TOKEN: ${{ secrets.AUCTION_ADMIN_TOKEN }}
+      BUCKET: octobot-auction-snapshots
+      SOURCE_RUN: '45025957206'
+      API: https://octometrics.eqvoice.workers.dev/api/auction
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check credentials without printing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::GitHub CLOUDFLARE_API_TOKEN secret missing"; exit 1; }
+          test -n "$AUCTION_ADMIN_TOKEN" || { echo "::error::GitHub AUCTION_ADMIN_TOKEN secret missing. Copy the SAME admin token saved in Cloudflare into GitHub Actions secrets."; exit 1; }
+          test "${#AUCTION_ADMIN_TOKEN}" -ge 32 || { echo "::error::Admin token appears too short"; exit 1; }
+          echo "Required secrets present."
+      - name: Download both staged manifests (not the 5.8 GB backup)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/auction-manifests"
+          for realm in nzoth yshaarj; do
+            npx --yes wrangler@4.166.0 r2 object get "$BUCKET/migration-manifests/$SOURCE_RUN/$realm.json" --file "$RUNNER_TEMP/auction-manifests/$realm.json" --remote
+            test -s "$RUNNER_TEMP/auction-manifests/$realm.json"
+          done
+      - name: Validate manifests, import via authenticated endpoint, and verify public snapshots
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {setTimeout as pause} from 'node:timers/promises';
+          const expected={
+            nzoth:{name:"N'Zoth",listings:42328,historical:240272,scan:'ahl_mwovomjc_b49a92ecbc10'},
+            yshaarj:{name:"Y'Shaarj",listings:2429,historical:4531,scan:'ahl_pvp_mwovhf7c_c27016780331'}
+          };
+          const manifests={};
+          for(const [realm,want] of Object.entries(expected)){
+            const data=JSON.parse(readFileSync(join(process.env.RUNNER_TEMP,'auction-manifests',realm+'.json'),'utf8'));
+            if(data.latest?.auction_count!==want.listings || data.latest?.total_historical_auctions!==want.historical || data.latest?.scan_id!==want.scan)
+              throw Error('Unexpected or mismatched staged manifest for '+realm);
+            if(Object.keys(data.files??{}).length<60)throw Error('Incomplete staged object manifest for '+realm);
+            manifests[realm]=data;
+            console.log(realm+': matched expected scan, listings, history and staged objects.');
+          }
+          const base=process.env.API;
+          const headers={'Accept':'application/json'};
+          async function summary(realm){
+            const resp=await fetch(base+'/summary?realm='+encodeURIComponent(realm)+'&audit='+Date.now(),{headers:{...headers,'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)});
+            if(!resp.ok)throw Error('Summary '+realm+' HTTP '+resp.status);
+            return resp.json();
+          }
+          const check=(s,want)=>s?.has_catalogue===true&&s.scan_id===want.scan&&s.auction_count===want.listings&&s.total_historical_auctions===want.historical;
+          for(const [realm,want] of Object.entries(expected)){
+            const before=await summary(want.name);
+            if(before.has_catalogue){
+              if(!check(before,want))throw Error(realm+' already has a different live control pointer, refusing overwrite');
+              console.log(realm+': identical snapshot already active, no import needed.');
+            }else{
+              const response=await fetch(base+'/import?realm='+encodeURIComponent(want.name),{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+process.env.AUCTION_ADMIN_TOKEN},
+                body:JSON.stringify(manifests[realm]),
+                signal:AbortSignal.timeout(120000)
+              });
+              const payload=await response.text();
+              if(response.status!==201)throw Error(realm+' import failed HTTP '+response.status+': '+payload.slice(0,600));
+              const parsed=JSON.parse(payload);
+              if(!parsed.ok||parsed.scan_id!==want.scan)throw Error(realm+' import returned unexpected result');
+              console.log(realm+': authenticated import published.');
+            }
+            let verified=false;
+            for(let attempt=0;attempt<18;attempt++){
+              const current=await summary(want.name);
+              if(check(current,want)){verified=true;break;}
+              await pause(2000);
+            }
+            if(!verified)throw Error(realm+' summary did not verify published scan and historical total');
+            const itemResponse=await fetch(base+'/items?realm='+encodeURIComponent(want.name)+'&limit=1',{signal:AbortSignal.timeout(20000)});
+            if(!itemResponse.ok)throw Error(realm+' public catalogue request HTTP '+itemResponse.status);
+            const items=await itemResponse.json();
+            if(!Array.isArray(items.items))throw Error(realm+' public items response invalid');
+            console.log(realm+': VERIFIED public summary, listing count, historical total and items route.');
+          }
+          console.log('Both historical imports activated; AUCTION_COLLECTION_PAUSED unchanged.');
+          NODE

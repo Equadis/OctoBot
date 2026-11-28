@@ -1,11 +1,11 @@
 import {petEngineErrors} from './pet-audit.mjs?v=20261117-pet-audit3';
-import {effectiveBuffIds} from './buffs.mjs?v=20261117-buff-audit4';
-import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
-import {ENCHANTS} from './equipment-options.mjs?v=20261113-swaps1';
+import {effectiveBuffIds} from './buffs.mjs?v=20261128-merge1';
+import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261128-merge1';
+import {ENCHANTS} from './equipment-options.mjs?v=20261128-merge1';
 import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
-import {validateBuild} from './builds.mjs?v=20261117-buff-audit4';
-import {equipmentErrors} from './items.mjs?v=20261114-ammo2';
-import {consumableEngineErrors} from './consumables.mjs?v=20261117-buff-audit4';
+import {validateBuild} from './builds.mjs?v=20261128-merge1';
+import {equipmentErrors} from './items.mjs?v=20261128-merge1';
+import {consumableEngineErrors} from './consumables.mjs?v=20261128-merge1';
 import {baseStatProfile} from './base-stat-audit.mjs?v=20261117-racial-audit1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */

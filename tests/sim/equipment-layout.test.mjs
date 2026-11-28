@@ -11,7 +11,7 @@ test('left equipment column positions icons before slot labels',()=>{
  assert.match(css,/\.planner-view #slots-left \.slot button\{grid-template-columns:33px minmax\(0,1fr\)\}/);
  assert.match(css,/\.planner-view #slots-left \.slot \.slot-icon\{grid-column:1;grid-row:1\}/);
  assert.match(css,/\.planner-view #slots-left \.slot \.slot-name\{grid-column:2;grid-row:1\}/);
- assert.match(css,/\.planner-view #slots-left \.slot \.item-name\{grid-column:1\/-1;grid-row:2;text-align:center\}/);
+ assert.match(css,/\.planner-view #slots-left \.slot \.item-name\{grid-column:1\/-1;grid-row:2;text-align:var\(--name-align,center\)\}/);
  assert.match(css,/\.planner-view \.slot:not\(\.has-item\) \.item-name\{font-style:normal\}/);
 });
 test('planner module and stylesheets carry cache versions across later releases',()=>{

@@ -79,6 +79,8 @@ def write_track(blob, track, seqs, kind):
     # Some client models (Helm_Robe_D_04) key a track a few ticks before the sequence that owns it starts; the field is unsigned, so clamp at 0.
     t_entries, v_entries = [], []
     for idx, start in zip(groups, starts):
+        # Some item models (bows, thrown weapons) point a sequence at keys stamped before that sequence starts; the old code died on the
+        # negative number. Clamp to 0 so the model converts (character bodies never hit this, so their output is unchanged).
         t_entries.append(pair(blob, [max(0, track['times'][k] - start) for k in idx], '<I'))
         if kind == 'quat':
             v_entries.append((len(idx), blob.add(b''.join(encode_quat(track['values'][k]) for k in idx), 4) if idx else 0))
@@ -110,10 +112,18 @@ def write_skin(m):
                      s['bone_influences'], s['root_bone'], *s['position'], cx, cy, cz, radius))
     sub_n, sub_o = pair(blob, subs, '<10H3f3ff')
     batches = []
+    mats = m.array('render_flags')
+    blends = [struct.unpack_from('<HH', m.data, mats['offset'] + 4 * k)[1] for k in range(mats['count'])]
     for t in view['texture_units']:
         # old fields: flags, shading, submesh, submesh2, colour, render flags, unit, mode, texture, unit2, transparency, uv animation
         # new fields: flags, priority, shader, submesh, geoset, colour, material, layer, texture count, texture, coord, weight, transform
-        batches.append((t['flags'] & 0xFF, 0, 0, t['submesh'], t['submesh2'], 65535 if t['color'] < 0 else t['color'], t['render_flags'], t['texture_unit'],
+        # The shader id picks how the batch is drawn. Blizzard's own files give a single-texture batch whose material is blended (alpha, additive, modulate)
+        # shader 16 and an opaque or alpha-key one shader 0 (measured over 700 Zam item models: blend 2, 4, 5 and 6 are all 16, blend 0 is 0). With 0 for everything, glows,
+        # flames and glass drew as opaque black squares (the Archaeologist's Lantern). Two-texture batches (mode 2) are left at 0: their ids vary (0x8001 and others)
+        # and the right one is not established.
+        blend = blends[t['render_flags']] if t['render_flags'] < len(blends) else 0
+        shader = 16 if blend >= 2 and t['mode'] <= 1 else 0
+        batches.append((t['flags'] & 0xFF, 0, shader, t['submesh'], t['submesh2'], 65535 if t['color'] < 0 else t['color'], t['render_flags'], t['texture_unit'],
                         max(1, t['mode']), t['texture'], t['texture_unit2'], t['transparency'], 0))
     bat_n, bat_o = pair(blob, batches, '<BbHHHHHHHHHHH')
     header = struct.pack('<4s13I', b'SKIN', verts_n, verts_o, idx_n, idx_o, bone_n, bone_o, sub_n, sub_o, bat_n, bat_o, 256, 0, 0)

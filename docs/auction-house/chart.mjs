@@ -30,9 +30,10 @@ export function buildChart(doc,history,average=null){
   for(const f of [0,.5,1]){const yy=g.pad.t+(g.height-g.pad.t-g.pad.b)*f;svg.append(el('line',{x1:g.pad.l,x2:g.width-g.pad.r,y1:yy,y2:yy,class:'ah-chart-grid'}));}
   if(g.averageY!==null)svg.append(el('line',{x1:g.pad.l,x2:g.width-g.pad.r,y1:g.averageY,y2:g.averageY,class:'ah-chart-average'}));
   svg.append(el('polyline',{points:g.points.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' '),class:'ah-chart-line',fill:'none'}));
-  for(const p of g.points){const c=el('circle',{cx:p.x.toFixed(1),cy:p.y.toFixed(1),r:3,class:'ah-chart-dot'});c.append(el('title',{},p.day+': '+money(p.value)));svg.append(c);}
+  // Each point carries its real observation (day and daily lowest unit buyout); the page shows it in a tooltip, so no native <title> is used.
+  for(const p of g.points){svg.append(el('circle',{cx:p.x.toFixed(1),cy:p.y.toFixed(1),r:3,class:'ah-chart-dot','data-day':p.day,'data-value':p.value}));}
   svg.append(el('text',{x:g.pad.l,y:g.height-5,class:'ah-chart-label'},first.day));
   svg.append(el('text',{x:g.width-g.pad.r,y:g.height-5,'text-anchor':'end',class:'ah-chart-label'},last.day));
-  svg.append(el('text',{x:g.width-g.pad.r,y:g.pad.t-2,'text-anchor':'end',class:'ah-chart-label'},'High '+money(g.hi)+' · Low '+money(g.lo)));
+
   return svg;
 }

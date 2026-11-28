@@ -2,18 +2,18 @@
   "schema": 1,
   "endpoint": "play.octowow.st:3724",
   "sample": {
-    "timestamp": "2026-11-17T01:53:50Z",
-    "website": "available",
+    "timestamp": "2026-11-28T18:31:21Z",
+    "website": "unavailable",
     "realms": {
-      "cthun": "online",
-      "nzoth": "online",
-      "yshaarj": "online"
+      "cthun": "unknown",
+      "nzoth": "unknown",
+      "yshaarj": "unknown"
     },
     "tcp": "reachable",
     "auth": "responsive",
-    "latency_ms": 872,
+    "latency_ms": 382,
     "auth_result_code": 0,
-    "source_error": null,
+    "source_error": "Request failed: ClientResponseError",
     "auth_reason": "Valid logon challenge response (result 0)"
   }
 }

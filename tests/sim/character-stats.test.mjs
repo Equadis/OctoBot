@@ -13,7 +13,7 @@ test('retains the observed naked Rogue attribute fixture but excludes mastery wi
  assert.deepEqual(r['Base Stats'],{Strength:'110',Agility:'180',Stamina:'75'});
  assert.deepEqual(r.Melee,{'Wep Skill':'300 | 300',Damage:'0-0 | 0-0',Speed:'0.00 | 0.00',Power:'430','Hit Rating':'0%','WS Crit':'+0.00%','Crit Chance':'8.21%',Haste:'0.0%','Armor Pen':'0','Poison Chance':'+0%','Poison Crit':'2.00%'});
  assert.equal(r['Melee vs Target']['Miss %'],'8.0% | 8.0%');assert.equal(r['Melee vs Target']['Glance Dmg'],'65% | 65%');assert.equal(r['Melee vs Target']['Crit Cap'],'45.5% | 45.5%');assert.equal(r['Melee vs Target']['Eff. Crit'],'5.21% | 5.21%');assert.equal(r['Melee vs Target']['Phys Reduced'],'43.4%');
- assert.equal(r.Defence.Health,'2093');assert.equal(r.Defence['Dodge %'],'12.4%');assert.equal(r.Defence.Armour,'360');assert.equal(r.Spell['Spell Power'],'15');assert.equal(r.Spell['Spell Crit'],'2.00%');
+ assert.equal(r.Defense.Health,'2093');assert.equal(r.Defense['Dodge %'],'12.4%');assert.equal(r.Defense.Armor,'360');assert.equal(r.Spell['Spell Power'],'15');assert.equal(r.Spell['Spell Crit'],'2.00%');
 });
 test('all conflict pairs replace in both directions and imported builds normalise',()=>{
  for(const [a,b] of BUFF_CONFLICTS){assert.deepEqual(selectBuff([a],b),[b]);assert.deepEqual(selectBuff([b],a),[a]);}
@@ -26,7 +26,7 @@ test('all conflict pairs replace in both directions and imported builds normalis
 test('base tables cover all nine defaults at every supported level, without invented crit coefficients',()=>{
  for(const cls of CLASS_DEFINITIONS)for(let level=1;level<=60;level++){
   const b=newBuild(cls.id);b.level=level;const r=rows(b);
-  assert.match(r['Base Stats'].Strength,/^\d+$/);assert.match(r.Defence.Health,/^\d+$/);
+  assert.match(r['Base Stats'].Strength,/^\d+$/);assert.match(r.Defense.Health,/^\d+$/);
   if(level!==60)assert.equal(r.Melee['Crit Chance'],'—');
  }
 });
@@ -35,8 +35,8 @@ test('gear, flat enchants, talent ranks, weapon types and target settings change
  const gear={mainhand:{id:25,name:'Test weapon',classs:2,subclass:7,speed:2,attributes:{Agility:10},effects:['Equip: +40 Attack Power.'],tooltipText:'10 - 20 Damage\nSpeed 2.00'}};
  const base=rows(b),equipped=rows(b,gear);assert.equal(equipped['Base Stats'].Agility,'155');assert.notEqual(equipped.Melee.Power,base.Melee.Power);assert.equal(equipped.Melee['Wep Skill'],'303 | 300');assert.notEqual(equipped.Melee.Damage,'0-0 | 0-0');
  const t=data('rogue').talents.find(t=>t.name==='Malice');b.talents[t.id]=5;assert.match(rows(b,gear).Melee['Crit Chance'],/10\.46%/);
- b.controls.buffIds=['sunder'];assert.equal(rows(b,gear)['Melee vs Target'].Armour,'1961');
- b.planning.targetArmour=100;assert.equal(rows(b,gear)['Melee vs Target'].Armour,'0');
+ b.controls.buffIds=['sunder'];assert.equal(rows(b,gear)['Melee vs Target'].Armor,'1961');
+ b.planning.targetArmour=100;assert.equal(rows(b,gear)['Melee vs Target'].Armor,'0');
 });
 test('triggered item effects are not silently treated as permanent stats',()=>{
  const s=passiveItemStats({attributes:{Strength:8},effects:['Equip: +40 Attack Power.','Equip: Chance on hit: increases attack power by 500 for 10 sec.']});assert.deepEqual(s,{str:8,ap:40});
@@ -52,9 +52,9 @@ test('Select All matches observed stronger consumable and target preferences',()
 test('Moonkin armour uses the published Octo talent, not the older Vanilla multiplier',()=>{
  const b=newBuild('druid');b.classOptions.form='Moonkin';const talent=data('druid').talents.find(t=>t.name==='Moonkin Form');
  const gear={chest:{attributes:{Armour:100},effects:[]}};
- assert.equal(rows(b,gear).Defence.Armour,'—');b.talents[talent.id]=1;
+ assert.equal(rows(b,gear).Defense.Armor,'—');b.talents[talent.id]=1;
  const agility=Number(rows(b,gear)['Base Stats'].Agility);
- assert.equal(rows(b,gear).Defence.Armour,String(280+agility*2));
+ assert.equal(rows(b,gear).Defense.Armor,String(280+agility*2));
 });
 
 test('ranged scopes cannot raise melee hit, crit or damage',()=>{
@@ -74,7 +74,7 @@ test('item lines the OctoWoW database publishes for dodge, parry, mana per 5 sec
  assert.deepEqual(passiveItemStats({effects:['Equip: Restores 12 mana per 5 sec when in combat.']}),{});   // conditional lines stay out of the permanent sheet
  const b=newBuild('paladin');const gear={chest:{id:9,name:'Test',classs:4,subclass:4,attributes:{},effects:['Equip: Increases your chance to dodge an attack by 2%.','Equip: Restores 8 mana per 5 sec.']}};
  const before=rows(b),after=rows(b,gear);
- near(parseFloat(after.Defence['Dodge %'])-parseFloat(before.Defence['Dodge %']),2,0.06);
- assert.equal(after.Defence['Mana / 5s'],'8');
+ near(parseFloat(after.Defense['Dodge %'])-parseFloat(before.Defense['Dodge %']),2,0.06);
+ assert.equal(after.Defense['Mana / 5s'],'8');
 });
 function near(a,b,eps){assert.ok(Math.abs(a-b)<=eps,`expected ${b}, got ${a}`);}

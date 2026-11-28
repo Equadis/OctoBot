@@ -36,7 +36,9 @@ class M2:
         if data[:4] != b'MD20':
             raise M2Error('not an MD20 model')
         self.version = self._u32(4)
-        if self.version != 256:
+        # Version 257 (a handful of Burning Crusade era weapons and off-hands) reads with this layout: checked by eye on bounding boxes, index
+        # ranges and texture names only, so callers must treat it as unproven (see item_overlay.py, which reports it).
+        if self.version not in (256, 257):
             raise M2Error(f'version {self.version}, expected 256')
         name_len, name_ofs = self._u32(8), self._u32(12)
         self.name = data[name_ofs:name_ofs + name_len].rstrip(b'\0').decode('latin1')

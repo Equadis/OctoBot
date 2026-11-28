@@ -6,7 +6,9 @@
 .ah-kpi,.ah-panel{background:var(--panel);border:1px solid var(--line);border-radius:5px}
 .ah-panel{margin-bottom:18px}
 .ah-kpi{padding:14px;display:flex;flex-direction:column;gap:8px}
-.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:var(--gold)}
+.ah-kpi small{font-size:11px;color:#9fadbf;font-weight:400;line-height:1.4;margin-top:-4px}.ah-kpi span{font-size:11px;color:#9fadbf}.ah-kpi strong{font-size:15px;font-weight:600;color:var(--gold)}
+/* Counters fill the remaining height without changing the three-line scan status. */
+.ah-kpi>strong:is(#item-count,#auction-count,#historical-auction-count){flex:1;display:flex;align-items:center;font-size:clamp(19px,2.65vw,34px);line-height:1.05;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 /* Override the gold KPI default with freshness/coverage colour classes. */
 .ah-kpi strong.ah-time-green{color:#78dfa6}
 .ah-kpi strong.ah-time-yellow{color:#e3bd57}
@@ -23,12 +25,14 @@
 .ah-field-end{justify-content:flex-end}
 .ah-inline{display:flex;gap:6px}
 .ah-actions{flex-direction:row;gap:8px;margin-left:auto}
-.ah-filters input:not([type=checkbox]),.ah-filters select,.ah-btn{box-sizing:border-box;height:38px;min-height:38px;padding:0 12px;background:#182333;border:1px solid var(--line);border-radius:4px;color:#dce5ee;font:inherit;font-size:12px}
+.ah-realm-actions{align-items:flex-end;flex-wrap:wrap}.ah-realm-actions #ah-realm{min-width:150px}
+@media(max-width:560px){.ah-realm-actions>.ah-field{flex:1 1 100%}.ah-realm-actions #ah-realm{width:100%;min-width:0}}
+.ah-filters input:not([type=checkbox]),.ah-filters select,.ah-btn{box-sizing:border-box;height:38px;min-height:38px;padding:0 12px;background:var(--bg-control);border:1px solid var(--line);border-radius:4px;color:#dce5ee;font:inherit;font-size:12px}
 .ah-filters input:not([type=checkbox]){width:100%;min-width:90px}
 .ah-filters select{min-width:150px;max-width:100%}
 .ah-filters select:disabled,.ah-filters input:disabled{opacity:.45}
 .ah-filters input:focus-visible,.ah-filters select:focus-visible,.ah-btn:focus-visible,.tool-btn:focus-visible,.ah-star:focus-visible,.ah-expand:focus-visible{outline:2px solid #9d8a35;outline-offset:1px}
-.ah-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#1f2b3b;color:#bec9d8;cursor:pointer;white-space:nowrap}
+.ah-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--bg-control);color:#bec9d8;cursor:pointer;white-space:nowrap}
 .ah-btn:hover:not(:disabled),.ah-btn:focus-visible{background:#2b332e;border-color:var(--gold);color:#f4d65c}
 .ah-btn[aria-pressed=true],.ah-btn[aria-expanded=true]{background:#3a3827;color:#f4d65c;border-color:#9d8a35}
 .ah-btn:disabled{opacity:.4;cursor:default}
@@ -50,7 +54,7 @@
 .ah-hint{font-size:12px;line-height:1.6;color:#9fadbf;margin:10px 0}
 .ah-saved{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .ah-chips{display:flex;flex-wrap:wrap;gap:6px}
-.ah-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:4px;background:#1f2b3b;font-size:12px;overflow:hidden}
+.ah-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);font-size:12px;overflow:hidden}
 .ah-chip button{background:none;border:0;color:#bec9d8;font:inherit;cursor:pointer;padding:0 10px;height:30px}
 .ah-chip button:hover,.ah-chip button:focus-visible{color:#f4d65c;background:#2b332e}
 .ah-chip .ah-chip-remove{border-left:1px solid var(--line);padding:0 8px;color:#98a6b8}
@@ -63,12 +67,15 @@
 .ah-scroll th{text-align:left;padding:10px 5px;background:#1a2737;color:#bdc7d5;font-weight:600;overflow:hidden;text-overflow:ellipsis}
 
 /* Sortable metric headers preserve the compact no-side-scroll layout. */
-.ah-scroll th[data-sort-key]{padding:0;white-space:normal;overflow:visible}
+.ah-scroll th[data-sort-key]{padding:0;white-space:normal;overflow:visible;vertical-align:middle}
 .ah-sort-header{display:flex;align-items:center;justify-content:space-between;gap:3px;min-width:0;width:100%;height:100%;padding:10px 5px;background:transparent;border:0;border-radius:0;font:inherit;font-weight:600;font-size:inherit;color:inherit;text-align:left;cursor:pointer}
 .ah-sort-header:hover,.ah-sort-header:focus-visible{background:#27374b;color:#f1d370}
 .ah-sort-header:focus-visible{outline:2px solid #e8c67c;outline-offset:-2px}
 .ah-sort-title{min-width:0;overflow-wrap:normal;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
-.ah-sort-arrow{flex:none;color:#8696ad;font-weight:700;font-size:12px}
+.ah-sort-arrow{flex:0 0 14px;display:block;width:14px;height:14px;line-height:14px;color:#8696ad;font-size:0;background:currentColor;mask:var(--sort-mask) center/14px 14px no-repeat;-webkit-mask:var(--sort-mask) center/14px 14px no-repeat}
+.ah-sort-arrow[data-direction="asc"]{--sort-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7%2012V2M3.5%205.5%207%202l3.5%203.5' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")}
+.ah-sort-arrow[data-direction="desc"]{--sort-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7%202v10m-3.5-3.5L7%2012l3.5-3.5' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")}
+.ah-sort-arrow[data-direction="none"]{--sort-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M4%2012V2M1.5%204.5%204%202l2.5%202.5M10%202v10m-2.5-2.5L10%2012l2.5-2.5' stroke='black' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")}
 .ah-sort-active .ah-sort-header{color:#f1d370}
 .ah-sort-active .ah-sort-arrow{color:#f1d370}
 
@@ -82,10 +89,6 @@
 .ah-q0{--item-quality:var(--quality-0)}.ah-q1{--item-quality:var(--quality-1)}.ah-q2{--item-quality:var(--quality-2)}.ah-q3{--item-quality:var(--quality-3)}.ah-q4{--item-quality:var(--quality-4)}.ah-q5{--item-quality:var(--quality-5)}.ah-q6{--item-quality:var(--quality-6)}
 .ah-item-label{display:flex;flex-direction:column;min-width:0;max-width:100%;overflow:hidden;gap:3px}
 .ah-name-clip{display:block;min-width:0;width:100%;max-width:clamp(95px,18vw,230px);overflow:hidden;white-space:nowrap}
-.ah-name-text{display:inline-block;white-space:nowrap;will-change:transform}
-.ah-name-clip.ah-scroll-name .ah-name-text{animation:ah-name-pan var(--name-duration,10s) linear infinite}
-@keyframes ah-name-pan{0%,12%{transform:translateX(0)}88%,93%{transform:translateX(calc(-1 * var(--name-distance,0px)))}93.01%,100%{transform:translateX(0)}}
-@media(prefers-reduced-motion:reduce){.ah-name-clip.ah-scroll-name .ah-name-text{animation:none}}
 .ah-entry-name{display:flex;align-items:center;gap:3px;min-width:0;max-width:100%}
 .ah-variant-stats,.ah-variant-unresolved{display:block;font-size:10px;line-height:1.35;color:#9fb8ce;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .ah-variant-unresolved{color:#8995a6;font-size:10px;font-weight:400}
@@ -95,14 +98,22 @@
 /* Prices: white numbers, each followed by its coin. Zero amounts are not shown. */
 .ah-money{display:inline-flex;align-items:center;gap:1px;flex-wrap:wrap;white-space:normal}.ah-num{color:#fff}.ah-coin{width:11px;height:11px;margin-right:1px;flex:none}.ah-money .ah-coin:last-child{margin-right:0}
 .ah-time-red{color:#ff5a5a}.ah-time-orange{color:#ff9a3c}.ah-time-yellow{color:var(--gold)}.ah-time-green{color:#4fdc7a}
-/* Auction countdown palette from the reference image; do not recolour scan/status indicators. */
+/* Shared auction countdown and trend palette; do not recolour scan/status indicators. */
 .ah-auction-time.ah-time-red{color:#ff0000}
-.ah-auction-time.ah-time-orange{color:#ff9218}
+.ah-auction-time.ah-time-orange{color:#ff8000}
 .ah-auction-time.ah-time-yellow{color:#ffff00}
-.ah-auction-time.ah-time-green{color:#1eff00}
-.ah-auction-time.ah-time-blue{color:#2992ff}
+.ah-auction-time.ah-time-green{color:#00ff00}
+.ah-auction-time.ah-time-blue{color:#0080ff}
 
-.ah-change-up{color:#f27c7e}.ah-change-down{color:#5bdb9d}.ah-change-neutral{color:#a8b7c7}
+.ah-scroll td.ah-change-up-strong,.ah-stats .ah-change-up-strong{color:#ff0000}
+.ah-scroll td.ah-change-up,.ah-stats .ah-change-up{color:#ff8000}
+.ah-scroll td.ah-change-up-slight,.ah-stats .ah-change-up-slight{color:#ffff00}
+.ah-scroll td.ah-change-neutral,.ah-stats .ah-change-neutral{color:#ffffff}
+.ah-scroll td.ah-change-down-slight,.ah-stats .ah-change-down-slight{color:#dfff00}
+.ah-scroll td.ah-change-down,.ah-stats .ah-change-down{color:#00ff00}
+.ah-scroll td.ah-change-down-strong,.ah-stats .ah-change-down-strong{color:#0080ff}
+.ah-scroll td.ah-change-unknown,.ah-stats .ah-change-unknown{color:#a8b7c7}
+.ah-trend-arrow{display:inline-block;font-size:calc(1em + 2pt);line-height:1;vertical-align:middle}
 .ah-star,.ah-expand{background:none;border:0;cursor:pointer;font:inherit;padding:2px 4px;line-height:1;border-radius:3px}
 .ah-star{font-size:17px;color:#7d8ba0}
 .ah-star:hover,.ah-star[aria-pressed=true]{color:#f4d65c}
@@ -116,7 +127,7 @@
 .ah-stats div{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
 .ah-stats dt{font-size:11px;color:#9fadbf;margin:0 0 4px}.ah-stats dd{margin:0;font-size:13px;font-weight:600;color:var(--gold)}
 .ah-stats dd small{font-weight:400;color:#98a6b8;display:block;margin-top:2px}
-.ah-detail details{border:1px solid var(--line);border-radius:4px;margin:8px 0;background:#182333}
+.ah-detail details{border:1px solid var(--line);border-radius:4px;margin:8px 0;background:var(--bg-control)}
 .ah-detail summary{cursor:pointer;padding:9px 12px;font-size:12px;font-weight:600;color:#dce3ed}
 .ah-detail summary:hover,.ah-detail summary:focus-visible{color:#f4d65c}
 .ah-detail details>div{padding:0 12px 12px;overflow:auto}
@@ -159,21 +170,14 @@
 
 
 /* Fixed column proportions fit the eleven main metrics without horizontal scrolling. */
-.ah-scroll>table>thead th:nth-child(1){width:30px}
-.ah-scroll>table>thead th:nth-child(2){width:24%}
-.ah-scroll>table>thead th:nth-child(3){width:6%}
-.ah-scroll>table>thead th:nth-child(4){width:6%}
-.ah-scroll>table>thead th:nth-child(5){width:9%}
-.ah-scroll>table>thead th:nth-child(6){width:9%}
-.ah-scroll>table>thead th:nth-child(7){width:9%}
-.ah-scroll>table>thead th:nth-child(8){width:10%}
-.ah-scroll>table>thead th:nth-child(9){width:7%}
-.ah-scroll>table>thead th:nth-child(10){width:6%}
-.ah-scroll>table>thead th:nth-child(11){width:10%}
+.ah-scroll>table>thead th:nth-child(1){width:30px;box-sizing:border-box}
+.ah-scroll>table>thead th:nth-child(2){width:20%;box-sizing:border-box}
+/* Fixed table layout divides the remaining space equally among the nine data columns. */
+.ah-scroll>table>thead th:nth-child(n+3){width:auto}
 .ah-scroll>table>tbody>tr.ah-entry>td{overflow:hidden;text-overflow:ellipsis}
 .ah-scroll>table>tbody>tr.ah-entry>td:nth-child(2){overflow:visible}
 .ah-detail-inner .ah-db-link{display:inline-block;margin:8px 0 4px;color:#e8c67c;font-size:12px}
-.ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#1f2b3b;border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
+.ah-roll-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--bg-panel);border:1px solid #39465a;padding:10px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
 .ah-roll-detail strong{color:#efce47}
 .ah-roll-detail span{color:#9fe0bd}
 .ah-roll-detail small{color:#8995a6;font-size:10px;font-weight:400;line-height:1.4;width:100%}
@@ -214,3 +218,37 @@
  .ah-icon{width:24px;height:24px}
  .ah-name-clip{max-width:min(100%,calc(100vw - 154px))}
 }
+
+.ah-history-layout{display:grid;grid-template-columns:minmax(0,640px) minmax(160px,1fr);gap:24px;align-items:center}.ah-history-summary{display:grid;gap:14px;padding:12px;min-width:0}.ah-history-stat{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;font-weight:400}.ah-history-summary small{font-weight:400;font-size:11px}@media(max-width:700px){.ah-history-layout{grid-template-columns:1fr;gap:6px}.ah-history-summary{padding:4px 0}}
+
+.ah-stats .ah-trend-prices{display:block;margin-top:4px;font-weight:400;color:#dce3ed;line-height:1.4}
+
+/* Keep the compact favourite cell from clipping the star into an ellipsis. */
+.ah-scroll>table>tbody>tr.ah-entry>td:first-child{padding:0;text-align:center;overflow:visible;text-overflow:clip;white-space:nowrap}
+.ah-scroll>table>tbody>tr.ah-entry>td:first-child .ah-star{display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;padding:0;box-sizing:border-box;overflow:visible}
+
+/* Market %: comparison with historical average, independent of scan-to-scan trend. */
+.ah-market-dark-red{color:#b22222}
+.ah-market-red{color:#ff0000}
+.ah-market-orange{color:#ff8000}
+.ah-market-yellow{color:#ffff00}
+.ah-market-white{color:#ffffff}
+.ah-market-yellow-green{color:#dfff00}
+.ah-market-green{color:#00ff00}
+.ah-market-blue{color:#0080ff}
+.ah-market-unknown{color:#a8b7c7}
+
+#last-scan.ah-time-green{color:#00ff00}
+#last-scan.ah-time-yellow{color:#ffff00}
+#last-scan.ah-time-red{color:#ff0000}
+
+/* Auction listings: Load More under the table; price history tooltip and active point. */
+.ah-load-more{display:block;margin:12px auto 4px;min-width:160px}
+.ah-load-more:disabled{opacity:.6;cursor:default}
+.ah-chart{touch-action:pan-y}
+.ah-chart-dot.active{fill:#fff;stroke:#e8c67c;stroke-width:2}
+.ah-chart-tip{display:grid;gap:3px;pointer-events:none;z-index:1100}
+.ah-chart-tip strong{color:#e8c67c;font-size:12px}
+.ah-chart-tip .ah-chart-tip-label{color:#98a6b8;font-size:10px}
+.ah-section-head h2 .collapse-toggle{font-size:15px;font-weight:600}
+

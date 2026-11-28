@@ -19,17 +19,18 @@
 <meta name="twitter:card" content="summary_large_image">
   <title>OctoBot · Gear Planner &amp; DPS Simulator</title>
   <link rel="icon" href="../favicon.png" type="image/png">
-  <link rel="stylesheet" href="planner.css?v=20261115-blue1">
-  <link rel="stylesheet" href="../quality-select.css?v=1">
-  <link rel="stylesheet" href="combat-layout.css?v=20261117-character-width2">
-  <script type="module" src="planner.mjs?v=20261117-mvp8"></script>
-<link rel="stylesheet" href="../site-theme.css?v=20261116-q2">
+  <link rel="stylesheet" href="planner.css?v=20261126-toolbar2">
+  <link rel="stylesheet" href="../quality-select.css?v=20261125-theme2">
+  <link rel="stylesheet" href="combat-layout.css?v=20261202-pan-paint">
+  <script type="module" src="planner.mjs?v=20261202-pan-paint"></script>
+<link rel="stylesheet" href="../site-theme.css?v=20261201-ui3">
 <script src="../icon-fallback.js?v=1"></script><script src="../site-tooltips.js?v=20261116-tips1" defer></script>
 </head>
 <body>
 <main>
   <header class="site-header"><div class="site-identity"><a class="site-home" href="../" aria-label="OctoBot home" title="OctoBot home"><img class="site-logo" src="../favicon.png" width="48" height="48" alt=""></a><div><div class="brand">OCTOBOT</div><h1>Gear Planner &amp; DPS Simulator</h1></div></div><div class="header-status"><a class="header-link" href="https://discord.gg/QtdNpKnU72" target="_blank" rel="noopener noreferrer" aria-label="Join the OctoWoW Discord" data-tip="Join the Discord"><span class="header-icon" style="-webkit-mask:url(../img/discord.png?v=1) center/contain no-repeat;mask:url(../img/discord.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><a class="header-link" href="https://ko-fi.com/equadis" target="_blank" rel="noopener noreferrer" aria-label="Support OctoBot with a donation" data-tip="Buy me a coffee"><span class="header-icon" style="-webkit-mask:url(../img/coffee.png?v=1) center/contain no-repeat;mask:url(../img/coffee.png?v=1) center/contain no-repeat" aria-hidden="true"></span></a><span class="viewers" id="viewer-status" role="status"><i class="viewer-dot" aria-hidden="true"></i><span id="viewer-count">—</span><span class="sr-only"> active viewers across the dashboard</span></span></div></header>
-  <div class="planner-topbar"><nav class="page-nav" aria-label="Dashboard pages" data-current="sim"></nav><script src="../site-nav.js?v=20261117-chat1"></script><div class="planner-actions-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" type="button" hidden>Reset all</button></div></div>
+  <nav class="page-nav" aria-label="Dashboard pages" data-current="sim"></nav><script src="../site-nav.js?v=20261120-tabs"></script>
+  <div class="site-construction-banner" role="note"><strong>Under Construction</strong><span>This section is still in development. Features and information may be incomplete, unavailable or subject to change.</span></div>
   <section id="class-selection" aria-labelledby="classes-title">
     <div class="class-heading"><h2 id="classes-title">Classes</h2></div>
     <div id="class-grid" class="class-grid" aria-label="Choose a class"></div>
@@ -37,49 +38,50 @@
 
   <div id="startup-error" class="notice error" role="alert" hidden></div>
   <noscript><p class="notice error">Enable JavaScript to use the planner.</p></noscript>
-  <div id="planner" hidden>
-    <div class="toolbar">
-      <div class="actions"><div class="rail-brand"><strong>OctoSim</strong><span>Warrior Build Planner</span></div><a class="all-classes" href="?classes">← All classes</a><button id="save-build">Save Build</button><button id="load-build">Load Build</button><button id="share-build">Share Build</button><button id="export-build">Export Build</button><button id="import-build">Import Build</button></div>
+  <div id="planner" data-name-pan="hover" hidden>
+    <div class="app-toolbar" role="toolbar" aria-label="Build actions">
+      <div class="app-toolbar-actions"><a class="app-btn" href="?classes">← All classes</a><button id="save-build" type="button">Save</button><button id="load-build" type="button">Load</button><button id="share-build" type="button">Share</button><button id="export-build" type="button">Export</button><button id="import-build" type="button">Import</button></div>
+      <div class="app-toolbar-status"><p id="feedback" role="status" aria-live="polite"></p><button id="reset-all" class="reset-all" type="button" hidden>Reset all</button></div>
     </div>
     <div class="planner-grid">
       <div class="planner-column left-column">
       <section class="card equipment-card" id="equipment" aria-labelledby="equipment-heading">
         <div class="card-heading"><h2 id="equipment-heading">Character</h2><span class="small muted" id="catalogue-status" hidden></span><button id="reset-gear" class="panel-reset" type="button" aria-label="Reset gear">Reset</button></div>
-        <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field character-name-field">Character name<input id="character-name" maxlength="24" autocomplete="off" placeholder="Name your character"></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
-        <details class="character-options">
-          <summary>Build details</summary>
-          <label class="field">Build name<input id="build-name" maxlength="80" value="My Warrior Build" autocomplete="off"></label>
-          <div id="profession-controls" class="profession-controls"></div><div class="build-summary" id="tree-summary"></div>
-          <p id="storage-status" class="small muted">Build changes are kept in this browser.</p>
-        </details>
+        <div class="gear-workspace">
+        <div class="gear-col gear-character">
+        <div class="character-controls"><label class="field">Race<select id="character-race"><option>Human</option><option>Orc</option><option>Dwarf</option><option>Night Elf</option><option>Undead</option><option>Tauren</option><option>Gnome</option><option>Troll</option></select></label><label class="field character-name-field">Build name<input id="build-name" maxlength="80" value="" autocomplete="off" placeholder="Name this build"></label><label class="field">Level<input id="character-level" type="number" min="1" max="60" step="1" value="60"></label></div>
+        <div class="character-options">
+          <div class="build-summary" id="tree-summary" hidden></div><p id="storage-status" hidden>Build changes are kept in this browser.</p>
+        </div>
         <div class="paperdoll">
           <div id="slots-left" class="slot-column"></div>
-          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div id="gear-stats" class="gear-stats" aria-label="Character statistics"></div><div class="character-build-meta"><span id="talent-split">0 / 0 / 0</span><span id="points-left"></span><span id="equipment-count"></span></div></div>
+          <div class="character-summary"><img class="class-mark" src="https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" alt=""><strong>Warrior</strong><span id="character-description"></span><div id="gear-stats" class="gear-stats" aria-label="Character statistics"></div></div>
           <div id="slots-right" class="slot-column"></div>
         </div>
-        <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div><details class="appearance-slots"><summary>Appearance</summary><div id="slots-appearance" class="weapons extra-slots"></div></details>
+        <div id="slots-weapons" class="weapons"></div><div id="slots-ammo" class="weapons extra-slots"></div><div id="class-options" class="class-options"></div>
+        </div>
+        <section class="gear-col gear-selector" id="item-selector" aria-labelledby="item-selector-heading">
+          <div class="item-selector-heading"><h3 id="item-selector-heading">Head</h3><button id="clear-item" class="panel-reset" type="button">Clear slot</button></div>
+          <form id="item-form" class="item-filter-grid" role="search" aria-label="Equipment filters">
+            <label class="field">Search<input id="item-reference" maxlength="200" placeholder="Item name or ID" aria-label="Search items" autocomplete="off"></label>
+            <label class="field">Quality<select id="item-quality" class="quality-select"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
+            <label class="field">Sort by<select id="item-sort"></select></label>
+          </form>
+          <div class="item-count-row"><span id="item-count" role="status" aria-live="polite"></span><button id="item-direction" type="button" class="sort-direction" aria-label="Sort direction: descending" title="Descending">▼</button></div>
+          <p id="item-error" class="error" role="alert"></p>
+          <div id="item-results" class="item-results" role="listbox" aria-label="Items"></div>
+        </section>
+        <section class="gear-col gear-preview" aria-label="Item preview">
+          <section id="item-preview" class="item-preview" aria-label="Item details">
+            <div class="item-preview-top">
+              <div id="item-preview-summary"><p class="muted">Select an item.</p></div>
+              <label class="field enchant-field">Item Enchant<select id="item-enchant" disabled><option value="">None</option></select></label>
+            </div>
+            <div id="item-preview-details" aria-live="polite"></div>
+          </section>
+        </section>
+        </div>
       </section>
-
-        <section class="card" id="buffs" aria-labelledby="buffs-heading">
-          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
-          <div id="buff-list"></div>
-        </section>
-      </div>
-      <div class="planner-column right-column">
-    <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
-      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div><button id="clear-talents" class="panel-reset" type="button" aria-label="Reset talents">Reset</button></div>
-
-      <div id="talent-trees" class="talent-trees"></div>
-    </section>
-        <section class="card" id="rotation" aria-labelledby="rotation-heading">
-          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><button id="reset-rotation" class="panel-reset" type="button" aria-label="Reset rotation">Reset</button></div>
-          <label class="field rotation-preset-field">Preset<select id="rotation-preset"></select></label>
-          <p id="rotation-description" class="rotation-description"></p>
-          <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
-          <div id="rotation-rows"></div>
-          <select id="rotation-add" aria-label="Add ability"><option value="">Add ability…</option></select>
-          <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
-        </section>
         <section class="card" id="build-settings" aria-labelledby="settings-heading">
           <div class="card-heading"><h2 id="settings-heading">Settings</h2><button id="reset-settings" class="panel-reset" type="button" aria-label="Reset settings">Reset</button></div>
           <div class="fight-controls">
@@ -90,7 +92,7 @@
           <div class="target-heading">Target</div><div id="target-name" class="target-name">Custom</div>
           <div class="target-fields">
             <label class="target-field"><input id="target-level" type="number" min="1" max="70" value="63">Level</label>
-            <label class="target-field"><input id="target-armour" type="number" min="0" max="50000" value="4211">Armour</label>
+            <label class="target-field"><input id="target-armour" type="number" min="0" max="50000" value="4211">Armor</label>
             <label class="target-field"><input id="target-nature-res" type="number" min="0" max="10000" value="0">Nature Res</label>
             <label class="target-field"><input id="target-fire-res" type="number" min="0" max="10000" value="0">Fire Res</label>
             <label class="target-field"><input id="target-frost-res" type="number" min="0" max="10000" value="0">Frost Res</label>
@@ -105,27 +107,34 @@
           <button disabled class="run-button" title="Public simulations require verified combat rules and live-client comparisons." aria-describedby="simulation-readiness">Run Simulation</button><p class="small muted" id="simulation-readiness" role="status">Combat rules awaiting validation.</p><div id="simulation-output"></div><details class="character-options"><summary>Experimental reference lab</summary><p class="small muted">Single-rank benchmark using the current build and fixed fight settings, not the saved rotation. No mana, energy or rage regeneration, no partial resistance, no threat, no incoming damage. Melee benchmarks include white attacks. Fixed 100 ms decisions; 19% dual-wield penalty, no parry/block or crit suppression, 2× melee and 1.5× spell/heal critical multipliers, no periodic crits. All values are unverified reference estimates.</p><label class="field">Learned spell rank<select id="reference-rank"></select></label><p><a id="reference-source" target="_blank" rel="noopener noreferrer">Rank source ↗</a></p><label class="field">Assumed cooldown (ms)<input id="reference-cooldown" type="number" min="0" step="1"></label><label class="field">Random seed<input id="reference-seed" type="number" min="0" step="1" value="42"></label><label class="field" id="reference-cost-row" hidden>Observed resource cost<input id="reference-cost" type="number" min="0" step="any"></label><label class="field" id="reference-coeff-row" hidden>Assumed periodic coefficient per tick<input id="reference-coeff" type="number" min="0" step="any"></label><label class="field" id="reference-custom-model-row" hidden>Explicit reference mechanics (JSON)<textarea id="reference-custom-model" rows="6" spellcheck="false"></textarea></label><label class="field" id="reference-life-tap-row" hidden>Mana per health spent<input id="reference-life-tap-factor" type="number" min="0" step="any"></label><label class="field" id="reference-periodic-consume-row" hidden><input id="reference-periodic-consume" type="checkbox"> Consume periodic duration even on a miss</label><div id="reference-ranged-row" hidden><p class="small muted">Observed ranged stats must be for the equipped build and selected target. Ranged auto shots consume one ammunition each.</p><label class="field">Observed ranged AP<input id="reference-rap" type="number" min="0" step="any"></label><label class="field">Observed miss (%)<input id="reference-ranged-miss" type="number" min="0" max="100" step="any"></label><label class="field">Observed crit (%)<input id="reference-ranged-crit" type="number" min="0" max="100" step="any"></label><label class="field">Shot scaling<select id="reference-ranged-policy"><option value="normalised">Normalised</option><option value="actual-swing">Actual weapon speed</option></select></label><label class="field">Normalised speed (s)<input id="reference-ranged-speed" type="number" min="0.01" step="any" value="2.8"></label><label class="field">Starting ammo count<input id="reference-ammo" type="number" min="1"></label></div><label class="field" id="reference-direct-coeff-row" hidden>Assumed direct spell/healing coefficient<input id="reference-direct-coeff" type="number" min="0" step="any"></label><div id="reference-execute-row" hidden><p class="small muted">Execute: the reference sources disagree; enter an explicit research model. Target starts at 20% health.</p><label class="field">Base damage<input id="reference-execute-base" type="number" min="0"></label><label class="field">Damage per extra rage<input id="reference-execute-coefficient" type="number" min="0" step="any"></label><label class="field">Extra rage cap<input id="reference-execute-cap" type="number" min="0"></label><label class="field">Additional rage paid<select id="reference-execute-payment"><option value="always">Always</option><option value="landed">On hit</option></select></label></div><div id="reference-ap-row" hidden><p class="small muted">Bloodthirst: published sources disagree on both base damage and scaling.</p><label class="field">Base damage<input id="reference-ap-base" type="number" min="0"></label><label class="field">AP coefficient<input id="reference-ap-coefficient" type="number" min="0" step="any"></label></div><label class="small"><input id="reference-confirm" type="checkbox"> I have learned this rank and accept the reference-only assumptions, conflicts and incomplete effects.</label><p><button id="run-reference" type="button">Run reference benchmark</button> <button id="cancel-reference" type="button">Cancel</button></p><p id="reference-status" role="status"></p><div id="reference-output"></div></details><details class="character-options"><summary>Experimental configured rotation</summary><p class="small muted">Runs every configured priority row, never an unsupported subset. Generate a current-phase rank and policy template; review and edit the JSON, including null observation inputs and explicit acceptance of external references/source conflicts. Fixed timing only: disable duration and keypress variability. Regenerate after changing the build.</p><button id="generate-reference-rotation" type="button">Generate rotation settings</button><details><summary>Available rank IDs and sources</summary><pre id="rotation-reference-choices" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details><label class="field">Explicit rotation configuration (JSON)<textarea id="rotation-reference-config" rows="14" spellcheck="false" style="width:100%;font-family:monospace"></textarea></label><label class="small"><input id="rotation-reference-confirm" type="checkbox"> I confirm every selected rank and reference-only policy; unverified effects may be omitted.</label><p><button id="run-reference-rotation" type="button">Run configured rotation (reference)</button> <button id="cancel-reference-rotation" type="button">Cancel</button></p><p id="rotation-reference-status" role="status"></p><div id="rotation-reference-output"></div></details>
         </section>
         <section class="card" id="combat-log" aria-labelledby="log-heading"><div class="card-heading"><h2 id="log-heading">Combat Log</h2><button id="reset-combat-log" class="panel-reset" type="button" aria-label="Reset combat log">Reset</button></div><div id="combat-log-output"><p class="small muted">Run a simulation to see the combat log.</p></div></section>
+
+      </div>
+      <div class="planner-column right-column">
+    <section class="card talent-card" id="talents" aria-labelledby="talents-heading">
+      <div class="card-heading"><h2 id="talents-heading">Talents</h2><div class="talent-count"><strong id="talents-total">0 / 0 / 0</strong><span id="talents-points-left">Points left: 51</span></div><button id="clear-talents" class="panel-reset" type="button" aria-label="Reset talents">Reset</button></div>
+
+      <div id="talent-trees" class="talent-trees"></div>
+    </section>
+        <section class="card" id="buffs" aria-labelledby="buffs-heading">
+          <div class="card-heading"><h2 id="buffs-heading">Buffs &amp; Debuffs</h2><button id="reset-buffs" class="panel-reset" type="button" aria-label="Reset buffs and debuffs">Reset</button></div>
+          <div id="buff-list"></div>
+        </section>
+        <section class="card" id="rotation" aria-labelledby="rotation-heading">
+          <div class="card-heading"><h2 id="rotation-heading">Rotation</h2><button id="reset-rotation" class="panel-reset" type="button" aria-label="Reset rotation">Reset</button></div>
+          <label class="field rotation-preset-field">Preset<select id="rotation-preset"></select></label>
+          <p id="rotation-description" class="rotation-description"></p>
+          <div class="rotation-save"><input id="rotation-name" maxlength="80" placeholder="Name this rotation…" aria-label="Rotation name"><button id="rotation-save">Save rotation</button></div><span id="rotation-save-status" role="status" class="small"></span>
+          <div id="rotation-rows"></div>
+          <select id="rotation-add" aria-label="Add ability"><option value="">Add ability…</option></select>
+          <div class="keypress-controls"><label>Key press interval <input id="key-interval" type="number" min="10" max="5000" value="100"> ms</label><label><input id="key-variability" type="checkbox" checked> Variability ±</label><label><input id="key-variability-ms" type="number" min="0" max="5000" value="35" aria-label="Key press variability"> ms</label></div>
+        </section>
       </div>
     </div>
   </div>
   <footer><span>Game icons © Blizzard Entertainment · <a href="https://github.com/Equadis/OctoBot" target="_blank" rel="noopener noreferrer">OctoBot source ↗</a></span><span class="source-credits">Based on forks of <a href="https://thrunk112.github.io/WarriorSim-TurtleWoW/turtle.html" target="_blank" rel="noopener noreferrer">TurtleSim</a> and <a href="https://www.combatgum.app/" target="_blank" rel="noopener noreferrer">Combat Gum</a>. <span class="reference-forks">(<a href="https://github.com/isfir/wowsims-turtle" target="_blank" rel="noopener noreferrer">WoWSims Turtle</a> · <a href="https://github.com/Barwaat/huntersim2-twow" target="_blank" rel="noopener noreferrer">HunterSim Turtle</a>)</span></span></footer>
 </main>
-<dialog id="item-dialog" class="equipment-picker" aria-labelledby="item-dialog-heading">
-  <form id="item-form" class="item-picker-header"><h2 id="item-dialog-heading">Equipment</h2><input id="item-reference" maxlength="200" placeholder="Search items…" aria-label="Search items" autocomplete="off"><span id="item-count" class="small muted" role="status"></span><button type="button" data-close="item-dialog" aria-label="Close equipment picker">×</button></form>
-  <div class="item-picker-grid">
-    <aside class="item-picker-controls" aria-label="Equipment filters">
-      <label class="field">Sort By<select id="item-sort"></select></label>
-      <label class="field">Direction<button id="item-direction" type="button">Descending ▼</button></label>
-      <label class="field">Quality<select id="item-quality" class="quality-select"><option value="">All qualities</option><option value="0">Poor</option><option value="1">Common</option><option value="2">Uncommon</option><option value="3">Rare</option><option value="4">Epic</option><option value="5">Legendary</option></select></label>
-      <label class="field enchant-field">Equipped item enchant<select id="item-enchant"><option value="">— None —</option></select></label>
-      <div class="item-picker-actions"><p id="item-error" class="error" role="alert"></p><button id="clear-item" type="button">Clear Slot</button></div>
-    </aside>
-    <div id="item-results" class="item-results" role="listbox" aria-label="Items"></div>
-    <section id="item-preview" class="item-preview" aria-label="Item details" aria-live="polite"><p class="muted">Select an item.</p></section>
-  </div>
-</dialog>
-<dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" required autocomplete="off"></label><div class="save-actions"><button type="submit">Save</button><span id="save-error" class="error" role="status" aria-live="polite"></span></div></form></dialog>
-<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off"></label><div class="library-actions"><button id="export-library" type="button">Export class builds</button><button id="import-library" type="button">Import class builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
+<dialog id="save-dialog" aria-labelledby="save-heading"><div class="card-heading"><h2 id="save-heading">Save Build</h2><button data-close="save-dialog" aria-label="Close save build">×</button></div><form id="save-form"><label class="field">Build name<input id="save-name" maxlength="80" autocomplete="off"></label><div class="save-actions"><button type="submit">Save</button><span id="save-error" class="error" role="status" aria-live="polite"></span></div></form></dialog>
+<dialog id="load-dialog" aria-labelledby="load-heading"><div class="card-heading"><h2 id="load-heading">Saved Builds</h2><button data-close="load-dialog" aria-label="Close saved builds">×</button></div><div class="saved-filters"><label class="field">Search builds<input id="saved-build-search" type="search" autocomplete="off" placeholder="Build, character or class"></label><label class="field">Class<select id="saved-class-filter"><option value="">All classes</option></select></label></div><div class="library-actions"><button id="export-library" type="button">Export builds</button><button id="import-library" type="button">Import builds</button></div><p id="saved-library-status" class="small" role="status"></p><div id="saved-builds"></div></dialog>
 <dialog id="share-dialog" aria-labelledby="share-heading"><div class="card-heading"><h2 id="share-heading">Share Build</h2><button data-close="share-dialog" aria-label="Close share link">×</button></div><label class="field">Build link<textarea id="share-url" rows="4" readonly></textarea></label><button id="copy-link">Copy link</button></dialog>
 <input id="import-library-file" type="file" accept=".json,application/json" hidden>
 <input id="import-file" type="file" accept=".json,application/json" hidden>

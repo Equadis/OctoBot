@@ -15,15 +15,20 @@ import {outfitter} from '../../cloudflare/population/src/outfitter.js';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const docs=path.resolve(here,'..','..','docs');
 const args=process.argv.slice(2).filter(a=>!a.startsWith('--'));
-const overlay=args[0]&&path.resolve(args[0]);
+// Several folders may be given, comma separated (the character overlay and the skins overlay, say); the first that holds a key answers it.
+const overlays=(args[0]||'').split(',').filter(Boolean).map(folder=>path.resolve(folder));
+const overlay=overlays[0];
 const port=Number(args[1]||8080);
 const noOverlay=process.argv.includes('--no-overlay');
-if(!overlay){console.error('usage: node tools/models/e2e_server.mjs <overlay folder> [port] [--no-overlay]');process.exit(2);}
+// --fail-skins answers the skins catalogue with a 503, to test the page against a failing service.
+const failSkins=process.argv.includes('--fail-skins');
+if(!overlay){console.error('usage: node tools/models/e2e_server.mjs <overlay folder[,more folders]> [port] [--no-overlay] [--fail-skins]');process.exit(2);}
 
 // A file-backed stand-in for an R2 bucket: exact keys only, no listing, never outside the folder.
 const bucket={async get(key){
  if(!/^[A-Za-z0-9_./-]+$/.test(key)||key.includes('..'))return null;
- try{return {body:await fs.readFile(path.join(overlay,key))};}catch{return null;}
+ for(const folder of overlays){try{return {body:await fs.readFile(path.join(folder,key))};}catch{}}
+ return null;
 }};
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.ico':'image/x-icon','.ogg':'audio/ogg','.mp3':'audio/mpeg'};
 const log=[];
@@ -33,6 +38,7 @@ http.createServer(async(req,res)=>{
  try {
   if(url.pathname==='/telemetry.json'){const body=JSON.stringify({endpoint:`http://127.0.0.1:${port}`});res.writeHead(200,{'content-type':'application/json'});return res.end(body);}
   if(url.pathname.startsWith('/api/outfitter/')){
+   if(failSkins&&url.pathname==='/api/outfitter/skins'){res.writeHead(503,{'content-type':'application/json'});return res.end('{"error":"unavailable"}');}
    const response=await outfitter(new Request(url,{method:req.method,headers:{}}),fetch,noOverlay?{}:{MODELS:bucket});
    log.push(`${response.status} ${url.pathname.replace('/api/outfitter/','')}`);
    // The Worker's own cache headers are passed through, so the browser behaves as it does against the deployed Worker (versioned URLs are cached
@@ -49,4 +55,4 @@ http.createServer(async(req,res)=>{
   res.writeHead(200,{'content-type':types[path.extname(file)]||'application/octet-stream','cache-control':'no-store'});
   res.end(await fs.readFile(file));
  } catch(error){res.writeHead(500);res.end(String(error));}
-}).listen(port,'127.0.0.1',()=>console.log(`serving the site and Worker on http://127.0.0.1:${port}/ (${noOverlay?'no overlay':'overlay from '+overlay})`));
+}).listen(port,'127.0.0.1',()=>console.log(`serving the site and Worker on http://127.0.0.1:${port}/ (${noOverlay?'no overlay':'overlay from '+overlays.join(', ')})`));

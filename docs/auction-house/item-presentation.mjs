@@ -50,18 +50,29 @@ export function itemTooltip(item){
    "Item ID: "+itemId,
    ...variantLines(item),
    ...(v.hasVariant&&v.bonuses.length?["Random enchantment from Classic DBC reference."]:[]),
-   known?"Name and rarity from the OctoWoW catalogue snapshot.":"Item details not found in the available catalogue."
+   known?"Name and rarity from the OctoWoW catalog snapshot.":"Item details not found in the available catalog."
  ].join("\n");
 }
 const baseCache=new Map();
-let referencePromise;
+const cataloguePromises=new Map();
+async function catalogueFor(file){
+ if(!cataloguePromises.has(file)){
+  const pending=fetch(new URL("../sim/data/items/"+file,import.meta.url),{cache:"force-cache"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  cataloguePromises.set(file,pending);void pending.then(value=>{if(!value&&cataloguePromises.get(file)===pending)cataloguePromises.delete(file);});
+ }
+ return cataloguePromises.get(file);
+}
 async function referenceFor(id){
- if(!referencePromise)referencePromise=fetch("../sim/data/items/reference-tooltips.json",{cache:"force-cache"})
-  .then(r=>r.ok?r.json():null).catch(()=>null);
- const ref=await referencePromise;
- return ref?.items?.[id]||null;
+ const [details,supplement]=await Promise.all([catalogueFor("details.json"),catalogueFor("details-supplement.json")]);
+ const found=details?.[id]??supplement?.[id];
+ if(found&&(found.tooltipText||found.summary))return {tooltipText:found.tooltipText||found.summary,source:"OctoWoW DB snapshot"};
+ return null;
 }
 async function officialFor(id){
+ try{
+  const response=await fetch("https://octometrics.eqvoice.workers.dev/api/world-chat/item-tooltip?id="+id,{credentials:"omit",signal:AbortSignal.timeout(8000)});
+  if(response.ok){const data=await response.json();if(data.id===id&&typeof data.tooltipText==="string"&&data.tooltipText.trim()&&data.source==="OctoWoW DB")return data;}
+ }catch{/* Existing direct DB request remains a fallback. */}
  try{
   const response=await fetch("https://octowow.st/db/?item="+id,{credentials:"omit",signal:AbortSignal.timeout(7000)});
   if(!response.ok)return null;
@@ -80,8 +91,8 @@ export async function richItemTooltip(item){
  const id=Number(item?.item_id),v=variantDetails(item),title=displayItemName(item);
  let base=null;
  if(Number.isSafeInteger(id)&&id>0){
-  if(!baseCache.has(id))baseCache.set(id,(async()=>await officialFor(id)||await referenceFor(id))());
-  base=await baseCache.get(id);
+  if(!baseCache.has(id))baseCache.set(id,(async()=>await referenceFor(id)||await officialFor(id)||(await catalogueFor("reference-tooltips.json"))?.items?.[id]||null)());
+  base=await baseCache.get(id);if(!base)baseCache.delete(id);
  }
  const raw=typeof base?.tooltipText==='string'?base.tooltipText.trim():'';
  const lines=raw?raw.split("\n").map(x=>x.trim()).filter(Boolean).filter((x,i)=>i!==0||x!==clean(item?.item_name)):[];
@@ -92,8 +103,8 @@ export async function richItemTooltip(item){
  if(rollStats.length)lines.push("Variant effects",...rollStats);
  notes.push(...details.filter(line=>line.startsWith("Unmapped random enchantment")));
  if(v.hasVariant&&v.bonuses.length)notes.push("Standard Classic DBC reference; custom values may differ.");
- if(!lines.length)notes.push("Full item attributes are not available in the catalogue.");
- if(base?.source==="OctoWoW DB")notes.push("Base stats: OctoWoW DB.");
+ if(!lines.length)notes.push("Full item attributes are not available in the catalog.");
+ if(base?.source==="OctoWoW DB"||base?.source==="OctoWoW DB snapshot")notes.push("Base stats: "+base.source+".");
  else if(raw)notes.push("Base stats: Gear Planner reference.");
  return {title,lines,notes};
 }

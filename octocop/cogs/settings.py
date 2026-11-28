@@ -256,6 +256,45 @@ class SettingsCog(
             f"Ban DMs are now **{'enabled' if enabled else 'disabled'}**.", ephemeral=True
         )
 
+    def _entity_links_changed(self) -> None:
+        cog = self.bot.get_cog("EntityLinkingCog")
+        if cog is not None:
+            cog.invalidate_settings()
+
+    @app_commands.command(
+        name="entity-links", description="Turn [item:Name] / [quest:Name] game links on or off for the server."
+    )
+    @app_commands.guild_only()
+    async def entity_links(self, interaction: discord.Interaction, enabled: bool) -> None:
+        context = await self._require_manage(interaction)
+        if context is None:
+            return
+        _, guild = context
+        await self.bot.moderation_database.set_entity_links_enabled(guild.id, enabled)
+        self._entity_links_changed()
+        await interaction.response.send_message(
+            f"Game entity links are now **{'enabled' if enabled else 'disabled'}** server-wide.", ephemeral=True
+        )
+
+    @app_commands.command(
+        name="entity-links-channel", description="Turn game entity links on or off in one channel."
+    )
+    @app_commands.describe(channel="Channel, thread or forum to change", enabled="Whether links work there")
+    @app_commands.guild_only()
+    async def entity_links_channel(
+        self, interaction: discord.Interaction, channel: discord.abc.GuildChannel | discord.Thread, enabled: bool
+    ) -> None:
+        context = await self._require_manage(interaction)
+        if context is None:
+            return
+        _, guild = context
+        await self.bot.moderation_database.set_entity_link_channel(guild.id, channel.id, enabled)
+        self._entity_links_changed()
+        await interaction.response.send_message(
+            f"Game entity links are now **{'enabled' if enabled else 'disabled'}** in {channel.mention}.",
+            ephemeral=True,
+        )
+
     @app_commands.command(name="view", description="View OctoBot permissions configured for a role.")
     @app_commands.describe(role="Role to inspect")
     @app_commands.guild_only()

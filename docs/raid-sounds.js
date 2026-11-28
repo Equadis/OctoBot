@@ -24,8 +24,7 @@
   ];
   var EVENTS = [
     { key: 'soon', label: 'Estimated clear ending soon', note: 'When the estimated clear is close, a few minutes from now.' },
-    { key: 'finished', label: 'Raid finished', note: 'When a raid is seen to end. A finished raid is not a confirmed clear.' },
-    { key: 'confirmed', label: 'Clear confirmed', note: 'Only when the tracker confirms a clear. The tracker does not report this yet.' },
+    { key: 'finished', label: 'Raid finished', note: 'Chronicle final boss kill preferred; otherwise a sustained roster departure. One alert per raid.' },
     { key: 'allianceDrop', label: 'Head dropped: Alliance', note: 'A confirmed Rallying Cry announcement in Stormwind.' },
     { key: 'hordeDrop', label: 'Head dropped: Horde', note: 'A confirmed Rallying Cry announcement in Orgrimmar.' }
   ];
@@ -38,7 +37,6 @@
     events: {
       soon: { on: true, sound: 'map-ping' },
       finished: { on: true, sound: 'raid-warning' },
-      confirmed: { on: true, sound: 'level-up' },
       allianceDrop: { on: true, sound: 'dragon-roar' },
       hordeDrop: { on: true, sound: 'war-horn' }
     }
@@ -141,12 +139,12 @@
       var select = el('select', { 'aria-label': event.label + ' sound' });
       SOUNDS.forEach(function (s) { var o = el('option', { value: s.id, text: s.label }); if (s.id === settings.events[event.key].sound) o.selected = true; select.append(o); });
       select.addEventListener('change', function () { settings.events[event.key].sound = select.value; save(); play(select.value, { quiet: false }); });
-      var test = el('button', { type: 'button', class: 'sound-test', title: 'Play this sound', 'aria-label': 'Play ' + event.label + ' sound' });
+      var test = el('button', { type: 'button', class: 'sound-test', 'aria-label': 'Play ' + event.label + ' sound' });
       test.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg>';
       test.addEventListener('click', function () { play(settings.events[event.key].sound); });
       var label = el('label', { class: 'sound-event-label' }, [on, el('span', { text: event.label })]);
       var controls = el('div', { class: 'sound-controls' }, [select, test]);
-      var row = el('div', { class: 'sound-row', title: event.note }, [label, controls]);
+      var row = el('div', { class: 'sound-row' }, [label, controls]);
       rowRefs[event.key] = { row: row, inputs: [on, select, test], note: event.key === 'soon' ? el('p', { class: 'sound-disabled-note', text: 'This option is disabled until estimated clear confidence is higher.' }) : null };
       if (rowRefs[event.key].note) row.append(rowRefs[event.key].note);
       return row;

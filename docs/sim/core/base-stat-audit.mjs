@@ -1,5 +1,5 @@
 import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
-import {CLASS_RACES} from './class-rules.mjs?v=20261117-racial-audit1';
+import {CLASS_RACES} from './class-rules.mjs?v=20261128-merge1';
 
 // CMaNGOS is an explicitly labelled reference, not OctoWoW live evidence.
 export const BASE_STAT_SOURCE='https://github.com/cmangos/mangos-classic/blob/master/sql/base/mangos.sql';

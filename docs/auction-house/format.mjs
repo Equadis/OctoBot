@@ -17,12 +17,24 @@ export function parseMoney(text){
   return Number.isSafeInteger(total)&&total<=4294967295?total:null;
 }
 export const pct=n=>n==null||!Number.isFinite(Number(n))?'No data':Number(n).toFixed(1)+'%';
+/** Compare this listing's own unit buyout against the item variant's verified historical unit average. */
+export function listingMarketPct(unitBuyout,historicalAverage){
+  const unit=Number(unitBuyout),avg=Number(historicalAverage);
+  if(!Number.isFinite(unit)||unit<=0||!Number.isFinite(avg)||avg<=0)return null;
+  return 100*unit/avg;
+}
+/** Market percentage is relative to a historical average of 100%. */
+export function marketClass(n){
+  if(n==null||!Number.isFinite(Number(n))||Number(n)<=0)return 'ah-market-unknown';
+  n=Number(Number(n).toFixed(1));
+  return n>300?'ah-market-dark-red':n>150?'ah-market-red':n>=125?'ah-market-orange':n>110?'ah-market-yellow':n>=90?'ah-market-white':n>=75?'ah-market-yellow-green':n>=50?'ah-market-green':'ah-market-blue';
+}
 export function trend(n){
-  if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-neutral',text:'No previous completed scan to compare'};
+  if(n==null||!Number.isFinite(Number(n)))return {label:'–',className:'ah-change-unknown',text:'No previous completed scan to compare'};
   n=Number(n);
-  if(Math.abs(n)<10)return {label:'→',className:'ah-change-neutral',text:'Little change since the previous scan'};
-  return {label:(n>0?'↑':'↓').repeat(Math.abs(n)>=25?2:1),className:n>0?'ah-change-up':'ah-change-down',
-    text:n>0?'Dearer than in the previous scan':'Cheaper than in the previous scan'};
+  const text=Math.abs(n)<5?'Little change since the previous scan':n>0?'Dearer than in the previous scan':'Cheaper than in the previous scan';
+  const [label,className]=n>=25?['↑↑','ah-change-up-strong']:n>=10?['↑','ah-change-up']:n>=5?['↗︎','ah-change-up-slight']:n<=-25?['↓↓','ah-change-down-strong']:n<=-10?['↓','ah-change-down']:n<=-5?['↘︎','ah-change-down-slight']:['→','ah-change-neutral'];
+  return {label,className,text};
 }
 /** Approximate remaining time: the scan's value minus time since observation. Never a guarantee. */
 export function remaining(ms,capturedAt,now=Date.now()){
@@ -61,7 +73,7 @@ export function timeClass(ms,capturedAt,now=Date.now()){
   const hours=r/3600000;
   return hours<=0.5?'ah-time-red':hours<=2?'ah-time-orange':hours<=8?'ah-time-yellow':hours<=24?'ah-time-green':'ah-time-blue';
 }
-/** The amount to show in a bid column, or null (shown as a hyphen) when it merely repeats the stack or unit buyout. */
+/** The amount to show in a bid column, or null (shown as an en dash) when it merely repeats the stack or unit buyout. */
 export function bidAmount(current,start,stackBuyout,unitBuyout){
   const value=Number(current)>0?Number(current):Number(start);
   if(!Number.isFinite(value))return null;
@@ -94,7 +106,7 @@ export function scanStatus({completedAt=null,scanning=false,startedAt=null,colle
   }
   const age=scanAge(completedAt,now);
   if(age===null)return {text:'No completed scan',className:'ah-time-yellow'};
-  return {text:'Last scan · '+age,className:lastScanClass(completedAt,now)==='ah-time-red'?'ah-time-red':'ah-time-yellow'};
+  return {text:'Last scan · '+age,className:lastScanClass(completedAt,now)};
 }
 /** Last complete scan: green under 1 hour, yellow from 1 to under 24 hours, red thereafter. */
 export function lastScanClass(completedAt,now=Date.now()){

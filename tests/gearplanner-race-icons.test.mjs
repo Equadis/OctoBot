@@ -27,18 +27,18 @@ test('Race, character name and Level share a row without an extra portrait colum
   const html=read('sim/index.html'),css=read('sim/combat-layout.css');
   assert.match(html,/<div class="character-controls"><label class="field">Race<select id="character-race">/);
   assert.doesNotMatch(html,/race-icon/);
-  assert.match(html, /id="character-race"[\s\S]*id="character-name"[\s\S]*id="character-level"/,'name sits between race and level');
+  assert.match(html, /id="character-race"[\s\S]*id="build-name"[\s\S]*id="character-level"/,'the build name sits between race and level');
   assert.match(css,/\.character-controls\{display:grid;grid-template-columns:132px minmax\(0,1fr\) 58px;gap:14px;align-items:end\}/,'the name takes available width while Race and Level retain their sizes');
 });
 
 test('the race dropdown shows one portrait to the left of every race, like the Dressing Room background picker',()=>{
   const picker=read('sim/race-picker.mjs'),js=read('sim/planner.mjs'),css=read('sim/combat-layout.css');
   assert.match(picker,/for\(const sex of \['male'\]\)/,'one portrait per race');
-  assert.match(picker,/frag\.append\(portraits\(doc,race\),label\)/,'portraits come before the race name');
+  assert.match(picker,/frag\.append\(portraits\(doc,race,iconFor\),label\)/,'portraits come before the race name');
   assert.match(picker,/role="listbox"|setAttribute\('role','listbox'\)/);
   assert.match(picker,/e\.key==='Escape'/);
   assert.match(picker,/select\.addEventListener\('change',sync\)/,'the hidden select stays the source of truth');
-  assert.match(js,/racePicker = setupRacePicker\(document, \$\('character-race'\)\)/);
+  assert.match(js,/racePicker = setupRacePicker\(document, \$\('character-race'\), undefined, \{ iconFor: race => raceIconUrl\(race, build\?\.gender \|\| 'male'\) \}\)/);
   assert.match(js,/\$\('character-race'\)\.value = build\.race;\s*racePicker\?\.sync\(\)/,'a restored build refreshes the dropdown');
   for(const cls of ['.rp-native','.rp-button','.rp-list','.rp-option','.rp-faces'])assert.ok(css.includes(cls),cls);
 });

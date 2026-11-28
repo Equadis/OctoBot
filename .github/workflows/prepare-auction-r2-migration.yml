@@ -1,0 +1,103 @@
+name: Prepare Auction R2 migration from verified backup
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PREPARE to verify the 22 Nov backup and stage auction snapshot objects'
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/prepare-auction-r2-migration.yml'
+permissions:
+  contents: read
+concurrency:
+  group: auction-r2-migration-preparation
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.event_name == 'push' || inputs.confirm == 'PREPARE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '823592d7e68e3220a2b75f3f9c72515e' }}
+      BACKUP_PREFIX: backups/d1-20261122-45024577727-1
+      BUCKET: octobot-auction-snapshots
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify backup parts and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/auction-backup
+          cd /tmp/auction-backup
+          for i in 0000 0001 0002 0003 0004; do
+            npx --yes wrangler@4.166.0 r2 object get "$BUCKET/$BACKUP_PREFIX/part-$i" --file "part-$i" --remote
+          done
+          for file in sha256.txt sha256-gzip.txt; do
+            npx --yes wrangler@4.166.0 r2 object get "$BUCKET/$BACKUP_PREFIX/$file" --file "$file" --remote
+          done
+          cat part-* > octometrics.sql.gz
+          sha256sum -c sha256-gzip.txt
+          gzip -d octometrics.sql.gz
+          sha256sum -c sha256.txt
+          test -s octometrics.sql
+          echo 'Verified original and compressed SHA-256 checksums.'
+      - name: Reconstruct and validate the D1 SQLite backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v sqlite3 || { sudo apt-get update -qq && sudo apt-get install -y sqlite3; }
+          sqlite3 -batch /tmp/auction-backup/verified.sqlite ".bail on" ".read /tmp/auction-backup/octometrics.sql"
+          test "$(sqlite3 /tmp/auction-backup/verified.sqlite 'PRAGMA integrity_check;')" = 'ok'
+          sqlite3 -header -column /tmp/auction-backup/verified.sqlite "
+            SELECT 'N\x27Zoth' AS realm,
+              (SELECT COUNT(*) FROM ah_scans WHERE status='complete') AS completed_scans,
+              (SELECT COUNT(*) FROM ah_listings) AS listings,
+              (SELECT COUNT(*) FROM ah_first_seen) AS first_seen
+            UNION ALL
+            SELECT 'Y Shaarj',
+              (SELECT COUNT(*) FROM pvp_ah_scans WHERE status='complete'),
+              (SELECT COUNT(*) FROM pvp_ah_listings),
+              (SELECT COUNT(*) FROM pvp_ah_first_seen);
+          "
+          echo 'SQLite reconstruction and integrity check succeeded.'
+      - name: Generate R2 snapshots without modifying the live Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --disable-warning=ExperimentalWarning cloudflare/octometrics/seed-auction-snapshots.mjs /tmp/auction-backup/verified.sqlite /tmp/auction-seed
+          for realm in nzoth yshaarj; do
+            test -s "/tmp/auction-seed/$realm/manifest.json"
+            REALM="$realm" node --input-type=module -e '
+              import {readFileSync,createReadStream} from "node:fs";
+              import {createHash} from "node:crypto";
+              const m=JSON.parse(readFileSync("/tmp/auction-seed/"+process.env.REALM+"/manifest.json"));
+              for(const [key,v] of Object.entries(m.files)){
+                const buffer=readFileSync("/tmp/auction-seed/"+process.env.REALM+"/"+v.file);
+                if(buffer.length!==v.bytes || createHash("md5").update(buffer).digest("hex")!==v.md5)throw Error("Manifest mismatch: "+key);
+              }
+              if(!m.latest.auction_count||!m.latest.total_historical_auctions)throw Error("Unexpected empty import");
+              console.log(process.env.REALM,JSON.stringify(m.latest),"verified objects:",Object.keys(m.files).length);
+            '
+          done
+      - name: Upload staged objects (not public or activated)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for realm in nzoth yshaarj; do
+            REALM="$realm" node -e '
+              const fs=require("fs"),m=JSON.parse(fs.readFileSync("/tmp/auction-seed/"+process.env.REALM+"/manifest.json"));
+              for(const [key,v] of Object.entries(m.files))process.stdout.write(key+"\t"+v.file+"\n");
+            ' > "/tmp/auction-seed/$realm/keys.tsv"
+            while IFS=$'\t' read -r key file; do
+              npx --yes wrangler@4.166.0 r2 object put "$BUCKET/$key" --file "/tmp/auction-seed/$realm/$file" --content-type application/json --content-encoding gzip --remote
+            done < "/tmp/auction-seed/$realm/keys.tsv"
+            npx --yes wrangler@4.166.0 r2 object put "$BUCKET/migration-manifests/$GITHUB_RUN_ID/$realm.json" --file "/tmp/auction-seed/$realm/manifest.json" --content-type application/json --remote
+          done
+          echo 'Migration objects staged privately in R2; live Worker, auction control pointers and collectors unchanged.'

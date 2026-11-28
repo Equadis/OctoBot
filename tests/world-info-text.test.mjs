@@ -18,9 +18,14 @@ test('status words and tags are in proper case, not all capitals',()=>{
 });
 
 test('loading states show trailing dots one at a time through CSS, never by changing the text',()=>{
-  assert.match(css,/\.dots::after\{content:"\.\.\.";[^}]*overflow:hidden;[^}]*animation:loading-dots 1\.2s steps\(4,end\) infinite\}/);
-  assert.match(css,/@keyframes loading-dots\{to\{width:1\.13em\}\}/);
-  assert.match(css,/prefers-reduced-motion:reduce\)\{\.dots::after\{animation:none;width:auto\}/,'reduced motion shows all three dots');
+  const theme=readFileSync(new URL('../docs/site-theme.css',import.meta.url),'utf8');
+  // One shared animation: four 750 ms frames (80 BPM), zero to three dots, no fading, space for all three dots always reserved.
+  assert.match(theme,/\.dots::after\{content:"\.\.\.";display:inline-block;white-space:nowrap;clip-path:inset\(0 100% 0 0\);animation:ellipsis-dots 3s step-end infinite\}/);
+  assert.match(theme,/@keyframes ellipsis-dots\{0%\{clip-path:inset\(0 100% 0 0\)\}25%\{clip-path:inset\(0 66\.6667% 0 0\)\}50%\{clip-path:inset\(0 33\.3333% 0 0\)\}75%\{clip-path:inset\(0 0 0 0\)\}\}/);
+  assert.doesNotMatch(theme.slice(theme.indexOf('@keyframes ellipsis-dots')),/opacity/,'no fading or pulsing');
+  assert.match(theme,/prefers-reduced-motion:reduce\)\{\.dots::after\{animation:none;clip-path:none\}/,'reduced motion shows all three dots');
+  assert.doesNotMatch(css,/loading-dots/,'the old page-local animation is gone');
+  assert.match(js,/out\.textContent = 'Leaving'; out\.classList\.add\('dots'\)/);
   assert.match(html,/id="eom-current">Loading</,'the boss loads without animated dots');
   assert.match(html,/id="eom-current-until">Checking rotation</,'the UTC line does not animate');
   assert.doesNotMatch(html,/id="eom-current-until"[^>]*class="dots"/);

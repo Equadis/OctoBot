@@ -11,7 +11,26 @@
   // The Bufftracker reports every ~2 minutes; older than this its raids are shown as last known, flagged stale.
   const TRACKER_FRESH_MS = 3 * MINUTE;
   const FRESH_DMF_MS = 6 * 60 * MINUTE;
+  const DMF_MOVING_GAP_MS = 3 * MINUTE;
+  const DMF_HEARTBEAT_MS = 3 * MINUTE;
   const DAY = 86_400_000;
+  // The three-day anchor comes from OctoTimers. OctoWoW synchronised Onyxia across realms on 31 August.
+  const RAID_RESETS = [
+    { anchor: Date.UTC(2026, 9, 3, 2), days: 3, raids: ['zul-gurub'] },
+    { anchor: Date.UTC(2026, 7, 31, 2), days: 5, raids: ['onyxias-lair', 'lower-karazhan-halls'] },
+    { anchor: Date.UTC(2026, 9, 7, 2), days: 7, raids: ['molten-core', 'blackwing-lair'] }
+  ];
+  const resetDate = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  });
+  const resetCycles = RAID_RESETS.map(({ anchor, days, raids }) => ({
+    anchor, period: days * DAY, next: 0,
+    cards: raids.map(raid => ({
+      date: $('raid-reset-' + raid + '-date'),
+      countdown: $('raid-reset-' + raid + '-countdown')
+    }))
+  }));
   const BOSSES = [
     { id: 'grilek', name: "Gri'lek" },
     { id: 'hazzarah', name: "Hazza'rah" },
@@ -48,6 +67,8 @@
   function raidGroupLabel(name) {
     const label = String(groupLabel(name) ?? '').trim();
     if (!label || /^(pug|unknown)$/i.test(label)) return label;
+    const led = /^(.+?)-led PUG$/i.exec(label);
+    if (led) return '<' + led[1].trim().replace(/^<|>$/g, '') + '>-led PUG';
     return '<' + label.replace(/^<|>$/g, '') + '>';
   }
   // Build raid labels with text nodes, not HTML, because guild names come from roster data.
@@ -56,7 +77,7 @@
     if (!guild) return;
     const name = raidGroupLabel(guild);
     node.append(document.createTextNode(' \u2013 '));
-    if (name.startsWith('<') && name.endsWith('>')) {
+    if (name.startsWith('<')) {
       const bold = document.createElement('strong');
       bold.className = 'raid-guild';
       bold.textContent = name;
@@ -228,7 +249,7 @@
     return {
       observedAt: time(a.observedAt), stale: a.stale === true, expired: a.expired === true, sessions,
       lair: object(a.lair) || {},
-      lastFinished: last && validPast(time(last.at), serverNow()) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
+      lastFinished: last && validPast(time(last.at), serverNow()) ? { at: time(last.at), id: Number.isInteger(Number(last.id)) && Number(last.id) > 0 ? Number(last.id) : null, key: typeof last.key === 'string' ? last.key : null, killConfirmed: last.killConfirmed === true, endReason: String(last.endReason || '') } : null
     };
   }
   function renderAuthRaid(key, auth) {
@@ -443,7 +464,7 @@
       return;
     }
     if (clear.status === 'stale') { out.textContent = 'Stale'; note.textContent = 'Bufftracker data is out of date; no estimate is shown and no clear is assumed.'; return; }
-    if (clear.status === 'leaving') { out.textContent = 'Leaving'; note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
+    if (clear.status === 'leaving') { out.textContent = 'Leaving'; out.classList.add('dots'); note.textContent = 'The roster is leaving the lair; a boss kill is not confirmed.'; return; }
     const need = Number.isInteger(clear.minSamples) ? clear.minSamples : MIN_SAMPLES_FALLBACK;
     if (clear.status === 'learning') {
       out.textContent = 'Learning'; out.classList.add('dots');
@@ -459,7 +480,7 @@
     const level = clear.confidence || 'low';
     if (now <= estimatedAt) { out.textContent = span(estimatedAt - now); note.textContent = 'Estimated clear · ' + basis; }
     else if (!Number.isFinite(latestAt) || now <= latestAt) { out.textContent = 'Soon'; { const tm = document.createElement('sup'); tm.className = 'tm'; tm.textContent = '™'; if (out.append) out.append(tm); } note.textContent = 'Past the typical clear time, still unconfirmed · ' + basis; }
-    else { out.textContent = 'Overdue'; note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
+    else { out.textContent = 'Overdue'; out.classList.add('dots'); note.textContent = 'Running longer than past raids; no clear has been confirmed · ' + basis; }
     colourConfidence(note, level);
   }
   function hhmm(ms) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)); }
@@ -476,18 +497,31 @@
     return { location, observedAt, npc: found && typeof found.npc === 'string' ? found.npc : '',
       sites, confirmed: found && found.fresh === true };
   }
+  // A relocation is inferred, not a directly verified event. Require a known previous
+  // location and fresh post-sighting heartbeats from BOTH independent observers.
+  function dmfMoving(dmf, now, apiOk) {
+    if (!apiOk || !dmf || !validPast(dmf.observedAt, now) || now - dmf.observedAt < DMF_MOVING_GAP_MS) return false;
+    return ['elwynn', 'mulgore'].every(key => {
+      const site = object(dmf.sites && dmf.sites[key]);
+      const heartbeat = site && time(site.lastHeartbeatAt);
+      return Boolean(site && site.collectorStatus === 'online' && validPast(heartbeat, now) &&
+        heartbeat > dmf.observedAt && now - heartbeat <= DMF_HEARTBEAT_MS &&
+        heartbeat - dmf.observedAt >= 2 * MINUTE);
+    });
+  }
   function renderDmf() {
     const dmf = state.dmf, latest = dmf && dmf.observedAt;
-    const fresh = dmf && dmf.confirmed && validPast(latest) && freshAt(latest, FRESH_DMF_MS);
+    const moving = dmfMoving(dmf, Date.now(), state.apiOk);
+    const fresh = !moving && dmf && dmf.confirmed && validPast(latest) && freshAt(latest, FRESH_DMF_MS);
     const sw = Boolean(fresh && dmf.location === 'elwynn');
     const tb = Boolean(fresh && dmf.location === 'mulgore');
-    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : 'Location unconfirmed';
+    $('dmf-heading').textContent = sw ? 'Elwynn Forest · Goldshire' : tb ? 'Mulgore · Thunder Bluff' : moving ? 'Moving' : 'Location unconfirmed';
     const icon = $('dmf-icon');
     icon.hidden = !(sw || tb);
     if (sw || tb) icon.src = sw ? '../img/alliance-crest.png' : '../img/horde-crest.png';
     const description = $('dmf-description');
     description.hidden = Boolean(sw || tb);
-    description.textContent = 'Awaiting a confirmed on-site Darkmoon Faire NPC sighting.';
+    description.textContent = moving ? 'Both observers are online; no Faire NPC has been seen recently. Relocation inferred, not confirmed.' : 'Awaiting a confirmed on-site Darkmoon Faire NPC sighting.';
     const sites = dmf && dmf.sites || {};
     const status = key => {
       const site = object(sites[key]), value = String(site && site.collectorStatus || 'unknown');
@@ -496,14 +530,16 @@
     const observers = 'Elwynn observer: ' + status('elwynn') + ' · Mulgore observer: ' + status('mulgore');
     $('dmf-observed').textContent = sw || tb
       ? 'Confirmed ' + span(Date.now() - latest) + ' ago · ' + dmf.npc + ' · ' + observers
-      : validPast(latest)
+      : moving
+        ? 'Last confirmed ' + when(latest) + ' · ' + observers
+        : validPast(latest)
         ? 'Last confirmed ' + when(latest) + ' (now stale) · ' + observers
         : 'No confirmed Faire sighting yet · ' + observers;
     const panel = $('dmf-panel');
     panel.classList.toggle('faction-alliance', sw);
     panel.classList.toggle('faction-horde', tb);
-    panel.classList.toggle('faction-moving', !(sw || tb));
-    labelState('dmf-state', sw || tb ? 'Confirmed' : 'Unconfirmed', sw || tb ? 'online' : 'unknown');
+    panel.classList.toggle('faction-moving', moving);
+    labelState('dmf-state', sw || tb ? 'Confirmed' : moving ? 'Moving' : 'Unconfirmed', sw || tb ? 'online' : moving ? 'estimated' : 'unknown');
   }
 
   async function loadMetrics() {
@@ -546,7 +582,7 @@
     renderLive();
   }
   // ---- Sound alerts: edges only (something new since the last look), never on first load. Nothing plays unless the visitor turned alerts on.
-  const sound = { baselined: false, finished: {}, drop: {}, soon: {}, confirmed: {} };
+  const sound = { baselined: false, finished: {}, finishedKeys: {}, drop: {}, soon: {} };
   const sounds = () => (typeof window !== 'undefined' && window.RaidSounds) || null;
   function watchSounds(fromData) {
     const player = sounds();
@@ -558,11 +594,14 @@
       if (fromData) {
         const authFinished = state.auth[raidKey] && state.auth[raidKey].lastFinished ? state.auth[raidKey].lastFinished.at : null;
         const finishedAt = state.auth[raidKey] ? (validPast(authFinished, serverNow()) ? authFinished : null) : raid && validPast(raid.lastFinishedAt) ? raid.lastFinishedAt : null;
-        if (sound.baselined && finishedAt && finishedAt > (sound.finished[raidKey] || 0)) player.notify('finished');
-        if (finishedAt) sound.finished[raidKey] = finishedAt;
-        const confirmed = Boolean(clear && clear.confirmed === true);
-        if (sound.baselined && confirmed && !sound.confirmed[raidKey]) player.notify('confirmed');
-        sound.confirmed[raidKey] = confirmed;
+        const finished = state.auth[raidKey] && state.auth[raidKey].lastFinished;
+        const identity = finished && (finished.key || (finished.id ? 'raid:' + finished.id : null));
+        const seen = sound.finishedKeys[raidKey] || (sound.finishedKeys[raidKey] = new Set());
+        if (finishedAt) {
+          if (sound.baselined && finishedAt > (sound.finished[raidKey] || 0) && (!identity || !seen.has(identity))) player.notify('finished');
+          if (identity) { seen.add(identity); if (seen.size > 200) seen.delete(seen.values().next().value); }
+          sound.finished[raidKey] = Math.max(finishedAt, sound.finished[raidKey] || 0);
+        }
       }
       // The ending-soon alert waits for a medium or high confidence estimate; a low-confidence estimate stays silent.
       const trusted = Boolean(clear && ['medium', 'high'].includes(String(clear.confidence)));
@@ -584,6 +623,22 @@
       sound.baselined = true;
     }
   }
+  function renderRaidResets(now = Date.now()) {
+    for (const cycle of resetCycles) {
+      const { anchor, period, cards } = cycle;
+      if (now >= cycle.next || now < cycle.next - period) {
+        cycle.next = anchor + (Math.floor((now - anchor) / period) + 1) * period;
+        const timestamp = new Date(cycle.next).toISOString();
+        const label = resetDate.format(cycle.next) + ' UTC';
+        for (const { date } of cards) {
+          date.dateTime = timestamp;
+          date.textContent = label;
+        }
+      }
+      const remaining = spanWithDays(Math.ceil((cycle.next - now) / 1000) * 1000);
+      for (const { countdown } of cards) countdown.textContent = remaining;
+    }
+  }
   function renderLive() {
     renderRaid('ony');
     renderRaid('bwl');
@@ -594,6 +649,7 @@
     renderBuff('alliance');
     renderBuff('horde');
     renderDmf();
+    renderRaidResets();
     renderMadnessCountdown();
     watchSounds(false);
   }
@@ -760,7 +816,23 @@
     void loadMetrics();
     void loadEra();
     setInterval(renderLive, 1000);
-    setInterval(() => { void loadMetrics(); }, MINUTE);
+    // Keep drop timers within five seconds of a fresh NPC-yell event while viewed.
+    // Background tabs use the original minute cadence to limit Worker/D1 reads.
+    let metricsInFlight = false;
+    let nextMetricsAt = Date.now() + 5_000;
+    const refreshMetrics = async () => {
+      if (metricsInFlight) return;
+      metricsInFlight = true;
+      try { await loadMetrics(); }
+      finally { metricsInFlight = false; nextMetricsAt = Date.now() + (document.hidden ? MINUTE : 5_000); }
+    };
+    setInterval(() => {
+      if (Date.now() >= nextMetricsAt) void refreshMetrics();
+    }, 1_000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) { nextMetricsAt = Date.now(); void refreshMetrics(); }
+      else nextMetricsAt = Date.now() + MINUTE;
+    });
     setInterval(() => { void loadEra(); }, 15 * MINUTE);
   }
   init();

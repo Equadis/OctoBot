@@ -2,10 +2,15 @@ import {requestJson,preloadGeometry} from './service.mjs?v=20261117-versioned1';
 import {applyGearChanges} from './gear-diff.mjs?v=20261118-geosets1';
 import {SLOT_ICONS,iconUrl} from '../sim/core/interface.mjs?v=20261112-navigation1';
 import {BACKGROUNDS,findBackground} from './backgrounds.mjs';
-import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261117-names1';
+import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261130-ui2';
+import {wireDialogs} from '../dialogs.mjs?v=1';
+import {sanitiseShared,addShared,removeShared,sharedAgo} from './shared.mjs?v=1';
+import {visibleOptions,relabelOptions,lookPairs,stepLook,selectedChoice,choiceLabel} from './customization.mjs?v=20261122-states1';
+import {parseCatalogue,resolveSkin,skinsForBody,variantFor} from './skins.mjs?v=20261130-ui2';
+import {stateKey,parseStates,stateNote,infoKind,NOTES} from './appearance.mjs?v=20261122-states1';
 import {SLOTS,RACES,emptyOutfit,normalise,equip,exportTmog,importTmog,encode,decode,viewerSlot,filterItems,buildNameIndex,sameNameItems,buildIconIndex,sameIconItems} from './state.mjs?v=20261116-races1';
-const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1';
-let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[];
+const $=id=>document.getElementById(id),STORAGE='octobot-outfitter-v1',SAVED='octobot-outfits-v1',SHARED='octobot-outfits-shared-v1';
+let outfit=emptyOutfit(),items=[],byId=new Map(),nameIndex=new Map(),iconIndex=new Map(),selectedSlot=1,viewer=null,revision=0,endpoint='',assetBase='',saved=[],shared=[],skinCatalogue=[],skinNote='',appliedLook='';
 const metadata=new Map();
 // Per-item notes about how the 3D preview was approximated, shown as an (i) hover beside the item's DB link.
 let approxNotes=new Map();
@@ -171,14 +176,21 @@ function safeRead(key,fallback){try{return JSON.parse(localStorage.getItem(key))
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(outfit));}catch{feedback('Browser storage is unavailable. Export your outfit to keep a copy.');}}
 function saveLibrary(){try{localStorage.setItem(SAVED,JSON.stringify(saved));return true;}catch{feedback('Could not save outfit. Export it to keep a copy.');return false;}}
 function sanitiseGear(value){const next=normalise(value);for(const {id,types} of SLOTS){const item=byId.get(next.gear[id]);if(next.gear[id]&&(!item||!types.includes(item.slot)))throw Error(`Unknown item or wrong slot: ${next.gear[id]}.`);}if(byId.get(next.gear[16])?.slot===17)delete next.gear[17];return next;}
-function commit(next,message){outfit=sanitiseGear(next);persist();renderSlots();renderItems();if(message)feedback(message);renderModel();}
+function commit(next,message){outfit=sanitiseGear(next);const problem=reconcileSkin();persist();renderSlots();renderItems();renderSkinRow();if(problem||message)feedback(problem||message);renderModel();}
 function renderRaces(){
  const box=$('race-picker');box.replaceChildren();
- for(const [id,name] of RACES){
+ for(const [faction,ids] of [['Alliance',[1,3,4,7,10]],['Horde',[2,5,6,8,9]]]){
+  const group=document.createElement('div'),heading=document.createElement('span'),buttons=document.createElement('div');
+  group.className='race-faction';group.setAttribute('role','group');group.setAttribute('aria-label',faction);
+  heading.className='race-faction-heading';heading.textContent=faction;
+  buttons.className='race-picker race-faction-buttons';group.append(heading,buttons);box.append(group);
+  for(const id of ids){
+   const name=RACES.find(([raceId])=>raceId===id)[1];
   const button=document.createElement('button'),img=document.createElement('img');
   button.type='button';button.className='race-button';button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(outfit.race===id));
   img.alt='';img.width=42;img.height=42;img.src=`races/${RACE_KEYS[id]}_${outfit.gender?'female':'male'}.png?v=20261114`;button.append(img);
-  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id,look:{}});};box.append(button);
+  button.onclick=()=>{if(outfit.race!==id)commit({...outfit,race:id,look:{}});};buttons.append(button);
+  }
  }
  $('race-name').textContent=RACES.find(([id])=>id===outfit.race)?.[1]||'';
 }
@@ -292,15 +304,16 @@ function renderItems(){
  const results=$('results'),scrollTop=results.scrollTop,focusedId=results.contains(document.activeElement)?document.activeElement.dataset.itemId:null;results.replaceChildren();
  for(const item of rows){
   const row=document.createElement('div');row.className='result'+(outfit.gear[selectedSlot]===item.id?' equipped':'');const thumbnail=image(item);thumbnail.loading='lazy';row.append(thumbnail);
-  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);button.setAttribute('aria-label',`Try on ${item.name}`);
+  const button=document.createElement('button');button.className='try-item';button.type='button';button.dataset.itemId=String(item.id);// The whole row is the target, padding and thumbnail included; links and info icons keep their own actions.
+  row.addEventListener('click',event=>{if(event.target.closest('a,.info-i,button'))return;button.click();});button.setAttribute('aria-label',`Try on ${item.name}`);
   const title=document.createElement('span'),name=document.createElement('span'),level=document.createElement('span'),detail=document.createElement('span');
-  title.className='item-row-name';name.className=`quality-${item.quality}`;name.textContent=item.name;level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
-  detail.className='item-description';detail.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;button.append(title,detail);button.onclick=()=>{
+  title.className='item-row-name';name.className=`ah-name-clip quality-${item.quality}`;{const t=document.createElement('span');t.className='ah-name-text';t.textContent=item.name;name.append(t);}level.className='item-level';level.textContent=`[${item.level||0}]`;title.append(name,level);
+  detail.className='item-description ah-name-clip';{const t=document.createElement('span');t.className='ah-name-text';t.textContent=`${(item.classs===4?ARMOUR:WEAPONS)[item.subclass]||'Other'} · Item ${item.id}`;detail.append(t);}button.append(title,detail);button.onclick=()=>{
    let next=equip(outfit,selectedSlot,item);if(selectedSlot===17&&byId.get(outfit.gear[16])?.slot===17)delete next.gear[16];commit(next,`${item.name} selected.`);
   };
-  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.target='_blank';link.rel='noopener';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
+  const link=document.createElement('a');link.href=`https://octowow.st/db/?item=${item.id}`;link.className='ext-db-link';link.target='_blank';link.rel='noopener noreferrer';link.textContent='DB ↗';link.setAttribute('aria-label',`${item.name} in the OctoWoW database`);const links=document.createElement('span');links.className='result-links';const slot=document.createElement('span');slot.className='info-slot';const note=approxNotes.get(item.id)||knownNotes.get(noteKey(item,selectedSlot));if(note)slot.append(infoIcon(note));links.append(slot,link);row.append(button,links);results.append(row);watchRowPreview(row,item,links,link);
  }
- queueScan();
+ queueScan();scheduleScrollingNames(results);
  results.scrollTop=scrollTop;if(focusedId)results.querySelector(`[data-item-id="${focusedId}"]`)?.focus({preventScroll:true});
  if(!rows.length){const text=document.createElement('p');text.className='muted';text.textContent='No matching items. Try another name, ID or filter.';results.append(text);}
 }
@@ -310,15 +323,15 @@ const previewCache=new Map();
 const knownNotes=new Map();
 const noteKey=(item,slotId)=>`${item.id}:${viewerSlot(slotId,item)}`;
 const SLOW_LOOKUP_MS=4000;
-const NOTE_NAME='Estimated preview: shown with the Classic model of the same-named original item. It may differ from the in-game look.';
-const NOTE_ICON='Estimated preview: shown with a Classic model that uses the same icon. It may differ from the in-game look.';
-const NOTE_NONE='No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.';
-const NOTE_FAIL='The appearance service did not answer for this item, so it has no preview right now. It stays in your outfit. Selecting it again will retry.';
-const NOTE_LEGACY='No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.';
+const NOTE_NAME=NOTES.name,NOTE_ICON=NOTES.icon,NOTE_NONE=NOTES.missing,NOTE_FAIL=NOTES.error,NOTE_LEGACY=NOTES.legacy;
+// The recovery build's table of pairs that have no model, no visible appearance or an incomplete one (appearance.mjs). One small request per visit;
+// without it (an older build) every item is judged as before.
+let appearanceStates=new Map();
+async function loadAppearanceStates(){try{appearanceStates=parseStates(await getJson(`${assetBase}meta/octobot/appearance-states.json`));}catch{appearanceStates=new Map();}}
 // First display ID in the list whose model files exist in the Classic library, or null.
 async function usableDisplay(data,slot){
  for(const displayId of Array.isArray(data.candidates)&&data.candidates.length?data.candidates:[data.displayId]){
-  const path=[21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
+  const path=[14,21,22,26].includes(slot)?`item/${displayId}`:`armor/${slot}/${displayId}`;
   try{await getJson(`${assetBase}meta/${path}.json`);return displayId;}catch{}
  }
  return null;
@@ -328,12 +341,17 @@ function resolvePreview(item,slotId){
  if(previewCache.has(key))return previewCache.get(key);
  const job=(async()=>{
   let legacy=false;
+  // The client's own answer is known for these pairs: nothing to look up, nothing to estimate.
+  const known=appearanceStates.get(stateKey(item.id,slot));
+  if(known&&known.state!=='incomplete')return {slot,displayId:null,kind:known.state,note:stateNote(known)};
+  let unknownDisplay=false;
   try{
    const data=await displayFor(item.id);
+   unknownDisplay=!data.displayId&&!(Array.isArray(data.candidates)&&data.candidates.length);
    // A reply without `candidates` comes from a Worker that has not been updated to look up Classic appearances.
    if(!Array.isArray(data.candidates))legacy=true;
    const own=await usableDisplay(data,slot);
-   if(own!==null)return {slot,displayId:own,kind:'own',note:''};
+   if(own!==null)return {slot,displayId:own,kind:'own',note:known?stateNote(known):''};
   }catch{
    // The service itself failed (timeout or 502). Do not chain more slow lookups; report it and let the next render retry.
    queueMicrotask(()=>previewCache.delete(key));return {slot,displayId:null,kind:'error',note:NOTE_FAIL};
@@ -346,12 +364,12 @@ function resolvePreview(item,slotId){
   const byIcon=await Promise.all(sameIconItems(iconIndex,item).slice(0,8).map(async sibling=>{try{return await usableDisplay(await displayFor(sibling.id),slot);}catch{return null;}}));
   const iconMatch=byIcon.find(displayId=>displayId!==null);
   if(iconMatch!==undefined)return {slot,displayId:iconMatch,kind:'icon',note:NOTE_ICON};
-  return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:NOTE_NONE};
+  return {slot,displayId:null,kind:'none',legacy,note:legacy?NOTE_LEGACY:unknownDisplay?NOTES.unresolved:NOTE_NONE};
  })();
  job.then(result=>{if(result?.note)knownNotes.set(key,result.note);}).catch(()=>{});
  previewCache.set(key,job);return job;
 }
-function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.textContent='i';return info;}
+function infoIcon(note){const info=document.createElement('span');info.className='info-i';info.tabIndex=0;info.setAttribute('role','note');info.setAttribute('aria-label',note);info.dataset.tip=note;info.dataset.kind=infoKind(note);info.textContent='i';return info;}
 // Item rows are checked as they scroll into view, so the (i) appears for every item with an estimated or missing preview.
 // These checks are background work: they run two at a time, only for rows still on screen, and never while the 3D model
 // is loading, so they cannot slow down the model the user just chose.
@@ -461,11 +479,11 @@ async function loadLookOptions(chrModelId){
 }
 function characterActor(){return viewer?.renderer?.actors?.find(actor=>typeof actor.setAppearance==='function'&&typeof actor.getNumAnimations==='function')||null;}
 // Diagnostics for testing, only with ?debug in the address: the live character actor and the current outfit.
-if(new URLSearchParams(location.search).has('debug'))window.__outfitter={actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
+if(new URLSearchParams(location.search).has('debug'))window.__outfitter={preview:(id,slotId)=>resolvePreview(byId.get(id),slotId),states:()=>appearanceStates,skins:()=>skinCatalogue,skinNote:()=>skinNote,appliedLook:()=>appliedLook,actor:()=>characterActor(),viewer:()=>viewer,outfit:()=>structuredClone(outfit),applied:()=>[...appliedGear]};
 // Pushes an appearance onto the live model without saving it. Returns false when the model is not ready.
 function pushAppearance(look){
  const actor=characterActor();if(!actor)return false;
- try{actor.setAppearance({options:lookPairs(lookOptions,look),sheathMain:actor.k,sheathOff:actor.x});return true;}catch{return false;}
+ try{actor.setAppearance({options:lookPairs(lookOptions,look,currentSkin().choiceId),sheathMain:actor.k,sheathOff:actor.x});if(look===outfit.look)appliedLook=lookKey();return true;}catch{return false;}
 }
 let openLookMenu=null;
 function closeLookMenu({revert=true}={}){
@@ -496,7 +514,7 @@ function renderLook(){
  closeLookMenu({revert:false});
  const box=$('look-options');box.replaceChildren();
  if(!lookOptions.length){const p=document.createElement('p');p.className='muted';p.textContent='Appearance options are unavailable for this character.';box.append(p);$('look-reset').disabled=true;return;}
- $('look-reset').disabled=!Object.keys(outfit.look||{}).length;
+ $('look-reset').disabled=!Object.keys(outfit.look||{}).length&&!outfit.skin;
  for(const option of lookOptions){
   // One button per option: [‹] Name ........ number [›]. The arrows cycle; the middle opens the full list.
   const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span');
@@ -509,8 +527,78 @@ function renderLook(){
   const arrow=(label,delta,text)=>{const button=document.createElement('button');button.type='button';button.className='look-arrow';button.textContent=text;button.setAttribute('aria-label',`${label} ${option.name}`);button.onclick=()=>{closeLookMenu({revert:false});changeLook(stepLook(lookOptions,outfit.look,option.id,delta));};return button;};
   pill.append(arrow('Previous',-1,'‹'),main,arrow('Next',1,'›'));row.append(pill);box.append(row);
  }
+ if(skinCatalogue.length)box.append(skinPill());
 }
 // Appearance is part of the saved and shared outfit. The live model is updated in place so there is no reload.
+// ---- Character skins (donation-shop appearances) ----
+// A skin is a texture-only change of the body, applied as an extra choice of the Skin Color option (see skins.mjs). It is saved in the outfit as
+// `skin`; outfits made before skins existed have none and load with the default appearance.
+function lookKey(){return JSON.stringify([outfit.look,currentSkin().choiceId]);}
+function currentSkin(){return resolveSkin(skinCatalogue,outfit.skin,outfit.race,outfit.gender);}
+function skinAvailableInModel(choiceId){return lookOptions.some(option=>option.skinChoiceIds?.includes(choiceId));}
+// Drops a saved skin that does not fit the body (another race or sex) and returns the reason; it is never swapped for another skin.
+function reconcileSkin(){
+ if(!outfit.skin||!skinCatalogue.length)return '';
+ const {problem}=currentSkin();
+ if(!problem){skinNote='';return '';}
+ const next={...outfit};delete next.skin;outfit=next;skinNote=problem;return problem;
+}
+// The Skin dropdown is the sixth button of the Appearance list (see renderLook); this keeps its note and its list up to date.
+function renderSkinRow(){
+ const note=$('skin-note');note.hidden=!skinNote;note.textContent=skinNote;
+ renderLook();
+}
+async function loadSkins(){
+ try{skinCatalogue=parseCatalogue(await getJson(`${endpoint}/api/outfitter/skins`));}catch{skinCatalogue=[];}
+ const before=outfit.skin;reconcileSkin();if(before!==outfit.skin)persist();renderSkinRow();
+}
+function applySkinChange(message){
+ persist();renderSkinRow();
+ const {choiceId}=currentSkin();
+ if(choiceId&&!skinAvailableInModel(choiceId)){renderModel();}
+ else if(!pushAppearance(outfit.look))renderModel();
+ if(message)feedback(message);
+}
+function setSkin(id){
+ if(!id){clearSkin();return;}
+ const skin=skinCatalogue.find(candidate=>candidate.id===id);
+ if(!skin||!variantFor(skin,outfit.race,outfit.gender)||outfit.skin===id)return;
+ outfit={...outfit,skin:id};skinNote='';applySkinChange(`${skin.name} applied.`);
+}
+function clearSkin(){
+ if(!outfit.skin)return;
+ const next={...outfit};delete next.skin;outfit=next;skinNote='';applySkinChange('Skin removed.');
+}
+// The Skin dropdown, on its own row under the model's five options: default None, then the donation-shop skins that fit this race and sex. It is not one of the model's
+// own options, so it has its own list; choosing applies the skin's texture as an extra Skin Color choice (skins.mjs) without touching the other five. It is a drop-down only
+// (no arrows) and as wide as the longest shop skin name, so the button does not change size from one body to the next.
+function skinPill(){
+ const skins=skinsForBody(skinCatalogue,outfit.race,outfit.gender),choices=[{id:'',name:'None'},...skins.map(skin=>({id:skin.id,name:skin.name}))];
+ const current=currentSkin().skin&&skins.some(skin=>skin.id===outfit.skin)?outfit.skin:'';
+ const index=Math.max(0,choices.findIndex(choice=>choice.id===current));
+ const longest=skinCatalogue.filter(skin=>skin.labelled).reduce((best,skin)=>skin.name.length>best.length?skin.name:best,'None');
+ const row=document.createElement('div'),pill=document.createElement('div'),main=document.createElement('button'),name=document.createElement('span'),value=document.createElement('span'),sizer=document.createElement('span'),caret=document.createElement('span');
+ row.className='look-option skin-option';row.id='skin-option';pill.className='look-pill';
+ name.className='look-name';name.textContent='Skin';
+ value.className='look-value';value.id='skin-value';value.textContent=choices[index].name;
+ sizer.className='skin-sizer';sizer.setAttribute('aria-hidden','true');sizer.textContent=longest;
+ caret.className='skin-caret';caret.setAttribute('aria-hidden','true');caret.textContent='▾';
+ main.type='button';main.className='look-main';main.id='skin-main';main.title=choices[index].name;main.setAttribute('aria-haspopup','listbox');main.setAttribute('aria-label',`Skin, ${choices[index].name}. Open the list`);
+ const text=document.createElement('span');text.className='skin-text';text.append(value,sizer);main.append(name,text,caret);
+ const choose=id=>{closeLookMenu({revert:false});setSkin(id);};
+ main.onclick=()=>{
+  if(openLookMenu&&openLookMenu.pill===pill){closeLookMenu();return;}
+  closeLookMenu();
+  const menu=document.createElement('div');menu.className='look-menu look-skin-menu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label','Skin');
+  for(const choice of choices){
+   const item=document.createElement('button');item.type='button';item.className='look-choice'+(choice.id===current?' selected':'');item.setAttribute('role','option');item.setAttribute('aria-selected',String(choice.id===current));
+   item.textContent=choice.name;item.dataset.skin=choice.id;item.onclick=()=>choose(choice.id);menu.append(item);
+  }
+  row.append(menu);pill.classList.add('open');openLookMenu={menu,pill,row};menu.querySelector('.selected')?.scrollIntoView({block:'nearest'});
+ };
+ pill.append(main);row.append(pill);
+ return row;
+}
 function changeLook(look){
  outfit={...outfit,look};persist();renderLook();
  if(!pushAppearance(look))renderModel();
@@ -638,7 +726,11 @@ async function applyGearInPlace(){
 let builtFor='',appliedGear=new Map();
 async function renderModel(resetCamera=false,forceRebuild=false){
  const inPlace=!resetCamera&&!forceRebuild&&Boolean(viewer?.renderer?.actors?.[0]?.isLoaded?.())&&builtFor===`${outfit.race}-${outfit.gender}`;
- if(inPlace){await applyGearInPlace();return;}
+ if(inPlace){
+  // A saved outfit, shared link or import can change the look or the skin without changing the body; the model is kept, so push them here.
+  const key=lookKey();if(key!==appliedLook&&pushAppearance(outfit.look))appliedLook=key;
+  await applyGearInPlace();return;
+ }
  keptView=!resetCamera&&viewer?.renderer?.actors?.length?readView(viewer.renderer):null;
  keptAnim=!skipKeptAnim&&characterActor()?.d?.B?.c?{paused:animationPaused,time:characterActor().d.B.c.c,name:$('animation').value}:null;skipKeptAnim=false;modelBusy=true;for(const job of scanQueue)job.queued=false;scanQueue.length=0;
  const token=++revision,current=structuredClone(outfit);clearViewer();$('model-status').hidden=false;$('model-status').textContent='Loading 3D preview…';approxNotes=new Map();
@@ -651,6 +743,10 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   await preloadGeometry(assetBase,character.Model);
   lookOptions=await loadLookOptions(character.Character&&character.Character.ChrModelId);
   if(token!==revision)return;
+  // A skin is only ever applied from the service's own texture; when the service has none the saved skin stays unapplied and says so.
+  {const wanted=resolveSkin(skinCatalogue,current.skin,current.race,current.gender);
+   skinNote=wanted.choiceId&&!skinAvailableInModel(wanted.choiceId)?`${wanted.skin.name} could not be applied: the appearance service has no texture for it.`:skinNote;renderSkinRow();}
+  appliedLook=JSON.stringify([current.look,resolveSkin(skinCatalogue,current.skin,current.race,current.gender).choiceId]);
   renderLook();
   const unavailable=[],approximated=[],approximatedByIcon=[],nextNotes=new Map(),unavailableIds=[],slowItems=[];let outdatedService=false;
   const appearances=await Promise.all(SLOTS.map(async ({id})=>{
@@ -669,7 +765,7 @@ async function renderModel(resetCamera=false,forceRebuild=false){
   }));
   if(token!==revision)return;
   const container=$('model'),wrap=container.parentElement;
-  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:assetBase,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
+  viewer=new window.ZamModelViewer({type:2,container:window.jQuery(container),aspect:wrap.clientWidth/wrap.clientHeight,contentPath:assetBase,dataEnv:'classic',env:'classic',gameDataEnv:'classic',hd:false,physics:false,...(lookOptions.length?{charCustomization:{options:lookPairs(lookOptions,current.look,resolveSkin(skinCatalogue,current.skin,current.race,current.gender).choiceId)}}:{}),models:{id:current.race*2-1+current.gender,type:16},items:appearances.filter(Boolean)});
   builtFor=`${current.race}-${current.gender}`;appliedGear=new Map(appearances.filter(Boolean));
   if(!viewer.renderer)throw Error('WebGL is unavailable. Enable hardware acceleration or try a WebGL-capable browser.');
   viewer.setAdaptiveMode?.(true);
@@ -684,11 +780,10 @@ async function renderModel(resetCamera=false,forceRebuild=false){
    if(Date.now()-started>25000){$('model-status').textContent='Model assets could not finish loading. Try Reload preview.';modelBusy=false;return;}
    setTimeout(check,250);
   };check();
-  for(const id of unavailableIds)nextNotes.set(id,outdatedService?'No preview: the appearance service has not been updated to find Classic models yet. The item stays in your outfit.':'No preview: this is a custom OctoWoW appearance with no Classic 3D model. The item stays in your outfit and in saved and shared outfits.');
   approxNotes=nextNotes;renderItems();
   if(slowItems.length){
    feedback(`Still fetching the model for ${slowItems.map(entry=>entry.item.name).join(', ')}. The preview will update when it arrives.`);
-   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();feedback(`No preview for ${item.name} right now: ${result.kind==='error'?'the appearance service did not answer. Select it again to retry.':'it has no Classic model.'}`);}}).catch(()=>{});
+   for(const {item,id} of slowItems)resolvePreview(item,id).then(result=>{if(token===revision&&result.displayId!==null)renderModel();else if(token===revision&&result.note){approxNotes.set(item.id,result.note);renderItems();feedback(`No preview for ${item.name} right now: ${result.kind==='error'?'the appearance service did not answer. Select it again to retry.':result.kind==='invisible'?'the game client defines no visible appearance for it.':'it has no Classic model.'}`);}}).catch(()=>{});
   }
  } catch(error){if(token===revision){modelBusy=false;$('model-status').textContent=`3D preview unavailable. ${error.message} You can still browse, save and share outfits.`;}}
 }
@@ -708,21 +803,41 @@ function renderSaved(){
   card.append(load,remove);target.append(card);
  });
 }
+function saveShared(){try{localStorage.setItem(SHARED,JSON.stringify(shared));return true;}catch{feedback('Could not store the Recently Shared list in this browser.');return false;}}
+function renderShared(){
+ const target=$('shared-outfits');target.replaceChildren();
+ if(!shared.length){const p=document.createElement('span');p.className='muted';p.textContent='Nothing shared yet. Use Share to name an outfit and copy its link.';target.append(p);}
+ for(const entry of shared){
+  const card=document.createElement('div');card.className='saved-card shared-card';
+  const load=document.createElement('button');load.type='button';load.className='saved-load';load.setAttribute('aria-label',`Load ${entry.name}`);
+  const preview=document.createElement('span');preview.className='saved-preview';
+  if(entry.snapshot){const img=document.createElement('img');img.alt='';img.src=entry.snapshot;preview.append(img);}else preview.classList.add('empty');
+  const label=document.createElement('span');label.className='saved-name';label.textContent=entry.name;
+  const when=document.createElement('time');when.className='shared-time';when.dateTime=new Date(entry.sharedAt).toISOString();when.textContent=sharedAgo(entry.sharedAt);label.append(when);
+  load.append(preview,label);load.onclick=()=>{try{commit(entry.outfit,`${entry.name} loaded.`);}catch(e){feedback(e.message);}};
+  const remove=document.createElement('button');remove.type='button';remove.className='saved-remove';remove.textContent='×';remove.setAttribute('aria-label',`Remove ${entry.name} from Recently Shared`);
+  remove.onclick=()=>{shared=removeShared(shared,entry);saveShared();renderShared();};
+  const copyLink=document.createElement('button');copyLink.type='button';copyLink.className='shared-copy';copyLink.textContent='Copy link';copyLink.setAttribute('aria-label',`Copy the link for ${entry.name}`);
+  copyLink.onclick=()=>copy(entry.url,'Link copied to clipboard');
+  card.append(load,remove,copyLink);target.append(card);
+ }
+}
 function shareUrl(){const url=new URL(location.href);url.search='';url.hash='outfit='+encode(outfit);return url.href;}
 async function copy(text,message){try{await navigator.clipboard.writeText(text);feedback(message);}catch{$('outfit-code').value=text;$('exchange').showModal();$('outfit-code').select();$('exchange-status').textContent='Select and copy this text.';}}
 function fromText(text){const trimmed=text.trim();if(trimmed.startsWith('T.O.L.')){const imported=importTmog(trimmed);return {...outfit,gear:imported.gear};}const url=new URL(trimmed);if(!url.hash.startsWith('#outfit='))throw Error('Enter a Tmog code or OctoBot outfit link.');return decode(url.hash.slice(8));}
 async function start(){
+ wireDialogs(document);
  setupBackdrops();setupInfoTips();setupWeaponControls();setupScrub();
  try{
-  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalogue unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
-  let message='Select an equipment slot, then choose an item to try on.';
+  const response=await fetch('../sim/data/items/catalogue.json');if(!response.ok)throw Error('Equipment catalog unavailable.');items=await response.json();byId=new Map(items.map(i=>[i.id,i]));nameIndex=buildNameIndex(items);iconIndex=buildIconIndex(items);
+  let message='';
   try{outfit=sanitiseGear(safeRead(STORAGE,emptyOutfit()));}catch{outfit=emptyOutfit();message='The previous outfit could not be restored. Import a saved code to recover it.';}
   if(location.hash.startsWith('#outfit=')){try{outfit=sanitiseGear(decode(location.hash.slice(8)));persist();message='Shared outfit loaded.';}catch(e){message=`Could not load shared outfit: ${e.message}`;}}
-  saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);
-  renderSlots();renderTypes();renderItems();renderSaved();feedback(message);
-  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();renderItems();
+  saved=safeRead(SAVED,[]);if(!Array.isArray(saved))saved=[];saved=saved.filter(e=>e&&typeof e.name==='string'&&e.name.length<=80&&e.outfit).slice(0,100);shared=sanitiseShared(safeRead(SHARED,[]));
+  renderSlots();renderTypes();renderItems();renderSaved();renderShared();feedback(message);
+  try{const config=await getJson('../telemetry.json');const url=new URL(config.endpoint,location.href);if(url.protocol!=='https:'&&url.origin!==location.origin)throw Error();endpoint=url.origin;}catch{endpoint='';}await loadAssetBase();await Promise.all([loadSkins(),loadAppearanceStates()]);renderItems();
   renderModel();
- }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalogue. Reload the page to try again.';return;}
+ }catch(error){feedback(error.message);$('model-status').textContent='Could not load the equipment catalog. Reload the page to try again.';return;}
 
  $('hide-head').onchange=()=>commit({...outfit,hideHead:$('hide-head').checked});$('hide-back').onchange=()=>commit({...outfit,hideBack:$('hide-back').checked});
  for(const id of ['search','type','quality'])$(id).addEventListener(id==='search'?'input':'change',()=>{$('results').scrollTop=0;renderItems();});
@@ -748,15 +863,26 @@ async function start(){
   document.addEventListener('fullscreenchange',sync);sync();
  }
  $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.preview-panel').requestFullscreen();}catch{feedback('Full screen is unavailable in this browser.');}};
- $('look-reset').onclick=()=>changeLook({});
+ $('look-reset').onclick=()=>{if(outfit.skin){const next={...outfit};delete next.skin;outfit=next;skinNote='';persist();renderSkinRow();}changeLook({});};
  $('animation').onchange=()=>{const actor=characterActor(),name=$('animation').value;try{if(actor){actor.setAnimPaused(false);actor.setAnimation(name,true);}}catch{}showPlayState(false);chosenAnimation=name;};
  $('anim-pause').onclick=()=>{const actor=characterActor();if(!actor)return;const next=!animationPaused;try{actor.setAnimPaused(next);}catch{}showPlayState(next);};
  $('anim-prev').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?-5:-1);
  $('anim-next').onclick=event=>stepAnimation(event.ctrlKey||event.metaKey?5:1);
  $('save').onclick=()=>{$('outfit-name').value='';$('save-dialog').showModal();$('outfit-name').focus();};$('cancel-save').onclick=()=>$('save-dialog').close();
  $('save-form').onsubmit=event=>{event.preventDefault();const name=$('outfit-name').value.trim();if(!name)return;const snapshot=captureSnapshot(),entry={name,outfit:structuredClone(outfit),...(snapshot?{snapshot}:{})},index=saved.findIndex(e=>e.name===name);if(index>=0)saved[index]=entry;else{if(saved.length>=100){feedback('You have 100 saved outfits. Delete one before saving another.');return;}saved.push(entry);}const ok=saveLibrary();renderSaved();$('save-dialog').close();if(ok)feedback(`${name} saved in this browser.`);};
- $('share').onclick=()=>copy(shareUrl(),'Outfit link copied.');
- $('import').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
+ $('share').onclick=()=>{$('share-name').value='';$('share-dialog').showModal();$('share-name').focus();};$('cancel-share').onclick=()=>$('share-dialog').close();
+ $('share-form').onsubmit=async event=>{
+  event.preventDefault();const name=$('share-name').value.trim();if(!name)return;
+  const url=shareUrl(),snapshot=captureSnapshot();
+  let copied=true;try{await navigator.clipboard.writeText(url);}catch{copied=false;}
+  shared=addShared(shared,{name,outfit:outfit,url,snapshot});saveShared();renderShared();$('share-dialog').close();
+  // The confirmation is only shown once the browser has really copied the link; otherwise the link is offered for manual copying.
+  if(copied)feedback('Link copied to clipboard');
+  else{$('outfit-code').value=url;$('exchange-status').textContent='The link could not be copied automatically. Select and copy it.';$('exchange').showModal();$('outfit-code').select();}
+ };
+ // Export shows the current outfit's Tmog code; Import opens the same dialog empty, ready for a pasted code or link.
+ $('export').onclick=()=>{$('outfit-code').value=exportTmog(outfit);$('exchange-status').textContent='Tmog codes contain equipment. OctoBot links also include race, body and visibility settings.';$('exchange').showModal();};
+ $('import').onclick=()=>{$('outfit-code').value='';$('exchange-status').textContent='Paste a Tmog code (T.O.L.) or an OctoBot outfit link, then choose Import outfit.';$('exchange').showModal();$('outfit-code').focus();};
  $('copy-code').onclick=()=>copy($('outfit-code').value,'Code copied.');$('apply-code').onclick=()=>{try{commit(fromText($('outfit-code').value),'Outfit imported.');$('exchange').close();}catch(error){$('exchange-status').textContent=error.message;}};
  window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#outfit=')){try{commit(decode(location.hash.slice(8)),'Shared outfit loaded.');}catch(error){feedback(error.message);}}});
  const modelResize=new ResizeObserver(()=>{const wrap=$('model').parentElement,width=wrap.clientWidth,height=wrap.clientHeight;if(width&&height)viewer?.renderer?.onResize?.(width,height,width/height);});

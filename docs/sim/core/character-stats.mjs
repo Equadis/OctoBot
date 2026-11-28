@@ -1,12 +1,12 @@
 import {resolveBuffEffects} from './buff-effect-audit.mjs?v=20261117-buff-audit4';
-import {racialPassives,validRace} from './class-rules.mjs?v=20261117-racial-audit1';
+import {racialPassives,validRace} from './class-rules.mjs?v=20261128-merge1';
 import {petProfile} from './pet-audit.mjs?v=20261117-pet-audit3';
 import {petContextAudit} from './pet-context-audit.mjs?v=20261117-pet-audit3';
 import {racialEventAudit} from './racial-event-audit.mjs?v=20261117-racial-audit2';
-import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261117-buff-audit4';
+import {CONSUMABLE_BY_ID,consumablePassiveStats,consumableRestriction} from './consumables.mjs?v=20261128-merge1';
 import {baseStatProfile,racialAttributeEstimate} from './base-stat-audit.mjs?v=20261117-racial-audit1';
-import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261117-buff-audit4';
-import {ENCHANTS,validEnchant,enchantAvailable} from './equipment-options.mjs?v=20261117-mvp1';
+import {BUFF_STATS,normaliseBuffs} from './buffs.mjs?v=20261128-merge1';
+import {ENCHANTS,validEnchant,enchantAvailable} from './equipment-options.mjs?v=20261128-merge1';
 import {equipmentItemAudit,equipmentSetAudit,weaponSkillBonus} from './item-effects.mjs?v=20261117-item-audit3';
 import {combineScopedEquipment} from './equipment-scopes.mjs?v=20261117-item-audit3';
 import {resolveTalentEffects} from './talent-effects.mjs?v=20261117-mvp3';
@@ -109,10 +109,10 @@ export function characterStats(build,talentData,gear={}){
  ['Wep Skill',pair(skills.map(num))],['Damage',pair(weapons.map(w=>w.damage))],['Speed',pair(weapons.map(w=>w.speed))],['Power',num(ap)],['Hit Rating',pct(meleeHit,0)],['WS Crit',sameOrPair(wsCrit.map(n=>'+'+pct(n,2)))],['Crit Chance',sameOrPair(crit.map(n=>pct(n,2)))],['Haste',pct((haste-1)*100)],['Armor Pen',sameOrPair(['mainhand','offhand'].map(slot=>num(s.armorPen+(talentAudit.weapon[slot]?.armorPen||0))))],['Poison Chance','+'+pct(s.poisonChance,0)],['Poison Crit',pct(spellCrit,2)]
  ]);
  group('Melee vs Target',[
- ['Miss %',pair(miss.map(n=>pct(n)))],['Yellow Miss %',pct(yellow)],['Dodge %',pair(dodgeTarget.map(n=>pct(n)))],['Spell Miss %',pct(spellMiss)],['Poison Resist %',pct(target.targetNatureRes?null:spellMiss),'Against zero Nature resistance; additional resistance modelling is pending.'],['Glance Dmg',pair(glance.map(n=>pct(n,0)))],['Crit Cap',pair(cap.map(n=>pct(n)))],['Eff. Crit',pair(effectiveCrit.map(n=>pct(n,2)))],['Armour',sameOrPair(armourByHand.map(num))],['Phys Reduced',sameOrPair(mitigation.map(n=>pct(n)))]
+ ['Miss %',pair(miss.map(n=>pct(n)))],['Yellow Miss %',pct(yellow)],['Dodge %',pair(dodgeTarget.map(n=>pct(n)))],['Spell Miss %',pct(spellMiss)],['Poison Resist %',pct(target.targetNatureRes?null:spellMiss),'Against zero Nature resistance; additional resistance modelling is pending.'],['Glance Dmg',pair(glance.map(n=>pct(n,0)))],['Crit Cap',pair(cap.map(n=>pct(n)))],['Eff. Crit',pair(effectiveCrit.map(n=>pct(n,2)))],['Armor',sameOrPair(armourByHand.map(num))],['Phys Reduced',sameOrPair(mitigation.map(n=>pct(n)))]
  ]);
- group('Defence',[
- ['Health',num(health)],...(!['warrior','rogue'].includes(c)?[['Mana',num(base?base[6]+s.mana+Math.min(20,s.int)+Math.max(0,s.int-20)*15:null)],['Mana / 5s',num(s.mp5)]]:[]),['Parry %',pct(parry)],['Dodge %',pct(dodge)],['Armour',num(armour)],...['Arcane','Fire','Nature','Frost','Shadow'].map(name=>[name+' Res',num(s[name.toLowerCase()+'Res'])])
+ group('Defense',[
+ ['Health',num(health)],...(!['warrior','rogue'].includes(c)?[['Mana',num(base?base[6]+s.mana+Math.min(20,s.int)+Math.max(0,s.int-20)*15:null)],['Mana / 5s',num(s.mp5)]]:[]),['Parry %',pct(parry)],['Dodge %',pct(dodge)],['Armor',num(armour)],...['Arcane','Fire','Nature','Frost','Shadow'].map(name=>[name+' Res',num(s[name.toLowerCase()+'Res'])])
  ]);
  const extraDef=[];
  if(s.hp5)extraDef.push(['Health / 5s',num(s.hp5)]);

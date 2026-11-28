@@ -3,13 +3,14 @@ import {randomUUID} from "node:crypto";
 export function decodeWorldPacket(channel,sender,text,raw){
   try{
     if(typeof channel!=="string"||channel.toLowerCase()!=="world"||typeof sender!=="bigint"||sender<=0n||
-       !Buffer.isBuffer(raw)||raw.length<23||raw.readUInt32LE(1)===0xffffffff)return null;
+       !Buffer.isBuffer(raw)||raw.length<23||raw[0]!==0x0e||raw.readUInt32LE(1)===0xffffffff)return null;
     const end=raw.indexOf(0,5);if(end<0||raw.toString("utf8",5,end).toLowerCase()!=="world")return null;
     const offset=end+1+4;
     if(raw.readBigUInt64LE(offset)!==sender)return null;
     const len=raw.readUInt32LE(offset+8),start=offset+12,tag=start+len;
     if(len<2||tag!==raw.length-1||raw[tag-1]!==0||raw.toString("utf8",start,tag-1)!==text)return null;
-    return {gm:(raw[tag]&4)!==0,text:text.trim()};
+    // Vanilla chat tags are enum values: 1 = AFK, 2 = DND, 3 = GM.
+    return {gm:raw[tag]===3,text:text.trim(),channel:"world",chatType:raw[0]};
   }catch{return null;}
 }
 export function createWorldChat({account,config,log,getWorld}){
@@ -95,7 +96,7 @@ export function createWorldChat({account,config,log,getWorld}){
       if(!packet||!packet.text||packet.text.length>1200)return;
       if(!seen)log.info("World Chat alpha: first valid public channel packet received");
       seen=true;const time=Date.now(),id=randomUUID();
-      void nameFor(guid).then(author=>{if(stopped)return;queueGuild(guid,author);queue.push({id,time,authorKey:guid.toString(),author,message:packet.text,gm:packet.gm});if(queue.length>250)queue.shift();});
+      void nameFor(guid).then(author=>{if(stopped)return;queueGuild(guid,author);queue.push({id,time,authorKey:guid.toString(),author,message:packet.text,gm:packet.gm,channel:packet.channel,chatType:packet.chatType});if(queue.length>250)queue.shift();});
     },
     stop(){stopped=true;if(timer)clearInterval(timer);queue=[];guildRequests.clear();guildOut.clear();}
   };

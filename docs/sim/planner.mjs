@@ -1,25 +1,31 @@
 import {wireReferenceLab} from './reference-lab.mjs?v=20261117-mvp8';
 import {wireReferenceRotation} from './reference-rotation.mjs?v=20261117-mvp8';
 import {classReleaseReadiness} from './core/combat-release-readiness.mjs?v=20261117-mvp1';
-import {trinketSwapControls} from './trinket-swaps.mjs?v=20261114-compact1';
+import {trinketSwapControls} from './trinket-swaps.mjs?v=20261202-pan-paint';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
-import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261112-display1';
-import {equipmentErrors} from './core/items.mjs?v=20261117-mvp1';
-import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
-import {setupRacePicker} from './race-picker.mjs?v=2';
+import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261130-ui2';
+import {equipmentErrors} from './core/items.mjs?v=20261128-merge1';
+import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261128-merge1';
+import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=20261130-ui2';
+import { raceIconUrl } from './race-icons.mjs?v=20261128-merge1';
+import {optionIcon, optionHasIcons} from './core/icons.mjs?v=20261128-merge1';
 let racePicker = null;
-import {characterStats} from './core/character-stats.mjs?v=20261117-mvp4';
-import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261117-mvp2';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './core/classes.mjs?v=20261112-audit1';
-import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261116-save10a';
+import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
+import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
+import { classDefinition } from './core/classes.mjs?v=20261128-merge1';
+import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261202-buildnames2';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261117-mvp2';
-import { itemPicker } from './item-picker.mjs?v=20261117-mvp1';
-import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261117-mvp1';
-import { settings } from './settings.mjs?v=20261117-buff-audit4';
-import { configuration } from './configuration.mjs?v=20261117-stacking-audit1';
-import { attachTooltip, refreshTooltip, equipmentTooltip } from './tooltip.mjs?v=20261113-swaps1';
-import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261128-merge1';
+import { maxEnergy, reconcileStartingEnergy } from './core/resources.mjs?v=1';
+import { consumeReload, markInternalReload, clearUi, loadUi, saveUi, takePendingBuild, setPendingBuild } from './ui-state.mjs?v=20261201-ui3';
+import { wireDialogs } from '../dialogs.mjs?v=1';
+import { scheduleScrollingNames } from '../scrolling-names.mjs?v=20261202-pan-paint';
+import { itemPicker } from './item-picker.mjs?v=20261202-pan-paint';
+import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261128-merge1';
+import { settings } from './settings.mjs?v=20261112-polish2';
+import { configuration } from './configuration.mjs?v=20261202-pan-paint';
+import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
+import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261128-merge1';
 
 const $ = id => document.getElementById(id);
 // Drop the obsolete cache-busting `v` parameter from the address bar without reloading;
@@ -29,9 +35,20 @@ try{
  if(kept.length!==location.search.replace(/^\?/,'').split('&').filter(Boolean).length)history.replaceState(history.state,'',location.pathname+(kept.length?'?'+kept.join('&'):'')+location.hash);
 }catch{}
 // Opening the planner without ?class= always shows the class selection; each class's saved gear (per-class drafts) is untouched.
-const selectedView=plannerView(location.href,null);
+// Moving between OctoBot pages keeps the planner view (sessionStorage); a refresh or a new session opens the class selector.
+// Saved builds live in localStorage and are not affected either way.
+let tabStorage=null;try{tabStorage=sessionStorage;}catch{}
+const reloaded=consumeReload(tabStorage,performance.getEntriesByType?.('navigation')?.[0]?.type);
+const sharedLink=location.hash.startsWith('#build=');
+if(reloaded&&!sharedLink)clearUi(tabStorage);
+const sessionView=reloaded?null:(tabStorage?rememberedPlannerView(tabStorage):null);
+const selectedView=reloaded&&!sharedLink?'classes':plannerView(location.href,sessionView);
 const classId=selectedView==='classes'?'warrior':selectedView;
-try{rememberPlannerView(selectedView,localStorage);}catch{}
+try{if(tabStorage)rememberPlannerView(selectedView,tabStorage);}catch{}
+if(reloaded&&!sharedLink&&selectedView==='classes'){try{history.replaceState(null,'',location.pathname+'?classes');}catch{}}
+// A build chosen from another class's Saved Builds list is carried here and applied instead of the stored draft.
+const pendingBuild=selectedView==='classes'?null:takePendingBuild(tabStorage,classId);
+const savedUi=selectedView==='classes'||!tabStorage||pendingBuild?null:loadUi(tabStorage,classId);
 if(selectedView!=='classes'){
  const canonical=new URL(location.href);if(!canonical.searchParams.has('class')){canonical.searchParams.set('class',classId);history.replaceState(null,'',canonical);}
 }
@@ -42,7 +59,7 @@ let picker, config, settingsControls, swapControls, resetReferenceLab, resetRefe
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 // Remember folded stat sections while gear, talents and buffs trigger character-sheet rerenders.
-const collapsedStatGroups = new Set();
+const collapsedStatGroups = new Set(savedUi?.collapsedStats||[]);
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -64,19 +81,19 @@ function gameIcon(name, className = '', source = null) {
   return image;
 }
 
+// Class tile artwork reuses the talent tree backgrounds (one signature tree per class); they are small WebP files, cached after first use.
+const CLASS_ART = Object.freeze({ warrior: [0, '50% 22%'], paladin: [0, '50% 28%'], hunter: [1, '50% 45%'], rogue: [1, '50% 40%'], priest: [0, '50% 30%'], shaman: [0, '50% 30%'], mage: [1, '50% 40%'], warlock: [2, '50% 35%'], druid: [0, '50% 25%'] });
 function createClasses() {
   if ($('class-grid').childElementCount) return;
   for (const cls of CLASSES) {
     const card = element(cls.available ? 'a' : 'div', `class-card${cls.available ? ' available' : ' planned'}`);
     card.style.setProperty('--class-colour', cls.colour);
+    if (cls.id in CLASS_ART) { const [tree, position] = CLASS_ART[cls.id]; card.classList.add('art-card'); card.style.setProperty('--art', `url("talent-backgrounds/${cls.id}-${tree}.webp")`); card.style.setProperty('--art-pos', position); }
     if (cls.available) card.href = `?class=${cls.id}`;
     else card.setAttribute('aria-disabled', 'true');
-    const title = element('div', 'class-card-title');
-    title.append(element('strong', '', cls.name));
-    const text = element('div', 'class-card-copy');
-    text.append(title, element('span', 'class-card-note', cls.available ? 'Open planner' : 'Not available yet'));
-    card.append(gameIcon(`classicon_${cls.id}`, 'class-card-icon'), text);
-    if (cls.available) card.append(element('span', 'card-arrow', '→'));
+    // Same arrangement as the dashboard cards: name top left, icon top right, "Open →" bottom right.
+    card.append(element('span', 'class-card-title', cls.name), gameIcon(`classicon_${cls.id}`, 'class-card-icon'));
+    if (cls.available) card.append(element('span', 'class-card-go', 'Open →'));
     $('class-grid').append(card);
   }
 }
@@ -106,11 +123,11 @@ function applyBuild(candidate, message, legacy=false) {
   $('character-level').value = build.level;
   $('character-race').value = build.race;
   racePicker?.sync();
-  $('character-name').value = build.characterName || '';
+
   persistDraft();
   config?.render();
   settingsControls?.render();
-  renderSkills();
+
   renderClassOptions();
   render();
   picker?.verifyGear().then(warnings => { if (warnings.length) feedback(`Equipment needs attention: ${warnings.join(' ')}`, true); render(); }).catch(() => {});
@@ -119,39 +136,105 @@ function applyBuild(candidate, message, legacy=false) {
 
 function createSlots() {
   for (const [slot, name] of Object.entries(SLOTS)) {
+    // Shirt and tabard are appearance-only and are not planned here.
+    if (['shirt', 'tabard'].includes(slot)) continue;
     const container = element('div', 'slot');
     const button = element('button');
     button.type = 'button';
     button.setAttribute('aria-label', `Edit ${name}`);
-    const itemName = element('span', 'item-name', 'Empty');
+    // Keep equipped names on one line, with hover panning for overflow.
+    const itemName = element('span', 'item-name ah-name-clip');
+    const itemText = element('span', 'ah-name-text', 'Empty');
+    itemName.append(itemText);
     const copy = element('span', 'slot-copy');
     copy.append(element('span', 'slot-name', name), itemName);
     button.append(gameIcon(SLOT_ICONS[slot], 'slot-icon'), copy);
     button.addEventListener('click', () => openItem(slot));
-    attachTooltip(button, async () => {
-      const item = build.gear[slot];
-      if (!item) return {title:SLOTS[slot],lines:['Empty']};
-      const metadata = await picker.inspect(item.id);
-      return equipmentTooltip(metadata, item);
-    });
-    const enchantLabel=element('span','slot-enchant','No enchant');
-    attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
+    // Hovering (or focusing) an equipped item shows it, with its enchant, in the item preview; leaving restores the previous preview.
+    // It never changes the selected slot, the filters or the build.
+    for (const [start, end] of [['mouseenter', 'mouseleave'], ['focus', 'blur']]) {
+      button.addEventListener(start, () => picker?.hoverEquipped(slot));
+      button.addEventListener(end, () => picker?.endHover());
+    }
+    // Trinkets cannot be enchanted, so they get no enchant line at all.
+    const enchantable=!['trinket1','trinket2'].includes(slot);
+    const enchantLabel=enchantable?element('span','slot-enchant ah-name-clip'):null;
+    const enchantText=enchantable?element('span','ah-name-text','No enchant'):null;
+    if(enchantLabel)enchantLabel.append(enchantText);
+    if(enchantLabel)attachTooltip(enchantLabel,()=>{const enchant=ENCHANTS.find(e=>e.id===build.gear[slot]?.enchantId);return {title:enchant?.name||'No enchant',lines:enchant?[enchantSummary(enchant)]:[]};});
     container.dataset.slot = slot;
-    container.append(button, enchantLabel);
-    slotElements.set(slot, { container, itemName, enchantLabel, image: button.querySelector('img') });
+    container.append(...(enchantLabel?[button, enchantLabel]:[button]));
+    slotElements.set(slot, { container, itemName, itemText, enchantLabel, enchantText, image: button.querySelector('img') });
     const left = ['head', 'neck', 'shoulder', 'back', 'chest', 'wrist'].includes(slot);
     const weapons = ['mainhand', 'offhand', 'ranged'].includes(slot);
-    const extra=['ammo','quiver'].includes(slot),appearance=['shirt','tabard'].includes(slot);
+    const extra=['ammo','quiver'].includes(slot);
     if(!slotAllowed(classId,slot))container.hidden=true;
     container.dataset.side = weapons ? 'weapon' : left ? 'left' : 'right';
-    $(appearance?'slots-appearance':extra?'slots-ammo':weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
+    $(extra?'slots-ammo':weapons ? 'slots-weapons' : left ? 'slots-left' : 'slots-right').append(container);
   }
+}
+
+// Draw prerequisite links from the same tree/position data used by allocation validation.
+const talentConnections = [];
+function createTalentConnections(grid, talents) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  Object.assign(grid.style, {position:'relative', isolation:'isolate'});
+  Object.assign(svg.style, {position:'absolute', inset:'0', width:'100%', height:'100%', overflow:'visible', pointerEvents:'none', zIndex:'0'});
+  const links = [];
+  for (const child of talents) {
+    if (child.requires == null) continue;
+    const parent = talents.find(t => t.position === child.requires);
+    if (!parent) continue;
+    const line = document.createElementNS(ns,'path');
+    line.setAttribute('fill','none');
+    line.setAttribute('stroke-width','2');
+    line.setAttribute('stroke-linejoin','round');
+    const tip = document.createElementNS(ns,'path');
+    svg.append(line,tip);
+    links.push({parent,child,line,tip});
+  }
+  grid.prepend(svg);
+  for (const t of talents) talentButtons.get(t.id).button.style.zIndex = '1';
+  function draw() {
+    const bounds = grid.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+    for (const {parent,child,line,tip} of links) {
+      const a = talentButtons.get(parent.id).button.getBoundingClientRect();
+      const b = talentButtons.get(child.id).button.getBoundingClientRect();
+      const ax = a.left + a.width/2 - bounds.left, ay = a.top + a.height/2 - bounds.top;
+      const bx = b.left + b.width/2 - bounds.left, by = b.top + b.height/2 - bounds.top;
+      let x,y,dx=0,dy=0,d;
+      if (child.row === parent.row) {
+        dx = Math.sign(bx-ax); x = bx-dx*(b.width/2+2); y = by;
+        d = `M ${ax+dx*(a.width/2+2)} ${ay} L ${x} ${y}`;
+      } else {
+        dy = Math.sign(by-ay); x=bx; y=by-dy*(b.height/2+2);
+        const start = ay+dy*(a.height/2+2);
+        const bend = Math.abs(ax-bx)<1 ? start : (start+y)/2;
+        d = `M ${ax} ${start} V ${bend} H ${x} V ${y}`;
+      }
+      line.setAttribute('d',d);
+      tip.setAttribute('d',`M ${x} ${y} L ${x-dx*7-dy*4} ${y-dy*7+dx*4} L ${x-dx*7+dy*4} ${y-dy*7-dx*4} Z`);
+      const met = (build.talents[parent.id] ?? 0) >= child.requiresRanks;
+      const color = met ? '#ffd100' : '#657184';
+      line.setAttribute('stroke',color); tip.setAttribute('fill',color);
+    }
+  }
+  talentConnections.push(draw);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(draw).observe(grid);
+  requestAnimationFrame(draw);
 }
 
 function createTalents() {
   for (const tree of data.trees) {
     const section = element('section', 'talent-tree');
     section.setAttribute('aria-label', `${tree.name} talents`);
+    section.classList.add('art-card');
+    section.style.setProperty('--art', `url("talent-backgrounds/${classId}-${tree.index}.webp")`);
     const heading = element('div', 'tree-heading');
     const total = element('span'); total.id = `tree-total-${tree.index}`;
     heading.append(element('h3', '', tree.name), total);
@@ -184,6 +267,7 @@ function createTalents() {
       talentButtons.set(talent.id, { button, rank });
       grid.append(button);
     }
+    createTalentConnections(grid, data.talents.filter(t => t.tree === tree.index));
     section.append(heading, grid);
     $('talent-trees').append(section);
   }
@@ -197,29 +281,28 @@ function render() {
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);
   $('character-description').textContent = `${build.race} · Level ${build.level}`;
-  $('talent-split').textContent = totals.join(' / ');
-  $('points-left').textContent = `${Math.max(0, build.level - 9) - spent} points left`;
   $('talents-total').textContent=totals.join(' / ');
   $('talents-points-left').textContent=`Points left: ${Math.max(0,build.level-9)-spent}`;
-  $('equipment-count').textContent = `${Object.keys(build.gear).length} / ${Object.keys(SLOTS).filter(slot=>slotAllowed(classId,slot)).length} slots planned`;
   $('tree-summary').replaceChildren(...data.trees.map(tree => {
     const row = element('div', '', tree.name);
     row.append(element('strong', '', String(totals[tree.index])));
     $(`tree-total-${tree.index}`).textContent = `${totals[tree.index]} / ${tree.maxPoints}`;
     return row;
   }));
-  for (const [slot, { container, itemName, image, enchantLabel }] of slotElements) {
+  for (const [slot, { container, itemName, itemText, image, enchantLabel, enchantText }] of slotElements) {
     const item = build.gear[slot];
     const metadata = item && picker?.lookup(item.id);
-    itemName.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
+    itemText.textContent = item ? metadata?.name || item.label || `Item #${item.id}` : 'Empty';
     image.src = iconUrl(metadata?.icon || SLOT_ICONS[slot]);
-    if (metadata) itemName.className = `item-name q${metadata.quality}`;
-    else itemName.className = 'item-name';
+    if (metadata) itemName.className = `item-name ah-name-clip q${metadata.quality}`;
+    else itemName.className = 'item-name ah-name-clip';
     const enchant=ENCHANTS.find(enchant=>enchant.id===item?.enchantId);
-    enchantLabel.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
-    enchantLabel.dataset.tone=bonusTone(enchantLabel.textContent);
+    if(enchantLabel){
+    enchantText.textContent=enchant?enchantSummary(enchant)+(enchantAvailable(enchant)?'':' (future phase)'):'No enchant';
+    enchantLabel.dataset.tone=bonusTone(enchantText.textContent);
     enchantLabel.tabIndex=enchant?0:-1;
     enchantLabel.classList.toggle('enchanted',Boolean(item?.enchantId));
+    }
     itemName.removeAttribute('title');
     container.classList.toggle('has-item', Boolean(item));
     container.classList.toggle('equipment-invalid', Boolean(item && !picker?.usable(slot,item.id)));
@@ -237,6 +320,7 @@ function render() {
     button.classList.toggle('locked', rank === 0 && validateTalents(data,
       { ...build.talents, [talent.id]: 1 }, build.level).length > 0);
   }
+  for (const draw of talentConnections) draw();
   const verifiedGear=Object.fromEntries(Object.entries(build.gear).filter(([slot,item])=>picker?.usable(slot,item.id)).map(([slot,item])=>[slot,picker.lookup(item.id)]));
   const sheet=characterStats(build,data,verifiedGear);
   $('gear-stats').replaceChildren(...sheet.groups.map(group=>{
@@ -260,6 +344,7 @@ function render() {
     return section;
   }));
   $('gear-stats').title=sheet.sourceNote;config?.refreshCompatibility();
+  scheduleScrollingNames($('equipment'));
 }
 
 function talentTooltip(talent) {
@@ -272,16 +357,25 @@ function talentTooltip(talent) {
   return {title:talent.name,lines};
 }
 
+// Maximum energy depends on the talents (Vigor), so Starting Energy follows it: full stays full, a lower value is kept, and nothing exceeds the cap.
+function energyCap(talents=build.talents){return maxEnergy(classId,data,talents);}
+function classOptionsForTalents(previousTalents){
+  if(!('startingEnergy' in build.classOptions))return build.classOptions;
+  const before=energyCap(previousTalents),after=energyCap();
+  return before===after?build.classOptions:{...build.classOptions,startingEnergy:reconcileStartingEnergy(build.classOptions.startingEnergy,before,after)};
+}
 function changeTalentExtent(maximise){
-  try{build.talents=(maximise?maximiseTalent:minimiseTalent)(data,build.talents,selectedId,build.level);persistDraft();render();refreshTooltip();feedback(`Talent rank ${build.talents[selectedId]||0}.`);}catch(error){feedback(error.message,true);}
+  try{const previous=build.talents;build.talents=(maximise?maximiseTalent:minimiseTalent)(data,build.talents,selectedId,build.level);build.classOptions=classOptionsForTalents(previous);persistDraft();renderClassOptions();render();refreshTooltip();feedback(`Talent rank ${build.talents[selectedId]||0}.`);}catch(error){feedback(error.message,true);}
 }
 
 function changeRank(delta) {
   if (selectedId === null) return;
   try {
+    const previous = build.talents;
     build.talents = setTalentRank(data, build.talents, selectedId,
       (build.talents[selectedId] ?? 0) + delta, build.level);
-    persistDraft(); render(); refreshTooltip();
+    build.classOptions = classOptionsForTalents(previous);
+    persistDraft(); renderClassOptions(); render(); refreshTooltip();
     feedback(`${data.talents.find(t => t.id === selectedId).name}: rank ${build.talents[selectedId] ?? 0}.`);
   } catch (error) { feedback(error.message, true); }
 }
@@ -298,25 +392,88 @@ function downloadJson(value,filename){
   const link=element('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-function openItem(slot) {
-  picker.open(slot);
+// The selector beside the character panel always shows one slot; the matching slot is highlighted.
+function markActiveSlot(active) {
+  for (const [slot, { container }] of slotElements) container.classList.toggle('slot-active', slot === active);
 }
 
+let activeSlot = 'head';
+function openItem(slot, options = {}) {
+  activeSlot = slot;
+  markActiveSlot(slot);
+  picker.open(slot, options);
+}
+
+// Remember what the visitor was looking at so that leaving for another OctoBot page and coming back feels unchanged.
+function captureUi() {
+  const panels = {}, groups = {};
+  for (const card of document.querySelectorAll('.planner-column > section.card')) panels[card.id] = !$(`${card.id}-body`)?.hidden;
+  for (const body of document.querySelectorAll('.buff-group-body')) groups[body.id.replace(/^buff-group-/, '')] = !body.hidden;
+  return {
+    slot: activeSlot, filters: picker?.filters?.(), panels, groups,
+    optionsOpen: document.querySelector('.character-options')?.open ?? null,
+    collapsedStats: [...collapsedStatGroups], scrollY: window.scrollY, itemScroll: $('item-results')?.scrollTop || 0,
+  };
+}
+function restoreUi(state) {
+  if (!state) return;
+  for (const [id, open] of Object.entries(state.panels)) {
+    const body = $(`${id}-body`), toggle = body && document.querySelector(`[aria-controls="${id}-body"]`);
+    if (body && toggle) { body.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); }
+  }
+  for (const [id, open] of Object.entries(state.groups)) {
+    const body = document.getElementById(`buff-group-${id}`), toggle = body && document.querySelector(`[aria-controls="buff-group-${id}"]`);
+    if (body && toggle) { body.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); }
+  }
+  if (state.optionsOpen !== null && document.querySelector('.character-options')) document.querySelector('.character-options').open = state.optionsOpen;
+  scheduleScrollingNames(document);
+  // Scroll positions are restored once the page and the item list have had time to lay out.
+  for (const delay of [150, 700]) setTimeout(() => { window.scrollTo(0, state.scrollY); if (delay > 150 && $('item-results')) $('item-results').scrollTop = state.itemScroll; }, delay);
+}
+function saveUiState() { if (tabStorage && selectedView !== 'classes' && picker) saveUi(tabStorage, classId, captureUi()); }
+if (typeof ResizeObserver === 'function') new ResizeObserver(() => scheduleScrollingNames($('equipment'))).observe($('equipment'));
+window.addEventListener('pagehide', saveUiState);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveUiState(); });
+
+// Saved builds from every class, newest first. Choosing one of another class opens that class's planner with the build loaded.
 async function showSavedBuilds(){
-  const entries=await library.list();
-  const query=$('saved-build-search').value.trim().toLowerCase();
-  $('saved-builds').replaceChildren();
-  if(!entries.length)$('saved-builds').append(element('p','muted','No named builds saved yet.'));
-  for(const entry of entries.filter(entry=>entry.name.toLowerCase().includes(query))){
-    const row=element('div','saved-row');
-    const label=element('span','',entry.name);
-    label.append(element('small','',`Level ${entry.build.level} ${currentClass.name} · ${new Date(entry.savedAt).toLocaleDateString()}`));
+  const entries=await library.listAll();
+  const query=$('saved-build-search').value.trim().toLowerCase(),only=$('saved-class-filter').value;
+  const container=$('saved-builds');container.replaceChildren();
+  const shown=entries.filter(entry=>{
+    if(only&&entry.classId!==only)return false;
+    if(!query)return true;
+    const cls=classDefinition(entry.classId);
+    return [entry.name,cls.name].some(text=>String(text).toLowerCase().includes(query));
+  });
+  if(!entries.length)container.append(element('p','muted','No named builds saved yet. Use Save to keep a build in this browser.'));
+  else if(!shown.length)container.append(element('p','muted','No saved builds match this search.'));
+  for(const entry of shown){
+    const cls=classDefinition(entry.classId),row=element('div','saved-row');
+    row.style.setProperty('--class-colour',cls.colour);
+    const icon=gameIcon(`classicon_${entry.classId}`,'row-icon saved-class-icon');icon.alt=cls.name;
+    const label=element('span','saved-label'),title=element('span','saved-title',entry.name);title.style.color=cls.colour;
+    label.append(title,element('small','',`Level ${entry.build?.level??'?'} ${cls.name} · ${new Date(entry.savedAt).toLocaleDateString()}`));
     const actions=element('div','saved-actions');
     const load=element('button','','Load');load.type='button';
-    load.addEventListener('click',async()=>{try{const restored=await restoreSaved(entry.build);applyBuild(restored.build,'Saved build loaded.'+(restored.changes.length?' '+restored.changes.join('; ')+'. Original saved copy retained.':''));$('load-dialog').close();}catch(error){feedback(error.message,true);}});
-    const remove=element('button','delete-build','Delete');remove.type='button';remove.setAttribute('aria-label',`Delete ${entry.name}`);
-    remove.addEventListener('click',async()=>{try{await library.remove(entry.name);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.addEventListener('click',async()=>{try{await library.save(entry.build,entry.savedAt);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);}catch(error){feedback(error.message,true);}});
-    actions.append(load,remove);row.append(label,actions);$('saved-builds').append(row);
+    load.addEventListener('click',async()=>{
+      try{
+        if(entry.classId!==classId){
+          setPendingBuild(tabStorage,{classId:entry.classId,build:entry.build});
+          $('load-dialog').close();
+          location.assign(`?class=${entry.classId}`);
+          return;
+        }
+        const restored=await restoreSaved(entry.build);applyBuild(restored.build,'Saved build loaded.'+(restored.changes.length?' '+restored.changes.join('; ')+'. Original saved copy retained.':''));$('load-dialog').close();
+      }catch(error){feedback(error.message,true);}
+    });
+    actions.append(load);
+    if(!entry.legacy){
+      const remove=element('button','delete-build','Delete');remove.type='button';remove.setAttribute('aria-label',`Delete ${entry.name}`);
+      remove.addEventListener('click',async()=>{try{await library.removeFrom(entry.classId,entry.id);row.replaceChildren(element('span','',`Deleted “${entry.name}”`));const undo=element('button','','Undo');undo.type='button';undo.addEventListener('click',async()=>{try{await library.putRecord(entry);await showSavedBuilds();}catch(error){feedback(error.message,true);}});row.append(undo);}catch(error){feedback(error.message,true);}});
+      actions.append(remove);
+    }
+    row.append(icon,label,actions);container.append(row);
   }
 }
 
@@ -327,34 +484,20 @@ function createClassOptions(){
     else{input.type='number';input.min=option.min;input.max=option.max;}
     input.addEventListener('change',()=>{try{const value=option.values?input.value:Number(input.value);const controls={...build.controls};if(value!=='None'&&['mhPoison','mhImbue','ohPoison'].includes(option.key))controls.buffIds=controls.buffIds.filter(id=>id!==`wizard-oil-${option.key==='ohPoison'?'oh':'mh'}`);applyBuild({...build,controls,classOptions:{...build.classOptions,[option.key]:value}},'Class options updated.');config.render();}catch(error){feedback(error.message,true);renderClassOptions();}});
     label.append(input);$('class-options').append(label);
+    // Seals, auras, stances, forms, poisons, pets and similar choices show their icon beside the name, in the list and when closed.
+    if(option.values&&optionHasIcons(option.key))optionPickers.set(option.key,setupIconSelect(document,input,{label:option.label,iconFor:value=>{const name=optionIcon(option.key,value);return name?iconUrl(name):null;}}));
   }
 }
-function renderClassOptions(){for(const option of CLASS_OPTIONS[classId])$(`class-option-${option.key}`).value=build.classOptions[option.key];}
+const optionPickers=new Map();
+function renderClassOptions(){
+  for(const option of CLASS_OPTIONS[classId]){$(`class-option-${option.key}`).value=build.classOptions[option.key];optionPickers.get(option.key)?.sync();}
+  const energy=$('class-option-startingEnergy');if(energy)energy.max=String(energyCap());
+}
 
-function createSkills(){
-  const container=$('profession-controls');
-  for(let index=0;index<2;index++){
-    const row=element('div','profession-row'),label=element('label','field',`Profession ${index+1}`),select=element('select');select.id=`profession-${index}`;select.setAttribute('aria-label',`Profession ${index+1}`);
-    for(const name of ['',...PRIMARY_PROFESSIONS]){const option=element('option','',name||'None');option.value=name;select.append(option);}
-    const rankLabel=element('label','field','Skill'),rank=element('input');rank.type='number';rank.min=1;rank.max=300;rank.id=`profession-rank-${index}`;rank.setAttribute('aria-label',`Profession ${index+1} skill`);label.append(select);rankLabel.append(rank);row.append(label,rankLabel);container.append(row);
-    for(const field of [select,rank])field.addEventListener('change',updateSkills);
-  }
-  for(const name of SECONDARY_SKILLS){const label=element('label','field',name),rank=element('input');rank.id=`skill-${name.replaceAll(' ','-')}`;rank.type='number';rank.min=0;rank.max=300;label.append(rank);container.append(label);rank.addEventListener('change',updateSkills);}
-}
-function renderSkills(){
-  const selected=Object.keys(build.skills).filter(name=>PRIMARY_PROFESSIONS.includes(name));
-  for(let i=0;i<2;i++){$(`profession-${i}`).value=selected[i]||'';$(`profession-rank-${i}`).value=build.skills[selected[i]]||300;$(`profession-rank-${i}`).disabled=!selected[i];}
-  for(const name of SECONDARY_SKILLS)$(`skill-${name.replaceAll(' ','-')}`).value=build.skills[name]||0;
-}
-async function updateSkills(){
-  const skills={};
-  for(let i=0;i<2;i++){const name=$(`profession-${i}`).value;if(name){if(skills[name]){feedback('Select different primary professions.',true);renderSkills();return;}skills[name]=Number($(`profession-rank-${i}`).value);}}
-  for(const name of SECONDARY_SKILLS){const rank=Number($(`skill-${name.replaceAll(' ','-')}`).value);if(rank)skills[name]=rank;}
-  try{const restored=await restoreSaved({...build,skills});applyBuild(restored.build,'Profession skills updated.');}catch(error){feedback(error.message,true);renderSkills();}
-}
 
 function wireControls() {
-  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
+  // Every dialog: the × button, Escape (native), and a click on the backdrop all close it.
+  wireDialogs(document);
   picker = itemPicker({
     getBuild: () => ({...build,gear:Object.fromEntries(Object.entries(build.gear).map(([slot,item])=>[slot,{...item,twoHanded:picker?.lookup(item.id)?.slot===17,subclass:picker?.lookup(item.id)?.subclass}]))}),
     onEquip: (slot,item) => {
@@ -367,15 +510,15 @@ function wireControls() {
   });
   resetReferenceLab=wireReferenceLab({classId,getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker.lookup(id)});
   resetReferenceRotation=wireReferenceRotation({getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker.lookup(id)});
-  swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>picker.open(slot,options),inspect:id=>picker.inspect(id)});
+  swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>{markActiveSlot(null);return picker.open(slot,options);},inspect:id=>picker.inspect(id)});
   settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();config?.renderChecks();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
-  $('clear-talents').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'talents'),'Talents reset.'));
+  $('clear-talents').addEventListener('click',()=>{const previous=build.talents,next=resetPlannerSection(build,'talents');const before=energyCap(previous),after=maxEnergy(classId,data,next.talents);if('startingEnergy' in next.classOptions&&before!==after)next.classOptions={...next.classOptions,startingEnergy:reconcileStartingEnergy(next.classOptions.startingEnergy,before,after)};applyBuild(next,'Talents reset.');});
   for(const [id,section,label] of [['reset-buffs','buffs','Buffs & Debuffs'],['reset-rotation','rotation','Rotation'],['reset-settings','build-settings','Settings']])$(id).addEventListener('click',()=>{applyBuild(resetPlannerSection(build,section),`${label} reset.`);if(section==='rotation'){for(const field of ['rotation-name','rotation-save-status'])$(field)[field==='rotation-name'?'value':'textContent']='';$('rotation-add').value='';}});
   $('reset-results').addEventListener('click',()=>{$('simulation-output').replaceChildren();feedback('Results reset.');});
   $('reset-combat-log').addEventListener('click',()=>{$('combat-log-output').replaceChildren(element('p','small muted','Run a simulation to see the combat log.'));feedback('Combat log reset.');});
   config=configuration({getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker?.lookup(id),onChange:controls=>{const classOptions={...build.classOptions};if(controls.buffIds.includes('wizard-oil-mh')){if(classId==='rogue')classOptions.mhPoison='None';if(classId==='shaman')classOptions.mhImbue='None';}if(controls.buffIds.includes('wizard-oil-oh')&&classId==='rogue')classOptions.ohPoison='None';build=validateBuild({...build,classOptions,controls},data);renderClassOptions();persistDraft();render();}});
-  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level'], ['character-name', 'characterName']]) {
+  for (const [id, key] of [['build-name', 'name'], ['character-race', 'race'], ['character-level', 'level']]) {
     $(id).addEventListener('change', async () => {
       try {
         const restored=restoreLegacyBuild({ ...build, [key]: key === 'level' ? Number($(id).value) : $(id).value }, data);
@@ -393,24 +536,36 @@ function wireControls() {
   $('reset-all').hidden=false;
   $('reset-all').addEventListener('click',resetAll);
   $('save-build').addEventListener('click',async()=>{
-    try{$('save-name').value=defaultSaveName($('character-name').value, $('build-name').value);$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
+    try{$('save-name').value=defaultSaveName($('build-name').value, build.race, classId, build.level);$('save-error').textContent='';$('save-dialog').showModal();$('save-name').focus();$('save-name').select();}
     catch(error){feedback(error.message,true);}
   });
   $('save-form').addEventListener('submit',async event=>{
     event.preventDefault();
-    try{const next=validateBuild({...build,characterName:$('character-name').value.trim(),name:$('save-name').value.trim()},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
+    try{const next=validateBuild({...build,name:defaultSaveName($('save-name').value,build.race,classId,build.level)},data);await picker.verifyCandidate(next);await library.save(next);applyBuild(next,`Saved “${next.name}” in this browser.`);$('save-dialog').close();}
     catch(error){$('save-error').textContent=error.message;}
   });
-  $('load-build').addEventListener('click',async()=>{try{$('saved-build-search').value='';$('saved-library-status').textContent='';await showSavedBuilds();$('load-dialog').showModal();}catch(error){feedback(error.message,true);}});
+  $('load-build').addEventListener('click',async()=>{try{$('saved-build-search').value='';$('saved-class-filter').value='';$('saved-library-status').textContent='';await showSavedBuilds();$('load-dialog').showModal();}catch(error){feedback(error.message,true);}});
+  for(const cls of CLASSES){const option=element('option','',cls.name);option.value=cls.id;$('saved-class-filter').append(option);}
   $('saved-build-search').addEventListener('input',()=>showSavedBuilds().catch(error=>feedback(error.message,true)));
+  $('saved-class-filter').addEventListener('change',()=>showSavedBuilds().catch(error=>feedback(error.message,true)));
   $('export-library').addEventListener('click',async()=>{
-    try{const entries=await library.list();const backup={librarySchema:1,classId,exportedAt:new Date().toISOString(),builds:entries.map(entry=>entry.build)};downloadJson(backup,`${currentClass.name}_builds.json`);$('saved-library-status').textContent=`Exported ${entries.length} builds.`;}
+    try{const entries=(await library.listAll()).filter(entry=>!entry.legacy);const backup={librarySchema:2,exportedAt:new Date().toISOString(),builds:entries.map(entry=>entry.build)};downloadJson(backup,'octosim_builds.json');$('saved-library-status').textContent=`Exported ${entries.length} builds from all classes.`;}
     catch(error){$('saved-library-status').textContent=error.message;}
   });
   $('import-library').addEventListener('click',()=>$('import-library-file').click());
   $('import-library-file').addEventListener('change',async()=>{
-    try{const file=$('import-library-file').files[0];if(!file)return;if(file.size>8*1024*1024)throw new Error('Class backups must be smaller than 8 MB.');const backup=JSON.parse(await file.text());if(backup.librarySchema!==1||backup.classId!==classId)throw new Error('Open the matching class before importing this backup.');if(!Array.isArray(backup.builds))throw new Error('Invalid class backup.');for(const candidate of backup.builds)await picker.verifyCandidate(validateBuild(candidate,data));const count=await library.importBuilds(backup.builds);await showSavedBuilds();$('saved-library-status').textContent=`Imported ${count} builds.`;}
-    catch(error){$('saved-library-status').textContent=error.message;}
+    try{
+      const file=$('import-library-file').files[0];if(!file)return;if(file.size>8*1024*1024)throw new Error('Build backups must be smaller than 8 MB.');
+      const backup=JSON.parse(await file.text());
+      // Version 1 files hold one class; version 2 files hold any mix. Both import into the right class from any planner.
+      if(![1,2].includes(backup.librarySchema)||!Array.isArray(backup.builds))throw new Error('This is not an OctoSim builds backup.');
+      const mine=backup.builds.filter(candidate=>candidate?.classId===classId),others=backup.builds.filter(candidate=>candidate?.classId!==classId);
+      for(const candidate of mine)await picker.verifyCandidate(validateBuild(candidate,data));
+      let count=0;
+      if(mine.length)count+=await library.importBuilds(mine);
+      if(others.length)count+=await library.importForeign(others);
+      await showSavedBuilds();$('saved-library-status').textContent=`Imported ${count} builds.`;
+    }catch(error){$('saved-library-status').textContent=error.message;}
     finally{$('import-library-file').value='';}
   });
   $('share-build').addEventListener('click', async () => {
@@ -463,8 +618,6 @@ function createDisclosures() {
     toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-controls',body.id);
     toggle.addEventListener('click',()=>{body.hidden=!body.hidden;toggle.setAttribute('aria-expanded',String(!body.hidden));});
     title.replaceChildren(toggle);
-    // Buffs & Debuffs starts minimised, like each of its categories.
-    if(card.id==='buffs'){body.hidden=true;toggle.setAttribute('aria-expanded','false');}
   }
 }
 
@@ -474,7 +627,7 @@ async function initialise() {
   document.body.classList.add('planner-view');
   document.body.style.setProperty('--class-colour',currentClass.colour);
   $('character-race').replaceChildren(...CLASS_RACES[classId].map(race=>{const option=element('option','',race);option.value=race;return option;}));
-  if (racePicker) racePicker.sync(); else racePicker = setupRacePicker(document, $('character-race'));
+  if (racePicker) racePicker.sync(); else racePicker = setupRacePicker(document, $('character-race'), undefined, { iconFor: race => raceIconUrl(race, build?.gender || 'male') });
   $('class-selection').hidden = true;
   try {
     const response = await fetch(new URL(`./data/talents/${classId}.json`, import.meta.url));
@@ -482,16 +635,16 @@ async function initialise() {
     data = await response.json();
     if(data.classId!==classId||!Array.isArray(data.talents)||data.talents.length<30||data.trees.length!==3)throw new Error('Incomplete class talent data.');
     library=buildLibrary(classId,value=>validateBuild(value,data),{legacyValidate:value=>restoreLegacyBuild(value,data).build});
-    document.querySelector('.rail-brand span').textContent=`${currentClass.name} Build Planner`;
     document.querySelector('.character-summary>strong').textContent=currentClass.name;
     for(const image of document.querySelectorAll('.class-mark,.rail-class-icon')){image.src=iconUrl(`classicon_${classId}`);image.alt=currentClass.name;}
     createSlots();
     if(['paladin','druid','shaman'].includes(classId)){$('slots-weapons').setAttribute('aria-label','Weapons and relic');const slot=$('slots-weapons').querySelector('.slot:last-child');slot.querySelector('.slot-name').textContent='Relic';slot.querySelector('button').setAttribute('aria-label','Edit Relic');}
-    createTalents(); createSkills(); createClassOptions(); wireControls(); createDisclosures();
+    createTalents(); createClassOptions(); wireControls(); createDisclosures();
     let message = 'Planner ready.';
     try {
-      const stored = localStorage.getItem(DRAFT_KEY) || (classId==='warrior'?localStorage.getItem('octosim.planner.draft.v1'):null);
-      if (stored) { const restored=await restoreSaved(JSON.parse(stored));build=restored.build;message='Your previous build was restored.'+(restored.changes.length?' '+restored.changes.join('; ')+'.':''); }
+      const stored = pendingBuild ? null : (localStorage.getItem(DRAFT_KEY) || (classId==='warrior'?localStorage.getItem('octosim.planner.draft.v1'):null));
+      if (pendingBuild) { const restored=await restoreSaved(pendingBuild.build);build=restored.build;message='Saved build loaded.'+(restored.changes.length?' '+restored.changes.join('; ')+'. Original saved copy retained.':''); }
+      else if (stored) { const restored=await restoreSaved(JSON.parse(stored));build=restored.build;message='Your previous build was restored.'+(restored.changes.length?' '+restored.changes.join('; ')+'.':''); }
     } catch { message = 'Browser storage could not be restored. Import or share a build to load it.'; }
     let invalidShare = null;
     if (location.hash.startsWith('#build=')) {
@@ -499,6 +652,9 @@ async function initialise() {
       catch (error) { invalidShare = error.message; }
     }
     applyBuild(build, message);
+    const startSlot = savedUi?.slot && SLOTS[savedUi.slot] && slotAllowed(classId, savedUi.slot) ? savedUi.slot : 'head';
+    openItem(startSlot, savedUi?.filters ? { filters: savedUi.filters } : {});
+    restoreUi(savedUi);
     if (invalidShare) feedback(invalidShare, true);
     $('planner').hidden = false;
   } catch (error) {
@@ -509,11 +665,12 @@ async function initialise() {
 
 function restoreNavigation() {
   if (plannerView(location.href, selectedView) !== selectedView) {
+    markInternalReload(tabStorage);
     location.reload();
     return;
   }
   // Back/forward cache restores do not re-run this module.
-  try{rememberPlannerView(selectedView,localStorage);}catch{}
+  try{if(tabStorage)rememberPlannerView(selectedView,tabStorage);}catch{}
 }
 window.addEventListener('hashchange', restoreNavigation);
 window.addEventListener('popstate', restoreNavigation);

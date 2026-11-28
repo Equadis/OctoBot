@@ -280,8 +280,8 @@ class RadioMonitorConfigTests(unittest.TestCase):
         no_channel_monitor = RadioMonitor(placeholder, no_channel, placeholder, placeholder)
         disabled_monitor.start()
         no_channel_monitor.start()
-        self.assertIsNone(disabled_monitor._task)
-        self.assertIsNone(no_channel_monitor._task)
+        self.assertEqual(disabled_monitor._tasks, [])
+        self.assertEqual(no_channel_monitor._tasks, [])
 
 
 class RadioDatabaseTests(unittest.IsolatedAsyncioTestCase):
@@ -794,7 +794,7 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await late_db.close()
 
-    async def test_channel_failure_retries_next_poll(self) -> None:
+    async def test_channel_failure_retries_after_cooldown(self) -> None:
         class _BrokenChannel(_FakeChannel):
             def __init__(self):
                 super().__init__()
@@ -809,12 +809,18 @@ class RadioMonitorDeliveryTests(unittest.IsolatedAsyncioTestCase):
         channel = _BrokenChannel()
         client = _SequenceRadioClient([
             self.snapshot(self.start, False),
+            self.snapshot(self.start + timedelta(seconds=1), False),
             self.snapshot(self.start + timedelta(seconds=10), False),
         ])
         monitor = RadioMonitor(_FakeBot(channel), self.config, self.db, client)
+        now = 0
+        monitor.api.clock = lambda: now
         await monitor.check()
         self.assertEqual(channel.sent, [])
         channel.fail = False
+        await monitor.check()
+        self.assertEqual(channel.sent, [])
+        now = 10
         await monitor.check()
         self.assertEqual(len(channel.sent), 1)
 

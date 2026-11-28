@@ -13,6 +13,7 @@
   let latencySamples = [], latencyMax = 100;
   let workerEndpoint=null,workerConfigured=false,workerHistory=[],workerCursor=0,workerActive=false;
   const colour = {up:'#63df9a',down:'#ed777f',unknown:'#455363'};
+  const latencyColour=ms=>!Number.isFinite(ms)?'#a1adbd':ms<200?'#63df9a':ms<500?'#e3bd57':'#ed777f';
   const fmt = t => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
   const short = ms => {
     if (ms < 60000) return 'under 1m';
@@ -26,7 +27,7 @@
     return n;
   };
   const label = (value) => ({
-    online:'Online',offline:'Offline',reachable:'Reachable',
+    online:'Online',partial:'Partial',offline:'Offline',reachable:'Reachable',
     unreachable:'Unreachable',responsive:'Responsive',unresponsive:'Unresponsive',
     malformed_response:'Invalid response',available:'Available',unavailable:'Unavailable',
     unknown:'Unknown'
@@ -312,7 +313,7 @@
     dot.setAttribute('fill','#74c6ef');dot.style.display='';
     const tooltip=$('latency-tooltip');
     tooltip.replaceChildren();
-    const title=document.createElement('strong');title.textContent=point.latency_ms+' ms · authentication response';
+    const title=document.createElement('strong');const value=document.createElement('span');value.textContent=point.latency_ms+' ms';value.style.color=latencyColour(point.latency_ms);title.append(value,document.createTextNode(' · authentication response'));
     const stamp=document.createElement('div');stamp.textContent=fmt(point.t)+' UTC';
     tooltip.append(title,stamp);tooltip.hidden=false;
     const outer=hit.closest('.graph').getBoundingClientRect();
@@ -355,9 +356,8 @@
     const tooltip=$('tooltip');
     tooltip.replaceChildren();
     const heading=document.createElement('strong');heading.textContent=fmt(point.t)+' UTC';tooltip.append(heading);
-    for(const str of [...names,'Authentication latency: '+(Number.isFinite(point.latency_ms)?point.latency_ms+' ms':'NO DATA')]){
-      const div=document.createElement('div');div.textContent=str;tooltip.append(div);
-    }
+    for(const [key,name] of LANE){const div=document.createElement('div'),value=document.createElement('span');const raw=key==='tcp'||key==='auth'?point[key]:point.realms?.[key];value.textContent=label(raw);value.style.color=raw==='partial'?'#e3bd57':status(point,key)==='unknown'?'#a1adbd':colour[status(point,key)];div.append(document.createTextNode(name+': '),value);tooltip.append(div);}
+    const latency=document.createElement('div'),value=document.createElement('span');value.textContent=Number.isFinite(point.latency_ms)?point.latency_ms+' ms':'NO DATA';value.style.color=latencyColour(point.latency_ms);latency.append(document.createTextNode('Authentication latency: '),value);tooltip.append(latency);
     tooltip.hidden=false;
     const outer=hit.closest('.graph').getBoundingClientRect();
     tooltip.style.left=Math.max(0,Math.min(outer.width-235,e.clientX-outer.left+12))+'px';

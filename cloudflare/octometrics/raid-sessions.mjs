@@ -197,7 +197,7 @@ export function buildAuthoritative({snapshot,endedRows,learned,raid,now}){
     thresholds:p.thresholds,
     lair:{present:p.lair.present,complete:p.lair.complete,unassigned:p.lair.unassigned,ambiguity:p.lair.ambiguity,observedAt:p.lair.observedAt||snapshot.observedAt},
     sessions:live,
-    lastFinished:lastEnded?{at:lastEnded.confirmedAt||lastEnded.session.confirmedAt||lastEnded.session.endedAt,departedAt:lastEnded.session.endedAt,id:lastEnded.session.id,durationMs:lastEnded.durationMs,
+    lastFinished:lastEnded?{at:lastEnded.confirmedAt||lastEnded.session.confirmedAt||lastEnded.session.endedAt,departedAt:lastEnded.session.endedAt,id:lastEnded.session.id,key:lastEnded.session.key,durationMs:lastEnded.durationMs,
       endReason:lastEnded.session.endReason,clearSource:lastEnded.session.clearSource,
       killConfirmed:lastEnded.session.clearSource==='chronicle_kill',trusted:lastEnded.session.trusted}:null,
   };

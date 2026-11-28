@@ -1,3 +1,5 @@
+import {hardcoreDeathAnnouncement} from "../../services/world-buff-tracker/collector/hardcore-deaths.mjs";
+import {handleRaidRoute,pruneRaidState} from "./raid-state.mjs";
 import {auctionRoute,auctionCleanup} from "./auction.mjs";
 import {worldChatRoute,worldChatCleanup} from "./world-chat.mjs";
 /** Standalone Cloudflare Worker for OctoMetrics, not a replacement for the existing OctoBot Worker.
@@ -7,7 +9,7 @@ import {RAIDS,headFromYell,pairSessions,learnDurations,summariseDrops,buildHead,
 import {listenerStatus} from "./listener-status.mjs";
 import {ZONE_HEAD,RT_ROLE,RT_ACCOUNT,validateRaidSessions,validateRaidSessionEnded,latestSnapshots,endedEvents,learnAuthoritative,buildAuthoritative,authoritativeClear} from "./raid-sessions.mjs";
 const ALLOWED_REALMS=new Set(["N'Zoth","Y'Shaarj","C'Thun"]);
-const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate","dmf_status","dmf_sighting","listener_health","raid_sessions","raid_session_ended"]);
+const ALLOWED_TYPES=new Set(["session_online","session_offline","session_error","raid_who","server_info","world_buff_drop","zg_buff_candidate","dmf_status","dmf_sighting","listener_health","raid_sessions","raid_session_ended","hardcore_death"]);
 const ALLOWED_ACCOUNTS={
   "N'Zoth":{sw:"OBPVESW",org:"OBPVEORG",bb:"OBPVEBB"},
   "Y'Shaarj":{sw:"OBPVPSW",org:"OBPVPORG",bb:"OBPVPBB"},
@@ -37,7 +39,12 @@ function validateRecord(x){
     return x.confirmed===true&&x.source==="onsite"&&typeof x.npc==="string"&&
       x.npc.trim().length>0&&x.npc.length<=100?{ok:true}:no("invalid_sighting");
   }
+  if(["server_info","session_online","session_offline","session_error"].includes(x.type)&&x.realm==="N\u0027Zoth"&&((x.role==="ah"&&x.account==="OBPVEAH")||DMF_ROLES[x.role]?.account===x.account))return {ok:true};
   if(!["sw","org","bb"].includes(x.role)||x.account!==ALLOWED_ACCOUNTS[x.realm][x.role])return no("account_role_mismatch");
+  if(x.type==="hardcore_death"){
+    return x.role==="sw"&&hardcoreDeathAnnouncement(x.text)&&
+      typeof x.eventId==="string"&&/^[a-f0-9-]{36}$/i.test(x.eventId)?{ok:true}:no("invalid_death_announcement");
+  }
   if(x.type==="listener_health")return typeof x.connected==="boolean"?{ok:true}:no("invalid_health");
   if(x.type==="world_buff_drop"){
     // A confirmed drop needs evidence: an announcement heard by the listener of the faction it names, for a buff the collector knows.
@@ -66,6 +73,16 @@ function sanitise(e){
   }
   if(Array.isArray(e.lines))p.lines=e.lines.filter(x=>typeof x==="string").slice(0,30).map(x=>x.slice(0,250));
   return p;
+}
+export function serverUptimeSeconds(lines){
+  const pattern=/^Server uptime:\s*(?:(\d+) days?\s+)?(?:(\d+) hours?\s+)?(?:(\d+) minutes?\s+)?(\d+) seconds?$/i;
+  for(const line of Array.isArray(lines)?lines:[]){
+    const match=typeof line==="string"?pattern.exec(line.trim()):null;
+    if(!match)continue;
+    const seconds=Number(match[1]??0)*86400+Number(match[2]??0)*3600+Number(match[3]??0)*60+Number(match[4]);
+    if(Number.isSafeInteger(seconds))return seconds;
+  }
+  return null;
 }
 function isFresh(iso,seconds=180){return typeof iso==="string"&&Date.now()-Date.parse(iso)<=seconds*1000&&Date.now()-Date.parse(iso)>=-30000;}
 function decode(r){try{return {...r,payload:JSON.parse(r.payload_json)}}catch{return {...r,payload:{}};}}
@@ -187,10 +204,35 @@ export default {
     const url=new URL(request.url);
     if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(request)});
     if(!env.DB)return json({error:"D1 not configured"},503,request);
-    const chat=await worldChatRoute(request,env);
+    if(url.pathname.startsWith("/api/raid/")){
+      if(!env.METRICS_PUSH_TOKEN)return json({error:"ingest secret not configured"},503,request);
+      if(request.headers.get("authorization")!==`Bearer ${env.METRICS_PUSH_TOKEN}`)return json({error:"unauthorised"},401,request);
+      return handleRaidRoute(request,url,env,(body,status)=>json(body,status,request));
+    }
+    const chat=await worldChatRoute(request,{...env,DB:env.WORLD_CHAT_DB??env.DB});
     if(chat)return chat;
-    const auction=await auctionRoute(request,env);
+    const auction=await auctionRoute(request,{...env,DB:env.AUCTION_DB??env.DB});
     if(auction)return auction;
+    if(request.method==="GET"&&url.pathname==="/api/realm-uptime"){
+      const realms=await Promise.all([...ALLOWED_REALMS].map(async realm=>{
+        const {results}=await env.DB.prepare("SELECT observed_at,payload_json FROM metric_events WHERE realm=? AND type='server_info' ORDER BY id DESC LIMIT 5").bind(realm).all();
+        const readings=results.map(decode).filter(row=>row.payload.valid===true)
+          .map(row=>({observed_at:row.observed_at,elapsed_seconds:serverUptimeSeconds(row.payload.lines)}))
+          .filter(row=>row.elapsed_seconds!==null)
+          .sort((a,b)=>Date.parse(b.observed_at)-Date.parse(a.observed_at));
+        return [realm,readings[0]??null];
+      }));
+      return json(Object.fromEntries(realms),200,request);
+    }
+    if(request.method==="GET"&&url.pathname==="/api/world-chat/deaths"){
+      const realm=url.searchParams.get("realm");
+      const after=Number(url.searchParams.get("after")??"0");
+      if(!ALLOWED_REALMS.has(realm)||!Number.isSafeInteger(after)||after<0)
+        return json({error:"invalid death log query"},400,request);
+      const {results}=await env.DB.prepare("SELECT id,observed_at,payload_json FROM metric_events WHERE realm=? AND type='hardcore_death' AND id>? ORDER BY id DESC LIMIT 100").bind(realm,after).all();
+      const items=results.map(decode).map(row=>({id:row.id,time:row.observed_at,text:row.payload.text}));
+      return json({realm,items},200,request);
+    }
     if(url.pathname==="/health")return json({ok:true},200,request);
     if(request.method==="POST" && url.pathname==="/api/ingest"){
       if(!env.METRICS_PUSH_TOKEN)return json({error:"ingest secret not configured"},503,request);
@@ -225,6 +267,19 @@ export default {
         if(revisions.length)await env.DB.batch([insert,...revisions]);else await insert.run();
         return json({ok:true},202,request);
       }
+      if(e.type==="hardcore_death"){
+        const time=new Date(e.time).toISOString();
+        const text=hardcoreDeathAnnouncement(e.text);
+        // The same server announcement or a publisher retry should add only one row.
+        const recent=new Date(Date.parse(time)-60000).toISOString();
+        const later=new Date(Date.parse(time)+60000).toISOString();
+        await env.DB.prepare(`INSERT INTO metric_events(type,realm,account,role,observed_at,payload_json)
+          SELECT 'hardcore_death',?,?,?,?,? WHERE NOT EXISTS (
+            SELECT 1 FROM metric_events WHERE realm=? AND type='hardcore_death' AND observed_at BETWEEN ? AND ?
+              AND (json_extract(payload_json,'$.eventId')=? OR json_extract(payload_json,'$.text')=?)
+          )`).bind(e.realm,e.account,e.role,time,JSON.stringify({text,eventId:e.eventId}),e.realm,recent,later,e.eventId,text).run();
+        return json({ok:true},202,request);
+      }
       const clean=sanitise(e);
       const payload=JSON.stringify(clean);
       if(payload.length>16000)return json({error:"payload too large"},413,request);
@@ -253,6 +308,10 @@ export default {
     return json({error:"not found"},404,request);
   },
   async scheduled(_event,env){
+    if(_event?.cron==="*/5 * * * *"){
+      await auctionCleanup({...env,DB:env.AUCTION_DB??env.DB});
+      return;
+    }
     // Bound data growth: metrics retain a 30-day event history. Last buff drops may be older
     // on quiet realms, so archive separately if multi-month event history becomes necessary.
     // Raid snapshots are superseded every couple of minutes: keep 3 days. Ended sessions (the training data) keep the full 30.
@@ -260,7 +319,8 @@ export default {
     // Listener health is one row per listener per minute and only the latest matters: keep two days.
     await env.DB.prepare("DELETE FROM metric_events WHERE type='listener_health' AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days')").run();
     await env.DB.prepare("DELETE FROM metric_events WHERE type NOT IN ('raid_sessions','raid_session_ended','raid_session_revision') AND observed_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days')").run();
-    await auctionCleanup(env);
-    await worldChatCleanup(env);
+    await pruneRaidState(env.DB);
+    const outcomes=await Promise.allSettled([auctionCleanup({...env,DB:env.AUCTION_DB??env.DB}),worldChatCleanup({...env,DB:env.WORLD_CHAT_DB??env.DB})]);
+    for(const outcome of outcomes)if(outcome.status==="rejected")console.warn("Independent cleanup failed",String(outcome.reason).slice(0,200));
   }
 };

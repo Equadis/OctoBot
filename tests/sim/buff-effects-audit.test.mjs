@@ -35,7 +35,7 @@ test('food, drink and spell source aliases use the intended item IDs; same-categ
 test('spell damage and healing are distinct, and armour and health apply from additional consumables',()=>{
  const b=newBuild('mage');b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['supreme-power'];let a=sheet(b);
  assert.equal(+a.Spell['Spell Power']-+before.Spell['Spell Power'],150);assert.equal(+a.Spell['Healing Power'],+before.Spell['Spell Power']);
- b.controls.buffIds=[];b.controls.consumableIds=[13445,13510];a=sheet(b);assert.equal(+a.Defence.Armour-+before.Defence.Armour,450);assert.equal(+a.Defence.Health-+before.Defence.Health,1200);
+ b.controls.buffIds=[];b.controls.consumableIds=[13445,13510];a=sheet(b);assert.equal(+a.Defense.Armor-+before.Defense.Armor,450);assert.equal(+a.Defense.Health-+before.Defense.Health,1200);
 });
 test('weapon oils are restricted to equipped weapons, not bare hands, shields or active poison',()=>{
  const b=newBuild('rogue');b.controls.buffIds=['wizard-oil-mh','wizard-oil-oh'];
@@ -53,9 +53,9 @@ test('checked raid spell values include all attributes and source-aware recipien
  const mage=newBuild('mage');mage.controls.buffIds=[];const before=sheet(mage);mage.controls.buffIds=['wild','recklessness'];const after=sheet(mage);
  assert.equal(Number(after['Base Stats'].Intellect)-Number(before['Base Stats'].Intellect),12);
  assert.equal(Number(after['Base Stats'].Spirit)-Number(before['Base Stats'].Spirit),12);
- assert.equal(Number(after.Defence.Armour)-Number(before.Defence.Armour),309); // +285 aura and +24 from agility
- assert.equal(Number(after.Defence['Fire Res'])-Number(before.Defence['Fire Res']),20);
- assert.equal(Number(after['Melee vs Target'].Armour)-Number(before['Melee vs Target'].Armour),-640);
+ assert.equal(Number(after.Defense.Armor)-Number(before.Defense.Armor),309); // +285 aura and +24 from agility
+ assert.equal(Number(after.Defense['Fire Res'])-Number(before.Defense['Fire Res']),20);
+ assert.equal(Number(after['Melee vs Target'].Armor)-Number(before['Melee vs Target'].Armor),-640);
  assert.equal(after['Target Debuff Contributions'].targetAttackPower,'90');
 });
 test('additional long-duration stat effects and scoped effects preserve exact tooltip amount',()=>{
@@ -78,7 +78,7 @@ test('new raid and world buffs reach the sheet independently across nine classes
   const b=newBuild(c);b.controls.buffIds=[];const base=sheet(b);b.controls.buffIds=['fortitude','fengus','slipkik','curse-elements','annihilator','nightfall'];const a=sheet(b);
   assert.equal(Number(a['Base Stats'].Stamina)-Number(base['Base Stats'].Stamina),54,c);
   assert.equal(Number(a.Melee.Power)-Number(base.Melee.Power),200,c);
-  assert.equal(Number(a['Melee vs Target'].Armour)-Number(base['Melee vs Target'].Armour),-600,c);
+  assert.equal(Number(a['Melee vs Target'].Armor)-Number(base['Melee vs Target'].Armor),-600,c);
   assert.equal(a['Target Debuff Contributions'].targetFireRes,'-75');assert.equal(a['Target Debuff Contributions'].targetSpellDamageTakenPct,'15%');
   assert.equal(Number(a.Spell['Spell Power']),Number(base.Spell['Spell Power']));
  }
@@ -90,7 +90,7 @@ test('oil level gate and imported consumable conflict handling',()=>{
 
 test('source-backed active target procs do not give personal penetration or permanent spell power',()=>{
  const b=newBuild('rogue');b.controls.buffIds=[];const base=sheet(b);b.controls.buffIds=['wind-serpent','shartateth','hemorrhage','mark-death'];const a=sheet(b);
- assert.equal(Number(a['Melee vs Target'].Armour)-Number(base['Melee vs Target'].Armour),-650);
+ assert.equal(Number(a['Melee vs Target'].Armor)-Number(base['Melee vs Target'].Armor),-650);
  assert.equal(a.Melee['Armor Pen'],base.Melee['Armor Pen']);
  assert.equal(a['Target Debuff Contributions'].targetPhysicalDamageTakenPct,'2%');
  assert.equal(a.Spell['Spell Power'],base.Spell['Spell Power']);
@@ -129,7 +129,7 @@ test('new spirit and shadow resistance modifiers preserve recipient and target s
  for(const [race,expected] of [['Human',42],['Gnome',40]]){
   const b=newBuild('mage');b.race=race;b.controls.buffIds=[];const before=sheet(b);b.controls.buffIds=['divine-spirit','curse-shadow'];const after=sheet(b);
   assert.equal(+after['Base Stats'].Spirit-+before['Base Stats'].Spirit,expected);
-  assert.equal(after.Defence['Shadow Res'],before.Defence['Shadow Res']);
+  assert.equal(after.Defense['Shadow Res'],before.Defense['Shadow Res']);
   assert.equal(after['Target Debuff Contributions'].targetShadowRes,'-75');
  }
 });
@@ -144,7 +144,7 @@ test('verified earth totem and wisdom add the correct stats; resistance adjustme
  assert.equal(buffDefinition('earth').stats.str,96);assert.equal(buffDefinition('earth').status,'source-spell');
  assert.equal(buffDefinition('wisdom').stats.mp5,33);
  const b=newBuild('mage');b.controls.buffIds=['wisdom','curse-shadow'];b.planning.targetShadowRes=100;
- const a=sheet(b);assert.equal(a.Defence['Mana / 5s'],'33');assert.equal(a['Target Resistance Estimates']['Shadow Resistance (raw)'],'25');
+ const a=sheet(b);assert.equal(a.Defense['Mana / 5s'],'33');assert.equal(a['Target Resistance Estimates']['Shadow Resistance (raw)'],'25');
 });
 test('additional defence, health regeneration and school-elixir replacement groups retain only one rank',()=>{
  assert.deepEqual(selectConsumable([3389,8951],13445),[13445]);assert.deepEqual(selectConsumable([3382,3388],20004),[20004]);
@@ -189,10 +189,10 @@ test('weapon mastery is opt-in, level-gated and scoped to the equipped weapon ty
  const h=newBuild('hunter');h.controls.buffIds=['mastery-bows'];const bow={ranged:{classs:2,subclass:2}};assert.equal(sheet(h,bow)['Ranged Equipment Contributions']['Ranged Weapon Skill'],'305');
 });
 test('unverified armour reductions do not inflate target mitigation estimates',()=>{
- const b=newBuild('rogue');const initial=sheet(b)['Melee vs Target'].Armour;
- b.controls.buffIds=['eskhandar','ripper'];assert.equal(sheet(b)['Melee vs Target'].Armour,initial);
+ const b=newBuild('rogue');const initial=sheet(b)['Melee vs Target'].Armor;
+ b.controls.buffIds=['eskhandar','ripper'];assert.equal(sheet(b)['Melee vs Target'].Armor,initial);
  assert.ok(resolveBuffEffects(b).entries.every(e=>!e.active&&e.status==='unresolved'));
- b.controls.buffIds=['corrosive-poison'];assert.equal(+sheet(b)['Melee vs Target'].Armour,+initial-60);
+ b.controls.buffIds=['corrosive-poison'];assert.equal(+sheet(b)['Melee vs Target'].Armor,+initial-60);
 });
 test('developer melee miss formula handles skill above and below target defence',()=>{
  const b=newBuild('warrior');b.race='Human';b.planning.targetLevel=60;

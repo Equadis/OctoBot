@@ -120,3 +120,166 @@ python tools/models/blp.py "D:/Octowow/Data" tools/models/out/tex "Character\Gob
 # Extract to the ignored output folder
 python tools/models/octo_mpq.py extract "D:/Octowow/Data/patch-5.mpq" tools/models/out "Character\Goblin\Male\GoblinMale.m2"
 ```
+
+## Recovering every item appearance from the client (2026-11-21)
+
+Goal: no yellow (i) in the Dressing Room because a model was missing or estimated. Everything below is local; outputs go to the git-ignored `out/` folder and nothing is uploaded.
+
+Pipeline, in order:
+
+1. `resolve_displays.py` builds item id to display id. Sources: the client's `WDB/itemcache.wdb` (the client has no `Item.dbc`), then OctoWoW's Tmog addon groups (`DisplayGroups.lua`: items that share one look; used only when every known member has identical assets in `ItemDisplayInfo.dbc`, and measured at 149 of 150 correct against the database), then, with `--fetch`, the OctoWoW database page of any item neither source places (the page the Worker already reads; cached, 4 at a time, no models downloaded).
+2. `zam_compare.py` asks Zam's asset host which (viewer slot, display id) metadata files exist, the same files `usableDisplay()` asks for. Metadata only.
+3. `item_overlay.py build` writes Zam-format records (`meta/armor/<slot>/<display>.json`, `meta/item/<display>.json`) for every display id Zam lacks: body textures (BLP to WebP, ids from 9,700,000), cloaks, shoulders, weapons, shields, ranged and helms for all ten races (models through `m2v274`, ids from 9,800,000). `item_overlay.py oracle` first proves the generator: it rebuilds the records of display ids Zam does hold and compares structure (texture regions and sexes, geoset groups, model slots). Fields of `ItemDisplayInfo.dbc` it relies on: 1 and 2 model, 3 and 4 model texture, 6 to 8 geoset groups, 12 and 13 helm geoset visibility, 14 to 21 body textures.
+4. `recover_audit.py` sorts every item and slot pair into Verified, Recovered, Partially Recovered or Unresolved with exact reasons and writes `out/model-recovery-progress.md`. `local_audit.py` is the client-only check it uses.
+
+The Worker (`cloudflare/population/src/outfitter.js`) now asks its bucket first for `meta/armor/*` and `meta/item/*` records; the bucket holds only display ids Zam lacks, so Zam is never overridden, and a missing or failing bucket changes nothing. Not deployed.
+
+Found on the way: `m2v274` crashed on some bows and thrown weapons because a sequence pointed at keys stamped before it began (now clamped to 0, bodies unchanged).
+
+## Archive precedence and the HD pack (2026-11-21)
+
+`D:\Octowow\Data` holds the OctoWoW release (the base archives, `patch.MPQ`, `patch-1` to `patch-5`) **and** mods the player installed on top. WoW.exe
+loads `patch.MPQ`, then `patch-?.MPQ` alphabetically, so a single-letter patch overrides the digits. Here `patch-V` is the Project Reforged HD pack
+(33,299 textures that replace official ones: armour textures, baked NPC textures, character skins) and `patch-L/O/S/Z` are small local mods.
+
+* `octo_mpq.Client(folder)` now follows the exe's load order and **leaves out letter patches** (`include_mods=True` opts in). `octo_mpq.archive_rank` is
+  the single definition of the order. `Client.which(path)` names the archive that supplies a file, and encrypted archive members now decrypt.
+* `asset_index.py build <Data> <out.sqlite>` indexes every named file (118,138 paths from the official archives) with its winning archive;
+  `search` and `stats` query it. Names come from each archive's `(listfile)`; `patch.MPQ` has 5,710 blocks with no known name.
+* **Finding:** until this change the reader ranked letter patches above the base archives, so the deployed build `8c2bbd319a49e0a6` contains
+  4,949 textures decoded from the HD pack (of 9,325; models, skins, skeletons and metadata are unaffected) plus 28 orphan Goblin and High Elf character
+  textures that only exist with the pack. Rebuilding from official archives only (`build_overlay.py` and `item_overlay.py`, merged with
+  `merge_overlays.py`) gives `out/publish-official`, version `87965b06bb43d4b2`, 23,342 files. It is built locally and **not uploaded**: replacing live
+  files is a public change that needs the owner's decision (see Publishing status).
+
+## Character skins (donation-shop appearances)
+
+Found by reading the client, not by assumption (`skins.py`, `skin_links.json`, `wdb.py`):
+
+* The shop sells **"Mark of ..." tokens**: 40 items in the client's item cache that all cast spell 56053 ("This token will alter your character's
+  skin, while leaving the haircut, hair color, and facial features unchanged"). Their names, allowed races and shop thumbnails
+  (`Interface\ShopFrame\entries\<token>[_1|_2].blp`; `_1` male, `_2` female, none = single sex, see `Turtle_ShopUI.lua`) are in the client; the server decides which
+  skin a token applies, so the client does **not** link tokens to textures.
+* The skins are **texture-only changes of the normal race models** (no transformation, no new geometry, so equipment, helms and animations work as for
+  any skin colour). 138 textures hold them: 99 `CharSections.dbc` skin rows flagged 1 (not selectable at creation) and 39 baked NPC textures
+  (`Textures\BakedNpcTextures\*shop*.blp`, each with a `CreatureDisplayInfoExtra` row 15735 to 15774 and a `CreatureDisplayInfo` row 20962 to 20999). Each is a whole
+  body texture that already contains the face, so the viewer needs no face or underwear layers for it.
+* `skins.py discover` writes `discovery.json` and `audit.md`; `skins.py build` also converts the textures and shop pictures to WebP (ids from 9,900,000),
+  writes `skins/catalogue.json` and one `skins/choices/<body>.json` per body, a manifest and `version.json`. Statuses follow the equipment audit
+  (Verified, Recovered, Partially Recovered, Unresolved). **No skin is Verified**: a link between a token and a texture is evidence, not proof.
+* `skin_links.json` records each link with its basis (`name`, `ordinal` or `visual`, meaning compared by eye with the token's own shop picture) and how sure it is (`confidence`: **high** = no other
+  texture of the race looks like the picture, **medium** = best match with a look-alike or a weaker sex, **low** = several textures look the same and this is one of them). 38 of the 40 tokens are
+  linked (13 high, 19 medium, 6 low); every link was checked by rendering the skin in the real viewer next to the shop picture (`render_skins.mjs`, `skin_validation_sheet.py`), which caught and fixed
+  five wrong first guesses (Earthen Dwarves, Nature II and III, Demon Hunter, Mag'har) and one female link that rendered tan against a pale picture (Arcane Binder, dropped). The six low links are
+  all Orc men and women whose textures are near-identical (Blackrock Clan I and II, Burning Blade, Orc: Blackrock II, Dreadskull Clan II and III): the page marks them "Probable match".
+  Left unlinked because nothing matches their picture: **Dreadskull Clan I** (red skin with green glowing eyes) and **Necromancy II** (Night Elf, pale lavender; only look-alikes remain). Female looks the shop
+  pictures show but no texture could be told apart for: Wildhammer II to IV (only two female dwarf skins exist), Night Elf: Demon, Nature II and III, Dalaran Legacy, Spirit Walker (the shop also pictures
+  brown tauren for it that no texture here matches). Textures no token is linked to are offered as "Unlabelled client skins".
+* The Worker adds each body's skin choices to its Skin Color option (`mergeSkinChoices`), serves the catalogue at `/api/outfitter/skins`, and the page keeps the
+  choice out of the ordinary appearance list. See `cloudflare/population/README.md` and `docs/outfitter/README.md`.
+* **Checked:** all 54 linked token looks rendered in the real viewer and compared with the shop pictures by eye (0 failed requests, 0 script errors); every skin picks up its own texture file, and a skin
+  change on the same body reaches the live model (a bug found while doing this: only race or sex changes reloaded it). **Not checked:** in game, and the shop pictures wear equipment and the game's lighting,
+  so a render that resembles the picture is evidence, not proof. Nothing is `Verified`.
+* **Browser regression test:** `node tools/models/ui_regression.mjs <skins overlay> <model overlay>` drives the real page and Worker code in a headless Edge or Chrome (`cdp.mjs`) and runs 35 checks (panel,
+  search and filters, picking, saving, links, import, race and sex compatibility, old outfits, a service with no skins, a phone-width layout, no errors). It needs a built skins overlay.
+
+### Unresolved equipment, by cause
+
+`unresolved_causes.py` sorts the 140 partly recovered or unresolved item-slot pairs of the audit: 56 have a texture for one sex only, 43 name no model for the
+slot, 17 are weapons in model version 257 (read with the 256 layout, plausibility-checked only), 15 have no display id anywhere in the client, 5 miss their helm model
+files, 2 name a texture the archives do not hold, 2 name a display id the client does not have. Apart from the version 257 weapons (needs a reader and a visual
+check) none of these can be fixed from the client alone.
+
+## Equipment placement and blended parts (2026-11-22)
+
+**What was looked at.** Where items sit on every body, for shields, off-hand items, one-hand and two-hand weapons, daggers, staves, polearms, fist weapons, bows, guns, crossbows, wands, thrown
+weapons and held-in-off-hand items, with library (Zam) items and client-recovered ones, front and side views, wielded and sheathed, with and without a skin (`render_gear.mjs`, `gear_sheet.py`).
+
+* **Attachment points are right.** Every body has the shield point (attachment 0) and the two hand points (1 and 2); the converted Goblin and High Elf bodies store them exactly as the library's own
+  models do (an absolute position equal to the bone's pivot: checked on Zam's Human, Goblin and Blood Elf models and the client's originals), the right hand is on the right and the left on the left,
+  and the shield point's distance from the left hand is inside the library's range on all 20 bodies (`placement_check.py`). The grip, rotation and scale of weapons are the same for library and recovered
+  items; hands wrap the grips on Human, Goblin, High Elf and Tauren. Shields sit on the outside of the left arm with their face outward, as the library's do, so from the front only their edge is
+  seen and the hand is behind it. Flagged by the numbers but the client's own data, not a conversion fault: the Goblin man's hands are at different heights (his stand pose), and the library's Tauren man
+  has an unusual right-hand point. No transform was changed.
+* **What was wrong: blended parts drew as opaque black squares.** The converter wrote shader id 0 for every batch. Blizzard's files give a single-texture batch whose material is blended (alpha, additive,
+  modulate, mod2x) shader 16 (measured over 700 library item models: blend 2, 4, 5 and 6 are 16, blend 0 is 0), and the viewer needs it: with 0 the transparency of glows, flames, glass and flags was lost. The
+  Archaeologist's Lantern (a held-in-off-hand item) showed a flat black square with its glow picture beside the hand. This touched about 1,000 item batches (lanterns, torches, orbs, glowing and flaming
+  weapons) and 520 helm batches. `m2v274.write_skin` now gives blended single-texture batches shader 16 (972 skin files changed; models, textures and records are byte-identical). Two-texture
+  batches are left at 0: the library uses several ids for them and the right one is not established (an experiment with 0x8001 changed the look but could not be judged).
+* **Shields were sent to the viewer as off-hand weapons (2026-11-22, user report).** `viewerSlot` mapped every off-hand item to slot 22, so the viewer attached a shield at the left *hand* (the weapon attachment) instead of its shield attachment: the arm went through the middle of the shield and it hung edge-on beside the leg, on every body. Shields now go as slot 14 (`state.mjs`); one-hand weapons and held items in the off hand stay 22. Checked on all 20 bodies at front and three-quarter views (`render_gear.mjs`), and `ui_regression.mjs` asserts the applied slots are `[14, 21]` for a shield and a sword.
+* **Tests for it.** `validate_overlay.py` fails a build that has a blended single-texture batch with shader 0; `artifact_scan.py` finds solid black patches in renders (the lantern's squares were 1,000
+  to 2,600 px, legitimate black fur stays under 500); `placement_matrix.mjs` renders a loadout matrix in the real page and runs both, and checks each loadout's equipment applied; `placement_check.py` is the static
+  attachment table.
+* **Not changed and not verifiable here:** the library's own models (Human to Troll bodies, their shields) come from Zam unchanged; where one of them clips a hand in the original game it does here.
+  Judging a grip is by eye, and nothing is checked in game.
+
+## The last 66 items and the 72 partial pairs (2026-11-22)
+
+**Where this started.** 13,779 of 13,919 item and slot pairs had their own model; 72 pairs were partially recovered and 68 pairs (66 items) unresolved. Every one of the 140 was
+looked at again against the client's own files (`ItemDisplayInfo.dbc`, `WDB/itemcache.wdb`, the archives, newest patch first). Nothing was matched by name or icon.
+
+**Why the 68 unresolved pairs have no model.** For 52 of them the client itself defines nothing to draw, so the exact preview is nothing:
+
+| Cause | Pairs | Evidence |
+|---|---|---|
+| Display id 0 in the client's item cache | 15 | The server's own cache (refreshed 2026-11-22) lists display id 0 for Faceted Armcuffs, Radiant Veil, Jeweled Helm, Blood Crown, Topaz Tempest Rod, Cenarion Treads and the rest of the 5518x block: unreleased placeholders with a question-mark icon. They had been "unresolved" because the OctoWoW database page names no id. |
+| Test placeholders | 14 | "Test Helm 2", "Test Chest 1/2", "Test Belt", ...: the display row is empty (or absent) and the icons are rings and necklaces. |
+| Hidden-slot items | 12 | "Hidden Mail Shoulders", "Summer Collection of Unseen Fashion", "The Emperor's New Cape": an empty display row is the point of the item. |
+| Empty display row | 9 | Tabard of the Ashbringer, Earthshatter Leggings and Greaves, Coldheart Icicle, the four Firestones: the row exists and names no model or texture. |
+| Deprecated "OLD" items | 2 | OLDCeremonial Club: empty row. |
+
+The other 16 pairs stay unresolved, each with its exact cause:
+
+| Cause | Pairs | Items |
+|---|---|---|
+| The row names textures the client does not hold (no Mail_NightElf_C_02* or Generic_DwPr_01 / OrHu_01 files for either sex) | 6 | Black and White Night Elf Breastplate, Black Night Elf Gloves, OLD Dwarven Initiate's Shirt and Pants, OLD Thick Trapper's Shirt |
+| No display row 2042 in the client table | 1 | Branch of the Great Tree |
+| The row is for another kind of slot or object (boot textures on gloves, a flint-axe model on helms, shoulder models and chest textures on a helm): the item's data is inconsistent and its intended look is unknown | 9 | Thief's Mitts, Cloudweaver Gloves, Energy Resistant Belt, Thinker's Shoulders, Crown of Wrath, Genesis Raiments, Crystalfall Cap, Felguard's Visage, Grifter's Belt |
+
+The client's inventory type agrees with the catalogue slot for all of them, so no item was in the wrong slot.
+
+**Recovered.** Nine Gold and Silver Embroidered Doublets (items 42057 to 42065) had a leading space in the name of their sleeve texture (`' Cosmetic_A_01TunicBlue_Sleeve_AU'`); the file exists without it. `local_audit.Assets.string`
+now drops surrounding whitespace and `item_overlay.py extra` rebuilt them (36 textures, 9 records). The rebuild continues the existing id ranges (`used_ids`), so no existing file moved.
+
+**Partial pairs (72, now 44).** 17 weapons have M2 version 257 models read with the version 256 layout; 12 items covering their ten display ids were rendered in the real viewer (`render_gear.mjs`, front and left, Human man) and look right
+(`visual_checks.json`), so they count as recovered. Two shoulders name one shoulder model only (the game draws one pauldron). The 44 that stay partial: 41 lack a texture for one sex in the client (chest and legs: that part shows bare), two helms
+exist for some races only, one shoulder texture is missing. These are client gaps, not converter faults: the same texture names exist for neither the missing sex nor as a unisex file.
+
+**What the page says.** Each pair that is not simply "has its own model" has a state in `meta/octobot/appearance-states.json`, built by `recover_audit.py` (`appearance_states.py`) and served from the bucket by the Worker (`states` route, not deployed). The page reads it once:
+
+| Icon | State | Shown for |
+|---|---|---|
+| quiet grey, dashed | No visible appearance | the 52 pairs the client draws nothing for; the preview shows nothing, as the game does |
+| amber | Missing model | files the client names are not in it (7 pairs) |
+| amber | Unresolved metadata | the display row is for another slot (9 pairs), or the service found no display id |
+| amber | Incomplete model | a model loads but something is absent: the note says which sex (44 pairs) |
+| amber | Estimated preview | another item's model, as before |
+| red | Service error | the appearance service failed or is out of date |
+
+A pair with a state skips the service lookup and every estimate. Without the table (an older build) the page judges items as before.
+
+**Tools.** `item_overlay.py extra` (second pass with continuing ids), `overlay_patch.py` (applies a small patch, with `.remove.json`, to a finished folder), `appearance_states.py`, `recover_audit.py --wdb --overlay --extra --out`, `visual_checks.json`.
+
+## Publishing status and rollback
+
+* **Nothing from the skins work is uploaded or deployed.** The skins overlay is built under `tools/models/out/skins/overlay` and served only by
+  `e2e_server.mjs` on this machine. The Worker and page changes are committed on the branch `feature/character-skins` only; the page hides the skin row until the
+  service lists skins, so merging it before any upload changes nothing for visitors. Uploading converted client files still needs OctoWoW's agreement (rules above).
+* `upload_overlay.mjs` now refuses to run without `--backup <folder>` (it saves the object each key already has before overwriting it) or an explicit `--no-backup`.
+  A rollback of a published build is: restore the Worker (`npx wrangler rollback <version id>`), re-upload the backup folder
+  (`node tools/models/upload_overlay.mjs <backup folder> octobot-models --no-backup`, which sends `version.json` last), and check with `/api/outfitter/models-version`.
+  Resetting the version pointer alone is **not** a rollback when keys keep their names (`helms.json`, textures).
+* The live build `8c2bbd319a49e0a6` was uploaded before this existed: its old `helms.json` was overwritten and is not recoverable except by rebuilding the previous
+  commit. The Worker before that deployment is `1408876d-0345-4295-970d-53693bc16d1a`.
+
+See `DEPLOYMENT.md` for the full backup, replace, verify and rollback procedure, and `DEPLOYMENT_READINESS.md` for the state of the official-only replacement.
+
+## Keeping automated sessions away from production
+
+On 2026-11-22 a one-click "Yes, upload it" answer started an upload to the live bucket 17 seconds before a new instruction interrupted it (12 textures were written and restored). OctoWoW has since
+confirmed that the owner may use and redistribute the converted models and textures and that no permission document is needed, so the gate asks for a deliberate act, not a file. Three layers stand in
+front of the live bucket and Worker: `publish_guard.mjs` (`upload_overlay.mjs` refuses any bucket that is not a private test bucket unless the command says `--owner-confirmed <the folder's exact build>`
+and `--backup <folder>`; a restore from a `--backup` folder is allowed; a hand-made `PUBLISH_PERMISSION.json` for that build is still accepted), `.claude/hooks/protect-live-bucket.mjs` (a Claude Code
+hook that blocks raw `wrangler r2 object put|delete` and `wrangler deploy|rollback|delete` unless the command carries `OCTOBOT_OWNER_CONFIRMED=<build>`, and blocks any write to the permission file)
+and `CLAUDE.md` (a session may add the flag or marker only when the owner's own chat message tells it to publish that build). They stop mistakes and automated sessions acting on a button answer, not
+the owner, and a session that does not start in this repository does not load the hook. `--hold-version` uploads everything except `version.json`, so the new build can be tested before it is switched on.

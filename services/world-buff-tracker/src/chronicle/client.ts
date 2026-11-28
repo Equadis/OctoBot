@@ -2,6 +2,7 @@ import { parseChronicleResponse } from "./parse.js";
 import type { ChronicleLog } from "./types.js";
 
 const RECENT_URL = "https://octo.chronicleclassic.com/api/v1/raidlogs/recent?instance_name=Onyxia%27s%20Lair";
+export const BLACKWING_RECENT_URL = "https://octo.chronicleclassic.com/api/v1/raidlogs/recent?instance_name=Blackwing%20Lair";
 
 /**
  * Chronicle only answers requests that look like they came from its own site — drop the
@@ -35,12 +36,16 @@ export class HttpChronicleClient implements ChronicleClient {
   readonly #fetch: FetchLike;
   readonly #url: string;
 
-  constructor(fetchFn: FetchLike = (url, init) => fetch(url, init), url: string = RECENT_URL) {
+  constructor(fetchFn: FetchLike = (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(8_000) }), url: string = RECENT_URL) {
     this.#fetch = fetchFn;
     this.#url = url;
   }
 
   async fetchRecentOnyxia(): Promise<ChronicleLog[]> {
+    return this.fetchRecent();
+  }
+
+  async fetchRecent(): Promise<ChronicleLog[]> {
     const res = await this.#fetch(this.#url, { headers: HEADERS });
     if (!res.ok) throw new Error(`chronicle: HTTP ${res.status}`);
     return parseChronicleResponse(await res.json());

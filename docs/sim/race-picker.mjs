@@ -1,29 +1,31 @@
 /* Race dropdown with a portrait to the left of each race, built the same way as the Dressing Room's background picker:
  * the native <select> stays as the source of truth (hidden), and a button plus a list of options sits beside it.
  * Whatever sets select.value (the user, a restored build, a class change) only has to call sync(). */
-import {raceIconUrl} from './race-icons.mjs?v=2';
+import {raceIconUrl} from './race-icons.mjs?v=20261128-merge1';
 
-function portraits(doc,race){
+function portraits(doc,race,iconFor){
   const wrap=doc.createElement('span');wrap.className='rp-faces';
   for(const sex of ['male']){   // one portrait per race keeps the selector narrow
-    const url=raceIconUrl(race,sex),image=doc.createElement(url?'img':'span');
+    const url=iconFor(race,sex),image=doc.createElement(url?'img':'span');
     if(url){image.src=url;image.alt='';image.loading='lazy';image.width=20;image.height=20;}
     else image.className='rp-blank';
     wrap.append(image);
   }
   return wrap;
 }
-function row(doc,race){
+function row(doc,race,iconFor){
   const frag=doc.createDocumentFragment();
   const label=doc.createElement('span');label.className='rp-label';label.textContent=race;
-  frag.append(portraits(doc,race),label);
+  frag.append(portraits(doc,race,iconFor),label);
   return frag;
 }
-export function setupRacePicker(doc,select,onChoose=()=>{}){
+/* The same dropdown serves any list of choices with an icon each (seals, auras, stances, pets, professions...): pass a label and
+ * iconFor(value) returning an image URL, or nothing for entries without an icon (they keep a blank slot so labels stay aligned). */
+export function setupRacePicker(doc,select,onChoose=()=>{},{label:fieldLabel='Race',iconFor=race=>raceIconUrl(race,'male')}={}){
   select.classList.add('rp-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
   const wrap=doc.createElement('div');wrap.className='rp-picker';
   const button=doc.createElement('button');button.type='button';button.className='rp-button';
-  button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Race');
+  button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label',fieldLabel);
   const list=doc.createElement('div');list.className='rp-list';list.setAttribute('role','listbox');list.hidden=true;
   wrap.append(button,list);select.after(wrap);
   const rows=()=>[...list.querySelectorAll('.rp-option')];
@@ -37,10 +39,10 @@ export function setupRacePicker(doc,select,onChoose=()=>{}){
   const choose=race=>{select.value=race;select.dispatchEvent(new Event('change',{bubbles:true}));sync();close(true);onChoose(race);};
   function sync(){
     const race=select.value;
-    button.replaceChildren(row(doc,race),Object.assign(doc.createElement('span'),{className:'rp-caret',textContent:'▾'}));
+    button.replaceChildren(row(doc,race,iconFor),Object.assign(doc.createElement('span'),{className:'rp-caret',textContent:'▾'}));
     list.replaceChildren(...[...select.options].map(o=>{
       const item=doc.createElement('button');item.type='button';item.className='rp-option';item.setAttribute('role','option');
-      item.setAttribute('aria-selected',String(o.value===race));item.append(row(doc,o.value));
+      item.setAttribute('aria-selected',String(o.value===race));item.append(row(doc,o.value,iconFor));
       item.addEventListener('click',()=>choose(o.value));return item;
     }));
   }
@@ -57,3 +59,4 @@ export function setupRacePicker(doc,select,onChoose=()=>{}){
   sync();
   return {sync,wrap,button,list};
 }
+export const setupIconSelect=(doc,select,{label,iconFor,onChoose}={})=>setupRacePicker(doc,select,onChoose,{label,iconFor});

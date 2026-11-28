@@ -1,0 +1,9 @@
+{
+  "note": "Community abbreviations. Every target id must exist in the build; checked by tools/build_entity_database.py.",
+  "aliases": [
+    {"type": "item", "id": 19019, "names": ["TF", "Thunderfury"]},
+    {"type": "item", "id": 17182, "names": ["Sulfuras", "Sulf"]},
+    {"type": "item", "id": 19364, "names": ["Ashkandi"]},
+    {"type": "item", "id": 18608, "names": ["Benediction", "Bene"]}
+  ]
+}

@@ -1,7 +1,8 @@
 import test from "node:test";import assert from "node:assert/strict";
 import {listingKinds,cleanText} from "../world-chat-classify.mjs";
 import {validLine} from "../world-chat.mjs";
-import {decodeWorldPacket} from "../collector/dist-metrics/metrics/world-chat.js";
+import {decodeWorldPacket as decodeLegacyWorldPacket} from "../collector/dist-metrics/metrics/world-chat.js";
+import {decodeWorldPacket} from "../../../services/world-buff-tracker/collector/world-chat.mjs";
 test("recruitment aliases, boundaries, multiple raids and trade exclusion",()=>{
   assert.deepEqual(listingKinds("LFM heal ZG / MC / Ony").map(x=>x.tag),["ZG","MC","Ony"]);
   assert.equal(listingKinds("I cleared MC yesterday").length,0);
@@ -16,12 +17,23 @@ test("fresh event validation",()=>{
  assert.ok(validLine(line,now));assert.equal(validLine({...line,time:now-120001},now),null);assert.equal(validLine({...line,gm:"true"},now),null);
 });
 test("GM flag is packet metadata, not message text",()=>{
- const text="<GM> fake",name=Buffer.from("world\0"),msg=Buffer.from(text+"\0"),body=Buffer.alloc(5+name.length+4+8+4+msg.length+1);
- name.copy(body,5);const p=5+name.length+4;body.writeBigUInt64LE(42n,p);body.writeUInt32LE(msg.length,p+8);msg.copy(body,p+12);
- assert.equal(decodeWorldPacket("world",42n,text,body).gm,false);
- body[body.length-1]=4;assert.equal(decodeWorldPacket("world",42n,text,body).gm,true);
- assert.equal(decodeWorldPacket("guild",42n,text,body),null);assert.equal(decodeWorldPacket("world",43n,text,body),null);
- body.writeUInt32LE(0xffffffff,1);assert.equal(decodeWorldPacket("world",42n,text,body),null);
+ const text="|c1000ccff<GM> fake|r",name=Buffer.from("world\0"),msg=Buffer.from(text+"\0"),body=Buffer.alloc(5+name.length+4+8+4+msg.length+1);
+ body[0]=0x0e;name.copy(body,5);const p=5+name.length+4;body.writeBigUInt64LE(42n,p);body.writeUInt32LE(msg.length,p+8);msg.copy(body,p+12);
+ for(const decode of [decodeWorldPacket,decodeLegacyWorldPacket]){
+  for(const tag of [0,1,2,3,4]){
+   body[body.length-1]=tag;
+   assert.equal(decode("world",42n,text,body).gm,tag===3);
+  }
+  for(const type of [0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x0a,0x1a,0xff]){
+   body[0]=type;assert.equal(decode("world",42n,text,body),null,`private or non-channel type ${type}`);
+  }
+  body[0]=0x0e;
+  assert.equal(decode("guild",42n,text,body),null);
+  assert.equal(decode("world",43n,text,body),null);
+  body.writeUInt32LE(0xffffffff,1);
+  assert.equal(decode("world",42n,text,body),null);
+  body.writeUInt32LE(0,1);
+ }
 });
 
 import {readFileSync} from "node:fs";
@@ -55,11 +67,13 @@ test("real SQL lifecycle: auth, dedupe, realms, refresh, independent listings, e
  let now=Date.now();const actual=Date.now;Date.now=()=>now;
  try{
   const line=(id,authorKey,message,gm=false,time=now)=>({id:"12345678-1234-1234-1234-"+String(id).padStart(12,"0"),authorKey,author:"Player"+authorKey,message,gm,time});
-  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only",guilds=[])=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages,guilds})}),env);
+  const send=(messages,realm="N'Zoth",account="OBPVESW",auth="Bearer test-only",guilds=[])=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:auth},body:JSON.stringify({realm,account,channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m})),guilds})}),env);
   const read=async(realm="N'Zoth")=>(await worldChatRoute(new Request(base+"?realm="+encodeURIComponent(realm)),env)).json();
   assert.equal((await read()).status,"waiting");
   assert.equal((await send([], "N'Zoth","OBPVESW","Bearer no")).status,401);
   assert.equal((await send([], "N'Zoth","OBPVPORG")).status,400);
+  assert.equal((await send([{...line(999,"1","private"),chatType:0x06}])).status,400);
+  assert.equal((await send([{...line(999,"1","private"),channel:"guild"}])).status,400);
   const first=line(1,"1","LFM WC");
   assert.equal((await send([first,line(2,"2","LFG WC"),line(3,"3","<GM> fake"),line(4,"4","announcement",true),line(5,"5","WTB linen")])).status,202);
   await send([first]);
@@ -114,12 +128,39 @@ test("item markup survives real SQL storage and listing refresh; legacy plain te
  const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
  const now=Date.now(),id=i=>"12345678-1234-1234-1234-"+String(i).padStart(12,"0");
  const line=(i,message)=>({id:id(i),time:now+i,authorKey:"1",author:"Player",gm:false,message});
- const send=messages=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm:"N'Zoth",account:"OBPVESW",channel:"world",messages})}),env);
+ const send=messages=>worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({realm:"N'Zoth",account:"OBPVESW",channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m}))})}),env);
  try{
   assert.equal((await send([line(1,"WTB [Shadowcraft Gloves]"),line(2,"WTB |cff0070dd|Hitem:16712:0:0:0|h[Shadowcraft Gloves]|h|r")])).status,202);
   const data=await (await worldChatRoute(new Request(base),env)).json();
   assert.equal(data.world.length,2);assert.equal(data.world[0].parts,undefined);assert.equal(data.world[1].parts[1].itemId,16712);
   assert.equal(data.wtb.length,1);assert.equal(data.wtb[0].parts[1].colour,"#0070dd");assert.equal(data.wtb[0].message,"WTB [Shadowcraft Gloves]");
+ }finally{DB.sql.close();}
+});
+
+test("live and archived staff display verified role badges, while player markup stays ordinary",async()=>{
+ const DB=dbAdapter(),env={DB,METRICS_PUSH_TOKEN:"test-only"},base="https://worker.example/api/world-chat";
+ const now=Date.now();
+ const roles=["GM","CM","DJ","DEV"];
+ const messages=[...roles.map((_,i)=>({gm:true,message:"|c1"+i+"12aBcFStaff notice|r"})),
+  {gm:true,message:"Legacy GM notice"},{gm:false,message:"|c1312aBcFStaff notice|r"}].map((event,i)=>({
+  id:"12345678-1234-1234-1234-"+String(i).padStart(12,"0"),time:now+i,authorKey:String(i+1),author:"Sender",...event
+ }));
+ try{
+  const ingest=await worldChatRoute(new Request(base+"/ingest",{method:"POST",headers:{authorization:"Bearer test-only"},body:JSON.stringify({
+   realm:"N'Zoth",account:"OBPVEDMFA",channel:"world",messages:messages.map(m=>({channel:"world",chatType:0x0e,...m}))
+  })}),env);
+  assert.equal(ingest.status,202);
+  const read=async path=>(await worldChatRoute(new Request(base+path),env)).json();
+  const live=await read("");
+  const staff=await read("/history?feed=gm&q=notice");
+  const world=await read("/history?feed=world&q=notice");
+  assert.deepEqual(staff.items,live.gm);
+  assert.deepEqual(world.items,live.world);
+  assert.deepEqual(staff.items.map(row=>row.staffRole),[...roles,"GM"]);
+  assert.deepEqual(staff.items.map(row=>row.staffColour),["#12aBcF","#12aBcF","#12aBcF","#12aBcF",undefined]);
+  assert.equal(staff.items[0].message,"Staff notice");
+  assert.equal(world.items.length,1);
+  assert.equal(world.items[0].staffRole,undefined);
  }finally{DB.sql.close();}
 });
 
@@ -192,4 +233,38 @@ test("history errors retain live fallback and distinguish incompatible API and s
  assert.equal(resp.status,503);
  assert.equal(resp.headers.get("Access-Control-Allow-Origin"),"https://equadis.github.io");
  assert.equal((await resp.json()).code,"history_schema_missing");
+});
+
+
+import {elapsedLabel,showOlderButton,playerKey,mentionParts,rowInFocus,itemAuctionHref,auctionSearchFromURL} from "../../../docs/world-chat/chat-interactions.mjs";
+test("elapsed listing timers count up, clamp future timestamps and pad seconds",()=>{
+ const t=1000000;
+ assert.equal(elapsedLabel(t,t),"0m 00s ago");
+ assert.equal(elapsedLabel(t,t+65000),"1m 05s ago");
+ assert.equal(elapsedLabel(t,t+299999),"4m 59s ago");
+ assert.equal(elapsedLabel(t,t-1000),"0m 00s ago");
+});
+test("history load button appears only at top, with separate retry visibility",()=>{
+ assert.equal(showOlderButton({more:true},0),true);
+ assert.equal(showOlderButton({more:true},3),false);
+ assert.equal(showOlderButton({more:false},0),false);
+ assert.equal(showOlderButton({error:"network"},500),true);
+});
+test("DGG-style focus is case-insensitive and includes whole-name mentions, not substrings",()=>{
+ const names=new Set(["alice","bob"]);
+ const parts=mentionParts("Hey ALICE, @Bob! Malice and bobcat.",names);
+ assert.equal(parts.map(p=>p.text).join(""),"Hey ALICE, @Bob! Malice and bobcat.");
+ assert.deepEqual(parts.filter(p=>p.player).map(p=>p.player),["alice","bob"]);
+ assert.equal(rowInFocus("ALICE",[],"alice"),true);
+ assert.equal(rowInFocus("Bob",["alice"],"alice"),true);
+ assert.equal(rowInFocus("Bob",[],"alice"),false);
+ assert.equal(rowInFocus("Bob",[],""),true);
+ assert.equal(playerKey(" Alice "),"alice");
+ assert.deepEqual(mentionParts("@Newplayer",new Set()),[{text:"@Newplayer",player:"newplayer"}]);
+});
+test("item menu AH links seed the existing search field with a numeric item ID",()=>{
+ assert.equal(itemAuctionHref(16712),"../auction-house/?q=16712&open=16712");
+ assert.equal(itemAuctionHref(16712,"Y'Shaarj"),"../auction-house/?realm=Y%27Shaarj&q=16712&open=16712");
+ assert.equal(itemAuctionHref(-1),null);
+ assert.equal(auctionSearchFromURL("https://equadis.github.io/OctoBot/auction-house/?q=16712"),"16712");
 });

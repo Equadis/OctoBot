@@ -13,6 +13,39 @@ section{min-width:0}
 .world-grid{display:grid;gap:16px}
 .world-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .world-panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
+.raid-reset-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.raid-reset{
+  display:flex;
+  flex-direction:column;
+  min-height:168px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.raid-reset::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  /* Keep the loading screen logo and borders outside the card at all aspect ratios. */
+  inset:-60% 0 -54%;
+  background-image:linear-gradient(90deg,rgba(14,22,34,.93),rgba(14,22,34,.68)),var(--raid-art);
+  background-position:center;
+  background-size:cover;
+}
+.raid-reset-zul-gurub{--raid-art:url("img/raid-resets/zul-gurub.webp")}
+.raid-reset-onyxias-lair{--raid-art:url("img/raid-resets/onyxias-lair.webp")}
+.raid-reset-lower-karazhan-halls{--raid-art:url("img/raid-resets/lower-karazhan-halls.webp")}
+.raid-reset-molten-core{--raid-art:url("img/raid-resets/molten-core.webp")}
+.raid-reset-blackwing-lair{--raid-art:url("img/raid-resets/blackwing-lair.webp")}
+.raid-reset h3{font-size:18px;margin-bottom:20px}
+.raid-reset h3 a{color:inherit;text-decoration:none}
+.raid-reset h3 a:hover,.raid-reset h3 a:focus-visible{text-decoration:underline}
+.raid-reset .field-label,.raid-reset .buff-grid small{color:#aab7c7}
+.raid-reset-sources{margin:8px 0 0}
+@media(max-width:1120px){.raid-reset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.raid-reset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.raid-reset-grid{grid-template-columns:1fr}}
 .panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .eyebrow{display:block;color:#96a7ba;font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:7px}
 .world-panel h2,.world-panel h3{color:var(--gold);font-size:22px;font-weight:500;margin:0}
@@ -62,7 +95,7 @@ section{min-width:0}
 .calendar-title .muted{margin:9px 0 0}
 .calendar-controls{display:flex;align-items:center;gap:7px}
 .calendar-controls strong{font-size:12px;font-weight:500;color:#d9e1ec;min-width:132px;text-align:center}
-button{font:inherit;border:1px solid var(--line);border-radius:4px;background:#233044;color:#c5d1e0;padding:7px 11px;cursor:pointer;font-size:12px}
+button{font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--bg-control);color:#c5d1e0;padding:7px 11px;cursor:pointer;font-size:12px}
 button:hover{border-color:var(--gold);color:var(--gold)}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .calendar-controls button{min-width:32px}
@@ -114,6 +147,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .heading-with-icon{display:flex;align-items:center;gap:12px}.heading-with-icon .eyebrow{margin-bottom:5px}
 .boss-icon{width:44px;height:44px;flex:none;border:1px solid #3a4a60;border-radius:4px;background:#0d1420}
 .buff-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:24px}
+.raid-reset .buff-grid{margin-top:auto}
 .buff-grid>div{min-width:0;padding-right:18px}.buff-grid>div+div{border-left:1px solid var(--line);padding-left:20px}.buff-grid>div:last-child{padding-right:0}
 .faction-alliance{background:linear-gradient(135deg,#162c57 0%,var(--panel) 62%);border-color:#2a4a86;border-left:4px solid #2f5cb3}
 .faction-horde{background:linear-gradient(135deg,#5C1010 0%,var(--panel) 62%);border-color:#772020;border-left:4px solid #8c2323}
@@ -122,7 +156,8 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .dmf-location>.dmf-icon{width:48px;height:48px}
 .dmf-location>strong{font-size:34px;min-width:0}
 
-.clear-block{margin:8px 0 14px;display:flex;flex-direction:column;gap:5px}.clear-block .clock{font-size:24px;line-height:1.2}
+.field-header:has(+ .clear-block){margin-bottom:3px}
+.clear-block{margin:0 0 14px;display:flex;flex-direction:column;gap:5px}.clear-block .clock{font-size:24px;line-height:1.2}
 .clear-block small{color:#91a0b2;font-size:11px;line-height:1.5}
 .clear-tag{align-self:flex-start;font-size:9px;letter-spacing:.08em;font-weight:700;color:#a8d8f2;background:#29394b;border:1px solid #52758e;border-radius:3px;padding:3px 6px}
 .clear-tag[hidden]{display:none}
@@ -135,7 +170,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 .world-grid.two.bottom-grid{grid-template-columns:fit-content(480px) minmax(0,1fr);align-items:start}
 @media(max-width:780px){.world-grid.two.bottom-grid{grid-template-columns:minmax(0,1fr)}}
 .heading-actions{display:flex;align-items:center;gap:8px;flex:none}
-.panel-arrow{width:28px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:#182333;border:1px solid #39465a;border-radius:4px;color:#a0b1c8;cursor:pointer}
+.panel-arrow{width:28px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-control);border:1px solid #39465a;border-radius:4px;color:#a0b1c8;cursor:pointer}
 .panel-arrow:hover,.panel-arrow:focus-visible{border-color:#9d8a35;color:#f4d65c}
 .panel-arrow span{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor}
 .panel-arrow[aria-expanded=true] span{transform:rotate(180deg)}
@@ -158,8 +193,7 @@ footer{display:flex;justify-content:space-between;gap:15px;margin:26px 0;color:#
 /* Empty notes take no space; the explanatory text lives behind the small (i) at the bottom right of each block */
 .world-panel{position:relative}
 small:empty,.evidence:empty{display:none}
-.info-i{position:absolute;right:12px;bottom:10px;width:16px;height:16px;border:1px solid #5b6b82;border-radius:50%;color:#8fa0b6;font:italic 700 11px/14px Georgia,serif;text-align:center;cursor:help;user-select:none}
-.info-i:hover,.info-i:focus-visible{border-color:#9d8a35;color:#f4d65c;outline:0}
+.info-i{position:absolute;right:12px;bottom:10px}
 .info-i::after{content:attr(data-tip);position:absolute;right:-6px;bottom:24px;width:min(300px,70vw);padding:9px 11px;background:#0e1623;border:1px solid #39465a;border-radius:6px;color:#c6d0dc;font:400 11px/1.55 system-ui,sans-serif;text-align:left;box-shadow:0 8px 22px rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;z-index:5}
 .info-i:hover::after,.info-i:focus::after{opacity:1;visibility:visible}
 .world-panel{padding-bottom:30px}
@@ -229,12 +263,6 @@ small:empty,.evidence:empty{display:none}
 .sound-note{margin:10px 0 0;font-size:12px;color:#6fe08f}
 .sound-note:empty{display:none}
 .sound-fine{margin:10px 0 0;font-size:11px;color:#8898ac;line-height:1.5}
-
-/* Loading states: trailing dots appear one by one (nothing, . .. ...) without changing the element's text.
-   The three dots are always there but clipped to a width that grows in four steps, which animates reliably everywhere. */
-.dots::after{content:"...";display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:0;animation:loading-dots 1.2s steps(4,end) infinite}
-@keyframes loading-dots{to{width:1.13em}}
-@media (prefers-reduced-motion:reduce){.dots::after{animation:none;width:auto}}
 
 /* Edge of Madness: countdown urgency changes as its next rotation approaches. */
 .zg-panel #eom-countdown.rotation-safe{color:#78dfa6}

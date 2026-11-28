@@ -18,7 +18,7 @@ export function parseChronicleResponse(json: unknown): ChronicleLog[] {
 /** The clean-Onyxia-kill test: the boss encounter "Onyxia" present with a "clean" kill_type.
  *  A log can list Onyxia among many encounters (whelps, warders), so scan rather than take one. */
 export function hasCleanOnyxiaKill(log: ChronicleLog): boolean {
-  return log.encounters.some((e) => e.name === "Onyxia" && e.boss && e.kill_type === "clean");
+  return hasCleanBossKill(log, "Onyxia");
 }
 
 /**
@@ -27,9 +27,18 @@ export function hasCleanOnyxiaKill(log: ChronicleLog): boolean {
  * can't be reconciled against a time window, so they're worthless here).
  */
 export function cleanOnyxiaKills(logs: readonly ChronicleLog[], realm: string): OnyxiaKill[] {
+  return cleanFinalBossKills(logs, realm, "Onyxia");
+}
+
+export function hasCleanBossKill(log: ChronicleLog, boss: "Onyxia" | "Nefarian"): boolean {
+  return log.encounters.some(e => e.name === boss && e.boss && e.kill_type === "clean");
+}
+
+/** at is the log start, NOT the final boss death time (especially for BWL). */
+export function cleanFinalBossKills(logs: readonly ChronicleLog[], realm: string, boss: "Onyxia" | "Nefarian"): OnyxiaKill[] {
   const out: OnyxiaKill[] = [];
   for (const log of logs) {
-    if (log.realm_name !== realm || !hasCleanOnyxiaKill(log)) continue;
+    if (log.realm_name !== realm || !hasCleanBossKill(log, boss)) continue;
     const at = new Date(log.first_encounter_time);
     if (Number.isNaN(at.getTime())) continue;
     out.push({

@@ -1,6 +1,6 @@
 /* Quality (rarity) dropdowns: each option is drawn in its item-rarity colour, and the closed dropdown takes the colour of the
    selected option. Colours are the shared --quality-N variables from site-theme.css (the Gear Planner's palette). Add class="quality-select" to a select whose option values are 0 to 5. */
-.quality-select option{background:#182333;color:#e5e9ef}
+.quality-select option{background:var(--bg-control);color:#e5e9ef}
 .quality-select option[value="0"]{color:var(--quality-0)}
 .quality-select option[value="1"]{color:var(--quality-1)}
 .quality-select option[value="2"]{color:var(--quality-2)}

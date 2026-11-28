@@ -747,7 +747,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Parry %",
+     "Defense.Parry %",
      "Talent Contributions.Deflection — parry"
     ],
     "petPaths": [],
@@ -1528,7 +1528,7 @@
      "melee.mainhand.targetArmour"
     ],
     "sheetRows": [
-     "Melee vs Target.Armour",
+     "Melee vs Target.Armor",
      "Melee vs Target.Eff. Crit",
      "Melee vs Target.Phys Reduced",
      "Melee.Armor Pen",
@@ -4067,8 +4067,8 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
-     "Defence.Parry %",
+     "Defense.Dodge %",
+     "Defense.Parry %",
      "Talent Contributions.Anticipation — defense"
     ],
     "petPaths": [],
@@ -5787,7 +5787,7 @@
     ],
     "sheetRows": [
      "Base Stats.Intellect",
-     "Defence.Mana",
+     "Defense.Mana",
      "Melee.Poison Crit",
      "Spell.Spell Crit",
      "Talent Contributions.Divine Intellect — int"
@@ -8360,8 +8360,8 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
-     "Defence.Parry %",
+     "Defense.Dodge %",
+     "Defense.Parry %",
      "Talent Contributions.Anticipation — defense"
     ],
     "petPaths": [],
@@ -9676,7 +9676,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Parry %",
+     "Defense.Parry %",
      "Talent Contributions.Deflection — parry"
     ],
     "petPaths": [],
@@ -11186,7 +11186,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
+     "Defense.Dodge %",
      "Talent Contributions.Improved Primal Aspects — dodge",
      "Talent Contributions.Improved Primal Aspects — meleeDamageHealingPct"
     ],
@@ -15114,7 +15114,7 @@
      "Ability Talent Modifiers.Multi-Shot",
      "Ability Talent Modifiers.Scatter Shot",
      "Ability Talent Modifiers.Steady Shot",
-     "Defence.Parry %",
+     "Defense.Parry %",
      "Melee.Haste",
      "Melee.Speed",
      "Talent Contributions.Swift Reflexes — hastePct",
@@ -15919,7 +15919,7 @@
      "health"
     ],
     "sheetRows": [
-     "Defence.Health",
+     "Defense.Health",
      "Talent Contributions.Survivalist — maxHealthPct"
     ],
     "petPaths": [],
@@ -17048,8 +17048,8 @@
     ],
     "sheetRows": [
      "Base Stats.Agility",
-     "Defence.Armour",
-     "Defence.Dodge %",
+     "Defense.Armor",
+     "Defense.Dodge %",
      "Melee.Crit Chance",
      "Melee.Damage",
      "Melee.Power",
@@ -19323,7 +19323,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
+     "Defense.Dodge %",
      "Talent Contributions.Lightning Reflexes — dodge"
     ],
     "petPaths": [],
@@ -19421,7 +19421,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Parry %",
+     "Defense.Parry %",
      "Talent Contributions.Deflection — parry"
     ],
     "petPaths": [],
@@ -21616,7 +21616,7 @@
     "sheetRows": [
      "Ability Talent Modifiers.Garrote",
      "Ability Talent Modifiers.Rupture",
-     "Melee vs Target.Armour",
+     "Melee vs Target.Armor",
      "Melee vs Target.Phys Reduced",
      "Melee.Armor Pen",
      "Talent Contributions.Serrated Blades — armorPen",
@@ -24896,7 +24896,7 @@
      "Ability Talent Modifiers.Smite",
      "Ability Talent Modifiers.Vampiric Embrace",
      "Base Stats.Intellect",
-     "Defence.Mana",
+     "Defense.Mana",
      "Melee.Poison Crit",
      "Spell.Spell Crit",
      "Talent Contributions.Mental Strength — castSpeedPct",
@@ -31614,10 +31614,10 @@
      "Base Stats.Spirit",
      "Base Stats.Stamina",
      "Base Stats.Strength",
-     "Defence.Armour",
-     "Defence.Dodge %",
-     "Defence.Health",
-     "Defence.Mana",
+     "Defense.Armor",
+     "Defense.Dodge %",
+     "Defense.Health",
+     "Defense.Mana",
      "Melee vs Target.Eff. Crit",
      "Melee.Crit Chance",
      "Melee.Damage",
@@ -32398,7 +32398,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
+     "Defense.Dodge %",
      "Talent Contributions.Ancestral Guardian — dodge",
      "Talent Contributions.Ancestral Guardian — itemArmourPct"
     ],
@@ -35194,11 +35194,11 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Arcane Res",
-     "Defence.Fire Res",
-     "Defence.Frost Res",
-     "Defence.Nature Res",
-     "Defence.Shadow Res",
+     "Defense.Arcane Res",
+     "Defense.Fire Res",
+     "Defense.Frost Res",
+     "Defense.Nature Res",
+     "Defense.Shadow Res",
      "Talent Contributions.Magic Absorption — arcaneRes",
      "Talent Contributions.Magic Absorption — fireRes",
      "Talent Contributions.Magic Absorption — frostRes",
@@ -43531,7 +43531,7 @@
     "sheetRows": [
      "Base Stats.Spirit",
      "Base Stats.Stamina",
-     "Defence.Health",
+     "Defense.Health",
      "Talent Contributions.Demonic Embrace — spi",
      "Talent Contributions.Demonic Embrace — sta"
     ],
@@ -49457,7 +49457,7 @@
      "Ability Talent Modifiers.Moonfire",
      "Ability Talent Modifiers.Starfire",
      "Ability Talent Modifiers.Wrath",
-     "Defence.Armour",
+     "Defense.Armor",
      "Melee.Poison Crit",
      "Spell.Spell Crit",
      "Talent Contributions.Moonkin Form — formItemArmourPct",
@@ -50827,7 +50827,7 @@
    "observed": {
     "snapshotPaths": [],
     "sheetRows": [
-     "Defence.Dodge %",
+     "Defense.Dodge %",
      "Talent Contributions.Feral Swiftness — dodge",
      "Unresolved Talent Mechanics.Feral Swiftness"
     ],
@@ -51779,8 +51779,8 @@
      "Base Stats.Intellect",
      "Base Stats.Stamina",
      "Base Stats.Strength",
-     "Defence.Health",
-     "Defence.Mana",
+     "Defense.Health",
+     "Defense.Mana",
      "Melee.Poison Crit",
      "Melee.Power",
      "Spell.Spell Crit",

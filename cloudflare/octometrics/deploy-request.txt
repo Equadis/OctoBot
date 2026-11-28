@@ -1,0 +1,1 @@
+Production deployment retry: verify updated Cloudflare API token permissions and deploy R2 Auction House snapshot routes with collection paused (2026-11-22).

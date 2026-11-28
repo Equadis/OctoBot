@@ -271,3 +271,7 @@ export function parseGuildEvent(body: Buffer): GuildEventMessage {
   for (let i = 0; i < count; i += 1) params.push(reader.cString());
   return { type, params };
 }
+
+export function buildSay(message: string): Buffer {
+  return new PacketWriter().u32LE(ChatType.Say).u32LE(LANG_UNIVERSAL).cString(escapeChatText(message)).toBuffer();
+}
