@@ -15,6 +15,8 @@ import {VERIFIED_COMBAT_HOOKS} from '../../tools/sim/audit-talents.mjs';
 import {compile,compiledAbilities} from '../../tools/sim/combat-verification.mjs';
 import {createPaladinDefenseRuntime} from '../../docs/sim/core/combat-paladin-defense.mjs';
 import {CombatResources} from '../../docs/sim/core/combat-timeline.mjs';
+import {createElementalShieldRuntime,compileElementalShield} from '../../docs/sim/core/combat-elemental-shield.mjs';
+import {powershiftMana} from '../../docs/sim/core/combat-druid-feral.mjs';
 
 const talentData=c=>JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${c}.json`,import.meta.url)));
 const hunter=talentData('hunter');
@@ -166,6 +168,66 @@ test('Talent 272 Open Wounds: Rip damage and the Claw bonus per active owned ble
     near(bonus.fraction,t.rankParameters[1][r-1]/100,'Claw per bleed rank '+r);
     assert.deepEqual(bonus.names,['Rake','Rip','Pounce']);
   }
+});
+
+// Elemental shield runtime with real timeline, auras and resources; only the random source and unit liveness are stubbed.
+const shaman=talentData('shaman'),shamanTalent=id=>{const t=shaman.talents.find(x=>x.id===id);assert.ok(t);return t;};
+const shieldModel=(kind,extra={})=>({durationMs:600000,charges:3,internalCooldownMs:1000,triggerSchools:['physical','fire'],damageBasis:'effective',chance:1,amount:100,apCoefficient:0,spellPowerCoefficient:0,mitigation:0,flatReduction:0,threat:null,consume:'activation',kind,outcomes:kind==='water'?null:[{name:'hit',probability:1,multiplier:1,landed:true}],...extra});
+function shieldRig(talents,extra={},rolls=[]){
+  const timeline=new CombatTimeline(),auras=new CombatAuras(timeline),resources=new CombatResources(timeline,{mana:{current:0,max:100000}});
+  const queue=[...rolls],log=[];
+  const e={timeline,auras,resources,random:()=>queue.length?queue.shift():.999999,unit:()=>({alive:true}),recordMechanic:(type,details)=>log.push({type,...details})};
+  const compiled=compileElementalShield({talents},{abilityId:'shaman:water-shield'},shieldModel('water',extra));
+  const runtime=createElementalShieldRuntime(new Map([['water',compiled]]),'p',{attackPower:100,healingPower:100,nature:100},['boss'],600000);
+  const aura=()=>auras.active('p','buff').find(a=>a.id==='water');
+  return {timeline,auras,resources,e,log,runtime,compiled,aura,mana:()=>resources.snapshot().mana.current,push:(...v)=>queue.push(...v)};
+}
+test('Talent 255 Stable Shields: shield charges rise by the published amount and the cooldown between activations by the published seconds, at every rank, for every shield',()=>{
+  const t=shamanTalent(255);assert.equal(t.name,'Stable Shields');
+  for(let r=1;r<=t.maxRanks;r++){
+    const m=t.descriptions[r-1].match(/number of charges of your shield spells by (\d+), but increases the cooldown between activations by (\d+) sec/i);
+    assert.ok(m,'description rank '+r);assert.equal(Number(m[1]),t.rankParameters[0][r-1]);
+    for(const kind of ['water','lightning']){
+      const base=compileElementalShield({talents:{}},{abilityId:`shaman:${kind}-shield`},shieldModel(kind)),withTalent=compileElementalShield({talents:{255:r}},{abilityId:`shaman:${kind}-shield`},shieldModel(kind));
+      assert.equal(withTalent.charges-base.charges,t.rankParameters[0][r-1],`${kind} charges rank ${r}`);
+      assert.equal(withTalent.internalCooldownMs-base.internalCooldownMs,Number(m[2])*1000,`${kind} cooldown rank ${r}`);
+    }
+    const earth=compileElementalShield({talents:{255:r}},{abilityId:'shaman:earth-shield'},shieldModel('earth'));
+    assert.equal(earth.charges,3+t.rankParameters[0][r-1],'Earth Shield gets the same bonus');
+  }
+});
+test('Talent 245 Improved Water Shield: mana every 5 seconds and the regeneration bonus per active charge equal the published values at every rank',()=>{
+  const t=shamanTalent(245);assert.equal(t.name,'Improved Water Shield');
+  for(let r=1;r<=t.maxRanks;r++){
+    const m=t.descriptions[r-1].match(/restore (\d+) Mana every (\d+) sec.*regeneration is increased by ([\d.]+)% for each active Water Shield globe/i);
+    assert.ok(m,'description rank '+r);assert.equal(Number(m[1]),t.rankParameters[0][r-1]);assert.equal(Number(m[3]),t.rankParameters[1][r-1]);assert.equal(Number(m[2]),5);
+    const rig=shieldRig({245:r});rig.runtime.activate(rig.e,'water');
+    rig.timeline.runUntil(4999);assert.equal(rig.mana(),0,'nothing before 5 s');
+    rig.timeline.runUntil(5000);assert.equal(rig.mana(),t.rankParameters[0][r-1],'first tick rank '+r);
+    rig.timeline.runUntil(10000);assert.equal(rig.mana(),2*t.rankParameters[0][r-1],'second tick');
+    const before=rig.mana();rig.runtime.manaRegen(rig.e,50);
+    near(rig.mana()-before,50*t.rankParameters[1][r-1]/100*3,`regeneration bonus with 3 charges rank ${r}`);
+    const none=shieldRig({});none.runtime.activate(none.e,'water');none.timeline.runUntil(10000);none.runtime.manaRegen(none.e,50);assert.equal(none.mana(),0,'no talent: no mana, no bonus');
+  }
+});
+test('Talent 248 Undertow: Healing Wave and Lesser Healing Wave have the published chance to restore a charge, or consume one at maximum charges',()=>{
+  const t=shamanTalent(248);assert.equal(t.name,'Undertow');
+  for(let r=1;r<=t.maxRanks;r++){
+    const chance=t.rankParameters[0][r-1]/100,key={id:'water',targetId:'p',ownerId:'p',kind:'buff'};
+    const fresh=(roll)=>{const rig=shieldRig({248:r},{undertowPolicy:'consume-only'},[roll]);rig.runtime.activate(rig.e,'water');rig.auras.consume(key,1);return rig;};
+    const hit=fresh(chance-1e-6);hit.runtime.onAction(hit.e,'shaman:healing-wave',[],true);assert.equal(hit.aura().stacks,3,'a charge is restored, rank '+r);
+    const miss=fresh(chance+1e-6);miss.runtime.onAction(miss.e,'shaman:healing-wave',[],true);assert.equal(miss.aura().stacks,2,'no restore above the chance');
+    const lesser=fresh(chance-1e-6);lesser.runtime.onAction(lesser.e,'shaman:lesser-healing-wave',[],true);assert.equal(lesser.aura().stacks,3,'Lesser Healing Wave too');
+    const other=fresh(0);other.runtime.onAction(other.e,'shaman:chain-heal',[],true);assert.equal(other.aura().stacks,2,'other spells do nothing');
+    const missed=fresh(0);missed.runtime.onAction(missed.e,'shaman:healing-wave',[],false);assert.equal(missed.aura().stacks,2,'a spell that did not land does nothing');
+    const full=shieldRig({248:r},{undertowPolicy:'consume-only'},[chance-1e-6]);full.runtime.activate(full.e,'water');full.runtime.onAction(full.e,'shaman:healing-wave',[],true);
+    assert.equal(full.aura().stacks,2,'at maximum charges the effect consumes one instead');
+  }
+});
+test('Talent 308 Natural Shapeshifter: Powershift mana cost is reduced by the published percentage at every rank (Powershift is the only shapeshift the engine casts)',()=>{
+  const t=talentData('druid').talents.find(x=>x.id===308);assert.equal(t.name,'Natural Shapeshifter');
+  const base=powershiftMana({baseMana:1000,shapeshifterRank:0});
+  for(let r=1;r<=t.maxRanks;r++)near(powershiftMana({baseMana:1000,shapeshifterRank:r}),base*(1-t.rankParameters[0][r-1]/100),'rank '+r);
 });
 
 test('every VERIFIED_COMBAT_HOOKS entry names an existing test file that contains a test titled "Talent <id> <name>:"',()=>{

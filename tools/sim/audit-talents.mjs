@@ -40,6 +40,12 @@ export const VERIFIED_COMBAT_HOOKS={
  '389':'tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)',
  '101':'tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)',
  '454':'tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)',
+ '245':'tests/sim/talent-hook-verification.test.mjs (Improved Water Shield: mana every 5 s and regeneration bonus per charge at every rank equal the published values, with the shield active only)',
+ '248':'tests/sim/talent-hook-verification.test.mjs (Undertow: Healing Wave and Lesser Healing Wave restore a charge with the published chance, or consume one at maximum charges)',
+ '255':'tests/sim/talent-hook-verification.test.mjs (Stable Shields: charges and cooldown between activations at every rank for every shield)',
+ '276':'tests/sim/combat-talent-triggers.test.mjs (Primal Fury: Bear Form melee crit Rage chance via the trigger framework and Cat Form combo point chance in the compiled Claw and Rake, at every rank)',
+ '280':'tests/sim/combat-talent-triggers.test.mjs (Ancient Brutality: Bear Form dodge Rage per second for 5 s with a 9 s internal cooldown via the trigger framework, and Cat bleed tick Energy in the compiled Rake and Rip, at every rank)',
+ '308':'tests/sim/talent-hook-verification.test.mjs (Natural Shapeshifter: Powershift mana cost reduction at every rank; Powershift is the only shapeshift the engine casts)',
  '272':'tests/sim/talent-hook-verification.test.mjs (Open Wounds: compiled Rip damage multiplier and Claw per-owned-bleed bonus at every rank equal the published percentages)',
  '462':'tests/sim/talent-hook-verification.test.mjs (Redoubt: hit-triggered block chance, bonus, 10 s duration and 5 block charges at every rank equal the published values)',
  '468':'tests/sim/talent-hook-verification.test.mjs (Shield Specialization: block value factor, mana-on-block chance, 2% maximum mana and 5 s internal cooldown at every rank equal the published values)',
@@ -190,7 +196,8 @@ export function buildTalentAudit(){
     }else scaling='changes-without-single-numeric-parameter';
    }
    const hookFiles=scanHooks(id);
-   // A pending rule describes an event-driven mechanic. It counts as applied only when VERIFIED_COMBAT_HOOKS names a deterministic combat test for this talent.
+   // A pending rule describes an event-driven mechanic; an unattached or never-computed rule is a stat the planner calculator ignores. Each counts as applied
+   // only when VERIFIED_COMBAT_HOOKS names a deterministic combat test for this talent, and the test must cover every part of the description.
    const hookVerified=Boolean(VERIFIED_COMBAT_HOOKS[id])&&hookFiles.length>0;
    const ruleStates=rules.map(rule=>{
     const scopes=Array.isArray(rule.scope)?rule.scope:rule.scope?[rule.scope]:[];
@@ -200,6 +207,9 @@ export function buildTalentAudit(){
      const attaches=scopes.some(s=>tags.has(s));
      state=!attaches?'unattached-scope':!statRead(rule.stat)?'recorded-not-computed':'applied-ability-model';
     }else state=(snapPaths.size||rowPaths.size||petPaths.size)?'applied-sheet':'not-observed';
+    // The planner's ability calculator may not read a stat that a combat module reads directly (e.g. shield charges). For talents
+    // in VERIFIED_COMBAT_HOOKS the named test covers that module, so those rules count as applied too.
+    if(hookVerified&&['unattached-scope','recorded-not-computed'].includes(state))state='applied-combat-hook';
     return {kind:rule.kind,stat:rule.stat??null,scope:scopes.length?scopes:null,note:rule.kind==='pending'?rule.note:undefined,state};
    });
    const findings=ruleStates.map((st,i)=>({st,rule:rules[i]})).filter(x=>['recorded-not-computed','unattached-scope'].includes(x.st.state)).map(x=>({stat:x.st.stat,scope:x.st.scope,state:x.st.state,...classifyFinding(c,t.id,x.rule)}));

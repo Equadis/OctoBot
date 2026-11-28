@@ -27,8 +27,8 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Classification | Talents |
 |---|---|
 | Conflicting or disputed | 0 |
-| Verified and functioning | 84 |
-| Implemented but unverified | 170 |
+| Verified and functioning | 90 |
+| Implemented but unverified | 164 |
 | Partially implemented | 61 |
 | Missing implementation | 161 |
 | Total | 476 |
@@ -44,18 +44,18 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | hunter | 55 | 8 | 28 | 6 | 13 | 34 | 15 | 24 |
 | rogue | 56 | 9 | 14 | 11 | 22 | 21 | 5 | 34 |
 | priest | 52 | 11 | 15 | 5 | 21 | 28 | 8 | 21 |
-| shaman | 49 | 10 | 18 | 7 | 14 | 27 | 10 | 18 |
+| shaman | 49 | 13 | 15 | 7 | 14 | 27 | 10 | 16 |
 | mage | 55 | 9 | 22 | 3 | 21 | 31 | 13 | 28 |
 | warlock | 52 | 11 | 17 | 6 | 18 | 25 | 9 | 20 |
-| druid | 54 | 10 | 19 | 9 | 16 | 32 | 10 | 24 |
+| druid | 54 | 13 | 16 | 9 | 16 | 32 | 10 | 22 |
 
 ## Integrity flags (talents affected)
 
 | Flag | Talents | Meaning |
 |---|---|---|
-| pending-rule | 208 | A rule is declared pending in the audit data: the mechanic is not implemented |
-| unattached-scope | 46 | The rule's scope matches no ability profile, so it can never be applied |
-| recorded-not-computed | 48 | The stat is recorded but never read by the ability calculator |
+| pending-rule | 204 | A rule is declared pending in the audit data: the mechanic is not implemented |
+| unattached-scope | 45 | The rule's scope matches no ability profile, so it can never be applied |
+| recorded-not-computed | 47 | The stat is recorded but never read by the ability calculator |
 | rule-effect-not-observed | 0 | A sheet-type rule produced no observable change |
 | claims-sheet-but-not-observed | 0 | Planner coverage says "sheet" but no output changes |
 | conditional-not-modelled | 164 | Planner coverage says proc or conditional: not modelled |
@@ -70,11 +70,11 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 
 ## Unapplied rules: disposition
 
-108 rules are recorded but not applied by the ability calculator (recorded-not-computed 55, unattached-scope 53). Each has a recorded disposition in `tools/sim/talent-findings.mjs`; none is approximated.
+106 rules are recorded but not applied by the ability calculator (recorded-not-computed 54, unattached-scope 52). Each has a recorded disposition in `tools/sim/talent-findings.mjs`; none is approximated.
 
 | Disposition | Rules |
 |---|---|
-| unsupported-dimension | 84 |
+| unsupported-dimension | 82 |
 | needs-event-model | 11 |
 | needs-resource-model | 4 |
 | needs-debuff-model | 3 |
@@ -98,13 +98,12 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | enemy debuff | 3 |
 | party aura | 2 |
 | pet ability timing | 2 |
-| shield charges | 2 |
 | aura stacks | 1 |
 | disputed ability | 1 |
 | enemy mana | 1 |
 | execute rage scaling | 1 |
 | self-healing | 1 |
-| shapeshifting | 1 |
+| shield charges | 1 |
 | totem timing | 1 |
 
 ## Integration defects fixed
@@ -117,7 +116,13 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 - Talent 30: tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)
 - Talent 101: tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)
 - Talent 222: tests/sim/talent-hook-verification.test.mjs (Elemental Devastation: owner landed melee crit grants the published spell hit per rank for 10 s, then expires; other events do nothing)
+- Talent 245: tests/sim/talent-hook-verification.test.mjs (Improved Water Shield: mana every 5 s and regeneration bonus per charge at every rank equal the published values, with the shield active only)
+- Talent 248: tests/sim/talent-hook-verification.test.mjs (Undertow: Healing Wave and Lesser Healing Wave restore a charge with the published chance, or consume one at maximum charges)
+- Talent 255: tests/sim/talent-hook-verification.test.mjs (Stable Shields: charges and cooldown between activations at every rank for every shield)
 - Talent 272: tests/sim/talent-hook-verification.test.mjs (Open Wounds: compiled Rip damage multiplier and Claw per-owned-bleed bonus at every rank equal the published percentages)
+- Talent 276: tests/sim/combat-talent-triggers.test.mjs (Primal Fury: Bear Form melee crit Rage chance via the trigger framework and Cat Form combo point chance in the compiled Claw and Rake, at every rank)
+- Talent 280: tests/sim/combat-talent-triggers.test.mjs (Ancient Brutality: Bear Form dodge Rage per second for 5 s with a 9 s internal cooldown via the trigger framework, and Cat bleed tick Energy in the compiled Rake and Rip, at every rank)
+- Talent 308: tests/sim/talent-hook-verification.test.mjs (Natural Shapeshifter: Powershift mana cost reduction at every rank; Powershift is the only shapeshift the engine casts)
 - Talent 381: tests/sim/talent-hook-verification.test.mjs (Unleashed Fury: pet damage multiplier at every rank equals the published percentage)
 - Talent 382: tests/sim/talent-hook-verification.test.mjs (Bestial Discipline: pet focus per tick and special cooldown at every rank equal the published values)
 - Talent 384: tests/sim/talent-hook-verification.test.mjs (Ferocity: pet critical chance on eligible normal hits at every rank equals the published percentage)
@@ -510,7 +515,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Shield Specialization (252, 5) | T0 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook |
 | Totemic Alignment (253, 2) | T1 | partial | sheet | Missing implementation | unattached-scope, no-combat-hook, custom-id-range |
 | Thundering Strikes (254, 5) | T1 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
-| Stable Shields (255, 3) | T1 | partial | sheet, hook | Implemented but unverified | recorded-not-computed |
+| Stable Shields (255, 3) | T1 | partial | sheet, hook | Verified and functioning | - |
 | Improved Ghost Wolf (256, 2) | T1 | partial | sheet, ability x1 | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Calming Winds (257, 3) | T2 | partial | sheet, ability x2 | Implemented but unverified | no-combat-hook, custom-id-range |
 | Lightning Strike (258, 1) | T2, needs Stable Shields 3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
@@ -537,10 +542,10 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Totemic Mastery (242, 1) | T2 | partial | sheet, ability x5 | Partially implemented | recorded-not-computed, planner-estimate-only, no-combat-hook |
 | Nature's Grace (243, 3) | T2 | partial | sheet, ability x4 | Implemented but unverified | no-combat-hook |
 | Restorative Totems (244, 5) | T3 | partial | sheet, ability x1 | Partially implemented | recorded-not-computed, planner-estimate-only, no-combat-hook |
-| Improved Water Shield (245, 3) | T3 | partial | sheet, hook | Implemented but unverified | pending-rule, custom-id-range |
+| Improved Water Shield (245, 3) | T3 | partial | sheet, hook | Verified and functioning | custom-id-range |
 | Tidal Surge (246, 2) | T4, needs Healing Way 3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Ancestral Swiftness (247, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Undertow (248, 2) | T4, needs Improved Water Shield 3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
+| Undertow (248, 2) | T4, needs Improved Water Shield 3 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled, custom-id-range |
 | Improved Chain Heal (249, 5) | T5, needs Restorative Totems 5 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook, custom-id-range |
 | Spirit Link (250, 1) | T6, needs Improved Chain Heal 5 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 
@@ -698,7 +703,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Guidance of the Dream (305, 3) | T1 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook, custom-id-range |
 | Improved Moonfire (306, 2) | T1 | partial | sheet, ability x2 | Verified and functioning | no-combat-hook |
 | Natural Weapons (307, 3) | T1 | partial | snapshot, sheet, ability x8 | Implemented but unverified | no-combat-hook, custom-id-range |
-| Natural Shapeshifter (308, 3) | T1 | partial | sheet, hook | Implemented but unverified | unattached-scope |
+| Natural Shapeshifter (308, 3) | T1 | partial | sheet, hook | Verified and functioning | - |
 | Moonfury (309, 3) | T2 | partial | sheet, ability x6 | Verified and functioning | no-combat-hook |
 | Omen of Clarity (310, 1) | T2, needs Natural Weapons 3 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Nature's Reach (311, 2) | T2 | partial | sheet, ability x6 | Implemented but unverified | no-combat-hook |
@@ -725,11 +730,11 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Feral Swiftness (273, 2) | T2 | partial | sheet | Partially implemented | pending-rule, unattached-scope, sheet-only, no-combat-hook |
 | Feral Charge (274, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Sharpened Claws (275, 3) | T2 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
-| Primal Fury (276, 2) | T2, needs Sharpened Claws 3 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range, prerequisite-in-same-or-higher-tier |
+| Primal Fury (276, 2) | T2, needs Sharpened Claws 3 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled, custom-id-range, prerequisite-in-same-or-higher-tier |
 | Predatory Strikes (277, 3) | T3 | partial | snapshot, sheet, ability x5 | Implemented but unverified | no-combat-hook |
 | Blood Frenzy (278, 2) | T3, needs Sharpened Claws 3 | partial | sheet, ability x1, hook | Partially implemented | pending-rule, recorded-not-computed, custom-id-range |
 | Improved Shred (279, 2) | T3 | partial | sheet, ability x1 | Implemented but unverified | no-combat-hook |
-| Ancient Brutality (280, 2) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
+| Ancient Brutality (280, 2) | T4 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled, custom-id-range |
 | Berserk (281, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 | Heart of the Wild (282, 5) | T5, needs Predatory Strikes 3 | sheet | snapshot, sheet | Implemented but unverified | no-combat-hook |
 | Carnage (283, 2) | T5 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled |

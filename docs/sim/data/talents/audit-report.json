@@ -151,16 +151,16 @@
     "Restoration"
    ],
    "byClassification": {
-    "verified-functioning": 10,
+    "verified-functioning": 13,
     "missing": 14,
-    "implemented-unverified": 18,
+    "implemented-unverified": 15,
     "partial": 7
    },
    "byFlag": {
     "no-combat-hook": 39,
-    "recorded-not-computed": 8,
+    "recorded-not-computed": 7,
     "unattached-scope": 4,
-    "pending-rule": 18,
+    "pending-rule": 16,
     "conditional-not-modelled": 13,
     "custom-id-range": 16,
     "sheet-only": 4,
@@ -168,7 +168,7 @@
    },
    "reachesCombat": 27,
    "withHook": 10,
-   "pendingTalents": 18
+   "pendingTalents": 16
   },
   "mage": {
    "talents": 55,
@@ -233,35 +233,35 @@
     "Restoration"
    ],
    "byClassification": {
-    "implemented-unverified": 19,
+    "implemented-unverified": 16,
     "missing": 16,
-    "verified-functioning": 10,
+    "verified-functioning": 13,
     "partial": 9
    },
    "byFlag": {
     "no-combat-hook": 44,
-    "pending-rule": 24,
+    "pending-rule": 22,
     "conditional-not-modelled": 17,
     "prerequisite-in-same-or-higher-tier": 3,
     "custom-id-range": 15,
     "recorded-not-computed": 6,
-    "unattached-scope": 7,
     "planner-estimate-only": 3,
+    "unattached-scope": 6,
     "sheet-only": 3
    },
    "reachesCombat": 32,
    "withHook": 10,
-   "pendingTalents": 24
+   "pendingTalents": 22
   }
  },
  "findingSummary": {
-  "total": 108,
+  "total": 106,
   "byState": {
-   "recorded-not-computed": 55,
-   "unattached-scope": 53
+   "recorded-not-computed": 54,
+   "unattached-scope": 52
   },
   "byDisposition": {
-   "unsupported-dimension": 84,
+   "unsupported-dimension": 82,
    "needs-event-model": 11,
    "needs-resource-model": 4,
    "needs-debuff-model": 3,
@@ -284,13 +284,12 @@
    "enemy debuff": 3,
    "party aura": 2,
    "pet ability timing": 2,
-   "shield charges": 2,
    "aura stacks": 1,
    "disputed ability": 1,
    "enemy mana": 1,
    "execute rage scaling": 1,
    "self-healing": 1,
-   "shapeshifting": 1,
+   "shield charges": 1,
    "totem timing": 1
   },
   "combatVerification": {
@@ -31989,7 +31988,7 @@
      "scope": [
       "Shield spells"
      ],
-     "state": "recorded-not-computed"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -32041,33 +32040,21 @@
     "docs/sim/core/combat-elemental-shield.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-elemental-shield.test.mjs"
+    "tests/sim/combat-elemental-shield.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Stable Shields: charges and cooldown between activations at every rank for every shield)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "stat not covered by the harness: maximumCharges",
     "fieldsChecked": [],
     "abilitiesChecked": []
    },
-   "findings": [
-    {
-     "stat": "maximumCharges",
-     "scope": [
-      "Shield spells"
-     ],
-     "state": "recorded-not-computed",
-     "disposition": "unsupported-dimension",
-     "dimension": "shield charges",
-     "why": "Shield charge counts are not simulated."
-    }
-   ],
+   "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
-   "flags": [
-    "recorded-not-computed"
-   ]
+   "flags": []
   },
   {
    "classId": "shaman",
@@ -34525,7 +34512,7 @@
      "stat": null,
      "scope": null,
      "note": "Water Shield conditional mana/5 requires an actual shield-state control",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -34573,9 +34560,10 @@
     "docs/sim/core/combat-elemental-shield.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-elemental-shield.test.mjs"
+    "tests/sim/combat-elemental-shield.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Improved Water Shield: mana every 5 s and regeneration bonus per charge at every rank equal the published values, with the shield active only)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -34584,10 +34572,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "custom-id-range"
    ]
   },
@@ -34803,7 +34790,7 @@
      "stat": null,
      "scope": null,
      "note": "Undertow restores/consumes Water Shield charges after a qualifying heal; requires shield state and target events",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -34850,8 +34837,10 @@
    "combatHookFiles": [
     "docs/sim/core/combat-elemental-shield.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Undertow: Healing Wave and Lesser Healing Wave restore a charge with the published chance, or consume one at maximum charges)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -34860,10 +34849,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled",
     "custom-id-range"
    ]
@@ -37245,7 +37233,8 @@
     "tests/sim/configuration.test.mjs",
     "tests/sim/equipment-options.test.mjs",
     "tests/sim/items.test.mjs",
-    "tests/sim/reference-parity.test.mjs"
+    "tests/sim/reference-parity.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -37338,7 +37327,8 @@
    "existingTestFiles": [
     "tests/sim/class-audit.test.mjs",
     "tests/sim/combat-dynamic-outcomes.test.mjs",
-    "tests/sim/reference-parity.test.mjs"
+    "tests/sim/reference-parity.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -41393,7 +41383,8 @@
     "tests/sim/combat-incoming-math.test.mjs",
     "tests/sim/combat-multitarget.test.mjs",
     "tests/sim/combat-rank-compiler.test.mjs",
-    "tests/sim/combat-reference-adapter.test.mjs"
+    "tests/sim/combat-reference-adapter.test.mjs",
+    "tests/sim/combat-talent-triggers.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -48539,7 +48530,7 @@
      "scope": [
       "Shapeshifting"
      ],
-     "state": "unattached-scope"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -48588,32 +48579,21 @@
    "combatHookFiles": [
     "docs/sim/core/combat-reference-adapter.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Natural Shapeshifter: Powershift mana cost reduction at every rank; Powershift is the only shapeshift the engine casts)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "no compiled ability exposed: mana cost",
     "fieldsChecked": [],
     "abilitiesChecked": []
    },
-   "findings": [
-    {
-     "stat": "manaCostReductionPct",
-     "scope": [
-      "Shapeshifting"
-     ],
-     "state": "unattached-scope",
-     "disposition": "unsupported-dimension",
-     "dimension": "shapeshifting",
-     "why": "Form changes are class options, not simulated mana-costing actions."
-    }
-   ],
+   "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
-   "flags": [
-    "unattached-scope"
-   ]
+   "flags": []
   },
   {
    "classId": "druid",
@@ -51098,7 +51078,7 @@
      "stat": null,
      "scope": null,
      "note": "Primal Fury generates Rage after Bear critical hits or extra combo points after Cat critical builders",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -51144,10 +51124,13 @@
     ]
    },
    "combatHookFiles": [
-    "docs/sim/core/combat-rank-compiler.mjs"
+    "docs/sim/core/combat-rank-compiler.mjs",
+    "docs/sim/core/combat-talent-triggers.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/combat-talent-triggers.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/combat-talent-triggers.test.mjs (Primal Fury: Bear Form melee crit Rage chance via the trigger framework and Cat Form combo point chance in the compiled Claw and Rake, at every rank)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -51156,10 +51139,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled",
     "custom-id-range",
     "prerequisite-in-same-or-higher-tier"
@@ -51581,7 +51563,7 @@
      "stat": null,
      "scope": null,
      "note": "Ancient Brutality triggers Rage on Bear dodge and modifies Cat periodic-bleed mechanics; event and aura modelling pending",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -51627,10 +51609,13 @@
     ]
    },
    "combatHookFiles": [
-    "docs/sim/core/combat-rank-compiler.mjs"
+    "docs/sim/core/combat-rank-compiler.mjs",
+    "docs/sim/core/combat-talent-triggers.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/combat-talent-triggers.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/combat-talent-triggers.test.mjs (Ancient Brutality: Bear Form dodge Rage per second for 5 s with a 9 s internal cooldown via the trigger framework, and Cat bleed tick Energy in the compiled Rake and Rip, at every rank)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -51639,10 +51624,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled",
     "custom-id-range"
    ]

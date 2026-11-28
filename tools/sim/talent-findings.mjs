@@ -77,7 +77,6 @@ export const TALENT_DISPOSITIONS={
  'warlock:366':D('unsupported-dimension','pet and summon','Pet control spells are not simulated.'),
  'hunter:375':D('unsupported-dimension','pet and summon','Eyes of the Beast pet control is not simulated.'),
  'hunter:378':D('unsupported-dimension','pet and summon','Revive Pet is not a simulated action.'),
- 'druid:308':D('unsupported-dimension','shapeshifting','Form changes are class options, not simulated mana-costing actions.'),
  'mage:24':D('unsupported-dimension','crowd control',CC),
  'druid:319':D('unsupported-dimension','crowd control',CC),
  'mage:43':D('unsupported-dimension','buff provider strength',BUFF_PROVIDER)
