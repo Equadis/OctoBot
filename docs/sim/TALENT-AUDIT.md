@@ -27,9 +27,9 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Classification | Talents |
 |---|---|
 | Conflicting or disputed | 0 |
-| Verified and functioning | 80 |
-| Implemented but unverified | 173 |
-| Partially implemented | 62 |
+| Verified and functioning | 84 |
+| Implemented but unverified | 170 |
+| Partially implemented | 61 |
 | Missing implementation | 161 |
 | Total | 476 |
 
@@ -40,20 +40,20 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Class | Talents | Verified | Unverified | Partial | Missing | Reach combat input | Hard-wired combat hooks | Talents with pending rules |
 |---|---|---|---|---|---|---|---|---|
 | warrior | 54 | 6 | 19 | 8 | 21 | 23 | 5 | 23 |
-| paladin | 49 | 7 | 20 | 7 | 15 | 20 | 9 | 19 |
+| paladin | 49 | 10 | 18 | 6 | 15 | 20 | 9 | 16 |
 | hunter | 55 | 8 | 28 | 6 | 13 | 34 | 15 | 24 |
 | rogue | 56 | 9 | 14 | 11 | 22 | 21 | 5 | 34 |
 | priest | 52 | 11 | 15 | 5 | 21 | 28 | 8 | 21 |
 | shaman | 49 | 10 | 18 | 7 | 14 | 27 | 10 | 18 |
 | mage | 55 | 9 | 22 | 3 | 21 | 31 | 13 | 28 |
 | warlock | 52 | 11 | 17 | 6 | 18 | 25 | 9 | 20 |
-| druid | 54 | 9 | 20 | 9 | 16 | 32 | 10 | 24 |
+| druid | 54 | 10 | 19 | 9 | 16 | 32 | 10 | 24 |
 
 ## Integrity flags (talents affected)
 
 | Flag | Talents | Meaning |
 |---|---|---|
-| pending-rule | 211 | A rule is declared pending in the audit data: the mechanic is not implemented |
+| pending-rule | 208 | A rule is declared pending in the audit data: the mechanic is not implemented |
 | unattached-scope | 46 | The rule's scope matches no ability profile, so it can never be applied |
 | recorded-not-computed | 48 | The stat is recorded but never read by the ability calculator |
 | rule-effect-not-observed | 0 | A sheet-type rule produced no observable change |
@@ -117,11 +117,15 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 - Talent 30: tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)
 - Talent 101: tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)
 - Talent 222: tests/sim/talent-hook-verification.test.mjs (Elemental Devastation: owner landed melee crit grants the published spell hit per rank for 10 s, then expires; other events do nothing)
+- Talent 272: tests/sim/talent-hook-verification.test.mjs (Open Wounds: compiled Rip damage multiplier and Claw per-owned-bleed bonus at every rank equal the published percentages)
 - Talent 381: tests/sim/talent-hook-verification.test.mjs (Unleashed Fury: pet damage multiplier at every rank equals the published percentage)
 - Talent 382: tests/sim/talent-hook-verification.test.mjs (Bestial Discipline: pet focus per tick and special cooldown at every rank equal the published values)
 - Talent 384: tests/sim/talent-hook-verification.test.mjs (Ferocity: pet critical chance on eligible normal hits at every rank equals the published percentage)
 - Talent 389: tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)
 - Talent 454: tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)
+- Talent 462: tests/sim/talent-hook-verification.test.mjs (Redoubt: hit-triggered block chance, bonus, 10 s duration and 5 block charges at every rank equal the published values)
+- Talent 468: tests/sim/talent-hook-verification.test.mjs (Shield Specialization: block value factor, mana-on-block chance, 2% maximum mana and 5 s internal cooldown at every rank equal the published values)
+- Talent 474: tests/sim/talent-hook-verification.test.mjs (Reckoning: extra attack chance after a block at every rank equals the published percentage; only blocks trigger it)
 
 ## Warrior
 
@@ -223,19 +227,19 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Talent (ID, ranks) | Tier / prerequisite | Planner | Channels observed | Classification | Flags |
 |---|---|---|---|---|---|
 | Improved Devotion Aura (461, 5) | T0 | partial | sheet | Missing implementation | recorded-not-computed, no-combat-hook |
-| Redoubt (462, 5) | T0 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
+| Redoubt (462, 5) | T0 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled, custom-id-range |
 | Precision (463, 3) | T1 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |
 | Guardian's Favor (464, 2) | T1 | partial | sheet, ability x2 | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Toughness (465, 5) | T1 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook |
 | Improved Righteous Fury (466, 3) | T2 | partial | sheet | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Blessing of Sanctuary (467, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Shield Specialization (468, 3) | T2, needs Redoubt 5 | partial | sheet, hook | Partially implemented | pending-rule |
+| Shield Specialization (468, 3) | T2, needs Redoubt 5 | partial | sheet, hook | Verified and functioning | - |
 | Anticipation (469, 3) | T2 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook |
 | Improved Hand of Reckoning (470, 2) | T3 | partial | sheet, ability x1 | Implemented but unverified | planner-estimate-only, no-combat-hook, custom-id-range |
 | Improved Hammer of Justice (471, 3) | T3 | partial | sheet, ability x1 | Implemented but unverified | planner-estimate-only, no-combat-hook |
 | Righteous Defense (472, 3) | T4, needs Improved Righteous Fury 3 | proc-or-conditional | sheet | Implemented but unverified | conditional-not-modelled, sheet-only, no-combat-hook, custom-id-range |
 | Holy Shield (473, 1) | T4 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
-| Reckoning (474, 5) | T4 | proc-or-conditional | sheet, hook | Implemented but unverified | pending-rule, conditional-not-modelled, custom-id-range |
+| Reckoning (474, 5) | T4 | proc-or-conditional | sheet, hook | Verified and functioning | conditional-not-modelled, custom-id-range |
 | Righteous Strikes (475, 5) | T5 | partial | sheet, ability x1, hook | Partially implemented | pending-rule, custom-id-range |
 | Bulwark of the Righteous (476, 1) | T6, needs Holy Shield 1 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook, custom-id-range |
 
@@ -717,7 +721,7 @@ A talent whose rules are all ability-scoped is also compiled with and without th
 | Feral Instinct (269, 3) | T1 | partial | sheet, hook | Implemented but unverified | unattached-scope |
 | Brutal Impact (270, 2) | T1 | partial | sheet | Missing implementation | pending-rule, recorded-not-computed, no-combat-hook |
 | Thick Hide (271, 3) | T1 | sheet | sheet | Implemented but unverified | sheet-only, no-combat-hook |
-| Open Wounds (272, 3) | T1 | partial | sheet, ability x1, hook | Implemented but unverified | custom-id-range |
+| Open Wounds (272, 3) | T1 | partial | sheet, ability x1, hook | Verified and functioning | custom-id-range |
 | Feral Swiftness (273, 2) | T2 | partial | sheet | Partially implemented | pending-rule, unattached-scope, sheet-only, no-combat-hook |
 | Feral Charge (274, 1) | T2 | proc-or-conditional | sheet | Missing implementation | pending-rule, conditional-not-modelled, no-combat-hook |
 | Sharpened Claws (275, 3) | T2 | sheet | snapshot, sheet | Verified and functioning | no-combat-hook |

@@ -18,13 +18,14 @@ const weapon={id:123,name:'Test dagger',classs:2,subclass:15,speed:2,attributes:
 const policy={phase:3,provenance:'Synthetic verification policy; values are not OctoWoW observations',gcdMs:1500,cooldownMs:10000,costOverride:100,weaponPolicy:'actual-swing',acceptSourceConflict:true,acceptExternalReference:true,lifeTapFactor:1,flatThreat:0,physical:{dualWieldPenaltyPct:19,parryPct:0,blockPct:0,blockValue:0,critSuppressionPct:0,criticalMultiplier:2,order:['miss','dodge','parry','block','glance','crit'],position:'behind'},periodicCanCrit:false,healCriticalMultiplier:1.5,spellCriticalMultiplier:1.5,resistance:Object.fromEntries(['fire','frost','shadow','nature','arcane','holy'].map(k=>[k,{policy:'none',bins:[{fraction:0,probability:1}]}])),refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',threat:{damage:1,heal:.5},apPerComboPoint:.03,spendOnMiss:false,componentCoefficients:[.2,.13]};
 const MELEE_GEAR=['warrior','rogue','hunter','shaman','druid','paladin'];
 
-export function compile(classId,rank,talents){
+export function compile(classId,rank,talents,classOptions={},policyExtra={}){
  const build=newBuild(classId);build.level=60;build.talents=talents;
  if(classId==='warrior')build.classOptions={...build.classOptions,stance:'Battle'};
+ if(Object.keys(classOptions).length)build.classOptions={...build.classOptions,...classOptions};
  const gear=MELEE_GEAR.includes(classId)?{mainhand:weapon}:{};
  const sheet=characterStats(build,data(classId),gear);
  if(classId==='hunter')sheet.combatSnapshot.ranged={rawMin:40,rawMax:60,baseSpeedSeconds:2.8,intervalSeconds:2.8,ammoDps:10,scopeDamage:0,observedAP:100,targetArmour:0};
- return compileReferenceRank({build,sheet,gear,spellId:rank.spellId,learnedSpellIds:[rank.spellId],policy}).action;
+ return compileReferenceRank({build,sheet,gear,spellId:rank.spellId,learnedSpellIds:[rank.spellId],policy:{...policy,...policyExtra}}).action;
 }
 const sum=(effects,stat)=>effects.filter(e=>e.stat===stat).reduce((n,e)=>n+e.value,0);
 const DAMAGE=['damage','periodic-damage'],HEAL=['heal','periodic-heal'];

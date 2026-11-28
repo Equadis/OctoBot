@@ -6,9 +6,27 @@ Written 28 November 2026 against `feat/octosim-merge-main` (PR #79). Figures com
 
 | Task | Result |
 |---|---|
-| M1 | Verified talents 72 to 80 (missing 162 to 161). Two audit defects fixed: (1) `VERIFIED_COMBAT_HOOKS` never promoted anything, because a pending rule always counted as unapplied, so even its one entry (Elemental Devastation) stayed "partial"; a pending rule now counts as applied only for talents in that map, and the map is guarded by a test that each entry names a real test titled `Talent <id> <name>:`. (2) Pet-only talents are measured against their rank parameter. New deterministic rank sweeps in `tests/sim/talent-hook-verification.test.mjs` and `tests/sim/combat-talent-triggers.test.mjs` cover Elemental Devastation, Unleashed Fury, Bestial Discipline, Ferocity, Spirit Bond, Illumination, Shatter and Enrage. The tests fail when the hook's number is changed (checked by mutation for Shatter and Illumination). 75 hooked talents remain unverified; each still needs its own rank sweep. |
+| M1 | Verified talents 72 to 84 (missing 162 to 161; second sweep added Open Wounds, Redoubt, Shield Specialization, Reckoning). Two audit defects fixed: (1) `VERIFIED_COMBAT_HOOKS` never promoted anything, because a pending rule always counted as unapplied, so even its one entry (Elemental Devastation) stayed "partial"; a pending rule now counts as applied only for talents in that map, and the map is guarded by a test that each entry names a real test titled `Talent <id> <name>:`. (2) Pet-only talents are measured against their rank parameter. New deterministic rank sweeps in `tests/sim/talent-hook-verification.test.mjs` and `tests/sim/combat-talent-triggers.test.mjs` cover Elemental Devastation, Unleashed Fury, Bestial Discipline, Ferocity, Spirit Bond, Illumination, Shatter, Enrage, Open Wounds, Redoubt, Shield Specialization and Reckoning. The tests fail when the hook's number is changed (checked by mutation for Shatter, Illumination, Open Wounds, Redoubt, Shield Specialization and Reckoning). 71 hooked talents remain unverified. |
 | M3 | Re-scoped, not done. The 94 "unattached" and "recorded" rules are mostly not label problems: of 108 audit findings, 84 are `unsupported-dimension` (survivability, crowd control, interruption, movement, buff strength, threat, area geometry: outside DPS scope until M9) and 24 need an event or resource model (M2, M5). Nothing in that set was safe to "fix" by relabelling. |
 | M2 | Slice done: `docs/sim/core/combat-talent-triggers.mjs` (declarative spec, magnitudes read from `rankParameters`, duration and event checked against the published description by test). Enrage (new, owner struck by a critical hit) and Elemental Devastation (migrated, same behaviour) run through it and are wired into the class runtime and the reference adapter. Flurry, Redoubt, Setup, Swift Aspects and the rest are not done: they need engine support (swing-charge haste, block-chance aura, combo-point API, aspect state) before a spec can be added. |
+
+### Why the sweep stopped at 12 talents
+
+A talent is only promoted when its whole published description is covered by the hook. Reading the hooks against the descriptions showed that many cover only part of them, so a sweep of the covered number would overstate the talent. Found while sweeping (the named part was not found in the hook or compiled output; not a claim about the rest of the code):
+
+| Talent | Described effect | Part found | Part not found |
+|---|---|---|---|
+| Primal Fury (276) | Bear crit rage and Cat combo point | Cat combo point chance (rank times 50%) | Bear Form 5 Rage on crit |
+| Ancient Brutality (280) | Bear dodge rage and Cat bleed energy | Cat bleed tick energy (3 and 5) | Bear dodge Rage over 5 s, 9 s limit |
+| Carnage (283) | Bear healing and Ferocious Bite refresh | Healing from Swipe and Savage Bite (5 and 10%) | Ferocious Bite refresh chance |
+| Furor (286) | Bear Rage and Cat Energy on shapeshift | Cat Energy 40 (Powershift only) | Bear 10 Rage |
+| Natural Shapeshifter (308) | Shapeshift mana cost | Powershift cost only | Other shapeshifts; rule is also `unattached-scope` |
+| Stable Shields (255) | Charges and cooldown | Charges and +1 s | Rule is `recorded-not-computed`, so the audit cannot promote it |
+| Call of Earth (228) | Charges, interruption avoidance, charge refresh | Charges | Interruption avoidance, refresh |
+
+These are the next implementation targets (each is a missing half, not a number mismatch), and each needs a rank sweep after it is implemented.
+
+One boundary note: Reckoning computes its chance as `.1 * rank`, which differs from the published `30 / 100` by a floating-point rounding step (about 4e-17). The test uses a margin of 1e-6 around the chance rather than the exact boundary.
 
 ## What "verified" means in the talent audit
 

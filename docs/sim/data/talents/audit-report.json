@@ -40,14 +40,14 @@
     "Retribution"
    ],
    "byClassification": {
-    "verified-functioning": 7,
+    "verified-functioning": 10,
     "missing": 15,
-    "implemented-unverified": 20,
-    "partial": 7
+    "implemented-unverified": 18,
+    "partial": 6
    },
    "byFlag": {
     "no-combat-hook": 40,
-    "pending-rule": 19,
+    "pending-rule": 16,
     "conditional-not-modelled": 16,
     "custom-id-range": 12,
     "recorded-not-computed": 6,
@@ -58,7 +58,7 @@
    },
    "reachesCombat": 20,
    "withHook": 9,
-   "pendingTalents": 19
+   "pendingTalents": 16
   },
   "hunter": {
    "talents": 55,
@@ -233,9 +233,9 @@
     "Restoration"
    ],
    "byClassification": {
-    "implemented-unverified": 20,
+    "implemented-unverified": 19,
     "missing": 16,
-    "verified-functioning": 9,
+    "verified-functioning": 10,
     "partial": 9
    },
    "byFlag": {
@@ -4018,7 +4018,8 @@
    },
    "combatHookFiles": [],
    "existingTestFiles": [
-    "tests/sim/combat-class-runtime.test.mjs"
+    "tests/sim/combat-class-runtime.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -7653,7 +7654,7 @@
      "stat": null,
      "scope": null,
      "note": "Redoubt grants temporary block chance after receiving an attack, ending after time or block charges",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -7703,8 +7704,10 @@
    "combatHookFiles": [
     "docs/sim/core/combat-reference-adapter.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Redoubt: hit-triggered block chance, bonus, 10 s duration and 5 block charges at every rank equal the published values)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -7713,10 +7716,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled",
     "custom-id-range"
    ]
@@ -8261,7 +8263,7 @@
      "stat": null,
      "scope": null,
      "note": "Block-triggered mana restoration requires event simulation",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -8315,9 +8317,10 @@
     "docs/sim/core/combat-reference-adapter.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-class-runtime.test.mjs"
+    "tests/sim/combat-class-runtime.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Shield Specialization: block value factor, mana-on-block chance, 2% maximum mana and 5 s internal cooldown at every rank equal the published values)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -8326,11 +8329,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "partial",
+   "classification": "verified-functioning",
    "disputedHint": false,
-   "flags": [
-    "pending-rule"
-   ]
+   "flags": []
   },
   {
    "classId": "paladin",
@@ -8848,7 +8849,7 @@
      "stat": null,
      "scope": null,
      "note": "Reckoning grants an extra attack after blocking; cannot increase always-on weapon speed",
-     "state": "pending"
+     "state": "applied-combat-hook"
     }
    ],
    "observed": {
@@ -8900,9 +8901,10 @@
     "docs/sim/core/combat-rotation-lab.mjs"
    ],
    "existingTestFiles": [
-    "tests/sim/combat-class-runtime.test.mjs"
+    "tests/sim/combat-class-runtime.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
-   "verifiedCombatTest": null,
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Reckoning: extra attack chance after a block at every rank equals the published percentage; only blocks trigger it)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "has pending, sheet or special rules",
@@ -8911,10 +8913,9 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
-    "pending-rule",
     "conditional-not-modelled",
     "custom-id-range"
    ]
@@ -31746,7 +31747,8 @@
    },
    "combatHookFiles": [],
    "existingTestFiles": [
-    "tests/sim/combat-class-runtime.test.mjs"
+    "tests/sim/combat-class-runtime.test.mjs",
+    "tests/sim/talent-hook-verification.test.mjs"
    ],
    "verifiedCombatTest": null,
    "combatVerification": {
@@ -50781,8 +50783,10 @@
    "combatHookFiles": [
     "docs/sim/core/combat-rank-compiler.mjs"
    ],
-   "existingTestFiles": [],
-   "verifiedCombatTest": null,
+   "existingTestFiles": [
+    "tests/sim/talent-hook-verification.test.mjs"
+   ],
+   "verifiedCombatTest": "tests/sim/talent-hook-verification.test.mjs (Open Wounds: compiled Rip damage multiplier and Claw per-owned-bleed bonus at every rank equal the published percentages)",
    "combatVerification": {
     "status": "inconclusive",
     "reason": "no compiled ability exposed: damage multiplier",
@@ -50791,7 +50795,7 @@
    },
    "findings": [],
    "reachesCombatInput": true,
-   "classification": "implemented-unverified",
+   "classification": "verified-functioning",
    "disputedHint": false,
    "flags": [
     "custom-id-range"

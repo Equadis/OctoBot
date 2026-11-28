@@ -40,6 +40,10 @@ export const VERIFIED_COMBAT_HOOKS={
  '389':'tests/sim/talent-hook-verification.test.mjs (Spirit Bond: pet attack power and spell power from owner ranged attack power at every rank equal the published percentages)',
  '101':'tests/sim/combat-talent-triggers.test.mjs (Enrage: a landed critical hit against the owner applies the published melee damage bonus per rank for 8 s, refreshes, and expires; the class runtime calls the trigger)',
  '454':'tests/sim/talent-hook-verification.test.mjs (Illumination: compiled critical-heal mana refund at every rank equals the published percentage of the spell mana cost)',
+ '272':'tests/sim/talent-hook-verification.test.mjs (Open Wounds: compiled Rip damage multiplier and Claw per-owned-bleed bonus at every rank equal the published percentages)',
+ '462':'tests/sim/talent-hook-verification.test.mjs (Redoubt: hit-triggered block chance, bonus, 10 s duration and 5 block charges at every rank equal the published values)',
+ '468':'tests/sim/talent-hook-verification.test.mjs (Shield Specialization: block value factor, mana-on-block chance, 2% maximum mana and 5 s internal cooldown at every rank equal the published values)',
+ '474':'tests/sim/talent-hook-verification.test.mjs (Reckoning: extra attack chance after a block at every rank equals the published percentage; only blocks trigger it)',
  '30':'tests/sim/talent-hook-verification.test.mjs (Shatter: compiled non-physical damage gains the published frozen-target critical chance at every rank)'
 };
 // Gear and form variants. Weapon, shield and form talents only act when the matching equipment or form is present,

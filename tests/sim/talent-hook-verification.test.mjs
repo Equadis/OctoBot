@@ -13,6 +13,8 @@ import {CombatTimeline} from '../../docs/sim/core/combat-timeline.mjs';
 import {CombatAuras} from '../../docs/sim/core/combat-auras.mjs';
 import {VERIFIED_COMBAT_HOOKS} from '../../tools/sim/audit-talents.mjs';
 import {compile,compiledAbilities} from '../../tools/sim/combat-verification.mjs';
+import {createPaladinDefenseRuntime} from '../../docs/sim/core/combat-paladin-defense.mjs';
+import {CombatResources} from '../../docs/sim/core/combat-timeline.mjs';
 
 const talentData=c=>JSON.parse(readFileSync(new URL(`../../docs/sim/data/talents/${c}.json`,import.meta.url)));
 const hunter=talentData('hunter');
@@ -96,6 +98,74 @@ test('Talent 30 Shatter: non-physical damage against frozen targets gains the pu
     break;
   }
   assert.ok(checked===t.maxRanks,'a non-physical mage damage ability must compile');
+});
+
+// Paladin defence runtime with real timeline, auras and resources; only the random source and unit liveness are stubbed.
+const paladin=talentData('paladin'),paladinTalent=id=>{const t=paladin.talents.find(x=>x.id===id);assert.ok(t);return t;};
+function defenceRig(talents,reckoning=null,rolls=[]){
+  const timeline=new CombatTimeline(),auras=new CombatAuras(timeline),resources=new CombatResources(timeline,{mana:{current:0,max:1000}});
+  const queue=[...rolls],log=[];
+  const e={timeline,auras,resources,random:()=>queue.length?queue.shift():.999999,unit:()=>({alive:true}),recordMechanic:(type,details)=>log.push({type,...details})};
+  const runtime=createPaladinDefenseRuntime([],'p',600000,{},{hasShield:true,specializationRank:0,redoubtRank:0,reckoningRank:0,...talents},reckoning);
+  const incoming=outcome=>runtime.afterIncoming(e,{targetId:'p',actorId:'boss',school:'physical',outcome},()=>{},()=>log.push({type:'extra-attack'}));
+  return {timeline,auras,resources,e,runtime,log,incoming,push:(...v)=>queue.push(...v)};
+}
+test('Talent 468 Shield Specialization: block value factor and mana-on-block chance follow rankParameters at every rank; 2% of maximum mana; 5 second internal cooldown',()=>{
+  const t=paladinTalent(468);assert.equal(t.name,'Shield Specialization');
+  for(let r=1;r<=t.maxRanks;r++){
+    const chance=t.rankParameters[1][r-1]/100;
+    const rig=defenceRig({specializationRank:r});
+    near(rig.runtime.calculatedDefence(rig.e,{targetId:'p',school:'physical'}).blockValueFactor,1+t.rankParameters[0][r-1]/100,'block value rank '+r);
+    // A roll just below the chance triggers (unless the chance is 100%, where any roll below 1 does); a roll at the chance does not.
+    if(chance<1){const miss=defenceRig({specializationRank:r},null,[chance]);miss.incoming('block');near(miss.resources.snapshot().mana.current,0,'roll equal to chance rank '+r);}
+    const hit=defenceRig({specializationRank:r},null,[Math.max(0,chance-1e-9),0,0]);
+    hit.incoming('block');near(hit.resources.snapshot().mana.current,20,'2% of 1000 mana, rank '+r);
+    hit.timeline.runUntil(4999);hit.incoming('block');near(hit.resources.snapshot().mana.current,20,'internal cooldown holds until 5 s');
+    hit.timeline.runUntil(5000);hit.incoming('block');near(hit.resources.snapshot().mana.current,40,'procs again at 5 s');
+    const nonBlock=defenceRig({specializationRank:r},null,[0]);nonBlock.incoming('hit');near(nonBlock.resources.snapshot().mana.current,0,'only blocks restore mana');
+  }
+});
+test('Talent 474 Reckoning: after a block the extra attack chance equals rankParameters[0][rank-1] percent, and only blocks trigger it',()=>{
+  const t=paladinTalent(474);assert.equal(t.name,'Reckoning');
+  const policy={kind:'immediate-mainhand',procSeals:false,maxRangeYards:5};
+  for(let r=1;r<=t.maxRanks;r++){
+    const chance=t.rankParameters[0][r-1]/100;
+    const extra=roll=>{const rig=defenceRig({reckoningRank:r},policy,[roll]);rig.incoming('block');return rig.log.filter(x=>x.type==='extra-attack').length;};
+    assert.equal(extra(chance-1e-6),1,'just below the chance, rank '+r);
+    assert.equal(extra(chance+1e-6),0,'just above the chance, rank '+r);
+    const noBlock=defenceRig({reckoningRank:r},policy,[0]);noBlock.incoming('hit');assert.equal(noBlock.log.filter(x=>x.type==='extra-attack').length,0,'a hit is not a block, rank '+r);
+  }
+});
+test('Talent 462 Redoubt: melee/physical hits against the owner have the published chance to grant the published block chance for 10 seconds or 5 blocks',()=>{
+  const t=paladinTalent(462);assert.equal(t.name,'Redoubt');
+  for(let r=1;r<=t.maxRanks;r++){
+    const chance=t.rankParameters[0][r-1]/100,bonus=t.rankParameters[1][r-1];
+    const blockBonus=rig=>rig.runtime.calculatedDefence(rig.e,{targetId:'p',school:'physical'}).blockBonusPct;
+    const rig=defenceRig({redoubtRank:r},null,[chance+1e-6]);rig.incoming('hit');near(blockBonus(rig),0,'a roll just above the chance does not trigger, rank '+r);
+    const on=defenceRig({redoubtRank:r},null,[chance-1e-6]);on.incoming('hit');near(blockBonus(on),bonus,'block bonus rank '+r);
+    const aura=on.auras.active('p','buff').find(a=>a.id==='paladin:redoubt');assert.equal(aura.stacks,5);assert.equal(aura.expiresAt-aura.appliedAt,10000);
+    on.timeline.runUntil(9999);near(blockBonus(on),bonus,'active at 9.999 s');on.timeline.runUntil(10000);near(blockBonus(on),0,'expired at 10 s');
+    const blocks=defenceRig({redoubtRank:r},null,[chance-1e-6,.999999,.999999,.999999,.999999,.999999]);blocks.incoming('hit');
+    for(let k=1;k<=5;k++){near(blockBonus(blocks),bonus,'charge '+k);blocks.incoming('block');}
+    near(blockBonus(blocks),0,'five blocks consume the aura');
+  }
+});
+
+// Feral ranks need an explicit paw model; these are synthetic verification inputs, not observations.
+const pawModel=form=>({form,provenance:'synthetic verification input',min:30,max:50,speedSeconds:1,intervalSeconds:1,skill:300,critPct:20,hitPct:100,targetDodgePct:5,glanceMultiplier:.9,glanceChancePct:20});
+test('Talent 272 Open Wounds: Rip damage and the Claw bonus per active owned bleed follow rankParameters at every rank',()=>{
+  const t=talentData('druid').talents.find(x=>x.id===272);assert.equal(t.name,'Open Wounds');
+  const feral=name=>compiledAbilities('druid').find(x=>x.name===name).rank;
+  const cat=(rank,talents)=>compile('druid',rank,talents,{form:'Cat'},{feralModel:pawModel('Cat')});
+  const rip=feral('Rip'),claw=feral('Claw');
+  const base={rip:cat(rip,{}),claw:cat(claw,{})};
+  near(base.rip.effects[0].formula.multiplier,1,'Rip without talent');assert.equal(base.claw.effects[0].ownedBleedBonus,undefined);
+  for(let r=1;r<=t.maxRanks;r++){
+    near(cat(rip,{272:r}).effects[0].formula.multiplier,1+t.rankParameters[0][r-1]/100,'Rip rank '+r);
+    const bonus=cat(claw,{272:r}).effects[0].ownedBleedBonus;
+    near(bonus.fraction,t.rankParameters[1][r-1]/100,'Claw per bleed rank '+r);
+    assert.deepEqual(bonus.names,['Rake','Rip','Pounce']);
+  }
 });
 
 test('every VERIFIED_COMBAT_HOOKS entry names an existing test file that contains a test titled "Talent <id> <name>:"',()=>{
