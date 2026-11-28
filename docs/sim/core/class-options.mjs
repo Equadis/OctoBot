@@ -17,7 +17,7 @@ const BASE_CLASS_OPTIONS={
 };
 export const CLASS_OPTIONS=Object.freeze(Object.fromEntries(Object.entries(BASE_CLASS_OPTIONS).map(([id,options])=>[id,[...options,choice('targetCreature','Scenario: Target Creature',['Unspecified','Undead','Demon','Beast','Dragonkin','Elemental','Humanoid','Giant','Mechanical','Player']),choice('moving','Scenario: Moving',['No','Yes']),choice('outdoors','Scenario: Outdoors',['No','Yes','Unspecified'])]])));
 export function defaultClassOptions(classId){return Object.fromEntries(CLASS_OPTIONS[classId].map(option=>[option.key,option.value]));}
-// startingEnergy can reach the talent-derived cap (110 with Vigor); a value above the current cap is clamped, never rejected, so older saves stay valid.
+// startingEnergy has a loose ceiling here so older saves stay valid, and is then clamped to the exact class and talent cap from resources.mjs (rogue 100/105/110 with Vigor, druid always 100: no druid talent in the data raises maximum energy); a value above the current cap is clamped, never rejected, so older saves stay valid.
 export function validateClassOptions(input,classId,{energyCap}={}){
  const options=CLASS_OPTIONS[classId],result=defaultClassOptions(classId);if(input===undefined)return result;
  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Invalid class options.');

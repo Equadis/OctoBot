@@ -18965,7 +18965,9 @@
     ]
    },
    "combatHookFiles": [],
-   "existingTestFiles": [],
+   "existingTestFiles": [
+    "tests/sim/energy-cap.test.mjs"
+   ],
    "verifiedCombatTest": null,
    "combatVerification": {
     "status": "inconclusive",

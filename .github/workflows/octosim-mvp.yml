@@ -1,8 +1,17 @@
 name: OctoSim MVP integration
 on:
   push:
-    branches: ['release/octosim-mvp-0.1']
+    branches: ['release/octosim-mvp-0.1', 'feat/octosim-**', 'octosim/**']
+  pull_request:
+    paths:
+      - 'docs/sim/**'
+      - 'tests/sim/**'
+      - 'tools/sim/**'
+      - '.github/workflows/octosim-mvp.yml'
   workflow_dispatch:
+concurrency:
+  group: octosim-mvp-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
