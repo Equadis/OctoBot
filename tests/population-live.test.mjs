@@ -135,26 +135,18 @@ function fixture(options={}){
     view(){return vm.runInContext('({start,windowEnd})',context);},
     navigate(view){return vm.runInContext('navigateTimeline',context)(view);},
     advance(ms){timestamp+=ms},
-    setWorkerFailed(v){failed=v},
-    comparisonTone(value,average){return vm.runInContext('comparisonTone',context)(value,average)}
+    setWorkerFailed(v){failed=v}
   };
 }
 async function settle(){
   for(let i=0;i<75;i++)await Promise.resolve();
 }
 
-test('population metric colours compare to the historical average and uptime threshold',async()=>{
+test('population metric colours: the all-time peak and the uptime threshold (no running-average comparison)',async()=>{
  const env=fixture();await settle();
- assert.equal(env.comparisonTone(101,100),'signal-green');
- assert.equal(env.comparisonTone(100,100),'signal-yellow');
- assert.equal(env.comparisonTone(75,100),'signal-yellow');
- assert.equal(env.comparisonTone(74.9,100),'signal-red');
- assert.equal(env.comparisonTone(null,100),'');
- assert.equal(env.get('online-now').className,'signal-green');
  assert.equal(env.get('all-peak').className,'signal-green');
  assert.equal(env.get('uptime').className,'signal-yellow');
- assert.ok(env.get('average-line').getAttribute('d')?.includes('L'),'blue average is a path, not a flat line');
- assert.match(env.get('readout').textContent,/Average to date:/);
+ assert.doesNotMatch(env.get('readout').textContent,/Average to date:/);
  const html=readFileSync(join(root,'population/index.html'),'utf8');
  assert.match(html,/state.seconds>7\*86400\?'signal-green':'signal-yellow'/);
 });

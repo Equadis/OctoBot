@@ -9,6 +9,8 @@ export const BUFF_ICONS=Object.freeze({
  'mark-death':'ability_hunter_markedfordeath',expose:'ability_warrior_riposte',sunder:'ability_warrior_sunder',recklessness:'spell_shadow_unholystrength',
  faerie:'spell_nature_faeriefire',eskhandar:'inv_misc_monsterclaw_04',annihilator:'inv_axe_12',shartateth:'inv_demonaxe',ripper:'inv_sword_31',nightfall:'inv_axe_12',
  'skill-book':'inv_misc_book_09','juju-might':'inv_misc_monsterscales_07','juju-power':'inv_misc_monsterscales_11','wizard-oil-mh':'inv_potion_105','wizard-oil-oh':'inv_potion_105',merlot:'inv_drink_waterskin_05',
+ fortitude:'spell_holy_prayeroffortitude','arcane-intellect':'spell_holy_arcaneintellect','divine-spirit':'spell_holy_divinespirit',wisdom:'spell_holy_sealofwisdom',
+ 'curse-elements':'spell_shadow_chilltouch','curse-shadow':'spell_shadow_curseofachimonde',
 });
 export const OPTION_ICONS=Object.freeze({
  stance:{Battle:'ability_warrior_offensivestance',Berserker:'ability_racial_avatar',Defensive:'ability_warrior_defensivestance'},
