@@ -1,4 +1,4 @@
-import { CLASS_DEFINITIONS } from './classes.mjs?v=20261202-profs1';
+import { CLASS_DEFINITIONS } from './classes.mjs?v=20261128-merge1';
 export const CLASSES=Object.freeze(CLASS_DEFINITIONS.map(cls=>({...cls,available:true})));
 
 export const SLOT_ICONS = Object.freeze({

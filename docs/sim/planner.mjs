@@ -1,28 +1,31 @@
+import {wireReferenceLab} from './reference-lab.mjs?v=20261117-mvp8';
+import {wireReferenceRotation} from './reference-rotation.mjs?v=20261117-mvp8';
+import {classReleaseReadiness} from './core/combat-release-readiness.mjs?v=20261117-mvp1';
 import {trinketSwapControls} from './trinket-swaps.mjs?v=20261202-pan-paint';
 import {resetPlannerSection} from './core/panel-resets.mjs?v=20261113-swaps1';
 import {statTone,enchantSummary,bonusTone} from './core/presentation.mjs?v=20261130-ui2';
-import {equipmentErrors} from './core/items.mjs?v=20261130-ui2';
-import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261112-audit1';
+import {equipmentErrors} from './core/items.mjs?v=20261128-merge1';
+import {CLASS_RACES,slotAllowed} from './core/class-rules.mjs?v=20261128-merge1';
 import {setupRacePicker, setupIconSelect} from './race-picker.mjs?v=20261130-ui2';
-import { raceIconUrl } from './race-icons.mjs?v=20261202-buildnames2';
-import {optionIcon, optionHasIcons} from './core/icons.mjs?v=20261202-buildnames2';
+import { raceIconUrl } from './race-icons.mjs?v=20261128-merge1';
+import {optionIcon, optionHasIcons} from './core/icons.mjs?v=20261128-merge1';
 let racePicker = null;
 import {characterStats} from './core/character-stats.mjs?v=20261130-ui2';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
-import { classDefinition } from './core/classes.mjs?v=20261202-buildnames2';
+import { classDefinition } from './core/classes.mjs?v=20261128-merge1';
 import { buildLibrary, defaultSaveName } from './core/build-library.mjs?v=20261202-buildnames2';
 import { validateTalents, setTalentRank, talentTotals, maximiseTalent, minimiseTalent } from './core/talents.mjs?v=20261112-audit1';
-import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261202-buildnames2';
+import { SLOTS, newBuild, validateBuild, encodeBuild, decodeBuild, restoreLegacyBuild } from './core/builds.mjs?v=20261128-merge1';
 import { maxEnergy, reconcileStartingEnergy } from './core/resources.mjs?v=1';
 import { consumeReload, markInternalReload, clearUi, loadUi, saveUi, takePendingBuild, setPendingBuild } from './ui-state.mjs?v=20261201-ui3';
 import { wireDialogs } from '../dialogs.mjs?v=1';
 import { scheduleScrollingNames } from '../scrolling-names.mjs?v=20261202-pan-paint';
 import { itemPicker } from './item-picker.mjs?v=20261202-pan-paint';
-import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261130-ui2';
+import { ENCHANTS, enchantAvailable } from './core/equipment-options.mjs?v=20261128-merge1';
 import { settings } from './settings.mjs?v=20261112-polish2';
 import { configuration } from './configuration.mjs?v=20261202-pan-paint';
 import { attachTooltip, refreshTooltip } from './tooltip.mjs?v=20261124-tips2';
-import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261112-navigation1';
+import { CLASSES, SLOT_ICONS, iconUrl, plannerView, rememberPlannerView, rememberedPlannerView } from './core/interface.mjs?v=20261128-merge1';
 
 const $ = id => document.getElementById(id);
 // Drop the obsolete cache-busting `v` parameter from the address bar without reloading;
@@ -52,7 +55,7 @@ if(selectedView!=='classes'){
 const currentClass=classDefinition(classId);
 const DRAFT_KEY=`octosim.planner.draft.${classId}.v2`;
 let library;
-let picker, config, settingsControls, swapControls;
+let picker, config, settingsControls, swapControls, resetReferenceLab, resetReferenceRotation;
 let data, build = newBuild(classId), selectedId = null, editingSlot = null;
 const talentButtons = new Map(), slotElements = new Map();
 // Remember folded stat sections while gear, talents and buffs trigger character-sheet rerenders.
@@ -271,6 +274,9 @@ function createTalents() {
 }
 
 function render() {
+  resetReferenceLab?.();resetReferenceRotation?.();
+  const readiness=classReleaseReadiness(classId);
+  $('simulation-readiness').textContent=`Research runtime available · ${readiness.evidenceAbilities} / ${readiness.registered} registered abilities have published evidence · ${readiness.executableReferenceRanks} executable reference ranks · ${readiness.validatedAbilities} validated. Public simulations remain disabled until rank and live-client checks pass.`;
   swapControls?.render();
   const totals = talentTotals(data, build.talents);
   const spent = totals.reduce((sum, value) => sum + value, 0);
@@ -502,8 +508,10 @@ function wireControls() {
     },
     onClear: slot => {delete build.gear[slot];if(slot==='ranged'){delete build.gear.ammo;delete build.gear.quiver;}persistDraft();render();feedback(`${SLOTS[slot]} cleared.`);},
   });
+  resetReferenceLab=wireReferenceLab({classId,getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker.lookup(id)});
+  resetReferenceRotation=wireReferenceRotation({getBuild:()=>build,getTalents:()=>data,lookupGear:id=>picker.lookup(id)});
   swapControls=trinketSwapControls({getBuild:()=>build,onChange:candidate=>{try{applyBuild(candidate,'Trinket swap updated.');}catch(error){feedback(error.message,true);}},openPicker:(slot,options)=>{markActiveSlot(null);return picker.open(slot,options);},inspect:id=>picker.inspect(id)});
-  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();render();},onError:error=>feedback(error.message,true)});
+  settingsControls=settings({getBuild:()=>build,onChange:planning=>{build=validateBuild({...build,planning},data);persistDraft();config?.renderChecks();render();},onError:error=>feedback(error.message,true)});
   $('reset-gear').addEventListener('click',()=>applyBuild(resetPlannerSection(build,'equipment'),'Equipment reset.'));
   $('clear-talents').addEventListener('click',()=>{const previous=build.talents,next=resetPlannerSection(build,'talents');const before=energyCap(previous),after=maxEnergy(classId,data,next.talents);if('startingEnergy' in next.classOptions&&before!==after)next.classOptions={...next.classOptions,startingEnergy:reconcileStartingEnergy(next.classOptions.startingEnergy,before,after)};applyBuild(next,'Talents reset.');});
   for(const [id,section,label] of [['reset-buffs','buffs','Buffs & Debuffs'],['reset-rotation','rotation','Rotation'],['reset-settings','build-settings','Settings']])$(id).addEventListener('click',()=>{applyBuild(resetPlannerSection(build,section),`${label} reset.`);if(section==='rotation'){for(const field of ['rotation-name','rotation-save-status'])$(field)[field==='rotation-name'?'value':'textContent']='';$('rotation-add').value='';}});

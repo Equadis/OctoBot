@@ -1,0 +1,8 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {resistanceReference} from '../../docs/sim/core/combat-resistance-reference.mjs';
+import {spellAttackTable} from '../../docs/sim/core/combat-attack-tables.mjs';
+const base={rating:100,penetration:20,attackerLevel:60,cap:.75,policy:'nonbinary',bins:[0,.25,.5,.75,1],provenance:'synthetic'};
+test('reference resistance preserves explicit mean, floors penetration and caps rating',()=>{const r=resistanceReference(base);assert.equal(r.effective,80);assert.equal(r.mean,.2);assert.ok(Math.abs(r.resistance.reduce((s,b)=>s+b.fraction*b.probability,0)-r.mean)<1e-12);assert.equal(resistanceReference({...base,penetration:200}).mean,0);assert.equal(resistanceReference({...base,rating:10000}).mean,.75);assert.equal(r.liveVerified,false);assert.throws(()=>resistanceReference({...base,bins:[0,.5,.25,1]}));});
+test('binary reference feeds the independent spell table',()=>{const r=resistanceReference({...base,policy:'binary'});const t=spellAttackTable({missPct:10,criticalPct:0,criticalMultiplier:1.5,resistancePolicy:'binary',resistance:r.resistance,provenance:'synthetic'});assert.ok(Math.abs(t.outcomes.find(o=>o.name==='resist').probability-.18)<1e-12);});
+
+test('rating model is explicit and mutually exclusive with supplied distributions',()=>{const opts={missPct:0,criticalPct:0,criticalMultiplier:1.5,resistancePolicy:'binary',provenance:'synthetic',resistanceModel:{rating:300,attackerLevel:60,cap:.75}};const t=spellAttackTable(opts);assert.equal(t.outcomes.find(o=>o.name==='resist').probability,.75);assert.equal(t.outcomes.find(o=>o.name==='resist').resistedFraction,1);assert.throws(()=>spellAttackTable({...opts,resistance:[{fraction:0,probability:1}]}),/not both/);});

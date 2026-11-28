@@ -1,0 +1,944 @@
+{
+ "schema": "octosim-chronicle-observed-v1",
+ "provenance": {
+  "reportUrl": "https://octo.chronicleclassic.com/instances/DU_nwbg0KMg5F6Tu",
+  "clientBuild": "7272",
+  "realm": "N'Zoth",
+  "date": "2026-11-19",
+  "stream": "damage"
+ },
+ "unit": "hits (not casts)",
+ "note": "Observation only. Does not establish rank, learn level, coefficients or availability.",
+ "observedCandidates": [
+  {
+   "abilityKey": "warlock:power-overwhelming",
+   "classId": "warlock",
+   "spellId": 51714,
+   "label": "Power Overwhelming",
+   "hits": 1912,
+   "distinctCasters": 3,
+   "review": {
+    "verdict": "name-matches",
+    "dbName": "Power Overwhelming",
+    "dbLevel": 40,
+    "source": "https://octowow.st/db/?spell=51714",
+    "reviewedOn": "2026-11-22"
+   }
+  }
+ ],
+ "disputedObserved": [
+  {
+   "abilityKey": "hunter:steady-shot",
+   "classId": "hunter",
+   "spellId": 3668,
+   "label": "Steady Shot",
+   "hits": 604,
+   "distinctCasters": 2,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDTrueshot",
+    "dbRank": 5,
+    "reason": "database names this ID a different spell than the Chronicle label",
+    "source": "https://octowow.st/db/?spell=3668",
+    "reviewedOn": "2026-11-22"
+   }
+  },
+  {
+   "abilityKey": "paladin:holy-strike",
+   "classId": "paladin",
+   "spellId": 10332,
+   "label": "Holy Strike",
+   "hits": 2,
+   "distinctCasters": 1,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 7,
+    "dbLevel": 99,
+    "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence",
+    "source": "https://octowow.st/db/?spell=10332",
+    "reviewedOn": "2026-11-22"
+   }
+  },
+  {
+   "abilityKey": "paladin:holy-strike",
+   "classId": "paladin",
+   "spellId": 10333,
+   "label": "Holy Strike",
+   "hits": 905,
+   "distinctCasters": 5,
+   "review": {
+    "verdict": "disputed",
+    "dbName": "zzOLDHoly Strike",
+    "dbRank": 8,
+    "dbLevel": 99,
+    "reason": "database lists a deprecated level-99 name while players cast it live; unresolved until authoritative evidence",
+    "source": "https://octowow.st/db/?spell=10333",
+    "reviewedOn": "2026-11-22"
+   }
+  }
+ ],
+ "unmappedObserved": [
+  {
+   "classId": "druid",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 1247,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 6795,
+   "label": "Growl",
+   "hits": 4,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 8983,
+   "label": "Bash",
+   "hits": 7,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 9910,
+   "label": "Thorns",
+   "hits": 32,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 16666,
+   "label": "Demonic Rune",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 16922,
+   "label": "Starfire Stun",
+   "hits": 12,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 18658,
+   "label": "Hibernate",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 60,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "druid",
+   "spellId": 52373,
+   "label": "Flametongue Attack",
+   "hits": 925,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 52865,
+   "label": "Midnight Comet",
+   "hits": 169,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "druid",
+   "spellId": 900104,
+   "label": "Reflect Physical",
+   "hits": 12,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 90,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "hunter",
+   "spellId": 16666,
+   "label": "Demonic Rune",
+   "hits": 3,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 17291,
+   "label": "Stratholme Holy Water",
+   "hits": 18,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 40,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "hunter",
+   "spellId": 49557,
+   "label": "Strike Together",
+   "hits": 467,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "hunter",
+   "spellId": 51363,
+   "label": "Spirit Link",
+   "hits": 215,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 51514,
+   "label": "Piercing Shots",
+   "hits": 302,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 51519,
+   "label": "Extra Shot",
+   "hits": 134,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "hunter",
+   "spellId": 58109,
+   "label": "Explosive Ammunition",
+   "hits": 37,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 58110,
+   "label": "Poisonous Ammunition",
+   "hits": 48,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 58111,
+   "label": "Enchanted Ammunition",
+   "hits": 49,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "hunter",
+   "spellId": 58112,
+   "label": "Explosive Ammunition",
+   "hits": 74,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 2139,
+   "label": "Counterspell",
+   "hits": 4,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 5019,
+   "label": "Shoot",
+   "hits": 17,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "mage",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 31,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "mage",
+   "spellId": 7321,
+   "label": "Chilled",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 12355,
+   "label": "Impact",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 12826,
+   "label": "Polymorph",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 13241,
+   "label": "Goblin Sapper Charge",
+   "hits": 8,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 18469,
+   "label": "Counterspell - Silenced",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 22311,
+   "label": "Brood Power: Bronze",
+   "hits": 50,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 23063,
+   "label": "Dense Dynamite",
+   "hits": 6,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 27860,
+   "label": "Engulfing Shadows",
+   "hits": 4,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 80,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "mage",
+   "spellId": 44095,
+   "label": "Ancient Accord",
+   "hits": 317,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "mage",
+   "spellId": 51977,
+   "label": "Arcane Instability",
+   "hits": 1362,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "paladin",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 3258,
+   "distinctCasters": 5
+  },
+  {
+   "classId": "paladin",
+   "spellId": 7712,
+   "label": "Fire Strike",
+   "hits": 380,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 9910,
+   "label": "Thorns",
+   "hits": 9,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 10308,
+   "label": "Hammer of Justice",
+   "hits": 12,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "paladin",
+   "spellId": 10318,
+   "label": "Holy Wrath",
+   "hits": 26,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 11374,
+   "label": "Gift of Arthas",
+   "hits": 4,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 13241,
+   "label": "Goblin Sapper Charge",
+   "hits": 16,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 16806,
+   "label": "Conflagration",
+   "hits": 29,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 20286,
+   "label": "Judgement of Righteousness",
+   "hits": 252,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 20729,
+   "label": "Hand of Sacrifice",
+   "hits": 27,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 20966,
+   "label": "Judgement of Command",
+   "hits": 214,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 21992,
+   "label": "Thunderfury",
+   "hits": 473,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 22311,
+   "label": "Brood Power: Bronze",
+   "hits": 396,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 22600,
+   "label": "Force Reactive Disk",
+   "hits": 672,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 23063,
+   "label": "Dense Dynamite",
+   "hits": 5,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 23418,
+   "label": "Siphon Blessing",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 23478,
+   "label": "Burning Adrenaline",
+   "hits": 2,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 25899,
+   "label": "Greater Blessing of Sanctuary",
+   "hits": 451,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "paladin",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 100,
+   "distinctCasters": 5
+  },
+  {
+   "classId": "paladin",
+   "spellId": 46771,
+   "label": "Thorns Fire Dmg +4",
+   "hits": 5,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51302,
+   "label": "Hand of Reckoning",
+   "hits": 10,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51363,
+   "label": "Spirit Link",
+   "hits": 1075,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51558,
+   "label": "Repentance",
+   "hits": 27,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51560,
+   "label": "Repent",
+   "hits": 181,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51566,
+   "label": "Bulwark of the Righteous",
+   "hits": 18,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "paladin",
+   "spellId": 51810,
+   "label": "Divine Strike",
+   "hits": 1339,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 52373,
+   "label": "Flametongue Attack",
+   "hits": 731,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 52899,
+   "label": "Hallowed Ground",
+   "hits": 159,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 52948,
+   "label": "Simple Slingshot",
+   "hits": 16,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 900102,
+   "label": "Reflect Holy",
+   "hits": 106,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "paladin",
+   "spellId": 900104,
+   "label": "Reflect Physical",
+   "hits": 297,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "priest",
+   "spellId": 5019,
+   "label": "Shoot",
+   "hits": 5,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 7,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 8317,
+   "label": "Fire Shield",
+   "hits": 6,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 10912,
+   "label": "Mind Control",
+   "hits": 2,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 16806,
+   "label": "Conflagration",
+   "hits": 63,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "priest",
+   "spellId": 17291,
+   "label": "Stratholme Holy Water",
+   "hits": 19,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 19253,
+   "label": "Touch of Weakness",
+   "hits": 3,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 23402,
+   "label": "Corrupted Healing",
+   "hits": 372,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 28382,
+   "label": "Shadowguard",
+   "hits": 2,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 40,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "priest",
+   "spellId": 57707,
+   "label": "Pain Spike",
+   "hits": 14,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "priest",
+   "spellId": 900103,
+   "label": "Reflect Fire",
+   "hits": 16,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "rogue",
+   "spellId": 1769,
+   "label": "Kick",
+   "hits": 15,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 1833,
+   "label": "Cheap Shot",
+   "hits": 2,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "rogue",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 6798,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 8643,
+   "label": "Kidney Shot",
+   "hits": 4,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "rogue",
+   "spellId": 11286,
+   "label": "Gouge",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "rogue",
+   "spellId": 11337,
+   "label": "Instant Poison VI",
+   "hits": 4404,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 14278,
+   "label": "Ghostly Strike",
+   "hits": 2,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "rogue",
+   "spellId": 16806,
+   "label": "Conflagration",
+   "hits": 17,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "rogue",
+   "spellId": 17291,
+   "label": "Stratholme Holy Water",
+   "hits": 51,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 22311,
+   "label": "Brood Power: Bronze",
+   "hits": 40,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "rogue",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 60,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 52373,
+   "label": "Flametongue Attack",
+   "hits": 870,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "rogue",
+   "spellId": 52511,
+   "label": "Surprise Attack",
+   "hits": 191,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "rogue",
+   "spellId": 900102,
+   "label": "Reflect Holy",
+   "hits": 2,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "shaman",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 944,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "shaman",
+   "spellId": 17291,
+   "label": "Stratholme Holy Water",
+   "hits": 21,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "shaman",
+   "spellId": 27869,
+   "label": "Dark Rune",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "shaman",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 60,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "warlock",
+   "spellId": 5019,
+   "label": "Shoot",
+   "hits": 14,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warlock",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 15,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warlock",
+   "spellId": 8317,
+   "label": "Fire Shield",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warlock",
+   "spellId": 11682,
+   "label": "Hellfire Effect",
+   "hits": 2457,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "warlock",
+   "spellId": 16806,
+   "label": "Conflagration",
+   "hits": 63,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warlock",
+   "spellId": 22311,
+   "label": "Brood Power: Bronze",
+   "hits": 37,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warlock",
+   "spellId": 25228,
+   "label": "Soul Link",
+   "hits": 1375,
+   "distinctCasters": 3
+  },
+  {
+   "classId": "warlock",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 80,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "warlock",
+   "spellId": 900103,
+   "label": "Reflect Fire",
+   "hits": 107,
+   "distinctCasters": 4
+  },
+  {
+   "classId": "warrior",
+   "spellId": 355,
+   "label": "Taunt",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 6552,
+   "label": "Pummel",
+   "hits": 11,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 6603,
+   "label": "Auto Attack",
+   "hits": 1352,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 7373,
+   "label": "Hamstring",
+   "hits": 72,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 7922,
+   "label": "Charge Stun",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 9910,
+   "label": "Thorns",
+   "hits": 10,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 12721,
+   "label": "Deep Wound",
+   "hits": 1470,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 12868,
+   "label": "Deep Wounds",
+   "hits": 6,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 17291,
+   "label": "Stratholme Holy Water",
+   "hits": 30,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 20615,
+   "label": "Intercept Stun",
+   "hits": 32,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 22311,
+   "label": "Brood Power: Bronze",
+   "hits": 143,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 25899,
+   "label": "Greater Blessing of Sanctuary",
+   "hits": 1,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 41830,
+   "label": "Unhatching Blaze",
+   "hits": 40,
+   "distinctCasters": 2
+  },
+  {
+   "classId": "warrior",
+   "spellId": 52373,
+   "label": "Flametongue Attack",
+   "hits": 782,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 900102,
+   "label": "Reflect Holy",
+   "hits": 5,
+   "distinctCasters": 1
+  },
+  {
+   "classId": "warrior",
+   "spellId": 900104,
+   "label": "Reflect Physical",
+   "hits": 1,
+   "distinctCasters": 1
+  }
+ ]
+}

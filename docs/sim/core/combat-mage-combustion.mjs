@@ -1,0 +1,8 @@
+import {frozenOutcomes} from './combat-mage-frost.mjs';
+export function validateCombustion(p){if(!p||!Number.isSafeInteger(p.durationMs)||p.durationMs<=0||!['direct-only','direct-and-periodic'].includes(p.hitScope)||!Array.isArray(p.eligibleAbilityIds)||new Set(p.eligibleAbilityIds).size!==p.eligibleAbilityIds.length||p.eligibleAbilityIds.some(id=>typeof id!=='string'||!id.startsWith('mage:')||id==='mage:combustion')||p.multiTarget!=='per-hit')throw new Error('Explicit Combustion eligible Fire hits, duration and per-hit policy required');return p;}
+const active=(e,actor)=>e.auras.active(actor,'buff').find(a=>a.id==='mage:combustion'&&a.ownerId===actor);
+const eligible=(p,context,x)=>p&&p.eligibleAbilityIds.includes(context.abilityId)&&x.school==='fire'&&(x.kind==='damage'||p.hitScope==='direct-and-periodic'&&x.kind==='periodic-damage');
+function update(e,actor,duration,bonus,crits){e.auras.apply({id:'mage:combustion',name:'Combustion',targetId:actor,ownerId:actor,kind:'buff',durationMs:duration,maxStacks:11,stacks:1+bonus/10,stackPolicy:'replace',refreshPolicy:'preserve',modifiers:[{stat:'combustionCriticalCount',mode:'flat',value:crits}]});}
+export function applyCombustion(e,actor,p){validateCombustion(p);update(e,actor,p.durationMs,0,0);}
+export function combustionOutcomes(e,actor,p,context,x,outcomes){const a=eligible(p,context,x)&&active(e,actor);return a?frozenOutcomes(outcomes,(a.stacks-1)*10):outcomes;}
+export function advanceCombustion(e,actor,p,context,x,hit){if(!eligible(p,context,x)||!hit.landed)return;const a=active(e,actor);if(!a)return;const crits=a.modifiers[0].value+(hit.critical?1:0);if(crits>=3){e.auras.remove(a,'three-critical-hits');return;}update(e,actor,a.expiresAt-e.timeline.now,Math.min(100,a.stacks*10),crits);}

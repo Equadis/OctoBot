@@ -29,7 +29,7 @@ export function conditionValue(condition,context){
  if(['rage','energy','comboPoints','mana','manaPercent','petFocus','soulShards'].includes(m))return need(context.resources?.[m],m);
  if(m.startsWith('predicted'))return need(context.predictedResources?.[m.slice(9).toLowerCase()],m);
  if(m==='selfBuffActive'||m==='selfBuffRemaining'){const remaining=auraValue(context.selfBuffs,name,'remaining');return m==='selfBuffActive'?Number(remaining>0):remaining;}
- if(m==='ownDebuffRemaining'){const entry=named(context.debuffs,name,'owned debuff tracker',{});if(!entry.owner&&entry.remaining>0)return fail('debuff ownership');return entry.owner==='player'?entry.remaining:0;}
+ if(m==='ownDebuffRemaining'){if(context.ownDebuffs!==undefined)return auraValue(context.ownDebuffs,name,'remaining');const entry=named(context.debuffs,name,'owned debuff tracker',{});if(!entry.owner&&entry.remaining>0)return fail('debuff ownership');return entry.owner==='player'?entry.remaining:0;}
  if(m==='auraDuration'){need(context.auras,'legacy aura tracker');return auraValue(context.auras,name,'remaining');}
  if(/^(buff|debuff)(Active|Remaining|Stacks)$/.test(m)){const map=context[m.startsWith('debuff')?'debuffs':'buffs'];return m.endsWith('Active')?Number(auraValue(map,name,'remaining')>0):auraValue(map,name,m.endsWith('Stacks')?'stacks':'remaining');}
  if(m==='procActive')return Number(named(context.procs,name,'proc tracker',false));
@@ -48,7 +48,7 @@ export function conditionValue(condition,context){
  if(m==='snapshotUpgrade')return Number(named(context.snapshotUpgrades,name,'verified snapshot policy'));
  if(m==='safeSwingWindow'||m==='safeRangedWindow'){
   const timer=need(context[m==='safeSwingWindow'?'meleeSwing':'rangedSwing'],'swing timer');
-  if(named(context.castWindowPolicies,name,'verified swing-reset/clip policies')!=='verified-safe')return fail(`swing policy: ${name}`);
+  if(!['verified-safe','reference-no-clip'].includes(named(context.castWindowPolicies,name,'explicit swing-reset/clip policies')))return fail(`swing policy: ${name}`);
   const cast=named(context.castTimes,name,'cast times');return Number(cast+need(context.latencySeconds,'latency')<need(timer.nextIn,'next swing')&&need(timer.sinceLast,'last swing')>=0);
  }
  if(m==='nextSwingIn')return need(context.meleeSwing?.nextIn,m);

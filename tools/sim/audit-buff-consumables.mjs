@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import {CONSUMABLES} from '../../docs/sim/core/consumables.mjs';
+import {BUFF_OPTIONS} from '../../docs/sim/core/configuration.mjs';
+import {buffDefinition} from '../../docs/sim/core/buff-effect-audit.mjs';
+const counts={},rows=CONSUMABLES.map(i=>({id:i.id,name:i.name,source:i.source,buffId:i.buffId,category:i.category,...i.effectAudit,effects:i.effects}));
+for(const r of rows)counts[r.status]=(counts[r.status]||0)+1;
+const groups={},buffs=BUFF_OPTIONS.map(o=>({...buffDefinition(o.id),name:o.name,display:o.effect}));
+for(const b of buffs)groups[b.status]=(groups[b.status]||0)+1;
+const summary={consumables:rows.length,counts,sharedBuffs:buffs.length,groups,unresolved:buffs.filter(b=>['unresolved','unmapped','source-conflict','reference-static','reference-scoped'].includes(b.status)),eventEvidence:buffs.filter(b=>b.status==='event').map(b=>({id:b.id,evidence:b.eventEvidence||'existing-partial',source:b.source,reason:b.reason})),examples:rows.filter(x=>x.status==='unmapped')};
+console.log('BUFF_AUDIT_BEGIN'+JSON.stringify(summary)+'BUFF_AUDIT_END');
+fs.writeFileSync('buff-consumable-audit.json',JSON.stringify({summary,buffs,rows},null,2));

@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {regenerationAmount,validateRegenPolicy,dynamicManaRegen} from '../../docs/sim/core/combat-regeneration.mjs';
+const r={resource:'mana',amount:20,fiveSecondRule:{windowMs:5000,insideAmount:5}};
+test('explicit regen is reduced only within the configured spend window',()=>{assert.equal(regenerationAmount(r,0,null),20);assert.equal(regenerationAmount(r,0,0),5);assert.equal(regenerationAmount(r,4999,0),5);assert.equal(regenerationAmount(r,5000,0),20);assert.equal(regenerationAmount(r,8000,7000),5);assert.equal(regenerationAmount({resource:'energy',amount:20},0,0),20);assert.throws(()=>validateRegenPolicy({...r,resource:'energy'}));});
+
+test('dynamic spirit follows spend window while mp5 remains active',()=>{const q={...r,intervalMs:2000,dynamicManaPolicy:{insideSpiritFraction:.25,provenance:'synthetic'}};const a={stat:(_u,k,b)=>({spiritManaRegenPerSecondDelta:10,mp5Delta:25}[k]??b)};assert.equal(dynamicManaRegen(q,4999,0,a,'p'),20);assert.equal(dynamicManaRegen(q,5000,0,a,'p'),50);assert.equal(dynamicManaRegen(r,0,null,a,'p'),20);assert.throws(()=>dynamicManaRegen({...q,fiveSecondRule:undefined},0,null,a,'p'),/policy/);});

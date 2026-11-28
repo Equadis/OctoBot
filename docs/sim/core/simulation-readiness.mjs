@@ -1,17 +1,20 @@
-import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261113-swaps1';
-import {ENCHANTS} from './equipment-options.mjs?v=20261130-ui2';
+import {petEngineErrors} from './pet-audit.mjs?v=20261117-pet-audit3';
+import {effectiveBuffIds} from './buffs.mjs?v=20261128-merge1';
+import {postSwapBuild,trinketSwapEngineErrors} from './trinket-swaps.mjs?v=20261128-merge1';
+import {ENCHANTS} from './equipment-options.mjs?v=20261128-merge1';
 import {rotationEngineErrors} from './rotations/readiness.mjs?v=20261112-rotations1';
-import {validateBuild} from './builds.mjs?v=20261201-ui3';
-import {equipmentErrors} from './items.mjs?v=20261130-ui2';
-import {consumableEngineErrors} from './consumables.mjs?v=20261130-ui2';
-import {BASE_STATS} from './base-stats.mjs?v=20261112-stats1';
+import {validateBuild} from './builds.mjs?v=20261128-merge1';
+import {equipmentErrors} from './items.mjs?v=20261128-merge1';
+import {consumableEngineErrors} from './consumables.mjs?v=20261128-merge1';
+import {baseStatProfile} from './base-stat-audit.mjs?v=20261117-racial-audit1';
 /** Shared fail-closed entry point for future workers and adapters. A planner
  * selection, a source tooltip, and an implemented combat effect are distinct. */
 export function prepareSimulation(input,talents,{lookup=()=>null,engine=null}={}){
- const build=validateBuild(input,talents),errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
- if(!BASE_STATS[`${build.race}:${build.classId}`]?.[build.level-1])errors.push('Base attributes for this race/class/level have not been verified.');
+ const build=validateBuild(input,talents);build.controls.buffIds=effectiveBuffIds(build.controls.buffIds,build.planning);const errors=equipmentErrors(build,lookup).map(e=>`${e.slot}: ${e.reason}`);
+ const baseAudit=baseStatProfile(build.race,build.classId,build.level);if(!baseAudit.row||baseAudit.status==='reference-anomaly'||baseAudit.status==='reference-conflict')errors.push('Base attributes for this race/class/level are missing, anomalous or disputed between sources.');
  if(!engine||engine.classId!==build.classId||!['implemented-unverified','validated'].includes(engine.status))errors.push(`The ${build.classId} combat engine is not implemented.`);
  errors.push(...trinketSwapEngineErrors(build,engine));
+ errors.push(...petEngineErrors(build,engine,talents));
  if(build.trinketSwap?.enabled)errors.push(...equipmentErrors(postSwapBuild(build),lookup).map(e=>`Swap ${e.slot}: ${e.reason}`));
  for(const ref of Object.values(build.gear)){const enchant=ENCHANTS.find(e=>e.id===ref.enchantId);if(enchant?.rangedEffects&&!engine?.supportedEnchantIds?.includes(enchant.id))errors.push(`${enchant.name} is not implemented by the combat engine.`);}
  errors.push(...rotationEngineErrors(build,engine,{talents,lookup}));

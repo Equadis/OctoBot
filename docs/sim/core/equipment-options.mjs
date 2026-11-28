@@ -2,103 +2,178 @@
 // These enchant choices and patch tags are not validated combat modifiers.
 export const EQUIPMENT_REFERENCE=Object.freeze({url:'https://www.combatgum.app/rogue',retrievedAt:'2026-11-11'});
 export const NEW_ITEM_IDS=new Set([33053, 33056, 33059, 33062, 33067, 33074, 33078, 33081, 33138, 33139, 33149, 33153, 33154, 33156, 33157, 33188, 33209, 33225, 33241, 33242, 33247, 33248, 33249, 33253, 33269, 33271, 33273, 33275, 33276, 33277, 33279, 33284, 33288, 33293, 33301, 33304, 33306, 33308, 33312, 33314, 33315, 33326, 33330, 33331, 33345, 33386, 33387, 33388, 33389, 33390, 33391, 33662, 33668, 33670, 33671, 33673, 33849, 33850, 33851, 33852, 33853, 33855, 33858, 33886, 33887, 33888, 33889, 33890, 33892, 33893, 33907, 33908, 33909, 33910, 33911, 33913, 33914, 42183, 42184, 42193, 42195, 61533]);
-// OctoWoW roadmap: https://octowow.st/index.php/roadmap (BWL opened 2026-11-01).
+// Existing production roadmap phase policy: BWL (2026-11-01), https://octowow.st/index.php/roadmap
 export const CURRENT_ENCHANT_PHASE=2;
 export const ENCHANTS=Object.freeze([
   {
     "id": "crusader_mh",
     "name": "Crusader (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "enchant_mh_5wd",
     "name": "+5 Weapon Damage (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {
+      "weaponDamage": 5
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_mh_agi",
     "name": "+15 Agility (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {
+      "agi": 15
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_mh_str",
     "name": "+15 Strength (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {
+      "str": 15
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_mh_sp",
     "name": "Spell Power (MH) (+30 SP)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {
+      "sp": 30
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "crusader_oh",
     "name": "Crusader (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "lifestealing_mh",
     "name": "Lifestealing (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "fiery_weapon_mh",
     "name": "Fiery Weapon (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "fiery_blaze_mh",
     "name": "Fiery Blaze (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "elemental_slayer_mh",
     "name": "Elemental Slayer (MH)",
-    "slot": "mainhand"
+    "slot": "mainhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "enchant_oh_5wd",
     "name": "+5 Weapon Damage (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {
+      "weaponDamage": 5
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "elemental_slayer_oh",
     "name": "Elemental Slayer (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "enchant_oh_agi",
     "name": "+15 Agility (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {
+      "agi": 15
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "lifestealing_oh",
     "name": "Lifestealing (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "fiery_weapon_oh",
     "name": "Fiery Weapon (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "fiery_blaze_oh",
     "name": "Fiery Blaze (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {},
+    "effectStatus": "event",
+    "verification": "reference"
   },
   {
     "id": "enchant_oh_str",
     "name": "+15 Strength (OH)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {
+      "str": 15
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_oh_sp",
     "name": "Spell Power (OH) (+30 SP)",
-    "slot": "offhand"
+    "slot": "offhand",
+    "effects": {
+      "sp": 30
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_head_dodge",
     "name": "Dodge (+2% Dodge)",
-    "slot": "head"
+    "slot": "head",
+    "effects": {
+      "dodge": 2
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_head_ap",
@@ -106,27 +181,58 @@ export const ENCHANTS=Object.freeze([
     "slot": "head",
     "classes": [
       "rogue"
-    ]
+    ],
+    "effects": {
+      "ap": 28,
+      "dodge": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "requiredLevel": 60,
+    "source": "https://octowow.st/db/?item=19784"
   },
   {
     "id": "enchant_head_haste",
     "name": "Arcanum of Rapidity (+1% Haste)",
-    "slot": "head"
+    "slot": "head",
+    "effects": {
+      "haste": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?spell=22840"
   },
   {
     "id": "enchant_head_agi",
     "name": "Lesser Arcanum of Voracity (+8 Agi)",
-    "slot": "head"
+    "slot": "head",
+    "effects": {
+      "agi": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11647"
   },
   {
     "id": "enchant_head_sp",
-    "name": "Arcanum of Focus (+12 SP)",
-    "slot": "head"
+    "name": "Arcanum of Focus (+8 SP)",
+    "slot": "head",
+    "effects": {
+      "sp": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=18330"
   },
   {
     "id": "enchant_legs_dodge",
     "name": "Dodge (+2% Dodge)",
-    "slot": "legs"
+    "slot": "legs",
+    "effects": {
+      "dodge": 2
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_legs_ap",
@@ -134,228 +240,968 @@ export const ENCHANTS=Object.freeze([
     "slot": "legs",
     "classes": [
       "rogue"
-    ]
+    ],
+    "effects": {
+      "ap": 28,
+      "dodge": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "requiredLevel": 60,
+    "source": "https://octowow.st/db/?item=19784"
   },
   {
     "id": "enchant_legs_haste",
     "name": "Arcanum of Rapidity (+1% Haste)",
-    "slot": "legs"
+    "slot": "legs",
+    "effects": {
+      "haste": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?spell=22840"
   },
   {
     "id": "enchant_legs_agi",
     "name": "Lesser Arcanum of Voracity (+8 Agi)",
-    "slot": "legs"
+    "slot": "legs",
+    "effects": {
+      "agi": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11647"
   },
   {
     "id": "enchant_legs_sp",
-    "name": "Arcanum of Focus (+12 SP)",
-    "slot": "legs"
+    "name": "Arcanum of Focus (+8 SP)",
+    "slot": "legs",
+    "effects": {
+      "sp": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=18330"
   },
   {
     "id": "enchant_shoulder_naxx",
     "availableFromPhase": 6,
     "name": "Might of the Scourge (+26 AP, +1% Crit)",
-    "slot": "shoulder"
+    "slot": "shoulder",
+    "effects": {
+      "ap": 26,
+      "crit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "requiredLevel": 60,
+    "source": "https://octowow.st/db/?item=23548"
   },
   {
     "id": "enchant_shoulder_ap",
     "name": "Zandalar Signet of Might (+30 AP)",
-    "slot": "shoulder"
+    "slot": "shoulder",
+    "effects": {
+      "ap": 30
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=20077"
   },
   {
     "id": "enchant_shoulder_haste",
     "name": "Sigil of Quickness (+2% Haste)",
-    "slot": "shoulder"
+    "slot": "shoulder",
+    "effects": {
+      "haste": 2
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_shoulder_arpen",
     "name": "Sigil of Penetration (+40 ArPen)",
-    "slot": "shoulder"
+    "slot": "shoulder",
+    "effects": {
+      "armorPen": 40
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_shoulder_sp",
     "availableFromPhase": 6,
     "name": "Power of the Scourge (+15 SP, +1% Spell Crit)",
-    "slot": "shoulder"
+    "slot": "shoulder",
+    "effects": {
+      "sp": 15,
+      "spellCrit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "requiredLevel": 60,
+    "source": "https://octowow.st/db/?item=23545"
   },
   {
     "id": "enchant_back_dodge",
     "name": "Dodge (+1% Dodge)",
-    "slot": "back"
+    "slot": "back",
+    "effects": {
+      "dodge": 1
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_back_agi",
     "name": "Enchant Cloak - Lesser Agility (+3 Agi)",
-    "slot": "back"
+    "slot": "back",
+    "effects": {
+      "agi": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_back_agi7",
     "availableFromPhase": 5,
     "source": "https://octowow.st/db/?item=42187",
     "name": "Enchant Cloak - Agility (+7 Agi)",
-    "slot": "back"
+    "slot": "back",
+    "effects": {
+      "agi": 7
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_chest_defense",
     "name": "Defense (+5 Defense)",
-    "slot": "chest"
+    "slot": "chest",
+    "effects": {
+      "defense": 5
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_chest_greater_stats",
     "name": "Enchant Chest - Greater Stats (+4 All)",
-    "slot": "chest"
+    "slot": "chest",
+    "effects": {
+      "str": 4,
+      "agi": 4,
+      "sta": 4,
+      "int": 4,
+      "spi": 4
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_chest_stats",
     "name": "Enchant Chest - Stats (+3 All)",
-    "slot": "chest"
+    "slot": "chest",
+    "effects": {
+      "str": 3,
+      "agi": 3,
+      "sta": 3,
+      "int": 3,
+      "spi": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_wrist_str",
     "name": "Enchant Bracer - Superior Strength (+9 Str)",
-    "slot": "wrist"
+    "slot": "wrist",
+    "effects": {
+      "str": 9
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_wrist_agi",
     "name": "Enchant Bracer - Greater Agility (+7 Agi)",
-    "slot": "wrist"
+    "slot": "wrist",
+    "effects": {
+      "agi": 7
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_wrist_sp",
     "name": "Enchant Bracer - Spell Power (+12 SP)",
-    "slot": "wrist"
+    "slot": "wrist",
+    "effects": {
+      "sp": 12
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_agi15",
     "name": "Enchant Gloves - Superior Agility (+15 Agi)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "agi": 15
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_str",
     "name": "Enchant Gloves - Major Strength (+9 Str)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "str": 9
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_haste",
     "name": "Enchant Gloves - Minor Haste (+1% Haste)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "haste": 1
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_agi7",
     "name": "Enchant Gloves - Greater Agility (+7 Agi)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "agi": 7
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_shadow_power",
     "name": "Enchant Gloves - Shadow Power (+20 SP)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "shadowSp": 20
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_fire_power",
     "name": "Enchant Gloves - Fire Power (+20 SP)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "fireSp": 20
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_frost_power",
     "name": "Enchant Gloves - Frost Power (+20 SP)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "frostSp": 20
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_hands_nature_power",
     "name": "Enchant Gloves - Nature Power (+20 SP)",
-    "slot": "hands"
+    "slot": "hands",
+    "effects": {
+      "natureSp": 20
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
-  {"id":"enchant_feet_minor_speed","name":"Enchant Boots - Minor Speed (+8% Movement Speed)","slot":"feet","source":"https://octowow.st/db/?spell=13890"},
-  {"id":"enchant_feet_stamina7","name":"Enchant Boots - Greater Stamina (+7 Sta)","slot":"feet","source":"https://octowow.st/db/?spell=20020"},
-  {"id":"enchant_feet_spirit5","name":"Enchant Boots - Spirit (+5 Spirit)","slot":"feet","source":"https://octowow.st/db/?spell=20024"},
+  {"id":"enchant_feet_minor_speed","name":"Enchant Boots - Minor Speed (+8% Movement Speed)","slot":"feet","effects":{"runSpeedPct":8},"effectStatus":"passive","verification":"reference","source":"https://octowow.st/db/?spell=13890"},
+  {"id":"enchant_feet_stamina7","name":"Enchant Boots - Greater Stamina (+7 Sta)","slot":"feet","effects":{"sta":7},"effectStatus":"passive","verification":"reference","source":"https://octowow.st/db/?spell=20020"},
+  {"id":"enchant_feet_spirit5","name":"Enchant Boots - Spirit (+5 Spirit)","slot":"feet","effects":{"spi":5},"effectStatus":"passive","verification":"reference","source":"https://octowow.st/db/?spell=20024"},
   {
     "id": "enchant_feet_defense",
     "name": "Defense (+5 Defense)",
-    "slot": "feet"
+    "slot": "feet",
+    "effects": {
+      "defense": 5
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_feet_agi",
     "name": "Enchant Boots - Greater Agility (+7 Agi)",
-    "slot": "feet"
+    "slot": "feet",
+    "effects": {
+      "agi": 7
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_waist_defense",
     "name": "Defense (+5 Defense)",
-    "slot": "waist"
+    "slot": "waist",
+    "effects": {
+      "defense": 5
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_waist_agi",
     "name": "Mithril Belt Buckle (+6 Agi)",
-    "slot": "waist"
+    "slot": "waist",
+    "effects": {
+      "agi": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_waist_str",
     "name": "Obsidian Belt Buckle (+10 Str)",
-    "slot": "waist"
+    "slot": "waist",
+    "effects": {
+      "str": 10
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_waist_arpen",
     "name": "Iron Belt Buckle (+25 ArPen)",
-    "slot": "waist"
+    "slot": "waist",
+    "effects": {
+      "armorPen": 25
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_neck_agi",
     "name": "Brilliant Opal Gemstone (+6 Agi)",
-    "slot": "neck"
+    "slot": "neck",
+    "effects": {
+      "agi": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_neck_str",
     "name": "Azerothian Ruby Gemstone (+6 Str)",
-    "slot": "neck"
+    "slot": "neck",
+    "effects": {
+      "str": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_neck_stats",
     "name": "Stunning Imperial Gemstone (+3 All Stats)",
-    "slot": "neck"
+    "slot": "neck",
+    "effects": {
+      "str": 3,
+      "agi": 3,
+      "sta": 3,
+      "int": 3,
+      "spi": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring1_agi",
     "name": "Brilliant Opal Gemstone (+6 Agi)",
-    "slot": "ring1"
+    "slot": "ring1",
+    "effects": {
+      "agi": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring1_str",
     "name": "Azerothian Ruby Gemstone (+6 Str)",
-    "slot": "ring1"
+    "slot": "ring1",
+    "effects": {
+      "str": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring1_stats",
     "name": "Stunning Imperial Gemstone (+3 All Stats)",
-    "slot": "ring1"
+    "slot": "ring1",
+    "effects": {
+      "str": 3,
+      "agi": 3,
+      "sta": 3,
+      "int": 3,
+      "spi": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring2_agi",
     "name": "Brilliant Opal Gemstone (+6 Agi)",
-    "slot": "ring2"
+    "slot": "ring2",
+    "effects": {
+      "agi": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring2_str",
     "name": "Azerothian Ruby Gemstone (+6 Str)",
-    "slot": "ring2"
+    "slot": "ring2",
+    "effects": {
+      "str": 6
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
   {
     "id": "enchant_ring2_stats",
     "name": "Stunning Imperial Gemstone (+3 All Stats)",
-    "slot": "ring2"
+    "slot": "ring2",
+    "effects": {
+      "str": 3,
+      "agi": 3,
+      "sta": 3,
+      "int": 3,
+      "spi": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
   },
-  {"id":"scope_4405","name":"Crude Scope (+1 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":5,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":1},"source":"https://octowow.st/db/?item=4405"},
-  {"id":"scope_4406","name":"Standard Scope (+2 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":10,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":2},"source":"https://octowow.st/db/?item=4406"},
-  {"id":"scope_4407","name":"Accurate Scope (+3 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":20,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":3},"source":"https://octowow.st/db/?item=4407"},
-  {"id":"scope_10546","name":"Deadly Scope (+5 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":30,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":5},"source":"https://octowow.st/db/?item=10546"},
-  {"id":"scope_10548","name":"Sniper Scope (+7 Ranged Damage)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":40,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedDamage":7},"source":"https://octowow.st/db/?item=10548"},
-  {"id":"scope_18283","name":"Biznicks 247x128 Accurascope (+3% Ranged Hit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedHit":3},"source":"https://octowow.st/db/?item=18283"},
-  {"id":"scope_33146","name":"Facetted Crystal Scope (+2% Ranged Crit)","slot":"ranged","classes":["warrior","rogue","hunter"],"requiredLevel":50,"weaponSubclasses":[2,3,18],"rangedEffects":{"rangedCrit":2},"source":"https://octowow.st/db/?item=33146"}
+  {
+    "id": "scope_4405",
+    "name": "Crude Scope (+1 Ranged Damage)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 5,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedDamage": 1
+    },
+    "source": "https://octowow.st/db/?item=4405",
+    "effects": {
+      "rangedDamage": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip"
+  },
+  {
+    "id": "scope_4406",
+    "name": "Standard Scope (+2 Ranged Damage)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 10,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedDamage": 2
+    },
+    "source": "https://octowow.st/db/?item=4406",
+    "effects": {
+      "rangedDamage": 2
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip"
+  },
+  {
+    "id": "scope_4407",
+    "name": "Accurate Scope (+3 Ranged Damage)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 20,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedDamage": 3
+    },
+    "source": "https://octowow.st/db/?item=4407",
+    "effects": {
+      "rangedDamage": 3
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
+  },
+  {
+    "id": "scope_10546",
+    "name": "Deadly Scope (+5 Ranged Damage)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 30,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedDamage": 5
+    },
+    "source": "https://octowow.st/db/?item=10546",
+    "effects": {
+      "rangedDamage": 5
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip"
+  },
+  {
+    "id": "scope_10548",
+    "name": "Sniper Scope (+7 Ranged Damage)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 40,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedDamage": 7
+    },
+    "source": "https://octowow.st/db/?item=10548",
+    "effects": {
+      "rangedDamage": 7
+    },
+    "effectStatus": "passive",
+    "verification": "reference"
+  },
+  {
+    "id": "scope_18283",
+    "name": "Biznicks 247x128 Accurascope (+3% Ranged Hit)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 50,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedHit": 3
+    },
+    "source": "https://octowow.st/db/?item=18283",
+    "effects": {
+      "rangedHit": 3
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip"
+  },
+  {
+    "id": "scope_33146",
+    "name": "Facetted Crystal Scope (+2% Ranged Crit)",
+    "slot": "ranged",
+    "classes": [
+      "warrior",
+      "rogue",
+      "hunter"
+    ],
+    "requiredLevel": 50,
+    "weaponSubclasses": [
+      2,
+      3,
+      18
+    ],
+    "rangedEffects": {
+      "rangedCrit": 2
+    },
+    "source": "https://octowow.st/db/?item=33146",
+    "effects": {
+      "rangedCrit": 2
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip"
+  },
+  {
+    "id": "arcanum_protection_head",
+    "name": "Arcanum of Protection (+1% Dodge)",
+    "slot": "head",
+    "effects": {
+      "dodge": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=18331"
+  },
+  {
+    "id": "enchant_head_paladin_zg",
+    "name": "Syncretist's Sigil (+10 Sta, +7 Defense, +24 Healing)",
+    "slot": "head",
+    "classes": [
+      "paladin"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "defense": 7,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19783"
+  },
+  {
+    "id": "enchant_head_hunter_zg",
+    "name": "Falcon's Call (+24 Ranged AP, +10 Sta, +1% Hit)",
+    "slot": "head",
+    "classes": [
+      "hunter"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "rangedAP": 24,
+      "sta": 10,
+      "hit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19785"
+  },
+  {
+    "id": "enchant_head_shaman_zg",
+    "name": "Vodouisant's Vigilant Embrace (+15 Int, +13 SP)",
+    "slot": "head",
+    "classes": [
+      "shaman"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "int": 15,
+      "sp": 13
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19786"
+  },
+  {
+    "id": "enchant_head_mage_zg",
+    "name": "Presence of Sight (+18 SP, +1% Spell Hit)",
+    "slot": "head",
+    "classes": [
+      "mage"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sp": 18,
+      "spellHit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19787"
+  },
+  {
+    "id": "enchant_head_warlock_zg",
+    "name": "Hoodoo Hex (+10 Sta, +18 SP)",
+    "slot": "head",
+    "classes": [
+      "warlock"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "sp": 18
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19788"
+  },
+  {
+    "id": "enchant_head_priest_zg",
+    "name": "Prophetic Aura (+10 Sta, +4 MP5, +24 Healing)",
+    "slot": "head",
+    "classes": [
+      "priest"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "mp5": 4,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19789"
+  },
+  {
+    "id": "enchant_head_druid_zg",
+    "name": "Animist's Caress (+10 Sta, +10 Int, +24 Healing)",
+    "slot": "head",
+    "classes": [
+      "druid"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "int": 10,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19790"
+  },
+  {
+    "id": "voracity_head_str",
+    "name": "Lesser Arcanum of Voracity (+8 Strength)",
+    "slot": "head",
+    "effects": {
+      "str": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11645"
+  },
+  {
+    "id": "voracity_head_sta",
+    "name": "Lesser Arcanum of Voracity (+8 Stamina)",
+    "slot": "head",
+    "effects": {
+      "sta": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11646"
+  },
+  {
+    "id": "voracity_head_int",
+    "name": "Lesser Arcanum of Voracity (+8 Intellect)",
+    "slot": "head",
+    "effects": {
+      "int": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11648"
+  },
+  {
+    "id": "arcanum_protection_legs",
+    "name": "Arcanum of Protection (+1% Dodge)",
+    "slot": "legs",
+    "effects": {
+      "dodge": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=18331"
+  },
+  {
+    "id": "enchant_legs_paladin_zg",
+    "name": "Syncretist's Sigil (+10 Sta, +7 Defense, +24 Healing)",
+    "slot": "legs",
+    "classes": [
+      "paladin"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "defense": 7,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19783"
+  },
+  {
+    "id": "enchant_legs_hunter_zg",
+    "name": "Falcon's Call (+24 Ranged AP, +10 Sta, +1% Hit)",
+    "slot": "legs",
+    "classes": [
+      "hunter"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "rangedAP": 24,
+      "sta": 10,
+      "hit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19785"
+  },
+  {
+    "id": "enchant_legs_shaman_zg",
+    "name": "Vodouisant's Vigilant Embrace (+15 Int, +13 SP)",
+    "slot": "legs",
+    "classes": [
+      "shaman"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "int": 15,
+      "sp": 13
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19786"
+  },
+  {
+    "id": "enchant_legs_mage_zg",
+    "name": "Presence of Sight (+18 SP, +1% Spell Hit)",
+    "slot": "legs",
+    "classes": [
+      "mage"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sp": 18,
+      "spellHit": 1
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19787"
+  },
+  {
+    "id": "enchant_legs_warlock_zg",
+    "name": "Hoodoo Hex (+10 Sta, +18 SP)",
+    "slot": "legs",
+    "classes": [
+      "warlock"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "sp": 18
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19788"
+  },
+  {
+    "id": "enchant_legs_priest_zg",
+    "name": "Prophetic Aura (+10 Sta, +4 MP5, +24 Healing)",
+    "slot": "legs",
+    "classes": [
+      "priest"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "mp5": 4,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19789"
+  },
+  {
+    "id": "enchant_legs_druid_zg",
+    "name": "Animist's Caress (+10 Sta, +10 Int, +24 Healing)",
+    "slot": "legs",
+    "classes": [
+      "druid"
+    ],
+    "requiredLevel": 60,
+    "effects": {
+      "sta": 10,
+      "int": 10,
+      "healingPower": 24
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=19790"
+  },
+  {
+    "id": "voracity_legs_str",
+    "name": "Lesser Arcanum of Voracity (+8 Strength)",
+    "slot": "legs",
+    "effects": {
+      "str": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11645"
+  },
+  {
+    "id": "voracity_legs_sta",
+    "name": "Lesser Arcanum of Voracity (+8 Stamina)",
+    "slot": "legs",
+    "effects": {
+      "sta": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11646"
+  },
+  {
+    "id": "voracity_legs_int",
+    "name": "Lesser Arcanum of Voracity (+8 Intellect)",
+    "slot": "legs",
+    "effects": {
+      "int": 8
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=11648"
+  },
+  {
+    "id": "enchant_shoulder_resilience",
+    "availableFromPhase": 6,
+    "name": "Resilience of the Scourge (+31 Healing, +5 MP5)",
+    "slot": "shoulder",
+    "requiredLevel": 60,
+    "effects": {
+      "healingPower": 31,
+      "mp5": 5
+    },
+    "effectStatus": "passive",
+    "verification": "octowow-tooltip",
+    "source": "https://octowow.st/db/?item=23547"
+  }
 ].map(enchant=>Object.freeze(enchant)));
-export function enchantAvailable(enchant,phase=CURRENT_ENCHANT_PHASE){return (enchant?.availableFromPhase??0)<=phase;}
+export function enchantAvailable(enchant,phase=CURRENT_ENCHANT_PHASE){return Boolean(enchant)&&(enchant.availableFromPhase??0)<=phase;}
 export function enchantsForSlot(slot,classId='warrior',item=null,level=60,{includeFuture=false}={}){
  return ENCHANTS.filter(enchant=>(includeFuture||enchantAvailable(enchant)) && enchant.slot===slot && (!enchant.classes||enchant.classes.includes(classId)) && (!enchant.requiredLevel||level>=enchant.requiredLevel) && (!['mainhand','offhand'].includes(slot)||!item||item.classs===2) && (!enchant.weaponSubclasses||!item||item.classs===2&&enchant.weaponSubclasses.includes(item.subclass)));
 }
-// Display locked options without treating them as legal new selections.
+// Keep known future enchants in saved builds while disallowing new selection and effects.
 export function enchantChoicesForSlot(slot,classId='warrior',item=null,level=60,phase=CURRENT_ENCHANT_PHASE){
  return enchantsForSlot(slot,classId,item,level,{includeFuture:true}).map(enchant=>({...enchant,disabled:!enchantAvailable(enchant,phase),displayName:enchantAvailable(enchant,phase)?enchant.name:`${enchant.name} — Phase ${enchant.availableFromPhase}`}));
 }

@@ -1,13 +1,14 @@
+import {buffDefinition} from './core/buff-effect-audit.mjs?v=20261117-buff-audit4';
 import {CLASS_OPTIONS} from './core/class-options.mjs?v=20261201-ui3';
 import {CONDITION_DEFINITIONS} from './core/rotations/conditions.mjs?v=20261112-rotations1';
 import {presetCompatibility} from './core/rotations/validator.mjs?v=20261112-rotations1';
 import {recommendPresets} from './core/rotations/recommendations.mjs?v=20261112-rotations1';
-import {CONSUMABLES,CONSUMABLE_BY_ID,LEGACY_GROUPS,consumableGroup,consumablesConflict,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables} from './core/consumables.mjs?v=20261130-ui2';
+import {CONSUMABLES,CONSUMABLE_BY_ID,LEGACY_GROUPS,consumableGroup,consumablesConflict,consumableRestriction,selectConsumable,resolveConsumableSelection,stackingNote,orderConsumables,sharedConsumableConflict} from './core/consumables.mjs?v=20261128-merge1';
 import {scheduleScrollingNames} from '../scrolling-names.mjs?v=20261202-pan-paint';
-import {buffIcon,consumableIcon} from './core/icons.mjs?v=20261202-profs1';
-import {iconUrl} from './core/interface.mjs?v=20261112-navigation1';
-import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261112-stats2';
-import { BUFF_OPTIONS, buffRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261201-ui3';
+import {buffIcon,consumableIcon} from './core/icons.mjs?v=20261128-merge1';
+import {iconUrl} from './core/interface.mjs?v=20261128-merge1';
+import {selectBuff,selectBuffGroup,BUFF_CONFLICTS} from './core/buffs.mjs?v=20261128-merge1';
+import { BUFF_OPTIONS, buffRestriction, buffScenarioRestriction, BUFF_GROUPS, rotationProfile, OPERATORS, validateRotationRows } from './core/configuration.mjs?v=20261201-ui3';
 import { attachTooltip } from './tooltip.mjs?v=20261124-tips2';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -19,7 +20,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
  const SAVED_KEY=`octosim.rotations.${classId}.v1`;
  const {abilities:ABILITIES,metrics:METRICS,presets:ROTATION_PRESETS,resources}=rotationProfile(classId);
  const validateRows=rows=>validateRotationRows(rows,classId);
- const checkboxes=new Map(),buffRows=new Map();
+ const checkboxes=new Map(),buffRows=new Map();let worldSection=null;
  // Names of the currently selected items that a buff or consumable cannot stack with.
  const buffNameOf=id=>BUFF_OPTIONS.find(option=>option.id===id)?.name||id;
  const buffConflicts=id=>{const controls=getBuild().controls,names=[];
@@ -60,13 +61,14 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
  for(const group of BUFF_GROUPS){
   const actions=node('div',undefined,'buff-actions');
   const setGroup=enabled=>{
-   const ids=group.options.filter(option=>!enabled||!buffRestriction(option,getBuild())).map(option=>option.id);
+   const ids=group.options.filter(option=>!enabled||!buffScenarioRestriction(option,getBuild())).map(option=>option.id);
    const selected=selectBuffGroup(getBuild().controls.buffIds,ids,enabled);
    update({buffIds:[...selected]});renderChecks();
   };
   if(group.all)actions.append(button('Select All',()=>setGroup(true),`Select all ${group.name}`));
   actions.append(button('Clear All',()=>setGroup(false),`Clear all ${group.name}`));
   const {section,body}=collapsible(group.id,group.name,{open:['raid','target'].includes(group.id),actions});
+  if(group.id==='world'){worldSection=section;body.append(node('p','World buffs do not apply in instanced raids.','small muted'));}
   for(const option of group.options){
    if(option.classes&&!option.classes.includes(classId)||option.id==='wizard-oil-oh'&&!['warrior','rogue','hunter'].includes(classId))continue;
    const label=node('label',undefined,'buff-row');const input=node('input');input.type='checkbox';input.value=option.id;
@@ -74,26 +76,26 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
    input.addEventListener('change',()=>{
     let selected=[...getBuild().controls.buffIds];if(input.checked)selected=selectBuff(selected,option.id);else selected=selectBuff(selected,option.id,false);update({buffIds:[...selected]});renderChecks();
    });
-   const buffTip=()=>({title:option.name,lines:[option.effect,...(buffRestriction(option,getBuild())?[buffRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),'Combat Gum reference value. Combat calculations are in development.']});
+   const buffTip=()=>({title:option.name,lines:[option.effect,...(buffScenarioRestriction(option,getBuild())?[buffScenarioRestriction(option,getBuild())]:[]),...BUFF_CONFLICTS.filter(pair=>pair.includes(option.id)).map(pair=>`Replaces ${BUFF_OPTIONS.find(b=>b.id===pair.find(id=>id!==option.id))?.name}.`),buffDefinition(option.id).reason]});
    attachTooltip(label,buffTip);attachTooltip(label.querySelector('.buff-box'),()=>conflictTip(buffConflicts(option.id),buffTip));
-   checkboxes.set(option.id,input);buffRows.set(option.id,{row:label,input,option});body.append(label);paintRow(label,input,buffRestriction(option,getBuild()),buffConflicts(option.id));
+   checkboxes.set(option.id,input);buffRows.set(option.id,{row:label,input,option});body.append(label);paintRow(label,input,buffScenarioRestriction(option,getBuild()),buffConflicts(option.id));
    if(option.id==='tea'){
     const threshold=node('label',undefined,'tea-threshold');threshold.append(node('span','Use at <'));
     const field=node('input');field.type='number';field.min=0;field.max=100;field.id='tea-threshold';field.setAttribute('aria-label','Thistle Tea energy threshold');field.disabled=input.disabled;field.addEventListener('change',()=>{try{update({teaThreshold:Number(field.value)});}catch{field.value=getBuild().controls.teaThreshold;}});
     threshold.append(field,node('span','energy'));body.append(threshold);
    }
   }
-  $('buff-list').append(section);
+  if(group.id!=='world')$('buff-list').append(section);
  }
  // Names are measured while their section is visible, so re-measure whenever the panel is resized, opened or expanded.
  if(typeof ResizeObserver==='function'&&$('buffs'))new ResizeObserver(()=>scheduleScrollingNames($('buffs'))).observe($('buffs'));
- function renderChecks(){for(const [id,input] of checkboxes){input.checked=getBuild().controls.buffIds.includes(id);const {row,option}=buffRows.get(id);paintRow(row,input,buffRestriction(option,getBuild()),buffConflicts(id));}if($('tea-threshold'))$('tea-threshold').value=getBuild().controls.teaThreshold;renderAdditional();}
+ function renderChecks(){for(const [id,input] of checkboxes){input.checked=getBuild().controls.buffIds.includes(id);const {row,option}=buffRows.get(id);paintRow(row,input,buffScenarioRestriction(option,getBuild()),buffConflicts(id));}if($('tea-threshold'))$('tea-threshold').value=getBuild().controls.teaThreshold;renderAdditional();}
  const extraActions=node('div',undefined,'buff-actions');
  extraActions.append(button('Clear All',()=>{update({consumableIds:[]});renderChecks();},'Clear all consumables'));
  const {section:extra,body:extraBody}=collapsible('class-consumables','All Consumables',{open:false,actions:extraActions});extra.classList.add('additional-consumables');
  const search=node('input');search.type='search';search.placeholder='Search consumables…';search.setAttribute('aria-label','Search all consumables');
  const kind=select(['All','Potion','Flask','Elixir','Rune','Bandage','Food & Utility'].map(v=>[v,v]),'All','Consumable type');
- const count=node('div',undefined,'small muted'),list=node('div',undefined,'additional-consumable-list');extraBody.append(search,kind,count,list);$('buff-list').append(extra);
+ const count=node('div',undefined,'small muted'),list=node('div',undefined,'additional-consumable-list');extraBody.append(search,kind,count,list);$('buff-list').append(extra);if(worldSection)$('buff-list').append(worldSection);
  function renderAdditional(){
   const build=getBuild(),query=search.value.trim().toLowerCase(),selected=build.controls.consumableIds||[];
   const candidates=orderConsumables(CONSUMABLES.filter(item=>!item.buffId&&item.verified&&!consumableRestriction(item,build)&&(kind.value==='All'||item.category===kind.value)&&(!query||item.name.toLowerCase().includes(query)||String(item.id)===query)));
@@ -103,7 +105,7 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
    paintRow(row,input,null,consumableConflicts(item));
    const text=nameCell(item.name,consumableIcon(item)),effect=effectCell(item.requiredLevel?`Lv ${item.requiredLevel}`:'');row.append(boxCell(input),text,effect);
    input.addEventListener('change',()=>{const current=getBuild().controls.consumableIds||[];update({consumableIds:input.checked?selectConsumable(current,item.id):current.filter(id=>id!==item.id)});renderChecks();});
-   const itemTip=()=>({title:item.name,lines:[...item.effects,stackingNote(item),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]});
+   const itemTip=()=>({title:item.name,lines:[...item.effects,stackingNote(item),...getBuild().controls.buffIds.flatMap(id=>{const conflict=sharedConsumableConflict(id,item);return conflict?[`Replaces ${BUFF_OPTIONS.find(b=>b.id===id)?.name||id} (${conflict.evidence}).`]:[]}),...(item.durationSeconds?[`Duration: ${item.durationSeconds} seconds.`]:[]),'Item cooldown and shared category require server verification. Timed effects are not yet supported by a combat engine.',item.source]});
    attachTooltip(row,itemTip);attachTooltip(row.querySelector('.buff-box'),()=>conflictTip(consumableConflicts(item),itemTip));list.append(row);
   }
   if(focusedId)list.querySelector(`input[value="${focusedId}"]`)?.focus({preventScroll:true});
@@ -191,5 +193,5 @@ export function configuration({getBuild,onChange,getTalents=()=>null,lookupGear=
   try{update({[key]:key==='variability'?$(id).checked:Number($(id).value)});$('key-variability-ms').disabled=!getBuild().controls.variability;}catch{render();}
  });
  function render(){renderChecks();choices();renderRows();const controls=getBuild().controls;roleSelect.value=controls.rotationRole||'dps';for(const [id,key] of [['key-interval','keyInterval'],['key-variability-ms','variabilityMs']])$(id).value=controls[key];$('key-variability').checked=controls.variability;$('key-variability-ms').disabled=!controls.variability;$('rotation-description').textContent=ROTATION_PRESETS.find(p=>p.id===controls.rotationPreset)?.description||'';refreshCompatibility();}
- return {render,refreshCompatibility};
+ return {render,renderChecks,refreshCompatibility};
 }

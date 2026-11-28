@@ -1,0 +1,5 @@
+## Interface: 11200
+## Title: OctoSim Capture
+## Notes: Manual evidence collection for OctoSim research
+## SavedVariables: OctoSimCaptures
+OctoSimCapture.lua

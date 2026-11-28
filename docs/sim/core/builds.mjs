@@ -1,11 +1,11 @@
 import { maxEnergy } from './resources.mjs?v=1';
-import {TRINKET_SWAP_MODES,defaultTrinketSwap,validateTrinketSwap} from './trinket-swaps.mjs?v=20261113-swaps1';
-import {resolveConsumableSelection,CONSUMABLE_BY_ID,consumableRestriction} from './consumables.mjs?v=20261130-ui2';
-import {validRace,slotAllowed,CLASS_RACES} from './class-rules.mjs?v=20261112-audit1';
+import {TRINKET_SWAP_MODES,defaultTrinketSwap,validateTrinketSwap} from './trinket-swaps.mjs?v=20261128-merge1';
+import {resolveConsumableSelection,CONSUMABLE_BY_ID,consumableRestriction} from './consumables.mjs?v=20261128-merge1';
+import {validRace,slotAllowed,CLASS_RACES} from './class-rules.mjs?v=20261128-merge1';
 import {defaultClassOptions,validateClassOptions} from './class-options.mjs?v=20261201-ui3';
-import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261202-buildnames2';
-import { validEnchant } from './equipment-options.mjs?v=20261130-ui2';
-import { TARGET_IDS } from './targets.mjs?v=20261111-classes1';
+import { classDefinition, PRIMARY_PROFESSIONS, SECONDARY_SKILLS } from './classes.mjs?v=20261128-merge1';
+import { validEnchant } from './equipment-options.mjs?v=20261128-merge1';
+import { TARGET_IDS } from './targets.mjs?v=20261128-merge1';
 import { defaultControls, validateControls, BUFF_OPTIONS, buffRestriction } from './configuration.mjs?v=20261201-ui3';
 import { validateTalents } from './talents.mjs?v=20261112-audit1';
 
@@ -18,7 +18,7 @@ export const SLOTS = Object.freeze({
 export function newBuild(classId='warrior') {
   const cls=classDefinition(classId);
   return { schemaVersion: 1, classId, name: `My ${cls.name} Build`, level: 60,
-    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, ...(TRINKET_SWAP_MODES[classId]?{trinketSwap:defaultTrinketSwap()}:{}), controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'heroic-dummy', targetEnergyPerSecond: 0 } };
+    race: cls.race, skills:{}, classOptions:defaultClassOptions(classId), talents: {}, gear: {}, ...(TRINKET_SWAP_MODES[classId]?{trinketSwap:defaultTrinketSwap()}:{}), controls: defaultControls(), planning: { buffs: '', debuffs: '', rotation: '', duration: 60, iterations: 1000, targetLevel: 63, targetArmour: 4211, durationVary: false, durationVariation: 20, targetNatureRes: 0, targetFireRes: 0, targetFrostRes: 0, targetShadowRes: 0, targetArcaneRes: 0, targetPreset: 'heroic-dummy', customRaid:false, targetEnergyPerSecond: 0 } };
 }
 
 export function parseItemReference(input) {
@@ -84,6 +84,8 @@ export function validateBuild(input, data) {
   if (typeof planning.durationVary !== 'boolean') throw new Error('Invalid fight duration variation.');
   planning.targetPreset = input.planning?.targetPreset ?? 'custom';
   if (!TARGET_IDS.includes(planning.targetPreset)) throw new Error('Unknown target preset.');
+  planning.customRaid=input.planning?.customRaid??false;
+  if(typeof planning.customRaid!=='boolean')throw new Error('Invalid custom encounter type.');
   const classOptions=validateClassOptions(input.classOptions,input.classId,{energyCap:maxEnergy(input.classId,data,input.talents)});
   const trinketSwap=validateTrinketSwap(input.trinketSwap,input.classId,classOptions);
   if(input.classId==='rogue')for(const [hand,key] of [['mh','mhPoison'],['oh','ohPoison']])if(classOptions[key]!=='None'&&input.controls?.buffIds?.includes(`wizard-oil-${hand}`))throw new Error('A weapon cannot have both poison and wizard oil.');

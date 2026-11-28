@@ -1,0 +1,1326 @@
+{
+ "schema": "octosim-chronicle-spell-review-v1",
+ "provenance": {
+  "reportUrl": "https://octo.chronicleclassic.com/instances/DU_nwbg0KMg5F6Tu",
+  "clientBuild": "7272",
+  "realm": "N'Zoth",
+  "date": "2026-11-19",
+  "stream": "damage"
+ },
+ "reviewedOn": "2026-11-22",
+ "unit": "hits (not casts)",
+ "summary": {
+  "reviewed": 65,
+  "catalogue-entry": 51,
+  "excluded": 10,
+  "disputed": 4
+ },
+ "notReviewed": {
+  "rows": 62,
+  "hits": 21008,
+  "auto": 9,
+  "cross": 53
+ },
+ "entries": [
+  {
+   "spellId": 11337,
+   "classId": "rogue",
+   "label": "Instant Poison VI",
+   "hits": 4404,
+   "distinctCasters": 3,
+   "db": {
+    "name": "Instant Poison VI",
+    "rank": "Rank 6",
+    "level": 60,
+    "school": "Nature",
+    "effects": "School Damage 112"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Rogue weapon poison; the page shows direct Nature damage and no proc wording, so proc behaviour is inferred from the spell family.",
+   "source": "https://octowow.st/db/?spell=11337",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 11682,
+   "classId": "warlock",
+   "label": "Hellfire Effect",
+   "hits": 2457,
+   "distinctCasters": 4,
+   "db": {
+    "name": "Hellfire Effect",
+    "rank": "Rank 3",
+    "level": 54,
+    "school": "Fire",
+    "effects": "School Damage 208, radius 10 yd"
+   },
+   "classification": "periodic-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Tick damage of the channelled Warlock Hellfire; the page shows a direct area damage effect, so the tick behaviour is inferred.",
+   "source": "https://octowow.st/db/?spell=11682",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51714,
+   "classId": "warlock",
+   "label": "Power Overwhelming",
+   "hits": 1912,
+   "distinctCasters": 3,
+   "db": {
+    "name": "Power Overwhelming",
+    "rank": null,
+    "level": 40,
+    "school": "Physical",
+    "effects": "Mod Scale; Mod Dmg % 20; Periodic Damage Percent; 10 s; 14 s cooldown; self"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Castable demon cooldown (instant, 80 mana). Already a published identity in the simulator.",
+   "source": "https://octowow.st/db/?spell=51714",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 12721,
+   "classId": "warrior",
+   "label": "Deep Wound",
+   "hits": 1470,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Deep Wound",
+    "rank": null,
+    "level": 1,
+    "school": "Physical",
+    "effects": "Apply Aura Periodic Damage, 3 s interval, 12 s"
+   },
+   "classification": "periodic-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Bleed applied by the Warrior talent Deep Wounds (12868).",
+   "source": "https://octowow.st/db/?spell=12721",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 25228,
+   "classId": "warlock",
+   "label": "Soul Link",
+   "hits": 1375,
+   "distinctCasters": 3,
+   "db": {
+    "name": "Soul Link",
+    "rank": null,
+    "level": 40,
+    "school": "Shadow",
+    "effects": "Mod Dmg % 3; Split Damage 30%, 100 yd"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Warlock talent that redirects 30% of damage taken to the demon. Logged events are redirected incoming damage, not outgoing DPS, and must not be compared with simulated damage.",
+   "source": "https://octowow.st/db/?spell=25228",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51977,
+   "classId": "mage",
+   "label": "Arcane Instability",
+   "hits": 1362,
+   "distinctCasters": 4,
+   "db": {
+    "name": "Arcane Instability",
+    "rank": null,
+    "level": 0,
+    "school": "Arcane",
+    "effects": "School Damage (no value shown)"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom OctoWoW spell: level 0, no cast, no description. Damage-proc class is inferred and the mechanic is unverified.",
+   "source": "https://octowow.st/db/?spell=51977",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51810,
+   "classId": "paladin",
+   "label": "Divine Strike",
+   "hits": 1339,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Divine Strike",
+    "rank": null,
+    "level": 1,
+    "school": "Holy",
+    "effects": "School Damage 3 (extra Holy damage)"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Extra damage on hit of 3 Holy; trigger source unverified (one caster in this report).",
+   "source": "https://octowow.st/db/?spell=51810",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 10333,
+   "classId": "paladin",
+   "label": "Holy Strike",
+   "hits": 905,
+   "distinctCasters": 5,
+   "db": {
+    "name": "zzOLDHoly Strike",
+    "rank": "Rank 8",
+    "level": 99,
+    "school": "Holy",
+    "effects": "Weapon Damage + 201"
+   },
+   "classification": "proc",
+   "disposition": "disputed",
+   "confidence": "db",
+   "reason": "Kept disputed by instruction: the database lists a deprecated level-99 name while players cast it live. Unresolved until authoritative evidence.",
+   "source": "https://octowow.st/db/?spell=10333",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 22600,
+   "classId": "paladin",
+   "label": "Force Reactive Disk",
+   "hits": 672,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Force Reactive Disk",
+    "rank": null,
+    "level": 0,
+    "school": "Nature",
+    "effects": "School Damage 25, radius 5; Trigger Spell"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "Item effect; belongs to the item-effect catalogue, not class abilities.",
+   "source": "https://octowow.st/db/?spell=22600",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 3668,
+   "classId": "hunter",
+   "label": "Steady Shot",
+   "hits": 604,
+   "distinctCasters": 2,
+   "db": {
+    "name": "zzOLDTrueshot",
+    "rank": "Rank 5",
+    "level": 99,
+    "school": "n/a",
+    "effects": "Weapon Damage + 50"
+   },
+   "classification": "active-ability",
+   "disposition": "disputed",
+   "confidence": "db",
+   "reason": "Kept disputed by instruction: the database names this ID a different spell than the Chronicle label Steady Shot.",
+   "source": "https://octowow.st/db/?spell=3668",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 21992,
+   "classId": "paladin",
+   "label": "Thunderfury",
+   "hits": 473,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Thunderfury",
+    "rank": null,
+    "level": 63,
+    "school": "Nature",
+    "effects": "School Damage 300; Mod Resistance; Trigger Spell"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "Legendary weapon proc; belongs to the item-effect catalogue.",
+   "source": "https://octowow.st/db/?spell=21992",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 49557,
+   "classId": "hunter",
+   "label": "Strike Together",
+   "hits": 467,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Strike Together",
+    "rank": null,
+    "level": 0,
+    "school": "Physical",
+    "effects": "School Damage, 20% of Attack Power"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Hunter damage effect scaling with Attack Power; trigger source unverified.",
+   "source": "https://octowow.st/db/?spell=49557",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 7712,
+   "classId": "paladin",
+   "label": "Fire Strike",
+   "hits": 380,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Fire Strike",
+    "rank": null,
+    "level": 1,
+    "school": "Fire",
+    "effects": "School Damage 2 (extra Fire damage)"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Extra damage on hit of 2 Fire on a Paladin; trigger source unverified and it may be a gear effect.",
+   "source": "https://octowow.st/db/?spell=7712",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 23402,
+   "classId": "priest",
+   "label": "Corrupted Healing",
+   "hits": 372,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Corrupted Healing",
+    "rank": null,
+    "level": 0,
+    "school": "Shadow",
+    "effects": "Periodic Damage 175 per second, 30 s"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "inferred",
+   "reason": "Level-0 periodic affliction damaging the afflicted player; encounter-style effect, not player DPS.",
+   "source": "https://octowow.st/db/?spell=23402",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 44095,
+   "classId": "mage",
+   "label": "Ancient Accord",
+   "hits": 317,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Ancient Accord",
+    "rank": null,
+    "level": 60,
+    "school": "Arcane",
+    "effects": "School Damage 300 to target; 100 radius 10 yd"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Mage damage effect; trigger source unverified.",
+   "source": "https://octowow.st/db/?spell=44095",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51514,
+   "classId": "hunter",
+   "label": "Piercing Shots",
+   "hits": 302,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Piercing Shots",
+    "rank": null,
+    "level": 4,
+    "school": "Physical",
+    "effects": "Apply Aura Periodic Damage, 2 s interval, 8 s bleed"
+   },
+   "classification": "periodic-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Hunter bleed effect lasting 8 s.",
+   "source": "https://octowow.st/db/?spell=51514",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 20286,
+   "classId": "paladin",
+   "label": "Judgement of Righteousness",
+   "hits": 252,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Judgement of Righteousness",
+    "rank": "Rank 8",
+    "level": 58,
+    "school": "Holy",
+    "effects": "School Damage 162; Dummy"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Judgement damage of Seal of Righteousness, triggered by casting Judgement.",
+   "source": "https://octowow.st/db/?spell=20286",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 20966,
+   "classId": "paladin",
+   "label": "Judgement of Command",
+   "hits": 214,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Judgement of Command",
+    "rank": "Rank 5",
+    "level": 60,
+    "school": "Holy",
+    "effects": "School Damage 339"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Judgement damage of Seal of Command, triggered by casting Judgement.",
+   "source": "https://octowow.st/db/?spell=20966",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 52511,
+   "classId": "rogue",
+   "label": "Surprise Attack",
+   "hits": 191,
+   "distinctCasters": 3,
+   "db": {
+    "name": "Surprise Attack",
+    "rank": null,
+    "level": 1,
+    "school": "Physical",
+    "effects": "School Damage, 25% of Attack Power; Add Combo Points"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Custom Rogue ability, usable after the target dodges, awards one combo point.",
+   "source": "https://octowow.st/db/?spell=52511",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51560,
+   "classId": "paladin",
+   "label": "Repent",
+   "hits": 181,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Repent",
+    "rank": "Rank 3",
+    "level": 40,
+    "school": "Holy",
+    "effects": "School Damage 160; 0.5 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Custom Paladin ranked damage ability. Distinct from Repentance (51558).",
+   "source": "https://octowow.st/db/?spell=51560",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 52865,
+   "classId": "druid",
+   "label": "Midnight Comet",
+   "hits": 169,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Midnight Comet",
+    "rank": null,
+    "level": 0,
+    "school": "Arcane",
+    "effects": "School Damage (no value shown)"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Druid Arcane damage effect (level 0, no description); trigger source unverified.",
+   "source": "https://octowow.st/db/?spell=52865",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 52899,
+   "classId": "paladin",
+   "label": "Hallowed Ground",
+   "hits": 159,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Hallowed Ground",
+    "rank": null,
+    "level": 1,
+    "school": "Holy",
+    "effects": "School Damage 96 radius 8 yd; Mod Speed Slow -10, 4 s"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Paladin area damage and slow; trigger source unverified.",
+   "source": "https://octowow.st/db/?spell=52899",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51519,
+   "classId": "hunter",
+   "label": "Extra Shot",
+   "hits": 134,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Extra Shot",
+    "rank": null,
+    "level": 1,
+    "school": "Physical",
+    "effects": "Weapon Damage +"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Hunter extra ranged shot; trigger source unverified.",
+   "source": "https://octowow.st/db/?spell=51519",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 58112,
+   "classId": "hunter",
+   "label": "Explosive Ammunition",
+   "hits": 74,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Explosive Ammunition",
+    "rank": null,
+    "level": 0,
+    "school": "Fire",
+    "effects": "Weapon % Dmg 20, radius 5 yd"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Damage effect likely triggered by an ammunition mode. Two IDs share this name (58109 and 58112) and are kept as separate identities.",
+   "source": "https://octowow.st/db/?spell=58112",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 7373,
+   "classId": "warrior",
+   "label": "Hamstring",
+   "hits": 72,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Hamstring",
+    "rank": "Rank 3",
+    "level": 54,
+    "school": "Physical",
+    "effects": "School Damage; Mod Speed Slow 50%, 15 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Warrior ability.",
+   "source": "https://octowow.st/db/?spell=7373",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 58111,
+   "classId": "hunter",
+   "label": "Enchanted Ammunition",
+   "hits": 49,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Enchanted Ammunition",
+    "rank": null,
+    "level": 0,
+    "school": "Arcane",
+    "effects": "School Damage; Add Class Target Trigger; Add % Modifier; 60 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Hunter ammunition mode (60 s aura). The same ID also carries damage, so whether logged hits are the mode or its trigger is unresolved.",
+   "source": "https://octowow.st/db/?spell=58111",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 58110,
+   "classId": "hunter",
+   "label": "Poisonous Ammunition",
+   "hits": 48,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Poisonous Ammunition",
+    "rank": null,
+    "level": 0,
+    "school": "Nature",
+    "effects": "School Damage; Add Class Target Trigger; Add % Modifier; 60 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Hunter ammunition mode (60 s aura); same ambiguity as Enchanted Ammunition.",
+   "source": "https://octowow.st/db/?spell=58110",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 58109,
+   "classId": "hunter",
+   "label": "Explosive Ammunition",
+   "hits": 37,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Explosive Ammunition",
+    "rank": null,
+    "level": 0,
+    "school": "Fire",
+    "effects": "School Damage; Add Class Target Trigger; Dummy; 60 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Custom Hunter ammunition mode (60 s aura); same ambiguity as the other ammunition IDs.",
+   "source": "https://octowow.st/db/?spell=58109",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 20615,
+   "classId": "warrior",
+   "label": "Intercept Stun",
+   "hits": 32,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Intercept Stun",
+    "rank": "Rank 3",
+    "level": 1,
+    "school": "Physical",
+    "effects": "Stun 3 s; School Damage 65"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Secondary stun and damage applied by the Intercept charge; not separately castable.",
+   "source": "https://octowow.st/db/?spell=20615",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 20729,
+   "classId": "paladin",
+   "label": "Hand of Sacrifice",
+   "hits": 27,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Blessing of Sacrifice",
+    "rank": "Rank 2",
+    "level": 54,
+    "school": "Holy",
+    "effects": "Split Damage Flat 55, 30 s"
+   },
+   "classification": "active-ability",
+   "disposition": "disputed",
+   "confidence": "db",
+   "reason": "Disputed: the log says Hand of Sacrifice, the database says Blessing of Sacrifice. The same spell family is plausible but the renaming is unverified, so no guess.",
+   "source": "https://octowow.st/db/?spell=20729",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51558,
+   "classId": "paladin",
+   "label": "Repentance",
+   "hits": 27,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Repentance",
+    "rank": "Rank 3",
+    "level": 60,
+    "school": "Holy",
+    "effects": "Stun 6 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Paladin crowd-control ability.",
+   "source": "https://octowow.st/db/?spell=51558",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 10318,
+   "classId": "paladin",
+   "label": "Holy Wrath",
+   "hits": 26,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Holy Wrath",
+    "rank": "Rank 2",
+    "level": 60,
+    "school": "Holy",
+    "effects": "School Damage 490, radius 20 yd; 2 s cast"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Paladin area ability against Undead and Demons.",
+   "source": "https://octowow.st/db/?spell=10318",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51566,
+   "classId": "paladin",
+   "label": "Bulwark of the Righteous",
+   "hits": 18,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Bulwark of the Righteous",
+    "rank": "Rank 3",
+    "level": 60,
+    "school": "Holy",
+    "effects": "School Damage 556; Mod Dmg % Taken -30, 12 s"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Custom Paladin ability: Holy damage and a 12 s damage-taken reduction.",
+   "source": "https://octowow.st/db/?spell=51566",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 52948,
+   "classId": "paladin",
+   "label": "Simple Slingshot",
+   "hits": 16,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Simple Slingshot",
+    "rank": null,
+    "level": 0,
+    "school": "Physical",
+    "effects": "School Damage 1-3; 0.5 s cast; 6 s cooldown"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "Item-use ranged attack; belongs to the item catalogue.",
+   "source": "https://octowow.st/db/?spell=52948",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 1769,
+   "classId": "rogue",
+   "label": "Kick",
+   "hits": 15,
+   "distinctCasters": 3,
+   "db": {
+    "name": "Kick",
+    "rank": "Rank 4",
+    "level": 58,
+    "school": "Physical",
+    "effects": "School Damage 80; Interrupt Cast"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Rogue interrupt.",
+   "source": "https://octowow.st/db/?spell=1769",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 57707,
+   "classId": "priest",
+   "label": "Pain Spike",
+   "hits": 14,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Pain Spike",
+    "rank": "Rank 4",
+    "level": 60,
+    "school": "Shadow",
+    "effects": "School Damage 333; Dummy"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Custom Priest ability (30 s category cooldown).",
+   "source": "https://octowow.st/db/?spell=57707",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 10308,
+   "classId": "paladin",
+   "label": "Hammer of Justice",
+   "hits": 12,
+   "distinctCasters": 4,
+   "db": {
+    "name": "Hammer of Justice",
+    "rank": "Rank 4",
+    "level": 54,
+    "school": "Holy",
+    "effects": "Stun 6 s; 60 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Paladin stun.",
+   "source": "https://octowow.st/db/?spell=10308",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 16922,
+   "classId": "druid",
+   "label": "Starfire Stun",
+   "hits": 12,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Starfire Stun",
+    "rank": null,
+    "level": 0,
+    "school": "Physical",
+    "effects": "Stun 3 s"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Stun riding on Starfire; talent link is inferred from the name.",
+   "source": "https://octowow.st/db/?spell=16922",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 6552,
+   "classId": "warrior",
+   "label": "Pummel",
+   "hits": 11,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Pummel",
+    "rank": "Rank 1",
+    "level": 38,
+    "school": "Physical",
+    "effects": "School Damage 20; Interrupt Cast"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Warrior interrupt.",
+   "source": "https://octowow.st/db/?spell=6552",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 51302,
+   "classId": "paladin",
+   "label": "Hand of Reckoning",
+   "hits": 10,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Hand of Reckoning",
+    "rank": null,
+    "level": 10,
+    "school": "Physical",
+    "effects": "Attack Me; Taunt 3 s; 10 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Custom Paladin taunt.",
+   "source": "https://octowow.st/db/?spell=51302",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 8983,
+   "classId": "druid",
+   "label": "Bash",
+   "hits": 7,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Bash",
+    "rank": "Rank 3",
+    "level": 46,
+    "school": "Physical",
+    "effects": "Stun 4 s; 60 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Druid stun.",
+   "source": "https://octowow.st/db/?spell=8983",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 12868,
+   "classId": "warrior",
+   "label": "Deep Wounds",
+   "hits": 6,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Deep Wounds",
+    "rank": "Rank 3",
+    "level": 1,
+    "school": "Physical",
+    "effects": "Dummy"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Warrior talent that triggers the Deep Wound bleed (12721).",
+   "source": "https://octowow.st/db/?spell=12868",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 46771,
+   "classId": "paladin",
+   "label": "Thorns Fire Dmg +4",
+   "hits": 5,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Thorns Fire Dmg +4",
+    "rank": "Rank 1",
+    "level": 55,
+    "school": "Fire",
+    "effects": "Damage Shield 4"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "Gear or enchant damage shield; belongs to the item catalogue.",
+   "source": "https://octowow.st/db/?spell=46771",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 2139,
+   "classId": "mage",
+   "label": "Counterspell",
+   "hits": 4,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Counterspell",
+    "rank": null,
+    "level": 24,
+    "school": "Arcane",
+    "effects": "Interrupt Cast; 30 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Mage interrupt.",
+   "source": "https://octowow.st/db/?spell=2139",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 6795,
+   "classId": "druid",
+   "label": "Growl",
+   "hits": 4,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Growl",
+    "rank": null,
+    "level": 10,
+    "school": "Physical",
+    "effects": "Attack Me; Taunt 3 s; 10 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Taunt. Owning class is taken from the log caster, the database does not state it.",
+   "source": "https://octowow.st/db/?spell=6795",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 8643,
+   "classId": "rogue",
+   "label": "Kidney Shot",
+   "hits": 4,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Kidney Shot",
+    "rank": "Rank 2",
+    "level": 50,
+    "school": "Physical",
+    "effects": "Stun; Dummy; Mod Dmg % Taken"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Rogue finisher.",
+   "source": "https://octowow.st/db/?spell=8643",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 11374,
+   "classId": "paladin",
+   "label": "Gift of Arthas",
+   "hits": 4,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Gift of Arthas",
+    "rank": null,
+    "level": 45,
+    "school": "Nature",
+    "effects": "Mod Damage Taken +8, 180 s"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "External debuff modifier with no damage effect; not a class mechanic.",
+   "source": "https://octowow.st/db/?spell=11374",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 27860,
+   "classId": "mage",
+   "label": "Engulfing Shadows",
+   "hits": 4,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Engulfing Shadows",
+    "rank": null,
+    "level": 55,
+    "school": "Shadow",
+    "effects": "School Damage 100; Energize 100; 1.5 s cast"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "inferred",
+   "reason": "No description; Shadow damage plus an energize looks like an item or encounter effect. Origin unresolved, so left excluded.",
+   "source": "https://octowow.st/db/?spell=27860",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 19253,
+   "classId": "priest",
+   "label": "Touch of Weakness",
+   "hits": 3,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Touch of Weakness",
+    "rank": "Rank 5",
+    "level": 50,
+    "school": "Shadow",
+    "effects": "School Damage 48; Mod Damage Done -15, 120 s"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Damage when the Priest is hit under the Touch of Weakness buff; trigger inferred from the spell family.",
+   "source": "https://octowow.st/db/?spell=19253",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 1833,
+   "classId": "rogue",
+   "label": "Cheap Shot",
+   "hits": 2,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Cheap Shot",
+    "rank": null,
+    "level": 26,
+    "school": "Physical",
+    "effects": "Stun 4 s; Add Combo Points"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Rogue stealth opener.",
+   "source": "https://octowow.st/db/?spell=1833",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 10332,
+   "classId": "paladin",
+   "label": "Holy Strike",
+   "hits": 2,
+   "distinctCasters": 1,
+   "db": {
+    "name": "zzOLDHoly Strike",
+    "rank": "Rank 7",
+    "level": 99,
+    "school": "Holy",
+    "effects": "Weapon Damage + 157"
+   },
+   "classification": "proc",
+   "disposition": "disputed",
+   "confidence": "db",
+   "reason": "Kept disputed by instruction: same deprecated level-99 naming as 10333.",
+   "source": "https://octowow.st/db/?spell=10332",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 10912,
+   "classId": "priest",
+   "label": "Mind Control",
+   "hits": 2,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Mind Control",
+    "rank": "Rank 3",
+    "level": 58,
+    "school": "Shadow",
+    "effects": "Mod Possess; Haste - Melee; channelled"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Priest crowd-control ability.",
+   "source": "https://octowow.st/db/?spell=10912",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 14278,
+   "classId": "rogue",
+   "label": "Ghostly Strike",
+   "hits": 2,
+   "distinctCasters": 2,
+   "db": {
+    "name": "Ghostly Strike",
+    "rank": null,
+    "level": 0,
+    "school": "Physical",
+    "effects": "Weapon % Dmg 125; Mod Dodge 15%, 7 s; Add Combo Points; 20 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Rogue ability.",
+   "source": "https://octowow.st/db/?spell=14278",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 23478,
+   "classId": "paladin",
+   "label": "Burning Adrenaline",
+   "hits": 2,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Burning Adrenaline",
+    "rank": null,
+    "level": 0,
+    "school": "Fire",
+    "effects": "School Damage 2188, radius 10 yd, range 50000 yd"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "inferred",
+   "reason": "Level-0 spell with an enormous range and damage; encounter-style debuff, not player DPS.",
+   "source": "https://octowow.st/db/?spell=23478",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 28382,
+   "classId": "priest",
+   "label": "Shadowguard",
+   "hits": 2,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Shadowguard",
+    "rank": "Rank 6",
+    "level": 60,
+    "school": "Shadow",
+    "effects": "School Damage 116"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Shadow bolt fired when the Priest is hit under Shadowguard; trigger inferred from the spell family.",
+   "source": "https://octowow.st/db/?spell=28382",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 355,
+   "classId": "warrior",
+   "label": "Taunt",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Taunt",
+    "rank": null,
+    "level": 10,
+    "school": "Physical",
+    "effects": "Attack Me; Taunt 3 s; 10 s cooldown"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Warrior taunt.",
+   "source": "https://octowow.st/db/?spell=355",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 7321,
+   "classId": "mage",
+   "label": "Chilled",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Chilled",
+    "rank": "Rank 1",
+    "level": 30,
+    "school": "Frost",
+    "effects": "Haste - Melee -25; Mod Speed Slow -30, 5 s"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Chill effect applied when a Mage is hit under Frost Armor; inferred from the name.",
+   "source": "https://octowow.st/db/?spell=7321",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 7922,
+   "classId": "warrior",
+   "label": "Charge Stun",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Charge Stun",
+    "rank": null,
+    "level": 1,
+    "school": "Physical",
+    "effects": "Stun 1 s"
+   },
+   "classification": "proc",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Secondary stun applied by the Warrior Charge.",
+   "source": "https://octowow.st/db/?spell=7922",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 11286,
+   "classId": "rogue",
+   "label": "Gouge",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Gouge",
+    "rank": "Rank 5",
+    "level": 60,
+    "school": "Physical",
+    "effects": "School Damage 75; Stun; Add Combo Points"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Rogue ability.",
+   "source": "https://octowow.st/db/?spell=11286",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 12355,
+   "classId": "mage",
+   "label": "Impact",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Impact",
+    "rank": "Rank 1",
+    "level": 10,
+    "school": "Fire",
+    "effects": "Stun 2 s"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Stun effect of the Impact talent; inferred from the name.",
+   "source": "https://octowow.st/db/?spell=12355",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 12826,
+   "classId": "mage",
+   "label": "Polymorph",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Polymorph",
+    "rank": "Rank 4",
+    "level": 60,
+    "school": "Arcane",
+    "effects": "Mod Confuse; Transform; 1.5 s cast"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Mage crowd-control ability.",
+   "source": "https://octowow.st/db/?spell=12826",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 18469,
+   "classId": "mage",
+   "label": "Counterspell - Silenced",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Counterspell - Silenced",
+    "rank": null,
+    "level": 0,
+    "school": "Arcane",
+    "effects": "Silence 4 s"
+   },
+   "classification": "talent-effect",
+   "disposition": "catalogue-entry",
+   "confidence": "inferred",
+   "reason": "Silence effect of Improved Counterspell; inferred from the name.",
+   "source": "https://octowow.st/db/?spell=18469",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 18658,
+   "classId": "druid",
+   "label": "Hibernate",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Hibernate",
+    "rank": "Rank 3",
+    "level": 58,
+    "school": "Nature",
+    "effects": "Stun; 1.5 s cast"
+   },
+   "classification": "active-ability",
+   "disposition": "catalogue-entry",
+   "confidence": "db",
+   "reason": "Druid crowd-control ability.",
+   "source": "https://octowow.st/db/?spell=18658",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 23418,
+   "classId": "paladin",
+   "label": "Siphon Blessing",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Siphon Blessing",
+    "rank": null,
+    "level": 0,
+    "school": "Shadow",
+    "effects": "Periodic Trigger 5 s, radius 100 yd"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "inferred",
+   "reason": "Level-0 periodic trigger tied to a blessing spell; encounter-style effect, not player DPS.",
+   "source": "https://octowow.st/db/?spell=23418",
+   "reviewedOn": "2026-11-22"
+  },
+  {
+   "spellId": 27869,
+   "classId": "shaman",
+   "label": "Dark Rune",
+   "hits": 1,
+   "distinctCasters": 1,
+   "db": {
+    "name": "Dark Rune",
+    "rank": null,
+    "level": 58,
+    "school": "Shadow",
+    "effects": "Energize 900-1501 mana; costs 600-1001 health"
+   },
+   "classification": "excluded-event",
+   "disposition": "excluded",
+   "confidence": "db",
+   "reason": "Consumable; not an ability.",
+   "source": "https://octowow.st/db/?spell=27869",
+   "reviewedOn": "2026-11-22"
+  }
+ ]
+}

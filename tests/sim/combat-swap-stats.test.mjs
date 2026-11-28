@@ -1,0 +1,24 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {swapStatModifiers} from '../../docs/sim/core/combat-swap-stats.mjs';
+const before={attackPower:100,healingPower:10,spellPower:10,schools:{fire:10},health:100,melee:{mainhand:{min:20,max:30,damage:'20-30',baseSpeedSeconds:2,handMultiplier:1},offhand:{damage:'0-0'}}};
+test('AP and spell power swaps propagate only supported formula deltas',()=>{const after=structuredClone(before);after.attackPower=170;after.schools.fire=30;after.melee.mainhand.min+=10;after.melee.mainhand.max+=10;assert.deepEqual(swapStatModifiers(before,after),[{stat:'attackPower',mode:'flat',value:70},{stat:'fire',mode:'flat',value:20}]);after.health=200;assert.throws(()=>swapStatModifiers(before,after),/Unsupported/);});
+
+test('optional global crit and hit swaps use dynamic deltas',()=>{const a={...structuredClone(before),spell:{missPct:10,critPct:10}};a.melee.hitPct=1;a.melee.mainhand.critPct=10;const b=structuredClone(a);b.spell.missPct=9;b.spell.critPct=12;b.melee.hitPct=2;b.melee.mainhand.critPct=13;assert.deepEqual(swapStatModifiers(a,b,{allowCritHit:true,acknowledgeUnverified:true}).map(x=>[x.stat,x.value]),[['spellHitDeltaPct',1],['spellCritDeltaPct',2],['meleeHitDeltaPct',1],['meleeCritDeltaPct',3]]);});
+
+test('explicit ranged swap changes preserve fixed weapon geometry',()=>{const a={...structuredClone(before),ranged:{observedAP:400,hitBonusPct:2,critBonusPct:3,baseSpeedSeconds:3}};const b=structuredClone(a);b.ranged.observedAP+=70;b.ranged.hitBonusPct++;b.ranged.critBonusPct+=2;assert.deepEqual(swapStatModifiers(a,b,{allowRangedHitCrit:true,acknowledgeUnverified:true}).map(x=>[x.stat,x.value]),[['rangedAP',70],['rangedHitDeltaPct',1],['rangedCritDeltaPct',2]]);b.ranged.baseSpeedSeconds=2;assert.throws(()=>swapStatModifiers(a,b,{allowRangedHitCrit:true,acknowledgeUnverified:true}),/Unsupported/);});
+
+test('dual wield rejects a global swing delta when one hand would be overcredited',()=>{
+ const a=structuredClone(before);
+ a.melee.dual=true;
+ a.melee.hitPct=1;
+ a.melee.mainhand.critPct=10;
+ a.melee.offhand={...a.melee.mainhand,hitPct:2};
+ const b=structuredClone(a);
+ const policy={allowCritHit:true,acknowledgeUnverified:true};
+ b.melee.mainhand.critPct=11;
+ assert.throws(()=>swapStatModifiers(a,b,policy),/unequal hand critPct/);
+ b.melee.offhand.critPct=11;
+ b.melee.hitPct=2;
+ assert.throws(()=>swapStatModifiers(a,b,policy),/unequal hand hitPct/);
+ b.melee.offhand.hitPct=3;
+ assert.deepEqual(swapStatModifiers(a,b,policy).map(m=>m.value),[1,1]);
+});

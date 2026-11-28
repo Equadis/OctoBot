@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {manaRegenReference} from '../../docs/sim/core/combat-resource-reference.mjs';import {regenerationAmount} from '../../docs/sim/core/combat-regeneration.mjs';
+const input={spirit:100,spiritCoefficient:.1,flatManaPerSecond:2,mp5:25,insideSpiritFraction:.25,intervalMs:2000,windowMs:5000,provenance:'synthetic'};
+test('MP5 remains active inside the spend window while spirit rate is reduced',()=>{const r=manaRegenReference(input);assert.equal(r.amount,34);assert.equal(r.fiveSecondRule.insideAmount,16);assert.equal(regenerationAmount(r,4000,0),16);assert.equal(regenerationAmount(r,5000,0),34);assert.equal(r.liveVerified,false);assert.throws(()=>manaRegenReference({...input,insideSpiritFraction:2}));});

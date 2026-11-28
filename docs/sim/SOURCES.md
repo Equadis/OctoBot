@@ -146,3 +146,7 @@ rejects an active swap unless an adapter declares the exact swap mode, and rejec
 unsupported scoped enhancements. Any adapter must additionally verify combat-drop
 availability, action downtime, retained/removed buffs and procs, unique equipment,
 and equip/use cooldowns. No DPS results or fabricated cooldown mechanics are added.
+
+## Base-stat audit follow-up (17 November 2026)
+
+40 of 59 race/class combinations have CMaNGOS level 1–60 reference data; 19 (1,140 rows) do not. Imported reference is not a live OctoWoW capture. Five source rows are flagged as anomalies (Human Warrior 19 repeats 18; Orc Rogue 19 and 20 repeat the level-18 primary stats; Undead Mage 1 and 2 have inverted Intellect/Spirit progression) and two as source conflicts (Night Elf and Tauren Druid level-1 base mana, 17 in CMaNGOS Classic and 50 in MaNGOS Zero); see `BASE-STAT-VERIFICATION.md` (22 November 2026), which also records that all 2,400 imported rows match the CMaNGOS source and agree with MaNGOS Zero. No inferred corrections or substitutes. Gnome Intellect and Human Spirit naked reference values appear already racial-modified; preserve them and scale only external gains before other multipliers. This is an explicitly provisional calculation; live total-stat rounding and source differences still require validation. Direct OctoWoW database requests were unavailable during this follow-up. WoWSims Turtle and community addon estimates are not authoritative base data.

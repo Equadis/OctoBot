@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {compileBuffUses} from '../../docs/sim/core/combat-buff-runtime.mjs';
+const audit={entries:[{id:'flurry',name:'Flurry',source:'reference',eventEligible:true},{id:'quickness',name:'Quickness',source:'reference',eventEligible:true}]};
+const p={id:'flurry',atMs:[0],cooldownMs:60000,acknowledgeUnverified:true};
+test('only selected eligible event buffs compile into timed haste',()=>{const [x]=compileBuffUses(audit,[p]);assert.equal(x.effect.durationMs,20000);assert.equal(x.effect.modifiers[0].value,3);assert.throws(()=>compileBuffUses({entries:[]},[p]),/eligible/);assert.throws(()=>compileBuffUses(audit,[p,p]),/eligible/);assert.throws(()=>compileBuffUses(audit,[{...p,id:'quickness'}]),/scope/);assert.equal(compileBuffUses(audit,[{...p,id:'quickness',scope:'melee-only'}])[0].effect.durationMs,30000);});

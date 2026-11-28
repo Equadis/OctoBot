@@ -1,4 +1,4 @@
-import { classDefinition } from './classes.mjs?v=20261202-buildnames2';
+import { classDefinition } from './classes.mjs?v=20261128-merge1';
 export const BUILDS_PER_CLASS=10;
 export const BUILD_LIMIT_MESSAGE='You cannot save any more builds for this class.';
 /** Build names are independent of character names. */

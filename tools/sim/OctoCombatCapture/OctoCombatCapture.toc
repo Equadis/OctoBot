@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: OctoCombatCapture
+## Notes: Explicit local combat-text research capture; experimental
+## Version: 0.1.0
+## SavedVariables: OctoCombatCaptures
+OctoCombatCapture.lua

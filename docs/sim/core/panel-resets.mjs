@@ -1,4 +1,4 @@
-import {newBuild} from './builds.mjs?v=20261201-ui3';
+import {newBuild} from './builds.mjs?v=20261128-merge1';
 // Shared panel resets preserve the selected class and unrelated build settings.
 export function resetPlannerSection(build,section){
  const next=structuredClone(build),defaults=newBuild(build.classId);

@@ -1,0 +1,413 @@
+{
+ "schema": "octosim-base-stat-verification-v1",
+ "verifiedOn": "2026-11-22",
+ "unit": "rows of strength, agility, stamina, intellect, spirit, base health, base mana",
+ "caveat": "Both sources are vanilla cores, not OctoWoW. Agreement verifies the import, not live OctoWoW values.",
+ "sources": [
+  {
+   "name": "CMaNGOS Classic sql/base/mangos.sql",
+   "url": "https://github.com/cmangos/mangos-classic/blob/master/sql/base/mangos.sql",
+   "sha256": "229660cdd6d108d822a491a70a59bdfb6141e61a60ac488d126bee3780e5e5fa",
+   "levelRows": 2400,
+   "classRows": 540
+  },
+  {
+   "name": "MaNGOS Zero World/Setup/FullDB",
+   "url": "https://github.com/mangoszero/database/tree/master/World/Setup/FullDB",
+   "sha256": {
+    "player_levelstats": "98df0b74303c30f93c302304267d6d58a403aea1ff0fb7a37dd56da47a1266e2",
+    "player_classlevelstats": "b54dcc1e2a9e2c01f6984bb888878aae50646fb79da9c98cec39d11005f79e8d"
+   },
+   "levelRows": 2400,
+   "classRows": 540
+  }
+ ],
+ "importFidelity": {
+  "rowsCompared": 2400,
+  "mismatchesAgainstCmangos": 0,
+  "mismatchSamples": []
+ },
+ "crossSource": {
+  "primaryRowsCompared": 2400,
+  "primaryMismatchesAgainstMangosZero": 0,
+  "classHealthManaDisagreements": [
+   {
+    "key": "Night Elf:druid",
+    "level": 1,
+    "mangosZero": [
+     33,
+     50
+    ],
+    "cmangosAndRepo": [
+     33,
+     17
+    ]
+   },
+   {
+    "key": "Tauren:druid",
+    "level": 1,
+    "mangosZero": [
+     33,
+     50
+    ],
+    "cmangosAndRepo": [
+     33,
+     17
+    ]
+   }
+  ]
+ },
+ "statusCounts": {
+  "verifiedInBothSources": 2393,
+  "disputed": 7,
+  "unresolvedMissing": 1140,
+  "corrected": 0,
+  "totalRows": 3540,
+  "note": "corrected is 0: no record can be replaced without inventing values; see candidates."
+ },
+ "disputedRecords": {
+  "anomalies": [
+   {
+    "race": "Undead",
+    "classId": "mage",
+    "fromLevel": 1,
+    "toLevel": 2,
+    "kind": "primary-stat-decrease",
+    "increments": {
+     "strength": 0,
+     "agility": 0,
+     "stamina": 0,
+     "intellect": -5,
+     "spirit": 7
+    },
+    "otherRaceMedianIncrements": {
+     "strength": 0,
+     "agility": 0,
+     "stamina": 0,
+     "intellect": 1,
+     "spirit": 1
+    },
+    "otherRacesCompared": 3,
+    "presentInCmangos": true,
+    "presentInMangosZero": true
+   },
+   {
+    "race": "Orc",
+    "classId": "rogue",
+    "fromLevel": 18,
+    "toLevel": 19,
+    "kind": "stalled-while-other-races-grow",
+    "increments": {
+     "strength": 0,
+     "agility": 0,
+     "stamina": 0,
+     "intellect": 0,
+     "spirit": 0
+    },
+    "otherRaceMedianIncrements": {
+     "strength": 1,
+     "agility": 2,
+     "stamina": 0,
+     "intellect": 0,
+     "spirit": 1
+    },
+    "otherRacesCompared": 6,
+    "presentInCmangos": true,
+    "presentInMangosZero": true
+   },
+   {
+    "race": "Orc",
+    "classId": "rogue",
+    "fromLevel": 19,
+    "toLevel": 20,
+    "kind": "stalled-while-other-races-grow",
+    "increments": {
+     "strength": 0,
+     "agility": 0,
+     "stamina": 0,
+     "intellect": 0,
+     "spirit": 0
+    },
+    "otherRaceMedianIncrements": {
+     "strength": 0,
+     "agility": 1,
+     "stamina": 1,
+     "intellect": 1,
+     "spirit": 0
+    },
+    "otherRacesCompared": 6,
+    "presentInCmangos": true,
+    "presentInMangosZero": true
+   },
+   {
+    "race": "Human",
+    "classId": "warrior",
+    "fromLevel": 18,
+    "toLevel": 19,
+    "kind": "stalled-while-other-races-grow",
+    "increments": {
+     "strength": 0,
+     "agility": 0,
+     "stamina": 0,
+     "intellect": 0,
+     "spirit": 0
+    },
+    "otherRaceMedianIncrements": {
+     "strength": 1,
+     "agility": 1,
+     "stamina": 1,
+     "intellect": 0,
+     "spirit": 1
+    },
+    "otherRacesCompared": 7,
+    "presentInCmangos": true,
+    "presentInMangosZero": true
+   }
+  ],
+  "sourceConflicts": [
+   {
+    "key": "Night Elf:druid",
+    "level": 1,
+    "mangosZero": [
+     33,
+     50
+    ],
+    "cmangosAndRepo": [
+     33,
+     17
+    ]
+   },
+   {
+    "key": "Tauren:druid",
+    "level": 1,
+    "mangosZero": [
+     33,
+     50
+    ],
+    "cmangosAndRepo": [
+     33,
+     17
+    ]
+   }
+  ]
+ },
+ "candidatesNotApplied": [
+  {
+   "race": "Human",
+   "classId": "warrior",
+   "level": 19,
+   "currentPrimary": [
+    44,
+    33,
+    41,
+    22,
+    26
+   ],
+   "candidatePrimary": [
+    45,
+    34,
+    42,
+    22,
+    27
+   ],
+   "basis": "level 18 row plus the median increment of 7 other races",
+   "nextRowPrimary": [
+    47,
+    35,
+    43,
+    22,
+    27
+   ],
+   "applied": false,
+   "note": "Inferred from other races, not an OctoWoW or source value. Not applied."
+  },
+  {
+   "race": "Orc",
+   "classId": "rogue",
+   "level": 19,
+   "currentPrimary": [
+    37,
+    43,
+    35,
+    20,
+    29
+   ],
+   "candidatePrimary": [
+    38,
+    45,
+    35,
+    20,
+    30
+   ],
+   "basis": "level 18 row plus the median increment of 6 other races",
+   "nextRowPrimary": [
+    37,
+    43,
+    35,
+    20,
+    29
+   ],
+   "applied": false,
+   "note": "Inferred from other races, not an OctoWoW or source value. Not applied."
+  },
+  {
+   "race": "Orc",
+   "classId": "rogue",
+   "level": 20,
+   "currentPrimary": [
+    37,
+    43,
+    35,
+    20,
+    29
+   ],
+   "candidatePrimary": [
+    38,
+    46,
+    36,
+    21,
+    30
+   ],
+   "basis": "level 19 candidate plus the median increment of 6 other races",
+   "nextRowPrimary": [
+    39,
+    48,
+    37,
+    21,
+    31
+   ],
+   "applied": false,
+   "note": "Inferred from other races, not an OctoWoW or source value. Not applied."
+  },
+  {
+   "race": "Undead",
+   "classId": "mage",
+   "level": 1,
+   "currentPrimary": [
+    19,
+    18,
+    21,
+    27,
+    21
+   ],
+   "candidatePrimary": [
+    19,
+    18,
+    21,
+    21,
+    27
+   ],
+   "basis": "level 2 minus the median increment of 3 other races",
+   "nextRowPrimary": [
+    19,
+    18,
+    21,
+    22,
+    28
+   ],
+   "applied": false,
+   "note": "Inferred from other races, not an OctoWoW or source value. Not applied."
+  }
+ ],
+ "classTableNonMonotonicTransitions": {
+  "cmangos": [
+   {
+    "classId": "warrior",
+    "fromLevel": 10,
+    "toLevel": 11,
+    "field": "baseHealth",
+    "from": 101,
+    "to": 100
+   },
+   {
+    "classId": "paladin",
+    "fromLevel": 1,
+    "toLevel": 2,
+    "field": "baseHealth",
+    "from": 28,
+    "to": 26
+   },
+   {
+    "classId": "paladin",
+    "fromLevel": 14,
+    "toLevel": 15,
+    "field": "baseHealth",
+    "from": 132,
+    "to": 131
+   },
+   {
+    "classId": "priest",
+    "fromLevel": 4,
+    "toLevel": 5,
+    "field": "baseMana",
+    "from": 200,
+    "to": 197
+   },
+   {
+    "classId": "shaman",
+    "fromLevel": 22,
+    "toLevel": 23,
+    "field": "baseMana",
+    "from": 456,
+    "to": 448
+   },
+   {
+    "classId": "shaman",
+    "fromLevel": 26,
+    "toLevel": 27,
+    "field": "baseMana",
+    "from": 579,
+    "to": 566
+   },
+   {
+    "classId": "shaman",
+    "fromLevel": 30,
+    "toLevel": 31,
+    "field": "baseMana",
+    "from": 718,
+    "to": 699
+   },
+   {
+    "classId": "mage",
+    "fromLevel": 3,
+    "toLevel": 4,
+    "field": "baseMana",
+    "from": 181,
+    "to": 178
+   }
+  ],
+  "mangosZeroMatches": true,
+  "note": "Class-only health/mana tables shared by every race. Reported, not changed."
+ },
+ "unresolvedMissingCombinations": {
+  "combinations": [
+   "Dwarf:mage",
+   "Dwarf:warlock",
+   "Gnome:hunter",
+   "Goblin:hunter",
+   "Goblin:mage",
+   "Goblin:rogue",
+   "Goblin:warlock",
+   "Goblin:warrior",
+   "High Elf:hunter",
+   "High Elf:mage",
+   "High Elf:paladin",
+   "High Elf:priest",
+   "High Elf:rogue",
+   "High Elf:warrior",
+   "Human:hunter",
+   "Orc:mage",
+   "Tauren:priest",
+   "Troll:warlock",
+   "Undead:hunter"
+  ],
+  "rows": 1140,
+  "inSources": false,
+  "note": "No rows in either source. Not substituted from another race or class."
+ },
+ "outOfScope": [
+  "The \"76 conflicting source-data records\" in the handoff are 76 abilities with source-conflicting spell-rank data (193 rank rows), not base stats. By class: warrior 11, rogue 9, paladin 6, druid 7, shaman 6, hunter 11, mage 6, warlock 12, priest 8. They need controlled spell measurements and are untouched here.",
+  "Known Mage and Priest level-60 health and mana differences between CMaNGOS and WoWSims Turtle are recorded as todo tests in tests/sim/reference-parity.test.mjs; neither source is OctoWoW.",
+  "Third-party Combat Gum figures for Goblin and High Elf Rogue (77/132/75 and 77/135/73) appear in tests/sim/reference-parity.test.mjs; they are unverified and were not imported."
+ ]
+}

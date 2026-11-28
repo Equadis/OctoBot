@@ -1,0 +1,28 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {CombatEncounter} from '../../docs/sim/core/combat-execution.mjs';import {createExplicitClassEncounter} from '../../docs/sim/core/combat-class-runtime.mjs';
+const hit=[{name:'hit',probability:1,multiplier:1,landed:true}],miss=[{name:'miss',probability:1,multiplier:0,landed:false}];
+const common={mode:'research',provenance:'synthetic mechanics fixture, not server evidence',classId:'warlock',level:60,seed:1,durationMs:26000,decisionIntervalMs:100,pools:{mana:{current:1000,max:1000}},units:[{id:'p',maxHealth:1000,health:100},{id:'boss',maxHealth:100000}],playerId:'p',primaryId:'boss',targetIds:['boss'],allyIds:[],stats:{p:{shadow:100}},classContext:{},geometry:{p:{boss:{distance:10,position:'behind'}}},autos:[],regeneration:[]};
+const effect={kind:'damage',when:'always',formula:{min:100,max:100,terms:[],multiplier:1},school:'shadow',outcomes:hit,mitigation:0,flatReduction:0,threat:null};
+const action=(abilityId,spellId,effects,other={})=>({abilityId,spellId,rank:6,learnLevel:54,source:'fixture',evidenceStatus:'synthetic',actorId:'p',kind:'instant',castMs:0,gcdMs:1500,cooldownMs:60000,sharedCooldown:null,costs:[{resource:'mana',amount:10}],targets:['enemy'],minRangeYards:0,maxRangeYards:30,position:null,comboRequired:null,requiredContext:null,effects,...other});
+test('leech uses post mitigation and caps effective basis at the killing blow',()=>{
+ const r=createExplicitClassEncounter({...common,units:[{id:'p',maxHealth:1000,health:100},{id:'boss',maxHealth:30}],actions:[action('warlock:death-coil',17926,[{...effect,mitigation:.5,leech:{fraction:1,basis:'effective'}}],{kind:'cast',castMs:1000})],rows:[{ability:'Death Coil',target:'primary',conditions:[]}]}).run();
+ assert.equal(r.events.find(e=>e.type==='damage').effective,30);assert.equal(r.events.find(e=>e.type==='heal').effective,30);assert.equal(r.units.find(u=>u.id==='p').health,130);
+});
+test('a missed single-application drain produces neither damage nor healing',()=>{
+ const r=createExplicitClassEncounter({...common,durationMs:5000,actions:[action('warlock:drain-life',11700,[{...effect,channelApplicationOutcomes:miss,leech:{fraction:1,basis:'effective'}}],{kind:'channel',castMs:5000,tickMs:1000,tickAtEnd:true})],rows:[{ability:'Drain Life',target:'primary',conditions:[]}]}).run();
+ assert.equal(r.events.filter(e=>e.type==='attack-result').length,1);assert.equal(r.events.filter(e=>e.type==='damage'||e.type==='heal').length,0);
+});
+test('curse ramp modifies base only, preserving spell power on all twelve snapshot ticks',()=>{
+ const dot={...effect,kind:'periodic-damage',formula:{min:100,max:100,terms:[{stat:'shadow',coefficient:.2}],multiplier:1},durationMs:24000,intervalMs:2000,baseTickMultipliers:[.5,.5,.5,.5,1,1,1,1,1.5,1.5,1.5,1.5],refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',applicationOutcomes:hit,auraName:'Curse of Agony'};
+ const r=createExplicitClassEncounter({...common,actions:[action('warlock:curse-of-agony',11713,[dot])],rows:[{ability:'Curse of Agony',target:'primary',conditions:[]}]}).run();assert.deepEqual(r.events.filter(e=>e.type==='damage').map(e=>e.effective),[70,70,70,70,120,120,120,120,170,170,170,170]);
+});
+test('Weakened Soul blocks repeat shield even after a shield breaks',()=>{
+ const e=createExplicitClassEncounter({...common,classId:'priest',durationMs:18000,units:[{id:'p',maxHealth:1000},{id:'boss',maxHealth:10000},{id:'ally',maxHealth:1000}],allyIds:['ally'],geometry:{p:{boss:{distance:10,position:'behind'},ally:{distance:10,position:'front'}}},incomingDamage:[{atMs:1000,actorId:'boss',targetId:'ally',source:'Swing',amount:150,school:'physical'}],actions:[action('priest:power-word-shield',10901,[{kind:'absorb',when:'always',id:'shield',formula:{min:100,max:100,terms:[],multiplier:1},durationMs:30000,schools:null,refresh:'replace'},{kind:'aura',when:'always',auraTarget:'target',aura:{id:'ws',name:'Weakened Soul',kind:'debuff',durationMs:15000,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers:[]}}],{targets:['ally'],cooldownMs:4000,blockingAura:'Weakened Soul'})],rows:[{ability:'Power Word: Shield',target:'ally',conditions:[]}]}).run();
+ assert.deepEqual(e.events.filter(x=>x.type==='absorb-apply').map(x=>x.time),[0,15000]);assert.equal(e.events.filter(x=>x.type==='absorb').reduce((n,x)=>n+x.amount,0),100);
+});
+
+test('Agony and Doom replace each other without changing another owned periodic',()=>{
+ const dot=(name,intervalMs,replacePeriodicAuras)=>({...effect,kind:'periodic-damage',durationMs:24000,intervalMs,replacePeriodicAuras,refresh:'restart',tickAtExpiry:true,snapshot:'snapshot',applicationOutcomes:hit,auraName:name});
+ const sc={...common,durationMs:12000,actions:[action('warlock:curse-of-agony',11713,[dot('Curse of Agony',2000,['Curse of Doom'])]),action('warlock:curse-of-doom',603,[dot('Curse of Doom',4000,['Curse of Agony'])])],rows:[{ability:'Curse of Doom',target:'primary',conditions:[{metric:'combatTime',operator:'>=',value:5}]},{ability:'Curse of Agony',target:'primary',conditions:[]}]};
+ const r=createExplicitClassEncounter(sc).run(),damage=r.events.filter(x=>x.type==='damage');
+ assert.deepEqual(damage.filter(x=>x.source==='Curse of Agony').map(x=>x.time),[2000,4000]);assert.deepEqual(damage.filter(x=>x.source==='Curse of Doom').map(x=>x.time),[9000]);
+});

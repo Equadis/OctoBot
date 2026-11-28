@@ -1,14 +1,24 @@
-import {validEnchant} from './equipment-options.mjs?v=20261130-ui2';
-import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261112-audit1';
-import { classDefinition } from './classes.mjs?v=20261202-profs1';
+import {validEnchant} from './equipment-options.mjs?v=20261128-merge1';
+import {validRace,slotAllowed,RACE_MASKS,racialPassives} from './class-rules.mjs?v=20261128-merge1';
+import { classDefinition } from './classes.mjs?v=20261128-merge1';
 // Database listing filters are preliminary. Equipping requires the source detail masks.
 export const SLOT_TYPES = Object.freeze({ head:[1],neck:[2],shoulder:[3],back:[16],chest:[5,20],wrist:[9],hands:[10],waist:[6],legs:[7],feet:[8],ring1:[11],ring2:[11],trinket1:[12],trinket2:[12],mainhand:[13,17,21],offhand:[13,14,22,23],ranged:[15,25,26,28],shirt:[4],tabard:[19],ammo:[24],quiver:[18] });
 export const RACES = RACE_MASKS;
+// Source explicitly displays Miscellaneous, no equipment inventory type.
+export const NON_EQUIPPABLE_SOURCE_IDS=Object.freeze({5410:{reason:'Source tooltip has no equipment slot (Miscellaneous).',source:'https://octowow.st/db/?item=5410'}});
+export function equipmentListingWithDetail(item,detail){
+ if(!item)return null;
+ if(NON_EQUIPPABLE_SOURCE_IDS[item.id])return null;
+ if(!detail||detail.id!==item.id)return {...item};
+ return {...item,name:detail.name||item.name,slot:detail.slot,reqlevel:detail.requiredLevel};
+}
+
 
 
 export function listingRestriction(item, build, slot) {
   if(!validRace(build.classId,build.race))return 'Invalid class/race combination.';
   if(!slotAllowed(build.classId,slot))return 'This slot is not applicable to this class.';
+  if(item&&NON_EQUIPPABLE_SOURCE_IDS[item.id])return NON_EQUIPPABLE_SOURCE_IDS[item.id].reason;
   if (!item || !SLOT_TYPES[slot]?.includes(item.slot)) return 'Wrong equipment slot.';
   let cls;try{cls=classDefinition(build.classId);}catch{return 'Class equipment rules are not implemented.';}
   if ((item.reqlevel || 0) > build.level) return `Requires level ${item.reqlevel}.`;

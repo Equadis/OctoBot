@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {HOLY_STRIKE_REFERENCE,holyStrikeRange} from '../../docs/sim/core/combat-paladin-holy-strike.mjs';
+const p={acceptSourceConflict:true,weaponMin:100,weaponMax:200,weaponCoefficient:.4,baseMin:100,baseMax:120,spellPower:100,spellCoefficient:.5,damageMultiplier:1.25,threatMultiplier:1.25,baseHeal:90,healingPower:200,healingCoefficient:.1,healingMultiplier:1,selfHealingMultiplier:.5,manaRestore:90};
+test('Holy Strike research ranks retain source status and no fabricated IDs',()=>{assert.equal(HOLY_STRIKE_REFERENCE.length,8);assert.deepEqual(HOLY_STRIKE_REFERENCE.map(r=>r.level),[4,12,20,28,36,44,52,60]);assert.equal(HOLY_STRIKE_REFERENCE[0].cost,5);assert.equal(HOLY_STRIKE_REFERENCE[7].cost,90);assert.ok(HOLY_STRIKE_REFERENCE.every(r=>!('spellId' in r)&&r.status==='archived-reference-only'));});
+test('Holy Strike separates holy weapon damage, spell scaling, healing and threat',()=>{assert.deepEqual(holyStrikeRange(p),{school:'holy',damageMin:237.5,damageMax:312.5,threatMultiplier:1.25,allyHealing:110,selfHealing:55,manaRestore:90});});
+test('Holy Strike fails closed on missing and conflicting inputs',()=>{assert.throws(()=>holyStrikeRange({...p,acceptSourceConflict:false}),/acknowledgement/);assert.throws(()=>holyStrikeRange({...p,spellCoefficient:undefined}),/spellCoefficient/);assert.throws(()=>holyStrikeRange({...p,weaponMax:99}),/Reversed/);});
+
+import {classReleaseReadiness} from '../../docs/sim/core/combat-release-readiness.mjs';
+test('Paladin Holy Strike adapter has no fabricated identity',()=>{const a=classReleaseReadiness('paladin').abilities.find(x=>x.id==='paladin:holy-strike');assert.equal(a.executableAdapter,'unresolved-identity-reference');assert.equal(a.referenceRankIds.length,0);});

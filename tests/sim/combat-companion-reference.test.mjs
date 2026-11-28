@@ -1,0 +1,163 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {newBuild} from '../../docs/sim/core/builds.mjs';
+import {buildCompanionConfig,companionTemplate} from '../../docs/sim/core/combat-companion-reference.mjs';
+import {prepareReferenceScenario,runReferenceScenario} from '../../docs/sim/core/combat-reference-adapter.mjs';
+const landed=[{name:'hit',probability:1,multiplier:1,landed:true}];
+const damage={school:'fire',min:20,max:20,apCoefficient:0,spCoefficient:.5,multiplier:1,outcomes:landed,mitigation:0,flatReduction:0,threat:null};
+const pet=(name='Imp',ability='Firebolt')=>({name,level:60,provenance:'synthetic explicit fixture',acceptReferenceRankUncertainty:true,health:100,initialHealth:100,attackPower:100,spellPower:20,damageMultiplier:1,resource:{max:40,current:20,regenAmount:10,regenIntervalMs:1000},distanceYards:3,position:'behind',decisionIntervalMs:100,gcdMs:1000,auto:null,abilities:[{name:ability,rank:1,learnedConfirmed:true,cost:20,castMs:500,cooldownMs:0,minRangeYards:0,maxRangeYards:30,refreshOnlyAfterExpiry:false,damage}]});
+const policy={provenance:'synthetic reference',phase:2,gcdMs:1500,cooldownMs:0,acceptExternalReference:true,acceptSourceConflict:true,periodicCanCrit:false,healCriticalMultiplier:1.5,spellCriticalMultiplier:1.5,resistance:Object.fromEntries(['fire','frost','shadow','nature','arcane','holy'].map(k=>[k,{policy:'none',bins:[{fraction:0,probability:1}]}])),threat:null,refresh:'restart',tickAtExpiry:true,snapshot:'snapshot'};
+function params(m=pet()){const build=newBuild('warlock');build.classOptions.pet='Imp';return {build,talents:JSON.parse(readFileSync(new URL('../../docs/sim/data/talents/warlock.json',import.meta.url))),gearById:{},learnedSpellIds:[11661],rankByAbility:{'warlock:shadow-bolt':11661},policies:{'warlock:shadow-bolt':policy},encounter:{mode:'reference-research',acknowledgeIncompleteEffects:true,position:'behind',distanceYards:20,allyDistanceYards:20,recastPeriodic:'rotation-only',includeMelee:false,durationMs:4500,decisionIntervalMs:50,enemyHealth:1e7,allyMaxHealth:1e7,allyHealth:1,regeneration:[],companionModel:m},rows:[{ability:'Shadow Bolt',target:'primary',conditions:[]}]};}
+test('companion has separate mana, independent spell timing, attribution and combined DPS',()=>{const r=runReferenceScenario(prepareReferenceScenario(params()),{seed:7,iterations:3});const events=r.exampleEvents;assert.deepEqual(events.filter(e=>e.type==='companion-action').map(e=>e.time),[0,2000,4000]);assert.deepEqual(events.filter(e=>e.type==='damage'&&e.actorId==='pet').map(e=>[e.time,e.raw]),[[500,30],[2500,30],[4500,30]]);assert.ok(r.example.actors.player.bySource['Shadow Bolt'].damage>0);assert.equal(r.example.actors.pet.bySource.Firebolt.damage,90);assert.ok(Math.abs(r.allStatistics.combinedDps.mean-r.allStatistics.dps.mean-r.allStatistics.petDps.mean)<1e-8);assert.ok(events.filter(e=>e.source==='Companion regeneration').every(e=>e.actorId==='pet'&&e.resource==='petMana'));});
+test('companion death cancels pending spell damage and future regeneration',()=>{const p=params();p.encounter.incomingDamage=[{atMs:2200,source:'Enemy',actorId:'boss',targetId:'pet',amount:100,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.actorId==='pet').map(e=>e.time),[500]);assert.equal(r.exampleEvents.filter(e=>e.source==='Companion regeneration').length,2);});
+test('Hunter family and learned ranks cannot be guessed from candidate data',()=>{const b=newBuild('hunter');b.classOptions.pet='Cat';b.classOptions.petLevel=60;const m=pet('Cat','Claw');const c=buildCompanionConfig(b,m,5000);assert.equal(c.pool.resource,'petFocus');assert.equal(c.priority.abilities[0].name,'Claw');assert.throws(()=>buildCompanionConfig(b,pet('Cat','Lightning Breath'),5000),/Unsupported/);assert.throws(()=>buildCompanionConfig(b,{...m,abilities:[{...m.abilities[0],rank:99}]},5000),/exceeds reference level/);assert.throws(()=>buildCompanionConfig(b,{...m,abilities:[{...m.abilities[0],learnedConfirmed:false}]},5000),/learned companion/);assert.ok(companionTemplate(b).candidateAbilities.some(x=>x.name==='Claw'));});
+test('missing observed companion stats fail closed',()=>{const p=params();delete p.encounter.companionModel;assert.throws(()=>prepareReferenceScenario(p),/selected companion ruleset/);assert.throws(()=>prepareReferenceScenario(params({...pet(),spellPower:null})),/spell power/);});
+
+test('companion utility threat gains and reductions use the pet ledger without fake damage',()=>{const m=pet('Voidwalker','Torment');const a=m.abilities[0];m.resource={max:100,current:100,regenAmount:0,regenIntervalMs:1000};m.abilities=[{...a,cost:0,castMs:0,cooldownMs:2000,utility:{flat:100,outcomes:landed}},{...a,name:'Suffering',cost:0,castMs:0,cooldownMs:60000,utility:{flat:50,outcomes:landed},areaPolicy:{mode:'ordered-nearby',cap:2}}];const p=params(m);p.build.classOptions.pet='Voidwalker';p.encounter.additionalEnemies=[{id:'add',maxHealth:1000000}];p.encounter.nearbyTargets={boss:['add'],add:['boss']};const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.equal(r.example.actors.pet.bySource.Torment.grossThreat,300);assert.equal(r.example.actors.pet.bySource.Suffering.grossThreat,100);assert.equal(r.example.actors.pet.unallocatedThreat,0);assert.equal(r.example.actors.pet.rates.actorDps,0);assert.deepEqual(r.exampleEvents.filter(e=>e.type==='companion-threat'&&e.source==='Suffering').map(e=>e.targetId),['boss','add']);});
+test('Hunter Growl and Cower use independent flat threat and percentage reduction policies',()=>{const b=newBuild('hunter');b.classOptions.pet='Cat';b.classOptions.petLevel=60;const m=pet('Cat','Growl'),a=m.abilities[0];m.abilities=[{...a,utility:{flat:100,outcomes:landed}},{...a,name:'Cower',utility:{fraction:.5,outcomes:landed}}];const c=buildCompanionConfig(b,m,5000);assert.equal(c.priority.abilities[0].utility.flat,100);assert.equal(c.priority.abilities[1].utility.fraction,.5);assert.equal(c.priority.abilities[1].effects.length,0);});
+test('Area damage requires explicit target policy and independently resolves each nearby target',()=>{const b=newBuild('hunter');b.classOptions.pet='Gorilla';b.classOptions.petLevel=60;const m=pet('Gorilla','Thunderstomp');assert.throws(()=>buildCompanionConfig(b,m,5000),/area target policy/);m.abilities[0].areaPolicy={mode:'ordered-nearby',cap:3};assert.deepEqual(buildCompanionConfig(b,m,5000).priority.abilities[0].targeting,{mode:'ordered-nearby',cap:3});});
+
+test('imported Hunter static talent ranks apply to raw pet input once and preserve included mode',()=>{const b=newBuild('hunter');b.classOptions.pet='Cat';b.classOptions.petLevel=60;b.talents={'381':5,'382':2,'384':5,'389':2,'390':5};const m=pet('Cat','Claw');m.abilities[0]={...m.abilities[0],disciplineEligible:true,cooldownMs:5000,damage:{...damage,school:'physical',ferocityEligible:true,ferocityCriticalMultiplier:2}};assert.throws(()=>buildCompanionConfig(b,m,10000),/static talent inclusion/);m.talentPolicy={staticMode:'apply',ownerRangedAP:400,ferocityMode:'normal-hit-only',frenzySwingPolicy:null};const c=buildCompanionConfig(b,m,10000);assert.deepEqual(c.stats,{attackPower:200,spellPower:80});assert.equal(c.regen.amount,15);assert.equal(c.priority.abilities[0].cooldownMs,4000);assert.equal(c.priority.abilities[0].effects[0].formula.multiplier,1.2);assert.equal(c.priority.abilities[0].effects[0].outcomes.find(x=>x.critical).probability,.15);m.talentPolicy.staticMode='included';const included=buildCompanionConfig(b,m,10000);assert.deepEqual(included.stats,{attackPower:100,spellPower:20});assert.equal(included.regen.amount,10);assert.equal(included.priority.abilities[0].cooldownMs,5000);assert.equal(included.priority.abilities[0].effects[0].formula.multiplier,1);assert.equal(included.talents.spiritBondRank,2);});
+
+test('explicit pet inheritance and learned Great Stamina apply once',()=>{const b=newBuild('hunter');b.classOptions.pet='Cat';b.classOptions.petLevel=60;const m=pet('Cat','Claw');m.statPolicy={mode:'apply',provenance:'synthetic',inheritance:[{stat:'attackPower',ownerStat:'rangedAP',coefficient:.2}],training:[{name:'Great Stamina',rank:1,learnedConfirmed:true,stat:'health',amount:30}]};const c=buildCompanionConfig(b,m,5000,{rangedAP:400});assert.equal(c.stats.attackPower,180);assert.equal(c.unit.maxHealth,130);assert.throws(()=>buildCompanionConfig(b,m,5000,{}),/inheritance/);});
+
+function shadows(){const m=pet('Voidwalker','Consume Shadows');m.initialHealth=40;m.abilities[0]={...m.abilities[0],cost:20,castMs:3000,cooldownMs:60000,utility:{amount:90,healthMaxPct:60,tickMs:1000}};const p=params(m);p.build.classOptions.pet='Voidwalker';return p;}
+test('companion channel heals at each explicit tick, including overhealing, with one resource payment',()=>{const p=shadows();const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').map(e=>[e.time,e.raw]),[[1000,30],[2000,30],[3000,30]]);assert.equal(r.exampleEvents.filter(e=>e.type==='resource-change'&&e.source==='Consume Shadows').length,1);});
+test('companion death cancels remaining healing ticks',()=>{const p=shadows();p.encounter.incomingDamage=[{atMs:1500,source:'Enemy',actorId:'boss',targetId:'pet',amount:100,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').map(e=>e.time),[1000]);});
+
+test('effective nonlethal pet damage can interrupt the healing channel without refunding mana',()=>{const p=shadows();p.encounter.companionModel.abilities[0].utility.interruptOnDamage=true;p.encounter.incomingDamage=[{atMs:1500,source:'Enemy',actorId:'boss',targetId:'pet',amount:10,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').map(e=>e.time),[1000]);assert.equal(r.exampleEvents.filter(e=>e.type==='companion-interrupt').length,1);assert.equal(r.exampleEvents.filter(e=>e.type==='resource-change'&&e.source==='Consume Shadows').length,1);});
+test('damage interruption is explicit and does not apply to legacy channels',()=>{const p=shadows();p.encounter.incomingDamage=[{atMs:1500,source:'Enemy',actorId:'boss',targetId:'pet',amount:10,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.equal(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').length,3);});
+
+test('defensive companion policy optionally blocks subsequent active attacks until aura expiry',()=>{const m=pet('Imp','Phase Shift'),a=m.abilities[0];m.initialHealth=40;m.resource={max:100,current:100,regenAmount:0,regenIntervalMs:1000};m.abilities=[{...a,cost:0,castMs:0,cooldownMs:60000,utility:{durationMs:2000,damageFactor:0,healthMaxPct:60,blocksAttacks:true}},{...a,name:'Firebolt',cost:0,castMs:0}];const r=runReferenceScenario(prepareReferenceScenario(params(m)),{seed:7,iterations:2});assert.equal(r.exampleEvents.find(e=>e.type==='damage'&&e.source==='Firebolt').time,2000);});
+
+test('explicit companion recovery windows restrict healing to a complete out-of-combat channel',()=>{const p=shadows();p.encounter.companionModel.abilities[0].utility.outOfCombatWindows=[[0,2000]];let r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.equal(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').length,0);p.encounter.companionModel.abilities[0].utility.outOfCombatWindows=[[1000,4000]];r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='heal'&&e.source==='Consume Shadows').map(e=>e.time),[2000,3000,4000]);});
+
+test('Voidwalker Sacrifice grants an owner shield and consumes the companion without fake damage',()=>{const m=pet('Voidwalker','Sacrifice');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,utility:{amount:100,durationMs:3000,ownerHealthMaxPct:100}};const p=params(m);p.build.classOptions.pet='Voidwalker';p.encounter.incomingDamage=[{atMs:1000,source:'Enemy',actorId:'boss',targetId:'player',amount:50,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.equal(r.exampleEvents.find(e=>e.type==='damage'&&e.source==='Enemy').absorbed,50);assert.ok(r.exampleEvents.some(e=>e.type==='class-state-change'&&e.source==='Sacrifice'&&e.value===false));assert.equal(r.exampleEvents.filter(e=>e.type==='companion-action').length,1);});
+
+test('Felhunter Paranoia tracks an explicit owner detection aura without inventing combat damage',()=>{const m=pet('Felhunter','Paranoia');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,utility:{durationMs:2000,amount:10,acknowledgeNoDetectionModel:true}};const p=params(m);p.build.classOptions.pet='Felhunter';const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='companion-action'&&e.source==='Paranoia').map(e=>e.time),[0,2000,4000]);assert.equal(r.exampleEvents.filter(e=>e.type==='damage'&&e.actorId==='pet').length,0);});
+
+test('Screech explicit attack power debuff is family-scoped and validated',()=>{const b=newBuild('hunter');b.classOptions.pet='Owl';b.classOptions.petLevel=60;const m=pet('Owl','Screech');m.abilities[0].areaPolicy={mode:'primary'};m.abilities[0].attackPowerReduction={amount:50,durationMs:4000};assert.deepEqual(buildCompanionConfig(b,m,5000).priority.abilities[0].attackPowerReduction,{amount:50,durationMs:4000});m.abilities[0].name='Claw';delete m.abilities[0].areaPolicy;assert.throws(()=>buildCompanionConfig(b,m,5000),/requires Screech/);});
+
+test('Imp Fire Shield retaliates only against effective physical damage to the owner',()=>{const m=pet('Imp','Fire Shield');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,utility:{durationMs:2000,amount:20,mitigation:.25,acknowledgeEffectivePhysicalDamage:true}};const p=params(m);p.encounter.incomingDamage=[{atMs:500,source:'Physical',actorId:'boss',targetId:'player',amount:1,school:'physical'},{atMs:600,source:'Magic',actorId:'boss',targetId:'player',amount:1,school:'fire'},{atMs:700,source:'Pet hit',actorId:'boss',targetId:'pet',amount:1,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.source==='Fire Shield (retaliation)').map(e=>[e.time,e.raw]),[[500,15]]);});
+
+test('Felhunter Tainted Blood compiles a capped reactive AP reduction with no defensive mitigation',()=>{const b=newBuild('warlock');b.classOptions.pet='Felhunter';const m=pet('Felhunter','Tainted Blood');m.abilities[0].utility={durationMs:4000,healthMaxPct:100,retaliationAP:10,retaliationDurationMs:2000,retaliationMaxStacks:3,acknowledgeEffectivePhysicalDamage:true};const u=buildCompanionConfig(b,m,5000).priority.abilities[0].utility;assert.equal(u.damageFactor,1);assert.equal(u.retaliationMaxStacks,3);assert.equal(u.retaliationAP,10);});
+
+test('Wolf Furious Howl compiles an explicit owner-only physical attack bonus',()=>{const b=newBuild('hunter');b.classOptions.pet='Wolf';b.classOptions.petLevel=60;const m=pet('Wolf','Furious Howl');m.abilities[0].utility={durationMs:10000,amount:40,acknowledgeOwnerOnly:true};const u=buildCompanionConfig(b,m,5000).priority.abilities[0].utility;assert.equal(u.kind,'owner-buff');assert.equal(u.amount,40);assert.equal(u.acknowledgeOwnerOnly,true);});
+
+test('Succubus Seduction suppresses scripted enemy attacks until effective damage breaks it',()=>{const m=pet('Succubus','Seduction');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,cooldownMs:60000,utility:{durationMs:4000,outcomes:landed,acknowledgeScriptedControl:true}};const p=params(m);p.build.classOptions.pet='Succubus';p.encounter.incomingDamage=[{atMs:100,source:'Controlled attack',actorId:'boss',targetId:'player',amount:10,school:'physical'},{atMs:4000,source:'Later attack',actorId:'boss',targetId:'player',amount:10,school:'physical'}];const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});assert.ok(r.exampleEvents.some(e=>e.type==='action-ineligible'&&e.source==='Controlled attack'));assert.ok(r.exampleEvents.some(e=>e.type==='damage'&&e.source==='Later attack'));});
+
+test('maintained Seduction releases its channel when target damage breaks control',()=>{const m=pet('Succubus','Seduction');m.abilities[0]={...m.abilities[0],cost:0,castMs:0,cooldownMs:60000,utility:{durationMs:4000,outcomes:landed,acknowledgeScriptedControl:true,maintainedChannel:true}};m.abilities.push({...m.abilities[0],name:'Lash of Pain',cooldownMs:60000,utility:undefined});const p=params(m);p.build.classOptions.pet='Succubus';const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:2});const stop=r.exampleEvents.find(e=>e.type==='companion-interrupt'&&e.source==='Seduction');assert.ok(stop);const lash=r.exampleEvents.find(e=>e.type==='companion-action'&&e.source==='Lash of Pain');assert.ok(lash&&lash.time>=stop.time&&lash.time<4000);});
+
+test('pet equipment armour and crit require explicit baseline and outcome policy',()=>{const b=newBuild('warlock');b.classOptions.pet='Imp';const m=pet();m.armour=200;m.equipmentPolicy={mode:'apply',provenance:'synthetic',critMode:'normal-hit-only'};m.abilities[0].damage={...m.abilities[0].damage,ferocityEligible:true,ferocityCriticalMultiplier:2};const rows=[{active:true,scope:'Pet',stat:'armourPct',amount:25,condition:{pet:true}},{active:true,scope:'Pet',stat:'critPct',amount:10,condition:{pet:true}}];const p=buildCompanionConfig(b,m,5000,null,rows);assert.equal(p.defensive.armour,50);assert.equal(p.priority.abilities[0].effects[0].outcomes.find(x=>x.critical).probability,.1);assert.throws(()=>buildCompanionConfig(b,{...m,armour:undefined},5000,null,rows));});
+
+test('imported Firebolt equipment adds damage only to the configured Imp spell',()=>{
+ const itemsRoot=new URL('../../docs/sim/data/items/',import.meta.url);
+ const read=name=>JSON.parse(readFileSync(new URL(name,itemsRoot)));
+ const listings=read('equipment.json');
+ const details={...read('details-supplement.json'),...read('details.json')};
+ const p=params();
+ const equip=(slot,id)=>{
+  p.build.gear[slot]={id,label:details[id].name};
+  p.gearById[id]={...listings.find(item=>item.id===id),...details[id]};
+ };
+ equip('trinket1',18354);
+ equip('hands',60424);
+
+ const model=p.encounter.companionModel;
+ assert.throws(()=>prepareReferenceScenario(p),/pet equipment inclusion policy/);
+ const run=()=>runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1}).example.actors;
+ model.equipmentPolicy={mode:'included',provenance:'synthetic damage inputs include equipped items'};
+ const included=run();
+ assert.equal(included.pet.bySource.Firebolt.damage,90);
+ model.equipmentPolicy={mode:'apply',provenance:'synthetic base damage without equipped items'};
+ const applied=run();
+ assert.equal(applied.pet.bySource.Firebolt.damage,138);
+ assert.deepEqual(applied.player.bySource,included.player.bySource);
+
+ equip('hands',80777);
+ assert.equal(run().pet.bySource.Firebolt.damage,138);
+ delete p.build.gear.trinket1;
+ assert.equal(run().pet.bySource.Firebolt.damage,114);
+
+ p.build.classOptions.pet='Succubus';
+ model.name='Succubus';
+ model.abilities[0].name='Lash of Pain';
+ model.abilities[0].damage={...damage,school:'shadow'};
+ delete model.equipmentPolicy;
+ assert.equal(run().pet.bySource['Lash of Pain'].damage,90);
+});
+
+function equipImported(p,slots){
+ const itemsRoot=new URL('../../docs/sim/data/items/',import.meta.url);
+ const load=name=>JSON.parse(readFileSync(new URL(name,itemsRoot)));
+ const listings=load('equipment.json');
+ const details={...load('details-supplement.json'),...load('details.json')};
+ for(const [slot,id] of Object.entries(slots)){
+  p.build.gear[slot]={id,label:details[id].name};
+  p.gearById[id]={...listings.find(item=>item.id===id),...details[id]};
+ }
+}
+
+test('equipped Felheart threshold adds Stamina and school resistance under explicit policy',()=>{
+ const p=params();
+ equipImported(p,{head:16808,shoulder:16807,wrist:16804,hands:16805,feet:16803});
+ const m=p.encounter.companionModel;
+ m.equipmentPolicy={mode:'apply',provenance:'synthetic'};
+ assert.throws(()=>prepareReferenceScenario(p),/health per Stamina/);
+ m.equipmentPolicy.healthPerStamina=10;
+ const applied=prepareReferenceScenario(p).scenario;
+ assert.equal(applied.units.find(unit=>unit.id==='pet').maxHealth,250);
+ assert.deepEqual(applied.petDefensiveDeltas,{arcaneResistance:100,fireResistance:100,frostResistance:100,natureResistance:100,shadowResistance:100});
+ m.equipmentPolicy.mode='included';
+ assert.equal(prepareReferenceScenario(p).scenario.units.find(unit=>unit.id==='pet').maxHealth,100);
+});
+
+test('Black Book schedules the equipped damage and armour buff on the living eligible demon',()=>{
+ const p=params();
+ equipImported(p,{trinket1:19337});
+ const request={slot:'trinket1',itemId:19337,tooltip:p.gearById[19337].effects[0],acknowledgeUnverifiedTiming:true,cooldownMs:60000,atMs:[1000]};
+ p.encounter.equipmentTooltipUses=[request];
+ const model={kind:'physical',provenance:'synthetic',min:10,max:10,table:{type:'melee-white',position:'behind',weaponSkill:300,targetDefense:300,hitPct:100,critPct:0,critSuppressionPct:0,critMultiplier:2,dualWieldWhite:false,dualWieldPenaltyPct:0,glancePct:0,glanceMultiplier:1,order:['miss','dodge','parry','block','glance','crit'],avoidance:{dodgePct:0,parryPct:0,blockPct:0},blockValue:0},armourModel:{attackerLevel:60,armour:1000}};
+ p.encounter.incomingDamage=[500,1500].map(atMs=>({atMs,source:'Enemy',actorId:'boss',targetId:'pet',school:'physical',attackModel:model}));
+ p.encounter.companionModel.health=1000;
+ const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1});
+ assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.source==='Firebolt').map(e=>e.raw),[30,60,60]);
+ const incoming=r.exampleEvents.filter(e=>e.type==='attack-result'&&e.source==='Enemy');
+ assert.ok(incoming[1].raw<incoming[0].raw);
+ p.build.classOptions.pet='Felguard';
+ const excluded=pet('Felguard','Felstorm');
+ excluded.abilities[0].areaPolicy={mode:'primary'};
+ p.encounter.companionModel=excluded;
+ assert.throws(()=>prepareReferenceScenario(p),/eligible companion/);
+});
+
+test('equipped Devilsaur Tooth consumes only one eligible Hunter companion attack',()=>{
+ const m=pet('Cat','Claw');
+ m.abilities[0].damage={...damage,school:'physical',outcomes:[...landed,{name:'crit',landed:true,critical:true,probability:0,multiplier:2}]};
+ const p=params(m);
+ p.build=newBuild('hunter');
+ p.build.classOptions.pet='Cat';
+ p.build.classOptions.petLevel=60;
+ p.talents=JSON.parse(readFileSync(new URL('../../docs/sim/data/talents/hunter.json',import.meta.url)));
+ equipImported(p,{trinket1:19992});
+ p.learnedSpellIds=[];
+ p.rankByAbility={'hunter:pet-attack':null};
+ p.policies={'hunter:pet-attack':{command:'hunter:pet-attack',activation:'scheduled-phase',phase:2,provenance:'synthetic'}};
+ p.rows=[{ability:'Pet Attack',target:'primary',conditions:[]}];
+ const request={slot:'trinket1',itemId:19992,tooltip:p.gearById[19992].effects[0],acknowledgeUnverifiedTiming:true,cooldownMs:60000,atMs:[1000],durationMs:3000,consume:'landed',criticalSources:['Claw']};
+ p.encounter.equipmentTooltipUses=[request];
+ const r=runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1});
+ assert.deepEqual(r.exampleEvents.filter(e=>e.type==='damage'&&e.source==='Claw').map(e=>e.raw),[30,60,30]);
+ request.criticalSources=['Growl'];
+ assert.throws(()=>runReferenceScenario(prepareReferenceScenario(p),{seed:7,iterations:1}),/configured direct attack sources/);
+});
+
+test('companion geometry uses explicit distances per enemy for area targeting',()=>{
+ const p=params();
+ p.encounter.additionalEnemies=[{id:'add',maxHealth:1000}];
+ p.encounter.companionModel.targetGeometry={boss:{distance:3,position:'side'},add:{distance:50,position:'front'}};
+ const prepared=prepareReferenceScenario(p);
+ assert.deepEqual(prepared.scenario.geometry.pet,p.encounter.companionModel.targetGeometry);
+ p.encounter.companionModel.targetGeometry.typo={distance:0,position:'front'};
+ assert.throws(()=>prepareReferenceScenario(p),/companion target geometry/);
+});

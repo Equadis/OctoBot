@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import {newBuild} from '../../docs/sim/core/builds.mjs';
+import {labRanks,prepareLab} from '../../docs/sim/core/combat-reference-lab.mjs';
+import {runReferenceScenario} from '../../docs/sim/core/combat-reference-adapter.mjs';
+const talents=c=>JSON.parse(readFileSync(new URL('../../docs/sim/data/talents/'+c+'.json',import.meta.url)));
+const input=(c,spellId)=>{const build=newBuild(c);build.planning.duration=20;build.planning.iterations=12;return {build,talents:talents(c),gearById:{},spellId,confirmed:true,seed:42,cooldownMs:0};};
+test('all nine classes have current-phase benchmark ranks',()=>{for(const c of ['warrior','rogue','paladin','hunter','mage','warlock','priest','shaman','druid'])assert.ok(labRanks(c).some(r=>r.available),c);});
+test('reference lab executes deterministic damaging and healing build benchmarks',()=>{for(const [c,spellId,metric] of [['mage',10181,'dps'],['warlock',11661,'dps'],['paladin',10329,'hps'],['priest',10965,'hps'],['shaman',10396,'hps'],['druid',9841,'hps']]){const a=prepareLab(input(c,spellId)),r=runReferenceScenario(a.prepared,{seed:a.seed,iterations:a.iterations});assert.equal(r.metric,metric,c);assert.ok(r.statistics.mean>0,c);assert.equal(r.statistics.n,12);assert.equal(r.liveVerified,false);assert.equal(r.rankRows[0].spellId,spellId);}});
+test('lab fails closed for future ranks, resistance, absent consent or missing cost',()=>{let a=input('mage',25304);assert.throws(()=>prepareLab(a),/current reference phase/);a=input('mage',10181);a.build.planning.targetFrostRes=50;assert.throws(()=>prepareLab(a),/resistance/);a=input('mage',10181);a.confirmed=false;assert.throws(()=>prepareLab(a),/Confirm learned/);a=input('hunter',13555);assert.throws(()=>prepareLab(a),/rank cost override/);});

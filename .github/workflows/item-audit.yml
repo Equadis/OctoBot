@@ -1,0 +1,22 @@
+name: Item and equipment audit
+on:
+  push:
+    branches: ['audit/item-stat-effects']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tools/sim/audit-item-inventory.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: item-inventory-audit
+          path: item-inventory-audit.json
+      - run: node --test tests/sim/*.test.mjs
+      - run: python -m unittest discover -s tests/sim -p 'test_*.py'

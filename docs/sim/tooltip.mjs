@@ -1,4 +1,4 @@
-import {ENCHANTS} from './core/equipment-options.mjs?v=20261130-ui2';
+import {ENCHANTS} from './core/equipment-options.mjs?v=20261128-merge1';
 import {fixSigns} from './core/signs.mjs?v=1';
 // Plain-text, viewport-clamped tooltips shared by equipment and talents.
 const tooltip=document.createElement('div');tooltip.id='planner-tooltip';tooltip.className='planner-tooltip';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;document.body.append(tooltip);

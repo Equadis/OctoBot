@@ -1,0 +1,4 @@
+const uniqueIds=(a,c)=>Array.isArray(a)&&new Set(a).size===a.length&&a.every(id=>typeof id==='string'&&id.startsWith(c+':'));
+export function validateSwiftness(p,c){if(!p||!['shaman','druid'].includes(c)||!uniqueIds(p.eligibleAbilityIds,c)||!Number.isSafeInteger(p.durationMs)||p.durationMs<=0||!['preserve-other','consume-both'].includes(p.overlap))throw new Error('Explicit Nature Swiftness spell eligibility, duration and overlap required');return p;}
+export function validateElementalMastery(p){if(!p||!uniqueIds(p.eligibleCostIds,'shaman'))throw new Error('Explicit Elemental Mastery offensive mana-cost eligibility required');return p;}
+export function cooldownAura(id,name,durationMs,modifiers=[]){return {kind:'aura',when:'always',auraTarget:'actor',aura:{id,name,kind:'buff',durationMs,maxStacks:1,stacks:1,stackPolicy:'replace',refreshPolicy:'refresh',modifiers}};}
